@@ -1,0 +1,1 @@
+This directory contains PatchUPK scriptfiles (a.k.a `.upatch` files) used for doing class overrides and removing other kinds of hardcoded limitations.

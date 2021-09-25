@@ -1,0 +1,1 @@
+This directory is a container for various kinds of documentation and research.
