@@ -1,4 +1,4 @@
-class ExXGStrategy extends XGStrategy;
+class Highlander_XGStrategy extends XGStrategy;
 
 
 function NewGame() {
