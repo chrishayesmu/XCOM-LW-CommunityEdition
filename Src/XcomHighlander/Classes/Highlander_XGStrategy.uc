@@ -2,7 +2,8 @@ class Highlander_XGStrategy extends XGStrategy;
 
 
 function NewGame() {
-    LogInternal(string(Class) $ " : NewGame Override successful");
+    LogInternal(string(Class) $ " : (highlander override)");
+
     m_kWorld = Spawn(class'XGWorld');
     m_kGeoscape = Spawn(class'XGGeoscape');
     m_kHQ = Spawn(class'XGHeadQuarters');
