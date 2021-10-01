@@ -6,7 +6,7 @@ function Mutate(string MutateString, PlayerController Sender) {
 
     local Highlander_XGStrategy active_m_kGameCore;
 
-    if(MutateString != "XComHeadquartersGame.StartMatch") {
+    if(MutateString == "XComHeadquartersGame.StartMatch") {
         LogInternal(string(Class) $ " : (highlander) XComHeadquartersGame.StartMatch");
         foreach AllActors(class'Highlander_XGStrategy', active_m_kGameCore)
         {
