@@ -29,3 +29,36 @@ function NewGame() {
     Init(false);
     GotoState('Initing');
 }
+
+function OnLoadedGame()
+{
+    LogInternal(string(Class) $ " : (highlander override) - OnLoadedGame");
+    super.OnLoadedGame();
+}
+
+function Init(bool bLoadingFromSave)
+{
+    LogInternal(string(Class) $ " : (highlander override) - bLoadingFromSave = " $ bLoadingFromSave);
+
+    // End:0x1D
+    if(m_arrSecondWave.Length == 0)
+    {
+        m_arrSecondWave.Add(36);
+    }
+    m_bLoadedFromSave = bLoadingFromSave;
+    m_bGameOver = false;
+    m_kWorld.Init(!bLoadingFromSave);
+    m_kGeoscape.Init();
+    m_kHQ.Init(bLoadingFromSave);
+    m_kAI.Init();
+    m_kExaltSimulation.Init(bLoadingFromSave);
+    PRES().InitUIScreens();
+    PRES().SetNarrativeMgr(m_kNarrative);
+    m_bOvermindEnabled = true;
+    // End:0x16E
+    if(bLoadingFromSave)
+    {
+        InitDifficulty(m_iDifficulty);
+    }
+    //return;
+}
