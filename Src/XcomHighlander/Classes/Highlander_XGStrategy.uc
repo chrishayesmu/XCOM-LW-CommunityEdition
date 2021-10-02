@@ -62,11 +62,11 @@ function Init(bool bLoadingFromSave)
 {
     LogInternal(string(Class) $ " : (highlander override) - bLoadingFromSave = " $ bLoadingFromSave);
 
-    // End:0x1D
-    if(m_arrSecondWave.Length == 0)
+    if (m_arrSecondWave.Length == 0)
     {
         m_arrSecondWave.Add(36);
     }
+
     m_bLoadedFromSave = bLoadingFromSave;
     m_bGameOver = false;
     m_kWorld.Init(!bLoadingFromSave);
@@ -77,10 +77,9 @@ function Init(bool bLoadingFromSave)
     PRES().InitUIScreens();
     PRES().SetNarrativeMgr(m_kNarrative);
     m_bOvermindEnabled = true;
-    // End:0x16E
-    if(bLoadingFromSave)
+
+    if (bLoadingFromSave)
     {
         InitDifficulty(m_iDifficulty);
     }
-    //return;
 }
