@@ -17,15 +17,14 @@ function InitBattle() {
     OnlineEventMgr = XComOnlineEventMgr(kEngine.OnlineEventManager);
     ProfileSettings = XComOnlineProfileSettings(kEngine.GetProfileSettings());
     bStandardLoad = OnlineEventMgr.bPerformingStandardLoad;
-    if (bStandardLoad)
+    if(bStandardLoad)
     {
         OnlineEventMgr.FinishLoadGame();
         foreach AllActors(class'XGBattle', m_kBattle)
         {
             break;
         }
-
-        if (m_kBattle.m_kDesc != none && WorldInfo.NetMode == NM_Standalone)
+        if((m_kBattle.m_kDesc != none) && WorldInfo.NetMode == NM_Standalone)
         {
             Content = m_kBattle.m_kDesc.DeterminePawnContent();
             XComContentManager(kEngine.GetContentManager()).RequestContent(Content, true);
@@ -37,40 +36,46 @@ function InitBattle() {
     else
     {
         kMapData = class'XComMapManager'.static.GetCurrentMapMetaData();
-
-        if (kMapData.MissionType == eMission_CaptureAndHold)
+        if(kMapData.MissionType == 6)
         {
-            m_kBattle = Spawn(class'Highlander_XGBattle_SPCaptureAndHold');
-        }
-        else if (kMapData.MissionType == eMission_CovertOpsExtraction)
-        {
-            m_kBattle = Spawn(class'Highlander_XGBattle_SPCovertOpsExtraction');
-        }
-        else if (XComTacticalGame(WorldInfo.Game).bDebugCombatRequested)
-        {
-            m_kBattle = Spawn(class'Highlander_XGBattle_SPDebug');
+            m_kBattle = Spawn(class'XGBattle_SPCaptureAndHold');
         }
         else
         {
-            m_kBattle = Spawn(class'Highlander_XGBattle_SPAssault');
+            // End:0x398
+            if(kMapData.MissionType == 5)
+            {
+                m_kBattle = Spawn(class'XGBattle_SPCovertOpsExtraction');
+            }
+            else
+            {
+                // End:0x3FF
+                if(XComTacticalGame(WorldInfo.Game).bDebugCombatRequested)
+                {
+                    m_kBattle = Spawn(class'XGBattle_SPDebug');
+                }
+                else
+                {
+                    m_kBattle = Spawn(class'XGBattle_SPAssault');
+                }
+            }
         }
-
         foreach WorldInfo.AllControllers(class'XComTacticalController', kLocalPC)
         {
-            if (kLocalPC.Player != none)
+            if(kLocalPC.Player != none)
             {
                 break;
             }
         }
 
-        if (ProfileSettings == none)
+        if(ProfileSettings == none)
         {
             kEngine.CreateProfileSettings();
             ProfileSettings = XComOnlineProfileSettings(kEngine.GetProfileSettings());
             ProfileSettings.ExtendedLaunch_InitToDefaults();
             class'XComOnlineEventMgr'.static.EnumGamepads_PC();
-
-            if (class'XComOnlineEventMgr'.static.GamepadConnected_PC())
+            // End:0x5A1
+            if(class'XComOnlineEventMgr'.static.GamepadConnected_PC())
             {
                 ProfileSettings.Data.ActivateMouse(false);
             }
@@ -82,16 +87,14 @@ function InitBattle() {
         kLocalPC.SetXGPlayer(NewPlayer);
         kLocalPC.SetTeamType(NewPlayer.m_eTeam);
         m_kBattle.AddPlayer(NewPlayer);
-
         NewPlayer = Spawn(class'XGAIPlayer');
         NewPlayer.Init();
         m_kBattle.AddPlayer(NewPlayer);
-
         NewPlayer = Spawn(class'XGAIPlayer_Animal');
         NewPlayer.Init();
         m_kBattle.AddPlayer(NewPlayer);
 
-        if (XComTacticalGame(WorldInfo.Game).m_bLoadingFromShell)
+        if(XComTacticalGame(WorldInfo.Game).m_bLoadingFromShell)
         {
             m_kProfileSettings = ProfileSettings;
             m_kBattle.SetProfileSettings();
@@ -103,7 +106,6 @@ function InitBattle() {
         {
             m_kBattle.SetProfileSettings();
             OnlineEventMgr.LoadTransport();
-
             foreach AllActors(class'StrategyGameTransport', kTransport)
             {
                 m_kBattle.m_kTransferSave = kTransport;
@@ -112,7 +114,6 @@ function InitBattle() {
                 XComPresentationLayer(XComPlayerController(WorldInfo.GetALocalPlayerController()).m_Pres).GetUIMgr().TutorialSaveData = kTransport.m_kTutorialSaveData;
                 m_kBattle.Start();
                 class'XComEngine'.static.SetRandomSeeds(class'XComEngine'.static.GetARandomSeed());
-
                 break;
             }
         }
