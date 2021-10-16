@@ -17,7 +17,7 @@ function NewGame() {
     }
 
     if (m_kHQ == none) {
-        m_kHQ = Spawn(class'Highlander_XGHeadQuarters');
+        m_kHQ = Spawn(class'XGHeadQuarters');
     }
 
     if (m_kAI == none) {

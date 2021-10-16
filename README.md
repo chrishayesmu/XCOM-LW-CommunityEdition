@@ -1,0 +1,3 @@
+# Build notes
+
+This project uses macros defined in the file `SrcOrig/XComGame/Globals.uci`. To build the Highlander locally, you will need this file present in your UDK environment, at `<UDK root>/Development/Src/XComGame/Globals.uci`. The simplest way to accomplish this is to create a symbolic link pointing at the file in your local Highlander repo, so that your build environment remains in sync with the latest changes.
