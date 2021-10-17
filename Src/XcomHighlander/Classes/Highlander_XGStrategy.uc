@@ -2,7 +2,7 @@ class Highlander_XGStrategy extends XGStrategy;
 
 
 function NewGame() {
-    LogInternal(string(Class) $ " : (highlander override)");
+    `HL_LOG(string(Class) $ " : (highlander override)");
 
     if (class'Engine'.static.GetCurrentWorldInfo().Game.BaseMutator != none) {
         class'Engine'.static.GetCurrentWorldInfo().Game.BaseMutator.Mutate("XGStrategy.NewGame", class'Engine'.static.GetCurrentWorldInfo().GetALocalPlayerController());
@@ -21,7 +21,7 @@ function NewGame() {
     }
 
     if (m_kAI == none) {
-        m_kAI = Spawn(class'XGStrategyAI');
+        m_kAI = Spawn(class'Highlander_XGStrategyAI');
     }
 
     m_kRecapSaveData = Spawn(class'XGRecapSaveData');
@@ -54,19 +54,19 @@ function NewGame() {
 
 function OnLoadedGame()
 {
-    LogInternal(string(Class) $ " : (highlander override) - OnLoadedGame");
+    `HL_LOG(string(Class) $ " : (highlander override) - OnLoadedGame");
     super.OnLoadedGame();
 }
 
 function Init(bool bLoadingFromSave)
 {
-    LogInternal(string(Class) $ " : (highlander override) - bLoadingFromSave = " $ bLoadingFromSave);
+    `HL_LOG(string(Class) $ " : (highlander override) - bLoadingFromSave = " $ bLoadingFromSave);
 
-    // End:0x1D
-    if(m_arrSecondWave.Length == 0)
+    if (m_arrSecondWave.Length == 0)
     {
         m_arrSecondWave.Add(36);
     }
+
     m_bLoadedFromSave = bLoadingFromSave;
     m_bGameOver = false;
     m_kWorld.Init(!bLoadingFromSave);
@@ -77,10 +77,9 @@ function Init(bool bLoadingFromSave)
     PRES().InitUIScreens();
     PRES().SetNarrativeMgr(m_kNarrative);
     m_bOvermindEnabled = true;
-    // End:0x16E
-    if(bLoadingFromSave)
+
+    if (bLoadingFromSave)
     {
         InitDifficulty(m_iDifficulty);
     }
-    //return;
 }

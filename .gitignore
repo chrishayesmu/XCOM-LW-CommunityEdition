@@ -1,2 +1,3 @@
 *.code-workspace
 *.uninstall*.txt
+.vscode

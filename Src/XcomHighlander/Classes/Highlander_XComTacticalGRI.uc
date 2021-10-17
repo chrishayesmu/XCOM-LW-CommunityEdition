@@ -115,5 +115,5 @@ function InitBattle() {
         }
     }
 
-    LogInternal(string(Class) $ " : (highlander override)");
+    `HL_LOG(string(Class) $ " : (highlander override)");
 }

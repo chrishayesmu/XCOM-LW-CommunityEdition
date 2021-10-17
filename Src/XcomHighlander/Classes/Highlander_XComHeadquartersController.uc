@@ -2,6 +2,6 @@ class Highlander_XComHeadquartersController extends XComHeadquartersController;
 
 
 event PostLogin() {
-    LogInternal(string(Class) $ " : (highlander override)");
+    `HL_LOG(string(Class) $ " : (highlander override)");
     super.PostLogin();
 }

@@ -1,1 +1,3 @@
 `include(../XComGame/Globals.uci)
+
+`define HL_LOG(msg, cond) `LOG(`msg, `cond, 'XComHighlander')
