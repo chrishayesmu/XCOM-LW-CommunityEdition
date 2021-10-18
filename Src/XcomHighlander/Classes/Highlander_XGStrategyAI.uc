@@ -49,6 +49,13 @@ var config int ThreatDecreasePerMonth;
 
 var config int MaxTargetedTerrorsPerMonth;
 var config int IndiscriminateTerrorResourceThreshold;
+var config int CiviliansLostPanicIncreaseThreshold;
+var config int CiviliansSavedPanicDecreaseThreshold;
+var config int ContinentPanicIncreasePerLostCivilian;
+var config int CountryPanicIncreasePerLostCivilian;
+var config int ContinentPanicDecreasePerSavedCivilian;
+var config int CountryPanicDecreasePerSavedCivilian;
+var config int NumCiviliansSavedToPreventCountryLeaving;
 
 // Config related to alien gains per month
 var config int MaximumResources;
@@ -100,7 +107,6 @@ function AIAddNewObjectives()
     }
 
     STAT_SetStat(19, StartOfMonthResources);
-    arrVisibleTargets = DetermineBestVisibleTargets();
 
     iNumAbductions      = RollMissionCount(MissionPlan.NumAbductions);
     iNumAirBaseDefenses = RollMissionCount(MissionPlan.NumAirBaseDefenses);
@@ -226,6 +232,73 @@ function AddNewTerrors(int iNumTerrors, int StartOfMonthResources)
 
         AddNewTerrorMission(TargetCountry, 1 + Rand(23));
     }
+}
+
+/**
+ * Calculates the change in panic after a terror mission for both the country and continent.
+ * Returns true if the country should leave the XCOM Project after this mission, false if not.
+ */
+function bool CalcTerrorMissionPanicResult(out int iCountryPanicChange, out int iContinentPanicChange)
+{
+    local int CiviliansLost, CiviliansSaved, CiviliansTotal;
+    local int ExtraCivilians;
+    local XGHeadQuarters kHQ;
+
+    kHQ = HQ();
+
+    // Some mods (i.e. LOS indicator's invisible sectoid/chryssalid) cause there to be more civilians than there should be,
+    // so those extra units are showing up in either saved or lost. They're more likely to be saved, because it's rare for
+    // the AI to shoot them, so if they exist, we remove them from the civilians saved.
+    // TODO: ideally we would hook into the battle itself and check whether each unit on the civilian team is actually a
+    // civilian unit or not, then transfer that info back to strategy.
+
+    CiviliansTotal = class'XGBattleDesc'.default.m_iNumTerrorCivilians;
+    ExtraCivilians = Max(kHQ.m_kLastResult.iCiviliansTotal - CiviliansTotal, 0);
+    CiviliansLost = kHQ.m_kLastResult.iCiviliansTotal - kHQ.m_kLastResult.iCiviliansSaved;
+    CiviliansSaved = kHQ.m_kLastResult.iCiviliansSaved;
+
+    if (ExtraCivilians != 0) {
+        `HL_LOG("WARNING: there are " $ ExtraCivilians $ " more civilian units than there should be. Likely this is due to a mod. "
+              $ "These units will be removed from the count of civilians saved under the assumption that they did not die.");
+
+        CiviliansSaved -= ExtraCivilians;
+    }
+
+    CiviliansLost = Clamp(CiviliansLost, 0, CiviliansTotal);
+    CiviliansSaved = Clamp(CiviliansSaved, 0, CiviliansTotal);
+
+    `HL_LOG("CiviliansTotal = " $ CiviliansTotal $ "; ExtraCivilians = " $ ExtraCivilians $ "; CiviliansLost = " $ CiviliansLost $ "; CiviliansSaved = " $ CiviliansSaved);
+
+    // If we saved more than the threshold limit of civilians, then we should decrease panic as a reward
+    if (CiviliansSavedPanicDecreaseThreshold >= 0 && CiviliansSaved > CiviliansSavedPanicDecreaseThreshold)
+    {
+        `HL_LOG(CiviliansSaved $ " civilians were saved, surpassing the threshold of " $ CiviliansSavedPanicDecreaseThreshold $ ". Panic will be decreased.");
+        CiviliansSaved -= CiviliansSavedPanicDecreaseThreshold;
+
+        iContinentPanicChange = CiviliansSaved * ContinentPanicDecreasePerSavedCivilian;
+        iCountryPanicChange = CiviliansSaved * CountryPanicDecreasePerSavedCivilian;
+    }
+    else
+    {
+        if (CiviliansLostPanicIncreaseThreshold > 0) {
+            `HL_LOG("Adjusting civilians lost from " $ CiviliansLost $ " to " $ (CiviliansLost - CiviliansLostPanicIncreaseThreshold));
+            CiviliansLost = Max(0, CiviliansLost - CiviliansLostPanicIncreaseThreshold);
+        }
+
+        iContinentPanicChange = CiviliansLost * ContinentPanicIncreasePerLostCivilian;
+        iCountryPanicChange = CiviliansLost * CountryPanicIncreasePerLostCivilian;
+    }
+
+    `HL_LOG("iContinentPanicChange = " $ iContinentPanicChange $ " and iCountryPanicChange = " $ iCountryPanicChange);
+
+    // If not enough civilians were saved, the country will leave immediately
+    if (CiviliansSaved < NumCiviliansSavedToPreventCountryLeaving)
+    {
+        `HL_LOG(CiviliansSaved $ " civilians were saved, failing to meet threshold of " $ NumCiviliansSavedToPreventCountryLeaving $ "; country will leave XCOM");
+        return true;
+    }
+
+    return false;
 }
 
 function bool PickMissionPlan(int Month, int Resources, int Threat, out HL_AIMissionPlan MissionPlan)
