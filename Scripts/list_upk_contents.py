@@ -28,6 +28,5 @@ def main():
     upk_content = parse_upk_data(upk_bytes)
     upk_content.log()
 
-
 if __name__ == "__main__":
     main()

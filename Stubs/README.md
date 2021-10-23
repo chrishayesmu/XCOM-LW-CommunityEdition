@@ -1,0 +1,3 @@
+This folder contains compilation stubs for building the Highlander. These stubs are minimal class, struct, and enum definitions to allow them to be built against. The stub files are incomplete and will be updated from time to time, so it's recommended to use symbolic links to these folders in your build environment.
+
+The `XComGame`, `XComLZMutator`, `XComMutator`, and `XComStrategyGame` folders are not currently included.
