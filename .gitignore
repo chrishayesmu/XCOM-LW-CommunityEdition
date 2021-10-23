@@ -1,3 +1,4 @@
 *.code-workspace
 *.uninstall*.txt
 .vscode
+__pycache__
