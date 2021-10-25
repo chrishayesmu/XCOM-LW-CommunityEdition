@@ -4,7 +4,7 @@ simulated function bool OnAccept(optional string selectedOption = "")
 {
     if (GetMgr().OnAcceptHiringOrder())
     {
-        // Highlander bug fix: normally when you order interceptors, the strategy HUD (particularly the player's current money)
+        // Highlander issue #1: normally when you order interceptors, the strategy HUD (particularly the player's current money)
         // doesn't update until you back out to the main HQ screen. This fix simply updates the HUD immediately.
         XComHQPresentationLayer(controllerRef.m_Pres).GetStrategyHUD().UpdateDefaultResources();
 
