@@ -1,3 +1,4 @@
 `include(../XComGame/Globals.uci)
 
 `define HL_LOG(msg, cond) `LOG(`msg, `cond, 'XComHighlander')
+`define HL_LOG_CLS(msg, cond) `LOG(string(Class) $ ": " $ `msg, `cond, 'XComHighlander')

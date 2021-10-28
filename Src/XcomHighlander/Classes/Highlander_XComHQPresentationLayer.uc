@@ -2,7 +2,7 @@ class Highlander_XComHQPresentationLayer extends XComHQPresentationLayer;
 
 simulated function Init()
 {
-    `HL_LOG(string(Class) $ ": Init");
+    `HL_LOG_CLS("Init");
     super.Init();
 }
 

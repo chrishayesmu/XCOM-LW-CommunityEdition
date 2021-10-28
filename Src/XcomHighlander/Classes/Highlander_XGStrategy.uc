@@ -1,8 +1,7 @@
 class Highlander_XGStrategy extends XGStrategy;
 
-
 function NewGame() {
-    `HL_LOG(string(Class) $ " : (highlander override)");
+    `HL_LOG_CLS("(highlander override)");
 
     if (class'Engine'.static.GetCurrentWorldInfo().Game.BaseMutator != none) {
         class'Engine'.static.GetCurrentWorldInfo().Game.BaseMutator.Mutate("XGStrategy.NewGame", class'Engine'.static.GetCurrentWorldInfo().GetALocalPlayerController());
@@ -30,12 +29,14 @@ function NewGame() {
         m_kExaltSimulation = Spawn(class'XGExaltSimulation');
     }
 
+    // For Dynamic War: sets the counter for each of these mission types to already be partly populated, so they
+    // don't all spawn at once and there's some control over which missions occur when at the start of the game.
     m_arrMissionTotals.Add(41);
-    m_arrMissionTotals[30] = int(class'XGTacticalGameCore'.default.SW_ELERIUM_LOSS * 0.20);
-    m_arrMissionTotals[31] = int(class'XGTacticalGameCore'.default.SW_ELERIUM_LOSS * 0.70);
-    m_arrMissionTotals[32] = int(class'XGTacticalGameCore'.default.SW_ELERIUM_LOSS * 0.40);
-    m_arrMissionTotals[35] = int(class'XGTacticalGameCore'.default.SW_ELERIUM_LOSS * 0.70);
-    m_arrMissionTotals[36] = int(class'XGTacticalGameCore'.default.SW_ELERIUM_LOSS * 0.50);
+    m_arrMissionTotals[30] = int(class'XGTacticalGameCore'.default.SW_ELERIUM_LOSS * 0.20); // Research
+    m_arrMissionTotals[31] = int(class'XGTacticalGameCore'.default.SW_ELERIUM_LOSS * 0.70); // Scout
+    m_arrMissionTotals[32] = int(class'XGTacticalGameCore'.default.SW_ELERIUM_LOSS * 0.40); // Harvest
+    m_arrMissionTotals[35] = int(class'XGTacticalGameCore'.default.SW_ELERIUM_LOSS * 0.70); // Abduction
+    m_arrMissionTotals[36] = int(class'XGTacticalGameCore'.default.SW_ELERIUM_LOSS * 0.50); // Terror
 
     if (m_kNarrative == none) {
         m_kNarrative = Spawn(class'XGNarrative');
@@ -54,13 +55,13 @@ function NewGame() {
 
 function OnLoadedGame()
 {
-    `HL_LOG(string(Class) $ " : (highlander override) - OnLoadedGame");
+    `HL_LOG_CLS("(highlander override) - OnLoadedGame");
     super.OnLoadedGame();
 }
 
 function Init(bool bLoadingFromSave)
 {
-    `HL_LOG(string(Class) $ " : (highlander override) - bLoadingFromSave = " $ bLoadingFromSave);
+    `HL_LOG_CLS("(highlander override) - bLoadingFromSave = " $ bLoadingFromSave);
 
     if (m_arrSecondWave.Length == 0)
     {

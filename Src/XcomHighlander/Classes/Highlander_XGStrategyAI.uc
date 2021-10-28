@@ -80,7 +80,7 @@ function AIAddNewObjectives()
     local int StartOfMonthResources, StartOfMonthThreat;
     local HL_AIMissionPlan MissionPlan;
 
-    `HL_LOG(string(Class) $ ": AIAddNewObjectives start");
+    `HL_LOG_CLS("AIAddNewObjectives start");
 
     // Use the default logic for Dynamic War; make sure to do this before modifying
     // any state or else it will be modified twice
@@ -211,7 +211,7 @@ function AIAddNewObjectives()
     // Not sure what this does, but it's in the original
     m_iCounter = 0;
 
-    `HL_LOG(string(Class) $ ": AIAddNewObjectives complete");
+    `HL_LOG_CLS("AIAddNewObjectives complete");
 }
 
 function AddNewTerrors(int iNumTerrors, int StartOfMonthResources)
