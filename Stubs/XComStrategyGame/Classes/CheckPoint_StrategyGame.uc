@@ -1,0 +1,1 @@
+class Checkpoint_StrategyGame extends Checkpoint;

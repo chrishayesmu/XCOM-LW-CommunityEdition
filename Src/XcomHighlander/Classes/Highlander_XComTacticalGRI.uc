@@ -1,6 +1,5 @@
 class Highlander_XComTacticalGRI extends XComTacticalGRI;
 
-
 function InitBattle() {
     local XGPlayer NewPlayer;
     local XComTacticalController kLocalPC;

@@ -1,0 +1,1 @@
+class XComDamageType_Barrage extends XComDamageType_DestructibleActorClear;

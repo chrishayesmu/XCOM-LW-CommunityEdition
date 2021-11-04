@@ -1,0 +1,1 @@
+class Highlander_XGFacility_Lockers extends XGFacility_Lockers;

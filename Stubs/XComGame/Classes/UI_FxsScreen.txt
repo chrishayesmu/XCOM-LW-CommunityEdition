@@ -1,0 +1,31 @@
+class UI_FxsScreen extends UI_FxsPanel
+	native(UI);
+
+var protected name s_package;
+var protected name s_screenId;
+var protected name MCPath;
+var protected bool m_bStopMusicOnExit;
+var protected bool m_bAllowShowDuringCinematic;
+var protected bool m_bPreCinematicVisible;
+var protectedwrite bool m_bAnimateIntro;
+var protectedwrite bool m_bAnimateOutro;
+var protectedwrite bool m_bDelayRemove;
+var protected int m_watchVar_OnCinematicMode;
+var array<UI_FxsPanel> panels;
+
+protected simulated function BaseInit(XComPlayerController _controller, UIFxsMovie _manager, optional delegate<OnCommandCallback> CommandFunction) {}
+
+simulated function OnInit() {}
+
+simulated function Update() {}
+
+native simulated function Remove();
+native simulated function name GetPackage();
+native simulated function AddPanel(UI_FxsPanel panel);
+native simulated function RemovePanel(UI_FxsPanel panel);
+
+simulated function SetInputState(int eInputState)
+{
+}
+
+native simulated function name GetMCPath();

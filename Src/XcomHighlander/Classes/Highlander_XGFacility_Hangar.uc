@@ -1,0 +1,1 @@
+class Highlander_XGFacility_Hangar extends XGFacility_Hangar;

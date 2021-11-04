@@ -1,0 +1,1 @@
+class XComDamageType_AreaBurn extends XComDamageType_Flame;

@@ -1,0 +1,1 @@
+class Highlander_XGGeoscapeUI extends XGGeoscapeUI;

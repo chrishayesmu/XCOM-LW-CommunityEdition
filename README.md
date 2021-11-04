@@ -48,6 +48,27 @@ A system for new mod hooks has not been determined yet.
 
 Mutator-based mods are still supported, as in Long War 1.0; however if these mods conflict with the Highlander (e.g. by overriding the same class as the Highlander does) their interaction may be unpredictable.
 
+### **Adding items, perks, and technologies**
+
+(This section represents a vision for the Highlander and not its current state!)
+
+In the base game, there are a number of systems that use enums for unique identifiers. Since UnrealScript enums are a single byte, this limits these identifiers to 256 different values, greatly limiting modding potential. In the Highlander, we've rewritten these systems to replace their identifiers with 32-bit signed integers, vastly increasing the value space to 2,147,483,647 distinct values (negative values are not allowed).
+
+#### **Choosing IDs without conflicts**
+
+Even with such a large space to work in, conflicts are possible if there's no system for partitioning the space. Mods are therefore responsible for choosing an ID space according to the following:
+
+1. IDs are assigned in blocks of 10,000 elements.
+2. Negative ID values are disallowed.
+3. All IDs from 0 to 99999, inclusive, are reserved for the Highlander.
+4. All IDs from 2,147,000,000 to 2,147,483,647, inclusive, are reserved for the Highlander.
+5. Of the remaining 214k ID blocks, modders should choose a block for themselves using a random number generator, rolling from 10 to 214,599. This number is your **block prefix**. Multiply it by 10000 to get the first ID in your block.
+6. If for some reason a single block isn't large enough for a mod, mods should extend into the next contiguous block. (Ex: if your block is 1000000 to 1009999, you would extend into 1010000 to 1019999.)
+
+As an example, suppose a random number generator gives you the block prefix **146339**. Then your block extends from 14,633,900,000 to 14,633,909,999.
+
+Once you have your ID block, you need to update your `HighlanderModBase` child class with this info, using the `ModIDRange` field. If you don't set this value to a valid block range, the Highlander will not load your mod. (For forward compatibility's sake, this applies even to mods that don't intend to add any content that needs an ID.)
+
 # Building the Highlander locally
 
 This project uses macros defined in the file `SrcOrig/XComGame/Globals.uci`. To build the Highlander locally, you will need this file present in your UDK environment, at `<UDK root>/Development/Src/XComGame/Globals.uci`. The simplest way to accomplish this is to create a symbolic link pointing at the file in your local Highlander repo, so that your build environment remains in sync with the latest changes.

@@ -1,0 +1,1 @@
+class Highlander_XGFacility_SituationRoom extends XGFacility_SituationRoom;

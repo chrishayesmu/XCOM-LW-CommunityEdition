@@ -1,0 +1,1 @@
+interface IFCRequestInterface extends Interface;

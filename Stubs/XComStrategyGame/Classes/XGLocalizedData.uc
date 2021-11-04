@@ -1,0 +1,42 @@
+class XGLocalizedData extends Object;
+
+//complete stub
+
+var const localized string StaffTypeNames[EStaffType];
+var const localized string StaffTypeSummary[EStaffType];
+var const localized string m_aFacilityNames[EFacilityType];
+var const localized string m_aFacilityNamesCaps[EFacilityType];
+var const localized string FacilityTypeSummary[EFacilityType];
+var const localized string ContinentBonusNames[EContinentBonus];
+var const localized string ContinentBonusDesc[EContinentBonus];
+var const localized string CityTypeNames[ECityType];
+var const localized string CountryNames[ECountry];
+var const localized string CountryNamesWithArticle[ECountry];
+var const localized string CountryNamesWithArticleLower[ECountry];
+var const localized string CountryPossessive[ECountry];
+var const localized string CountryAdjective[ECountry];
+var const localized string SoldierClassNames[48];
+var const localized string MissionDifficultyNames[EMissionDifficulty];
+var const localized string ShipWeaponNames[EShipWeapon];
+var const localized string ShipWeaponFlavorTxt[255];
+var const localized string TechTypeNames[ETechType];
+var const localized string TechTypeSummary[ETechType];
+var const localized string TechTypeReport[ETechType];
+var const localized string TechTypeCodeName[ETechType];
+var const localized string TechTypeResults[ETechType];
+var const localized string FoundryTechNames[48];
+var const localized string FoundryTechSummary[48];
+var const localized string ResearchCreditNames[EResearchCredits];
+var const localized string ResearchCreditSummary[EResearchCredits];
+var const localized string OTSTechNames[EOTSTech];
+var const localized string OTSTechSummary[EOTSTech];
+var const localized string GeneModTechNames[EGeneModTech];
+var const localized string GameObjectiveNames[EGameObjective];
+var const localized string SubObjectiveNames[ESubObjective];
+var const localized string SubObjectiveInDepth[ESubObjective];
+var const localized string m_strSecondWaveAltPsionicsText;
+var const localized string MonthlyGradeSummary[EMonthlyGrade];
+var const localized string ShipStatusNames[EShipStatus];
+var const localized string m_strTipLabel;
+var const localized string GameplayTips_Tactical[EGameplayTips_Tactical];
+var const localized string GEOSCAPE;

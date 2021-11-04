@@ -1,0 +1,1 @@
+class Highlander_XGExaltSimulation extends XGExaltSimulation;

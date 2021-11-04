@@ -3,6 +3,7 @@ OBJECT = XComGameInfo.InitGame : AUTO
 [REPLACEMENT_CODE]
 /*(0x0000/0x0000)*/ 1B <AddMutator> 1F <%t "XComMutator.XComMutatorLoader"> 27 16
 /*(0x0000/0x0000)*/ 1B <AddMutator> 1F <%t "XComHighlander.Loader"> 27 16
+/*(0x0000/0x0000)*/ 1B <AddMutator> 1F <%t "XComHighlander.HighlanderModLoader"> 27 16
 /*(0x002A/0x002A)*/ 07 [@label_0x0079] 77 01 <Engine.GameInfo.BaseMutator> 2A 16
 /*(0x0039/0x0035)*/     19 01 <Engine.GameInfo.BaseMutator> [@] <NullRef> 00 ( 1B <Mutate> 1F <%t "XComGameInfo.InitGame"> 1C <Engine.Actor.GetALocalPlayerController> 16 16 )
 /*(0x0079/0x0069)*/ [#label_0x0079]

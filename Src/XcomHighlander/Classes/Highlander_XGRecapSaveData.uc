@@ -1,0 +1,1 @@
+class Highlander_XGRecapSaveData extends XGRecapSaveData;

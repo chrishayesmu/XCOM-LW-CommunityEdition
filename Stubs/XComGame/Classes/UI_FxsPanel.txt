@@ -1,0 +1,73 @@
+class UI_FxsPanel extends Actor
+    native(UI)
+    notplaceable
+    hidecategories(Navigation);
+	
+enum EWidgetColor
+{
+    eColor_Xcom,
+    eColor_Alien,
+    eColor_Attention,
+    eColor_Good,
+    eColor_Bad,
+    eColor_White,
+    eColor_Black,
+    eColor_Red,
+    eColor_Green,
+    eColor_Blue,
+    eColor_Yellow,
+    eColor_Orange,
+    eColor_Cyan,
+    eColor_Purple,
+    eColor_Gray,
+    eColor_MAX
+};
+	
+var private bool b_DependantVariablesAreInitialized;
+var private bool b_CallOnInitOnDependantVariablesInitialized;
+var protected bool b_IsInitialized;
+var protected bool b_IsVisible;
+var protected bool b_IsFinished;
+var protected bool b_IsFocused;
+var protected bool b_ShowOnInitUpdate;
+var protected bool b_HideOnInitUpdate;
+var bool b_OwnsMouseFocus;
+var protected name s_name;
+var protected name m_sFullMovieclipPath;
+var XComPlayerController controllerRef;
+var protected UI_FxsScreen screen;
+var UIFxsMovie manager;
+var delegate<OnCommandCallback> m_fnOnCommand;
+var delegate<OnCommandCallback> __OnCommandCallback__Delegate;
+
+delegate OnCommandCallback(string Cmd, string Arg) {}
+
+native simulated function name GetMCPath();
+
+simulated function PanelInit(XComPlayerController _controller, UIFxsMovie _manager, UI_FxsScreen _screen, optional delegate<OnCommandCallback> CommandFunction) {}
+
+native simulated function bool IsInited();
+
+simulated function bool IsFocused() {}
+
+simulated function OnReceiveFocus() {}
+
+simulated function OnLoseFocus() {}
+
+native simulated function Show();
+
+native simulated function Hide();
+
+native simulated function bool IsVisible();
+
+native simulated function Remove();
+
+native simulated function bool OnUnrealCommand(int ucmd, int Arg);
+
+native simulated function bool OnMouseEvent(int ucmd, array<string> parsedArgs);
+
+native simulated function bool CheckInputIsReleaseOrDirectionRepeat(int Cmd, int Arg);
+
+native simulated function Invoke(string sFunctionToCall, optional array<ASValue> myArray, optional bool verbose);
+
+native simulated function SetVariable(string sVariable, optional ASValue myValue);

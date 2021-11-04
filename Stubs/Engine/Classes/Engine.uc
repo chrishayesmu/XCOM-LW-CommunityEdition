@@ -366,10 +366,10 @@ var config	float			MaxSmoothedFrameRate;
 /** Minimum framerate smoothing will kick in.																	*/
 var config	float			MinSmoothedFrameRate;
 
-/** 
- * Whether we should check for more than N pawns spawning in a single frame.  
+/**
+ * Whether we should check for more than N pawns spawning in a single frame.
  * Basically, spawning pawns and all of their attachments can be slow.  And on consoles it
- * can be really slow.  If this bool is true we will display a 
+ * can be really slow.  If this bool is true we will display a
  **/
 var config bool bCheckForMultiplePawnsSpawnedInAFrame;
 
@@ -837,7 +837,7 @@ public:
 	 * @param bEnable	If TRUE the enable the screen saver, if FALSE disable it.
 	 */
 	void EnableScreenSaver( UBOOL bEnable );
-	
+
 	/**
 	 * Get the index of the provided sprite category
 	 *
@@ -1040,6 +1040,25 @@ native static final function bool BasicSaveObject(Object Obj, string Pathname, b
  * @return TRUE if successful
  */
 native static final function bool BasicLoadObject(Object Obj, string Pathname, bool bIsSaveGame, int Version);
+
+function Object GetContentManager()
+{
+    return none;
+}
+
+function Object GetProfileSettings()
+{
+    return none;
+}
+
+function CreateProfileSettings()
+{
+}
+
+simulated function bool IsConsoleAllowed()
+{
+    return true;
+}
 
 defaultproperties
 {

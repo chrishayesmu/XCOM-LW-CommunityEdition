@@ -1,4 +1,12 @@
-`include(../XComGame/Globals.uci)
+`include(XComGame\Globals.uci);
 
 `define HL_LOG(msg, cond) `LOG(`msg, `cond, 'XComHighlander')
 `define HL_LOG_CLS(msg, cond) `LOG(string(Class) $ ": " $ `msg, `cond, 'XComHighlander')
+`define HL_MOD_LOADER (class'HighlanderModLoader'.static.GetModLoader())
+
+
+// Strat layer macros for use in child classes of XGStrategyActorNativeBase only
+
+`define HL_FTECH(techId, bRushResearch) (`HL_TECHTREE.HL_GetFoundryTech(`techId, `bRushResearch))
+`define HL_LABS (Highlander_XGFacility_Labs(LABS()))
+`define HL_TECHTREE (Highlander_XGTechTree(`HQGAME.GetGameCore().GetHQ().GetLabs().m_kTree))

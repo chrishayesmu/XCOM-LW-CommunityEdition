@@ -1,0 +1,1 @@
+class PointInSpace extends Actor;

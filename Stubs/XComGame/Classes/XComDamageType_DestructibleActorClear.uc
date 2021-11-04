@@ -1,0 +1,1 @@
+class XComDamageType_DestructibleActorClear extends XComDamageType_Flame;
