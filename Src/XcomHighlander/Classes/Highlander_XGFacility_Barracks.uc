@@ -23,6 +23,7 @@ function UpdateFoundryPerksForSoldier(XGStrategySoldier kSoldier)
 
     if (HQ().HasFacility(eFacility_Foundry))
     {
+        // Highlander issue #4: LW 1.0 uses the ID for Phoenix Coilguns (44) in this block, where it means to use Quenchguns (46)
         kSoldier.m_kChar.aUpgrades[109] = kEngineering.IsFoundryTechResearched(18) ? 1 : 0; // SCOPE Upgrade
         kSoldier.m_kChar.aUpgrades[110] = kEngineering.IsFoundryTechResearched(13) ? 1 : 0; // Mag Pistols
         kSoldier.m_kChar.aUpgrades[111] = kEngineering.IsFoundryTechResearched(14) ? 1 : 0; // Rail Pistols
@@ -30,8 +31,8 @@ function UpdateFoundryPerksForSoldier(XGStrategySoldier kSoldier)
         kSoldier.m_kChar.aUpgrades[123] = kSoldier.m_kChar.aUpgrades[123] | (kEngineering.IsFoundryTechResearched(7)  ? 1 << 2 : 0); // Enhanced Plasma
         kSoldier.m_kChar.aUpgrades[123] = kSoldier.m_kChar.aUpgrades[123] | (kEngineering.IsFoundryTechResearched(11) ? 1 << 3 : 0); // Advanced Flight
         kSoldier.m_kChar.aUpgrades[123] = kSoldier.m_kChar.aUpgrades[123] | (kEngineering.IsFoundryTechResearched(15) ? 1 << 4 : 0); // Reflex Pistols
-        kSoldier.m_kChar.aUpgrades[123] = kSoldier.m_kChar.aUpgrades[123] | (kEngineering.IsFoundryTechResearched(44) ? 1 << 5 : 0); // BUG: 44 is Phoenix Coilguns but this should be Quenchguns (46)
-        kSoldier.m_kChar.aUpgrades[123] = kSoldier.m_kChar.aUpgrades[123] | (kEngineering.IsFoundryTechResearched(3)  ? 1 << 6 : 0);  // Improved Medikit
+        kSoldier.m_kChar.aUpgrades[123] = kSoldier.m_kChar.aUpgrades[123] | (kEngineering.IsFoundryTechResearched(44) ? 1 << 5 : 0); // Quenchguns
+        kSoldier.m_kChar.aUpgrades[123] = kSoldier.m_kChar.aUpgrades[123] | (kEngineering.IsFoundryTechResearched(3)  ? 1 << 6 : 0); // Improved Medikit
         kSoldier.m_kChar.aUpgrades[115] = kEngineering.IsFoundryTechResearched(4) ? 1 : 0; // Improved Arc Thrower
         kSoldier.m_kChar.aUpgrades[117] = kEngineering.IsFoundryTechResearched(9) ? 1 : 0; // Drone Capture
         kSoldier.m_kChar.aUpgrades[118] = kEngineering.IsFoundryTechResearched(8) ? 1 : 0; // Field Repairs
