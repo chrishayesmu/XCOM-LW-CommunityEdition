@@ -1,6 +1,106 @@
 class Highlander_XGHeadQuarters extends XGHeadQuarters
     dependson(XGGameData);
 
+function Init(bool bLoadingFromSave)
+{
+    local XGFacility kFacility;
+    local XGOutpost kOutpost;
+    local int iSat;
+
+    foreach m_arrFacilities(kFacility)
+    {
+        kFacility.Init(bLoadingFromSave);
+    }
+
+    if (m_kObjectiveManager == none)
+    {
+        m_kObjectiveManager = Spawn(class'Highlander_XGObjectiveManager');
+        m_kObjectiveManager.Init();
+    }
+
+    if (m_kEntity == none)
+    {
+        SetEntity(Spawn(class'XGBaseEntity'), 0);
+    }
+
+    foreach m_arrOutposts(kOutpost)
+    {
+        if (kOutpost.m_kEntity == none)
+        {
+            kOutpost.Init(kOutpost.m_iContinent);
+        }
+    }
+
+    for (iSat = 0; iSat < m_arrSatellites.Length; iSat++)
+    {
+        if (m_arrSatellites[iSat].kSatEntity == none)
+        {
+            m_arrSatellites[iSat].kSatEntity = Spawn(class'XGEntity');
+            m_arrSatellites[iSat].kSatEntity.AssignGameActor(self, m_arrSatellites.Length);
+            m_arrSatellites[iSat].kSatEntity.Init(eEntityGraphic_Sat_Persistent);
+            m_arrSatellites[iSat].kSatEntity.SetHidden(true);
+            m_arrSatellites[iSat].kSatEntity.SetBase(none);
+        }
+    }
+
+    if ((GEOSCAPE().m_arrCraftEncounters[9] != 0) || m_kMC.m_bDetectedOverseer)
+    {
+        m_bHyperwaveActivated = true;
+    }
+
+    if (bLoadingFromSave)
+    {
+        UpdateSatCoverageGraphics();
+    }
+
+    if (m_arrFacilityBinks.Length == 0)
+    {
+        m_arrFacilityBinks.Add(24);
+    }
+
+    m_fCentralTimer = 5.0 + float(Rand(10));
+}
+
+function InitNewGame()
+{
+    local XGFacility kFacility;
+    local int I;
+
+    m_arrBaseFacilities.Add(24);
+    CreateFacilities();
+
+    foreach m_arrFacilities(kFacility)
+    {
+        kFacility.InitNewGame();
+    }
+
+    m_kBase = Spawn(class'Highlander_XGBase');
+    m_kBase.Init();
+    m_kActiveFacility = m_arrFacilities[0];
+    m_fAnnounceTimer = 10.0;
+
+    for (I = 0; I < 5; I++)
+    {
+        if (I != m_iContinent)
+        {
+            AddOutpost(I);
+        }
+    }
+
+    if (class'Engine'.static.GetCurrentWorldInfo().Game.BaseMutator != none)
+    {
+        class'Engine'.static.GetCurrentWorldInfo().Game.BaseMutator.Mutate("XGHeadQuarters.InitNewGame", class'Engine'.static.GetCurrentWorldInfo().GetALocalPlayerController());
+    }
+
+    // TODO: add mod hook here
+
+    if (World().m_kFundingCouncil == none)
+    {
+        World().m_kFundingCouncil = Spawn(class'Highlander_XGFundingCouncil');
+        World().m_kFundingCouncil.InitNewGame();
+    }
+}
+
 function CreateFacilities()
 {
     local XGFacility kFacility;

@@ -2,11 +2,17 @@
 
 `define HL_LOG(msg, cond) `LOG(`msg, `cond, 'XComHighlander')
 `define HL_LOG_CLS(msg, cond) `LOG(string(Class) $ ": " $ `msg, `cond, 'XComHighlander')
+`define HL_LOG_DEPRECATED_CLS(funcname) `HL_LOG_CLS("ERROR: Highlander-incompatible function `funcname  was called. This needs to be replaced with HL_`funcname. Stack trace follows."); ScriptTrace();
 `define HL_MOD_LOADER (class'HighlanderModLoader'.static.GetModLoader())
 
+// Dynamic loading of objects that are referenced by the base game; since we aren't in the same UPK, we can't reference them the same way
+`define SoundCue(nm) (SoundCue(DynamicLoadObject(`nm, class'SoundCue')))
+`define XComNarrativeMoment(nm) (XComNarrativeMoment(DynamicLoadObject("NarrativeMoment." $ `nm, class'XComNarrativeMoment')))
 
 // Strat layer macros for use in child classes of XGStrategyActorNativeBase only
 
 `define HL_FTECH(techId, bRushResearch) (`HL_TECHTREE.HL_GetFoundryTech(`techId, `bRushResearch))
+`define HL_ENGINEERING (Highlander_XGFacility_Engineering(ENGINEERING()))
 `define HL_LABS (Highlander_XGFacility_Labs(LABS()))
+`define HL_TECH(techId) (`HL_TECHTREE.HL_GetTech(`techId))
 `define HL_TECHTREE (Highlander_XGTechTree(`HQGAME.GetGameCore().GetHQ().GetLabs().m_kTree))

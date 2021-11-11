@@ -6,6 +6,7 @@ function int AddMission(XGMission kMission, optional bool bFirst)
 
     kMission.m_iID = ++m_iNumMissions;
     m_arrMissions.AddItem(kMission);
+
     kMission.GenerateBattleDescription();
 
     if (bFirst)
@@ -25,7 +26,7 @@ function int AddMission(XGMission kMission, optional bool bFirst)
 
     if (kMission.m_iMissionType == eMission_Crash)
     {
-        PRES().UINarrative(XComNarrativeMoment'FirstUFOShotDown');
+        PRES().UINarrative(`XComNarrativeMoment("FirstUFOShotDown"));
 
         if (XGMission_UFOCrash(kMission).m_iUFOType == eShip_UFOEthereal)
         {
@@ -46,7 +47,7 @@ function int AddMission(XGMission kMission, optional bool bFirst)
     {
         if (Game().GetNumMissionsTaken(eMission_TerrorSite) == 0)
         {
-            PRES().UINarrative(XComNarrativeMoment'Terror');
+            PRES().UINarrative(`XComNarrativeMoment("Terror"));
         }
 
         kMission.SetEntity(Spawn(class'XGMissionEntity'), eEntityGraphic_Mission_Terror);

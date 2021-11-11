@@ -69,6 +69,122 @@ function Init(bool bLoadingFromSave)
     }
 }
 
+function BeginCombat(XGMission kMission)
+{
+    local UIFxsMovieMgr UIMgr;
+    local XGShip_Dropship kSkyranger;
+    local TPawnContent Content;
+    local XComDropshipAudioMgr DropshipAudioManager;
+    local XGStrategySoldier kSoldier;
+
+    kSkyranger = kMission.GetAssignedSkyranger();
+
+    if (kMission.m_iMissionType == eMission_AlienBase)
+    {
+        // ABAs have their squad rerolled when the mission is launched; all other types use the squad generated when the mission is
+        // created. This is because an ABA can be on the Geoscape for an arbitrarily long time, and the original squad might be very
+        // outdated by the time the player finally launches.
+        kMission.m_kDesc.m_kAlienSquad = AI().DetermineAlienBaseSquad();
+        STORAGE().RemoveItem(eItem_Skeleton_Key);
+    }
+
+    kMission.m_strTip = GetTip(eTip_Tactical);
+
+    if (kSkyranger.GetCapacity() == 8 && STAT_GetStat(eRecap_FirstSixSoldierMission) == 0)
+    {
+        STAT_SetStat(eRecap_FirstSixSoldierMission, Game().GetDays());
+    }
+
+    GEOSCAPE().Pause();
+
+    if (m_kStrategyTransport == none)
+    {
+        m_kStrategyTransport = Spawn(class'StrategyGameTransport');
+    }
+
+    m_kStrategyTransport.m_kBattleDesc = kMission.m_kDesc;
+    m_kStrategyTransport.m_kBattleDesc.m_bSilenceNewbieMoments = m_kNarrative.SilenceNewbieMoments();
+    m_kStrategyTransport.m_kBattleDesc.m_bIsTutorial = m_bTutorial;
+    m_kStrategyTransport.m_kBattleDesc.m_bOvermindEnabled = m_bOvermindEnabled;
+    m_kStrategyTransport.m_kBattleDesc.m_bIsIronman = m_bIronMan;
+    m_kStrategyTransport.m_kBattleDesc.m_eContinent = EContinent(kMission.GetContinent().GetID());
+    m_kStrategyTransport.m_kBattleDesc.m_eTimeOfDay = GEOSCAPE().m_kDateTime.GetTimeOfDay();
+    m_kStrategyTransport.m_kBattleDesc.m_kMedalBattleData = BARRACKS().GetMedalBattleData();
+    m_kStrategyTransport.m_iMissionID = kMission.m_iID;
+    m_kStrategyTransport.m_kRecapSaveData = m_kRecapSaveData;
+    m_kStrategyTransport.m_kBattleDesc.m_strMapCommand = class'XComMapManager'.static.GetMapCommandLine(m_kStrategyTransport.m_kBattleDesc.m_strMapName, true, true, m_kStrategyTransport.m_kBattleDesc);
+
+    if (kMission.m_iMissionType == eMission_CovertOpsExtraction || kMission.m_iMissionType == eMission_CaptureAndHold)
+    {
+        // DebugMode:False
+        assert(EXALT().IsOperativeInField());
+        kSkyranger.m_kCovertOperative = EXALT().GetOperative();
+    }
+
+    kSkyranger.BuildTransferData();
+
+    UIMgr = PRES().GetUIMgr();
+
+    if (UIMgr != none)
+    {
+        m_kStrategyTransport.m_kTutorialSaveData = UIMgr.TutorialSaveData;
+    }
+
+    m_kStrategyTransport.m_kBattleDesc.m_kDropShipCargoInfo.m_kNarrative = m_kNarrative;
+    m_kStrategyTransport.m_kBattleDesc.m_arrSecondWave = m_arrSecondWave;
+    m_kStrategyTransport.m_kBattleDesc.m_kDropShipCargoInfo.m_bNeedOutsider = false;
+    m_kStrategyTransport.m_kBattleDesc.m_kDropShipCargoInfo.m_bNeedAlien = OBJECTIVES().m_eObjective == eObj_CaptureAlien;
+    m_kStrategyTransport.m_kBattleDesc.m_kDropShipCargoInfo.m_bAlienDiedByExplosive = false;
+
+    // Added for Highlander: transfer our techs in a different format
+    PopulateDropshipTechHistory(Highlander_XGBattleDesc(m_kStrategyTransport.m_kBattleDesc));
+    Content = m_kStrategyTransport.m_kBattleDesc.DeterminePawnContent();
+
+    if (ISCONTROLLED() && Game().GetNumMissionsTaken() < 1)
+    {
+        Content.arrAlienPawns.AddItem(class'XGGameData'.static.MapCharacterToPawn(eChar_Sectoid));
+    }
+
+    if (Content.arrCivilianPawns.Length > 0)
+    {
+        m_kStrategyTransport.m_kBattleDesc.m_kCivilianInfo = Content.arrCivilianPawns[0];
+    }
+
+    XComOnlineEventMgr(GameEngine(class'Engine'.static.GetEngine()).OnlineEventManager).SaveToStoredStrategy();
+    XComOnlineEventMgr(GameEngine(class'Engine'.static.GetEngine()).OnlineEventManager).SaveTransport();
+    XComContentManager(class'Engine'.static.GetEngine().GetContentManager()).GetContentForMap(m_kStrategyTransport.m_kBattleDesc.m_strMapName, Content);
+    XComContentManager(class'Engine'.static.GetEngine().GetContentManager()).RequestContent(Content, m_kStrategyTransport.m_kBattleDesc.m_iMissionType != eMission_Final);
+
+    foreach kSkyranger.m_arrSoldiers(kSoldier)
+    {
+        if (kSoldier.m_kPawn != none)
+        {
+            kSoldier.m_kPawn.ForceBoostTextures();
+        }
+    }
+
+    if (`HQPRES.m_kMissionAudioMgr == none)
+    {
+        DropshipAudioManager = new (`HQPRES) class'XComDropshipAudioMgr';
+        `HQPRES.m_kMissionAudioMgr = DropshipAudioManager;
+    }
+    else
+    {
+        DropshipAudioManager = `HQPRES.m_kMissionAudioMgr;
+    }
+
+    if (m_kStrategyTransport.m_kBattleDesc.m_bIsTutorial && m_kStrategyTransport.m_kBattleDesc.m_bDisableSoldierChatter)
+    {
+        DropshipAudioManager.PreloadFirstMissionNarrative();
+    }
+    else
+    {
+        DropshipAudioManager.BeginDropshipNarrativeMoments(kMission, EMissionType(kMission.m_iMissionType), ECountry(kMission.m_iCountry));
+    }
+
+    SetTimer(0.10, false, 'DeferredLaunchCommand');
+}
+
 function bool HL_UnlockFoundryProject(int iProject, out TItemUnlock kUnlock)
 {
     local HL_TFoundryTech kTech;
@@ -92,6 +208,38 @@ function bool HL_UnlockFoundryProject(int iProject, out TItemUnlock kUnlock)
     else
     {
         return false;
+    }
+}
+
+protected function PopulateDropshipTechHistory(Highlander_XGBattleDesc kBattleDesc)
+{
+    local int iTechId;
+    local Highlander_XGDropshipCargoInfo kCargo;
+    local Highlander_XGFacility_Labs kLabs;
+    local HL_TTech kTech;
+
+    kCargo = Highlander_XGDropshipCargoInfo(kBattleDesc.m_kDropShipCargoInfo);
+    kLabs = `HL_LABS;
+
+    if (kCargo == none)
+    {
+        `HL_LOG_CLS("ERROR: did not find Highlander_XGDropshipCargoInfo in the XGBattleDesc. This battle will not work properly!");
+        return;
+    }
+
+    foreach kLabs.m_arrResearched(iTechId)
+    {
+        kTech = `HL_TECH(iTechId);
+
+        // Clear out unneeded content from each tech so we don't use memory unnecessarily during the tac game
+        kTech.strName = "";
+        kTech.strSummary = "";
+        kTech.strReport = "";
+        kTech.strCustom = "";
+        kTech.strCodename = "";
+        kTech.ImagePath = "";
+
+        kCargo.m_arrHLTechHistory.AddItem(kTech);
     }
 }
 

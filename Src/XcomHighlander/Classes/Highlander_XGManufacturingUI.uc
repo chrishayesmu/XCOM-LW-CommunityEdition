@@ -220,7 +220,7 @@ function UpdateView()
           && !(ENGINEERING().IsBuildingFacility(eFacility_SmallRadar) || ENGINEERING().IsBuildingFacility(eFacility_LargeRadar)) )
         {
             m_bSatCapacity = true;
-            Narrative(XComNarrativeMoment'UrgeUplink'); // TODO this may not work from our UPK, might have to dynamic load
+            Narrative(`XComNarrativeMoment("UrgeUplink"));
         }
     }
 }

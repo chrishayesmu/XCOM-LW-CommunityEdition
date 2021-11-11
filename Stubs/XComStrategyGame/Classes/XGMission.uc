@@ -50,9 +50,9 @@ var const localized string m_aSecondOpName[76];
 var const localized string m_strOpAvenger;
 var const localized string m_strOpAshes;
 var const localized string m_strOpRandom;
-var const localized string m_strTitle;
-var const localized string m_strSituation;
-var const localized string m_strObjective;
+var string m_strTitle;
+var string m_strSituation;
+var string m_strObjective;
 var string m_strOpenExclamationMark;
 var string m_strTip;
 

@@ -41,9 +41,8 @@ function InitMutator(string Options, out string ErrorMessage)
 
 function GetSeamlessTravelActorList(bool bToEntry, out array<Actor> ActorList)
 {
-    `HL_LOG_CLS("In GetSeamlessTravelActorList", bEnableDebugLogging);
-
     // Always keep the mod loader mutator loaded
+    // TODO: I'm not sure this is doing anything at all, might not be respected by XCOM
     ActorList[ActorList.length] = self;
 
 	if (NextMutator != None)
@@ -58,11 +57,11 @@ function GetSeamlessTravelActorList(bool bToEntry, out array<Actor> ActorList)
 // would be interested in or can modify in some way. Each of these will cause a matching function in HighlanderModBase to be called
 // in each enabled mod.
 
+// #region Foundry-related events
+
 function OnFoundryProjectAddedToQueue(TFoundryProject kProject, HL_TFoundryTech kFoundryTech)
 {
     local HighlanderModBase kModBase;
-
-    `HL_LOG_CLS("OnFoundryProjectAddedToQueue", bEnableDebugLogging);
 
     foreach LoadedMods(kModBase)
     {
@@ -74,8 +73,6 @@ function OnFoundryProjectCanceled(TFoundryProject kProject, HL_TFoundryTech kFou
 {
     local HighlanderModBase kModBase;
 
-    `HL_LOG_CLS("OnFoundryProjectCanceled", bEnableDebugLogging);
-
     foreach LoadedMods(kModBase)
     {
         kModBase.OnFoundryProjectCanceled(kProject, kFoundryTech);
@@ -85,8 +82,6 @@ function OnFoundryProjectCanceled(TFoundryProject kProject, HL_TFoundryTech kFou
 function OnFoundryProjectCompleted(TFoundryProject kProject, HL_TFoundryTech kFoundryTech)
 {
     local HighlanderModBase kModBase;
-
-    `HL_LOG_CLS("OnFoundryProjectCompleted", bEnableDebugLogging);
 
     foreach LoadedMods(kModBase)
     {
@@ -98,8 +93,6 @@ function OnFoundryTechsBuilt(out array<HL_TFoundryTech> Techs)
 {
     local HighlanderModBase kModBase;
 
-    `HL_LOG_CLS("OnFoundryTechsBuilt", bEnableDebugLogging);
-
     foreach LoadedMods(kModBase)
     {
         kModBase.OnFoundryTechsBuilt(Techs);
@@ -110,12 +103,68 @@ function UpdateFoundryPerksForSoldier(XGStrategySoldier kSoldier, Highlander_XGF
 {
     local HighlanderModBase kModBase;
 
-    // Logging disabled for this one because it fires for every soldier in the barracks
-    // `HL_LOG_CLS("UpdateFoundryPerksForSoldier", bEnableDebugLogging);
-
     foreach LoadedMods(kModBase)
     {
         kModBase.UpdateFoundryPerksForSoldier(kSoldier, kEngineering);
+    }
+}
+
+// #endregion
+
+// #region Research-related events
+
+function Override_GetTech(out HL_TTech kTech, bool bIncludesProgress)
+{
+    local HighlanderModBase kModBase;
+
+    foreach LoadedMods(kModBase)
+    {
+        kModBase.Override_GetTech(kTech, bIncludesProgress);
+    }
+}
+
+function bool Override_HasPrereqs(HL_TTech kTech)
+{
+    local int iHasPrereqs;
+    local HighlanderModBase kModBase;
+
+    iHasPrereqs = 1;
+
+    foreach LoadedMods(kModBase)
+    {
+        kModBase.Override_HasPrereqs(kTech, iHasPrereqs);
+    }
+
+    return iHasPrereqs != 0;
+}
+
+function OnResearchCompleted(int iTech)
+{
+    local HighlanderModBase kModBase;
+
+    foreach LoadedMods(kModBase)
+    {
+        kModBase.OnResearchCompleted(iTech);
+    }
+}
+
+function OnResearchStarted(int iTech)
+{
+    local HighlanderModBase kModBase;
+
+    foreach LoadedMods(kModBase)
+    {
+        kModBase.OnResearchStarted(iTech);
+    }
+}
+
+function OnResearchTechsBuilt(out array<HL_TTech> Techs)
+{
+    local HighlanderModBase kModBase;
+
+    foreach LoadedMods(kModBase)
+    {
+        kModBase.OnResearchTechsBuilt(Techs);
     }
 }
 

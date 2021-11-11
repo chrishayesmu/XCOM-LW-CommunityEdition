@@ -15,7 +15,7 @@ var int m_iView;
 var int m_iCurrentSelection;
 var array<int> m_arrPromotedIndexes;
 var XGDebriefUI m_kMgr;
-var private XGShip_Dropship m_kSkyranger;
+var XGShip_Dropship m_kSkyranger;
 
 function Init(XComPlayerController _controllerRef, UIFxsMovie _manager, XGShip_Dropship kSkyranger){}
 simulated function OnInit(){}

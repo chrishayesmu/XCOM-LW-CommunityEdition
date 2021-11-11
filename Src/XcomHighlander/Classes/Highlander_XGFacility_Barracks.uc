@@ -15,11 +15,82 @@ function Init(bool bLoadingFromSave)
     BuildMedals();
 }
 
+function AddNewSoldiers(int iNumSoldiers, optional bool bCreatePawns = true)
+{
+    local XGStrategySoldier kSoldier;
+    local int I;
+
+    for (I = 0; I < iNumSoldiers; I++)
+    {
+        kSoldier = Spawn(class'Highlander_XGStrategySoldier');
+        kSoldier.m_kSoldier = m_kCharGen.CreateTSoldier();
+        kSoldier.m_kChar = TACTICAL().GetTCharacter(eChar_Soldier);
+
+        RandomizeStats(kSoldier);
+        STORAGE().AutoEquip(kSoldier);
+        AddNewSoldier(kSoldier, true);
+
+        if (bCreatePawns)
+        {
+            kSoldier.SetHQLocation(0, true);
+        }
+    }
+
+    ReorderRanks();
+}
+
+function AddTank(EItemType eArmor, EItemType eWeapon)
+{
+    local XGStrategySoldier kTank;
+    local TInventory kTankLoadout;
+
+    kTank = Spawn(class'Highlander_XGStrategySoldier');
+    kTank.m_kChar = TACTICAL().GetTCharacter(eChar_Tank);
+
+    if (eArmor == eItem_SHIV_Alloy)
+    {
+        kTank.m_kSoldier.strLastName = m_strAlloySHIVPrefix $ string(++m_iAlloyTankCounter);
+        kTank.m_kChar.aStats[0] += class'XGTacticalGameCore'.default.ALLOY_SHIV_HP_BONUS;
+    }
+    else if (eArmor == eItem_SHIV_Hover)
+    {
+        kTank.m_kSoldier.strLastName = m_strHoverSHIVPrefix $ string(++m_iHoverTankCounter);
+        kTank.m_kChar.aStats[0] += class'XGTacticalGameCore'.default.HOVER_SHIV_HP_BONUS;
+    }
+    else
+    {
+        kTank.m_kSoldier.strLastName = m_strSHIVPrefix $ string(++m_iTankCounter);
+    }
+
+    if (IsOptionEnabled(11)) // Cinematic Mode
+    {
+        kTank.m_kChar.aStats[1] += int(class'XGTacticalGameCore'.default.ABDUCTION_REWARD_SCI);
+    }
+
+    if (HQ().HasBonus(25) > 0) // Ghost In the Machine
+    {
+        kTank.m_kChar.aStats[1] += HQ().HasBonus(25);
+    }
+
+    if (HQ().HasBonus(48) > 0) // Robotics
+    {
+        kTank.m_kChar.aStats[1] += HQ().HasBonus(48);
+    }
+
+    kTank.m_kSoldier.iRank = -1;
+    kTank.m_kSoldier.iCountry = 66;
+    kTankLoadout.iArmor = eArmor;
+
+    TACTICAL().TInventoryLargeItemsSetItem(kTankLoadout, 0, eWeapon);
+    m_kLockers.ApplyTankLoadout(kTank, kTankLoadout);
+    AddNewSoldier(kTank);
+}
+
 function UpdateFoundryPerksForSoldier(XGStrategySoldier kSoldier)
 {
     local Highlander_XGFacility_Engineering kEngineering;
 
-    kEngineering = Highlander_XGFacility_Engineering(ENGINEERING());
+    kEngineering = `HL_ENGINEERING;
 
     if (HQ().HasFacility(eFacility_Foundry))
     {

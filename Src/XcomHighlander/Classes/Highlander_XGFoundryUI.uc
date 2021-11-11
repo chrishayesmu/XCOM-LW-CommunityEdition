@@ -3,13 +3,6 @@ class Highlander_XGFoundryUI extends XGFoundryUI
 
 var array<HL_TFoundryTech> m_arrHLTechs;
 
-function Init(int iView)
-{
-    `HL_LOG_CLS("Init");
-
-    super.Init(iView);
-}
-
 function TObjectSummary HL_BuildSummary(HL_TFoundryTech kFoundryTech)
 {
     local TObjectSummary kSummary;

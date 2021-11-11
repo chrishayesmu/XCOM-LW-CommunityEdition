@@ -40,19 +40,19 @@ function InitBattle() {
 
         if (kMapData.MissionType == eMission_CaptureAndHold)
         {
-            m_kBattle = Spawn(class'XGBattle_SPCaptureAndHold');
+            m_kBattle = Spawn(class'Highlander_XGBattle_SPCaptureAndHold');
         }
         else if (kMapData.MissionType == eMission_CovertOpsExtraction)
         {
-            m_kBattle = Spawn(class'XGBattle_SPCovertOpsExtraction');
+            m_kBattle = Spawn(class'Highlander_XGBattle_SPCovertOpsExtraction');
         }
         else if (XComTacticalGame(WorldInfo.Game).bDebugCombatRequested)
         {
-            m_kBattle = Spawn(class'XGBattle_SPDebug');
+            m_kBattle = Spawn(class'Highlander_XGBattle_SPDebug');
         }
         else
         {
-            m_kBattle = Spawn(class'XGBattle_SPAssault');
+            m_kBattle = Spawn(class'Highlander_XGBattle_SPAssault');
         }
 
         foreach WorldInfo.AllControllers(class'XComTacticalController', kLocalPC)
@@ -82,9 +82,11 @@ function InitBattle() {
         kLocalPC.SetXGPlayer(NewPlayer);
         kLocalPC.SetTeamType(NewPlayer.m_eTeam);
         m_kBattle.AddPlayer(NewPlayer);
+
         NewPlayer = Spawn(class'XGAIPlayer');
         NewPlayer.Init();
         m_kBattle.AddPlayer(NewPlayer);
+
         NewPlayer = Spawn(class'XGAIPlayer_Animal');
         NewPlayer.Init();
         m_kBattle.AddPlayer(NewPlayer);
@@ -101,18 +103,54 @@ function InitBattle() {
         {
             m_kBattle.SetProfileSettings();
             OnlineEventMgr.LoadTransport();
+
             foreach AllActors(class'StrategyGameTransport', kTransport)
             {
                 m_kBattle.m_kTransferSave = kTransport;
                 m_kBattle.m_kTransferSave.m_kBattleDesc.InitHumanLoadoutInfosFromDropshipCargoInfo();
                 m_kBattle.m_kDesc = kTransport.m_kBattleDesc;
+
                 `PRES.GetUIMgr().TutorialSaveData = kTransport.m_kTutorialSaveData;
+
                 m_kBattle.Start();
+
                 class'XComEngine'.static.SetRandomSeeds(class'XComEngine'.static.GetARandomSeed());
+
                 break;
             }
         }
     }
 
     `HL_LOG_CLS("(highlander override)");
+}
+
+simulated function ReceivedGameClass()
+{
+    super(GameReplicationInfo).ReceivedGameClass();
+
+    if (Role == ROLE_Authority)
+    {
+        if (m_kGameCore == none)
+        {
+            m_kGameCore = Spawn(class'Highlander_XGTacticalGameCore', self);
+            m_kGameCore.Init();
+        }
+
+        if (m_kPerkTree == none)
+        {
+            m_kPerkTree = Spawn(class'XComPerkManager', self);
+            m_kPerkTree.Init();
+        }
+    }
+
+    if (m_kCameraManager == none)
+    {
+        m_kCameraManager = Spawn(class'XComCameraManager', self);
+        m_kCameraManager.Init();
+
+        if (Role < ROLE_Authority && GetALocalPlayerController() != none && GetALocalPlayerController().Pawn != none)
+        {
+            m_kCameraManager.AddCursor(XCom3DCursor(GetALocalPlayerController().Pawn));
+        }
+    }
 }

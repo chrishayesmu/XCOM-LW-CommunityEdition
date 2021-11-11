@@ -6,6 +6,22 @@ simulated function Init()
     super.Init();
 }
 
+// Sometimes it's very difficult to tell how a UI class is being instantiated. Overriding this function with some logging helps a lot.
+// Comment it back in and change the target script class for easier debugging.
+/*
+function XGScreenMgr GetMgr(class<Actor> kMgrClass, optional IScreenMgrInterface kInterface = none, optional int iView = -1, optional bool bIgnoreIfDoesNotExist = false)
+{
+    `HL_LOG_CLS("Request for screen manager class: " $ string(kMgrClass));
+
+    if (string(kMgrClass) == "XGDebriefUI")
+    {
+        ScriptTrace();
+    }
+
+    return super.GetMgr(kMgrClass, kInterface, iView, bIgnoreIfDoesNotExist);
+}
+*/
+
 simulated function UIChooseTech(optional int iView = 1)
 {
     m_kChooseTech = Spawn(class'Highlander_UIChooseTech', self);
@@ -64,6 +80,35 @@ simulated state State_Archives
     }
 }
 
+simulated state State_BaseBuild
+{
+    simulated function Activate()
+    {
+        GetCamera().StartRoomViewNamed('Expansion', 1.0);
+        m_kBuildFacilities = Spawn(class'Highlander_UIBuildFacilities', self);
+        m_kBuildFacilities.Init(XComPlayerController(Owner), GetHUD());
+        GetStrategyHUD().m_kBuildQueue.Hide();
+    }
+}
+
+simulated state State_BaseBuildChooseFacility
+{
+    simulated function Activate()
+    {
+        m_kChooseFacility = Spawn(class'Highlander_UIChooseFacility', self);
+        m_kChooseFacility.Init(XComPlayerController(Owner), GetHUD());
+    }
+}
+
+simulated state State_Debrief
+{
+    simulated function Activate()
+    {
+        m_kDebriefUI = Spawn(class'Highlander_UIDebrief', self);
+        XComHeadquartersController(Owner).SetInputState('None');
+    }
+}
+
 simulated state State_Foundry
 {
     simulated function Activate()
@@ -73,8 +118,6 @@ simulated state State_Foundry
         Get3DMovie().ShowDisplay(class'UIFoundry'.default.DisplayTag);
         CAMLookAtNamedLocation(class'UIFoundry'.default.m_strCameraTag, 1.0);
     }
-
-    stop;
 }
 
 simulated state State_HangarHiring
@@ -86,24 +129,6 @@ simulated state State_HangarHiring
         m_kHangarHiring.Init(XComPlayerController(Owner), GetHUD(), 4);
         GetHUD().LoadScreen(m_kHangarHiring);
     }
-
-    simulated function Deactivate()
-    {
-        GetHUD().RemoveScreen(m_kHangarHiring);
-        m_kHangarHiring = none;
-    }
-
-    simulated function OnReceiveFocus()
-    {
-        m_kHangarHiring.OnReceiveFocus();
-    }
-
-    simulated function OnLoseFocus()
-    {
-        m_kHangarHiring.OnLoseFocus();
-    }
-
-    stop;
 }
 
 simulated state State_LabsMenu

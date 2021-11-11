@@ -301,6 +301,405 @@ function bool CalcTerrorMissionPanicResult(out int iCountryPanicChange, out int 
     return false;
 }
 
+function XGMission CreateTempleMission()
+{
+    local XGMission_TempleShip kMission;
+
+    kMission = Spawn(class'XGMission_TempleShip');
+    kMission.m_kDesc = Spawn(class'Highlander_XGBattleDesc');
+    kMission.m_iCity = -1;
+    kMission.m_iContinent = -1;
+    kMission.m_iDuration = -1;
+    kMission.m_v2Coords = vect2d(0.4150, 0.5570);
+    kMission.m_iMissionType = eMission_Final;
+
+    return kMission;
+}
+
+function XGMission CheatTerrorMission()
+{
+    local XGMission_Terror kMission;
+
+    kMission = Spawn(class'XGMission_Terror');
+    kMission.m_kDesc = Spawn(class'Highlander_XGBattleDesc');
+    kMission.m_iCity = 4;
+    kMission.m_iCountry = 0;
+    kMission.m_iContinent = 0;
+    kMission.m_iDuration = class'XGTacticalGameCore'.default.TERROR_TIMER;
+    kMission.m_v2Coords = CITY(4).m_v2Coords;
+    kMission.m_kDesc.m_kAlienSquad = DetermineTerrorSquad();
+
+    return kMission;
+}
+
+function XGMission CreateTerrorMission(XGShip_UFO kUFO)
+{
+    local XGMission_Terror kMission;
+
+    kMission = Spawn(class'XGMission_Terror');
+    kMission.m_kDesc = Spawn(class'Highlander_XGBattleDesc');
+    kMission.m_iCity = kUFO.m_kObjective.m_iCityTarget;
+    kMission.m_iCountry = CITY(kMission.m_iCity).GetCountry();
+    kMission.m_iContinent = kUFO.GetContinent();
+    kMission.m_iDuration = class'XGTacticalGameCore'.default.TERROR_TIMER;
+    kMission.m_v2Coords = CITY(kMission.m_iCity).m_v2Coords;
+    kMission.m_kDesc.m_kAlienSquad = DetermineTerrorSquad();
+
+    return kMission;
+}
+
+function XGMission CreateHQAssaultMission()
+{
+    local XGMission_HQAssault kMission;
+
+    kMission = Spawn(class'XGMission_HQAssault');
+    kMission.m_kDesc = Spawn(class'Highlander_XGBattleDesc');
+    kMission.m_iContinent = HQ().GetContinent();
+    kMission.m_v2Coords = HQ().GetCoords();
+    kMission.m_kDesc.m_kAlienSquad = DetermineHQAssaultSquad();
+
+    return kMission;
+}
+
+function XGMission CreateExaltRaidMission(ECountry ExaltCountry)
+{
+    local XGMission_ExaltRaid kMission;
+
+    kMission = Spawn(class'XGMission_ExaltRaid');
+    kMission.m_kDesc = Spawn(class'Highlander_XGBattleDesc');
+    kMission.m_iCity = Country(ExaltCountry).GetRandomCity();
+    kMission.m_iCountry = ExaltCountry;
+    kMission.m_iContinent = Country(ExaltCountry).GetContinent();
+    kMission.m_v2Coords = CITY(kMission.m_iCity).m_v2Coords;
+    kMission.m_kDesc.m_kAlienSquad = DetermineExaltRaidSquad();
+
+    return kMission;
+}
+
+/**
+ * This function has been rewritten to create an air base defense mission.
+ */
+function XGMission CheatCrash(XGShip_UFO strMapName)
+{
+    local XGMission_UFOLanded kMission;
+
+    kMission = Spawn(class'XGMission_UFOLanded');
+    kMission.m_kDesc = Spawn(class'Highlander_XGBattleDesc');
+    kMission.m_bScripted = true;
+    kMission.m_kDesc.m_bScripted = true;
+    kMission.m_iCity = -1;
+    kMission.m_iDuration = class'XGTacticalGameCore'.default.ABDUCTION_TIMER;
+    kMission.m_kDesc.m_kAlienSquad = DetermineAbductionSquad(9);
+    kMission.m_kDesc.m_iMissionType = 14;
+    kMission.m_strTitle = class'XComLocalizer'.static.ExpandString(class'XGMissionControlUI'.default.m_strLabelViewAbductionSitesFlying);
+    kMission.m_strSituation = class'XComLocalizer'.static.ExpandString(class'XGMissionControlUI'.default.m_strPanicRemedy);
+    kMission.m_strObjective = class'XComLocalizer'.static.ExpandString(class'XGMissionControlUI'.default.m_strLabelMessageFromFoundry);
+    kMission.m_kDesc.m_strMapName = "EWI_HQAssault_MP (Airbase Defense)";
+    kMission.m_kDesc.m_strMapCommand = class'XComMapManager'.static.GetMapCommandLine(kMission.m_kDesc.m_strMapName, true, true, kMission.m_kDesc);
+    kMission.m_v2Coords = strMapName.GetCoords();
+    kMission.m_iContinent = strMapName.GetContinent();
+
+    return kMission;
+}
+
+function CheatLandedUFO(string strMapName)
+{
+    local XGMission_UFOLanded kMission;
+    local XComMapMetaData kMapMeta;
+
+    if (XComEngine(class'Engine'.static.GetEngine()).MapManager.GetMapInfoFromDisplayName(strMapName, kMapMeta))
+    {
+        kMission = Spawn(class'XGMission_UFOLanded');
+        kMission.m_kDesc = Spawn(class'Highlander_XGBattleDesc');
+        kMission.m_iContinent = 0;
+        kMission.m_iCountry = 0;
+        kMission.m_iDuration = class'XGTacticalGameCore'.default.UFO_LANDED_TIMER;
+        kMission.m_v2Coords = CITY(8).m_v2Coords;
+        kMission.m_kDesc.m_kAlienSquad = DetermineUFOSquad(none, true, kMapMeta.ShipType);
+
+        if (Country(0).HasSatelliteCoverage())
+        {
+            kMission.m_iDetectedBy = HQ().GetSatellite(0);
+        }
+        else
+        {
+            kMission.m_iDetectedBy = -1;
+        }
+
+        kMission.m_bCheated = true;
+        kMission.m_kDesc.m_strMapName = strMapName;
+        GEOSCAPE().AddMission(kMission);
+    }
+}
+
+function CreateAlienBase()
+{
+    local XGCountry kCountry;
+    local XGMission_AlienBase kMission;
+
+    kCountry = Country(m_iAlienMonth);
+
+    if (kCountry == none)
+    {
+        return;
+    }
+
+    if (!kCountry.IsCouncilMember())
+    {
+        return;
+    }
+
+    if (!kCountry.LeftXCom())
+    {
+        return;
+    }
+
+    kMission = Spawn(class'XGMission_AlienBase');
+    kMission.m_kDesc = Spawn(class'Highlander_XGBattleDesc');
+    kMission.m_iCountry = kCountry.GetID();
+    kMission.m_v2Coords = CITY(kCountry.GetRandomCity()).m_v2Coords;
+    kMission.m_strTitle = kMission.m_strTitle $ kCountry.GetName();
+    kMission.m_kDesc.m_kAlienSquad = DetermineAlienBaseSquad();
+
+    // TODO: move alien base loot into config
+    kMission.m_arrArtifacts[eItem_AlienAlloys] = 100;
+    kMission.m_arrArtifacts[eItem_UFOPowerSource] = 3;
+    kMission.m_arrArtifacts[eItem_Elerium115] = int(class'XGTacticalGameCore'.default.UFO_ELERIUM_PER_POWER_SOURCE[Game().GetDifficulty()] * float(kMission.m_arrArtifacts[eItem_UFOPowerSource]));
+    kMission.m_arrArtifacts[eItem_AlienSurgery] = 4;
+    kMission.m_arrArtifacts[eItem_AlienStasisTank] = 15;
+    kMission.m_arrArtifacts[eItem_AlienFood] = 10;
+    kMission.m_arrArtifacts[eItem_AlienEntertainment] = 1;
+
+    if (OBJECTIVES().m_eObjective == eObj_AssaultAlienBase)
+    {
+        kMission.m_arrArtifacts[eItem_HyperwaveBeacon] = 1;
+    }
+
+    kMission.m_iDetectedBy = 0;
+    GEOSCAPE().AddMission(kMission);
+}
+
+function XGMission CreateFirstMission()
+{
+    local XGMission_Abduction kMission;
+    local XGMission_FundingCouncil kMeldMission;
+    local TFCMission kMeldData;
+    local ECountry MeldCountry;
+
+    if (ISCONTROLLED())
+    {
+        return CreateFirstMission_Controlled();
+    }
+
+    if (`HQGAME.GetGameCore().m_bMeldTutorial)
+    {
+        MeldCountry = ECountry(Continent(HQ().GetContinent()).GetRandomCouncilCountry());
+        kMeldData = World().m_kFundingCouncil.BuildMission(30, MeldCountry);
+        kMeldMission = World().m_kFundingCouncil.CreateMission(kMeldData);
+        kMeldMission.m_iCity = Country(MeldCountry).GetRandomCity();
+        kMeldMission.m_iCountry = MeldCountry;
+        kMeldMission.m_iContinent = Country(MeldCountry).GetContinent();
+
+        return kMeldMission;
+    }
+    else
+    {
+        kMission = Spawn(class'XGMission_Abduction');
+        kMission.m_kDesc = Spawn(class'Highlander_XGBattleDesc');
+        kMission.m_iCity = Continent(HQ().GetContinent()).GetRandomCity();
+        kMission.m_iCountry = CITY(kMission.m_iCity).GetCountry();
+        kMission.m_iContinent = HQ().GetContinent();
+        kMission.m_iDuration = class'XGTacticalGameCore'.default.ABDUCTION_TIMER;
+        kMission.m_v2Coords = CITY(kMission.m_iCity).m_v2Coords;
+        kMission.m_eTimeOfDay = 7;
+        kMission.m_kDesc.m_kAlienSquad = DetermineFirstMissionSquad();
+
+        return kMission;
+    }
+}
+
+function XGMission CreateFirstMission_Controlled()
+{
+    local XGMission_Abduction kMission;
+
+    kMission = Spawn(class'XGMission_Abduction');
+    kMission.m_kDesc = Spawn(class'Highlander_XGBattleDesc');
+    kMission.m_bScripted = true;
+    kMission.m_kDesc.m_bScripted = true;
+    kMission.m_iCity = Continent(HQ().GetContinent()).GetRandomCity();
+    kMission.m_iCountry = CITY(kMission.m_iCity).GetCountry();
+    kMission.m_iContinent = HQ().GetContinent();
+    kMission.m_iDuration = class'XGTacticalGameCore'.default.ABDUCTION_TIMER;
+    kMission.m_v2Coords = CITY(kMission.m_iCity).m_v2Coords;
+    kMission.m_kDesc.m_strMapName = "Tutorial 2 (Abduction)";
+    kMission.m_kDesc.m_strMapCommand = class'XComMapManager'.static.GetMapCommandLine(kMission.m_kDesc.m_strMapName, true, true, kMission.m_kDesc);
+    kMission.m_kDesc.m_iMissionType = eMission_Special;
+    return kMission;
+}
+
+function XGMission CreateCrashMission(XGShip_UFO kUFO)
+{
+    local XGMission_UFOCrash kMission;
+
+    kMission = Spawn(class'XGMission_UFOCrash');
+    kMission.m_kDesc = Spawn(class'Highlander_XGBattleDesc');
+    kMission.m_iContinent = kUFO.GetContinent();
+    kMission.m_iCountry = kUFO.GetCountry();
+    kMission.m_iDuration = class'XGTacticalGameCore'.default.UFO_CRASH_TIMER;
+    kMission.m_v2Coords = kUFO.GetCoords();
+    kMission.m_kDesc.m_kAlienSquad = DetermineUFOSquad(kUFO, false);
+    kMission.m_arrArtifacts = kUFO.m_kTShip.arrSalvage;
+    kMission.m_iUFOType = kUFO.GetType();
+    kMission.m_kUFOObjective = kUFO.m_kObjective.m_kTObjective;
+    kMission.m_iCounter = kUFO.m_iCounter;
+    RemoveUFO(kUFO);
+
+    return kMission;
+}
+
+function XGMission CreateLandedUFOMission(XGShip_UFO kUFO)
+{
+    local XGMission_UFOLanded kMission;
+
+    kMission = Spawn(class'XGMission_UFOLanded');
+    kMission.m_kDesc = Spawn(class'Highlander_XGBattleDesc');
+    kMission.m_iContinent = kUFO.GetContinent();
+    kMission.m_iCountry = kUFO.GetCountry();
+    kMission.m_iDuration = class'XGTacticalGameCore'.default.UFO_LANDED_TIMER;
+    kMission.m_v2Coords = kUFO.GetCoords();
+    kMission.m_kDesc.m_kAlienSquad = DetermineUFOSquad(kUFO, true);
+    kMission.kUFO = kUFO;
+
+    if (Country(kUFO.GetCountry()).HasSatelliteCoverage())
+    {
+        kMission.m_iDetectedBy = HQ().GetSatellite(ECountry(kUFO.GetCountry()));
+        kUFO.m_bEverDetected = true;
+    }
+    else
+    {
+        kMission.m_iDetectedBy = -1;
+    }
+
+    kMission.m_arrArtifacts = kUFO.m_kTShip.arrSalvage;
+    return kMission;
+}
+
+function XGMission CreateCovertOpsExtractionMission(ECountry eMissionCountry)
+{
+    local XGMission_CovertOpsExtraction kMission;
+    local XGCountry kCountry;
+
+    kCountry = Country(eMissionCountry);
+    kMission = Spawn(class'XGMission_CovertOpsExtraction');
+    kMission.m_kDesc = Spawn(class'Highlander_XGBattleDesc');
+    kMission.m_iContinent = kCountry.GetContinent();
+    kMission.m_iCountry = eMissionCountry;
+    m_iAlienMonth = eMission_CovertOpsExtraction; // Hacked-in way to pass mission type to DetermineCovertOpsSquad
+    kMission.m_kDesc.m_kAlienSquad = DetermineCovertOpsSquad();
+    kMission.m_iDuration = 96;
+    kMission.m_v2Coords = kCountry.GetCoords();
+    return kMission;
+}
+
+function XGMission CreateCaptureAndHoldMission(ECountry eMissionCountry)
+{
+    local XGMission_CaptureAndHold kMission;
+    local XGCountry kCountry;
+
+    kCountry = Country(eMissionCountry);
+    kMission = Spawn(class'XGMission_CaptureAndHold');
+    kMission.m_kDesc = Spawn(class'Highlander_XGBattleDesc');
+    kMission.m_iContinent = kCountry.GetContinent();
+    kMission.m_iCountry = eMissionCountry;
+    m_iAlienMonth = eMission_CaptureAndHold; // Hacked-in way to pass mission type to DetermineCovertOpsSquad
+    kMission.m_kDesc.m_kAlienSquad = DetermineCovertOpsSquad();
+    kMission.m_iDuration = 96;
+    kMission.m_v2Coords = kCountry.GetCoords();
+    return kMission;
+}
+
+function LaunchBlitz(array<ECityType> arrTargetCities, optional bool bFirstBlitz)
+{
+    local XGMission_Abduction kMission;
+    local XGCity kCity;
+    local array<EMissionRewardType> arrRewards;
+    local EMissionRewardType eReward;
+    local EMissionDifficulty eDiff;
+    local TGeoscapeAlert kAlert;
+    local int I, iIndex;
+
+    if (bFirstBlitz)
+    {
+        arrRewards.AddItem(eMissionReward_Cash);
+        arrRewards.AddItem(eMissionReward_Cash);
+        arrRewards.AddItem(eMissionReward_Cash);
+    }
+    else
+    {
+        arrRewards.AddItem(eMissionReward_Cash);
+        arrRewards.AddItem(eMissionReward_Cash);
+        arrRewards.AddItem(eMissionReward_Cash);
+        arrRewards.AddItem(eMissionReward_Cash);
+    }
+
+    // This loop is written for the vanilla behavior where you pick from multiple abductions;
+    // for Long War it can just be read as not being a loop.
+    for (I = 0; I < arrTargetCities.Length; I++)
+    {
+        kCity = CITY(arrTargetCities[I]);
+        iIndex = Rand(arrRewards.Length);
+        eReward = arrRewards[iIndex];
+        arrRewards.Remove(iIndex, 1);
+        eDiff = GetAbductionDifficulty(Country(kCity.GetCountry()));
+
+        kMission = Spawn(class'XGMission_Abduction');
+        kMission.m_kDesc = Spawn(class'Highlander_XGBattleDesc');
+        kMission.m_iCity = kCity.m_iID;
+        kMission.m_iCountry = CITY(kMission.m_iCity).GetCountry();
+        kMission.m_iContinent = kCity.GetContinent();
+        kMission.m_iDuration = class'XGTacticalGameCore'.default.ABDUCTION_TIMER;
+        kMission.m_v2Coords = kCity.GetCoords();
+        kMission.m_kDesc.m_kAlienSquad = DetermineAbductionSquad(eDiff);
+        kMission.m_eDifficulty = eDiff;
+
+        DetermineAbductionReward(kMission.m_kReward, eDiff, eReward);
+        kMission.m_iDetectedBy = 0;
+
+        if (ISCONTROLLED() && Game().GetNumMissionsTaken() == 1)
+        {
+            kMission.m_bScripted = true;
+            kMission.m_kDesc.m_bScripted = true;
+            kMission.m_kDesc.m_bIsTutorial = true;
+            kMission.m_kDesc.m_bAllowedMissionAbort = false;
+
+            if (kMission.m_iContinent == 0)
+            {
+                kMission.m_kReward.iEngineers = 0;
+                kMission.m_kReward.iScientists = int(class'XGTacticalGameCore'.default.ABDUCTION_REWARD_SCI);
+                kMission.m_kReward.iCredits = 0;
+                kMission.m_kDesc.m_strMapName = "URB_PierA_Rescue Tutorial 2 (Abduction) Pier";
+                kMission.m_kDesc.m_strMapCommand = class'XComMapManager'.static.GetMapCommandLine(kMission.m_kDesc.m_strMapName, true, true, kMission.m_kDesc);
+            }
+            else
+            {
+                kMission.m_kReward.iEngineers = 0;
+                kMission.m_kReward.iScientists = 0;
+                kMission.m_kReward.iCredits = int(class'XGTacticalGameCore'.default.ABDUCTION_REWARD_CASH);
+                kMission.m_kDesc.m_strMapName = "URB_PierA_Rescue Tutorial 2 (Abduction) Pier Asia";
+                kMission.m_kDesc.m_strMapCommand = class'XComMapManager'.static.GetMapCommandLine(kMission.m_kDesc.m_strMapName, true, true, kMission.m_kDesc);
+            }
+
+            kMission.m_kDesc.m_iMissionType = eMission_Special;
+        }
+
+        GEOSCAPE().AddMission(kMission);
+        kAlert.arrData.AddItem(kMission.m_iID);
+    }
+
+    kAlert.eType = eGA_Abduction;
+    GEOSCAPE().Alert(kAlert);
+}
+
 function bool PickMissionPlan(int Month, int Resources, int Threat, out HL_AIMissionPlan MissionPlan)
 {
     local int Index;

@@ -1,4 +1,7 @@
-class HighlanderTestMod extends HighlanderModBase;
+class HighlanderTestMod extends HighlanderModBase
+    config(HighlanderTestMod);
+
+var config array<HL_TTech> arrTechs;
 
 function OnModLoaded()
 {
@@ -45,6 +48,18 @@ function OnFoundryTechsBuilt(out array<HL_TFoundryTech> Techs)
 
     `HL_LOG_CLS("Adding new Foundry tech named '" $ kNewTech.strName $ "' with tech ID " $ kNewTech.iTechId);
     Techs.AddItem(kNewTech);
+}
+
+function OnResearchTechsBuilt(out array<HL_TTech> Techs)
+{
+    local HL_TTech kTech;
+
+    `HL_LOG_CLS("Adding " $ arrTechs.Length $ " research techs");
+
+    foreach arrTechs(kTech)
+    {
+        Techs.AddItem(kTech);
+    }
 }
 
 defaultproperties

@@ -3,6 +3,8 @@ class Highlander_XGMissionControlUI extends XGMissionControlUI;
 function BuildEventOptions()
 {
     local int iEvent, iDays;
+    local HL_TFoundryTech kFoundryTech;
+    local HL_TTech kTech;
     local TMCEvent kOption;
     local XGParamTag kTag;
 
@@ -30,10 +32,12 @@ function BuildEventOptions()
         switch (m_kEvents.arrEvents[iEvent].EEvent)
         {
             case eHQEvent_Research:
+                kTech = `HL_TECH(m_kEvents.arrEvents[iEvent].iData);
+
                 kOption.iEventType = eHQEvent_Research;
                 kOption.iPriority = 5;
                 kOption.imgOption.iImage = eImage_OldResearch;
-                kOption.txtOption.StrValue = TECH(m_kEvents.arrEvents[iEvent].iData).strName;
+                kOption.txtOption.StrValue = kTech.strName;
                 kOption.txtDays.StrValue = string(iDays);
                 kOption.clrOption = MakeColor(0, 200, 0, byte(175 / 3));
                 break;
@@ -60,10 +64,12 @@ function BuildEventOptions()
                 kOption.clrOption = MakeColor(100, 100, 100, byte(175 / 3));
                 break;
             case eHQEvent_Foundry:
+                kFoundryTech = `HL_FTECH(m_kEvents.arrEvents[iEvent].iData);
+
                 kOption.iEventType = eHQEvent_Foundry;
                 kOption.iPriority = 2;
                 kOption.imgOption.iImage = 106;
-                kOption.txtOption.StrValue = `HL_FTECH(m_kEvents.arrEvents[iEvent].iData).strName;
+                kOption.txtOption.StrValue = kFoundryTech.strName;
                 kOption.txtDays.StrValue = string(iDays);
                 kOption.clrOption = MakeColor(200, 200, 0, byte(175 / 3));
                 break;
@@ -198,7 +204,7 @@ function BuildEventOptions()
                 kOption.iPriority = 4;
                 kOption.imgOption.iImage = eImage_OldFunding;
                 kOption.txtOption.StrValue = m_strLabelCouncilReport;
-                kOption.txtOption.iState = 4;
+                kOption.txtOption.iState = eUIState_Warning;
                 kOption.txtDays.StrValue = string(iDays);
                 kOption.clrOption = MakeColor(0, 0, 200, byte(175 / 3));
                 break;
@@ -225,6 +231,8 @@ event Tick(float fDeltaT)
 
 function UpdateAlert()
 {
+    local HL_TFoundryTech kFoundryTech;
+    local HL_TTech kTech;
     local TGeoscapeAlert kGeoAlert;
     local TMCAlert kAlert;
     local TLabeledText txtLabel;
@@ -260,7 +268,7 @@ function UpdateAlert()
                 Sound().PlaySFX(SNDLIB().SFX_Alert_UFOContact);
             }
 
-            Narrative(XComNarrativeMoment'RoboHQ_ContactDetected');
+            Narrative(`XComNarrativeMoment("RoboHQ_ContactDetected"));
 
             kAlert.txtTitle.StrValue = m_strLabelRadarContact;
             kAlert.txtTitle.iState = eUIState_Warning;
@@ -1078,11 +1086,13 @@ function UpdateAlert()
         case eGA_ResearchCompleted:
             Sound().PlaySFX(SNDLIB().SFX_Alert_ResearchComplete);
 
-            kAlert.txtTitle.StrValue = TECH(kGeoAlert.arrData[0]).strName;
-            kAlert.txtTitle.iState = eUIState_Good;
-            kAlert.imgAlert.iImage = TECH(kGeoAlert.arrData[0]).iImage;
+            kTech = `HL_TECH(kGeoAlert.arrData[0]);
 
-            kTag.StrValue0 = TECH(kGeoAlert.arrData[0]).strName;
+            kAlert.txtTitle.StrValue = kTech.strName;
+            kAlert.txtTitle.iState = eUIState_Good;
+            kAlert.imgAlert.strPath = kTech.ImagePath;
+
+            kTag.StrValue0 = kTech.strName;
             txtTemp.StrValue = class'XComLocalizer'.static.ExpandString(m_strLabelTechResearchComplete);
             txtTemp.iState = eUIState_Highlight;
             kAlert.arrText.AddItem(txtTemp);
@@ -1198,11 +1208,13 @@ function UpdateAlert()
         case eGA_FoundryProjectCompleted:
             Sound().PlaySFX(SNDLIB().SFX_Alert_FoundryProjectComplete);
 
-            kAlert.txtTitle.StrValue = `HL_FTECH(kGeoAlert.arrData[0]).strName;
-            kAlert.txtTitle.iState = eUIState_Good;
-            kAlert.imgAlert.strPath = `HL_FTECH(kGeoAlert.arrData[0]).ImagePath;
+            kFoundryTech = `HL_FTECH(kGeoAlert.arrData[0]);
 
-            kTag.StrValue0 = `HL_FTECH(kGeoAlert.arrData[0]).strName;
+            kAlert.txtTitle.StrValue = kFoundryTech.strName;
+            kAlert.txtTitle.iState = eUIState_Good;
+            kAlert.imgAlert.strPath = kFoundryTech.ImagePath;
+
+            kTag.StrValue0 = kFoundryTech.strName;
             txtTemp.StrValue = class'XComLocalizer'.static.ExpandString(m_strLabelFoundryItemComplete);
             txtTemp.iState = eUIState_Highlight;
             kAlert.arrText.AddItem(txtTemp);

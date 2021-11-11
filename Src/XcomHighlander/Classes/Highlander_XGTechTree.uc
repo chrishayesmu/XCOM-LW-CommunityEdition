@@ -1,13 +1,16 @@
 class Highlander_XGTechTree extends XGTechTree
-    dependson(HighlanderTypes);
+    dependson(HighlanderTypes)
+    config(HighlanderBaseStrategyGame);
+
+var config array<HL_TTech> arrBaseGameTechs;
 
 var privatewrite array<HL_TFoundryTech> m_arrHLFoundryTechs;
+var privatewrite array<HL_TTech> m_arrHLTechs;
 
 function Init()
 {
     `HL_LOG_CLS("Override successful");
 
-    m_arrTechs.Add(76);
     BuildTechs();
     BuildFoundryTechs();
     BuildOTSTechs();
@@ -24,6 +27,7 @@ function BuildFoundryTechs()
     super.BuildFoundryTechs();
 
     // Map all of the base game Foundry techs into our new structure
+    // TODO: recreate these in our own config so we can get rid of some custom logic for them
     foreach m_arrFoundryTechs(BaseTech)
     {
         HighlanderTech = BlankHLTech;
@@ -62,6 +66,38 @@ function BuildFoundryTechs()
     `HL_MOD_LOADER.OnFoundryTechsBuilt(m_arrHLFoundryTechs);
 
     `HL_LOG_CLS("m_arrHLFoundryTechs length after mod processing: " $ m_arrHLFoundryTechs.Length);
+}
+
+function BuildTechs()
+{
+    local int Index;
+    local HL_TTech BaseTech;
+
+    foreach arrBaseGameTechs(BaseTech)
+    {
+        BaseTech.strName     = class'XGLocalizedData'.default.TechTypeNames[BaseTech.iTechId];
+        BaseTech.strCodename = class'XGLocalizedData'.default.TechTypeCodeName[BaseTech.iTechId];
+        BaseTech.strCustom   = class'XGLocalizedData'.default.TechTypeResults[BaseTech.iTechId];
+        BaseTech.strReport   = class'XComLocalizer'.static.ExpandString(class'XGLocalizedData'.default.TechTypeReport[BaseTech.iTechId]);
+        BaseTech.strSummary  = class'XGLocalizedData'.default.TechTypeSummary[BaseTech.iTechId];
+
+        m_arrHLTechs.AddItem(BaseTech);
+    }
+
+    // Clear out the base game tech list to help identify instances where it's being used
+    m_arrTechs.Remove(0, m_arrTechs.Length);
+
+    `HL_LOG_CLS("m_arrHLTechs length from base game: " $ m_arrHLTechs.Length);
+
+    // Now provide a chance for mods to change the research list
+    `HL_MOD_LOADER.OnResearchTechsBuilt(m_arrHLTechs);
+
+    `HL_LOG_CLS("m_arrHLTechs length after mod processing: " $ m_arrHLTechs.Length);
+
+    for (Index = 0; Index < m_arrHLTechs.Length; Index++)
+    {
+        m_arrHLTechs[Index].iHours *= class'XGTacticalGameCore'.default.TECH_TIME_BALANCE;
+    }
 }
 
 function bool CheckForSkunkworks()
@@ -190,10 +226,22 @@ function bool HL_CreditAppliesToFoundryTech(int iCredit, int iTechId)
     return false;
 }
 
+function bool HL_CreditAppliesToTech(int iCredit, int iTech)
+{
+    local HL_TTech kTech;
+
+    kTech = HL_GetTech(iTech);
+
+    return kTech.arrCredits.Find(iCredit) != INDEX_NONE;
+}
+
 function array<HL_TFoundryTech> HL_GetAvailableFoundryTechs()
 {
     local array<HL_TFoundryTech> arrTechs;
     local HL_TFoundryTech kTech;
+    local Highlander_XGfacility_Engineering kEngineering;
+
+    kEngineering = `HL_ENGINEERING;
 
     foreach m_arrHLFoundryTechs(kTech)
     {
@@ -202,9 +250,9 @@ function array<HL_TFoundryTech> HL_GetAvailableFoundryTechs()
             continue;
         }
 
-        if (kTech.iTechId != 0 && !ENGINEERING().IsFoundryTechResearched(kTech.iTechId) && HasFoundryPrereqs(kTech.iTechId))
+        if (kTech.iTechId != 0 && !kEngineering.IsFoundryTechResearched(kTech.iTechId) && HasFoundryPrereqs(kTech.iTechId))
         {
-            if (!Highlander_XGFacility_Engineering(ENGINEERING()).HL_IsFoundryTechInQueue(kTech.iTechId))
+            if (!kEngineering.HL_IsFoundryTechInQueue(kTech.iTechId))
             {
                 arrTechs.AddItem(kTech);
             }
@@ -250,7 +298,7 @@ function int HL_GetCreditAdjustedTechHours(int iTech, int iHours, bool bFoundry)
             continue;
         }
 
-        if ( (bFoundry && HL_CreditAppliesToFoundryTech(iCredit, iTech)) || CreditAppliesToTech(eCredit, ETechType(iTech)))
+        if ( (bFoundry && HL_CreditAppliesToFoundryTech(iCredit, iTech)) || HL_CreditAppliesToTech(eCredit, iTech))
         {
             fBonus = float(GetResearchCredit(eCredit).iBonus) / 100.0;
 
@@ -276,6 +324,33 @@ function int HL_GetCreditAdjustedTechHours(int iTech, int iHours, bool bFoundry)
     }
 
     return iHours;
+}
+
+function array<int> HL_GetGeneResults(int iTechId)
+{
+    local array<int> arrResults;
+    local int iGeneMod;
+
+    if (iTechId == 0 || iTechId == 76)
+    {
+        return arrResults;
+    }
+
+    if (!HQ().HasFacility(eFacility_GeneticsLab))
+    {
+        return arrResults;
+    }
+
+    for (iGeneMod = 0; iGeneMod < 11; iGeneMod++)
+    {
+        // TODO: rewrite the TGeneModTech struct to not use ETechType
+        if (GetGeneTech(EGeneModTech(iGeneMod)).eTechReq == iTechId)
+        {
+            arrResults.AddItem(iGeneMod);
+        }
+    }
+
+    return arrResults;
 }
 
 function array<int> HL_GetFoundryResults(int iCompletedTechId)
@@ -362,6 +437,62 @@ function HL_TFoundryTech HL_GetFoundryTech(int iFoundryTechType, optional bool b
     return kTech;
 }
 
+function TTech GetTech(int iTechType, optional bool bAdjustHours = true)
+{
+    local TTech kTech;
+
+    `HL_LOG_DEPRECATED_CLS(GetTech);
+
+    return kTech;
+}
+
+function HL_TTech HL_GetTech(int iTechType, optional bool bAdjustHours = true)
+{
+    local int iProgressIndex;
+    local HL_TTech kTech, BlankTech;
+    local Highlander_XGFacility_Labs kLabs;
+
+    kLabs = `HL_LABS;
+
+    foreach m_arrHLTechs(kTech)
+    {
+        if (kTech.iTechId == iTechType)
+        {
+            break;
+        }
+    }
+
+    if (kTech.iTechId != iTechType)
+    {
+        return BlankTech;
+    }
+
+    kTech.iHours = GetCreditAdjustedTechHours(iTechType, kTech.iHours, false);
+
+    if (HQ().HasBonus(57) > 0) // We Have Ways
+    {
+        if (kTech.bIsAutopsy || kTech.bIsInterrogation)
+        {
+            kTech.iHours *= (float(1) - (float(HQ().HasBonus(57)) / float(100)));
+        }
+    }
+
+    if (bAdjustHours)
+    {
+        iProgressIndex = kLabs.m_arrHLProgress.Find('iTechId', iTechType);
+
+        if (iProgressIndex != INDEX_NONE)
+        {
+            kTech.iHours -= kLabs.m_arrHLProgress[iProgressIndex].iHoursCompleted;
+        }
+    }
+
+    // Mod hook to modify project cost/time
+    `HL_MOD_LOADER.Override_GetTech(kTech, bAdjustHours);
+
+    return kTech;
+}
+
 function bool HasFoundryPrereqs(int iFoundryTech)
 {
     local int iItemReq, iTechReq;
@@ -383,6 +514,58 @@ function bool HasFoundryPrereqs(int iFoundryTech)
         {
             return false;
         }
+    }
+
+    return true;
+}
+
+function bool HasPrereqs(int iTech)
+{
+    local int iItemPrereq, iTechPrereq, iUfoPrereq;
+    local Highlander_XGFacility_Labs kLabs;
+    local HL_TTech kTech;
+
+    kLabs = `HL_LABS;
+    kTech = HL_GetTech(iTech);
+
+    foreach kTech.arrItemReqs(iItemPrereq)
+    {
+        if (!STORAGE().EverHadItem(iItemPrereq))
+        {
+            return false;
+        }
+    }
+
+    foreach kTech.arrTechReqs(iTechPrereq)
+    {
+        if (!kLabs.IsResearched(iTechPrereq))
+        {
+            return false;
+        }
+    }
+
+    foreach kTech.arrUfoReqs(iUfoPrereq)
+    {
+        if (GEOSCAPE().m_arrCraftEncounters[iUfoPrereq] == 0)
+        {
+            return false;
+        }
+    }
+
+    if (kTech.bRequiresAutopsy && kLabs.GetNumAutopsiesPerformed() == 0)
+    {
+        return false;
+    }
+
+    if (kTech.bRequiresInterrogation && !kLabs.HasInterrogatedCaptive())
+    {
+        return false;
+    }
+
+    // Mod hook for custom prereqs
+    if (!`HL_MOD_LOADER.Override_HasPrereqs(kTech))
+    {
+        return false;
     }
 
     return true;
