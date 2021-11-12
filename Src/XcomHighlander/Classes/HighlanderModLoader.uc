@@ -7,6 +7,9 @@ var config array<string> arrModClasses;
 var privatewrite bool bInited;
 var privatewrite array<HighlanderModBase> LoadedMods;
 
+var private array<HighlanderStrategyListener> StrategyListeners;
+var private array<HighlanderTacticalListener> TacticalListeners;
+
 const bEnableDebugLogging = true;
 
 static function HighlanderModLoader GetModLoader()
@@ -23,7 +26,11 @@ static function HighlanderModLoader GetModLoader()
 
 function InitMutator(string Options, out string ErrorMessage)
 {
+    local bool bStrategy, bTactical;
     local string ModClassName;
+
+    bStrategy = IsInStrategyGame();
+    bTactical = IsInTacticalGame();
 
     if (!bInited)
     {
@@ -33,6 +40,21 @@ function InitMutator(string Options, out string ErrorMessage)
         foreach arrModClasses(ModClassName)
         {
             LoadMod(ModClassName);
+        }
+
+        `HL_LOG_CLS(LoadedMods.Length $ " mods were loaded successfully");
+
+        if (bStrategy)
+        {
+            `HL_LOG_CLS("Loading strategy listeners");
+            LoadStrategyListeners();
+            `HL_LOG_CLS("Loaded " $ StrategyListeners.Length $ " strategy listeners");
+        }
+        else if (bTactical)
+        {
+            `HL_LOG_CLS("Loading tactical listeners");
+            LoadTacticalListeners();
+            `HL_LOG_CLS("Loaded " $ TacticalListeners.Length $ " tactical listeners");
         }
     }
 
@@ -51,6 +73,58 @@ function GetSeamlessTravelActorList(bool bToEntry, out array<Actor> ActorList)
 	}
 }
 
+function LoadStrategyListeners()
+{
+    local HighlanderModBase kMod;
+    local HighlanderStrategyListener kStrategyListener;
+
+    StrategyListeners.Remove(0, StrategyListeners.Length);
+
+    foreach LoadedMods(kMod)
+    {
+        if (kMod.StrategyListenerClass != none)
+        {
+            kStrategyListener = Spawn(kMod.StrategyListenerClass);
+
+            if (kStrategyListener != none)
+            {
+                StrategyListeners.AddItem(kStrategyListener);
+            }
+        }
+    }
+}
+
+function LoadTacticalListeners()
+{
+    local HighlanderModBase kMod;
+    local HighlanderTacticalListener kTacticalListener;
+
+    TacticalListeners.Remove(0, TacticalListeners.Length);
+
+    foreach LoadedMods(kMod)
+    {
+        if (kMod.TacticalListenerClass != none)
+        {
+            kTacticalListener = Spawn(kMod.TacticalListenerClass);
+
+            if (kTacticalListener != none)
+            {
+                TacticalListeners.AddItem(kTacticalListener);
+            }
+        }
+    }
+}
+
+static function bool IsInStrategyGame()
+{
+    return `HQGAME != none;
+}
+
+static function bool IsInTacticalGame()
+{
+    return XComTacticalGRI(XComGameReplicationInfo(class'Engine'.static.GetCurrentWorldInfo().GRI)) != none;
+}
+
 // #region Mod event entry points
 
 // These functions should be called by the Highlander (or sometimes, by mods) to indicate that an event has occurred which mods
@@ -61,51 +135,51 @@ function GetSeamlessTravelActorList(bool bToEntry, out array<Actor> ActorList)
 
 function OnFoundryProjectAddedToQueue(TFoundryProject kProject, HL_TFoundryTech kFoundryTech)
 {
-    local HighlanderModBase kModBase;
+    local HighlanderStrategyListener kStrategyListener;
 
-    foreach LoadedMods(kModBase)
+    foreach StrategyListeners(kStrategyListener)
     {
-        kModBase.OnFoundryProjectAddedToQueue(kProject, kFoundryTech);
+        kStrategyListener.OnFoundryProjectAddedToQueue(kProject, kFoundryTech);
     }
 }
 
 function OnFoundryProjectCanceled(TFoundryProject kProject, HL_TFoundryTech kFoundryTech)
 {
-    local HighlanderModBase kModBase;
+    local HighlanderStrategyListener kStrategyListener;
 
-    foreach LoadedMods(kModBase)
+    foreach StrategyListeners(kStrategyListener)
     {
-        kModBase.OnFoundryProjectCanceled(kProject, kFoundryTech);
+        kStrategyListener.OnFoundryProjectCanceled(kProject, kFoundryTech);
     }
 }
 
 function OnFoundryProjectCompleted(TFoundryProject kProject, HL_TFoundryTech kFoundryTech)
 {
-    local HighlanderModBase kModBase;
+    local HighlanderStrategyListener kStrategyListener;
 
-    foreach LoadedMods(kModBase)
+    foreach StrategyListeners(kStrategyListener)
     {
-        kModBase.OnFoundryProjectCompleted(kProject, kFoundryTech);
+        kStrategyListener.OnFoundryProjectCompleted(kProject, kFoundryTech);
     }
 }
 
 function OnFoundryTechsBuilt(out array<HL_TFoundryTech> Techs)
 {
-    local HighlanderModBase kModBase;
+    local HighlanderStrategyListener kStrategyListener;
 
-    foreach LoadedMods(kModBase)
+    foreach StrategyListeners(kStrategyListener)
     {
-        kModBase.OnFoundryTechsBuilt(Techs);
+        kStrategyListener.OnFoundryTechsBuilt(Techs);
     }
 }
 
 function UpdateFoundryPerksForSoldier(XGStrategySoldier kSoldier, Highlander_XGFacility_Engineering kEngineering)
 {
-    local HighlanderModBase kModBase;
+    local HighlanderStrategyListener kStrategyListener;
 
-    foreach LoadedMods(kModBase)
+    foreach StrategyListeners(kStrategyListener)
     {
-        kModBase.UpdateFoundryPerksForSoldier(kSoldier, kEngineering);
+        kStrategyListener.UpdateFoundryPerksForSoldier(kSoldier, kEngineering);
     }
 }
 
@@ -115,24 +189,24 @@ function UpdateFoundryPerksForSoldier(XGStrategySoldier kSoldier, Highlander_XGF
 
 function Override_GetTech(out HL_TTech kTech, bool bIncludesProgress)
 {
-    local HighlanderModBase kModBase;
+    local HighlanderStrategyListener kStrategyListener;
 
-    foreach LoadedMods(kModBase)
+    foreach StrategyListeners(kStrategyListener)
     {
-        kModBase.Override_GetTech(kTech, bIncludesProgress);
+        kStrategyListener.Override_GetTech(kTech, bIncludesProgress);
     }
 }
 
 function bool Override_HasPrereqs(HL_TTech kTech)
 {
     local int iHasPrereqs;
-    local HighlanderModBase kModBase;
+    local HighlanderStrategyListener kStrategyListener;
 
     iHasPrereqs = 1;
 
-    foreach LoadedMods(kModBase)
+    foreach StrategyListeners(kStrategyListener)
     {
-        kModBase.Override_HasPrereqs(kTech, iHasPrereqs);
+        kStrategyListener.Override_HasPrereqs(kTech, iHasPrereqs);
     }
 
     return iHasPrereqs != 0;
@@ -140,31 +214,31 @@ function bool Override_HasPrereqs(HL_TTech kTech)
 
 function OnResearchCompleted(int iTech)
 {
-    local HighlanderModBase kModBase;
+    local HighlanderStrategyListener kStrategyListener;
 
-    foreach LoadedMods(kModBase)
+    foreach StrategyListeners(kStrategyListener)
     {
-        kModBase.OnResearchCompleted(iTech);
+        kStrategyListener.OnResearchCompleted(iTech);
     }
 }
 
 function OnResearchStarted(int iTech)
 {
-    local HighlanderModBase kModBase;
+    local HighlanderStrategyListener kStrategyListener;
 
-    foreach LoadedMods(kModBase)
+    foreach StrategyListeners(kStrategyListener)
     {
-        kModBase.OnResearchStarted(iTech);
+        kStrategyListener.OnResearchStarted(iTech);
     }
 }
 
 function OnResearchTechsBuilt(out array<HL_TTech> Techs)
 {
-    local HighlanderModBase kModBase;
+    local HighlanderStrategyListener kStrategyListener;
 
-    foreach LoadedMods(kModBase)
+    foreach StrategyListeners(kStrategyListener)
     {
-        kModBase.OnResearchTechsBuilt(Techs);
+        kStrategyListener.OnResearchTechsBuilt(Techs);
     }
 }
 
