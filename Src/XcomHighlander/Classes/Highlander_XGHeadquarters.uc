@@ -173,3 +173,35 @@ function AddFacility(int iFacility)
         BARRACKS().UpdateFoundryPerks();
     }
 }
+
+state InBase
+{
+    event BeginState(name PS)
+    {
+        super.BeginState(PS);
+    }
+
+    event ContinuedState()
+    {
+        super.ContinuedState();
+    }
+
+    event Tick(float fDeltaT)
+    {
+        super.Tick(fDeltaT);
+    }
+
+    stop;
+}
+
+state InFacility
+{
+    ignores BeginState;
+
+    event Tick(float fDeltaT)
+    {
+        super.Tick(fDeltaT);
+    }
+
+    stop;
+}
