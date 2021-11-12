@@ -154,3 +154,8 @@ simulated function ReceivedGameClass()
         }
     }
 }
+
+defaultproperties
+{
+    m_kPlayerClass=class'Highlander_XGPlayer'
+}

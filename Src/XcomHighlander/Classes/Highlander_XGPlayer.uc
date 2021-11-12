@@ -1,3 +1,8 @@
 class Highlander_XGPlayer extends XGPlayer;
 
-// dummy
+function Init(optional bool bLoading = false)
+{
+    `HL_LOG_CLS("Override successful");
+
+    super.Init(bLoading);
+}

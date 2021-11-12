@@ -463,6 +463,8 @@ function UpdateMainMenu()
         }
         else if (m_kMainMenu.arrViews[iMenuOption] == eLabView_Archives)
         {
+            // Highlander issue #6: in the base game this conditional is "> 1", meaning you can't view the archives
+            // until you've done multiple researches
             kOption.iState = kLabs.GetNumTechsResearched() > 0 ? eUIState_Normal : eUIState_Disabled;
             kOption.strText = m_strLabelResearchArchives;
             kOption.strHelp = m_strHelpResearchArchives;
