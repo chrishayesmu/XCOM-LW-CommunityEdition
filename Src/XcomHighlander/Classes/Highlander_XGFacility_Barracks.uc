@@ -86,6 +86,39 @@ function AddTank(EItemType eArmor, EItemType eWeapon)
     AddNewSoldier(kTank);
 }
 
+function int CalcTotalSoldierRanks()
+{
+    local XGStrategySoldier kSoldier;
+    local int iSum;
+
+    iSum = 0;
+
+    foreach m_arrSoldiers(kSoldier)
+    {
+        if (!kSoldier.IsATank())
+        {
+            iSum += kSoldier.GetRank();
+        }
+    }
+
+    return iSum;
+}
+
+function bool HasSoldierOfRankOrHigher(int iRank)
+{
+    local XGStrategySoldier kSoldier;
+
+    foreach m_arrSoldiers(kSoldier)
+    {
+        if (kSoldier.GetRank() >= iRank)
+        {
+            return true;
+        }
+    }
+
+    return false;
+}
+
 function UpdateFoundryPerksForSoldier(XGStrategySoldier kSoldier)
 {
     local Highlander_XGFacility_Engineering kEngineering;

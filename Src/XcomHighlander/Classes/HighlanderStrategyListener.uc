@@ -6,6 +6,15 @@ class HighlanderStrategyListener extends XGStrategyActor
 /// -----------------------------------------------------
 
 /// <summary>
+/// Called at the end of Highlander_XGTechTree.HasFoundryPrereqs to determine if a Foundry project is available to the player yet or not.
+/// Mods can use this hook to add custom prerequisites that aren't supported in the HL_TPrereqs structure. If any of the prerequisites
+/// in kTech.kPrereqs are not met, this function will not be called and the project will not be available.
+/// </summary>
+/// <param name="kTech">The Foundry project which is under consideration.</param>
+/// <param name="iHasPrereqs">Whether the project's prereqs are satisfied. Should be 0 if prereqs are not met, or 1 if they are.</param>
+function Override_HasFoundryPrereqs(HL_TFoundryTech kTech, out int iHasPrereqs) {}
+
+/// <summary>
 /// Called after any Foundry project has been started and added to the Foundry queue.
 /// </summary>
 function OnFoundryProjectAddedToQueue(TFoundryProject kProject, HL_TFoundryTech kFoundryTech) {}
@@ -68,9 +77,8 @@ function Override_GetTech(out HL_TTech kTech, bool bIncludesProgress) {}
 
 /// <summary>
 /// Called at the end of Highlander_XGTechTree.HasPrereqs to determine if a research tech is available to the player yet or not.
-/// Mods can use this hook to add custom prerequisites that aren't supported in the HL_TTech structure, such as requiring a certain
-/// facility to be built, mission type to be completed, etc. If any of the prerequisites in HL_TTech are not met, this function will
-/// not be called and the tech will not be available.
+/// Mods can use this hook to add custom prerequisites that aren't supported in the HL_TPrereqs structure. If any of the prerequisites
+/// in kTech.kPrereqs are not met, this function will not be called and the tech will not be available.
 /// </summary>
 /// <param name="kTech">The tech which is under consideration.</param>
 /// <param name="iHasPrereqs">Whether the tech's prereqs are satisfied. Should be 0 if prereqs are not met, or 1 if they are.</param>

@@ -10,11 +10,11 @@ function int HL_GetUnlockItem(out HL_TTech kTech)
 {
     local int I, iItem;
 
-    for (I = 0; I < kTech.arrItemReqs.Length; I++)
+    for (I = 0; I < kTech.kPrereqs.arrItemReqs.Length; I++)
     {
-        if (HQ().m_arrLastCargo[kTech.arrItemReqs[I]] > 0)
+        if (HQ().m_arrLastCargo[kTech.kPrereqs.arrItemReqs[I]] > 0)
         {
-            return kTech.arrItemReqs[I];
+            return kTech.kPrereqs.arrItemReqs[I];
         }
     }
 

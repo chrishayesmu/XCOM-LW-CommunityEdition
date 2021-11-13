@@ -133,6 +133,21 @@ static function bool IsInTacticalGame()
 
 // #region Foundry-related events
 
+function bool Override_HasFoundryPrereqs(HL_TFoundryTech kTech)
+{
+    local int iHasPrereqs;
+    local HighlanderStrategyListener kStrategyListener;
+
+    iHasPrereqs = 1;
+
+    foreach StrategyListeners(kStrategyListener)
+    {
+        kStrategyListener.Override_HasFoundryPrereqs(kTech, iHasPrereqs);
+    }
+
+    return iHasPrereqs != 0;
+}
+
 function OnFoundryProjectAddedToQueue(TFoundryProject kProject, HL_TFoundryTech kFoundryTech)
 {
     local HighlanderStrategyListener kStrategyListener;

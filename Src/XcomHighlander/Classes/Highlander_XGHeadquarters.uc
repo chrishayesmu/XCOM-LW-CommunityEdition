@@ -174,6 +174,84 @@ function AddFacility(int iFacility)
     }
 }
 
+function bool ArePrereqsFulfilled(HL_TPrereqs kPrereqs)
+{
+    local int iPrereqId;
+    local Highlander_XGFacility_Barracks kBarracks;
+    local Highlander_XGFacility_Engineering kEngineering;
+    local Highlander_XGFacility_Labs kLabs;
+    local XGGeoscape kGeoscape;
+    local XGStorage kStorage;
+
+    kBarracks = `HL_BARRACKS;
+    kEngineering = `HL_ENGINEERING;
+    kGeoscape = GEOSCAPE();
+    kLabs = `HL_LABS;
+    kStorage = STORAGE();
+
+    foreach kPrereqs.arrFacilityReqs(iPrereqId)
+    {
+        if (!HasFacility(iPrereqId))
+        {
+            return false;
+        }
+    }
+
+    foreach kPrereqs.arrFoundryReqs(iPrereqId)
+    {
+        if (!kEngineering.IsFoundryTechResearched(iPrereqId))
+        {
+            return false;
+        }
+    }
+
+    foreach kPrereqs.arrItemReqs(iPrereqId)
+    {
+        if (!kStorage.EverHadItem(iPrereqId))
+        {
+            return false;
+        }
+    }
+
+    foreach kPrereqs.arrTechReqs(iPrereqId)
+    {
+        if (!kLabs.IsResearched(iPrereqId))
+        {
+            return false;
+        }
+    }
+
+    foreach kPrereqs.arrUfoReqs(iPrereqId)
+    {
+        if (kGeoscape.m_arrCraftEncounters[iPrereqId] == 0)
+        {
+            return false;
+        }
+    }
+
+    if (kPrereqs.iRequiredSoldierRank > 0 && !kBarracks.HasSoldierOfRankOrHigher(kPrereqs.iRequiredSoldierRank))
+    {
+        return false;
+    }
+
+    if (kPrereqs.iTotalSoldierRanks > 0 && kBarracks.CalcTotalSoldierRanks() < kPrereqs.iTotalSoldierRanks)
+    {
+        return false;
+    }
+
+    if (kPrereqs.bRequiresAutopsy && kLabs.GetNumAutopsiesPerformed() == 0)
+    {
+        return false;
+    }
+
+    if (kPrereqs.bRequiresInterrogation && !kLabs.HasInterrogatedCaptive())
+    {
+        return false;
+    }
+
+    return true;
+}
+
 state InBase
 {
     event BeginState(name PS)

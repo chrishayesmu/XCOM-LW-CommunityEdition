@@ -46,12 +46,12 @@ function BuildFoundryTechs()
 
         if (BaseTech.iItemReq != 0)
         {
-            HighlanderTech.arrItemReqs.AddItem(BaseTech.iItemReq);
+            HighlanderTech.kPrereqs.arrItemReqs.AddItem(BaseTech.iItemReq);
         }
 
         if (BaseTech.iTechReq != 0)
         {
-            HighlanderTech.arrTechReqs.AddItem(BaseTech.iTechReq);
+            HighlanderTech.kPrereqs.arrTechReqs.AddItem(BaseTech.iTechReq);
         }
 
         HighlanderTech.ImagePath = class'UIUtilities'.static.GetFoundryImagePath(BaseTech.iImage);
@@ -379,13 +379,16 @@ function array<int> HL_GetFoundryResults(int iCompletedTechId)
     foreach m_arrHLFoundryTechs(kTech)
     {
         // We only want newly-available techs, so anything that doesn't rely on the new research is out
-        if (kTech.arrTechReqs.Find(iCompletedTechId) == INDEX_NONE)
+        if (kTech.kPrereqs.arrTechReqs.Find(iCompletedTechId) == INDEX_NONE)
         {
             continue;
         }
 
+        // TODO: need to rewrite this to use HL_TPrereqs somehow. This logic works for all base game Foundry techs,
+        // but it will throw off any modded projects using other prereq fields
+
         // Validate item requirements
-        foreach kTech.arrItemReqs(iItemReq)
+        foreach kTech.kPrereqs.arrItemReqs(iItemReq)
         {
             if (!STORAGE().EverHadItem(iItemReq))
             {
@@ -394,7 +397,7 @@ function array<int> HL_GetFoundryResults(int iCompletedTechId)
         }
 
         // If there are other research requirements, check them
-        foreach kTech.arrTechReqs(iTechReq)
+        foreach kTech.kPrereqs.arrTechReqs(iTechReq)
         {
             if (iTechReq != iCompletedTechId && !LABS().IsResearched(iTechReq))
             {
@@ -506,25 +509,19 @@ function HL_TTech HL_GetTech(int iTechType, optional bool bAdjustHours = true)
 
 function bool HasFoundryPrereqs(int iFoundryTech)
 {
-    local int iItemReq, iTechReq;
     local HL_TFoundryTech kTech;
 
     kTech = HL_GetFoundryTech(iFoundryTech);
 
-    foreach kTech.arrItemReqs(iItemReq)
+    if (!`HL_HQ.ArePrereqsFulfilled(kTech.kPrereqs))
     {
-        if (!STORAGE().EverHadItem(iItemReq))
-        {
-            return false;
-        }
+        return false;
     }
 
-    foreach kTech.arrTechReqs(iTechReq)
+    // Mod hook for custom prereqs
+    if (!`HL_MOD_LOADER.Override_HasFoundryPrereqs(kTech))
     {
-        if (!LABS().IsResearched(iTechReq))
-        {
-            return false;
-        }
+        return false;
     }
 
     return true;
@@ -532,43 +529,11 @@ function bool HasFoundryPrereqs(int iFoundryTech)
 
 function bool HasPrereqs(int iTech)
 {
-    local int iItemPrereq, iTechPrereq, iUfoPrereq;
-    local Highlander_XGFacility_Labs kLabs;
     local HL_TTech kTech;
 
-    kLabs = `HL_LABS;
     kTech = HL_GetTech(iTech);
 
-    foreach kTech.arrItemReqs(iItemPrereq)
-    {
-        if (!STORAGE().EverHadItem(iItemPrereq))
-        {
-            return false;
-        }
-    }
-
-    foreach kTech.arrTechReqs(iTechPrereq)
-    {
-        if (!kLabs.IsResearched(iTechPrereq))
-        {
-            return false;
-        }
-    }
-
-    foreach kTech.arrUfoReqs(iUfoPrereq)
-    {
-        if (GEOSCAPE().m_arrCraftEncounters[iUfoPrereq] == 0)
-        {
-            return false;
-        }
-    }
-
-    if (kTech.bRequiresAutopsy && kLabs.GetNumAutopsiesPerformed() == 0)
-    {
-        return false;
-    }
-
-    if (kTech.bRequiresInterrogation && !kLabs.HasInterrogatedCaptive())
+    if (!`HL_HQ.ArePrereqsFulfilled(kTech.kPrereqs))
     {
         return false;
     }

@@ -25,10 +25,10 @@ function OnFoundryTechsBuilt(out array<HL_TFoundryTech> Techs)
     kNewTech.kCost.iElerium = 10;
     kNewTech.kCost.iAlloys = 5;
 
-    kNewTech.arrItemReqs.AddItem(169); // Alien Surgery
+    kNewTech.kPrereqs.arrItemReqs.AddItem(169); // Alien Surgery
 
-    kNewTech.arrTechReqs.AddItem(1);  // Xenobiology
-    kNewTech.arrTechReqs.AddItem(12); // Elerium
+    kNewTech.kPrereqs.arrTechReqs.AddItem(1);  // Xenobiology
+    kNewTech.kPrereqs.arrTechReqs.AddItem(12); // Elerium
 
     kNewTech.arrCredits.AddItem(5); // Armor credit
     kNewTech.arrCredits.AddItem(8); // Psionics credit

@@ -9,10 +9,14 @@
 `define SoundCue(nm) (SoundCue(DynamicLoadObject(`nm, class'SoundCue')))
 `define XComNarrativeMoment(nm) (XComNarrativeMoment(DynamicLoadObject("NarrativeMoment." $ `nm, class'XComNarrativeMoment')))
 
-// Strat layer macros for use in child classes of XGStrategyActorNativeBase only
+// ---------------------------
+// Strategy layer macros
+// ---------------------------
 
+`define HL_BARRACKS (Highlander_XGFacility_Barracks(`HQGAME.GetGameCore().GetHQ().GetBarracks()))
 `define HL_FTECH(techId, bRushResearch) (`HL_TECHTREE.HL_GetFoundryTech(`techId, `bRushResearch))
-`define HL_ENGINEERING (Highlander_XGFacility_Engineering(ENGINEERING()))
-`define HL_LABS (Highlander_XGFacility_Labs(LABS()))
+`define HL_ENGINEERING (Highlander_XGFacility_Engineering(`HQGAME.GetGameCore().GetHQ().GetEngineering()))
+`define HL_HQ (Highlander_XGHeadquarters(`HQGAME.GetGameCore().GetHQ()))
+`define HL_LABS (Highlander_XGFacility_Labs(`HQGAME.GetGameCore().GetHQ().GetLabs()))
 `define HL_TECH(techId) (`HL_TECHTREE.HL_GetTech(`techId))
 `define HL_TECHTREE (Highlander_XGTechTree(`HQGAME.GetGameCore().GetHQ().GetLabs().m_kTree))

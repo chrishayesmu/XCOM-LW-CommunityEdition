@@ -57,6 +57,9 @@ struct HL_TItemQuantity
     var int iQuantity;
 };
 
+/// <summary>
+/// Represents a cost paid by the player for building items, researching techs, beginning Foundry projects, etc.
+/// </summary>
 struct HL_TCost
 {
     var int iCash;
@@ -77,6 +80,25 @@ struct HL_TCost
     }
 };
 
+/// <summary>
+/// Represents prerequisites that must be met by the player. Depending on the context of how this struct is used, failing to
+/// meet prerequisites might make something completely unknown to the player (such as research techs) or visible but inaccessible.
+/// </summary>
+struct HL_TPrereqs
+{
+    var array<int> arrFacilityReqs; // A list of facility IDs that must be built. For non-unique facilities, only one needs to be built.
+    var array<int> arrFoundryReqs;  // A list of foundry project IDs that must be complete.
+    var array<int> arrItemReqs;     // A list of item IDs. The player must have possessed these at one time, but doesn't necessarily need to still have them now.
+    var array<int> arrTechReqs;     // A list of research tech IDs that must be complete.
+    var array<int> arrUfoReqs;      // A list of UFO types that must be encountered. A UFO type is considered encountered after a successful assault on a crashed or landed UFO.
+
+    var int iRequiredSoldierRank;   // If set, XCOM must have at least one soldier of this rank or higher.
+    var int iTotalSoldierRanks;     // If set, the sum of soldier ranks across XCOM's roster must be at least this value.
+
+    var bool bRequiresAutopsy;       // If true, any autopsy research must be completed.
+    var bool bRequiresInterrogation; // If true, any interrogation research must be completed.
+};
+
 // TODO: more customizable logic may be good in HL_TFoundryTech. For example, being able to make Foundry projects
 // dependent on other Foundry projects, or even letting mods run arbitrary code to decide if a project is available,
 // enabling (for example) mutually exclusive projects.
@@ -90,15 +112,13 @@ struct HL_TFoundryTech
                                 // engineers and should take 48 hours to complete when at 15 engineers, this would be 15 * 48 = 720 hours.
     var int iEngineers;         // The number of engineers required to make progress at normal speed on this project.
 
-    var HL_TCost kCost;         // The base cost (unmodified by any continent bonuses or other situational modifiers) to start this project.
-
-    var array<int> arrItemReqs; // A list of item IDs required to unlock this project. The player must have possessed these at one time,
-                                // but doesn't necessarily need to still have them now.
-    var array<int> arrTechReqs; // A list of research tech IDs required to unlock this project.
     var array<int> arrCredits;  // A list of research credit IDs that can apply to speed up this project.
 
     var string ImagePath;       // Path to an image to show in the Foundry UI for this project. Must include the "img:///" prefix.
                                 // Typical Foundry images are 256x128.
+
+    var HL_TCost kCost;         // The base cost (unmodified by any continent bonuses or other situational modifiers) to start this project.
+    var HL_TPrereqs kPrereqs;   // The prerequisites that must be met before this project will be visible in the Foundry.
 
     var bool bForceUnavailable; // If true, this project will never be shown in the list of available Foundry projects. This is the recommended
                                 // way to deprecate Foundry projects from a mod, rather than deleting them (which may break existing game saves).
@@ -112,8 +132,6 @@ struct HL_TFoundryTech
         iHours=0
         iEngineers=0
         kCost=(iCash=0, iAlloys=0, iElerium=0, iMeld=0, arrItems=())
-        arrItemReqs=()
-        arrTechReqs=()
         arrCredits=()
         ImagePath=""
         bForceUnavailable=false
@@ -153,21 +171,14 @@ struct HL_TTech
                     // day, or 20 in 0.5 days, etc. This value is also reduced multiplicatively by research credits (see arrCredits below), situational
                     // modifiers such as We Have Ways for autopsies/interrogations, and others.
 
-    var bool bRequiresAutopsy;       // If true, this research won't be unlocked until any autopsy research is completed, in addition to its other requirements.
-    var bool bRequiresInterrogation; // If true, this research won't be unlocked until any interrogation research is completed, in addition to its other requirements.
 
     var int iCreditGranted; // The research credit ID granted by this tech, if any. See EResearchCredits for values.
-
-    var array<int> arrItemReqs; // A list of item IDs required to unlock this project. The player must have possessed these at one time,
-                                // but doesn't necessarily need to still have them now.
-    var array<int> arrTechReqs; // A list of research tech IDs required to unlock this research.
-    var array<int> arrUfoReqs;  // A list of UFO types that must be encountered before this research is available.
-
     var array<int> arrCredits;  // A list of research credit IDs that can apply to speed up this research.
 
     var string ImagePath;
 
     var HL_TCost kCost;
+    var HL_TPrereqs kPrereqs;   // The prerequisites that must be met before this research will be visible in the Labs.
 
     structdefaultproperties
     {
@@ -181,8 +192,6 @@ struct HL_TTech
         bIsInterrogation=false
         iHours=0
         iCreditGranted=0
-        arrItemReqs=()
-        arrTechReqs=()
         arrCredits=()
         ImagePath=""
         kCost=(iCash=0,iAlloys=0,iElerium=0,iMeld=0,iWeaponFragments=0,arrItems=())
