@@ -99,9 +99,9 @@ struct HL_TPrereqs
     var bool bRequiresInterrogation; // If true, any interrogation research must be completed.
 };
 
-// TODO: more customizable logic may be good in HL_TFoundryTech. For example, being able to make Foundry projects
-// dependent on other Foundry projects, or even letting mods run arbitrary code to decide if a project is available,
-// enabling (for example) mutually exclusive projects.
+/// <summary>
+/// Struct representing a Foundry project.
+/// </summary>
 struct HL_TFoundryTech
 {
     var int iTechId;            // The integer ID of the project. See README if you don't know how to choose IDs.
@@ -138,9 +138,9 @@ struct HL_TFoundryTech
     }
 };
 
-/**
- * Struct representing a research technology.
- */
+/// <summary>
+/// Struct representing a research technology.
+/// </summary>
 struct HL_TTech
 {
     var int iTechId;
