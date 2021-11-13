@@ -6,13 +6,58 @@ struct HL_TRange
     var int MaxInclusive;
 };
 
+struct HL_TItem
+{
+    var string strName;
+    var string strNamePlural;
+    var string strBriefSummary;
+    var string strDeepSummary;
+    var string ImagePath;
+
+    var int iItemId;
+    var int iCash;
+    var int iAlloys;
+    var int iElerium;
+    var int iMeld;
+    var int iHours;
+    var int iMaxEngineers;
+
+    var array<int> arrTechReqs;
+    var array<int> arrFoundryReqs;
+    var array<int> arrItemReqs;
+    var array<int> arrFacilityReqs;
+
+    var int iCategory;
+
+    structdefaultproperties
+    {
+        strName=""
+        strNamePlural=""
+        strBriefSummary=""
+        strDeepSummary=""
+        ImagePath=""
+        iItemId=0
+        iCash=0
+        iAlloys=0
+        iElerium=0
+        iMeld=0
+        iHours=0
+        iMaxEngineers=0
+        arrTechReqs=()
+        arrFoundryReqs=()
+        arrItemReqs=()
+        arrFacilityReqs=()
+        iCategory=0
+    }
+};
+
 struct HL_TItemQuantity
 {
     var int iItemId;
     var int iQuantity;
 };
 
-struct HL_TResearchCost
+struct HL_TCost
 {
     var int iCash;
     var int iAlloys;
@@ -45,10 +90,7 @@ struct HL_TFoundryTech
                                 // engineers and should take 48 hours to complete when at 15 engineers, this would be 15 * 48 = 720 hours.
     var int iEngineers;         // The number of engineers required to make progress at normal speed on this project.
 
-    var int iAlloys;            // The number of alien alloys needed to start this project. Must be set both here and in kCost.
-    var int iCash;              // The amount of cash needed to start this project. Must be set both here and in kCost.
-    var int iElerium;           // The amount of elerium needed to start this project. Must be set both here and in kCost.
-    var TResearchCost kCost;    // The base cost (unmodified by any continent bonuses or other situational modifiers) to start this project.
+    var HL_TCost kCost;         // The base cost (unmodified by any continent bonuses or other situational modifiers) to start this project.
 
     var array<int> arrItemReqs; // A list of item IDs required to unlock this project. The player must have possessed these at one time,
                                 // but doesn't necessarily need to still have them now.
@@ -69,10 +111,7 @@ struct HL_TFoundryTech
         strSummary=""
         iHours=0
         iEngineers=0
-        iAlloys=0
-        iCash=0
-        iElerium=0
-        kCost=(iCash=0,iElerium=0,iAlloys=0,arrItems=(),arrItemQuantities=())
+        kCost=(iCash=0, iAlloys=0, iElerium=0, iMeld=0, arrItems=())
         arrItemReqs=()
         arrTechReqs=()
         arrCredits=()
@@ -128,7 +167,7 @@ struct HL_TTech
 
     var string ImagePath;
 
-    var HL_TResearchCost kCost;
+    var HL_TCost kCost;
 
     structdefaultproperties
     {
@@ -195,7 +234,73 @@ struct HL_TTechState
     var ETechState eAvailabilityState;
 };
 
-static function TResearchCost HighlanderToBase_TResearchCost(HL_TResearchCost kInCost)
+// ------------------------------------------------------------------------------
+// Utility functions for mixing vanilla and Highlander types
+// ------------------------------------------------------------------------------
+
+static function TProjectCost ConvertTCostToProjectCost(HL_TCost kInCost)
+{
+    local HL_TItemQuantity kItemQuantity;
+    local TProjectCost kOutCost;
+
+    kOutCost.iCash = kInCost.iCash;
+    kOutCost.iAlloys = kInCost.iAlloys;
+    kOutCost.iElerium = kInCost.iElerium;
+
+    if (kInCost.iMeld > 0)
+    {
+        kOutCost.arrItems.AddItem(eItem_Meld);
+        kOutCost.arrItemQuantities.AddItem(kInCost.iMeld);
+    }
+
+    if (kInCost.iWeaponFragments > 0)
+    {
+        kOutCost.arrItems.AddItem(eItem_WeaponFragment);
+        kOutCost.arrItemQuantities.AddItem(kInCost.iWeaponFragments);
+    }
+
+    foreach kInCost.arrItems(kItemQuantity)
+    {
+        kOutCost.arrItems.AddItem(kItemQuantity.iItemId);
+        kOutCost.arrItemQuantities.AddItem(kItemQuantity.iQuantity);
+    }
+
+    return kOutCost;
+}
+
+static function HL_TCost ConvertTResearchCostToTCost(TResearchCost kInCost)
+{
+    local int Index;
+    local HL_TCost kOutCost;
+    local HL_TItemQuantity kItemQuantity;
+
+    kOutCost.iCash = kInCost.iCash;
+    kOutCost.iAlloys = kInCost.iAlloys;
+    kOutCost.iElerium = kInCost.iElerium;
+
+    for (Index = 0; Index < kInCost.arrItems.Length; Index++)
+    {
+        if (kInCost.arrItems[Index] == eItem_Meld)
+        {
+            kOutCost.iMeld = kInCost.arrItemQuantities[Index];
+        }
+        else if (kInCost.arrItems[Index] == eItem_WeaponFragment)
+        {
+            kOutCost.iWeaponFragments = kInCost.arrItemQuantities[Index];
+        }
+        else
+        {
+            kItemQuantity.iItemId = kInCost.arrItems[Index];
+            kItemQuantity.iQuantity = kInCost.arrItemQuantities[Index];
+
+            kOutCost.arrItems.AddItem(kItemQuantity);
+        }
+    }
+
+    return kOutCost;
+}
+
+static function TResearchCost ConvertTCostToTResearchCost(HL_TCost kInCost)
 {
     local HL_TItemQuantity kItemQuantity;
     local TResearchCost kOutCost;

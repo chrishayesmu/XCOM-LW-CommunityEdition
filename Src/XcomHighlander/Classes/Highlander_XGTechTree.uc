@@ -37,10 +37,12 @@ function BuildFoundryTechs()
         HighlanderTech.iTechId = BaseTech.iFoundryTech;
         HighlanderTech.iHours = BaseTech.iHours;
         HighlanderTech.iEngineers = BaseTech.iEngineers;
-        HighlanderTech.iCash = BaseTech.iCash;
-        HighlanderTech.iElerium = BaseTech.iElerium;
-        HighlanderTech.iAlloys = BaseTech.iAlloys;
-        HighlanderTech.kCost = BaseTech.kCost;
+        HighlanderTech.kCost = class'HighlanderTypes'.static.ConvertTResearchCostToTCost(BaseTech.kCost);
+
+        // For some reason vanilla techs have these in both the cost and the tech itself, and don't populate the fields in the cost
+        HighlanderTech.kCost.iCash = BaseTech.iCash;
+        HighlanderTech.kCost.iAlloys = BaseTech.iAlloys;
+        HighlanderTech.kCost.iElerium = BaseTech.iElerium;
 
         if (BaseTech.iItemReq != 0)
         {
@@ -118,6 +120,8 @@ function bool CheckForSkunkworks()
 // TODO: include mod credit data
 function bool HL_CreditAppliesToFoundryTech(int iCredit, int iTechId)
 {
+    local HL_TFoundryTech kTech;
+
     switch (iCredit)
     {
         case 1: // Laser Weaponry
@@ -221,6 +225,13 @@ function bool HL_CreditAppliesToFoundryTech(int iCredit, int iTechId)
             }
         case 9: // All Technology
             return true;
+    }
+
+    kTech = `HL_FTECH(iTechId);
+
+    if (kTech.arrCredits.Find(iCredit) != INDEX_NONE)
+    {
+        return true;
     }
 
     return false;
@@ -419,17 +430,17 @@ function HL_TFoundryTech HL_GetFoundryTech(int iFoundryTechType, optional bool b
     if (bRushResearch)
     {
         kTech.iEngineers *= 1.50;
-        kTech.iCash *= 1.50;
-        kTech.iAlloys *= 1.50;
-        kTech.iElerium *= 1.50;
+        kTech.kCost.iCash *= 1.50;
+        kTech.kCost.iAlloys *= 1.50;
+        kTech.kCost.iElerium *= 1.50;
     }
 
     // TODO: may want to add a hook for mods to modify the cost/continent bonus
     if (HQ().HasBonus(4) > 0) // New Warfare
     {
-        kTech.iCash *= (float(1) - (float(HQ().HasBonus(4)) / float(100)));
-        kTech.iAlloys *= (float(1) - (float(HQ().HasBonus(4)) / float(100)));
-        kTech.iElerium *= (float(1) - (float(HQ().HasBonus(4)) / float(100)));
+        kTech.kCost.iCash *= (float(1) - (float(HQ().HasBonus(4)) / float(100)));
+        kTech.kCost.iAlloys *= (float(1) - (float(HQ().HasBonus(4)) / float(100)));
+        kTech.kCost.iElerium *= (float(1) - (float(HQ().HasBonus(4)) / float(100)));
     }
 
     kTech.iHours = HL_GetCreditAdjustedTechHours(iFoundryTechType, kTech.iHours, true);

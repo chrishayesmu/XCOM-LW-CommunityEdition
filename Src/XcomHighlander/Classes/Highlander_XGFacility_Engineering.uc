@@ -11,6 +11,7 @@ var array<int> m_arrHLFoundryHistory;
 function Init(bool bLoadingFromSave)
 {
     BaseInit();
+
     m_kItems = Spawn(class'Highlander_XGItemTree');
     m_kItems.Init();
 
@@ -32,7 +33,7 @@ function InitNewGame()
 
     if (HQ().HasBonus(9) > 0) // Resourceful
     {
-        m_arrHLFoundryHistory.AddItem(HQ().HasBonus(9));
+        m_arrHLFoundryHistory.AddItem(HQ().HasBonus(9)); // Alien Metallurgy
         m_arrHLFoundryHistory.AddItem(39); // Improved Salvage
     }
 
@@ -122,11 +123,8 @@ function TProjectCost GetFoundryProjectCost(int iTech, bool bRushFoundry)
     local HL_TFoundryTech kTech;
 
     kTech = `HL_FTECH(iTech);
-    kCost.arrItems = kTech.kCost.arrItems;
-    kCost.arrItemQuantities = kTech.kCost.arrItemQuantities;
-    kCost.iCash = kTech.iCash;
-    kCost.iElerium = kTech.iElerium;
-    kCost.iAlloys = kTech.iAlloys;
+
+    kCost = class'HighlanderTypes'.static.ConvertTCostToProjectCost(kTech.kCost);
     kCost.iStaffTypeReq = eStaff_Engineer;
     kCost.iStaffNumReq = kTech.iEngineers;
 

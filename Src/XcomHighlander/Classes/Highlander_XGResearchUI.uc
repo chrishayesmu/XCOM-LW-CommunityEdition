@@ -111,7 +111,7 @@ function TTechSummary HL_BuildTechSummary(HL_TTech kTech)
     kSummary.txtRequirementsLabel.StrValue = m_strCostLabel;
     kSummary.txtRequirementsLabel.iState = eUIState_Warning;
 
-    kCost = class'HighlanderTypes'.static.HighlanderToBase_TResearchCost(kTech.kCost);
+    kCost = class'HighlanderTypes'.static.ConvertTCostToTResearchCost(kTech.kCost);
     kSummary.bCanAfford = LABS().GetCostSummary(kSummary.kCost, kCost);
 
     return kSummary;

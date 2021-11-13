@@ -21,12 +21,9 @@ function OnFoundryTechsBuilt(out array<HL_TFoundryTech> Techs)
     kNewTech.iHours = 24 * 7;
     kNewTech.iEngineers = 50;
 
-    kNewTech.iCash = 150;
-    kNewTech.iElerium = 10;
-    kNewTech.iAlloys = 5;
-    kNewTech.kCost.iCash = kNewTech.iCash;
-    kNewTech.kCost.iElerium = kNewTech.iElerium;
-    kNewTech.kCost.iAlloys = kNewTech.iAlloys;
+    kNewTech.kCost.iCash = 150;
+    kNewTech.kCost.iElerium = 10;
+    kNewTech.kCost.iAlloys = 5;
 
     kNewTech.arrItemReqs.AddItem(169); // Alien Surgery
 

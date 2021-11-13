@@ -684,7 +684,7 @@ function SetNewProject(int iTech)
     if (m_kProject.iTech != 0)
     {
         kTech = `HL_TECH(m_kProject.iTech);
-        kCost = class'HighlanderTypes'.static.HighlanderToBase_TResearchCost(kTech.kCost);
+        kCost = class'HighlanderTypes'.static.ConvertTCostToTResearchCost(kTech.kCost);
 
         // TODO: since mods could potentially discount research dynamically, we should store the actual paid cost like engineering does, and refund that
         // TODO: Xenobiology doesn't refund its corpses for some reason? seems like maybe that should be configurable
@@ -718,7 +718,7 @@ function SetNewProject(int iTech)
     }
 
     kTech = `HL_TECH(iTech);
-    kCost = class'HighlanderTypes'.static.HighlanderToBase_TResearchCost(kTech.kCost);
+    kCost = class'HighlanderTypes'.static.ConvertTCostToTResearchCost(kTech.kCost);
 
     m_kProject.iTech = iTech;
     m_kProject.iEstimate = LabHoursToDays(kTech.iHours);
