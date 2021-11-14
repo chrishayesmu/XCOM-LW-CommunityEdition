@@ -2,6 +2,7 @@ class Highlander_XGTechTree extends XGTechTree
     dependson(HighlanderTypes)
     config(HighlanderBaseStrategyGame);
 
+var config array<HL_TFoundryTech> arrBaseGameFoundryProjects;
 var config array<HL_TTech> arrBaseGameTechs;
 
 var privatewrite array<HL_TFoundryTech> m_arrHLFoundryTechs;
@@ -21,42 +22,14 @@ function Init()
 
 function BuildFoundryTechs()
 {
-    local TFoundryTech BaseTech;
-    local HL_TFoundryTech BlankHLTech, HighlanderTech;
+    local HL_TFoundryTech BaseTech;
 
-    super.BuildFoundryTechs();
-
-    // Map all of the base game Foundry techs into our new structure
-    // TODO: recreate these in our own config so we can get rid of some custom logic for them
-    foreach m_arrFoundryTechs(BaseTech)
+    foreach arrBaseGameFoundryProjects(BaseTech)
     {
-        HighlanderTech = BlankHLTech;
+        BaseTech.strName = class'XGLocalizedData'.default.FoundryTechNames[BaseTech.iTechId];
+        BaseTech.strSummary = class'XGLocalizedData'.default.FoundryTechSummary[BaseTech.iTechId];
 
-        HighlanderTech.strName = BaseTech.strName;
-        HighlanderTech.strSummary = BaseTech.strSummary;
-        HighlanderTech.iTechId = BaseTech.iFoundryTech;
-        HighlanderTech.iHours = BaseTech.iHours;
-        HighlanderTech.iEngineers = BaseTech.iEngineers;
-        HighlanderTech.kCost = class'HighlanderTypes'.static.ConvertTResearchCostToTCost(BaseTech.kCost);
-
-        // For some reason vanilla techs have these in both the cost and the tech itself, and don't populate the fields in the cost
-        HighlanderTech.kCost.iCash = BaseTech.iCash;
-        HighlanderTech.kCost.iAlloys = BaseTech.iAlloys;
-        HighlanderTech.kCost.iElerium = BaseTech.iElerium;
-
-        if (BaseTech.iItemReq != 0)
-        {
-            HighlanderTech.kPrereqs.arrItemReqs.AddItem(BaseTech.iItemReq);
-        }
-
-        if (BaseTech.iTechReq != 0)
-        {
-            HighlanderTech.kPrereqs.arrTechReqs.AddItem(BaseTech.iTechReq);
-        }
-
-        HighlanderTech.ImagePath = class'UIUtilities'.static.GetFoundryImagePath(BaseTech.iImage);
-
-        m_arrHLFoundryTechs.AddItem(HighlanderTech);
+        m_arrHLFoundryTechs.AddItem(BaseTech);
    }
 
     // Clear out the base game tech list to help identify instances where it's being used
@@ -117,124 +90,13 @@ function bool CheckForSkunkworks()
     return true;
 }
 
-// TODO: include mod credit data
 function bool HL_CreditAppliesToFoundryTech(int iCredit, int iTechId)
 {
     local HL_TFoundryTech kTech;
 
-    switch (iCredit)
-    {
-        case 1: // Laser Weaponry
-            switch (iTechId)
-            {
-                case 6:  // Enhanced Lasers
-                case 34: // Supercapacitors
-                    return true;
-                default:
-                    break;
-            }
-        case 2: // Plasma Weaponry
-            switch (iTechId)
-            {
-                case 7:  // Enhanced Plasma
-                case 15: // Reflex Pistols
-                    return true;
-                default:
-                    break;
-            }
-        case 3: // Weapons Technology
-            switch (iTechId)
-            {
-                case 1:  // Enhanced Ballistics
-                case 2:  // Alien Grenades
-                case 6:  // Enhanced Lasers
-                case 7:  // Enhanced Plasma
-                case 10: // Ammo Conservation
-                case 13: // Mag Pistols
-                case 14: // Rail Pistols
-                case 15: // Reflex Pistols
-                case 16: // SHIV Suppression
-                case 18: // SCOPE Upgrade
-                case 46: // Quenchguns
-                    return true;
-                default:
-                    break;
-            }
-        case 4: // Aerospace Technology
-            switch (iTechId)
-            {
-                case 11: // Advanced Flight
-                case 12: // Armored Fighters
-                case 26: // Aircraft Boosters
-                case 27: // Wingtip Sparrowhawks
-                case 28: // Penetrator Weapons
-                case 31: // Improved Avionics
-                case 32: // UFO Countermeasures
-                case 33: // Elerium Afterburners
-                case 35: // UFO Tracking
-                case 37: // Super Skyranger
-                case 45: // UFO Scanners
-                    return true;
-                default:
-                    break;
-            }
-        case 5: // Armor Technology
-            switch (iTechId)
-            {
-                case 12: // Armored Fighters
-                case 22: // Shaped Armor
-                case 24: // Tactical Rigging
-                case 29: // Mechanized Unit Defenses
-                    return true;
-                default:
-                    break;
-            }
-        case 6: // Cybernetics
-            switch (iTechId)
-            {
-                case 3:  // Improved Medikit
-                case 5:  // Advanced Repair
-                case 9:  // Drone Capture
-                case 19: // Jellied Elerium
-                case 20: // MEC Close Combat
-                case 21: // Advanced Servomotors
-                case 30: // Advanced Surgery
-                case 36: // MEC Warfare Systems
-                    return true;
-                default:
-                    break;
-            }
-        case 7: // Gauss Weaponry
-            switch (iTechId)
-            {
-                case 13: // Mag Pistols
-                case 14: // Rail Pistols
-                case 44: // Phoenix Coilguns
-                case 46: // Quenchguns
-                    return true;
-                default:
-                    break;
-            }
-        case 8: // Psionics
-            switch (iTechId)
-            {
-                case 41: // Psi Warfare Systems
-                    return true;
-                default:
-                    break;
-            }
-        case 9: // All Technology
-            return true;
-    }
+    kTech = HL_GetFoundryTech(iTechId);
 
-    kTech = `HL_FTECH(iTechId);
-
-    if (kTech.arrCredits.Find(iCredit) != INDEX_NONE)
-    {
-        return true;
-    }
-
-    return false;
+    return kTech.arrCredits.Find(iCredit) != INDEX_NONE;
 }
 
 function bool HL_CreditAppliesToTech(int iCredit, int iTech)
