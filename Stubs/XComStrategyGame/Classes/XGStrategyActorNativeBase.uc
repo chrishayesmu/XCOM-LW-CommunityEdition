@@ -1162,6 +1162,7 @@ struct TItemProject
     var TProjectCost kRebate;
     var TProjectCost kOriginalCost;
 };
+
 struct TFacilityProject
 {
     var EFacilityType eFacility;
@@ -1287,7 +1288,7 @@ var config int BLUESHIRT_HP_MOD;
 var config int BLUESHIRT_AIM_MOD;
 
 function Achieve(XComOnlineEventMgr.EAchievementType eAchievement)
-{  
+{
 }
 
 function XGSoundMgr Sound()
@@ -1295,15 +1296,15 @@ function XGSoundMgr Sound()
 }
 
 function XComHQSoundCollection SNDLIB()
-{ 
+{
 }
 
 function bool ISCONTROLLED()
-{   
+{
 }
 
 function XGWorld World()
-{   
+{
 }
 
 function XGStrategyAI AI()
@@ -1311,36 +1312,36 @@ function XGStrategyAI AI()
 }
 
 function XGStrategy Game()
-{    
+{
 }
 
 function XGTacticalGameCore TACTICAL()
-{  
+{
 }
 
 function XGHeadQuarters HQ()
-{   
+{
 }
 function XGExaltSimulation EXALT(){}
 
 function XGGeoscape GEOSCAPE()
-{ 
+{
 }
 
 function XComHQPresentationLayer PRES()
-{ 
+{
 }
 
 function XGBase Base()
-{   
+{
 }
 
 function XGFacility_Barracks BARRACKS()
-{ 
+{
 }
 
 function XGFacility_Labs LABS()
-{  
+{
 }
 
 function XGFacility_Engineering ENGINEERING()
@@ -1348,11 +1349,11 @@ function XGFacility_Engineering ENGINEERING()
 }
 
 function XGStorage STORAGE()
-{    
+{
 }
 
 function XGFacility_Lockers LOCKERS()
-{   
+{
 }
 
 function XGFacility_PsiLabs PSILABS(){}
@@ -1360,11 +1361,11 @@ function XGFacility_PsiLabs PSILABS(){}
 function XGFacility_GeneLabs GENELABS(){}
 
 function XGFacility_CyberneticsLab CYBERNETICSLAB()
-{ 
+{
 }
 
 function XGFacility_Hangar HANGAR()
-{  
+{
 }
 
 function XGFacility_GollopChamber GOLLOP(){}
@@ -1376,15 +1377,15 @@ function XGObjectiveManager OBJECTIVES(){}
 
 
 function TItem Item(int iItemType, optional int iTransactionType)
-{ 
+{
 }
 
 function TFacility Facility(int iFacilityType, optional bool bRushConstruction)
-{  
+{
 }
 
 function TItem STAFF(int iStaffType)
-{    
+{
 }
 
 function XGItemTree ITEMTREE(){ }
@@ -1394,7 +1395,7 @@ function TShipWeapon SHIPWEAPON(int iWeaponType)
 }
 
 function TTech TECH(int iTechType)
-{   
+{
 }
 
 function TFoundryTech FTECH(int iFoundryTechType, optional bool bRushResearch)
@@ -1409,7 +1410,7 @@ function XGTechTree TECHTREE(){}
 
 
 function XComPerkManager perkMgr()
-{   
+{
 }
 
 function XGSetupPhaseManager SETUPMGR(){}
@@ -1418,35 +1419,35 @@ function XGCity CITY(int iCity){}
 
 
 function XGContinent Continent(int iContinent)
-{   
+{
 }
 
 function XGCountry Country(int iCountry)
-{  
+{
 }
 
 function bool Roll(int iChance)
-{  
+{
 }
 
 function int STAT_GetStat(ERecapStats eStat)
-{  
+{
 }
 
 function float STAT_GetAvgStat(ERecapStats eCountStat, ERecapStats eSumStat)
-{ 
+{
 }
 
 function float STAT_AddAvgStat(ERecapStats eCountStat, ERecapStats eSumStat, int Value)
-{  
+{
 }
 
 function string STAT_GetWorldStat(ERecapStats eStat)
-{  
+{
 }
 
 function string STAT_GetWorldAvgStat(ERecapStats eCountStat, ERecapStats eSumStat)
-{   
+{
 }
 
 function STAT_AddStat(ERecapStats eStat, optional int Value)
@@ -1466,15 +1467,15 @@ function STAT_SetProfileStat(EProfileStats eStat, int Value)
 }
 
 function int STAT_GetProfileStat(EProfileStats eStat)
-{ 
+{
 }
 
 function XGRecapSaveData GetRecapSaveData()
-{   
+{
 }
 
 function bool IsOptionEnabled(EGameplayOption eOption)
-{   
+{
 }
 
 native function SortSoldierArray(out array<XGStrategySoldier> Soldiers);

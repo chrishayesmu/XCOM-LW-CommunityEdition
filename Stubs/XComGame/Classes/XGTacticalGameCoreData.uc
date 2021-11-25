@@ -409,7 +409,7 @@ enum ECharacterStat
     eStat_Offense,
     eStat_Defense,
     eStat_Mobility,
-    eStat_Strength,
+    eStat_DamageReduction,
     eStat_ShieldHP,
     eStat_CouncilMedalAccrued,
     eStat_Will,
@@ -426,6 +426,7 @@ enum ECharacterStat
     eStat_Reaction,
     eStat_MAX
 };
+
 enum ERandomSample
 {
     eSample_Damage,

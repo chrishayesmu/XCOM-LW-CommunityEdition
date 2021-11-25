@@ -944,6 +944,10 @@ native static final function string GetLastMovieName();
 
 native static final function SetAlienFXColor(AlienFXColors AlienFXColor);
 
+native static final function bool IsSonOfFacemelt();
+native static final function bool IsFarmDemo();
+native static final function bool IsSteamBigPicture();
+
 /**
  * Play one of the LoadMap loading movies as configured by ini file
  *

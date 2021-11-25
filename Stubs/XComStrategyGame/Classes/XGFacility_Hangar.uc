@@ -47,6 +47,7 @@ function XGShip_Dropship GetDropship(){}
 function bool IsSkyrangerAvailable(XGShip_Dropship kSkyranger){}
 function XGShip_Dropship GetAvailableSkyranger(){}
 function AddInterceptor(int iContinent){}
+function AddDropship(){}
 function int GetAvailableBay(){}
 function bool IsBayAvailable(int iBay){}
 function UpdateHangarBays(){}
@@ -87,4 +88,3 @@ function ForceStreamMissionControlTextures(float Duration){}
 function NotifyHangarCinematicEnd(){}
 function bool PlayFirestormBuiltCinematic(){}
 function bool IsHangarCinematicBusy(){}
-

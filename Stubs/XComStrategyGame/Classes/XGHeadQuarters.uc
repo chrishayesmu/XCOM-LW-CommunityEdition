@@ -148,7 +148,8 @@ function bool IsHyperwaveActive(){}
 function CreateFacilities(){}
 function SetActiveFacility(XGFacility kFacility, float fInterpTime){}
 function EnterFacility(XGFacility kFacility, float fInterpTime, int iView, optional bool bAllowAutoSave){}
-function LeaveFacility(XGFacility kFacility){};
+function LeaveFacility(XGFacility kFacility){}
+function XGFacility CurrentFacility(){}
 function JumpToFacility(XGFacility kFacility, float fInterpTime, optional int iView, optional name NewState){}
 function EnterMissionControlAutosave(){}
 function array<XGFacility> GetFacilities(){}
