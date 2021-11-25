@@ -13,7 +13,7 @@ Like XCOM 2's Highlander, the name is inspired by [the movie's](https://en.wikip
 
 # Installation
 
-This section is TBD.
+This section is TBD, as there are no releases yet. For personal use while in development, see [building locally](#building-the-highlander-locally).
 
 # Project goals
 
@@ -71,4 +71,102 @@ Once you have your ID block, you need to update your `HighlanderModBase` child c
 
 # Building the Highlander locally
 
-This project uses macros defined in the file `SrcOrig/XComGame/Globals.uci`. To build the Highlander locally, you will need this file present in your UDK environment, at `<UDK root>/Development/Src/XComGame/Globals.uci`. The simplest way to accomplish this is to create a symbolic link pointing at the file in your local Highlander repo, so that your build environment remains in sync with the latest changes.
+> :warning: These steps are only tested on Windows systems. For other OS's you may need to modify these extensively.
+
+These steps will get you able to build and run the Highlander on your own machine. We make extensive use of [symbolic links](https://en.wikipedia.org/wiki/Symbolic_link) or **symlinks**, so make sure you know how to create them on your system.
+
+## First time setup for XCOM modding
+
+>If you have written and built mods for XCOM: Enemy Within before, you may be able to skip most of this section. However, some steps are unique to the Highlander's environment, so still read through to see if you need to make any changes!
+
+### Installing the UDK
+
+XCOM: Enemy Within was built using the 2011-09 version of the UDK, so we use the same one. You can download it [from the Nexus](https://www.nexusmods.com/xcom/mods/485). Make sure to note the installation path, as you will refer back to it frequently. Throughout this README we will refer to the installation path as `UDK_PATH`.
+
+> :warning: The UDK installer doesn't create a subfolder at the given path. For example, if you install at `D:\`, it will happily extract the UDK's contents directly into `D:\` and make things difficult to navigate. Make sure you create a subfolder yourself and install it there.
+
+After installing the UDK, navigate to `UDK_PATH` and check that you have the folders `Binaries`, `Development`, `Engine`, and `UDKGame`. To check that you are set up properly, execute `UDK_PATH/Binaries/Win32/UDK.exe make` to build the sample game that comes with the installer.
+
+### Adding XCOM stubs to the UDK
+
+To build against XCOM's APIs, we need to know its classes and their functions. We do this using **stubs**, which contain only the classes and function signatures, without including the body of any functions (which would be very difficult to get to build successfully). Note that the stubs are ***incomplete***, and periodically we have to add functions or even entire classes to them. For this reason, we use symlinks rather than just copying them into the UDK directory.
+
+If you open `UDK_PATH/Development/Src`, you will see a number of folders such as `Core`, `Engine`, etc. You will see the same folders in your Highlander installation directory under `Stubs`, plus a few more. We will mostly be adding packages to the UDK, but XCOM does make modifications to the `Engine` classes, so you'll need to delete the folder `UDK_PATH/Development/Src/Engine`.
+
+Once you've located both the stubs and the UDK folders, simply create symlinks within `UDK_PATH/Development/Src` pointing to the equivalent folder in `Stubs/`. You need to do this for the folders `Engine`, `XComGame`, `XComStrategyGame`, `XComMutator`, and `XComLZMutator`.
+
+After creating the symlinks, you still need to tell the UDK about the XCOM packages. Open the file at `UDK_PATH/UDKGame/Config/DefaultEngine.ini` in any text editor, and locate this block:
+
+```
+[UnrealEd.EditorEngine]
++EditPackages=UTGame
++EditPackages=UTGameContent
+```
+
+We're going to append the XCOM packages like this:
+
+```
+[UnrealEd.EditorEngine]
++EditPackages=UTGame
++EditPackages=UTGameContent
++EditPackages=XComGame
++EditPackages=XComStrategyGame
++EditPackages=XComMutator
++EditPackages=XComLZMutator
+```
+
+**Make sure your packages are in this order!** This is the order they will build in, and they must be in this order due to the dependencies between packages.
+
+Once you've saved the file, execute `UDK_PATH/Binaries/Win32/UDK.exe make` again. You will likely see a bunch of warnings, since we're only building stubs and not real functions, but you should not receive any errors. If the build succeeds for all packages, your stubs are set up correctly.
+
+### Installing an IDE
+
+You can edit UnrealScript files any way you like, including a basic notepad editor if you want. One setup which works well is using [Visual Studio Code](https://code.visualstudio.com/), which is free and relatively lightweight. You can install the [UnrealScript](https://marketplace.visualstudio.com/items?itemName=EliotVU.uc) extension to get language support, though many of the features may only work sporadically, due to the broken nature of the code in `SrcOrig`. It still provides syntax highlighting at minimum, which is well worth having.
+
+If you're using VS Code, you can also create [a custom build task](https://code.visualstudio.com/docs/editor/tasks#_custom-tasks) which executes `UDK_PATH/Binaries/Win32/UDK.exe make`, so that you can build by simply pressing <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>B</kbd>.
+
+## First time setup for the Highlander
+
+### Building through the UDK
+
+The steps for building the Highlander are quite similar to the setup for the stub files.
+
+1. Create a symlink in `UDK_PATH/Development/Src` which points to the Highlander source code (`HIGHLANDER_DIR/Src`).
+2. Modify `UDK_PATH/UDKGame/Config/DefaultEngine.ini` and add the line `+EditPackages=XComHighlander` to the end of the `EditPackages` block from before. (It must be at the end!)
+3. Build using `UDK_PATH/Binaries/Win32/UDK.exe make` and verify that the build succeeds.
+
+If the build succeeds then you should be good to go as far as building the Highlander locally.
+
+### Running the Highlander code in game
+
+> :warning: Before following these steps, make sure you have XCOM: Enemy Within installed, with [Long War 1.0](https://www.nexusmods.com/xcom/mods/88/) installed on top. We're using bytecode modification to inject the Highlander, so any differences in your environment could cause it to fail. Leaving other small mods installed is fine, but if you have another Long War version, or a similarly large mod installed, things are likely to break.
+
+Now that you've built the Highlander, connecting it to the game is straightforward. You will need to have PatcherGUI available, which is part of [UPKUtils](https://www.nexusmods.com/xcom/mods/448). You will also need to know the directory that XCOM is installed in, such as `D:\SteamLibrary\steamapps\common\XCom-Enemy-Unknown`. This will be referred to as `XCOM_PATH`.
+
+1. Navigate to `UDK_PATH/UDKGame/Script`. If you built the Highlander successfully, you should see the file `XComHighlander.u` there.
+2. Also navigate to `XCOM_PATH/XEW/XComGame/CookedPCConsole`. This is where `.upk` and `.u` files are stored for XCOM: Enemy Within. Make sure your path includes `XEW`, otherwise it is for XCOM: Enemy Unknown.
+3. Create a symbolic link within `CookedPCConsole` that points at the `XComHighlander.u` file.
+
+By using a symlink, each time you build the Highlander, the latest version will be picked up by the game automatically.
+
+There's one more step: the Highlander code is located alongside the game, but the game doesn't know to load it. There are several ways to make that happen, but we use **bytecode modification** to inject a few high-level classes into the game flow. Installing these is easy:
+
+1. Open up PatcherGUI, from UPKUtils. This is an application that can apply bytecode patches in a safe and reversible way.
+2. At the top of PatcherGUI's window, there should be a path pointing to the `XEW` folder in your XCOM installation. Verify that it has detected the right path, as sometimes it can get confused depending on your installation directory.
+3. Click the Browse button next to the line that just says "Mod file". Browse to `HIGHLANDER_DIR/Patches` and select `XComGame_Overrides.upatch`. (You'll need to change the filetype filter to see `.upatch` files.)
+4. After you select the file, you will see its contents appear in PatcherGUI. Click Apply on the right side to modify the game files. You should receive a pop-up stating that the mod installed successfully.
+5. Repeat this process for the mod file `HIGHLANDER_DIR/Patches/XComStrategyGame_Overrides.upatch`.
+
+At this point, if you launch XCOM, you should be running the Highlander. But since the point of the Highlander is to fix bugs and look as much like Long War 1.0 as possible, it may be tough to verify this. The simplest way - and a good idea regardless if you're going to be modding XCOM - is to enable the log window while playing.
+
+### Viewing XCOM logs
+
+These steps assume you're playing through Steam. If not, they should still be applicable; you just need to apply the launch options to your own launcher method.
+
+1. Find XCOM: Enemy Unknown in Steam. Right click it and select Properties.
+2. At the bottom of the General section, you should see a "Launch Options" field. Enter the following: `--noRedScreens -noStartUpMovies -log -allowConsole`
+3. Close the launch options and boot the game.
+
+After the game starts, a separate window should open which contains log output. These logs are also written to a file which is overwritten every time the game launches. For me, the file is at `Documents/my games/XCOM - Enemy Within/XComGame/Logs/Launch.log`. Note that the log window is unbuffered, while the file is buffered, so you may not see the latest output in the file unless you close the game.
+
+The Highlander begins logging even at the main menu, without loading a game. To verify that the Highlander is running properly, open the log file and search for `XComHighlander`, which all Highlander log lines begin with. If you find it, congratulations - you're all set up to build and run the XCOM Highlander!
