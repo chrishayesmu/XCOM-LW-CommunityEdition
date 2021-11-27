@@ -1,5 +1,21 @@
 class Highlander_XComTacticalGRI extends XComTacticalGRI;
 
+simulated function StartMatch()
+{
+    super(GameReplicationInfo).StartMatch();
+    m_CharacterGen = Spawn(class'XGCharacterGenerator');
+    mSimpleShapeManager = Spawn(class'SimpleShapeManager');
+    m_kTraceMgr = Spawn(class'XComTraceManager');
+    if (Role == ROLE_Authority)
+    {
+        m_kPrecomputedPath = Spawn(class'Highlander_XComPrecomputedPath');
+    }
+
+    `HL_LOG_CLS("(highlander override) StartMatch");
+
+    InitBattle();
+}
+
 function InitBattle() {
     local XGPlayer NewPlayer;
     local XComTacticalController kLocalPC;
@@ -121,7 +137,7 @@ function InitBattle() {
         }
     }
 
-    `HL_LOG_CLS("(highlander override)");
+    `HL_LOG_CLS("(highlander override) InitBattle");
 }
 
 simulated function ReceivedGameClass()
