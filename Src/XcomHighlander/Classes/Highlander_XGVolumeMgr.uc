@@ -47,27 +47,35 @@ function XGVolume CreateVolumeByType(EVolumeType kType, Vector vCenter, optional
     return kVolume;
 }
 
-function XGVolume CreateVolume(TVolume kTVolume, XGUnit kInstigator, Vector vCenter, optional XGAbility_Targeted kAbility)
+static function Vector TiledVolumeLocation(Vector vCenter)
 {
-    local XGVolume kVolume;
     local bool bFloorTile;
     local int X, Y, Z;
 
+    bFloorTile = class'XComWorldData'.static.GetWorldData().GetFloorTileForPosition(vCenter, X, Y, Z);
+
+    if (!bFloorTile)
+    {
+        vCenter.Z += 64.0 * 1.50;
+        bFloorTile = class'XComWorldData'.static.GetWorldData().GetFloorTileForPosition(vCenter, X, Y, Z);
+    }
+
+    if (bFloorTile)
+    {
+        vCenter = class'XComWorldData'.static.GetWorldData().GetPositionFromTileCoordinates(X, Y, Z);
+        vCenter.Z += 64.0 * 1.10;
+    }
+
+    return vCenter;
+}
+
+function XGVolume CreateVolume(TVolume kTVolume, XGUnit kInstigator, Vector vCenter, optional XGAbility_Targeted kAbility)
+{
+    local XGVolume kVolume;
+
     if (kTVolume.eType == eVolume_Smoke || kTVolume.eType == eVolume_CombatDrugs || kTVolume.eType == eVolume_Poison)
     {
-        bFloorTile = class'XComWorldData'.static.GetWorldData().GetFloorTileForPosition(vCenter, X, Y, Z);
-
-        if (!bFloorTile)
-        {
-            vCenter.Z += 64.0 * 1.50;
-            bFloorTile = class'XComWorldData'.static.GetWorldData().GetFloorTileForPosition(vCenter, X, Y, Z);
-        }
-
-        if (bFloorTile)
-        {
-            vCenter = class'XComWorldData'.static.GetWorldData().GetPositionFromTileCoordinates(X, Y, Z);
-            vCenter.Z += 64.0 * 1.10;
-        }
+        vCenter = TiledVolumeLocation(vCenter);
     }
 
     kVolume = Spawn(class'Highlander_XGVolume', kInstigator);

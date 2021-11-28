@@ -9,17 +9,20 @@ simulated event Tick(float DeltaTime) {
 }
 
 simulated function Vector GetEndPosition() {
-    local bool bFloorTile;
-    local int X, Y, Z;
     local Vector vCenter;
 
     vCenter = super.GetEndPosition();
 
+    // Highlander issue #13
+    // In XGVolumeMgr, volumes of type eVolume_Poison and eVolume_Smoke are
+    // snapped to tile centers. This replicates the same behavior, but for
+    // targeting.
+    // Slight inconsistency: We need to manually map weapons to volume types here.
     if (kCurrentWeapon.m_kGameWeapon.IsA('XGWeapon_SmokeGrenade')
         || kCurrentWeapon.m_kGameWeapon.IsA('XGWeapon_GasGrenade')
         || kCurrentWeapon.m_kGameWeapon.IsA('XGWeapon_ThinmanGrenade')
     ) {
-        bFloorTile = class'XComWorldData'.static.GetWorldData().GetFloorTileForPosition(vCenter, X, Y, Z);
+        vCenter = class'Highlander_XGVolumeMgr'.static.TiledVolumeLocation(vCenter);
 
         if (!bFloorTile)
         {
