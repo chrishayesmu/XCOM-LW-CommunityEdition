@@ -20,7 +20,7 @@ simulated function Vector GetEndPosition() {
     // Slight inconsistency: We need to manually map weapons to volume types here.
     if (kCurrentWeapon.m_kGameWeapon.IsA('XGWeapon_SmokeGrenade')
         || kCurrentWeapon.m_kGameWeapon.IsA('XGWeapon_GasGrenade')
-        || kCurrentWeapon.m_kGameWeapon.IsA('XGWeapon_ThinmanGrenade')
+        || kCurrentWeapon.m_kGameWeapon.IsA('XGWeapon_Plague')
     ) {
         vCenter = class'Highlander_XGVolumeMgr'.static.TiledVolumeLocation(vCenter);
 
