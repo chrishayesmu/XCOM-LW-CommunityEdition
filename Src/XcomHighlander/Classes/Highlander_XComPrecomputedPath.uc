@@ -19,22 +19,11 @@ simulated function Vector GetEndPosition() {
     // targeting.
     // Slight inconsistency: We need to manually map weapons to volume types here.
     if (kCurrentWeapon.m_kGameWeapon.IsA('XGWeapon_SmokeGrenade')
-        || kCurrentWeapon.m_kGameWeapon.IsA('XGWeapon_GasGrenade')
-        || kCurrentWeapon.m_kGameWeapon.IsA('XGWeapon_Plague')
-    ) {
+     || kCurrentWeapon.m_kGameWeapon.IsA('XGWeapon_GasGrenade')
+     || kCurrentWeapon.m_kGameWeapon.IsA('XGWeapon_Plague'))
+    {
         vCenter = class'Highlander_XGVolumeMgr'.static.TiledVolumeLocation(vCenter);
-
-        if (!bFloorTile)
-        {
-            vCenter.Z += 64.0 * 1.50;
-            bFloorTile = class'XComWorldData'.static.GetWorldData().GetFloorTileForPosition(vCenter, X, Y, Z);
-        }
-
-        if (bFloorTile)
-        {
-            vCenter = class'XComWorldData'.static.GetWorldData().GetPositionFromTileCoordinates(X, Y, Z);
-            vCenter.Z += 64.0 * 1.10;
-        }
     }
+
     return vCenter;
 }
