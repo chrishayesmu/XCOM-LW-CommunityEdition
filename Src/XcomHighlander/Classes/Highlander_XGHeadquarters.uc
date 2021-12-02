@@ -286,6 +286,40 @@ function OrderInterceptors(int iContinent, int iQuantity)
     m_akInterceptorOrders.AddItem(kOrder);
 }
 
+function OrderStaff(int iType, int iQuantity)
+{
+    local TStaffOrder kOrder;
+    local int I;
+
+    if (!WorldInfo.IsConsoleBuild(CONSOLE_Xbox360) && !WorldInfo.IsConsoleBuild(CONSOLE_PS3))
+    {
+        GetRecapSaveData().RecordEvent(RecordHiredAdditionalSoldiers(iQuantity));
+    }
+
+    // Highlander issue #14: update resource HUD after ordering soldiers
+    AddResource(eResource_Money, -STAFF(iType).iCash * iQuantity);
+    PRES().GetStrategyHUD().UpdateDefaultResources();
+
+    if (iType == eStaff_Soldier)
+    {
+        STAT_AddStat(eRecap_SoldiersHired, iQuantity);
+    }
+
+    for (I = 0; I < m_arrHiringOrders.Length; I++)
+    {
+        if (m_arrHiringOrders[I].iStaffType == iType && m_arrHiringOrders[I].iHours == STAFF(iType).iHours)
+        {
+            m_arrHiringOrders[I].iNumStaff += iQuantity;
+            return;
+        }
+    }
+
+    kOrder.iStaffType = iType;
+    kOrder.iNumStaff = iQuantity;
+    kOrder.iHours = STAFF(iType).iHours;
+    m_arrHiringOrders.AddItem(kOrder);
+}
+
 function ReduceInterceptorOrder(int iOrder)
 {
     local int iCost;
