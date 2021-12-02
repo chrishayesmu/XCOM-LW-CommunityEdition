@@ -2,9 +2,8 @@ class Highlander_XGBattle_SPCovertOpsExtraction extends XGBattle_SPCovertOpsExtr
 
 function CollectLoot()
 {
+    local int Index;
     local Highlander_XGBattleDesc kDesc;
-
-    super(XGBattle).CollectLoot();
 
     kDesc = Highlander_XGBattleDesc(m_kDesc);
     kDesc.m_kDropShipCargoInfo.m_kReward.iCredits += m_iCovertOpsCashRewardAmount;
@@ -13,6 +12,18 @@ function CollectLoot()
     {
         kDesc.m_kArtifactsContainer.Set(`LW_ITEM_ID(EXALTIntelligence), 1);
     }
+
+    class'XComCollectible'.static.CollectCollectibles(m_kDesc.m_arrArtifacts);
+
+    for (Index = 0; Index < m_kDesc.m_arrArtifacts.Length; Index++)
+    {
+        if (m_kDesc.m_arrArtifacts[Index] > 0)
+        {
+            kDesc.m_kArtifactsContainer.AdjustQuantity(Index, m_kDesc.m_arrArtifacts[Index]);
+        }
+    }
+
+    kDesc.m_kArtifactsContainer.Set(`LW_ITEM_ID(Meld), GetRecoveredMeldAmount());
 }
 
 // IMPORTANT: This function is an override of a function in XGBattle_SP. Since we can't modify the inheritance hierarchy,

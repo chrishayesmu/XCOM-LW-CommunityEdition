@@ -1,5 +1,36 @@
 class Highlander_XGBattle_SPCaptureAndHold extends XGBattle_SPCaptureAndHold;
 
+function CollectLoot()
+{
+    local int Index;
+    local Highlander_XGBattleDesc kDesc;
+    local XComCapturePointVolume kCapturePoint;
+
+    kDesc = Highlander_XGBattleDesc(m_kDesc);
+    kDesc.m_kDropShipCargoInfo.m_bAllPointsHeld = false;
+
+    class'XComCollectible'.static.CollectCollectibles(m_kDesc.m_arrArtifacts);
+
+    for (Index = 0; Index < m_kDesc.m_arrArtifacts.Length; Index++)
+    {
+        if (m_kDesc.m_arrArtifacts[Index] > 0)
+        {
+            kDesc.m_kArtifactsContainer.AdjustQuantity(Index, m_kDesc.m_arrArtifacts[Index]);
+        }
+    }
+
+    kDesc.m_kArtifactsContainer.Set(`LW_ITEM_ID(Meld), GetRecoveredMeldAmount());
+
+    foreach m_arrCapturePoints(kCapturePoint)
+    {
+        if (kCapturePoint.m_iCaptureSequenceIndex == 0 && kCapturePoint.IsActive())
+        {
+            m_kDesc.m_kDropShipCargoInfo.m_kReward.iCredits += m_iAllPointsSafeCashRewardAmount;
+            m_kDesc.m_kDropShipCargoInfo.m_bAllPointsHeld = true;
+        }
+    }
+}
+
 // IMPORTANT: This function is an override of a function in XGBattle_SP. Since we can't modify the inheritance hierarchy,
 // this function has been inserted into each Highlander child class override of XGBattle_SP.
 // ***If you modify this function, apply the changes in all child classes as well!***

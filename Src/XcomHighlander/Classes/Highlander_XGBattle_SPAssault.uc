@@ -1,8 +1,5 @@
 class Highlander_XGBattle_SPAssault extends XGBattle_SPAssault;
 
-// IMPORTANT: Functions below this point are overrides of functions in XGBattle_SP. Since we can't modify the inheritance hierarchy,
-// they have been inserted into each Highlander child class override of XGBattle_SP.
-// ***If you modify any function below here, apply the changes in all child classes as well!***
 function CollectLoot()
 {
     local int Index;
@@ -23,7 +20,6 @@ function CollectLoot()
     {
         if (m_kDesc.m_arrArtifacts[Index] > 0)
         {
-            `HL_LOG_CLS("Collectible found. Item ID is " $ Index $ ", with quantity " $ m_kDesc.m_arrArtifacts[Index]);
             kDesc.m_kArtifactsContainer.AdjustQuantity(Index, m_kDesc.m_arrArtifacts[Index]);
         }
     }
@@ -37,6 +33,10 @@ function CollectLoot()
         kDesc.m_kArtifactsContainer.AdjustQuantity(`LW_ITEM_ID(AlienAlloy), 80);
     }
 }
+
+// IMPORTANT: Functions below this point are overrides of functions in XGBattle_SP. Since we can't modify the inheritance hierarchy,
+// they have been inserted into each Highlander child class override of XGBattle_SP.
+// ***If you modify any function below here, apply the changes in all child classes as well!***
 
 function InitDescription()
 {

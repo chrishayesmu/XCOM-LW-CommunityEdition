@@ -1,5 +1,39 @@
 class Highlander_XGBattle_SPDebug extends XGBattle_SPDebug;
 
+function CollectLoot()
+{
+    local int Index;
+    local string strMapName;
+    local Highlander_XGBattleDesc kDesc;
+
+    kDesc = Highlander_XGBattleDesc(m_kDesc);
+
+    if (kDesc.m_eCouncilType == eFCM_ChryssalidHive)
+    {
+        return;
+    }
+
+    strMapName = class'Engine'.static.GetCurrentWorldInfo().GetMapName();
+    class'XComCollectible'.static.CollectCollectibles(m_kDesc.m_arrArtifacts);
+
+    for (Index = 0; Index < m_kDesc.m_arrArtifacts.Length; Index++)
+    {
+        if (m_kDesc.m_arrArtifacts[Index] > 0)
+        {
+            kDesc.m_kArtifactsContainer.AdjustQuantity(Index, m_kDesc.m_arrArtifacts[Index]);
+        }
+    }
+
+    kDesc.m_kArtifactsContainer.Set(`LW_ITEM_ID(Meld), GetRecoveredMeldAmount());
+
+    if (strMapName == "DLC1_3_Gangplank")
+    {
+        // TODO move these amounts into config
+        kDesc.m_kArtifactsContainer.AdjustQuantity(`LW_ITEM_ID(Elerium), 80);
+        kDesc.m_kArtifactsContainer.AdjustQuantity(`LW_ITEM_ID(AlienAlloy), 80);
+    }
+}
+
 // IMPORTANT: This function is an override of a function in XGBattle_SP. Since we can't modify the inheritance hierarchy,
 // this function has been inserted into each Highlander child class override of XGBattle_SP.
 // ***If you modify this function, apply the changes in all child classes as well!***
