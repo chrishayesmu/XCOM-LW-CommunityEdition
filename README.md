@@ -91,9 +91,9 @@ After installing the UDK, navigate to `UDK_PATH` and check that you have the fol
 
 To build against XCOM's APIs, we need to know its classes and their functions. We do this using **stubs**, which contain only the classes and function signatures, without including the body of any functions (which would be very difficult to get to build successfully). Note that the stubs are ***incomplete***, and periodically we have to add functions or even entire classes to them. For this reason, we use symlinks rather than just copying them into the UDK directory.
 
-If you open `UDK_PATH/Development/Src`, you will see a number of folders such as `Core`, `Engine`, etc. You will see the same folders in your Highlander installation directory under `Stubs`, plus a few more. We will mostly be adding packages to the UDK, but XCOM does make modifications to the `Engine` classes, so you'll need to delete the folder `UDK_PATH/Development/Src/Engine`.
+If you open `UDK_PATH/Development/Src`, you will see a number of folders such as `Core`, `Engine`, etc. You will see the same folders in your Highlander installation directory under `Stubs`, plus a few more. We will mostly be adding packages to the UDK, but XCOM does make modifications to the `Core` and `Engine` classes, so you'll need to delete the folders `UDK_PATH/Development/Src/Core` and `UDK_PATH/Development/Src/Engine`.
 
-Once you've located both the stubs and the UDK folders, simply create symlinks within `UDK_PATH/Development/Src` pointing to the equivalent folder in `Stubs/`. You need to do this for the folders `Engine`, `XComGame`, `XComStrategyGame`, `XComMutator`, and `XComLZMutator`.
+Once you've located both the stubs and the UDK folders, simply create symlinks within `UDK_PATH/Development/Src` pointing to the equivalent folder in `Stubs/`. You need to do this for the folders `Core`, `Engine`, `XComGame`, `XComStrategyGame`, `XComMutator`, and `XComLZMutator`.
 
 After creating the symlinks, you still need to tell the UDK about the XCOM packages. Open the file at `UDK_PATH/UDKGame/Config/DefaultEngine.ini` in any text editor, and locate this block:
 

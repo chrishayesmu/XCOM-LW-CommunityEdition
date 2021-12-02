@@ -19,11 +19,11 @@ function Mutate(string MutateString, PlayerController Sender) {
         if (XComTacticalGame(CurrentGameInfo) != none) {
             `HL_LOG_CLS("(highlander) init tac game");
             // perform overrides
-            CurrentGameInfo.GameReplicationInfoClass = class'Highlander_XComTacticalGRI';
+            //CurrentGameInfo.GameReplicationInfoClass = class'Highlander_XComTacticalGRI';
         }
         else if (XComHeadquartersGame(CurrentGameInfo) != none) {
             `HL_LOG_CLS("(highlander) init strat game");
-            CurrentGameInfo.PlayerControllerClass = class'Highlander_XComHeadquartersController';
+            //CurrentGameInfo.PlayerControllerClass = class'Highlander_XComHeadquartersController';
         }
     }
 

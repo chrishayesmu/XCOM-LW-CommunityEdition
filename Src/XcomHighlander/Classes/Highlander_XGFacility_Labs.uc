@@ -65,7 +65,7 @@ function Update()
         m_arrHLProgress[iProgressIndex].iHoursCompleted += iHoursCompleted;
         m_arrHLProgress[iProgressIndex].iHoursSpent += 1;
 
-        if (ISCONTROLLED() && m_kProject.iTech == eTech_Xenobiology)
+        if (ISCONTROLLED() && m_kProject.iTech == `LW_TECH_ID(Xenobiology))
         {
             if (GEOSCAPE().m_kDateTime.GetDay() > START_DAY + 7)
             {
@@ -249,6 +249,102 @@ function HL_GetAvailableTechs(out array<HL_TTech> arrTechs)
             }
         }
     }
+}
+
+function bool GetCostSummary(out TCostSummary kCostSummary, out TResearchCost kCost)
+{
+    local TText txtCost;
+    local bool bCanAfford;
+    local int iItem;
+    local HL_TItem kItem;
+    local XGParamTag kTag;
+
+    kTag = XGParamTag(XComEngine(class'Engine'.static.GetEngine()).LocalizeContext.FindTag("XGParam"));
+    bCanAfford = true;
+
+    if (kCost.iCash > 0)
+    {
+        txtCost.StrValue = class'XGScreenMgr'.static.ConvertCashToString(kCost.iCash);
+        txtCost.iState = eUIState_Cash;
+
+        if (kCost.iCash > GetResource(eResource_Money))
+        {
+            bCanAfford = false;
+            txtCost.iState = eUIState_Bad;
+            kCostSummary.strHelp = m_strErrInsufficientFunds;
+        }
+
+        kCostSummary.arrRequirements.AddItem(txtCost);
+    }
+
+    if (kCost.iElerium > 0)
+    {
+        kTag.IntValue0 = kCost.iElerium;
+        kTag.StrValue0 = m_strCostElerium;
+        txtCost.StrValue = class'XComLocalizer'.static.ExpandString(m_strCostLabel);
+        txtCost.iState = eUIState_Elerium;
+
+        if (kCost.iElerium > GetResource(eResource_Elerium))
+        {
+            bCanAfford = false;
+            txtCost.iState = eUIState_Bad;
+            kCostSummary.strHelp = m_strErrInsufficientElerium;
+        }
+
+        kCostSummary.arrRequirements.AddItem(txtCost);
+    }
+
+    if (kCost.iAlloys > 0)
+    {
+        kTag.IntValue0 = kCost.iAlloys;
+        kTag.StrValue0 = m_strCostAlloys;
+        txtCost.StrValue = class'XComLocalizer'.static.ExpandString(m_strCostLabel);
+        txtCost.iState = eUIState_Alloys;
+
+        if (kCost.iAlloys > GetResource(eResource_Alloys))
+        {
+            bCanAfford = false;
+            txtCost.iState = eUIState_Bad;
+            kCostSummary.strHelp = m_strErrInsufficientAlloys;
+        }
+
+        kCostSummary.arrRequirements.AddItem(txtCost);
+    }
+
+    if (kCost.arrItems.Length > 0)
+    {
+        for (iItem = 0; iItem < kCost.arrItems.Length; iItem++)
+        {
+            kItem = `HL_ITEM(kCost.arrItems[iItem]);
+
+            if (kCost.arrItemQuantities[iItem] > 1)
+            {
+                txtCost.StrValue = (string(kCost.arrItemQuantities[iItem]) $ "x") @ kItem.strNamePlural;
+            }
+            else
+            {
+                txtCost.StrValue = (string(kCost.arrItemQuantities[iItem]) $ "x") @ kItem.strName;
+            }
+
+            txtCost.iState = eUIState_Normal;
+
+            if (kCost.arrItemQuantities[iItem] > STORAGE().GetNumItemsAvailable(kCost.arrItems[iItem]))
+            {
+                bCanAfford = false;
+                txtCost.iState = eUIState_Bad;
+                kTag.IntValue0 = kCost.arrItemQuantities[iItem] - STORAGE().GetNumItemsAvailable(kCost.arrItems[iItem]);
+                kTag.StrValue0 = kItem.strName;
+                kCostSummary.strHelp = class'XComLocalizer'.static.ExpandString(m_strErrInsufficientResources);
+            }
+
+            if (kCost.arrItemQuantities[iItem] > 0)
+            {
+                kCostSummary.arrRequirements.AddItem(txtCost);
+            }
+        }
+    }
+
+    return bCanAfford;
 }
 
 function TTech GetCurrentTech()
@@ -467,19 +563,7 @@ function bool IsInterrogationTechAvailable()
 
 function bool IsResearched(int iTech)
 {
-    if (iTech == 255)
-    {
-        if (IsOptionEnabled(8))
-        {
-            return IsResearched(eTech_InterrogateEthereal) || IsResearched(eTech_InterrogateSectoidCommander);
-        }
-        else
-        {
-            return IsResearched(eTech_AutopsyEthereal) || IsResearched(eTech_AutopsySectoidCommander) || IsResearched(eTech_InterrogateEthereal) || IsResearched(eTech_InterrogateSectoidCommander);
-        }
-    }
-
-    return m_arrResearched.Find(iTech) != INDEX_NONE;
+    return iTech == 0 || m_arrResearched.Find(iTech) != INDEX_NONE;
 }
 
 function bool IsTechAvailable(ETechType eTech)
@@ -570,8 +654,11 @@ function bool NeedsScientists()
 function OnResearchCompleted()
 {
     local int iCorpseId, iProgressIndex, iTech;
-    local TResearchProject kNewProject;
     local bool bNeverInterrogated;
+    local Highlander_XGItemTree kItemTree;
+    local TResearchProject kNewProject;
+
+    kItemTree = `HL_ITEMTREE;
 
     bNeverInterrogated = !HasInterrogatedCaptive();
     iTech = m_kProject.iTech;
@@ -590,7 +677,7 @@ function OnResearchCompleted()
         GetRecapSaveData().RecordEvent(RecordTechResearched(m_kProject));
     }
 
-    if (ISCONTROLLED() && m_iHLLastResearched == eTech_Exp_Warfare)
+    if (ISCONTROLLED() && m_iHLLastResearched == `LW_TECH_ID(ExperimentalWarfare))
     {
         HANGAR().SetDisabled(false);
     }
@@ -620,14 +707,14 @@ function OnResearchCompleted()
         Achieve(AT_Edison);
     }
 
-    if (m_iHLLastResearched == eTech_Meld)
+    if (m_iHLLastResearched == `LW_TECH_ID(Xenogenetics))
     {
         // In vanilla EW, completing the meld research gave ~40 bonus meld; none in LW (maybe make configurable?)
         STORAGE().AddItem(eItem_Meld, 0);
         PRES().UINarrative(`XComNarrativeMoment("MeldIntro"), none, ResearchCinematicComplete);
     }
 
-    if (m_iHLLastResearched == eTech_Xenobiology)
+    if (m_iHLLastResearched == `LW_TECH_ID(Xenobiology))
     {
         if (!ISCONTROLLED())
         {
@@ -637,7 +724,7 @@ function OnResearchCompleted()
     else if (IsInterrogationTech(m_iHLLastResearched))
     {
         // Give the captive's corpse after interrogations
-        iCorpseId = class'XGGameData'.static.CharToCorpse(EItemType(`HL_TECH(m_iHLLastResearched).iSubjectCharacterId));
+        iCorpseId = kItemTree.CharacterToCorpse(EItemType(`HL_TECH(m_iHLLastResearched).iSubjectCharacterId));
 
         if (iCorpseId != 0)
         {
@@ -655,7 +742,7 @@ function OnResearchCompleted()
             ResearchCinematicComplete();
         }
     }
-    else if (m_iHLLastResearched == eTech_BaseShard)
+    else if (m_iHLLastResearched == `LW_TECH_ID(AlienOperations))
     {
         STAT_SetStat(eRecap_ObjResearchOutsiderShards, Game().GetDays());
         SITROOM().OnCodeCracked();
@@ -688,20 +775,20 @@ function SetNewProject(int iTech)
 
         // TODO: since mods could potentially discount research dynamically, we should store the actual paid cost like engineering does, and refund that
         // TODO: Xenobiology doesn't refund its corpses for some reason? seems like maybe that should be configurable
-        RefundCost(kCost, m_kProject.iTech == eTech_Xenobiology);
+        RefundCost(kCost, m_kProject.iTech == `LW_TECH_ID(Xenobiology));
     }
 
     if (!ISCONTROLLED())
     {
-        if (iTech == eTech_PsiLink) // Alien Command and Control
+        if (iTech == `LW_TECH_ID(AlienCommandAndControl))
         {
             Narrative(`XComNarrativeMoment("EtherealDeviceRetrieved_LeadOut_CS"));
         }
-        else if (iTech == eTech_Hyperwave) // Alien Communications
+        else if (iTech == `LW_TECH_ID(AlienCommunications))
         {
             Narrative(`XComNarrativeMoment("HyperwaveBeaconRetrieved_LeadOut_CS"));
         }
-        else if (iTech != eTech_BaseShard) // Alien Operations
+        else if (iTech != `LW_TECH_ID(AlienOperations))
         {
             if (!IsAutopsyTech(iTech) && !IsInterrogationTech(iTech) && --m_iTechConfirms > 0)
             {

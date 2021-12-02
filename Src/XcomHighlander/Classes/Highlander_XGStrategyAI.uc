@@ -84,7 +84,7 @@ function AIAddNewObjectives()
 
     // Use the default logic for Dynamic War; make sure to do this before modifying
     // any state or else it will be modified twice
-    if (IsOptionEnabled(9))
+    if (IsOptionEnabled(`LW_SECOND_WAVE_ID(DynamicWar)))
     {
         `HL_LOG("Dynamic War not currently supported. Falling back to base LW logic for adding missions.");
         super.AIAddNewObjectives();
@@ -306,7 +306,7 @@ function XGMission CreateTempleMission()
     local XGMission_TempleShip kMission;
 
     kMission = Spawn(class'XGMission_TempleShip');
-    kMission.m_kDesc = Spawn(class'Highlander_XGBattleDesc');
+    kMission.m_kDesc = Spawn(class'Highlander_XGBattleDesc').Init();
     kMission.m_iCity = -1;
     kMission.m_iContinent = -1;
     kMission.m_iDuration = -1;
@@ -321,7 +321,7 @@ function XGMission CheatTerrorMission()
     local XGMission_Terror kMission;
 
     kMission = Spawn(class'XGMission_Terror');
-    kMission.m_kDesc = Spawn(class'Highlander_XGBattleDesc');
+    kMission.m_kDesc = Spawn(class'Highlander_XGBattleDesc').Init();
     kMission.m_iCity = 4;
     kMission.m_iCountry = 0;
     kMission.m_iContinent = 0;
@@ -337,7 +337,7 @@ function XGMission CreateTerrorMission(XGShip_UFO kUFO)
     local XGMission_Terror kMission;
 
     kMission = Spawn(class'XGMission_Terror');
-    kMission.m_kDesc = Spawn(class'Highlander_XGBattleDesc');
+    kMission.m_kDesc = Spawn(class'Highlander_XGBattleDesc').Init();
     kMission.m_iCity = kUFO.m_kObjective.m_iCityTarget;
     kMission.m_iCountry = CITY(kMission.m_iCity).GetCountry();
     kMission.m_iContinent = kUFO.GetContinent();
@@ -353,7 +353,7 @@ function XGMission CreateHQAssaultMission()
     local XGMission_HQAssault kMission;
 
     kMission = Spawn(class'XGMission_HQAssault');
-    kMission.m_kDesc = Spawn(class'Highlander_XGBattleDesc');
+    kMission.m_kDesc = Spawn(class'Highlander_XGBattleDesc').Init();
     kMission.m_iContinent = HQ().GetContinent();
     kMission.m_v2Coords = HQ().GetCoords();
     kMission.m_kDesc.m_kAlienSquad = DetermineHQAssaultSquad();
@@ -366,7 +366,7 @@ function XGMission CreateExaltRaidMission(ECountry ExaltCountry)
     local XGMission_ExaltRaid kMission;
 
     kMission = Spawn(class'XGMission_ExaltRaid');
-    kMission.m_kDesc = Spawn(class'Highlander_XGBattleDesc');
+    kMission.m_kDesc = Spawn(class'Highlander_XGBattleDesc').Init();
     kMission.m_iCity = Country(ExaltCountry).GetRandomCity();
     kMission.m_iCountry = ExaltCountry;
     kMission.m_iContinent = Country(ExaltCountry).GetContinent();
@@ -384,7 +384,7 @@ function XGMission CheatCrash(XGShip_UFO strMapName)
     local XGMission_UFOLanded kMission;
 
     kMission = Spawn(class'XGMission_UFOLanded');
-    kMission.m_kDesc = Spawn(class'Highlander_XGBattleDesc');
+    kMission.m_kDesc = Spawn(class'Highlander_XGBattleDesc').Init();
     kMission.m_bScripted = true;
     kMission.m_kDesc.m_bScripted = true;
     kMission.m_iCity = -1;
@@ -410,7 +410,7 @@ function CheatLandedUFO(string strMapName)
     if (XComEngine(class'Engine'.static.GetEngine()).MapManager.GetMapInfoFromDisplayName(strMapName, kMapMeta))
     {
         kMission = Spawn(class'XGMission_UFOLanded');
-        kMission.m_kDesc = Spawn(class'Highlander_XGBattleDesc');
+        kMission.m_kDesc = Spawn(class'Highlander_XGBattleDesc').Init();
         kMission.m_iContinent = 0;
         kMission.m_iCountry = 0;
         kMission.m_iDuration = class'XGTacticalGameCore'.default.UFO_LANDED_TIMER;
@@ -455,24 +455,24 @@ function CreateAlienBase()
     }
 
     kMission = Spawn(class'XGMission_AlienBase');
-    kMission.m_kDesc = Spawn(class'Highlander_XGBattleDesc');
+    kMission.m_kDesc = Spawn(class'Highlander_XGBattleDesc').Init();
     kMission.m_iCountry = kCountry.GetID();
     kMission.m_v2Coords = CITY(kCountry.GetRandomCity()).m_v2Coords;
     kMission.m_strTitle = kMission.m_strTitle $ kCountry.GetName();
     kMission.m_kDesc.m_kAlienSquad = DetermineAlienBaseSquad();
 
     // TODO: move alien base loot into config
-    kMission.m_arrArtifacts[eItem_AlienAlloys] = 100;
-    kMission.m_arrArtifacts[eItem_UFOPowerSource] = 3;
-    kMission.m_arrArtifacts[eItem_Elerium115] = int(class'XGTacticalGameCore'.default.UFO_ELERIUM_PER_POWER_SOURCE[Game().GetDifficulty()] * float(kMission.m_arrArtifacts[eItem_UFOPowerSource]));
-    kMission.m_arrArtifacts[eItem_AlienSurgery] = 4;
-    kMission.m_arrArtifacts[eItem_AlienStasisTank] = 15;
-    kMission.m_arrArtifacts[eItem_AlienFood] = 10;
-    kMission.m_arrArtifacts[eItem_AlienEntertainment] = 1;
+    kMission.m_arrArtifacts[`LW_ITEM_ID(AlienAlloy)] = 100;
+    kMission.m_arrArtifacts[`LW_ITEM_ID(UFOPowerSource)] = 3;
+    kMission.m_arrArtifacts[`LW_ITEM_ID(Elerium)] = int(class'XGTacticalGameCore'.default.UFO_ELERIUM_PER_POWER_SOURCE[Game().GetDifficulty()] * float(kMission.m_arrArtifacts[`LW_ITEM_ID(UFOPowerSource)]));
+    kMission.m_arrArtifacts[`LW_ITEM_ID(AlienSurgery)] = 4;
+    kMission.m_arrArtifacts[`LW_ITEM_ID(AlienStasisTank)] = 15;
+    kMission.m_arrArtifacts[`LW_ITEM_ID(AlienFood)] = 10;
+    kMission.m_arrArtifacts[`LW_ITEM_ID(AlienEntertainment)] = 1;
 
     if (OBJECTIVES().m_eObjective == eObj_AssaultAlienBase)
     {
-        kMission.m_arrArtifacts[eItem_HyperwaveBeacon] = 1;
+        kMission.m_arrArtifacts[`LW_ITEM_ID(HyperwaveBeacon)] = 1;
     }
 
     kMission.m_iDetectedBy = 0;
@@ -505,7 +505,7 @@ function XGMission CreateFirstMission()
     else
     {
         kMission = Spawn(class'XGMission_Abduction');
-        kMission.m_kDesc = Spawn(class'Highlander_XGBattleDesc');
+        kMission.m_kDesc = Spawn(class'Highlander_XGBattleDesc').Init();
         kMission.m_iCity = Continent(HQ().GetContinent()).GetRandomCity();
         kMission.m_iCountry = CITY(kMission.m_iCity).GetCountry();
         kMission.m_iContinent = HQ().GetContinent();
@@ -523,7 +523,7 @@ function XGMission CreateFirstMission_Controlled()
     local XGMission_Abduction kMission;
 
     kMission = Spawn(class'XGMission_Abduction');
-    kMission.m_kDesc = Spawn(class'Highlander_XGBattleDesc');
+    kMission.m_kDesc = Spawn(class'Highlander_XGBattleDesc').Init();
     kMission.m_bScripted = true;
     kMission.m_kDesc.m_bScripted = true;
     kMission.m_iCity = Continent(HQ().GetContinent()).GetRandomCity();
@@ -542,7 +542,7 @@ function XGMission CreateCrashMission(XGShip_UFO kUFO)
     local XGMission_UFOCrash kMission;
 
     kMission = Spawn(class'XGMission_UFOCrash');
-    kMission.m_kDesc = Spawn(class'Highlander_XGBattleDesc');
+    kMission.m_kDesc = Spawn(class'Highlander_XGBattleDesc').Init();
     kMission.m_iContinent = kUFO.GetContinent();
     kMission.m_iCountry = kUFO.GetCountry();
     kMission.m_iDuration = class'XGTacticalGameCore'.default.UFO_CRASH_TIMER;
@@ -562,7 +562,7 @@ function XGMission CreateLandedUFOMission(XGShip_UFO kUFO)
     local XGMission_UFOLanded kMission;
 
     kMission = Spawn(class'XGMission_UFOLanded');
-    kMission.m_kDesc = Spawn(class'Highlander_XGBattleDesc');
+    kMission.m_kDesc = Spawn(class'Highlander_XGBattleDesc').Init();
     kMission.m_iContinent = kUFO.GetContinent();
     kMission.m_iCountry = kUFO.GetCountry();
     kMission.m_iDuration = class'XGTacticalGameCore'.default.UFO_LANDED_TIMER;
@@ -591,7 +591,7 @@ function XGMission CreateCovertOpsExtractionMission(ECountry eMissionCountry)
 
     kCountry = Country(eMissionCountry);
     kMission = Spawn(class'XGMission_CovertOpsExtraction');
-    kMission.m_kDesc = Spawn(class'Highlander_XGBattleDesc');
+    kMission.m_kDesc = Spawn(class'Highlander_XGBattleDesc').Init();
     kMission.m_iContinent = kCountry.GetContinent();
     kMission.m_iCountry = eMissionCountry;
     m_iAlienMonth = eMission_CovertOpsExtraction; // Hacked-in way to pass mission type to DetermineCovertOpsSquad
@@ -608,7 +608,7 @@ function XGMission CreateCaptureAndHoldMission(ECountry eMissionCountry)
 
     kCountry = Country(eMissionCountry);
     kMission = Spawn(class'XGMission_CaptureAndHold');
-    kMission.m_kDesc = Spawn(class'Highlander_XGBattleDesc');
+    kMission.m_kDesc = Spawn(class'Highlander_XGBattleDesc').Init();
     kMission.m_iContinent = kCountry.GetContinent();
     kMission.m_iCountry = eMissionCountry;
     m_iAlienMonth = eMission_CaptureAndHold; // Hacked-in way to pass mission type to DetermineCovertOpsSquad
@@ -616,6 +616,43 @@ function XGMission CreateCaptureAndHoldMission(ECountry eMissionCountry)
     kMission.m_iDuration = 96;
     kMission.m_v2Coords = kCountry.GetCoords();
     return kMission;
+}
+
+/**
+ * Penalizes XCOM for losing a base defense mission.
+ */
+function FillUFOPool()
+{
+    local Highlander_XGStorage kStorage;
+
+    kStorage = `HL_STORAGE;
+
+    // Lose the main resources (except weapon fragments)
+    AddResource(eResource_Money,   -450 - Rand(100));
+    AddResource(eResource_Elerium, -1 * Min(185 + Rand(30), GetResource(eResource_Elerium)));
+    AddResource(eResource_Alloys,  -1 * Min(185 + Rand(30), GetResource(eResource_Alloys)));
+    AddResource(eResource_Meld,    -1 * Min(185 + Rand(30), GetResource(eResource_Meld)));
+
+    // Lose up to a third of staff
+    AddResource(eResource_Engineers, -1 * Min(20 + Rand(10), GetResource(eResource_Engineers) / 3));
+    AddResource(eResource_Scientists, -1 * Min(20 + Rand(10), GetResource(eResource_Scientists) / 3));
+
+    // Free all captive aliens
+    kStorage.RemoveAllItem(`LW_ITEM_ID(SectoidCaptive));
+    kStorage.RemoveAllItem(`LW_ITEM_ID(SectoidCommanderCaptive));
+    kStorage.RemoveAllItem(`LW_ITEM_ID(FloaterCaptive));
+    kStorage.RemoveAllItem(`LW_ITEM_ID(HeavyFloaterCaptive));
+    kStorage.RemoveAllItem(`LW_ITEM_ID(ThinManCaptive));
+    kStorage.RemoveAllItem(`LW_ITEM_ID(MutonCaptive));
+    kStorage.RemoveAllItem(`LW_ITEM_ID(MutonEliteCaptive));
+    kStorage.RemoveAllItem(`LW_ITEM_ID(BerserkerCaptive));
+    kStorage.RemoveAllItem(`LW_ITEM_ID(EtherealCaptive));
+
+    // ChooseUFOMissionType damages/destroyers interceptors; Stat 103 is used to pass the target continent
+    STAT_SetStat(103, HQ().GetContinent());
+    ChooseUFOMissionType(0);
+
+    STAT_AddStat(2, 20); // +20 bonus research
 }
 
 function LaunchBlitz(array<ECityType> arrTargetCities, optional bool bFirstBlitz)
@@ -653,7 +690,7 @@ function LaunchBlitz(array<ECityType> arrTargetCities, optional bool bFirstBlitz
         eDiff = GetAbductionDifficulty(Country(kCity.GetCountry()));
 
         kMission = Spawn(class'XGMission_Abduction');
-        kMission.m_kDesc = Spawn(class'Highlander_XGBattleDesc');
+        kMission.m_kDesc = Spawn(class'Highlander_XGBattleDesc').Init();
         kMission.m_iCity = kCity.m_iID;
         kMission.m_iCountry = CITY(kMission.m_iCity).GetCountry();
         kMission.m_iContinent = kCity.GetContinent();

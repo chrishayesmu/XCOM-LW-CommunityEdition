@@ -6,51 +6,6 @@ struct HL_TRange
     var int MaxInclusive;
 };
 
-struct HL_TItem
-{
-    var string strName;
-    var string strNamePlural;
-    var string strBriefSummary;
-    var string strDeepSummary;
-    var string ImagePath;
-
-    var int iItemId;
-    var int iCash;
-    var int iAlloys;
-    var int iElerium;
-    var int iMeld;
-    var int iHours;
-    var int iMaxEngineers;
-
-    var array<int> arrTechReqs;
-    var array<int> arrFoundryReqs;
-    var array<int> arrItemReqs;
-    var array<int> arrFacilityReqs;
-
-    var int iCategory;
-
-    structdefaultproperties
-    {
-        strName=""
-        strNamePlural=""
-        strBriefSummary=""
-        strDeepSummary=""
-        ImagePath=""
-        iItemId=0
-        iCash=0
-        iAlloys=0
-        iElerium=0
-        iMeld=0
-        iHours=0
-        iMaxEngineers=0
-        arrTechReqs=()
-        arrFoundryReqs=()
-        arrItemReqs=()
-        arrFacilityReqs=()
-        iCategory=0
-    }
-};
-
 struct HL_TItemQuantity
 {
     var int iItemId;
@@ -97,6 +52,91 @@ struct HL_TPrereqs
 
     var bool bRequiresAutopsy;       // If true, any autopsy research must be completed.
     var bool bRequiresInterrogation; // If true, any interrogation research must be completed.
+};
+
+struct HL_TItem
+{
+    var string strName;           // The player-viewable name of the item (singular).
+    var string strNamePlural;     // The player-viewable name of the item (plural).
+    var string strBriefSummary;   // A summary of the item to show in the Engineering UI.
+    var string strTacticalText;   // Text shown in the detailed view of equipment items. Should be formatted as bullet points to match
+                                  // other items. See examples in XComGame.int, in the array m_aItemTacticalText, for the HTML to use.
+    var string ImagePath;         // Path to an image to show in the UI for this item. Must include the "img:///" prefix.
+                                  // Typical item images are 256x128.
+
+    var int iItemId;              // The integer ID of the item. See README if you don't know how to choose IDs.
+    var int iCategory;            // The item's category, corresponding to the enum type EItemCategory.
+
+    var int iHours;               // If >= 0, this is the number of engineer-hours needed to build this item. If < 0, this item cannot be built.
+    var int iMaxEngineers;        // The number of engineers required to make progress at normal speed on this project.
+
+    // How many of this item XCOM HQ starts the game with. If bIsInfinite is set at the start of the game, this value is ignored.
+    var int iStartingQuantity;
+
+    // Whether XCOM's stores of this item are unlimited, such as starting weapons and armor, or Alien Grenades after their Foundry project
+    // is complete. If this changes based on the state of the campaign (such as Alien Grenades do), then your mod should use the strategy hook
+    // Override_HL_GetItem to set this value dynamically.
+    var bool bIsInfinite;
+
+    var bool bIsCaptive;          // Whether this represents a captive unit.
+    var int iCaptiveToCorpseId;   // If the captive is killed, this is the item ID of the corpse to add to the player's storage.
+
+    var bool bIsCorpse;           // Whether this represents the corpse of a unit.
+    var int iCorpseToCharacterId; // The ID of the character that this is the corpse of.
+
+    var bool bIsUniqueEquip;      // If true, soldiers can only have one of this item equipped. This field is ignored for non-equipment items.
+
+    // An array of item IDs that cannot be equipped at the same time as this item, such as how Drum Mags and Hi Cap Mags can't be equipped together.
+    // This field is ignored for non-equipment items.
+    var array<int> arrMutuallyExclusiveEquipment;
+
+    // If this array is populated, then this item can only be equipped if one of the item IDs in this array is equipped in a large equipment slot.
+    // This field is ignored for non-equipment items.
+    var array<int> arrCompatibleLargeEquipment;
+
+    // If this array is populated, then this item cannot be equipped if any of the item IDs in this array is equipped in a large equipment slot.
+    // This field is ignored for non-equipment items.
+    var array<int> arrIncompatibleLargeEquipment;
+
+    // When equipped, this item grants its holder all of the perk IDs listed here.
+    // This field is ignored for non-equipment items.
+    var array<int> arrPerksGranted;
+
+    // The base number of charges for this item. If something changes the number of charges globally, such as a Foundry project, the mod should use
+    // Override_GetItem to reflect that dynamically. If the number of charges changes situationally, such as with soldier perks, that should be done
+    // using Override_UpdateItemCharges instead. Items that are on a cooldown or are not limited usage should not set this field.
+    // This field is ignored for non-equipment items.
+    var int iBaseCharges;
+
+    // If iHours >= 0, kCost is the cost to build this item in Engineering, and the item can be sold for 40% of its cash cost.
+    // Otherwise, kCost.iCash is the selling price of the item, if greater than zero. If kCost.iCash <= 0, the item cannot be sold.
+    var HL_TCost kCost;
+
+    // Prerequisites for this item to appear in Engineering to be built. The iHours field must also be greater than or equal to zero.
+    var HL_TPrereqs kPrereqs;
+
+    structdefaultproperties
+    {
+        strName=""
+        strNamePlural=""
+        strBriefSummary=""
+        ImagePath=""
+        iItemId=0
+        iCategory=0
+        iHours=-1
+        iMaxEngineers=-1
+        iStartingQuantity=0
+        bIsInfinite=false
+        bIsCaptive=false
+        iCaptiveToCorpseId=0
+        bIsCorpse=false
+        iCorpseToCharacterId=0
+        bIsUniqueEquip=false
+        arrPerksGranted=()
+        iBaseCharges=0
+        kCost=(iCash=-1)
+        kPrereqs=()
+    }
 };
 
 /// <summary>
@@ -216,6 +256,87 @@ struct TModVersion
 // Structs beyond this point are unlikely to be needed by most mod authors. You
 // can skip past them to see some utility functions.
 // ------------------------------------------------------------------------------
+
+struct HL_TItemCard
+{
+    var string strName;
+    var string strFlavorText;
+    var string strShivWeapon;
+    var int shipWpnRange;
+    var int shipWpnArmorPen;
+    var int shipWpnHitChance;
+    var int shipWpnFireRate;
+    var int iCharacterId;
+    var int iHealth;
+    var int iWill;
+    var int iAim;
+    var int iDefense;
+    var int iArmorHPBonus;
+    var int iBaseCritChance;
+    var int iBaseDamage;
+    var int iBaseDamageMax;
+    var int iCritDamage;
+    var int iCritDamageMax;
+    var float fireRate;
+    var int iRangeCategory;
+    var int iCardType;
+    var int iItemId;
+    var int iCharges;
+    var array<int> arrPerkTypes;
+    var array<int> arrAbilities;
+    var array<TShivAbility> arrAbilitiesShiv;
+
+    structdefaultproperties
+    {
+        strName="UNDEFINED"
+        strFlavorText=""
+        strShivWeapon=""
+        shipWpnRange=0
+        shipWpnArmorPen=0
+        shipWpnHitChance=0
+        shipWpnFireRate=0
+        iCharacterId=0
+        iHealth=0
+        iWill=0
+        iAim=0
+        iDefense=0
+        iArmorHPBonus=0
+        iBaseCritChance=0
+        iBaseDamage=0
+        iBaseDamageMax=0
+        iCritDamage=0
+        iCritDamageMax=0
+        fireRate=0.0
+        iRangeCategory=0
+        iCardType=0
+        iItemId=0
+        iCharges=0
+        arrPerkTypes=()
+        arrAbilities=()
+        arrAbilitiesShiv=()
+    }
+};
+
+struct HL_TItemProject
+{
+    var int iIndex;
+    var int iItemId;
+    var int iEngineers;
+    var int iMaxEngineers;
+    var int iQuantity;
+    var int iQuantityLeft;
+    var int iHoursLeft;
+    var bool bAdjusted;
+    var bool bNotify;
+    var bool bRush;
+    var TProjectCost kRebate;
+    var TProjectCost kOriginalCost;
+
+    structdefaultproperties
+    {
+        iIndex=-1
+    }
+};
 
 struct HL_TLabArchivesUI
 {

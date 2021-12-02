@@ -20,7 +20,7 @@ function InitDescription()
     }
     else
     {
-        m_kDesc = Spawn(class'Highlander_XGBattleDesc');
+        m_kDesc = Spawn(class'Highlander_XGBattleDesc').Init();
         m_kDesc.m_iNumPlayers = m_iNumPlayers;
         m_kDesc.Generate();
         m_kDesc.InitHumanLoadoutInfosFromProfileSettingsSaveData(m_kProfileSettings);
@@ -45,7 +45,7 @@ simulated function InitLevel()
 
     `HL_LOG_CLS("InitLevel: override successful");
 
-    m_kLevel = Spawn(class'XGLevel');
+    m_kLevel = Spawn(class'Highlander_XGLevel');
     m_kLevel.Init();
 
     foreach AllActors(class'XComBuildingVolume', kBuildingVolume)

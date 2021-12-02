@@ -99,11 +99,11 @@ function InitBattle() {
         kLocalPC.SetTeamType(NewPlayer.m_eTeam);
         m_kBattle.AddPlayer(NewPlayer);
 
-        NewPlayer = Spawn(class'XGAIPlayer');
+        NewPlayer = Spawn(class'Highlander_XGAIPlayer');
         NewPlayer.Init();
         m_kBattle.AddPlayer(NewPlayer);
 
-        NewPlayer = Spawn(class'XGAIPlayer_Animal');
+        NewPlayer = Spawn(class'Highlander_XGAIPlayer_Animal');
         NewPlayer.Init();
         m_kBattle.AddPlayer(NewPlayer);
 

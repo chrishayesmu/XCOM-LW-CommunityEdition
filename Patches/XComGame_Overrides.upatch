@@ -11,3 +11,36 @@ OBJECT = XComGameInfo.InitGame : AUTO
 /*(0x0083/0x0073)*/ 1C <Engine.GameInfo.InitGame> 00 <.Options> 48 <.ErrorMessage> 16
 /*(0x009F/0x0083)*/ 04 0B
 /*(0x00A1/0x0085)*/ 53
+
+OBJECT = XComGameInfo.SetGameType : AUTO
+[REPLACEMENT_CODE]
+/*(0x0000/0x0000)*/ 0F 00 <.GameInfoClassName> 12 20 <Engine.GameInfo> [@] <Engine.GameInfo.ParseOption.ReturnValue> 00 ( 1B <ParseOption> 00 <.Options> 1F <%t "Game"> 16 )
+/*(0x0038/0x0028)*/ 07 [@label_0x008E] 9B 7E 00 <.GameInfoClassName> 1F <%t "XComMPTacticalGame"> 27 27 4A 16 1D <%i -1> 16
+/*(0x0064/0x0050)*/ 	0F 00 <.GameInfoClassToUse> 1F <%t "XComGame.XComMPTacticalGame">
+/*(0x008B/0x0073)*/ 	06 [@label_0x01CF]
+/*(0x008E/0x0076)*/ [#label_0x008E]
+/*(0x008E/0x0076)*/ 07 [@label_0x00E1] 9B 7E 00 <.GameInfoClassName> 1F <%t "XComMPLobbyGame"> 27 27 4A 16 1D <%i -1> 16
+/*(0x00B7/0x009B)*/ 	0F 00 <.GameInfoClassToUse> 1F <%t "XComUIShell.XComMPLobbyGame">
+/*(0x00DE/0x00BE)*/ 	06 [@label_0x01CF]
+/*(0x00E1/0x00C1)*/ [#label_0x00E1]
+/*(0x00E1/0x00C1)*/ 07 [@label_0x0124] 9B 7E 00 <.MapName> 1F <%t "Shell"> 4A 27 4A 16 1D <%i -1> 16
+/*(0x0100/0x00DC)*/ 	0F 00 <.GameInfoClassToUse> 1F <%t "XComUIShell.XComShell">
+/*(0x0121/0x00F9)*/ 	06 [@label_0x01CF]
+/*(0x0124/0x00FC)*/ [#label_0x0124]
+/*(0x0124/0x00FC)*/ 07 [@label_0x01AA] 84 9B 7E 00 <.MapName> 1F <%t "Command1"> 4A 27 4A 16 1D <%i -1> 16 18 [@] ( 9B 7E 00 <.GameInfoClassName> 1F <%t "XComHeadquartersGame"> 27 27 4A 16 1D <%i -1> 16 16 )
+/*(0x0176/0x0146)*/ 	0F 00 <.GameInfoClassToUse> 1F <%t "XComHighlander.Highlander_XComHeadquartersGame">
+/*(0x01A7/0x0173)*/ 	06 [@label_0x01CF]
+/*(0x01AA/0x0176)*/ [#label_0x01AA]
+/*(0x01AA/0x0176)*/ 0F 00 <.GameInfoClassToUse> 1F <%t "XComHighlander.Highlander_XComTacticalGame">
+/*(0x01CF/0x0197)*/ [#label_0x01CF]
+/*(0x01CF/0x0197)*/ 07 [@label_0x020E] 72 00 <.GameInfoClass> 2A 16
+/*(0x01DE/0x01A2)*/ 	0F 00 <.GameInfoClass> 13 <Engine.GameInfo> 1C <Core.Object.DynamicLoadObject> 00 <.GameInfoClassToUse> 20 <Core.Class> 4A 16
+/*(0x020E/0x01BE)*/ [#label_0x020E]
+/*(0x020E/0x01BE)*/ 07 [@label_0x022A] 77 00 <.GameInfoClass> 2A 16
+/*(0x021D/0x01C9)*/ 	04 00 <.GameInfoClass>
+/*(0x0227/0x01CF)*/ 	06 [@label_0x0234]
+/*(0x022A/0x01D2)*/ [#label_0x022A]
+/*(0x022A/0x01D2)*/ 04 02 <Core.Object.Class>
+/*(0x0234/0x01D8)*/ [#label_0x0234]
+/*(0x0234/0x01D8)*/ 04 3A <.ReturnValue>
+/*(0x023E/0x01DE)*/ 53

@@ -9,7 +9,7 @@ function XGMission_FundingCouncil CreateMission(TFCMission MissionData)
     local int iDaysSinceStart, iClass, iLevel, I;
     local float fReward;
 
-    kDateTime = Spawn(class'XGDateTime');
+    kDateTime = Spawn(class'Highlander_XGDateTime');
     kDateTime.SetTime(0, 0, 0, START_MONTH, START_DAY, START_YEAR);
     iDaysSinceStart = kDateTime.DifferenceInDays(GEOSCAPE().m_kDateTime);
 
@@ -83,7 +83,7 @@ function XGMission_FundingCouncil CreateMission(TFCMission MissionData)
         kMission.m_iCity = kCountry.GetRandomCity();
     }
 
-    kMission.m_kDesc = Spawn(class'Highlander_XGBattleDesc');
+    kMission.m_kDesc = Spawn(class'Highlander_XGBattleDesc').Init();
     kMission.m_iCountry = kCountry.GetID();
     kMission.m_iContinent = kCountry.GetContinent();
     kMission.m_iDuration = class'XGTacticalGameCore'.default.ABDUCTION_TIMER;

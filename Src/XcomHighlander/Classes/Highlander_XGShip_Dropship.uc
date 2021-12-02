@@ -5,7 +5,7 @@ function Init(TShip kTShip)
     super(XGShip).Init(kTShip);
 
     CargoInfo = Spawn(class'Highlander_XGDropshipCargoInfo');
-    CargoInfo.m_arrArtifacts.Add(255);
+    Highlander_XGDropshipCargoInfo(CargoInfo).Init();
 
     m_arrUpgrades.Add(3);
     m_iCapacity = class'XGTacticalGameCore'.default.SKYRANGER_CAPACITY;

@@ -1,5 +1,20 @@
 class Highlander_XGBattle_SPCovertOpsExtraction extends XGBattle_SPCovertOpsExtraction;
 
+function CollectLoot()
+{
+    local Highlander_XGBattleDesc kDesc;
+
+    super(XGBattle).CollectLoot();
+
+    kDesc = Highlander_XGBattleDesc(m_kDesc);
+    kDesc.m_kDropShipCargoInfo.m_kReward.iCredits += m_iCovertOpsCashRewardAmount;
+
+    if (ShouldAwardIntel())
+    {
+        kDesc.m_kArtifactsContainer.Set(`LW_ITEM_ID(EXALTIntelligence), 1);
+    }
+}
+
 // IMPORTANT: This function is an override of a function in XGBattle_SP. Since we can't modify the inheritance hierarchy,
 // this function has been inserted into each Highlander child class override of XGBattle_SP.
 // ***If you modify this function, apply the changes in all child classes as well!***
@@ -20,7 +35,7 @@ function InitDescription()
     }
     else
     {
-        m_kDesc = Spawn(class'Highlander_XGBattleDesc');
+        m_kDesc = Spawn(class'Highlander_XGBattleDesc').Init();
         m_kDesc.m_iNumPlayers = m_iNumPlayers;
         m_kDesc.Generate();
         m_kDesc.InitHumanLoadoutInfosFromProfileSettingsSaveData(m_kProfileSettings);
@@ -45,7 +60,7 @@ simulated function InitLevel()
 
     `HL_LOG_CLS("InitLevel: override successful");
 
-    m_kLevel = Spawn(class'XGLevel');
+    m_kLevel = Spawn(class'Highlander_XGLevel');
     m_kLevel.Init();
 
     foreach AllActors(class'XComBuildingVolume', kBuildingVolume)

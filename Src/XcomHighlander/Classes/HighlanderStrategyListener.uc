@@ -34,7 +34,9 @@ function OnFoundryProjectCompleted(TFoundryProject kProject, HL_TFoundryTech kFo
 /// <summary>
 /// Called after the tech tree has built its list of Foundry techs. Techs can be removed from the list,
 /// or new techs added. These represent the Foundry techs that are available over the course of the entire
-/// campaign, not techs which are currently researched or available.
+/// campaign, not techs which are currently researched or available. At the point when this is called, Foundry
+/// project costs have not yet been adjusted for the Dynamic War option; any techs that you add to the list
+/// will also have their cost adjusted for Dynamic War if the option is enabled.
 ///
 /// Note that since this list is always built dynamically, if your mod is uninstalled or modified, anything
 /// you've previously changed in the list will be restored to its original state. If your mod adds Foundry techs
@@ -57,6 +59,17 @@ function OnFoundryTechsBuilt(out array<HL_TFoundryTech> Techs) {}
 function UpdateFoundryPerksForSoldier(XGStrategySoldier kSoldier, Highlander_XGFacility_Engineering kEngineering) {}
 
 
+/// -----------------------------------------------------
+/// Item events
+/// -----------------------------------------------------
+
+/// <summary>
+/// Called at the end of Highlander_XGItemTree.HL_GetItem. Can be used to dynamically adjust a number of item properties, including
+/// build cost, build time, whether an item is infinite, etc.
+/// </summary>
+/// <param name="kItem">The current state of the item, including any modifications made by mods before this one.</param>
+/// <param name="iTransactionType">The type of transaction this item is being retrieved for, corresponding to a value in XGStrategyActorNativeBase.ETransactionType.</param>
+function Override_GetItem(out HL_TItem kItem, int iTransactionType) {}
 
 /// -----------------------------------------------------
 /// Research events

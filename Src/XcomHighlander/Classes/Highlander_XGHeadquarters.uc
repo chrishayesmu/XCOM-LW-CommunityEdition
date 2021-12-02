@@ -1,5 +1,14 @@
-class Highlander_XGHeadQuarters extends XGHeadQuarters
+class Highlander_XGHeadquarters extends XGHeadQuarters
     dependson(XGGameData);
+
+struct CheckpointRecord_Highlander_XGHeadquarters extends XGHeadQuarters.CheckpointRecord
+{
+    var array<int> m_arrHLLastCaptives;
+    var HighlanderItemContainer m_kHLLastCargoArtifacts;
+};
+
+var array<int> m_arrHLLastCaptives;
+var HighlanderItemContainer m_kHLLastCargoArtifacts;
 
 function Init(bool bLoadingFromSave)
 {
@@ -250,6 +259,54 @@ function bool ArePrereqsFulfilled(HL_TPrereqs kPrereqs)
     }
 
     return true;
+}
+
+function OrderInterceptors(int iContinent, int iQuantity)
+{
+    local TShipOrder kOrder;
+    local int iCost;
+
+    iCost = `HL_ITEM(`LW_ITEM_ID(Interceptor)).kCost.iCash;
+
+    if (!WorldInfo.IsConsoleBuild(CONSOLE_Xbox360) && !WorldInfo.IsConsoleBuild(CONSOLE_PS3))
+    {
+        GetRecapSaveData().RecordEvent(RecordPurchasingInterceptor(iQuantity));
+    }
+
+    // Highlander issue #1: normally when you order interceptors, the strategy HUD (particularly the player's current money)
+    // doesn't update until you back out to the main HQ screen. This fix simply updates the HUD immediately.
+    AddResource(eResource_Money, -iCost * iQuantity);
+    PRES().GetStrategyHUD().UpdateDefaultResources();
+
+    kOrder.iNumInterceptors = iQuantity;
+    kOrder.iDestinationContinent = iContinent;
+    kOrder.iHours = 72;
+
+    STAT_AddStat(eRecap_InterceptorsHired, iQuantity);
+    m_akInterceptorOrders.AddItem(kOrder);
+}
+
+function ReduceInterceptorOrder(int iOrder)
+{
+    local int iCost;
+
+    if (iOrder < 0 || iOrder >= m_akInterceptorOrders.Length)
+    {
+        return;
+    }
+
+    iCost = `HL_ITEM(`LW_ITEM_ID(Interceptor)).kCost.iCash;
+
+    // Highlander issue #1: same fix as in OrderInterceptors, above.
+    AddResource(eResource_Money, iCost);
+    PRES().GetStrategyHUD().UpdateDefaultResources();
+
+    --m_akInterceptorOrders[iOrder].iNumInterceptors;
+
+    if (m_akInterceptorOrders[iOrder].iNumInterceptors <= 0)
+    {
+        m_akInterceptorOrders.Remove(iOrder, 1);
+    }
 }
 
 state InBase

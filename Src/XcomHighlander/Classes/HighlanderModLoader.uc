@@ -200,6 +200,20 @@ function UpdateFoundryPerksForSoldier(XGStrategySoldier kSoldier, Highlander_XGF
 
 // #endregion
 
+// #region Item-related events
+
+function Override_GetItem(out HL_TItem kItem, int iTransactionType)
+{
+    local HighlanderStrategyListener kStrategyListener;
+
+    foreach StrategyListeners(kStrategyListener)
+    {
+        kStrategyListener.Override_GetItem(kItem, iTransactionType);
+    }
+}
+
+// #endregion
+
 // #region Research-related events
 
 function Override_GetTech(out HL_TTech kTech, bool bIncludesProgress)

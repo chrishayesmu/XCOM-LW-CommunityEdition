@@ -18,6 +18,8 @@ function Init()
     BuildObjectives();
     BuildResearchCredits();
     BuildGeneTechs();
+
+    ScaleForDynamicWar();
 }
 
 function BuildFoundryTechs()
@@ -175,9 +177,9 @@ function int HL_GetCreditAdjustedTechHours(int iTech, int iHours, bool bFoundry)
         {
             fBonus = float(GetResearchCredit(eCredit).iBonus) / 100.0;
 
-            if (HQ().HasBonus(54) > 0) // Expertise
+            if (HQ().HasBonus(`LW_HQ_BONUS_ID(Expertise)) > 0)
             {
-                fBonus += (float(HQ().HasBonus(54)) / float(100));
+                fBonus += (float(HQ().HasBonus(`LW_HQ_BONUS_ID(Expertise))) / float(100));
             }
 
             fBonus *= float(iHours);
@@ -232,7 +234,7 @@ function array<int> HL_GetFoundryResults(int iCompletedTechId)
     local int iItemReq, iTechReq;
     local HL_TFoundryTech kTech;
 
-    if (iCompletedTechId == eTech_None || iCompletedTechId == eTech_MAX || !HQ().HasFacility(eFacility_Foundry))
+    if (iCompletedTechId == 0 || iCompletedTechId == eTech_MAX || !HQ().HasFacility(eFacility_Foundry))
     {
         return arrResults;
     }
@@ -301,16 +303,40 @@ function HL_TFoundryTech HL_GetFoundryTech(int iFoundryTechType, optional bool b
     }
 
     // TODO: may want to add a hook for mods to modify the cost/continent bonus
-    if (HQ().HasBonus(4) > 0) // New Warfare
+    if (HQ().HasBonus(`LW_HQ_BONUS_ID(NewWarfare)) > 0)
     {
-        kTech.kCost.iCash *= (float(1) - (float(HQ().HasBonus(4)) / float(100)));
-        kTech.kCost.iAlloys *= (float(1) - (float(HQ().HasBonus(4)) / float(100)));
-        kTech.kCost.iElerium *= (float(1) - (float(HQ().HasBonus(4)) / float(100)));
+        kTech.kCost.iCash *= (float(1) - (float(HQ().HasBonus(`LW_HQ_BONUS_ID(NewWarfare))) / float(100)));
+        kTech.kCost.iAlloys *= (float(1) - (float(HQ().HasBonus(`LW_HQ_BONUS_ID(NewWarfare))) / float(100)));
+        kTech.kCost.iElerium *= (float(1) - (float(HQ().HasBonus(`LW_HQ_BONUS_ID(NewWarfare))) / float(100)));
     }
 
     kTech.iHours = HL_GetCreditAdjustedTechHours(iFoundryTechType, kTech.iHours, true);
 
     return kTech;
+}
+
+function ETechType GetResultingTech(EItemType eItem)
+{
+    `HL_LOG_DEPRECATED_CLS(GetResultingTech);
+    return 0;
+}
+
+function int HL_GetResultingTech(int iItemId)
+{
+    local Highlander_XGFacility_Labs kLabs;
+    local int iTech;
+
+    kLabs = `HL_LABS;
+
+    for (iTech = 0; iTech < m_arrHLTechs.Length; iTech++)
+    {
+        if (m_arrHLTechs[iTech].kPrereqs.arrItemReqs.Find(iItemId) != INDEX_NONE && !kLabs.IsResearched(m_arrHLTechs[iTech].iTechId))
+        {
+            return m_arrHLTechs[iTech].iTechId;
+        }
+    }
+
+    return 0;
 }
 
 function TTech GetTech(int iTechType, optional bool bAdjustHours = true)
@@ -345,12 +371,9 @@ function HL_TTech HL_GetTech(int iTechType, optional bool bAdjustHours = true)
 
     kTech.iHours = GetCreditAdjustedTechHours(iTechType, kTech.iHours, false);
 
-    if (HQ().HasBonus(57) > 0) // We Have Ways
+    if ( (kTech.bIsAutopsy || kTech.bIsInterrogation) && HQ().HasBonus(`LW_HQ_BONUS_ID(WeHaveWays)) > 0)
     {
-        if (kTech.bIsAutopsy || kTech.bIsInterrogation)
-        {
-            kTech.iHours *= (float(1) - (float(HQ().HasBonus(57)) / float(100)));
-        }
+        kTech.iHours *= (float(1) - (float(HQ().HasBonus(`LW_HQ_BONUS_ID(WeHaveWays))) / float(100)));
     }
 
     if (bAdjustHours)
@@ -407,4 +430,47 @@ function bool HasPrereqs(int iTech)
     }
 
     return true;
+}
+
+protected function ScaleForDynamicWar()
+{
+    local int Index;
+
+    if (!IsOptionEnabled(`LW_SECOND_WAVE_ID(DynamicWar)))
+    {
+        return;
+    }
+
+    for (Index = 0; Index < m_arrHLTechs.Length; Index++)
+    {
+        m_arrHLTechs[Index].kCost = ScaleCost(m_arrHLTechs[Index].kCost);
+    }
+
+    for (Index = 0; Index < m_arrHLFoundryTechs.Length; Index++)
+    {
+        m_arrHLTechs[Index].kCost = ScaleCost(m_arrHLFoundryTechs[Index].kCost);
+    }
+}
+
+protected function HL_TCost ScaleCost(HL_TCost kCost)
+{
+    local int Index;
+
+    // Weapon fragments and items are adjusted for Dynamic War, but notably, alloys, elerium and meld are not
+    if (kCost.iWeaponFragments > 0)
+    {
+        kCost.iWeaponFragments = ScaleDynamicWarAmount(kCost.iWeaponFragments);
+    }
+
+    for (Index = 0; Index < kCost.arrItems.Length; Index++)
+    {
+        kCost.arrItems[Index].iQuantity = ScaleDynamicWarAmount(kCost.arrItems[Index].iQuantity);
+    }
+
+    return kCost;
+}
+
+protected function int ScaleDynamicWarAmount(int iInput)
+{
+    return Max(1, int(float(iInput) * class'XGTacticalGameCore'.default.SW_MARATHON));
 }

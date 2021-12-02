@@ -152,8 +152,8 @@ function BeginCombat(XGMission kMission)
 
     XComOnlineEventMgr(GameEngine(class'Engine'.static.GetEngine()).OnlineEventManager).SaveToStoredStrategy();
     XComOnlineEventMgr(GameEngine(class'Engine'.static.GetEngine()).OnlineEventManager).SaveTransport();
-    XComContentManager(class'Engine'.static.GetEngine().GetContentManager()).GetContentForMap(m_kStrategyTransport.m_kBattleDesc.m_strMapName, Content);
-    XComContentManager(class'Engine'.static.GetEngine().GetContentManager()).RequestContent(Content, m_kStrategyTransport.m_kBattleDesc.m_iMissionType != eMission_Final);
+    `CONTENTMGR.GetContentForMap(m_kStrategyTransport.m_kBattleDesc.m_strMapName, Content);
+    `CONTENTMGR.RequestContent(Content, m_kStrategyTransport.m_kBattleDesc.m_iMissionType != eMission_Final);
 
     foreach kSkyranger.m_arrSoldiers(kSoldier)
     {

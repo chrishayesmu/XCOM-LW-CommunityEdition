@@ -47,6 +47,44 @@ struct native TeamLoadoutInfo
     var ETeam m_eTeam;
 };
 
+struct CheckpointRecord
+{
+    var array<int> m_arrArtifacts;
+    var string m_strLocation;
+    var int m_iPodGroup;
+    var string m_strOpName;
+    var string m_strObjective;
+    var string m_strDesc;
+    var string m_strMapName;
+    var string m_strMapCommand;
+    var string m_strTime;
+    var int m_iMissionID;
+    var XGDropshipCargoInfo m_kDropShipCargoInfo;
+    var int m_iDifficulty;
+    var int m_iLowestDifficulty;
+    var int m_iMissionType;
+    var int m_iNumTerrorCivilians;
+    var TAlienSquad m_kAlienSquad;
+    var EShipType m_eUFOType;
+    var EContinent m_eContinent;
+    var ETimeOfDay m_eTimeOfDay;
+    var bool m_bOvermindEnabled;
+    var bool m_bIsIronman;
+    var bool m_bIsFirstMission;
+    var bool m_bIsTutorial;
+    var bool m_bDisableSoldierChatter;
+    var bool m_bAllowedMissionAbort;
+    var bool m_bScripted;
+    var float m_fMatchDuration;
+    var int m_iNumPlayers;
+    var TCivilianPawnContent m_kCivilianInfo;
+    var array<int> m_arrSecondWave;
+    var int m_iPlayCount;
+    var EFCMission m_eCouncilType;
+    var MedalBattleData m_kMedalBattleData;
+    var bool m_bSilenceNewbieMoments;
+};
+
 var protected TeamLoadoutInfo m_arrTeamLoadoutInfos[4];
 var repnotify int m_iNumPlayers;
 var array<int> m_arrArtifacts;
@@ -131,4 +169,3 @@ static function TSoldierPawnContent AddBattleScannerContent(){}
 static function int DetermineSoldierKit(TTransferSoldier kTransfer, int iPawnType){}
 static function int MapAlienToPawn(int iAlienType){}
 static function int MapSoldierToPawn(int iArmor, int iGender, bool bGeneMod){}
-

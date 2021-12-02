@@ -2,12 +2,25 @@
 
 `define HL_LOG(msg, cond) `LOG(`msg, `cond, 'XComHighlander')
 `define HL_LOG_CLS(msg, cond) `LOG(string(Class) $ ": " $ `msg, `cond, 'XComHighlander')
-`define HL_LOG_DEPRECATED_CLS(funcname) `HL_LOG_CLS("ERROR: Highlander-incompatible function `funcname  was called. This needs to be replaced with HL_`funcname. Stack trace follows."); ScriptTrace();
+`define HL_LOG_DEPRECATED(funcname) `HL_LOG("ERROR: Highlander-incompatible function `{funcname} was called. This needs to be replaced with HL_`funcname. Stack trace follows."); ScriptTrace();
+`define HL_LOG_DEPRECATED_CLS(funcname) `HL_LOG_CLS("ERROR: Highlander-incompatible function `{funcname} was called. This needs to be replaced with HL_`funcname. Stack trace follows."); ScriptTrace();
+`define HL_LOG_DEPRECATED_NOREPLACE_CLS(funcname) `HL_LOG_CLS("ERROR: Highlander-incompatible function `{funcname}  was called. This function is deprecated and unavailable. Stack trace follows."); ScriptTrace();
 `define HL_MOD_LOADER (class'HighlanderModLoader'.static.GetModLoader())
+
+// Convenience class of static functions
+`define HL_UTILS class'HighlanderUtils'.static
 
 // Dynamic loading of objects that are referenced by the base game; since we aren't in the same UPK, we can't reference them the same way
 `define SoundCue(nm) (SoundCue(DynamicLoadObject(`nm, class'SoundCue')))
 `define XComNarrativeMoment(nm) (XComNarrativeMoment(DynamicLoadObject("NarrativeMoment." $ `nm, class'XComNarrativeMoment')))
+
+// Shorthand macros for retrieving constant values
+`define LW_FOUNDRY_ID(nm) (class'LongWarConstants'.const.FoundryID_`nm)
+`define LW_HQ_BONUS_ID(nm) (class'LongWarConstants'.const.HQBonusID_`nm)
+`define LW_ITEM_ID(nm) (class'LongWarConstants'.const.ItemID_`nm)
+`define LW_PERK_ID(nm) (class'LongWarConstants'.const.PerkID_`nm)
+`define LW_TECH_ID(nm) (class'LongWarConstants'.const.ResearchID_`nm)
+`define LW_SECOND_WAVE_ID(nm) (class'LongWarConstants'.const.SecondWaveID_`nm)
 
 // ---------------------------
 // Strategy layer macros
@@ -16,7 +29,18 @@
 `define HL_BARRACKS (Highlander_XGFacility_Barracks(`HQGAME.GetGameCore().GetHQ().GetBarracks()))
 `define HL_FTECH(techId, bRushResearch) (`HL_TECHTREE.HL_GetFoundryTech(`techId, `bRushResearch))
 `define HL_ENGINEERING (Highlander_XGFacility_Engineering(`HQGAME.GetGameCore().GetHQ().GetEngineering()))
+`define HL_HANGAR (Highlander_XGFacility_Hangar(`HQGAME.GetGameCore().GetHQ().GetHangar()))
 `define HL_HQ (Highlander_XGHeadquarters(`HQGAME.GetGameCore().GetHQ()))
+`define HL_HQPRES (Highlander_XComHQPresentationLayer(`HQPRES))
+`define HL_ITEM(itemId, transactionType) (Highlander_XGItemTree(`HQGAME.GetGameCore().GetHQ().GetEngineering().m_kItems).HL_GetItem(`itemId, `transactionType))
+`define HL_ITEMTREE (Highlander_XGItemTree(`HQGAME.GetGameCore().GetHQ().GetEngineering().m_kItems))
 `define HL_LABS (Highlander_XGFacility_Labs(`HQGAME.GetGameCore().GetHQ().GetLabs()))
+`define HL_STORAGE (Highlander_XGStorage(`HQGAME.GetGameCore().GetHQ().m_kEngineering.GetStorage()))
 `define HL_TECH(techId) (`HL_TECHTREE.HL_GetTech(`techId))
 `define HL_TECHTREE (Highlander_XGTechTree(`HQGAME.GetGameCore().GetHQ().GetLabs().m_kTree))
+
+// ---------------------------
+// Tactical layer macros
+// ---------------------------
+
+`define HL_TAC_GAMECORE (Highlander_XGTacticalGameCore(`GAMECORE))

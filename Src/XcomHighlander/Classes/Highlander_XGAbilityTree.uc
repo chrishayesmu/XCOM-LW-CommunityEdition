@@ -6,7 +6,10 @@ simulated function bool HasAutopsyTechForChar(int iCharType)
     local HL_TTech kTech;
 
     // Hard-coded character types that don't need to be autopsied
-    if (iCharType == eChar_Zombie ||
+    if (iCharType == eChar_Civilian ||
+        iCharType == eChar_Soldier ||
+        iCharType == eChar_Tank ||
+        iCharType == eChar_Zombie ||
         iCharType == eChar_Outsider ||
         iCharType == eChar_ExaltOperative ||
         iCharType == eChar_ExaltSniper ||

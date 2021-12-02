@@ -13,9 +13,9 @@ function Init(int iView)
     {
         m_iHLReportTech = kLabs.m_iHLLastResearched;
 
-        if (kLabs.m_iHLLastResearched != eTech_None)
+        if (kLabs.m_iHLLastResearched != 0)
         {
-            if (kLabs.m_iHLLastResearched != eTech_Xenobiology && kLabs.m_iHLLastResearched != eTech_ArcThrower)
+            if (kLabs.m_iHLLastResearched != `LW_TECH_ID(Xenobiology) && kLabs.m_iHLLastResearched != `LW_TECH_ID(Xenoneurology))
             {
                 GoToView(eLabView_ChooseTech);
             }
@@ -32,7 +32,7 @@ function Init(int iView)
         return;
     }
 
-    if (kLabs.m_iHLLastResearched != eTech_None)
+    if (kLabs.m_iHLLastResearched != 0)
     {
         m_iHLReportTech = kLabs.m_iHLLastResearched;
         GoToView(eLabView_Report);
@@ -100,7 +100,7 @@ function TTechSummary HL_BuildTechSummary(HL_TTech kTech)
         {
             kTag.StrValue0 = class'XGLocalizedData'.default.ResearchCreditNames[I];
             kTag.IntValue0 = kTechTree.GetResearchCredit(EResearchCredits(I)).iBonus;
-            kSummary.txtSummary.StrValue $= "\\n" $ class'XComLocalizer'.static.ExpandString(m_strResearchCreditApplies);
+            kSummary.txtSummary.StrValue $= "\n" $ class'XComLocalizer'.static.ExpandString(m_strResearchCreditApplies);
         }
     }
 
@@ -127,7 +127,7 @@ function OnChooseArchive(int iArchive)
 function OnLeaveLabs()
 {
     PRES().PopState();
-    `HL_LABS.m_iHLLastResearched = eTech_None;
+    `HL_LABS.m_iHLLastResearched = 0;
 }
 
 function OnLeaveReport(bool bJumpToChooseTech)
@@ -357,7 +357,7 @@ function UpdateArchives()
 
         // Skip the Sectoid Commander Autopsy until the Sectoid Autopsy research comes up; this is a hack used in
         // the base game to make the autopsies appear next to each other in the list, since their IDs aren't consecutive
-        if (kTech.iTechId == eTech_AutopsySectoidCommander)
+        if (kTech.iTechId == `LW_TECH_ID(SectoidCommanderAutopsy))
         {
             continue;
         }
@@ -367,11 +367,11 @@ function UpdateArchives()
         kOption.strText = kTech.strName;
         kUI.mnuArchives.arrOptions.AddItem(kOption);
 
-        if (kTech.iTechId == eTech_AutopsySectoid && LABS().IsResearched(eTech_AutopsySectoidCommander))
+        if (kTech.iTechId == `LW_TECH_ID(SectoidAutopsy) && LABS().IsResearched(`LW_TECH_ID(SectoidCommanderAutopsy)))
         {
-            kUI.arrTechs.AddItem(eTech_AutopsySectoidCommander);
+            kUI.arrTechs.AddItem(`LW_TECH_ID(SectoidCommanderAutopsy));
 
-            kOption.strText = `HL_TECH(eTech_AutopsySectoidCommander).strName;
+            kOption.strText = `HL_TECH(`LW_TECH_ID(SectoidCommanderAutopsy)).strName;
             kUI.mnuArchives.arrOptions.AddItem(kOption);
         }
     }
@@ -388,7 +388,7 @@ function UpdateHeader()
     kLabs = `HL_LABS;
 
     kHeader.arrResources.AddItem(GetResourceText(eResource_Scientists));
-    kHeader.bDrawTech = kLabs.m_kProject.iTech != eTech_None;
+    kHeader.bDrawTech = kLabs.m_kProject.iTech != 0;
     kHeader.txtTitle.StrValue = m_strCurrentResearchTitle;
 
     if (kHeader.bDrawTech)
@@ -439,9 +439,9 @@ function UpdateMainMenu()
         {
             kOption.iState = eUIState_Normal;
 
-            if (kLabs.HL_GetCurrentTech().iTechId != eTech_None)
+            if (kLabs.HL_GetCurrentTech().iTechId != 0)
             {
-                if (ISCONTROLLED() && !kLabs.IsResearched(eTech_Xenobiology))
+                if (ISCONTROLLED() && !kLabs.IsResearched(`LW_TECH_ID(Xenobiology)))
                 {
                     kOption.iState = eUIState_Disabled;
                 }
@@ -600,7 +600,7 @@ function UpdateReport()
         kLabs.m_arrUnlockedGeneMods.AddItem(EGeneModTech(arrResults[iResult]));
     }
 
-    if (kTech.iTechId == eTech_Meld) // Xenogenetics
+    if (kTech.iTechId == `LW_TECH_ID(Xenogenetics))
     {
         kTag.StrValue0 = string(40);
         kReport.txtResults.Add(1);
@@ -724,7 +724,7 @@ function UpdateView()
             return;
         }
 
-        if (!HQ().HasFacility(eFacility_AlienContain) && kLabs.IsResearched(eTech_ArcThrower) && kLabs.m_iHLLastResearched != eTech_ArcThrower && !ENGINEERING().IsBuildingFacility(eFacility_AlienContain))
+        if (!HQ().HasFacility(eFacility_AlienContain) && kLabs.IsResearched(`LW_TECH_ID(Xenoneurology)) && kLabs.m_iHLLastResearched != `LW_TECH_ID(Xenoneurology) && !ENGINEERING().IsBuildingFacility(eFacility_AlienContain))
         {
             if (Narrative(`XComNarrativeMoment("UrgeContainment")))
             {
@@ -740,7 +740,7 @@ function UpdateView()
             }
         }
 
-        if (HQ().HasFacility(eFacility_AlienContain) && STORAGE().m_arrItems[eItem_ArcThrower] > 0 && !STORAGE().HasAlienCaptive())
+        if (HQ().HasFacility(eFacility_AlienContain) && `HL_STORAGE.GetNumItemsAvailable(`LW_ITEM_ID(ArcThrower)) > 0 && !STORAGE().HasAlienCaptive())
         {
             if (Narrative(`XComNarrativeMoment("UrgeCaptive")))
             {
@@ -748,7 +748,7 @@ function UpdateView()
             }
         }
 
-        if (kLabs.IsResearched(3) && !STORAGE().EverHadItem(eItem_HyperwaveBeacon))
+        if (kLabs.IsResearched(`LW_TECH_ID(AlienOperations)) && !STORAGE().EverHadItem(`LW_ITEM_ID(HyperwaveBeacon)))
         {
             if (Narrative(`XComNarrativeMoment("AlienBaseDetected_LeadOut_CS")))
             {
@@ -772,7 +772,7 @@ function UpdateView()
             }
         }
 
-        if (kLabs.HasInterrogatedCaptive() && !STORAGE().EverHadItem(eItem_Base_Shard))
+        if (kLabs.HasInterrogatedCaptive() && !STORAGE().EverHadItem(`LW_ITEM_ID(OutsiderShard)))
         {
             if (Narrative(`XComNarrativeMoment("PostInterrogation_LeadOut_CS")))
             {
@@ -841,7 +841,7 @@ function UpdateView()
     }
     else if (m_iCurrentView == eLabView_Report && !m_bViewingArchives)
     {
-        if (kLabs.m_iHLLastResearched == eTech_Xenobiology)
+        if (kLabs.m_iHLLastResearched == `LW_TECH_ID(Xenobiology))
         {
             PRES().UIObjectiveDisplay(eObj_CaptureAlien);
         }
@@ -849,12 +849,12 @@ function UpdateView()
         {
             PRES().UIObjectiveDisplay(eObj_CaptureOutsider);
         }
-        else if (kLabs.m_iHLLastResearched == eTech_BaseShard)
+        else if (kLabs.m_iHLLastResearched == `LW_TECH_ID(AlienOperations))
         {
             PRES().UIObjectiveDisplay(eObj_ObtainShards);
         }
 
-        if (kLabs.m_iHLLastResearched == eTech_BaseShard)
+        if (kLabs.m_iHLLastResearched == `LW_TECH_ID(AlienOperations))
         {
             Narrative(`XComNarrativeMoment("AlienCodeRevealed_LeadOut_CS"));
         }

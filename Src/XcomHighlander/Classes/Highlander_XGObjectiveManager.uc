@@ -102,7 +102,7 @@ function TSubObjective BuildSubObjective(ESubObjective eSubObj)
 
             break;
         case eSubObj_ResearchArcThrower:
-            if (`HL_LABS.IsResearched(eTech_ArcThrower))
+            if (`HL_LABS.IsResearched(`LW_TECH_ID(Xenoneurology)))
             {
                 if (STORAGE().m_arrItemArchives[eItem_ArcThrower] > 0)
                 {
@@ -113,7 +113,7 @@ function TSubObjective BuildSubObjective(ESubObjective eSubObj)
                     kSub.eStatus = eObjStatus_InProgress;
                 }
             }
-            else if (`HL_LABS.HL_GetCurrentTech().iTechId == eTech_ArcThrower)
+            else if (`HL_LABS.HL_GetCurrentTech().iTechId == `LW_TECH_ID(Xenoneurology))
             {
                 kSub.eStatus = eObjStatus_InProgress;
             }
@@ -185,7 +185,7 @@ function TSubObjective BuildSubObjective(ESubObjective eSubObj)
             {
                 kSub.eStatus = eObjStatus_Complete;
             }
-            else if (`HL_LABS.HL_GetCurrentTech().iTechId == eTech_PsiArmor)
+            else if (`HL_LABS.HL_GetCurrentTech().iTechId == `LW_TECH_ID(MindAndMachine))
             {
                 kSub.eStatus = eObjStatus_InProgress;
             }
