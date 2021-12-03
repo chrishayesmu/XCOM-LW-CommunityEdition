@@ -82,7 +82,7 @@ function bool CanBeBuilt(int iItemId)
 
     kItem = HL_GetItem(iItemId);
 
-    if (kItem.iHours < 0)
+    if (kItem.iHours < 0 || kItem.bIsInfinite)
     {
         return false;
     }
@@ -102,6 +102,11 @@ function bool CanBeSold(int iItemId)
     local HL_TItem kItem;
 
     kItem = HL_GetItem(iItemId, eTransaction_Sell);
+
+    if (kItem.bIsInfinite)
+    {
+        return false;
+    }
 
     // TODO: add a mod hook
 
@@ -131,7 +136,6 @@ function bool CanBeSold(int iItemId)
         case `LW_ITEM_ID(AlienGrenade):
             return !ENGINEERING().IsFoundryTechResearched(`LW_FOUNDRY_ID(AlienGrenades));
         default:
-            `HL_LOG_CLS("Item ID " $ iItemId $ " has cash cost " $ kItem.kCost.iCash);
             return kItem.kCost.iCash >= 0;
     }
 }

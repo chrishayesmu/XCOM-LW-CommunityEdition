@@ -212,6 +212,16 @@ function Override_GetItem(out HL_TItem kItem, int iTransactionType)
     }
 }
 
+function OnItemCompleted(HL_TItemProject kItemProject, int iQuantity, optional bool bInstant)
+{
+    local HighlanderStrategyListener kStrategyListener;
+
+    foreach StrategyListeners(kStrategyListener)
+    {
+        kStrategyListener.OnItemCompleted(kItemProject, iQuantity, bInstant);
+    }
+}
+
 // #endregion
 
 // #region Research-related events
@@ -270,6 +280,21 @@ function OnResearchTechsBuilt(out array<HL_TTech> Techs)
         kStrategyListener.OnResearchTechsBuilt(Techs);
     }
 }
+
+// #endregion
+
+// #region Miscellaneous events
+
+function PopulateAlert(int iAlertId, TGeoscapeAlert kGeoAlert, out TMCAlert kAlert)
+{
+    local HighlanderStrategyListener kStrategyListener;
+
+    foreach StrategyListeners(kStrategyListener)
+    {
+        kStrategyListener.PopulateAlert(iAlertId, kGeoAlert, kAlert);
+    }
+}
+
 
 // #endregion
 

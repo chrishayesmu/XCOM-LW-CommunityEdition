@@ -178,6 +178,11 @@ simulated function GoToView(int iView)
                     m_kActiveAlert.s_alertName = "AugmentationAlert";
                     m_kActiveAlert.m_bIsSimpleAlert = false;
                     break;
+                case class'Highlander_XGGeoscape'.const.MOD_ALERT_TYPE:
+                    m_kActiveAlert = Spawn(class'Highlander_UIMissionControl_AlertBase', self);
+                    m_kActiveAlert.s_alertName = "FundingCouncilAlert";
+                    m_kActiveAlert.m_bIsSimpleAlert = true;
+                    break;
                 default:
                     bAlertHandled = false;
                     break;
@@ -227,6 +232,90 @@ simulated function GoToView(int iView)
             HideNonAlertPanels();
 
             break;
+    }
+}
+
+simulated function LoadFlashAlertPanel()
+{
+    HideNonAlertPanels();
+
+    if (m_iView == eMCView_Abduction)
+    {
+        Invoke("LoadAbductionSelection");
+        return;
+    }
+
+    switch (GetMgr().m_kCurrentAlert.iAlertType)
+    {
+        case eGA_UFODetected:
+            Invoke("LoadRadarContactAlert");
+            return;
+        case eGA_UFOLanded:
+            Invoke("LoadUFOLandedAlert");
+            return;
+        case eGA_UFOCrash:
+            Invoke("LoadUFOCrashAlert");
+            return;
+        case eGA_UFOLost:
+            Invoke("LoadContactLostAlert");
+            return;
+        case eGA_DropArrive:
+            Invoke("LoadSkyrangerArrivalAlert");
+            return;
+        case eGA_AlienBase:
+            Invoke("LoadAlienBaseAlert");
+            return;
+        case eGA_ResearchCompleted:
+            Invoke("LoadScienceAlert");
+            return;
+        case eGA_ItemProjectCompleted:
+            Invoke("LoadEngineeringAlert");
+            return;
+        case eGA_FoundryProjectCompleted:
+            Invoke("LoadFoundryAlert");
+            return;
+        case eGA_NewFacilityBuilt:
+            Invoke("LoadFacilityBuiltAlert");
+            return;
+        case eGA_Terror:
+            Invoke("LoadTerrorAlert");
+            return;
+        case eGA_Abduction:
+            Invoke("LoadAbductionAlert");
+            return;
+        case eGA_CountryPanic:
+            Invoke("LoadCountryPanicAlert");
+            return;
+        case eGA_PsiTraining:
+            Invoke("LoadPsiTestingAlert");
+            return;
+        case eGA_SecretPact:
+        case eGA_ExaltRaidFailCountry:
+        case eGA_ExaltRaidFailContinent:
+        case 53:
+            Invoke("LoadSecretPactAlert");
+            return;
+        case eGA_SatelliteDestroyed:
+            Invoke("LoadSatelliteDownAlert");
+            return;
+        case eGA_Temple:
+            Invoke("LoadTempleShipAlert");
+            return;
+        case eGA_FCActivity:
+        case eGA_FCMissionActivity:
+        case class'Highlander_XGGeoscape'.const.MOD_ALERT_TYPE:
+            Invoke("LoadFundingCouncilAlert");
+            return;
+        case eGA_ExaltMissionActivity:
+        case eGA_ExaltResearchHack:
+            Invoke("LoadExaltSelection");
+            return;
+        case eGA_ExaltAlert:
+            Invoke("LoadExaltAlert");
+            return;
+        case eGA_Augmentation:
+            Invoke("LoadAugmentationAlert");
+            return;
     }
 }
 

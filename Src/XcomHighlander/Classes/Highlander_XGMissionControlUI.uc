@@ -29,6 +29,11 @@ function AddNotice(EGeoscapeAlert eNotice, optional int iData1, optional int iDa
             return;
     }
 
+    Mod_AddNotice(kNotice);
+}
+
+function Mod_AddNotice(TMCNotice kNotice)
+{
     if (m_arrNotices.Length == 0)
     {
         m_arrNotices.AddItem(kNotice);
@@ -1415,6 +1420,9 @@ function UpdateAlert()
             kAlert.mnuReplies.arrOptions.AddItem(kReply);
 
             break;
+        case class'Highlander_XGGeoscape'.const.MOD_ALERT_TYPE:
+            HandleModAlert(kGeoAlert, kAlert);
+            break;
         default:
             // For unrecognized alerts, just get rid of them
             GEOSCAPE().ClearTopAlert();
@@ -1429,4 +1437,22 @@ function UpdateAlert()
 
     m_kCurrentAlert = kAlert;
     m_kCurrentAlert.iAlertType = kGeoAlert.eType;
+}
+
+protected function HandleModAlert(TGeoscapeAlert kGeoAlert, out TMCAlert kAlert)
+{
+    local Highlander_XGGeoscape kGeoscape;
+    local HL_TModAlert kModAlert;
+
+    kGeoscape = `HL_GEOSCAPE;
+
+    if (kGeoscape.arrModAlerts.Length == 0)
+    {
+        return;
+    }
+
+    kModAlert = kGeoscape.arrModAlerts[0];
+    kGeoscape.arrModAlerts.Remove(0, 1);
+
+    `HL_MOD_LOADER.PopulateAlert(kModAlert.iAlertId, kGeoAlert, kAlert);
 }

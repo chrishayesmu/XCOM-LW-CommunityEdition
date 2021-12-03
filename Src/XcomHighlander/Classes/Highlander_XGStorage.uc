@@ -309,7 +309,7 @@ function array<TItem> GetCorpses()
     local array<TItem> arrCorpses;
     arrCorpses.Add(0);
 
-    `HL_LOG_DEPRECATED_CLS(IsInfinite);
+    `HL_LOG_DEPRECATED_CLS(GetCorpses);
 
     return arrCorpses;
 }

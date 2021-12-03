@@ -15,6 +15,14 @@ function XGScreenMgr GetMgr(class<Actor> kMgrClass, optional IScreenMgrInterface
     return super.GetMgr(kMgrClass, kInterface, iView, bIgnoreIfDoesNotExist);
 }
 
+function Mod_Notify(TMCNotice kNotice)
+{
+    if (m_kUIMissionControl != none)
+    {
+        Highlander_XGMissionControlUI(m_kUIMissionControl.GetMgr()).Mod_AddNotice(kNotice);
+    }
+}
+
 function bool RemoveMgr(class<Actor> kMgrClass)
 {
     ReplaceClassWithHighlanderEquivalent(kMgrClass);

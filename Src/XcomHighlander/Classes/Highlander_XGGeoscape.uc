@@ -1,5 +1,15 @@
 class Highlander_XGGeoscape extends XGGeoscape;
 
+struct HL_TModAlert
+{
+    var TGeoscapeAlert kAlert;
+    var int iAlertId;
+};
+
+const MOD_ALERT_TYPE = 255;
+
+var array<HL_TModAlert> arrModAlerts;
+
 function int AddMission(XGMission kMission, optional bool bFirst)
 {
     local XGMissionControlUI kMissionControlUI;
@@ -104,6 +114,20 @@ function int AddMission(XGMission kMission, optional bool bFirst)
     DetermineMap(kMission);
 
     return kMission.m_iID;
+}
+
+function int Mod_Alert(TGeoscapeAlert kAlert)
+{
+    local HL_TModAlert kModAlert;
+
+    kAlert.eType = MOD_ALERT_TYPE; // override whatever's passed in
+    kModAlert.kAlert = kAlert;
+    kModAlert.iAlertId = Rand(2000000000);
+    arrModAlerts.AddItem(kModAlert);
+
+    Alert(kAlert);
+
+    return kModAlert.iAlertId;
 }
 
 function Init()

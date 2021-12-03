@@ -29,6 +29,7 @@
 `define HL_BARRACKS (Highlander_XGFacility_Barracks(`HQGAME.GetGameCore().GetHQ().GetBarracks()))
 `define HL_FTECH(techId, bRushResearch) (`HL_TECHTREE.HL_GetFoundryTech(`techId, `bRushResearch))
 `define HL_ENGINEERING (Highlander_XGFacility_Engineering(`HQGAME.GetGameCore().GetHQ().GetEngineering()))
+`define HL_GEOSCAPE (Highlander_XGGeoscape(`HQGAME.GetGameCore().GetGeoscape()))
 `define HL_HANGAR (Highlander_XGFacility_Hangar(`HQGAME.GetGameCore().GetHQ().GetHangar()))
 `define HL_HQ (Highlander_XGHeadquarters(`HQGAME.GetGameCore().GetHQ()))
 `define HL_HQPRES (Highlander_XComHQPresentationLayer(`HQPRES))

@@ -947,6 +947,8 @@ function OnItemProjectCompleted(int iProject, optional bool bInstant)
         m_arrOldRebates.AddItem(m_arrHLItemProjects[iProject].kRebate);
         GEOSCAPE().Alert(GEOSCAPE().MakeAlert(eGA_ItemProjectCompleted, m_arrHLItemProjects[iProject].iItemId, m_arrHLItemProjects[iProject].iQuantity, m_arrOldRebates.Length - 1));
     }
+
+    `HL_MOD_LOADER.OnItemCompleted(m_arrHLItemProjects[iProject], m_arrHLItemProjects[iProject].iQuantity, bInstant);
 }
 
 function string RecordCanceledItemConstruction(TItemProject Project)

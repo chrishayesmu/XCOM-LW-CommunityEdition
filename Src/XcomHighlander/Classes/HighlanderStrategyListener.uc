@@ -72,7 +72,12 @@ function UpdateFoundryPerksForSoldier(XGStrategySoldier kSoldier, Highlander_XGF
 function Override_GetItem(out HL_TItem kItem, int iTransactionType) {}
 
 /// <summary>
+/// Called after an item is built. When this is called, the UI notification has been queued (but not viewed), the resulting
+/// items have already been added to storage, and any rebate has already been paid.
 /// </summary>
+/// <param name="kItemProject">The project which has just completed.</param>
+/// <param name="iQuantity">The number of items added to storage.</param>
+/// <param name="bInstant">Whether the project was completed instantly or not.</param>
 function OnItemCompleted(HL_TItemProject kItemProject, int iQuantity, optional bool bInstant) {}
 
 /// -----------------------------------------------------
@@ -118,3 +123,17 @@ function OnResearchStarted(int iTech) {}
 /// in largely the same way as OnResearchTechsBuilt.
 /// </summary>
 function OnResearchTechsBuilt(out array<HL_TTech> Techs) {}
+
+/// -----------------------------------------------------
+/// Miscellaneous events
+/// -----------------------------------------------------
+
+/// <summary>
+/// Called to display an alert on the Geoscape. Whenever a mod calls Highlander_XGGeoscape.Mod_Alert, an integer alert ID
+/// is returned. The calling mod is responsible for storing this ID and handling the PopulateAlert event. The fields in
+/// kAlert must be populated by the mod so that the alert can be shown to the player.
+/// </summary>
+/// <param name="iAlertId">The ID of the alert. Generally, mods should not handle alerts they didn't create.</param>
+/// <param name="kGeoAlert">The alert data passed to Highlander_XGGeoscape.Mod_Alert.</param>
+/// <param name="kAlert">A data structure to fill out with the data to display.</param>
+function PopulateAlert(int iAlertId, TGeoscapeAlert kGeoAlert, out TMCAlert kAlert) {}

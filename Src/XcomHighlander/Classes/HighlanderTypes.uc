@@ -75,7 +75,8 @@ struct HL_TItem
 
     // Whether XCOM's stores of this item are unlimited, such as starting weapons and armor, or Alien Grenades after their Foundry project
     // is complete. If this changes based on the state of the campaign (such as Alien Grenades do), then your mod should use the strategy hook
-    // Override_HL_GetItem to set this value dynamically.
+    // Override_HL_GetItem to set this value dynamically. Note that items which are marked as infinite cannot be built in engineering, nor can
+    // they be sold in the Grey Market.
     var bool bIsInfinite;
 
     var bool bIsCaptive;          // Whether this represents a captive unit.
