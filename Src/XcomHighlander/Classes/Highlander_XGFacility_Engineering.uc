@@ -585,6 +585,42 @@ function bool IsCorpseItem(int iItem)
     return false;
 }
 
+function GetItemEvents(out array<THQEvent> arrEvents)
+{
+    local int iItemProject, iEvent;
+    local THQEvent kEvent;
+    local bool bAdded;
+
+    for (iItemProject = 0; iItemProject < m_arrHLItemProjects.Length; iItemProject++)
+    {
+        if (m_arrHLItemProjects[iItemProject].iEngineers == 0)
+        {
+            continue;
+        }
+
+        kEvent.EEvent = eHQEvent_ItemProject;
+        kEvent.iData = m_arrHLItemProjects[iItemProject].iItemId;
+        kEvent.iData2 = m_arrHLItemProjects[iItemProject].iQuantity;
+        kEvent.iHours = HL_GetItemProjectHoursRemaining(m_arrHLItemProjects[iItemProject]);
+        bAdded = false;
+
+        for (iEvent = 0; iEvent < arrEvents.Length; iEvent++)
+        {
+            if (arrEvents[iEvent].iHours > kEvent.iHours)
+            {
+                arrEvents.InsertItem(iEvent, kEvent);
+                bAdded = true;
+                break;
+            }
+        }
+
+        if (!bAdded)
+        {
+            arrEvents.AddItem(kEvent);
+        }
+    }
+}
+
 function TProjectCost GetItemProjectCost(EItemType eItem, int iQuantity, optional bool bRush)
 {
     `HL_LOG_DEPRECATED_CLS(GetItemProjectCost);
@@ -748,7 +784,7 @@ function OnItemCompleted(int iItemProject, int iQuantity, optional bool bInstant
     {
         m_arrHLItemProjects[iItemProject].kRebate.iCash += kRebate.iCash * iQuantity;
         m_arrHLItemProjects[iItemProject].kRebate.iAlloys += kRebate.iAlloys * iQuantity;
-        m_arrItemProjects[iItemProject].kRebate.iElerium += kRebate.iElerium * iQuantity;
+        m_arrHLItemProjects[iItemProject].kRebate.iElerium += kRebate.iElerium * iQuantity;
 
         // Seems like LW rerouted the cash rebates (which aren't used in LW) to add Meld instead,
         // but ultimately didn't end up doing Meld rebates after all
@@ -893,7 +929,7 @@ function OnItemCompleted(int iItemProject, int iQuantity, optional bool bInstant
 
     if (!WorldInfo.IsConsoleBuild(CONSOLE_Xbox360) && !WorldInfo.IsConsoleBuild(CONSOLE_PS3))
     {
-        GetRecapSaveData().RecordEvent(RecordItemsBuilt(m_arrItemProjects[iItemProject].eItem, iQuantity));
+        GetRecapSaveData().RecordEvent(HL_RecordItemsBuilt(m_arrHLItemProjects[iItemProject].iItemId, iQuantity));
     }
 
     STAT_AddStat(eRecap_ItemsBuilt, iQuantity);
@@ -992,6 +1028,67 @@ function string HL_RecordStartedItemConstruction(HL_TItemProject Project)
 
     return OutputString;
 }
+
+function UpdateItemProject()
+{
+    local int iItemsProduced, iEngHours, iUnitHours, iProject;
+
+    if (m_arrHLItemProjects.Length == 0)
+    {
+        return;
+    }
+
+    for (iProject = 0; iProject < m_arrHLItemProjects.Length; iProject++)
+    {
+        if (m_arrHLItemProjects[iProject].iEngineers == 0)
+        {
+            continue;
+        }
+
+        iEngHours = GetWorkPerHour(m_arrHLItemProjects[iProject].iEngineers, m_arrHLItemProjects[iProject].bRush);
+
+        // TODO: a lot of the below seems to only apply to a system where items are built individually in an order,
+        // so this can probably be cleaned up quite a bit
+        if (m_arrHLItemProjects[iProject].iHoursLeft <= iEngHours)
+        {
+            if (GEOSCAPE().IsBusy())
+            {
+                return;
+            }
+
+            iEngHours -= m_arrHLItemProjects[iProject].iHoursLeft;
+            iUnitHours = `HL_ITEM(m_arrHLItemProjects[iProject].iItemId).iHours;
+            iItemsProduced = m_arrHLItemProjects[iProject].iQuantityLeft;
+            iItemsProduced += (iEngHours / iUnitHours);
+            m_arrHLItemProjects[iProject].iHoursLeft = iUnitHours - (iEngHours % iUnitHours);
+
+            if (iItemsProduced > m_arrHLItemProjects[iProject].iQuantityLeft)
+            {
+                iItemsProduced = m_arrHLItemProjects[iProject].iQuantityLeft;
+            }
+
+            m_arrHLItemProjects[iProject].iQuantityLeft -= iItemsProduced;
+            OnItemCompleted(iProject, iItemsProduced);
+
+            if (m_arrHLItemProjects[iProject].iQuantityLeft == 0)
+            {
+                OnItemProjectCompleted(iProject);
+                RemoveItemProject(iProject);
+            }
+            else
+            {
+                m_arrHLItemProjects[iProject].iMaxEngineers -= (iItemsProduced * `HL_ITEM(m_arrHLItemProjects[iProject].iItemId).iMaxEngineers);
+            }
+        }
+        else
+        {
+            m_arrHLItemProjects[iProject].iHoursLeft -= iEngHours;
+        }
+    }
+
+    SpillAvailableEngineers();
+}
+
 
 function bool UrgeBuildMEC()
 {

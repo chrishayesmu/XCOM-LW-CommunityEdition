@@ -117,6 +117,44 @@ function HL_EquipWeapon(int iItemId, XGShip_Interceptor kShip)
     }
 }
 
+function TContinentInfo GetContinentInfo(EContinent eCont)
+{
+    local Highlander_XGFacility_Engineering kEngineering;
+    local TContinentInfo kInfo;
+    local HL_TItemProject kProject;
+    local int iOrder;
+
+    kEngineering = `HL_ENGINEERING;
+
+    kInfo.eCont = eCont;
+    kInfo.strContinentName.StrValue = Continent(eCont).GetName();
+    kInfo.arrCraft = GetInterceptorsByContinent(eCont);
+    kInfo.iNumShips = kInfo.arrCraft.Length;
+
+    for (iOrder = 0; iOrder < HQ().m_akInterceptorOrders.Length; iOrder++)
+    {
+        if (HQ().m_akInterceptorOrders[iOrder].iDestinationContinent == eCont)
+        {
+            kInfo.m_arrInterceptorOrderIndexes.AddItem(iOrder);
+            kInfo.iNumShips += HQ().m_akInterceptorOrders[iOrder].iNumInterceptors;
+        }
+    }
+
+    // For the home continent, check for any Firestorms being built
+    if (eCont == `HQGAME.GetGameCore().GetHQ().GetContinent())
+    {
+        foreach kEngineering.m_arrHLItemProjects(kProject)
+        {
+            if (kProject.iItemId == `LW_ITEM_ID(Firestorm))
+            {
+                kInfo.iNumShips += kProject.iQuantity;
+            }
+        }
+    }
+
+    return kInfo;
+}
+
 function array<TItem> GetUpgrades(XGShip_Interceptor kShip)
 {
     local array<TItem> arrItems;

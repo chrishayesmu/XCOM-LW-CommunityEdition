@@ -1,5 +1,49 @@
 class Highlander_XGMissionControlUI extends XGMissionControlUI;
 
+function AddNotice(EGeoscapeAlert eNotice, optional int iData1, optional int iData2, optional int iData3)
+{
+    local TMCNotice kNotice;
+    local XGParamTag kTag;
+
+    kTag = XGParamTag(XComEngine(class'Engine'.static.GetEngine()).LocalizeContext.FindTag("XGParam"));
+    kNotice.fTimer = 6.0;
+
+    switch (eNotice)
+    {
+        case eGA_NewItemBuilt:
+            Sound().PlaySFX(SNDLIB().SFX_Notify_ItemBuilt);
+            kTag.IntValue0 = iData2;
+            kTag.StrValue0 = `HL_ITEM(iData1).strName;
+            kNotice.txtNotice.StrValue = class'XComLocalizer'.static.ExpandString(m_strLabelItemBuilt);
+            kNotice.txtNotice.iState = eUIState_Warning;
+            kNotice.imgNotice.iImage = eImage_FacilityGear;
+            break;
+        case 54: // Item repairs completed
+            kTag.StrValue0 = `HL_ITEM(iData1, eTransaction_Sell).strName;
+            kNotice.txtNotice.StrValue = class'XComLocalizer'.static.ExpandString(m_strSpeakSatDestroyed);
+            kNotice.txtNotice.iState = eUIState_Warning;
+            kNotice.imgNotice.iImage = eImage_FacilityGear;
+            break;
+        default:
+            super.AddNotice(eNotice, iData1, iData2, iData3);
+            return;
+    }
+
+    if (m_arrNotices.Length == 0)
+    {
+        m_arrNotices.AddItem(kNotice);
+        UpdateView();
+    }
+    else
+    {
+        if (m_arrNotices.Length <= 3)
+        {
+            m_arrNotices.InsertItem(0, kNotice);
+            UpdateView();
+        }
+    }
+}
+
 function BuildEventOptions()
 {
     local int iEvent, iDays;
@@ -45,7 +89,7 @@ function BuildEventOptions()
                 kOption.iEventType = eHQEvent_ItemProject;
                 kOption.iPriority = 2;
                 kOption.imgOption.iImage = eImage_OldManufacture;
-                kOption.txtOption.StrValue = Item(m_kEvents.arrEvents[iEvent].iData).strName;
+                kOption.txtOption.StrValue = `HL_ITEM(m_kEvents.arrEvents[iEvent].iData).strName;
 
                 if (m_kEvents.arrEvents[iEvent].iData2 > 1)
                 {
@@ -232,6 +276,7 @@ event Tick(float fDeltaT)
 function UpdateAlert()
 {
     local HL_TFoundryTech kFoundryTech;
+    local HL_TItem kItem;
     local HL_TTech kTech;
     local TGeoscapeAlert kGeoAlert;
     local TMCAlert kAlert;
@@ -1116,12 +1161,13 @@ function UpdateAlert()
             break;
         case eGA_ItemProjectCompleted:
             Sound().PlaySFX(SNDLIB().SFX_Alert_ItemProjectComplete);
+            kItem = `HL_ITEM(kGeoAlert.arrData[0]);
 
-            kAlert.txtTitle.StrValue = Item(kGeoAlert.arrData[0]).strName;
+            kAlert.txtTitle.StrValue = kItem.strName;
             kAlert.txtTitle.iState = eUIState_Good;
-            kAlert.imgAlert.iImage = Item(kGeoAlert.arrData[0]).iImage;
+            kAlert.imgAlert.strPath = kItem.ImagePath;
 
-            kTag.StrValue0 = Item(kGeoAlert.arrData[0]).strName;
+            kTag.StrValue0 = kItem.strName;
             txtTemp.StrValue = class'XComLocalizer'.static.ExpandString(m_strLabelManufactureItemComplete);
             txtTemp.iState = eUIState_Highlight;
             kAlert.arrText.AddItem(txtTemp);

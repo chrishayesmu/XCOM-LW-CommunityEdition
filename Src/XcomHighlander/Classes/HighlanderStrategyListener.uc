@@ -71,6 +71,10 @@ function UpdateFoundryPerksForSoldier(XGStrategySoldier kSoldier, Highlander_XGF
 /// <param name="iTransactionType">The type of transaction this item is being retrieved for, corresponding to a value in XGStrategyActorNativeBase.ETransactionType.</param>
 function Override_GetItem(out HL_TItem kItem, int iTransactionType) {}
 
+/// <summary>
+/// </summary>
+function OnItemCompleted(HL_TItemProject kItemProject, int iQuantity, optional bool bInstant) {}
+
 /// -----------------------------------------------------
 /// Research events
 /// -----------------------------------------------------
