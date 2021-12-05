@@ -140,18 +140,18 @@ function OnExit()
     {
         if (EXALT().m_bFirstCellClearedPostCombat)
         {
-            Narrative(`XComNarrativeMoment("FirstCellRemoved"));
+            Narrative(`XComNarrativeMomentEW("FirstCellRemoved"));
             EXALT().m_bFirstCellClearedPostCombat = false;
         }
         else
         {
-            Narrative(`XComNarrativeMoment("Robo_NewClue"));
+            Narrative(`XComNarrativeMomentEW("Robo_NewClue"));
         }
     }
 
     if (HQ().m_kLastResult.bSuccess && HQ().m_kLastResult.eType == eMission_ExaltRaid)
     {
-        Narrative(`XComNarrativeMoment("EXALTHQ_Success"));
+        Narrative(`XComNarrativeMomentEW("EXALTHQ_Success"));
     }
 
     BARRACKS().m_aLastMissionSoldiers.Remove(0, BARRACKS().m_aLastMissionSoldiers.Length);
@@ -161,13 +161,13 @@ function OnExit()
         switch (World().m_kFundingCouncil.m_iNextAnnetteMusing)
         {
             case 1:
-                Narrative(`XComNarrativeMoment("AnnetteStoryMusingI"));
+                Narrative(`XComNarrativeMomentEW("AnnetteStoryMusingI"));
                 break;
             case 2:
-                Narrative(`XComNarrativeMoment("AnnetteStoryMusingII"));
+                Narrative(`XComNarrativeMomentEW("AnnetteStoryMusingII"));
                 break;
             case 3:
-                Narrative(`XComNarrativeMoment("AnnetteStoryMusingIV"));
+                Narrative(`XComNarrativeMomentEW("AnnetteStoryMusingIV"));
                 break;
         }
     }
@@ -471,7 +471,7 @@ function UpdateView()
                     {
                         if (!bMeldWasRetrieved && bMeldWasPossible)
                         {
-                            Narrative(`XComNarrativeMoment("EngineerGreatMission_GetMeld"));
+                            Narrative(`XComNarrativeMomentEW("EngineerGreatMission_GetMeld"));
                         }
                         else if (Rand(10) > 4 || !bMeldWasPossible)
                         {
@@ -479,7 +479,7 @@ function UpdateView()
                         }
                         else
                         {
-                            Narrative(`XComNarrativeMoment("EngineerGreatMission_GotMeld"));
+                            Narrative(`XComNarrativeMomentEW("EngineerGreatMission_GotMeld"));
                         }
                     }
 
@@ -493,7 +493,7 @@ function UpdateView()
                     {
                         if (!bMeldWasRetrieved && bMeldWasPossible)
                         {
-                            Narrative(`XComNarrativeMoment("ScientistGreatMission_GetMeld"));
+                            Narrative(`XComNarrativeMomentEW("ScientistGreatMission_GetMeld"));
                         }
                         else if ((Rand(10) > 4) || !bMeldWasPossible)
                         {
@@ -501,7 +501,7 @@ function UpdateView()
                         }
                         else
                         {
-                            Narrative(`XComNarrativeMoment("ScientistGreatMission_GotMeld"));
+                            Narrative(`XComNarrativeMomentEW("ScientistGreatMission_GotMeld"));
                         }
                     }
 

@@ -711,7 +711,7 @@ function OnResearchCompleted()
     {
         // In vanilla EW, completing the meld research gave ~40 bonus meld; none in LW (maybe make configurable?)
         STORAGE().AddItem(eItem_Meld, 0);
-        PRES().UINarrative(`XComNarrativeMoment("MeldIntro"), none, ResearchCinematicComplete);
+        PRES().UINarrative(`XComNarrativeMomentEW("MeldIntro"), none, ResearchCinematicComplete);
     }
 
     if (m_iHLLastResearched == `LW_TECH_ID(Xenobiology))
@@ -905,10 +905,10 @@ function SetNewProject(int iTech)
                 Narrative(`XComNarrativeMoment("LabsAutopsyDrone"));
                 break;
             case eChar_Mechtoid:
-                Narrative(`XComNarrativeMoment("LabsAutopsyMechtoid"));
+                Narrative(`XComNarrativeMomentEW("LabsAutopsyMechtoid"));
                 break;
             case eChar_Seeker:
-                Narrative(`XComNarrativeMoment("LabsAutopsySeeker"));
+                Narrative(`XComNarrativeMomentEW("LabsAutopsySeeker"));
                 break;
             default:
                 `HL_LOG_CLS("Unknown or unset iSubjectCharacterId " $ kTech.iSubjectCharacterId $ ". Not triggering any narrative moment.");

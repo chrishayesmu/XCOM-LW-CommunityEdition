@@ -706,7 +706,7 @@ function UpdateView()
             UpdateCreditArchives();
             break;
         case eLabView_GeneLab:
-            Narrative(`XComNarrativeMoment("GeneticsLabComplete"));
+            Narrative(`XComNarrativeMomentEW("GeneticsLabComplete"));
             break;
     }
 
@@ -833,7 +833,7 @@ function UpdateView()
 
         if (GENELABS() != none && GENELABS().UrgeGeneMod())
         {
-            if (Narrative(`XComNarrativeMoment("Urge_GeneMod")))
+            if (Narrative(`XComNarrativeMomentEW("Urge_GeneMod")))
             {
                 return;
             }
