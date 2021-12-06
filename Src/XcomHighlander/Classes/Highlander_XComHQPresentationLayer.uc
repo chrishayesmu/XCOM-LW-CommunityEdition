@@ -1,5 +1,7 @@
 class Highlander_XComHQPresentationLayer extends XComHQPresentationLayer;
 
+var Highlander_UIModSettings m_kModSettings;
+
 simulated function Init()
 {
     `HL_LOG_CLS("Init");
@@ -155,6 +157,14 @@ reliable client simulated function UIMissionControl()
     PushState('State_MC');
 }
 
+reliable client simulated function HL_UIModSettings()
+{
+    if (m_kModSettings == none)
+    {
+        PushState('State_ModSettings');
+    }
+}
+
 reliable client simulated function UISoldier(XGStrategySoldier kSoldier, optional int iView = 0, optional bool bReturnToDebriefUI = false, optional bool bPreventSoldierCycling = false, optional bool bCovertOperativeMode = false)
 {
     m_kSoldierSummary = Spawn(class'Highlander_UISoldierSummary', self);
@@ -295,6 +305,34 @@ simulated state State_MC
         m_kUIMissionControl = Spawn(class'Highlander_UIMissionControl', self);
         m_kUIMissionControl.Init(XComPlayerController(Owner), GetHUD());
     }
+}
+
+simulated state State_ModSettings extends BaseScreenState
+{
+    simulated function Activate()
+    {
+        m_kModSettings = Spawn(class'Highlander_UIModSettings', self);
+        m_kModSettings.Init(XComPlayerController(Owner), GetHUD());
+        m_kModSettings.Show();
+    }
+
+    simulated function Deactivate()
+    {
+        GetHUD().RemoveScreen(m_kModSettings);
+        m_kModSettings = none;
+    }
+
+    simulated function OnReceiveFocus()
+    {
+        m_kModSettings.OnReceiveFocus();
+    }
+
+    simulated function OnLoseFocus()
+    {
+        m_kModSettings.OnLoseFocus();
+    }
+
+    stop;
 }
 
 simulated state State_PauseMenu
