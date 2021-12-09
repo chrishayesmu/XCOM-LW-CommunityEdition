@@ -30,7 +30,7 @@ function TObjectSummary HL_BuildSummary(HL_TFoundryTech kFoundryTech)
             {
                 kTag.StrValue0 = class'XGLocalizedData'.default.ResearchCreditNames[I];
                 kTag.IntValue0 = TECHTREE().GetResearchCredit(EResearchCredits(I)).iBonus;
-                kSummary.txtSummary.StrValue $= ("\\n" $ class'XComLocalizer'.static.ExpandString(m_strResearchCreditApplies));
+                kSummary.txtSummary.StrValue $= ("\n" $ class'XComLocalizer'.static.ExpandString(m_strResearchCreditApplies));
             }
         }
     }

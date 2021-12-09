@@ -211,7 +211,7 @@ function string RecordCanceledFoundryProject(TFoundryProject Project)
     local string OutputString;
 
     kTech = `HL_FTECH(Project.eTech);
-    OutputString = GEOSCAPE().m_kDateTime.GetDateString() @ GEOSCAPE().m_kDateTime.GetTimeString() @ ": Canceled foundry project " $ kTech.strName $ "\\n";
+    OutputString = GEOSCAPE().m_kDateTime.GetDateString() @ GEOSCAPE().m_kDateTime.GetTimeString() @ ": Canceled foundry project " $ kTech.strName $ "\n";
     return OutputString;
 }
 
@@ -221,7 +221,7 @@ function string RecordFoundryProjectCompleted(TFoundryProject FinishedProject)
     local string OutputString;
 
     kTech = `HL_FTECH(FinishedProject.eTech);
-    OutputString = GEOSCAPE().m_kDateTime.GetDateString() @ GEOSCAPE().m_kDateTime.GetTimeString() @ ": Finished foundry project for " $ kTech.strName $ "\\n";
+    OutputString = GEOSCAPE().m_kDateTime.GetDateString() @ GEOSCAPE().m_kDateTime.GetTimeString() @ ": Finished foundry project for " $ kTech.strName $ "\n";
     return OutputString;
 }
 
@@ -231,7 +231,7 @@ function string RecordStartedFoundryProject(TFoundryProject Project)
     local string OutputString;
 
     kTech = `HL_FTECH(Project.eTech);
-    OutputString = GEOSCAPE().m_kDateTime.GetDateString() @ GEOSCAPE().m_kDateTime.GetTimeString() @ ": Started foundry project " $ kTech.strName $ "\\n";
+    OutputString = GEOSCAPE().m_kDateTime.GetDateString() @ GEOSCAPE().m_kDateTime.GetTimeString() @ ": Started foundry project " $ kTech.strName $ "\n";
     return OutputString;
 }
 

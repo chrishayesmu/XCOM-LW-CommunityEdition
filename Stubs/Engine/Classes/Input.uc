@@ -20,6 +20,9 @@ struct native KeyBind
 	/** if true, the bind will not be activated if the corresponding key is held down */
 	var	config bool		bIgnoreCtrl, bIgnoreShift, bIgnoreAlt;
 
+    var config bool bPrimaryBinding;
+    var config bool bSecondaryBinding;
+
 structcpptext
 {
 	FKeyBind()
@@ -86,6 +89,9 @@ native function ResetInput();
 
 native function string GetBind(const out Name Key);
 
+function AddBind(out KeyBind NewBind){}
+function RemoveBind(const name BindName, const string BindCommand, const bool bSecondaryBind){}
+
 exec function SetBind(const out name BindName, string Command)
 {
 	local KeyBind	NewBind;
@@ -113,4 +119,3 @@ exec function SetBind(const out name BindName, string Command)
 	Bindings[Bindings.Length] = NewBind;
 	SaveConfig();
 }
-

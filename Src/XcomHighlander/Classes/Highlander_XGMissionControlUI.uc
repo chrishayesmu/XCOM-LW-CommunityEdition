@@ -652,7 +652,7 @@ function UpdateAlert()
             if (kGeoAlert.arrData[1] == 1)
             {
                 kTag.StrValue0 = class'UIUtilities'.static.GetHTMLColoredText(ConvertCashToString(kGeoAlert.arrData[2]), 6);
-                txtTemp.StrValue = class'XComLocalizer'.static.ExpandStringByTag(txtTemp.StrValue, kCountryTag) $ "\\n\\n";
+                txtTemp.StrValue = class'XComLocalizer'.static.ExpandStringByTag(txtTemp.StrValue, kCountryTag) $ "\n\n";
             }
 
             txtTemp.StrValue $= m_strLabelExaltActivityBody;

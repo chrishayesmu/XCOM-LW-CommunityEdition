@@ -360,3 +360,17 @@ simulated state State_StrategyHUD
         XComHeadquartersController(Owner).SetInputState('HQ_FreeMovement');
     }
 }
+
+// ----------------------------------------------------------------------------------
+// NOTE: states past this point are from XComPresentationLayerBase, and need to be modified here,
+// in Highlander_XComShellPresentationLayer, and in Highlander_XComPresentationLayer together!
+// ----------------------------------------------------------------------------------
+
+simulated state State_PCKeybindings
+{
+    simulated function Activate()
+    {
+        m_kPCKeybindings = Spawn(class'Highlander_UIKeybindingsPCScreen', self);
+        m_kPCKeybindings.Init(XComPlayerController(Owner), GetHUD());
+    }
+}

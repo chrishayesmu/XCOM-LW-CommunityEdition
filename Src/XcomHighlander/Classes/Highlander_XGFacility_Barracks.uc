@@ -56,12 +56,12 @@ function HL_AddTank(int iArmorItemId, int iWeaponItemId)
     if (iArmorItemId == eItem_SHIV_Alloy)
     {
         kTank.m_kSoldier.strLastName = m_strAlloySHIVPrefix $ string(++m_iAlloyTankCounter);
-        kTank.m_kChar.aStats[0] += class'XGTacticalGameCore'.default.ALLOY_SHIV_HP_BONUS;
+        kTank.m_kChar.aStats[eStat_HP] += class'XGTacticalGameCore'.default.ALLOY_SHIV_HP_BONUS;
     }
     else if (iArmorItemId == eItem_SHIV_Hover)
     {
         kTank.m_kSoldier.strLastName = m_strHoverSHIVPrefix $ string(++m_iHoverTankCounter);
-        kTank.m_kChar.aStats[0] += class'XGTacticalGameCore'.default.HOVER_SHIV_HP_BONUS;
+        kTank.m_kChar.aStats[eStat_HP] += class'XGTacticalGameCore'.default.HOVER_SHIV_HP_BONUS;
     }
     else
     {
@@ -70,17 +70,17 @@ function HL_AddTank(int iArmorItemId, int iWeaponItemId)
 
     if (IsOptionEnabled(`LW_SECOND_WAVE_ID(CinematicMode)))
     {
-        kTank.m_kChar.aStats[1] += int(class'XGTacticalGameCore'.default.ABDUCTION_REWARD_SCI);
+        kTank.m_kChar.aStats[eStat_Offense] += int(class'XGTacticalGameCore'.default.ABDUCTION_REWARD_SCI);
     }
 
     if (HQ().HasBonus(`LW_HQ_BONUS_ID(GhostInTheMachine)) > 0)
     {
-        kTank.m_kChar.aStats[1] += HQ().HasBonus(`LW_HQ_BONUS_ID(GhostInTheMachine));
+        kTank.m_kChar.aStats[eStat_Offense] += HQ().HasBonus(`LW_HQ_BONUS_ID(GhostInTheMachine));
     }
 
     if (HQ().HasBonus(`LW_HQ_BONUS_ID(Robotics)) > 0)
     {
-        kTank.m_kChar.aStats[1] += HQ().HasBonus(`LW_HQ_BONUS_ID(Robotics));
+        kTank.m_kChar.aStats[eStat_Offense] += HQ().HasBonus(`LW_HQ_BONUS_ID(Robotics));
     }
 
     kTank.m_kSoldier.iRank = -1;

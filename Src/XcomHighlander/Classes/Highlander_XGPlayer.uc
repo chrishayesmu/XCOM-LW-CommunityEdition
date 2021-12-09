@@ -7,6 +7,94 @@ function Init(optional bool bLoading = false)
     super.Init(bLoading);
 }
 
+simulated event bool FromNativeCheckForEndTurn(XGUnitNativeBase kUnit)
+{
+    return super.FromNativeCheckForEndTurn(kUnit);
+}
+
+event XGSquadNativeBase GetNativeSquad()
+{
+    return super.GetNativeSquad();
+}
+
+event XGSquadNativeBase GetEnemySquad()
+{
+    return super.GetEnemySquad();
+}
+
+simulated event ReplicatedEvent(name VarName)
+{
+    super.ReplicatedEvent(VarName);
+}
+
+simulated state Active
+{
+    simulated event BeginState(name PreviousStateName)
+    {
+        super.BeginState(PreviousStateName);
+    }
+
+    simulated event ContinuedState()
+    {
+        super.ContinuedState();
+    }
+}
+
+simulated state BeginningTurn
+{
+    simulated event BeginState(name PreviousStateName)
+    {
+        super.BeginState(PreviousStateName);
+    }
+
+    simulated event PushedState()
+    {
+        super.PushedState();
+    }
+}
+
+simulated state EndingTurn
+{
+    simulated event BeginState(name PreviousStateName)
+    {
+        super.BeginState(PreviousStateName);
+    }
+
+    simulated event PushedState()
+    {
+        super.PushedState();
+    }
+}
+
+auto simulated state Inactive
+{
+    simulated event BeginState(name PreviousStateName)
+    {
+        super.BeginState(PreviousStateName);
+    }
+
+    simulated event Tick(float fDeltaT)
+    {
+        super.Tick(fDeltaT);
+    }
+}
+
+simulated state Panicking
+{
+    simulated event PushedState()
+    {
+        super.PushedState();
+    }
+}
+
+state ServerWaitingForClientsToEndTurn
+{
+    event Tick(float fDeltaTime)
+    {
+        super.Tick(fDeltaTime);
+    }
+}
+
 // IMPORTANT: This function is an override of a function in XGPlayer. Since we can't modify the inheritance hierarchy,
 // this function has been inserted into each Highlander child class override of XGPlayer.
 // ***If you modify this function, apply the changes in all child classes as well!***

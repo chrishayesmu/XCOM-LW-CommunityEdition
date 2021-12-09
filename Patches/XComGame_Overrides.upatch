@@ -24,7 +24,7 @@ OBJECT = XComGameInfo.SetGameType : AUTO
 /*(0x00DE/0x00BE)*/ 	06 [@label_0x01CF]
 /*(0x00E1/0x00C1)*/ [#label_0x00E1]
 /*(0x00E1/0x00C1)*/ 07 [@label_0x0124] 9B 7E 00 <.MapName> 1F <%t "Shell"> 4A 27 4A 16 1D <%i -1> 16
-/*(0x0100/0x00DC)*/ 	0F 00 <.GameInfoClassToUse> 1F <%t "XComUIShell.XComShell">
+/*(0x0100/0x00DC)*/ 	0F 00 <.GameInfoClassToUse> 1F <%t "XComHighlander.Highlander_XComShell">
 /*(0x0121/0x00F9)*/ 	06 [@label_0x01CF]
 /*(0x0124/0x00FC)*/ [#label_0x0124]
 /*(0x0124/0x00FC)*/ 07 [@label_0x01AA] 84 9B 7E 00 <.MapName> 1F <%t "Command1"> 4A 27 4A 16 1D <%i -1> 16 18 [@] ( 9B 7E 00 <.GameInfoClassName> 1F <%t "XComHeadquartersGame"> 27 27 4A 16 1D <%i -1> 16 16 )

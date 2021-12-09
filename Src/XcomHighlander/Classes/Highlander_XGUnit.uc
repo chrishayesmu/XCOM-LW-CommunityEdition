@@ -1014,3 +1014,75 @@ function UpdateItemCharges()
         }
     }
 }
+
+simulated state Active
+{
+    function AddPathAction(optional int iCustomPathLength = 0, optional bool bNoCloseCombat = false)
+    {
+        local XGAction_Path kAction;
+
+        iCustomPathLength = 0;
+        bNoCloseCombat = false;
+
+        if (`BATTLE.IsTurnTimerCloseToExpiring())
+        {
+            AddIdleAction();
+            return;
+        }
+
+        if (iCustomPathLength == 0)
+        {
+            if (GetMoves() == 0)
+            {
+                AddIdleAction();
+                return;
+            }
+            else if (IsMine() && IsFlying())
+            {
+                SetDashing(false);
+                SetPathLength(GetMaxPathLength() * 2);
+            }
+            else
+            {
+                SetPathLength(GetMaxPathLength());
+            }
+        }
+        else
+        {
+            SetPathLength(iCustomPathLength);
+        }
+
+        GetPathingPawn().MyUnit = none;
+
+        kAction = Spawn(class'Highlander_XGAction_Path', Owner);
+        kAction.Init(self);
+        kAction.SetBoundToClientProxyID(m_iBindNextPathActionToClientProxyActionID);
+        kAction.m_bNoCloseCombat = bNoCloseCombat;
+        AddAction(kAction);
+
+        m_iBindNextPathActionToClientProxyActionID = -1;
+    }
+
+    simulated event BeginState(name nmPrev)
+    {
+        super.BeginState(nmPrev);
+    }
+
+    simulated event EndState(name nmNext)
+    {
+        super.EndState(nmNext);
+    }
+}
+
+auto simulated state Inactive
+{
+    simulated event BeginState(name nmPrev)
+    {
+        super.BeginState(nmPrev);
+    }
+}
+
+simulated event Tick(float fDeltaT)
+{
+    super.Tick(fDeltaT);
+}

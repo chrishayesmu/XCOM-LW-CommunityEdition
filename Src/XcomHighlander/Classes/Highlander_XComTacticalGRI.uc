@@ -6,6 +6,7 @@ simulated function StartMatch()
     m_CharacterGen = Spawn(class'XGCharacterGenerator');
     mSimpleShapeManager = Spawn(class'SimpleShapeManager');
     m_kTraceMgr = Spawn(class'XComTraceManager');
+
     if (Role == ROLE_Authority)
     {
         m_kPrecomputedPath = Spawn(class'Highlander_XComPrecomputedPath');
@@ -32,6 +33,7 @@ function InitBattle() {
     OnlineEventMgr = XComOnlineEventMgr(kEngine.OnlineEventManager);
     ProfileSettings = XComOnlineProfileSettings(kEngine.GetProfileSettings());
     bStandardLoad = OnlineEventMgr.bPerformingStandardLoad;
+
     if (bStandardLoad)
     {
         OnlineEventMgr.FinishLoadGame();
