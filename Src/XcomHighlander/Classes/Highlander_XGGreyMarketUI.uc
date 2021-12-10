@@ -19,7 +19,7 @@ function HL_AddSpecialItemsToList(int iItemId)
 function BuildItemList()
 {
     m_arrHLItems = `HL_STORAGE.HL_GetItemsInCategory(eItemCat_All, eTransaction_Sell);
-    m_arrHLItems.Sort(`HL_UTILS.SortItemsById);
+    m_arrHLItems.Sort(SortItems);
 
     m_arrItemList.Remove(0, m_arrItemList.Length);
     m_arrItemList.Add(m_arrHLItems.Length);
@@ -147,6 +147,46 @@ function SetHighlighted(optional int Target = -1)
     {
         PlayBadSound();
     }
+}
+
+function int SortItems(HL_TItem kItem1, HL_TItem kItem2)
+{
+    // Highlander issue #16: Items are sorted by category: alien artifacts first, then corpses/captives,
+    // then equipment. Within each category, items are sorted by name.
+    if (kItem1.iCategory == kItem2.iCategory)
+    {
+        if (kItem1.strName > kItem2.strName)
+        {
+            return -1;
+        }
+    }
+
+    if (kItem1.iCategory == eItemCat_Alien)
+    {
+        return 0;
+    }
+
+    if (kItem2.iCategory == eItemCat_Alien)
+    {
+        return -1;
+    }
+
+    if (kItem1.iCategory == eItemCat_Corpses)
+    {
+        return 0;
+    }
+
+    if (kItem2.iCategory == eItemCat_Corpses)
+    {
+        return -1;
+    }
+
+    if (kItem1.strName > kItem2.strName)
+    {
+        return -1;
+    }
+
+    return 0;
 }
 
 function UpdateItem()
