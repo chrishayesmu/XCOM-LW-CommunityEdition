@@ -95,7 +95,7 @@ function TSubObjective BuildSubObjective(ESubObjective eSubObj)
             {
                 kSub.eStatus = eObjStatus_Complete;
             }
-            else if (ENGINEERING().IsBuildingItem(EItemType(iSubId)))
+            else if (`HL_ENGINEERING.HL_IsBuildingItem(iSubId))
             {
                 kSub.eStatus = eObjStatus_InProgress;
             }

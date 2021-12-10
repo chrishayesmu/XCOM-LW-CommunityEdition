@@ -1,5 +1,16 @@
 class Highlander_UIShipLoadout extends UIShipLoadout;
 
+simulated function bool OnCancel(optional string Arg = "")
+{
+    local TShipWeapon kWeapon;
+
+    kWeapon = GetMgr().SHIPWEAPON(`HL_HANGAR.HL_ItemTypeToShipWeapon(m_kShip.GetWeapon()));
+    GetMgr().UpdateShipWeaponView(m_kShip, kWeapon.eType);
+    GetMgr().OnLeaveTable();
+
+    return true;
+}
+
 function RealizeSelected()
 {
     local int shipWpnRange, shipWpnFireRate, shipWpnBaseDamage, shipWpnArmorPen;

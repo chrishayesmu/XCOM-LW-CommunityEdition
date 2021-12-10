@@ -153,10 +153,9 @@ function OnLeaveReport(bool bJumpToChooseTech)
 
         for (iUnlock = 0; iUnlock < kLabs.m_arrUnlockedItems.Length; iUnlock++)
         {
-            switch (kLabs.m_arrUnlockedItems[iUnlock])
+            if (kLabs.m_arrUnlockedItems[iUnlock] == 255)
             {
-                case 255:
-                    UnlockMecArmor(kLabs.m_arrUnlockedItems[iUnlock]);
+                UnlockMecArmor(kLabs.m_arrUnlockedItems[iUnlock]);
             }
         }
 
@@ -497,11 +496,15 @@ function UpdateReport()
     local TResearchReport kReport;
     local HL_TTech kTech;
     local array<int> arrResults;
-    local int iCredit, iProgressIndex, iResult;
+    local int iCredit, iProgressIndex, iResult, iSampleItemid;
     local XGParamTag kTag;
     local XGDateTime kDateTime;
     local Highlander_XGFacility_Labs kLabs;
     local Highlander_XGTechTree kTechTree;
+
+    // This function is largely similar to the original version, with Highlander-incompatible functions replaced
+    // with their Highlander equivalents, but note that the kReport.eItemCard and kReport.eCharCard fields are not
+    // populated. This is because they are never read, and would need to be replaced with int types.
 
     kLabs = `HL_LABS;
     kTechTree = `HL_TECHTREE;
@@ -578,15 +581,15 @@ function UpdateReport()
         {
             if (ITEMTREE().CanBeBuilt(arrResults[iResult]) || ITEMTREE().IsMecArmor(arrResults[iResult]))
             {
-                kTag.StrValue0 = Item(arrResults[iResult]).strName;
+                kTag.StrValue0 = `HL_ITEM(arrResults[iResult]).strName;
                 kReport.txtResults.Add(1);
                 kReport.txtResults[kReport.txtResults.Length - 1].StrValue = class'XComLocalizer'.static.ExpandString(m_strItemBuildAvailable);
                 kReport.txtResults[kReport.txtResults.Length - 1].iState = eUIState_Warning;
-                kLabs.m_arrUnlockedItems.AddItem(EItemType(arrResults[iResult]));
+                kLabs.m_arrHLUnlockedItems.AddItem(arrResults[iResult]);
             }
         }
 
-        kReport.EItemCard = EItemType(arrResults[0]);
+        iSampleItemid = arrResults[0];
     }
 
     arrResults = kTechTree.HL_GetGeneResults(m_iHLReportTech);
@@ -631,14 +634,12 @@ function UpdateReport()
 
     if (kLabs.IsAutopsyTech(m_iHLReportTech))
     {
-        // TODO: make this work with new HL struct
-        //kReport.eCharCard = class'XGGameData'.static.CorpseToChar(TECH(m_iHLReportTech).iItemReq);
-        //kReport.btxtInfo.iButton = 3;
-        //kReport.btxtInfo.StrValue = m_strLabelTacticalSummary @ TACTICAL().GetTCharacter(kReport.eCharCard).strName;
+        kReport.btxtInfo.iButton = 3;
+        kReport.btxtInfo.StrValue = m_strLabelTacticalSummary @ TACTICAL().GetTCharacter(kTech.iSubjectCharacterId).strName;
     }
-    else if (kReport.EItemCard != 0)
+    else if (iSampleItemid != 0)
     {
-        kReport.btxtInfo.StrValue = m_strLabelTacticalSummary @ Item(kReport.EItemCard).strName;
+        kReport.btxtInfo.StrValue = m_strLabelTacticalSummary @ `HL_ITEM(iSampleItemid).strName;
     }
 
     m_kReport = kReport;

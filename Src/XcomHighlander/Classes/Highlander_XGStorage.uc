@@ -550,7 +550,23 @@ function EItemType GetShivWeapon()
 function ESoldierClass GetWeaponClassLimit(EItemType eItem)
 {
     `HL_LOG_DEPRECATED_NOREPLACE_CLS(GetWeaponClassLimit);
+
     return 0;
+}
+
+function bool HasAlienCaptive()
+{
+    local HL_TItemQuantity kItemQuantity;
+
+    foreach m_arrHLItems(kItemQuantity)
+    {
+        if (kItemQuantity.iQuantity > 0 && `HL_ITEM(kItemQuantity.iItemId).bIsCaptive)
+        {
+            return true;
+        }
+    }
+
+    return false;
 }
 
 function bool HasAlienWeapon()

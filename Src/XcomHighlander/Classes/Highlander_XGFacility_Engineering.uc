@@ -721,6 +721,28 @@ function GrantInitialStores()
     }
 }
 
+function bool IsBuildingItem(EItemType eItem)
+{
+    `HL_LOG_DEPRECATED_CLS(IsBuildingItem);
+
+    return false;
+}
+
+function bool HL_IsBuildingItem(int iItemId)
+{
+    local int iProject;
+
+    for (iProject = 0; iProject < m_arrHLItemProjects.Length; iProject++)
+    {
+        if (m_arrHLItemProjects[iProject].iItemId == iItemId)
+        {
+            return true;
+        }
+    }
+
+    return false;
+}
+
 function bool IsPriorityItem(EItemType eItem)
 {
     `HL_LOG_DEPRECATED_CLS(IsPriorityItem);

@@ -12,6 +12,7 @@ var int m_iHLLastResearched;
 var array<HL_TResearchProgress> m_arrHLProgress;
 var array<HL_TTechState> m_arrHLMissionResults;
 var array<int> m_arrHLUnlockedFoundryProjects;
+var array<int> m_arrHLUnlockedItems;
 
 function Init(bool bLoadingFromSave)
 {
@@ -724,7 +725,7 @@ function OnResearchCompleted()
     else if (IsInterrogationTech(m_iHLLastResearched))
     {
         // Give the captive's corpse after interrogations
-        iCorpseId = kItemTree.CharacterToCorpse(EItemType(`HL_TECH(m_iHLLastResearched).iSubjectCharacterId));
+        iCorpseId = kItemTree.CharacterToCorpse(`HL_TECH(m_iHLLastResearched).iSubjectCharacterId);
 
         if (iCorpseId != 0)
         {
@@ -856,8 +857,9 @@ function SetNewProject(int iTech)
                 break;
         }
 
-        if (iCaptiveItemId != 0)
+        if (iCaptiveItemId > 0 && iCaptiveItemId <= 255)
         {
+            // TODO: Captives from mods currently will not trigger the alien containment cutscenes
             Base().DoAlienInterrogation(EItemType(iCaptiveItemId));
         }
     }

@@ -315,6 +315,30 @@ function HL_TFoundryTech HL_GetFoundryTech(int iFoundryTechType, optional bool b
     return kTech;
 }
 
+function array<int> GetItemResults(int iTech)
+{
+    local array<int> arrResults;
+    local Highlander_XGItemTree kItemTree;
+    local HL_TItem kItem;
+
+    kItemTree = `HL_ITEMTREE;
+
+    if (iTech == 0)
+    {
+        return arrResults;
+    }
+
+    foreach kItemTree.m_arrHLItems(kItem)
+    {
+        if (kItem.kPrereqs.arrTechReqs.Find(iTech) != INDEX_NONE)
+        {
+            arrResults.AddItem(kItem.iItemId);
+        }
+    }
+
+    return arrResults;
+}
+
 function ETechType GetResultingTech(EItemType eItem)
 {
     `HL_LOG_DEPRECATED_CLS(GetResultingTech);

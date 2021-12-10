@@ -290,6 +290,7 @@ static function HL_TItemCard BuildWeaponCard(int iWeaponId)
     local TConfigWeapon kWeapon;
     local int iMinDamage, iMaxDamage, iMinCrit, iMaxCrit;
 
+    // TODO: rewrite this in a while that doesn't require bit fiddling
     if ((iWeaponId & 255) == 0)
     {
         kItemCard.iCardType = 0;
