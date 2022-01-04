@@ -9,6 +9,7 @@
 `define PRES (XComPresentationLayer(XComPlayerController(WorldInfo.GetALocalPlayerController()).m_Pres))
 `define TRACEMGR (XComTacticalGRI(class'Engine'.static.GetCurrentWorldInfo().GRI).m_kTraceMgr)
 `define SHAPEMGR (XComTacticalGRI(class'Engine'.static.GetCurrentWorldInfo().GRI).mSimpleShapeManager)
+`define WORLDINFO (class'Engine'.static.GetCurrentWorldInfo())
 
 `define METERSTOUNITS(x) ( (`x) * 64 )
 `define UNITSTOMETERS(x) ( (`x) / 64 )

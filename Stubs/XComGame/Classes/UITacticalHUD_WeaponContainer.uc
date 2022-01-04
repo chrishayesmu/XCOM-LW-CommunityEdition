@@ -17,4 +17,5 @@ function Update(optional bool bForceUpdate){}
 simulated function SetWeapons(XGWeapon ActiveWeapon, XGWeapon PrimaryWeapon, optional XGWeapon secondaryWeapon, optional XGWeapon tertiaryWeapon){}
 simulated function AS_SetWeaponName(string displayString){}
 simulated function HideSelectionBrackets(){}
+simulated function UpdateSelectionBracket(XGWeapon ActiveWeapon){}
 simulated function SetHelp(int Index, string Icon, string DisplayText){}

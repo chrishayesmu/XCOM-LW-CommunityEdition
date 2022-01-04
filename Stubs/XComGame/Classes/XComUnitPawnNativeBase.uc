@@ -122,7 +122,7 @@ var(XComUnitPawn) Vector ThrowGrenadeStartPosition;
 var(XComUnitPawn) Vector ThrowGrenadeStartPositionUnderhand;
 var float fStopDistanceNoCover;
 var float fStopDistanceCover;
-var protectedwrite repnotify TUnitPawnOpenCloseStateReplicationData m_kOpenCloseStateReplicationData;
+var repnotify TUnitPawnOpenCloseStateReplicationData m_kOpenCloseStateReplicationData;
 var(XComUnitPawn) editinline array<editinline AnimNotify_PlayParticleEffect> m_arrParticleEffects;
 var name m_WeaponSocketNameToUse;
 var(XComUnitPawn) array<ELocation> HiddenSlots;
@@ -157,7 +157,7 @@ var DamageEvent DamageEvent_CauseOfDeath;
 replication
 {
     if((Role == ROLE_Authority) && bNetDirty)
-        m_fTotalDistanceAlongPath, m_kGameUnit, 
+        m_fTotalDistanceAlongPath, m_kGameUnit,
         m_kOpenCloseStateReplicationData;
 }
 

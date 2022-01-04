@@ -310,11 +310,11 @@ var transient Array<AnimNodeSlot>	SlotNodes;
 var transient Array<InterpGroup>	InterpGroupList;
 
 /** AudioComponent used by FaceFX */
-var	transient protected AudioComponent				FacialAudioComp;
+var	transient AudioComponent				FacialAudioComp;
 
 /** General material used to control common pawn material parameters (e.g. burning) */
-var protected transient MaterialInstanceConstant MIC_PawnMat;
-var protected transient MaterialInstanceConstant MIC_PawnHair;
+var transient MaterialInstanceConstant MIC_PawnMat;
+var transient MaterialInstanceConstant MIC_PawnHair;
 
 /** If TRUE, translation of mesh is updated to match desired floor translation (0 unless special move desired floor conforming) */
 var transient repnotify bool		bUsedByMatinee;
@@ -343,7 +343,7 @@ var Vector					RootMotionInterpCurveLastValue;
 //debug
 var(Debug) bool bDebugShowCameraLocation;
 
-/** 
+/**
  *  Set this to TRUE if riding on a moving base that you know is clear from non-moving world obstructions.
  *  This can solve move-order dependencies when riding a mover, and it's faster.
  */
@@ -859,7 +859,7 @@ simulated function FaceFXAudioFinished(AudioComponent AC)
 event FaceFXAsset GetActorFaceFXAsset()
 {
 	if (Mesh.SkeletalMesh != None && !Mesh.bDisableFaceFX)
-	{	
+	{
 		return Mesh.SkeletalMesh.FaceFXAsset;
 	}
 	else
@@ -2629,7 +2629,7 @@ function bool Died(Controller Killer, class<DamageType> DamageType, vector HitLo
 		return false;
 	}
 	Health = Min(0, Health);
-	
+
 	// activate death events
 	if( default.KismetDeathDelayTime > 0 )
 	{
@@ -2701,7 +2701,7 @@ event Landed(vector HitNormal, Actor FloorActor)
 	LastHitBy = None;
 }
 
-/** 
+/**
   *  Called if bScriptTickSpecial is set
   *  This tick function is called after physics has executed
   */
@@ -3384,7 +3384,7 @@ simulated function OnTeleport(SeqAct_Teleport Action)
 	Action.GetObjectVars(objVars,"Destination");
 	if( !HandleTeleport( objVars, Action.bUpdateRotation, Action.bCheckOverlap, ,Action.TeleportVolumes ) )
 	{
-		`warn( "failed to handle teleport kismet action properly"@Action );		
+		`warn( "failed to handle teleport kismet action properly"@Action );
 	}
 }
 
@@ -3459,7 +3459,7 @@ simulated function bool HandleTeleport( array<Object> DestList, bool bUpdateRota
 	{
 		`warn("Unable to teleport - no destination list given");
 	}
-	
+
 	// and set to that actor's location
 	if( destActor != None && class'SeqAct_Teleport'.static.ShouldTeleport( self, destActor.Location, TeleportDistance, TeleportVolumes ) )
 	{
@@ -3492,7 +3492,7 @@ simulated function bool HandleTeleport( array<Object> DestList, bool bUpdateRota
 		`warn("Unable to teleport to"@destActor);
 		return FALSE;
 	}
-	
+
 	if( destActor == None )
 	{
 		`warn("Unable to teleport - no destination given");

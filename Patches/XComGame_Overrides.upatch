@@ -1,4 +1,6 @@
 UPK_FILE = XComGame.upk
+
+/* XComGameInfo.InitGame: adds a few key mutators used by the Highlander */
 OBJECT = XComGameInfo.InitGame : AUTO
 [REPLACEMENT_CODE]
 /*(0x0000/0x0000)*/ 1B <AddMutator> 1F <%t "XComMutator.XComMutatorLoader"> 27 16
@@ -12,6 +14,7 @@ OBJECT = XComGameInfo.InitGame : AUTO
 /*(0x009F/0x0083)*/ 04 0B
 /*(0x00A1/0x0085)*/ 53
 
+/* XComGameInfo.SetGameType: overrides the class names used for which subclass of XComGameInfo to instantiate */
 OBJECT = XComGameInfo.SetGameType : AUTO
 [REPLACEMENT_CODE]
 /*(0x0000/0x0000)*/ 0F 00 <.GameInfoClassName> 12 20 <Engine.GameInfo> [@] <Engine.GameInfo.ParseOption.ReturnValue> 00 ( 1B <ParseOption> 00 <.Options> 1F <%t "Game"> 16 )

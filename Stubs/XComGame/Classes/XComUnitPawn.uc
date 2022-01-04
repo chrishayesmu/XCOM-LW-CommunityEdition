@@ -28,7 +28,7 @@ var() float AimSpeedMin;
 var() float AimSpeedMax;
 var() float AimAtTargetMissPercent;
 var() float TurnSpeedMultiplier;
-var protected array<int> m_kUpdateWhenNotRenderedStack;
+var array<int> m_kUpdateWhenNotRenderedStack;
 var XComTacticalGame m_kTacticalGame;
 var repnotify CharacterParameters m_kReplicatedCharacterParams;
 var XComAnimNodeJetpack m_kJetPackNode;
@@ -54,10 +54,10 @@ var bool bUseBoneSprings;
 var bool m_bInWater;
 var() bool m_bOnlyAllowAnimLeftHandIKNotify;
 var() bool m_bDropWeaponOnDeath;
-var private transient bool m_bAnimOverrideZeroAimOffset;
+var transient bool m_bAnimOverrideZeroAimOffset;
 var bool m_bTutorialCanDieInMatinee;
 var bool bAllowPersistentFX;
-var private bool m_bWasIdleBeforeMatinee;
+var bool m_bWasIdleBeforeMatinee;
 var Actor m_kLookAtTarget;
 var() float PhysicsPushScale;
 var() EXComUnitPawn_RagdollFlag RagdollFlag;
@@ -259,7 +259,7 @@ defaultproperties
 {
 	Components(0)=none
 	Components(1)=none
-	begin object class=CylinderComponent name=UnitCollisionCylinder 
+	begin object class=CylinderComponent name=UnitCollisionCylinder
 		CollisionRadius=14.0
 		RBChannel=RBCC_Pawn
 		HiddenGame=false
@@ -286,11 +286,11 @@ defaultproperties
         bDoNotResetOnAttachingTo=true
         bUseBiasedSubjectMatrix=true
         fBiasedSubjectFarDistance=150.0
-    end object 
+    end object
 	Components.Add(MyLightEnvironment)
 	LightEnvironment=MyLightEnvironment
 
-	begin object class=SkeletalMeshComponent name=SkeletalMeshComponent 
+	begin object class=SkeletalMeshComponent name=SkeletalMeshComponent
         bUpdateSkelWhenNotRendered=false
         bUpdateKinematicBonesFromAnimation=false
         bUpdateJointsFromAnimation=true
@@ -323,7 +323,7 @@ defaultproperties
 	Components.Add(RangeIndicatorMeshComponent)
 	RangeIndicator=RangeIndicatorMeshComponent
 
-	begin object class=ParticleSystemComponent name=MindMergeFX_Send0 
+	begin object class=ParticleSystemComponent name=MindMergeFX_Send0
         bAutoActivate=false
         bIgnoreOwnerHidden=true
     end object
