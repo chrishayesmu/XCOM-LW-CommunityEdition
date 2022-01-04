@@ -215,12 +215,12 @@ function int HL_GetItemCharges(int iItemId, optional bool bForce1_for_NonGrenade
         case `LW_ITEM_ID(HEGrenade):
         case `LW_ITEM_ID(AlienGrenade):
         case `LW_ITEM_ID(APGrenade):
-            if (m_kSoldier.HasPerk(24)) // Grenadier
+            if (m_kSoldier.HasPerk(`LW_PERK_ID(Grenadier)))
             {
                 NumCharges++;
             }
 
-            if (m_kSoldier.HasPerk(53)) // Packmaster
+            if (m_kSoldier.HasPerk(`LW_PERK_ID(Packmaster)))
             {
                 NumCharges++;
             }
@@ -232,36 +232,36 @@ function int HL_GetItemCharges(int iItemId, optional bool bForce1_for_NonGrenade
         case `LW_ITEM_ID(PsiGrenade):
         case `LW_ITEM_ID(BattleScanner):
         case `LW_ITEM_ID(MimicBeacon):
-            if (m_kSoldier.HasPerk(91)) // Smoke and Mirrors
+            if (m_kSoldier.HasPerk(`LW_PERK_ID(SmokeAndMirrors)))
             {
                 NumCharges++;
             }
 
-            if (m_kSoldier.HasPerk(53)) // Packmaster
+            if (m_kSoldier.HasPerk(`LW_PERK_ID(Packmaster)))
             {
                 NumCharges++;
             }
 
             break;
         case `LW_ITEM_ID(Medikit):
-            if (m_kSoldier.HasPerk(48)) // Field Medic
+            if (m_kSoldier.HasPerk(`LW_PERK_ID(FieldMedic)))
             {
                 NumCharges++;
             }
 
-            if (m_kSoldier.HasPerk(53)) // Packmaster
+            if (m_kSoldier.HasPerk(`LW_PERK_ID(Packmaster)))
             {
                 NumCharges++;
             }
 
             break;
         case `LW_ITEM_ID(RestorativeMist):
-            if (m_kSoldier.HasPerk(48)) // Field Medic
+            if (m_kSoldier.HasPerk(`LW_PERK_ID(FieldMedic)))
             {
                 NumCharges += 2;
             }
 
-            if (m_kSoldier.HasPerk(53)) // Packmaster
+            if (m_kSoldier.HasPerk(`LW_PERK_ID(Packmaster)))
             {
                 NumCharges++;
             }
@@ -270,12 +270,12 @@ function int HL_GetItemCharges(int iItemId, optional bool bForce1_for_NonGrenade
         case `LW_ITEM_ID(ArcThrower):
             if (!bForce1_for_NonGrenades)
             {
-                if (m_kSoldier.HasPerk(102)) // Repair
+                if (m_kSoldier.HasPerk(`LW_PERK_ID(Repair)))
                 {
                     NumCharges += 2;
                 }
 
-                if (m_kSoldier.HasPerk(53)) // Packmaster
+                if (m_kSoldier.HasPerk(`LW_PERK_ID(Packmaster)))
                 {
                     NumCharges++;
                 }
@@ -392,4 +392,81 @@ function HL_TItemCard HL_SOLDIERUIGetItemCard()
     }
 
     return kItemCard;
+}
+
+function UpdateHeader()
+{
+    local int iOriginalArmorId, iOriginalWeaponId;
+    local int aModifiers[ECharacterStat];
+    local array<int> arrBackPackItems;
+    local Highlander_XGTacticalGameCore kGameCore;
+
+    kGameCore = `HL_GAMECORE;
+
+    m_kHeader.txtName.StrValue = m_kSoldier.GetName(eNameType_First) @ m_kSoldier.GetName(eNameType_Last);
+    m_kHeader.txtName.iState = eUIState_Normal;
+
+    m_kHeader.txtNickname.StrValue = m_kSoldier.GetName(eNameType_Nick);
+    m_kHeader.txtNickname.iState = eUIState_Nickname;
+
+    m_kHeader.txtStatus.strLabel = m_strLabelStatus;
+    m_kHeader.txtStatus.StrValue = m_kSoldier.GetStatusString();
+    m_kHeader.txtStatus.iState = m_kSoldier.GetStatusUIState();
+
+    m_kHeader.txtOffense.strLabel = m_strLabelOffense;
+    m_kHeader.txtOffense.StrValue = string(m_kSoldier.GetCurrentStat(eStat_Offense));
+    m_kHeader.txtOffense.iState = eUIState_Normal;
+    m_kHeader.txtOffense.bNumber = true;
+
+    m_kHeader.txtDefense.strLabel = m_strLabelDefense;
+    m_kHeader.txtDefense.StrValue = string(m_kSoldier.GetCurrentStat(eStat_Defense));
+    m_kHeader.txtDefense.iState = eUIState_Normal;
+    m_kHeader.txtDefense.bNumber = true;
+
+    m_kHeader.txtHP.strLabel = m_strLabelHPSPACED;
+    m_kHeader.txtHP.StrValue = string(m_kSoldier.GetCurrentStat(eStat_HP));
+
+    if (m_kSoldier.IsInjured())
+    {
+        m_kHeader.txtHP.StrValue $= "/" $ string(m_kSoldier.GetMaxStat(eStat_HP));
+        m_kHeader.txtHP.iState = eUIState_Bad;
+    }
+
+    m_kHeader.txtHP.bNumber = true;
+
+    m_kHeader.txtSpeed.strLabel = m_strLabelMobility;
+    m_kHeader.txtSpeed.StrValue = string(m_kSoldier.GetMaxStat(eStat_Mobility));
+    m_kHeader.txtSpeed.iState = eUIState_Normal;
+    m_kHeader.txtSpeed.bNumber = true;
+
+    m_kHeader.txtWill.strLabel = m_strLabelWill;
+    m_kHeader.txtWill.StrValue = string(m_kSoldier.GetMaxStat(eStat_Will));
+
+    if (IsInCovertOperativeMode())
+    {
+        iOriginalArmorId = m_kSoldier.m_kChar.kInventory.iArmor;
+        iOriginalWeaponId = m_kSoldier.m_kChar.kInventory.arrLargeItems[0];
+
+        m_kSoldier.m_kChar.kInventory.iArmor = `LW_ITEM_ID(LeatherJacket);
+        LOCKERS().EquipLargeItem(m_kSoldier, `LW_ITEM_ID(AssaultRifle), eSlot_None);
+
+        kGameCore.GetBackpackItemArray(m_kSoldier.m_kChar.kInventory, arrBackPackItems);
+        kGameCore.HL_GetInventoryStatModifiers(aModifiers, m_kSoldier.m_kChar, `LW_ITEM_ID(AssaultRifle), arrBackPackItems);
+
+        m_kSoldier.m_kChar.kInventory.iArmor = iOriginalArmorId;
+        LOCKERS().EquipLargeItem(m_kSoldier, iOriginalWeaponId, eSlot_None);
+    }
+    else
+    {
+        kGameCore.GetBackpackItemArray(m_kSoldier.m_kChar.kInventory, arrBackPackItems);
+        kGameCore.HL_GetInventoryStatModifiers(aModifiers, m_kSoldier.m_kChar, kGameCore.GetEquipWeapon(m_kSoldier.m_kChar.kInventory), arrBackPackItems);
+    }
+
+    m_kHeader.txtHPMod.StrValue = string(aModifiers[eStat_HP]);
+    m_kHeader.txtOffenseMod.StrValue = string(aModifiers[eStat_Offense]);
+    m_kHeader.txtDefenseMod.StrValue = string(aModifiers[eStat_Defense]);
+    m_kHeader.txtSpeedMod.StrValue = string(aModifiers[eStat_Mobility]);
+    m_kHeader.txtWillMod.StrValue = string(aModifiers[eStat_Will]);
+    m_kHeader.txtCritShot.StrValue = string(aModifiers[eStat_FlightFuel]);
+    m_kHeader.txtStrength.StrValue = (string((aModifiers[eStat_DamageReduction] % 100) / 10) $ ".") $ string((aModifiers[eStat_DamageReduction] % 100) % 10); // Damage Reduction
 }

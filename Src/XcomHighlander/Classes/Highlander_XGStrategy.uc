@@ -4,7 +4,7 @@ function NewGame() {
     `HL_LOG_CLS("(highlander override)");
 
     if (class'Engine'.static.GetCurrentWorldInfo().Game.BaseMutator != none) {
-        class'Engine'.static.GetCurrentWorldInfo().Game.BaseMutator.Mutate("XGStrategy.NewGame", class'Engine'.static.GetCurrentWorldInfo().GetALocalPlayerController());
+        `WORLDINFO.Game.BaseMutator.Mutate("XGStrategy.NewGame", `WORLDINFO.GetALocalPlayerController());
     }
 
     ValidateNewGameState();

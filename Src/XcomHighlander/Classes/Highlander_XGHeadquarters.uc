@@ -98,7 +98,7 @@ function InitNewGame()
 
     if (class'Engine'.static.GetCurrentWorldInfo().Game.BaseMutator != none)
     {
-        class'Engine'.static.GetCurrentWorldInfo().Game.BaseMutator.Mutate("XGHeadQuarters.InitNewGame", class'Engine'.static.GetCurrentWorldInfo().GetALocalPlayerController());
+        `WORLDINFO.Game.BaseMutator.Mutate("XGHeadQuarters.InitNewGame", `WORLDINFO.GetALocalPlayerController());
     }
 
     // TODO: add mod hook here

@@ -304,7 +304,7 @@ static function HL_TItemCard BuildWeaponCard(int iWeaponId)
     kItemCard.iItemId = iWeaponId;
     kItemCard.strName = Expand(kItem.strName);
     kItemCard.strFlavorText = Expand(kItem.strTacticalText);
-    kItemCard.iRangeCategory = `GAMECORE.GetWeaponCatRange(EItemType(iWeaponId & 255));
+    kItemCard.iRangeCategory = `HL_GAMECORE.HL_GetWeaponCatRange(iWeaponId & 255);
 
     if ((iWeaponId & 65536) > 0) // Damage Roulette enabled
     {
@@ -352,20 +352,16 @@ static function HL_TItemCard BuildWeaponCard(int iWeaponId)
 
 static function int GetMecWeaponAbility(int iMecWeaponId)
 {
-    local TWeapon kMecWeapon;
-    local int I;
+    local HL_TWeapon kMecWeapon;
 
-    kMecWeapon = `GAMECORE.GetTWeapon(iMecWeaponId);
+    kMecWeapon = `HL_GAMECORE.HL_GetTWeapon(iMecWeaponId);
 
-    for (I = 0; I < 96; I++)
+    if (kMecWeapon.arrAbilities.Length == 0)
     {
-        if (I != 0 && kMecWeapon.aAbilities[I] > 0)
-        {
-            return EAbility(I);
-        }
+        return 255;
     }
 
-    return 255;
+    return kMecWeapon.arrAbilities[0];
 }
 
 // TODO document
@@ -375,99 +371,99 @@ private static function array<int> GetCharacterPerks(int iCharacterId)
 
     switch (iCharacterId)
     {
-        case 4:
-            arrPerkTypes.AddItem(74);
+        case eChar_Sectoid:
+            arrPerkTypes.AddItem(ePerk_MindMerge);
             break;
-        case 9:
-            arrPerkTypes.AddItem(68);
-            arrPerkTypes.AddItem(77);
-            arrPerkTypes.AddItem(69);
+        case eChar_SectoidCommander:
+            arrPerkTypes.AddItem(ePerk_MindFray);
+            arrPerkTypes.AddItem(ePerk_GreaterMindMerge);
+            arrPerkTypes.AddItem(ePerk_PsiPanic);
             arrPerkTypes.AddItem(100);
             break;
-        case 5:
+        case eChar_Floater:
             arrPerkTypes.AddItem(79);
             arrPerkTypes.AddItem(80);
             break;
-        case 10:
+        case eChar_FloaterHeavy:
             arrPerkTypes.AddItem(81);
             arrPerkTypes.AddItem(79);
             arrPerkTypes.AddItem(80);
             break;
-        case 6:
+        case eChar_ThinMan:
             arrPerkTypes.AddItem(82);
             arrPerkTypes.AddItem(83);
             break;
-        case 13:
+        case eChar_Chryssalid:
             arrPerkTypes.AddItem(82);
             arrPerkTypes.AddItem(84);
             arrPerkTypes.AddItem(104);
             break;
-        case 14:
+        case eChar_Zombie:
             arrPerkTypes.AddItem(105);
             break;
-        case 7:
+        case eChar_Muton:
             arrPerkTypes.AddItem(21);
             arrPerkTypes.AddItem(85);
             arrPerkTypes.AddItem(86);
             break;
-        case 11:
+        case eChar_MutonElite:
             arrPerkTypes.AddItem(21);
             arrPerkTypes.AddItem(81);
             break;
-        case 15:
+        case eChar_MutonBerserker:
             arrPerkTypes.AddItem(89);
             arrPerkTypes.AddItem(88);
             break;
-        case 8:
+        case eChar_Cyberdisc:
             arrPerkTypes.AddItem(79);
             arrPerkTypes.AddItem(98);
             arrPerkTypes.AddItem(81);
             break;
-        case 16:
+        case eChar_Sectopod:
             arrPerkTypes.AddItem(103);
             arrPerkTypes.AddItem(96);
             break;
-        case 23:
+        case eChar_Seeker:
             arrPerkTypes.AddItem(79);
             arrPerkTypes.AddItem(127);
             arrPerkTypes.AddItem(166);
             break;
-        case 12:
-        case 19:
+        case eChar_Ethereal:
+        case eChar_EtherealUber:
             arrPerkTypes.AddItem(97);
             arrPerkTypes.AddItem(73);
             arrPerkTypes.AddItem(100);
             arrPerkTypes.AddItem(101);
             arrPerkTypes.AddItem(68);
             break;
-        case 17:
+        case eChar_Drone:
             arrPerkTypes.AddItem(79);
             arrPerkTypes.AddItem(99);
             arrPerkTypes.AddItem(102);
             break;
-        case 21:
+        case eChar_Mechtoid:
             arrPerkTypes.AddItem(126);
             break;
-        case 28:
+        case eChar_ExaltEliteOperative:
             arrPerkTypes.AddItem(147);
-        case 24:
+        case eChar_ExaltOperative:
             break;
-        case 29:
+        case eChar_ExaltEliteSniper:
             arrPerkTypes.AddItem(11);
-        case 25:
+        case eChar_ExaltSniper:
             arrPerkTypes.AddItem(15);
             arrPerkTypes.AddItem(16);
             break;
-        case 30:
+        case eChar_ExaltEliteHeavy:
             arrPerkTypes.AddItem(23);
-        case 26:
+        case eChar_ExaltHeavy:
             arrPerkTypes.AddItem(18);
             arrPerkTypes.AddItem(19);
             arrPerkTypes.AddItem(21);
             break;
-        case 31:
+        case eChar_ExaltEliteMedic:
             arrPerkTypes.AddItem(52);
-        case 27:
+        case eChar_ExaltMedic:
             arrPerkTypes.AddItem(47);
             arrPerkTypes.AddItem(48);
             break;

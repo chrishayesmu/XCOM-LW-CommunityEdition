@@ -46,7 +46,7 @@ function TSoldierPawnContent HL_BuildAlienContent(int AlienType, optional int eA
 
     eLoadout = class'XGLoadoutMgr'.static.GetLoadoutTemplateFromCharacter(ECharacter(AlienType), bUseAltLoadout);
     class'XGLoadoutMgr'.static.GetLoadoutTemplate(eLoadout, Loadout);
-    Alien = HL_BuildAlienContentFromLoadout(Loadout, 0, 1);
+    Alien = HL_BuildAlienContentFromLoadout(Loadout, 0, eGender_Male);
     Alien.iPawn = class'XGGameData'.static.MapCharacterToPawn(ECharacter(AlienType));
     return Alien;
 }
@@ -171,6 +171,28 @@ function InitAlienLoadoutInfos()
             }
 
             break;
+        }
+    }
+}
+
+function InitHumanLoadoutInfosFromProfileSettingsSaveData(XComOnlineProfileSettings kProfileSettings)
+{
+    local int PlayerIndex, UnitIndex;
+    local TSoldierPawnContent UnitContent;
+    local TTransferSoldier TransferSoldier;
+
+    for (PlayerIndex = 0; PlayerIndex < 4; PlayerIndex++)
+    {
+        if (m_arrTeamLoadoutInfos[PlayerIndex].m_eTeam == 0)
+        {
+            m_arrTeamLoadoutInfos[PlayerIndex].m_eTeam = 8;
+
+            for (UnitIndex = 0; UnitIndex < kProfileSettings.m_aSoldiers.Length; UnitIndex++)
+            {
+                TransferSoldier = kProfileSettings.m_aSoldiers[UnitIndex];
+                UnitContent = HL_BuildUnitContentFromEnums(TransferSoldier.kChar.kInventory.arrLargeItems[0], TransferSoldier.kChar.kInventory.iPistol, TransferSoldier.kChar.kInventory.iArmor, TransferSoldier.kChar.kInventory.arrSmallItems[0], TransferSoldier.kSoldier.kAppearance.iGender, class'XComPerkManager'.static.HasAnyGeneMod(TransferSoldier.kChar.aUpgrades));
+                m_arrTeamLoadoutInfos[PlayerIndex].m_arrUnits.AddItem(UnitContent);
+            }
         }
     }
 }

@@ -1,5 +1,106 @@
 class Highlander_XGUnit extends XGUnit;
 
+// TODO delete this function, it was only for logging/testing
+function SpawnPawn(optional bool bSnapToGround = true, optional bool bLoaded = false)
+{
+    local MeshComponent MeshComp;
+    local Vector vRotDir;
+    local XComUnitPawn kPawnArchetype;
+
+    `HL_LOG_CLS("Spawning pawn for " $ self);
+
+    kPawnArchetype = m_kCharacter.GetPawnArchetype();
+    `HL_LOG_CLS("m_kCharacter.GetPawnArchetype().Mesh = " $ kPawnArchetype.Mesh);
+    `HL_LOG_CLS("m_kCharacter.GetPawnArchetype().Mesh.Animations = " $ kPawnArchetype.Mesh.Animations);
+    `HL_LOG_CLS("m_kCharacter.GetPawnArchetype().MovementNode = " $ kPawnArchetype.MovementNode);
+    `HL_LOG_CLS("m_kCharacter.GetPawnArchetype().DefaultUnitPawnAnimsets.Length = " $ kPawnArchetype.DefaultUnitPawnAnimsets.Length);
+
+    m_kPawn = Spawn(m_kCharacter.GetPawnClass(), Owner,, Location, Rotation, kPawnArchetype, true, m_eTeam);
+    `HL_LOG_CLS("m_kPawn.Mesh = " $ m_kPawn.Mesh);
+    `HL_LOG_CLS("m_kPawn.Mesh.Animations = " $ m_kPawn.Mesh.Animations);
+    `HL_LOG_CLS("m_kPawn.MovementNode = " $ m_kPawn.MovementNode);
+    `HL_LOG_CLS("m_kPawn.DefaultUnitPawnAnimsets.Length = " $ m_kPawn.DefaultUnitPawnAnimsets.Length);
+
+    SetBase(m_kPawn);
+
+    if (m_kPawn != none)
+    {
+        if (m_kCharacter.m_kChar.iType == eChar_Cyberdisc)
+        {
+            m_kPawn.XComUpdateOpenCloseStateNode(2, true);
+        }
+
+        m_kPawn.SetXGCharacter(m_kCharacter);
+        m_kPawn.SpawnDefaultController();
+        m_kPawn.SetGameUnit(self);
+        m_kPawn.HealthMax = GetUnitMaxHP();
+        m_kPawn.Health = m_kPawn.HealthMax;
+        m_kActionQueue = Spawn(class'XGActionQueue', self);
+
+        if (WorldInfo.NetMode != NM_Standalone)
+        {
+            m_kNetExecActionQueue = Spawn(class'XGNetExecActionQueue', self);
+            m_kNetExecActionQueue.SetUnit(self);
+        }
+
+        if (bSnapToGround)
+        {
+            SnapToGround();
+        }
+
+        vRotDir = vector(m_kPawn.Rotation);
+        vRotDir.Z = 0.0;
+        m_kPawn.FocalPoint = m_kPawn.Location + (vRotDir * float(128));
+        m_kPathingPawn = Spawn(class'XComPathingPawn', self,,,,, true, m_eTeam);
+
+        if (m_kPathingPawn == none)
+        {
+            return;
+        }
+
+        m_kPathingPawn.SpawnDefaultController();
+        m_kPawn.SetPhysics(0);
+        m_kPawn.SetVisibleToTeams(m_kPlayer.m_eTeam);
+        class'XComWorldData'.static.GetWorldData().RegisterActor(m_kPawn, self.GetSightRadius());
+        XComUnitPawn(m_kPawn).InitPawnPerkContent(GetCharacter().m_kChar);
+    }
+
+    if (bLoaded)
+    {
+        m_kPawn.Health = GetUnitHP();
+
+        if (IsPoisoned())
+        {
+            if (m_bPoisonedByThinman)
+            {
+                m_kPawn.Mesh.AttachComponentToSocket(XComUnitPawn(m_kPawn).PoisonedByThinmanFX, 'Unit_Root');
+                XComUnitPawn(m_kPawn).PoisonedByThinmanFX.SetActive(true);
+            }
+            else
+            {
+                m_kPawn.Mesh.AttachComponentToSocket(XComUnitPawn(m_kPawn).PoisonedByChryssalidFX, 'Unit_Root');
+                XComUnitPawn(m_kPawn).PoisonedByChryssalidFX.SetActive(true);
+            }
+        }
+
+        if (IsAlien_CheckByCharType())
+        {
+            if (m_iFlamethrowerCharges != 0)
+            {
+                vRotDir.X = float(1) + (float(m_iFlamethrowerCharges) / float(100));
+                vRotDir.X = FClamp(vRotDir.X, 0.20, 10.0);
+
+                foreach GetPawn().ComponentList(class'MeshComponent', MeshComp)
+                {
+                    MeshComp.SetScale(vRotDir.X);
+                }
+            }
+        }
+    }
+
+    return;
+}
+
 function AddCriticallyWoundedAction(optional bool bStunAlien = false, optional bool bLoading = false)
 {
     local XGAction_CriticallyWounded kAction;
@@ -137,9 +238,9 @@ simulated function ApplyLoadout(XGLoadoutInstances kLoadoutInstances, bool bLoad
 
     if (kInventory != none)
     {
-        for (I = 0; I < 26; I++)
+        for (I = 0; I < eSlot_MAX; I++)
         {
-            if (I == 13)
+            if (I == eSlot_RearBackPack)
             {
                 for (J = 0; J < m_kLoadoutInstances.m_iNumBackpackItems; J++)
                 {
@@ -157,7 +258,7 @@ simulated function ApplyLoadout(XGLoadoutInstances kLoadoutInstances, bool bLoad
                             kItem.m_kEntity = kItem.CreateEntity();
                         }
 
-                        kInventory.AddItem(kItem, 13, true);
+                        kInventory.AddItem(kItem, eSlot_RearBackPack, true);
                     }
                 }
             }
@@ -280,7 +381,7 @@ function CheckForDamagedItems()
 
             if (iWeaponFragments > 0)
             {
-                PRES().MSGWeaponFragments(XGWeapon(kWeapon).m_kTWeapon.strName, iWeaponFragments);
+                PRES().MSGWeaponFragments(`HL_TWEAPON(XGWeapon(kWeapon)).strName, iWeaponFragments);
                 Highlander_XGBattleDesc(`BATTLE.m_kDesc).m_kArtifactsContainer.AdjustQuantity(`LW_ITEM_ID(WeaponFragment), iWeaponFragments);
                 kWeapon.m_bDamaged = true;
             }
@@ -294,7 +395,48 @@ function CheckForDamagedItems()
             {
                 if (eWeapon > 211 && eWeapon < 219)
                 {
-                    PRES().MSGItemDestroyed(XGWeapon(kWeapon).m_kTWeapon.strName);
+                    PRES().MSGItemDestroyed(`HL_TWEAPON(XGWeapon(kWeapon)).strName);
+                }
+            }
+        }
+    }
+}
+
+simulated function DebugCoverActors(XComTacticalCheatManager kCheatManager)
+{
+    local Highlander_XGTacticalGameCore kGameCore;
+    local XGInventoryItem kItem;
+    local int iItemIndex, iSlotIndex;
+
+    kGameCore = `HL_GAMECORE;
+
+    for (iSlotIndex = 0; iSlotIndex < eSlot_MAX; iSlotIndex++)
+    {
+        for (iItemIndex = 0; iItemIndex < GetInventory().GetNumberOfItemsInSlot(ELocation(iSlotIndex)); iItemIndex++)
+        {
+            kItem = GetInventory().GetItemByIndexInSlot(iItemIndex, ELocation(iSlotIndex));
+
+            if (kItem != none)
+            {
+                if (kGameCore.WeaponHasProperty(kItem.ItemType(), eWP_Pistol))
+                {
+                    kItem.m_eReservedSlot = eSlot_RightThigh;
+                }
+                else if (kGameCore.WeaponHasProperty(kItem.ItemType(), eWP_Heavy))
+                {
+                    kItem.m_eReservedSlot = eSlot_LeftBack;
+                }
+                else if (kGameCore.WeaponHasProperty(kItem.ItemType(), eWP_Mec))
+                {
+                    kItem.m_eReservedSlot = ELocation(iSlotIndex);
+                }
+                else if (kGameCore.HL_GetTWeapon(kItem.ItemType()).iSize == 1)
+                {
+                    kItem.m_eReservedSlot = eSlot_RightBack;
+                }
+                else
+                {
+                    kItem.m_eReservedSlot = ELocation(iSlotIndex);
                 }
             }
         }
@@ -305,7 +447,7 @@ simulated function DrawRangesForMedikit(optional bool bDetach = true)
 {
     local XGSquad kSquad;
     local XGUnit kUnit;
-    local TWeapon kMedikit;
+    local HL_TWeapon kMedikit;
     local int I;
     local float fRadius;
     local Highlander_XGInventory kInventory;
@@ -320,7 +462,7 @@ simulated function DrawRangesForMedikit(optional bool bDetach = true)
     if (GetMediKitCharges() > 0)
     {
         kSquad = GetSquad();
-        kMedikit = `GAMECORE.GetTWeapon(`LW_ITEM_ID(Medikit));
+        kMedikit = `HL_GAMECORE.HL_GetTWeapon(`LW_ITEM_ID(Medikit));
         fRadius = float(kMedikit.iRange * 64);
 
         for (I = 0; I < kSquad.GetNumMembers(); I++)
@@ -738,6 +880,174 @@ simulated function array<EItemType_Info> GetItemInfos()
     }
 
     return m_arrItemInfos;
+}
+
+simulated function int GetOffense()
+{
+    local int iAim;
+    local Highlander_XGTacticalGameCore kGameCore;
+
+    iAim = m_aCurrentStats[eStat_Offense];
+    kGameCore = `HL_GAMECORE;
+
+    if (GetInventory().GetActiveWeapon() == none)
+    {
+        return iAim;
+    }
+
+    // I'm not really sure why we subtract the weapon's aim, but that's how it's done in the original
+    iAim -= kGameCore.HL_GetTWeapon(GetInventory().GetActiveWeapon().ItemType()).kStatChanges.iAim;
+
+    if (IsBeingSuppressed())
+    {
+        iAim -= kGameCore.SuppressionAimPenalty;
+    }
+
+    if (IsPoisoned())
+    {
+        iAim -= kGameCore.POISONED_AIM_PENALTY;
+    }
+
+    return iAim;
+}
+
+simulated function GetTargetsInRange(int iTargetType, int iRangeType, out array<XGUnitNativeBase> arrTargets, Vector vLocation, optional XGWeapon kWeapon, optional float fCustomRange = 0.0, optional bool bNoLOSRequired, optional bool bSkipRoboticUnits = false, optional bool bSkipNonRoboticUnits = false, optional int eType = 0)
+{
+    local array<float> arrTargets_HeightBonusModifier, arrDistToTargetSq;
+    local float fRange;
+    local bool bHealing, bMindMerge;
+    local int iCharFilter;
+
+    arrTargets.Remove(0, arrTargets.Length);
+    arrDistToTargetSq.Remove(0, arrDistToTargetSq.Length);
+    bHealing = kWeapon != none && kWeapon.GameplayType() == eItem_Medikit;
+    bMindMerge = eType == eAbility_MindMerge || eType == eAbility_GreaterMindMerge;
+
+    if (iTargetType == eTarget_Self)
+    {
+        arrTargets.AddItem(self);
+        return;
+    }
+    else if (iTargetType == eTarget_Location)
+    {
+        if ( kWeapon != none && (kWeapon.GameplayType() == `LW_ITEM_ID(RecoillessRifle) || kWeapon.GameplayType() == `LW_ITEM_ID(BlasterLauncher)) )
+        {
+            DetermineEnemiesInSight(arrTargets, arrDistToTargetSq, vLocation, bSkipRoboticUnits, bSkipNonRoboticUnits);
+        }
+
+        return;
+    }
+
+    switch (iTargetType)
+    {
+        case eTarget_SingleDeadAlly:
+            DetermineDeadAllies(arrTargets, arrDistToTargetSq, vLocation);
+            break;
+        case eTarget_SingleAlly:
+        case eTarget_SingleAllyOrSelf:
+        case eTarget_MultipleAllies:
+        case eTarget_SectoidAllies:
+        case eTarget_MutonAllies:
+            if (iTargetType == eTarget_SectoidAllies || eType == eAbility_MindMerge)
+            {
+                if (IsAI())
+                {
+                    iCharFilter = 1 << eChar_Sectoid;
+                }
+                else
+                {
+                    iCharFilter = 1 << eChar_Soldier;
+                }
+            }
+
+            if (iTargetType == eTarget_MutonAllies)
+            {
+                iCharFilter = (1 << eChar_Muton) | (1 << eChar_MutonBerserker) | (1 << eChar_MutonElite);
+            }
+
+            if (eType == 41) // Command
+            {
+                iCharFilter = 1;
+            }
+
+            if (fCustomRange != float(0))
+            {
+                DetermineFriendsInRange(fCustomRange, false, arrTargets, arrDistToTargetSq, vLocation, iCharFilter, bSkipRoboticUnits, bSkipNonRoboticUnits, bHealing, bMindMerge);
+            }
+            else
+            {
+                switch (iRangeType)
+                {
+                    case eRange_Weapon:
+                        if (kWeapon != none)
+                        {
+                            fRange = class'Highlander_XGWeapon_Extensions'.static.LongRange(kWeapon) + float(m_aCurrentStats[eStat_WeaponRange]);
+                            DetermineFriendsInRange(fRange, false, arrTargets, arrDistToTargetSq, vLocation, iCharFilter, bSkipRoboticUnits, bSkipNonRoboticUnits, bHealing, bMindMerge);
+                        }
+
+                        break;
+                    case eRange_Sight:
+                        DetermineFriendsInRange(-1.0, false, arrTargets, arrDistToTargetSq, vLocation, iCharFilter, bSkipRoboticUnits, bSkipNonRoboticUnits, bHealing, bMindMerge);
+                        break;
+                    case eRange_SquadSight:
+                    case eRange_Unlimited:
+                        DetermineFriendsInRange(-1.0, true, arrTargets, arrDistToTargetSq, vLocation, iCharFilter, bSkipRoboticUnits, bSkipNonRoboticUnits, bHealing, bMindMerge);
+                        break;
+                    default:
+                        break;
+                }
+            }
+
+            if (iTargetType == eTarget_SingleAllyOrSelf)
+            {
+                if (bHealing && CanBeHealedWithMedikit())
+                {
+                    arrTargets.AddItem(self);
+                    arrDistToTargetSq.AddItem(0.0);
+                }
+            }
+
+            break;
+
+        case eTarget_SingleDeadEnemy:
+            DetermineDeadEnemies(arrTargets, arrDistToTargetSq, vLocation);
+            break;
+        case eTarget_SingleEnemy:
+        case eTarget_MultipleEnemies:
+            if (fCustomRange != float(0))
+            {
+                DetermineEnemiesInRangeByWeapon(kWeapon, fCustomRange, arrTargets, arrTargets_HeightBonusModifier, arrDistToTargetSq, vLocation, bSkipRoboticUnits, bSkipNonRoboticUnits);
+
+                if (eType == eAbility_ShotStun)
+                {
+                    FilterStunTargets(arrTargets);
+                }
+            }
+            else
+            {
+                switch (iRangeType)
+                {
+                    case eRange_Weapon:
+                        DetermineEnemiesInRangeByWeapon(kWeapon, 0.0, arrTargets, arrTargets_HeightBonusModifier, arrDistToTargetSq, vLocation, bSkipRoboticUnits, bSkipNonRoboticUnits);
+                        break;
+                    case eRange_Sight:
+                        DetermineEnemiesInSight(arrTargets, arrDistToTargetSq, vLocation, bSkipRoboticUnits, bSkipNonRoboticUnits, EAbility(eType));
+                        break;
+                    case eRange_SquadSight:
+                        DetermineEnemiesInSquadSight(arrTargets, vLocation, !bNoLOSRequired, bSkipRoboticUnits, bSkipNonRoboticUnits, EAbility(eType));
+                        break;
+                    case eRange_Unlimited:
+                        DetermineAllEnemies(arrTargets, arrDistToTargetSq, vLocation, bSkipRoboticUnits, bSkipNonRoboticUnits);
+                        break;
+                    default:
+                        break;
+                }
+            }
+
+            break;
+        default:
+            break;
+    }
 }
 
 function UpdateItemCharges()
