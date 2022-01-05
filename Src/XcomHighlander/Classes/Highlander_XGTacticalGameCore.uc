@@ -110,11 +110,55 @@ simulated function BuildWeapons()
     // TODO add mod hook
 }
 
+/// <summary>
+/// Retrieves a TWeapon struct. THIS FUNCTION IS NOT FOR MODS TO USE.
+/// It exists strictly for parts of the vanilla code base that can't be rewritten.
+/// Mods should only use HL_GetTWeapon.
+/// </summary>
 simulated function TWeapon GetTWeapon(int iWeapon)
 {
+    local int iAbilityId, iPropertyId;
+    local HL_TWeapon kHLWeapon;
     local TWeapon kWeapon;
 
-    `HL_LOG_DEPRECATED_CLS(GetTWeapon);
+    // Map as much as we can into the original struct
+    kHLWeapon = HL_GetTWeapon(iWeapon);
+
+    kWeapon.strName = kHLWeapon.strName;
+    kWeapon.iType = kHLWeapon.iItemId;
+    kWeapon.iSize = kHLWeapon.iSize;
+    kWeapon.iDamage = kHLWeapon.iDamage;
+    kWeapon.iEnvironmentDamage = kHLWeapon.iEnvironmentDamage;
+    kWeapon.iRange = kHLWeapon.iRange;
+    kWeapon.iReactionRange = kHLWeapon.iReactionRange;
+    kWeapon.iRadius = kHLWeapon.iRadius;
+    kWeapon.iCritical = kHLWeapon.kStatChanges.iCriticalChance;
+    kWeapon.iOffenseBonus = kHLWeapon.kStatChanges.iAim;
+    kWeapon.iHPBonus = kHLWeapon.kStatChanges.iHP;
+    kWeapon.iWillBonus = kHLWeapon.kStatChanges.iWill;
+
+    // iSuppression holds the ammo amount; the high digits are the amount with Ammo Conservation, which
+    // always grants +1 ammo, and the low digits are the amount without.
+    if (kHLWeapon.iBaseAmmo > 0)
+    {
+        kWeapon.iSuppression = 100 * (kHLWeapon.iBaseAmmo + 1) + kHLWeapon.iBaseAmmo;
+    }
+
+    foreach kHLWeapon.arrAbilities(iAbilityId)
+    {
+        if (iAbilityId < eAbility_MAX)
+        {
+            kWeapon.aAbilities[iAbilityId] = 1;
+        }
+    }
+
+    foreach kHLWeapon.arrProperties(iPropertyId)
+    {
+        if (iPropertyId < eWP_MAX)
+        {
+            kWeapon.aProperties[iPropertyId] = 1;
+        }
+    }
 
     return kWeapon;
 }

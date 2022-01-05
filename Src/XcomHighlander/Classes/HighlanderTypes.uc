@@ -336,15 +336,16 @@ struct HL_TWeapon
     // if the shooter has height advantage over the target. Note that the shooter must still be able to see the target, either
     // naturally or via Squadsight, and a weapon range greater than visual range confers no bonus otherwise.
     // For thrown items like grenades, this is the base maximum distance that the item can be thrown.
-    // In all cases, this distance is measured in game tiles.
+    // This uses the same units as TWeapon.iRange, where 1.5 units is equal to the length of the side of an in-game tile.
     var int iRange;
 
     // This is the same as iRange, but only applying to shots taken while on overwatch. The unit will not fire at a target
-    // using this item unless they are within this range. Range is measured in game tiles.
+    // using this item unless they are within this range. Range is measured in the same units as iRange.
     var int iReactionRange;
 
-    // The radius of this item's area of effect, if it has one. This is measured in game tiles.
-    // NOTE: in the base game this distance is measured in Unreal units, so convert as needed.
+    // The radius of this item's area of effect, if it has one. This is measured in units such that 64 units
+    // is equal to the length of the side of an in-game tile.
+    // TODO: confirm this measurement
     var int iRadius;
 
     // If this item is a gun, this is the ammo it has without any upgrades, e.g. Ammo Conservation, or small items like Drum Mags.
