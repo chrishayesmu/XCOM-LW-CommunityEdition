@@ -345,6 +345,43 @@ simulated function ApplyLoadout(XGLoadoutInstances kLoadoutInstances, bool bLoad
     }
 }
 
+function BuildAbilities(optional bool bUpdateUI = true)
+{
+    local Highlander_XGAbilityTree kAbilityTree;
+    local int I;
+
+    `HL_LOG_CLS("Unit " $ self $ ": BuildAbilities. bUpdateUI = " $ bUpdateUI);
+
+    kAbilityTree = Highlander_XGAbilityTree(`GAMECORE.m_kAbilities);
+
+    super.BuildAbilities(bUpdateUI);
+/*
+
+    for (I = 0; I < 64; I++)
+    {
+        if (m_aAbilities[I] != none)
+        {
+            `HL_LOG_CLS("Unit ability " $ I $ ": " $ m_aAbilities[I] $ "; ability ID = " $ m_aAbilities[I].GetType());
+        }
+    }
+ */
+}
+
+simulated function GenerateAbilities(int iAbility, Vector vLocation, out array<XGAbility> arrAbilities, optional XGWeapon kWeapon, optional bool bForLocalUseOnly = false)
+{
+    local array<XGUnit> arrEmpty;
+    local XGAbility kAbility;
+
+    `HL_LOG_CLS("Unit " $ self $ ": GenerateAbilities. iAbility = " $ iAbility $ "; arrAbilities.Length = " $ arrAbilities.Length);
+
+    if (iAbility == 7)
+    {
+        kAbility = `GAMECORE.m_kAbilities.SpawnAbility(iAbility, self, arrEmpty, kWeapon);
+    }
+
+    super.GenerateAbilities(iAbility, vLocation, arrAbilities, kWeapon, bForLocalUseOnly);
+}
+
 function CheckForDamagedItems()
 {
     local int I, iWeaponFragments;
