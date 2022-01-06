@@ -66,6 +66,20 @@ reliable client simulated function UICustomize(XGStrategySoldier kSoldier)
     }
 }
 
+reliable client simulated function UIFundingCouncilRequest(IFCRequestInterface kDataInterface)
+{
+    m_kFundingCouncilRequest = Spawn(class'Highlander_UIFundingCouncilRequest', self);
+    m_kFundingCouncilRequest.Init(XComPlayerController(Owner), GetHUD(), kDataInterface);
+    PushState('State_FundingCouncilRequest');
+}
+
+reliable client simulated function UIFundingCouncilRequestComplete(IFCRequestInterface kDataInterface)
+{
+    m_kFundingCouncilRequest = Spawn(class'Highlander_UIFundingCouncilRequest', self);
+    m_kFundingCouncilRequest.Init(XComPlayerController(Owner), GetHUD(), kDataInterface, 3);
+    PushState('State_FundingCouncilRequest');
+}
+
 reliable client simulated function UIItemUnlock(TItemUnlock kUnlock)
 {
     local TDialogueBoxData kData;
