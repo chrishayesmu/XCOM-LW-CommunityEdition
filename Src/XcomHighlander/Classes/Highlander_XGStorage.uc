@@ -53,6 +53,7 @@ function AddInfiniteItem(EItemType eItem)
 function AddItem(int iItemId, optional int iQuantity = -1, optional int iContinent = -1)
 {
     local Highlander_XGFacility_Barracks kBarracks;
+    local HL_TItem kItem;
     local int I;
 
     kBarracks = `HL_BARRACKS;
@@ -62,17 +63,19 @@ function AddItem(int iItemId, optional int iQuantity = -1, optional int iContine
         return;
     }
 
-    `HL_LOG_CLS("AddItem: iItemId = " $ iItemId $ ", iQuantity = " $ iQuantity);
+    kItem = `HL_ITEM(iItemId);
 
-    // 206, 207, 208 are SHIV rebuild projects
-    if (iItemId != 206 && iItemId != 207 && iItemId != 208)
+    if (kItem.iReplacementItemId > 0)
     {
-        `HL_UTILS.AdjustItemQuantity(m_arrHLItems, iItemId, iQuantity);
+        AddItem(kItem.iReplacementItemId, iQuantity, iContinent);
+        return;
+    }
 
-        if (iQuantity > 0)
-        {
-            `HL_UTILS.AdjustItemQuantity(m_arrHLItemArchives, iItemId, iQuantity);
-        }
+    `HL_UTILS.AdjustItemQuantity(m_arrHLItems, iItemId, iQuantity);
+
+    if (iQuantity > 0)
+    {
+        `HL_UTILS.AdjustItemQuantity(m_arrHLItemArchives, iItemId, iQuantity);
     }
 
     // Handle a few special items
@@ -80,38 +83,29 @@ function AddItem(int iItemId, optional int iQuantity = -1, optional int iContine
     {
         switch (iItemId)
         {
-            case eItem_SHIV:
-                AddItem(eItem_SHIVDeck_I);
-                kBarracks.HL_AddTank(eItem_SHIVDeck_I, eItem_ShivAutocannon);
+            case `LW_ITEM_ID(SHIV):
+                AddItem(`LW_ITEM_ID(SHIVChassis));
+                kBarracks.HL_AddTank(`LW_ITEM_ID(SHIVChassis), `LW_ITEM_ID(Autocannon));
                 STAT_AddStat(eRecap_SHIVsBuilt, 1);
                 break;
-            case 206: // Rebuild SHIV
-                AddItem(eItem_SHIV);
-                break;
-            case eItem_SHIV_Alloy:
-                AddItem(eItem_SHIVDeck_II);
-                kBarracks.HL_AddTank(eItem_SHIVDeck_II, eItem_ShivAutocannon);
+            case `LW_ITEM_ID(AlloySHIV):
+                AddItem(`LW_ITEM_ID(AlloySHIVChassis));
+                kBarracks.HL_AddTank(`LW_ITEM_ID(AlloySHIVChassis), `LW_ITEM_ID(Autocannon));
                 STAT_AddStat(eRecap_SHIVsBuilt, 1);
                 break;
-            case 207: // Rebuild Alloy SHIV
-                AddItem(eItem_SHIV_Alloy);
-                break;
-            case eItem_SHIV_Hover:
-                AddItem(eItem_SHIVDeck_III);
-                kBarracks.HL_AddTank(eItem_SHIVDeck_III, eItem_ShivAutocannon);
+            case `LW_ITEM_ID(HoverSHIV):
+                AddItem(`LW_ITEM_ID(HoverSHIVChassis));
+                kBarracks.HL_AddTank(`LW_ITEM_ID(HoverSHIVChassis), `LW_ITEM_ID(Autocannon));
                 STAT_AddStat(eRecap_SHIVsBuilt, 1);
                 break;
-            case 208: // Rebuild Hover SHIV
-                AddItem(eItem_SHIV_Hover);
-                break;
-            case eItem_Interceptor:
+            case `LW_ITEM_ID(Interceptor):
                 HANGAR().AddInterceptor(iContinent);
                 break;
-            case eItem_Firestorm:
+            case `LW_ITEM_ID(Firestorm):
                 HANGAR().AddFirestorm(iContinent);
                 STAT_AddStat(eRecap_FirestormsBuilt, 1);
                 break;
-            case eItem_Skyranger:
+            case `LW_ITEM_ID(Skyranger):
                 HANGAR().AddDropship();
                 break;
             default:
@@ -135,6 +129,80 @@ function bool AreReaperRoundsValid(XGStrategySoldier kSoldier)
     `HL_LOG_DEPRECATED_NOREPLACE_CLS(AreReaperRoundsValid);
 
     return false;
+}
+
+function AutoEquip(XGStrategySoldier kSoldier)
+{
+    local int iItemId;
+    local TInventory kRookieLoadout;
+
+    ReleaseLoadout(kSoldier);
+
+    if (kSoldier.GetCurrentStat(eStat_Mobility) >= class'XGTacticalGameCore'.default.SOLDIER_COST_HARD)
+    {
+        kRookieLoadout.iArmor = `LW_ITEM_ID(TacArmor);
+    }
+    else
+    {
+        kRookieLoadout.iArmor = `LW_ITEM_ID(TacVest);
+    }
+
+    if (`HL_MOD_LOADER.Override_GetInfiniteSecondary(kSoldier, iItemId))
+    {
+        kRookieLoadout.iPistol = iItemId;
+    }
+    else
+    {
+        kRookieLoadout.iPistol = `LW_ITEM_ID(Pistol);
+    }
+
+    if (kSoldier.GetCurrentStat(eStat_Offense) >= class'XGTacticalGameCore'.default.SOLDIER_COST_CLASSIC)
+    {
+        TACTICAL().TInventoryLargeItemsSetItem(kRookieLoadout, 0, `LW_ITEM_ID(AssaultRifle));
+    }
+    else
+    {
+        TACTICAL().TInventoryLargeItemsSetItem(kRookieLoadout, 0, `LW_ITEM_ID(AssaultCarbine));
+    }
+
+    TACTICAL().TInventorySmallItemsSetItem(kRookieLoadout, 0, `LW_ITEM_ID(APGrenade));
+
+    switch (Rand(6))
+    {
+        case 0:
+            TACTICAL().TInventorySmallItemsSetItem(kRookieLoadout, 1, `LW_ITEM_ID(LaserSight));
+            break;
+        case 1:
+            if (ENGINEERING().IsFoundryTechResearched(`LW_FOUNDRY_ID(AlienGrenades)))
+            {
+                TACTICAL().TInventorySmallItemsSetItem(kRookieLoadout, 1, `LW_ITEM_ID(AlienGrenade));
+            }
+            else
+            {
+                TACTICAL().TInventorySmallItemsSetItem(kRookieLoadout, 1, `LW_ITEM_ID(HEGrenade));
+            }
+
+            break;
+        case 2:
+            TACTICAL().TInventorySmallItemsSetItem(kRookieLoadout, 1, `LW_ITEM_ID(CeramicPlating));
+            break;
+        case 3:
+            TACTICAL().TInventorySmallItemsSetItem(kRookieLoadout, 1, `LW_ITEM_ID(APGrenade));
+            break;
+        case 4:
+            TACTICAL().TInventorySmallItemsSetItem(kRookieLoadout, 1, `LW_ITEM_ID(FlashbangGrenade));
+            break;
+        case 5:
+            TACTICAL().TInventorySmallItemsSetItem(kRookieLoadout, 1, `LW_ITEM_ID(Medikit));
+            break;
+    }
+
+    if (`HL_MOD_LOADER.Override_GetInfinitePrimary(kSoldier, iItemId))
+    {
+        TACTICAL().TInventoryLargeItemsSetItem(kRookieLoadout, 0, iItemId);
+    }
+
+    LOCKERS().ApplySoldierLoadout(kSoldier, kRookieLoadout);
 }
 
 function BackupAndReleaseInventory(XGStrategySoldier kSoldier)
@@ -348,7 +416,14 @@ function EItemType GetInfinitePrimary(XGStrategySoldier kSoldier)
 
 function int HL_GetInfinitePrimary(XGStrategySoldier kSoldier)
 {
+    local int iItemId;
+
     // TODO add mod hook
+    if (`HL_MOD_LOADER.Override_GetInfinitePrimary(kSoldier, iItemId))
+    {
+        return iItemId;
+    }
+
     switch (kSoldier.m_kSoldier.kClass.eWeaponType)
     {
         case eWP_Support:
@@ -374,8 +449,14 @@ function EItemType GetInfiniteSecondary(XGStrategySoldier kSoldier)
 
 function int HL_GetInfiniteSecondary(XGStrategySoldier kSoldier)
 {
-    // TODO add mod hook
-    if (kSoldier.HasPerk(18)) // Fire Rocket
+    local int iItemId;
+
+    if (`HL_MOD_LOADER.Override_GetInfiniteSecondary(kSoldier, iItemId))
+    {
+        return iItemId;
+    }
+
+    if (kSoldier.HasPerk(`LW_PERK_ID(FireRocket)))
     {
         return eItem_RocketLauncher;
     }

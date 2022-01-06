@@ -151,7 +151,6 @@ function SetSoldierClass(ESoldierClass eNewClass)
             {
                 iEquipmentGroup = 8;
                 m_iEnergy = 12; // Rocketeer
-
                 TACTICAL().TInventoryLargeItemsSetItem(kNewLoadout, 1, `LW_ITEM_ID(RocketLauncher));
                 TACTICAL().TInventoryLargeItemsSetItem(m_kBackedUpLoadout, 1, `LW_ITEM_ID(RocketLauncher));
             }
@@ -280,9 +279,22 @@ function SetSoldierClass(ESoldierClass eNewClass)
     m_kSoldier.kClass.strName = class'XGLocalizedData'.default.SoldierClassNames[m_iEnergy];
     TACTICAL().TInventoryLargeItemsSetItem(kNewLoadout, 0, kStorage.HL_GetInfinitePrimary(self));
     TACTICAL().TInventoryLargeItemsSetItem(m_kBackedUpLoadout, 0, kStorage.HL_GetInfinitePrimary(self));
-    LOCKERS().ApplySoldierLoadout(self, kNewLoadout);
 
-    `HL_LOG_CLS("Infinite primary: " $ kStorage.HL_GetInfinitePrimary(self));
+    if (eNewClass != eSC_Mec)
+    {
+        if (HasPerk(`LW_PERK_ID(FireRocket)))
+        {
+            TACTICAL().TInventoryLargeItemsSetItem(kNewLoadout, 1, kStorage.HL_GetInfiniteSecondary(self));
+            TACTICAL().TInventoryLargeItemsSetItem(m_kBackedUpLoadout, 1, kStorage.HL_GetInfiniteSecondary(self));
+        }
+        else
+        {
+            kNewLoadout.iPistol = kStorage.HL_GetInfiniteSecondary(self);
+            m_kBackedUpLoadout.iPistol = kStorage.HL_GetInfiniteSecondary(self);
+        }
+    }
+
+    LOCKERS().ApplySoldierLoadout(self, kNewLoadout);
 
     if (IsOptionEnabled(`LW_SECOND_WAVE_ID(TrainingRoulette)) && !IsASuperSoldier())
     {

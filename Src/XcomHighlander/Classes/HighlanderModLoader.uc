@@ -178,13 +178,13 @@ function OnFoundryProjectCompleted(TFoundryProject kProject, HL_TFoundryTech kFo
     }
 }
 
-function OnFoundryTechsBuilt(out array<HL_TFoundryTech> Techs)
+function OnFoundryTechsBuilt(out array<HL_TFoundryTech> arrTechs)
 {
     local HighlanderStrategyListener kStrategyListener;
 
     foreach StrategyListeners(kStrategyListener)
     {
-        kStrategyListener.OnFoundryTechsBuilt(Techs);
+        kStrategyListener.OnFoundryTechsBuilt(arrTechs);
     }
 }
 
@@ -212,6 +212,36 @@ function Override_GetItem(out HL_TItem kItem, int iTransactionType)
     }
 }
 
+function bool Override_GetInfinitePrimary(XGStrategySoldier kSoldier, out int iItemId)
+{
+    local bool bAnyTrue;
+    local HighlanderStrategyListener kStrategyListener;
+
+    bAnyTrue = false;
+
+    foreach StrategyListeners(kStrategyListener)
+    {
+        bAnyTrue = kStrategyListener.Override_GetInfinitePrimary(kSoldier, iItemId) || bAnyTrue;
+    }
+
+    return bAnyTrue;
+}
+
+function bool Override_GetInfiniteSecondary(XGStrategySoldier kSoldier, out int iItemId)
+{
+    local bool bAnyTrue;
+    local HighlanderStrategyListener kStrategyListener;
+
+    bAnyTrue = false;
+
+    foreach StrategyListeners(kStrategyListener)
+    {
+        bAnyTrue = kStrategyListener.Override_GetInfiniteSecondary(kSoldier, iItemId) || bAnyTrue;
+    }
+
+    return bAnyTrue;
+}
+
 function OnItemCompleted(HL_TItemProject kItemProject, int iQuantity, optional bool bInstant)
 {
     local HighlanderStrategyListener kStrategyListener;
@@ -219,6 +249,16 @@ function OnItemCompleted(HL_TItemProject kItemProject, int iQuantity, optional b
     foreach StrategyListeners(kStrategyListener)
     {
         kStrategyListener.OnItemCompleted(kItemProject, iQuantity, bInstant);
+    }
+}
+
+function OnItemsBuilt(out array<HL_TItem> arrItems)
+{
+    local HighlanderStrategyListener kStrategyListener;
+
+    foreach StrategyListeners(kStrategyListener)
+    {
+        kStrategyListener.OnItemsBuilt(arrItems);
     }
 }
 

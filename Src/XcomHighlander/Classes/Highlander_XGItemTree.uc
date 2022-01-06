@@ -22,6 +22,8 @@ function Init()
         m_arrHLItems.AddItem(kItem);
     }
 
+    `HL_MOD_LOADER.OnItemsBuilt(m_arrHLItems);
+
     m_arrFacilities.Add(24);
     m_arrStaff.Add(4);
     m_arrShips.Add(16);

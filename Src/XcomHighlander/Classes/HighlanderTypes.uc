@@ -70,6 +70,11 @@ struct HL_TItem
     var int iHours;               // If >= 0, this is the number of engineer-hours needed to build this item. If < 0, this item cannot be built.
     var int iMaxEngineers;        // The number of engineers required to make progress at normal speed on this project.
 
+    var int iReplacementItemId;  // If > 0, when this item is granted, then the replacement item ID is added to XCOM's stores instead of the actual
+                                 // item ID. This can be used to make items buildable in different ways, such as how SHIVs can be built directly,
+                                 // or they can be rebuilt using a damaged SHIV chassis. If you're using this field, then you can set strName to
+                                 // the name you want to appear in Engineering instead of the replacement item's name.
+
     // How many of this item XCOM HQ starts the game with. If bIsInfinite is set at the start of the game, this value is ignored.
     var int iStartingQuantity;
 

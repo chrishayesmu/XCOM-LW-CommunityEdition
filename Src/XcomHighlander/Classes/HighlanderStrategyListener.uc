@@ -72,6 +72,28 @@ function UpdateFoundryPerksForSoldier(XGStrategySoldier kSoldier, Highlander_XGF
 function Override_GetItem(out HL_TItem kItem, int iTransactionType) {}
 
 /// <summary>
+/// Called when equipping a soldier with their default primary weapon, such as when a new soldier is hired, or when the
+/// player unequips all equipped items at the Skyranger screen. Can override what weapon the soldier equips.
+///
+/// Note that this is also called when creating a blueshirt soldier for base defense. You can check kSoldier.m_bBlueShirt for this.
+/// </summary>
+/// <param name="kSoldier">The soldier to be equipped.</param>
+/// <param name="iItemId">The ID of the primary weapon they will be equipped with.</param>
+/// <returns>True if iItemId was modified by this function, false otherwise.</returns>
+function bool Override_GetInfinitePrimary(XGStrategySoldier kSoldier, out int iItemId) { return false; }
+
+/// <summary>
+/// Called when equipping a soldier with their default secondary weapon, such as when a new soldier is hired, or when the
+/// player unequips all equipped items at the Skyranger screen. Can override what weapon the soldier equips.
+///
+/// Note that this is also called when creating a blueshirt soldier for base defense. You can check kSoldier.m_bBlueShirt for this.
+/// </summary>
+/// <param name="kSoldier">The soldier to be equipped.</param>
+/// <param name="iItemId">The ID of the secondary weapon they will be equipped with.</param>
+/// <returns>True if iItemId was modified by this function, false otherwise.</returns>
+function bool Override_GetInfiniteSecondary(XGStrategySoldier kSoldier, out int iItemId) { return false; }
+
+/// <summary>
 /// Called after an item is built. When this is called, the UI notification has been queued (but not viewed), the resulting
 /// items have already been added to storage, and any rebate has already been paid.
 /// </summary>
@@ -79,6 +101,12 @@ function Override_GetItem(out HL_TItem kItem, int iTransactionType) {}
 /// <param name="iQuantity">The number of items added to storage.</param>
 /// <param name="bInstant">Whether the project was completed instantly or not.</param>
 function OnItemCompleted(HL_TItemProject kItemProject, int iQuantity, optional bool bInstant) {}
+
+/// <summary>
+/// Called after the item tree has built its list of items. See documentation for OnFoundryTechsBuilt; it functions
+/// in largely the same way as OnItemsBuilt.
+/// </summary>
+function OnItemsBuilt(out array<HL_TItem> arrItems) {}
 
 /// -----------------------------------------------------
 /// Research events
