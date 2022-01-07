@@ -4,4 +4,5 @@ defaultproperties
 {
     m_kPresentationLayerClass=class'Highlander_XComPresentationLayer'
     CheatClass=class'Highlander_XComTacticalCheatManager'
+    InputClass=class'Highlander_XComTacticalInput'
 }
