@@ -148,6 +148,7 @@ Now that you've built the Highlander, connecting it to the game is straightforwa
 2. Also navigate to `XCOM_PATH/XEW/XComGame/CookedPCConsole`. This is where `.upk` and `.u` files are stored for XCOM: Enemy Within. Make sure your path includes `XEW`, otherwise it is for XCOM: Enemy Unknown.
 3. Create a symbolic link within `CookedPCConsole` that points at the `XComHighlander.u` file.
 4. Repeat this process, creating a symbolic link in `XCOM_PATH/XEW/XComGame/Config` for each of the `.ini` files under `HIGHLANDER_DIR/Config`.
+5. Create one more symlink in `XCOM_PATH/XEW/XComGame/Localization/INT`, which points to `HIGHLANDER_DIR/Localization/XComHighlander.int`.
 
 By using a symlink, each time you build the Highlander, the latest version will be picked up by the game automatically. If you're only changing `.ini` files, you don't even need to build.
 

@@ -259,6 +259,12 @@ struct TModVersion
 };
 
 // ------------------------------------------------------------------------------
+// Delegate types used in various mod hooks
+// ------------------------------------------------------------------------------
+
+
+
+// ------------------------------------------------------------------------------
 // Structs beyond this point are unlikely to be needed by most mod authors. You
 // can skip past them to see some utility functions.
 // ------------------------------------------------------------------------------
@@ -373,6 +379,10 @@ struct HL_TTechState
 // ------------------------------------------------------------------------------
 // Utility functions for mixing vanilla and Highlander types
 // ------------------------------------------------------------------------------
+
+delegate OnShowMenu(TMenu kMenu, optional object Data);
+
+delegate OnSpinnerChanged(int Direction);
 
 static function TProjectCost ConvertTCostToProjectCost(HL_TCost kInCost)
 {
