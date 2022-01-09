@@ -7,6 +7,43 @@ function Init(optional bool bLoading = false)
     super.Init(bLoading);
 }
 
+function LoadInit()
+{
+    super.LoadInit();
+
+    // PostLoadGame needs to wait briefly before running so everything is initialized
+    SetTimer(0.10, false, 'PostLoadGame');
+}
+
+protected function PostLoadGame()
+{
+    local array<XGUnitNativeBase> EnemiesInSquadSight;
+    local XGPlayer kHumanPlayer;
+    local XGSquad Squad;
+    local XGUnitNativeBase FriendlyUnit, EnemyUnit;
+
+    // Highlander issue #10: when loading a game, the combat music doesn't restart if there are enemies in sight
+    kHumanPlayer = XGBattle_SP(`BATTLE).GetHumanPlayer();
+    Squad = kHumanPlayer.GetSquad();
+    FriendlyUnit = Squad.GetNextGoodMember();
+
+    if (FriendlyUnit == none)
+    {
+        return;
+    }
+
+    XGUnit(FriendlyUnit).DetermineEnemiesInSquadSight(EnemiesInSquadSight, FriendlyUnit.Location, false, false);
+
+    foreach EnemiesInSquadSight(EnemyUnit)
+    {
+        if (!XGUnit(EnemyUnit).IsDeadOrDying())
+        {
+            XComTacticalSoundManager(XComGameReplicationInfo(class'Engine'.static.GetCurrentWorldInfo().GRI).GetSoundManager()).PlayCombatMusic();
+            break;
+        }
+    }
+}
+
 simulated event bool FromNativeCheckForEndTurn(XGUnitNativeBase kUnit)
 {
     return super.FromNativeCheckForEndTurn(kUnit);
