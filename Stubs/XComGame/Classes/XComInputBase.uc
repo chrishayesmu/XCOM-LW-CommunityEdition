@@ -96,7 +96,7 @@ simulated function bool IsEventWithinInputTypeRange(int Cmd){}
 simulated function bool ProcessMouseInputThroughHUD(int Cmd, int Actionmask){}
 function XComHUD GetXComHUD(){}
 protected function IMouseInteractionInterface GetMouseInterfaceTarget(){}
-
+simulated function bool TestMouseConsumedByFlash(){}
 protected function IMouseInteractionInterface GetShootEnemyTarget(){}
 protected function IMouseInteractionInterface GetMouseInteractionTarget(){}
 simulated function int FilterCmdForUI(int Cmd, int Actionmask){}
