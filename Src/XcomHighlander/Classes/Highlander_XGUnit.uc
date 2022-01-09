@@ -41,6 +41,13 @@ function AddCriticallyWoundedAction(optional bool bStunAlien = false, optional b
             Highlander_XGBattleDesc(`BATTLE.m_kDesc).m_kArtifactsContainer.AdjustQuantity(`LW_ITEM_ID(OutsiderShard), 1);
             PRES().UINarrative(`XComNarrativeMoment("OutsiderShardFirstSeen"));
         }
+
+        // Highlander issue #7: if the last visible enemy is stunned instead of killed, combat music will continue playing.
+        // This fix simply stops the music in that case.
+        if (ShouldStopCombatMusicAfterBeingStunned())
+        {
+            XComTacticalSoundManager(XComGameReplicationInfo(class'Engine'.static.GetCurrentWorldInfo().GRI).GetSoundManager()).StopCombatMusic();
+        }
     }
 
     kAction = Spawn(class'XGAction_CriticallyWounded', Owner);
@@ -1013,6 +1020,43 @@ function UpdateItemCharges()
             }
         }
     }
+}
+
+protected function bool ShouldStopCombatMusicAfterBeingStunned()
+{
+    local array<XGUnitNativeBase> EnemiesInSquadSight;
+    local XGPlayer kPlayer;
+    local XGSquad Squad;
+    local XGUnitNativeBase FriendlyUnit, EnemyUnit;
+
+    // Logic here is basically mirrored from XGPlayer.OnUnitKilled, which stops the combat music
+    // when the last visible enemy dies
+    kPlayer = XGBattle_SP(`BATTLE).GetHumanPlayer();
+
+    if (kPlayer.m_bKismetControlledCombatMusic)
+    {
+        return false;
+    }
+
+    Squad = kPlayer.GetSquad();
+    FriendlyUnit = Squad.GetNextGoodMember();
+
+    if (FriendlyUnit == none)
+    {
+        return true;
+    }
+
+    XGUnit(FriendlyUnit).DetermineEnemiesInSquadSight(EnemiesInSquadSight, FriendlyUnit.Location, false, false);
+
+    foreach EnemiesInSquadSight(EnemyUnit)
+    {
+        if (EnemyUnit != self && !XGUnit(EnemyUnit).IsDeadOrDying())
+        {
+            return false;
+        }
+    }
+
+    return true;
 }
 
 simulated state Active
