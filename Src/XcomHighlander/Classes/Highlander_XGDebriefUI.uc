@@ -320,11 +320,15 @@ function UpdateScienceDebrief()
         if (kHQ.m_kHLLastCargoArtifacts.m_arrEntries[iItem].iQuantity > 0 && IsSpecialLootItem(iItem))
         {
             kItem = `HL_ITEM(kHQ.m_kHLLastCargoArtifacts.m_arrEntries[iItem].iItemId);
+
             kLootItem.imgItem.strPath = kItem.ImagePath;
+
             kLootItem.txtItem.StrValue = kItem.strName;
             kLootItem.txtItem.iState = eUIState_Highlight;
+
             kLootItem.txtQuantity.StrValue = string(kHQ.m_kHLLastCargoArtifacts.m_arrEntries[iItem].iQuantity);
             kLootItem.txtQuantity.iState = eUIState_Highlight;
+
             kDebrief.arrLoot.AddItem(kLootItem);
 
             for (eitm = 0; eitm < kDebrief.arrItems.Length; eitm++)
@@ -343,7 +347,9 @@ function UpdateScienceDebrief()
         if (kHQ.m_kHLLastCargoArtifacts.m_arrEntries[iItem].iQuantity > 0 && !IsSpecialLootItem(iItem))
         {
             kItem = `HL_ITEM(kHQ.m_kHLLastCargoArtifacts.m_arrEntries[iItem].iItemId);
+
             kLootItem.imgItem.strPath = kItem.ImagePath;
+
             kLootItem.txtItem.StrValue = kItem.strName;
             kLootItem.txtItem.iState = eUIState_Highlight;
 
@@ -373,6 +379,7 @@ function UpdateScienceDebrief()
 
             kLootItem.txtQuantity.StrValue = string(kHQ.m_kHLLastCargoArtifacts.m_arrEntries[iItem].iQuantity);
             kLootItem.txtQuantity.iState = eUIState_Highlight;
+
             kDebrief.arrLoot.AddItem(kLootItem);
 
             for (eitm = 0; eitm < kDebrief.arrItems.Length; eitm++)

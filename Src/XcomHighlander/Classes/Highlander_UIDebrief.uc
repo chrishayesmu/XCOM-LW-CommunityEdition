@@ -24,12 +24,8 @@ simulated function ShowScienceDebrief()
     local int iListId, iLoot, iItem, Len, Amount;
     local string Description, Title, imagePath;
 
-    `HL_LOG_CLS("ShowScienceDebrief");
-
     if (m_iView == eDebriefView_Science)
     {
-        `HL_LOG_CLS("ShowScienceDebrief: m_iView == eDebriefView_Science. m_kMgr.m_kScienceDebrief.arrItems.Length = " $ m_kMgr.m_kScienceDebrief.arrItems.Length $ "; m_kMgr.m_kScienceDebrief.arrLoot.Length = " $ m_kMgr.m_kScienceDebrief.arrLoot.Length);
-
         iListId = 0;
         Len = m_kMgr.m_kScienceDebrief.arrItems.Length;
 
@@ -37,16 +33,16 @@ simulated function ShowScienceDebrief()
         {
             if (iItem == 0)
             {
-                AS_AddListHeader(++iListId, m_kMgr.m_kScienceDebrief.arrItems[iItem].txtTitle.StrValue);
+                AS_AddListHeader(iListId++, m_kMgr.m_kScienceDebrief.arrItems[iItem].txtTitle.StrValue);
             }
 
             Title = m_kMgr.m_kScienceDebrief.arrItems[iItem].txtTech.StrValue;
             Description = m_kMgr.m_kScienceDebrief.arrItems[iItem].txtBody.StrValue;
             imagePath = m_kMgr.m_kScienceDebrief.arrItems[iItem].imgTech.strPath;
-            AS_AddScienceResearch(++iListId, Title, Description, imagePath);
+            AS_AddScienceResearch(iListId++, Title, Description, imagePath);
         }
 
-        AS_AddListHeader(++iListId, m_kMgr.m_kScienceDebrief.txtLootTitle.StrValue);
+        AS_AddListHeader(iListId++, m_kMgr.m_kScienceDebrief.txtLootTitle.StrValue);
         Len = m_kMgr.m_kScienceDebrief.arrLoot.Length;
 
         for (iLoot = 0; iLoot < Len; iLoot++)
@@ -54,20 +50,18 @@ simulated function ShowScienceDebrief()
             Description = m_kMgr.m_kScienceDebrief.arrLoot[iLoot].txtItem.StrValue;
             Amount = int(m_kMgr.m_kScienceDebrief.arrLoot[iLoot].txtQuantity.StrValue);
             imagePath = m_kMgr.m_kScienceDebrief.arrLoot[iLoot].imgItem.strPath;
-            AS_AddScienceItem(++iListId, Description, Amount, imagePath);
+            AS_AddScienceItem(iListId++, Description, Amount, imagePath);
         }
     }
     else
     {
-        `HL_LOG_CLS("ShowScienceDebrief: m_iView != eDebriefView_Science");
-
         Invoke("ClearScienceDebrief");
         iListId = 0;
         Len = m_kMgr.m_kEngineeringDebrief.arrItems.Length;
 
         if (m_kMgr.m_kEngineeringDebrief.iHighlighted > 0)
         {
-            AS_AddListHeader(++iListId, m_kMgr.m_kEngineeringDebrief.txtAdvisor.StrValue);
+            AS_AddListHeader(iListId++, m_kMgr.m_kEngineeringDebrief.txtAdvisor.StrValue);
         }
 
         for (iItem = 0; iItem < m_kMgr.m_kEngineeringDebrief.iHighlighted; iItem++)
@@ -75,12 +69,12 @@ simulated function ShowScienceDebrief()
             Description = m_kMgr.m_kEngineeringDebrief.arrItems[iItem].txtItem.StrValue;
             Amount = int(m_kMgr.m_kEngineeringDebrief.arrItems[iItem].txtBody.StrValue);
             imagePath = m_kMgr.m_kEngineeringDebrief.arrItems[iItem].imgItem.strPath;
-            AS_AddScienceItem(++iListId, Description, Amount, imagePath);
+            AS_AddScienceItem(iListId++, Description, Amount, imagePath);
         }
 
         if (iItem < Len)
         {
-            AS_AddListHeader(++iListId, m_kMgr.m_kEngineeringDebrief.txtTitle.StrValue);
+            AS_AddListHeader(iListId++, m_kMgr.m_kEngineeringDebrief.txtTitle.StrValue);
         }
 
         while (iItem < Len)
@@ -88,7 +82,7 @@ simulated function ShowScienceDebrief()
             Description = m_kMgr.m_kEngineeringDebrief.arrItems[iItem].txtItem.StrValue;
             Amount = int(m_kMgr.m_kEngineeringDebrief.arrItems[iItem].txtBody.StrValue);
             imagePath = m_kMgr.m_kEngineeringDebrief.arrItems[iItem].imgItem.strPath;
-            AS_AddScienceItem(++iListId, Description, Amount, imagePath);
+            AS_AddScienceItem(iListId++, Description, Amount, imagePath);
 
             iItem++;
         }
