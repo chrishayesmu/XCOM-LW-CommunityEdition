@@ -41,7 +41,7 @@ function ReplaceClassWithHighlanderEquivalent(out class<Actor> kClass)
         return;
     }
 
-    kHLClass = class<Actor>(DynamicLoadObject("XComHighlander.Highlander_" $ string(kClass.Name), class'Class'));
+    kHLClass = class<Actor>(DynamicLoadObject("XComHighlander.Highlander_" $ string(kClass.Name), class'Class', true));
 
     if (kHLClass != none)
     {
