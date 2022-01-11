@@ -1,5 +1,5 @@
 class Highlander_XGStrategyAI extends XGStrategyAI
-    config(HighlanderStrategyAI);
+    config(HighlanderBaseStrategyGame);
 
 struct HL_AIMissionPlan
 {
@@ -69,6 +69,7 @@ var config int MinResourcesForHQAssaultCounter;
 var config int MinThreatForHQAssaultCounter;
 var config int CounterValueToSpawnHQAssault;
 var config int MonthToForceSpawnHQAssault;
+
 
 function AIAddNewObjectives()
 {
@@ -325,7 +326,7 @@ function XGMission CheatTerrorMission()
     kMission.m_iCity = 4;
     kMission.m_iCountry = 0;
     kMission.m_iContinent = 0;
-    kMission.m_iDuration = class'XGTacticalGameCore'.default.TERROR_TIMER;
+    kMission.m_iDuration = 2 * `HL_STRATCFG(MissionGeoscapeDuration_Terror);
     kMission.m_v2Coords = CITY(4).m_v2Coords;
     kMission.m_kDesc.m_kAlienSquad = DetermineTerrorSquad();
 
@@ -341,7 +342,7 @@ function XGMission CreateTerrorMission(XGShip_UFO kUFO)
     kMission.m_iCity = kUFO.m_kObjective.m_iCityTarget;
     kMission.m_iCountry = CITY(kMission.m_iCity).GetCountry();
     kMission.m_iContinent = kUFO.GetContinent();
-    kMission.m_iDuration = class'XGTacticalGameCore'.default.TERROR_TIMER;
+    kMission.m_iDuration = 2 * `HL_STRATCFG(MissionGeoscapeDuration_Terror);
     kMission.m_v2Coords = CITY(kMission.m_iCity).m_v2Coords;
     kMission.m_kDesc.m_kAlienSquad = DetermineTerrorSquad();
 
@@ -388,7 +389,7 @@ function XGMission CheatCrash(XGShip_UFO strMapName)
     kMission.m_bScripted = true;
     kMission.m_kDesc.m_bScripted = true;
     kMission.m_iCity = -1;
-    kMission.m_iDuration = class'XGTacticalGameCore'.default.ABDUCTION_TIMER;
+    kMission.m_iDuration = 2 * `HL_STRATCFG(MissionGeoscapeDuration_AirBaseDefense);
     kMission.m_kDesc.m_kAlienSquad = DetermineAbductionSquad(9);
     kMission.m_kDesc.m_iMissionType = 14;
     kMission.m_strTitle = class'XComLocalizer'.static.ExpandString(class'XGMissionControlUI'.default.m_strLabelViewAbductionSitesFlying);
@@ -413,7 +414,7 @@ function CheatLandedUFO(string strMapName)
         kMission.m_kDesc = Spawn(class'Highlander_XGBattleDesc').Init();
         kMission.m_iContinent = 0;
         kMission.m_iCountry = 0;
-        kMission.m_iDuration = class'XGTacticalGameCore'.default.UFO_LANDED_TIMER;
+        kMission.m_iDuration = 2 * `HL_STRATCFG(MissionGeoscapeDuration_LandedScout); // just pick a random entry for cheats
         kMission.m_v2Coords = CITY(8).m_v2Coords;
         kMission.m_kDesc.m_kAlienSquad = DetermineUFOSquad(none, true, kMapMeta.ShipType);
 
@@ -461,21 +462,21 @@ function CreateAlienBase()
     kMission.m_strTitle = kMission.m_strTitle $ kCountry.GetName();
     kMission.m_kDesc.m_kAlienSquad = DetermineAlienBaseSquad();
 
-    // TODO: move alien base loot into config
-    kMission.m_arrArtifacts[`LW_ITEM_ID(AlienAlloy)] = 100;
-    kMission.m_arrArtifacts[`LW_ITEM_ID(UFOPowerSource)] = 3;
-    kMission.m_arrArtifacts[`LW_ITEM_ID(Elerium)] = int(class'XGTacticalGameCore'.default.UFO_ELERIUM_PER_POWER_SOURCE[Game().GetDifficulty()] * float(kMission.m_arrArtifacts[`LW_ITEM_ID(UFOPowerSource)]));
-    kMission.m_arrArtifacts[`LW_ITEM_ID(AlienSurgery)] = 4;
-    kMission.m_arrArtifacts[`LW_ITEM_ID(AlienStasisTank)] = 15;
-    kMission.m_arrArtifacts[`LW_ITEM_ID(AlienFood)] = 10;
-    kMission.m_arrArtifacts[`LW_ITEM_ID(AlienEntertainment)] = 1;
+    PopulateMissionRewards(kMission, `HL_STRATCFG(AlienBaseAssaultRewards));
+
+    kMission.m_arrArtifacts[`LW_ITEM_ID(Elerium)] += int(class'XGTacticalGameCore'.default.UFO_ELERIUM_PER_POWER_SOURCE[Game().GetDifficulty()] * float(kMission.m_arrArtifacts[`LW_ITEM_ID(UFOPowerSource)]));
 
     if (OBJECTIVES().m_eObjective == eObj_AssaultAlienBase)
     {
         kMission.m_arrArtifacts[`LW_ITEM_ID(HyperwaveBeacon)] = 1;
     }
+    else
+    {
+        kMission.m_arrArtifacts[`LW_ITEM_ID(HyperwaveBeacon)] = 0;
+    }
 
     kMission.m_iDetectedBy = 0;
+
     GEOSCAPE().AddMission(kMission);
 }
 
@@ -509,7 +510,7 @@ function XGMission CreateFirstMission()
         kMission.m_iCity = Continent(HQ().GetContinent()).GetRandomCity();
         kMission.m_iCountry = CITY(kMission.m_iCity).GetCountry();
         kMission.m_iContinent = HQ().GetContinent();
-        kMission.m_iDuration = class'XGTacticalGameCore'.default.ABDUCTION_TIMER;
+        kMission.m_iDuration = 2 * `HL_STRATCFG(MissionGeoscapeDuration_Abduction);
         kMission.m_v2Coords = CITY(kMission.m_iCity).m_v2Coords;
         kMission.m_eTimeOfDay = 7;
         kMission.m_kDesc.m_kAlienSquad = DetermineFirstMissionSquad();
@@ -529,7 +530,7 @@ function XGMission CreateFirstMission_Controlled()
     kMission.m_iCity = Continent(HQ().GetContinent()).GetRandomCity();
     kMission.m_iCountry = CITY(kMission.m_iCity).GetCountry();
     kMission.m_iContinent = HQ().GetContinent();
-    kMission.m_iDuration = class'XGTacticalGameCore'.default.ABDUCTION_TIMER;
+    kMission.m_iDuration = 2 * `HL_STRATCFG(MissionGeoscapeDuration_Abduction);
     kMission.m_v2Coords = CITY(kMission.m_iCity).m_v2Coords;
     kMission.m_kDesc.m_strMapName = "Tutorial 2 (Abduction)";
     kMission.m_kDesc.m_strMapCommand = class'XComMapManager'.static.GetMapCommandLine(kMission.m_kDesc.m_strMapName, true, true, kMission.m_kDesc);
@@ -545,7 +546,7 @@ function XGMission CreateCrashMission(XGShip_UFO kUFO)
     kMission.m_kDesc = Spawn(class'Highlander_XGBattleDesc').Init();
     kMission.m_iContinent = kUFO.GetContinent();
     kMission.m_iCountry = kUFO.GetCountry();
-    kMission.m_iDuration = class'XGTacticalGameCore'.default.UFO_CRASH_TIMER;
+    kMission.m_iDuration = 2 * DetermineCrashedUFOMissionTimer(kUFO);
     kMission.m_v2Coords = kUFO.GetCoords();
     kMission.m_kDesc.m_kAlienSquad = DetermineUFOSquad(kUFO, false);
     kMission.m_arrArtifacts = kUFO.m_kTShip.arrSalvage;
@@ -565,7 +566,7 @@ function XGMission CreateLandedUFOMission(XGShip_UFO kUFO)
     kMission.m_kDesc = Spawn(class'Highlander_XGBattleDesc').Init();
     kMission.m_iContinent = kUFO.GetContinent();
     kMission.m_iCountry = kUFO.GetCountry();
-    kMission.m_iDuration = class'XGTacticalGameCore'.default.UFO_LANDED_TIMER;
+    kMission.m_iDuration = 2 * DetermineLandedUFOMissionTimer(kUFO);
     kMission.m_v2Coords = kUFO.GetCoords();
     kMission.m_kDesc.m_kAlienSquad = DetermineUFOSquad(kUFO, true);
     kMission.kUFO = kUFO;
@@ -596,7 +597,7 @@ function XGMission CreateCovertOpsExtractionMission(ECountry eMissionCountry)
     kMission.m_iCountry = eMissionCountry;
     m_iAlienMonth = eMission_CovertOpsExtraction; // Hacked-in way to pass mission type to DetermineCovertOpsSquad
     kMission.m_kDesc.m_kAlienSquad = DetermineCovertOpsSquad();
-    kMission.m_iDuration = 96;
+    kMission.m_iDuration = 2 * `HL_STRATCFG(MissionGeoscapeDuration_CovertExtraction);
     kMission.m_v2Coords = kCountry.GetCoords();
     return kMission;
 }
@@ -613,7 +614,7 @@ function XGMission CreateCaptureAndHoldMission(ECountry eMissionCountry)
     kMission.m_iCountry = eMissionCountry;
     m_iAlienMonth = eMission_CaptureAndHold; // Hacked-in way to pass mission type to DetermineCovertOpsSquad
     kMission.m_kDesc.m_kAlienSquad = DetermineCovertOpsSquad();
-    kMission.m_iDuration = 96;
+    kMission.m_iDuration = 2 * `HL_STRATCFG(MissionGeoscapeDuration_DataRecovery);
     kMission.m_v2Coords = kCountry.GetCoords();
     return kMission;
 }
@@ -663,6 +664,7 @@ function LaunchBlitz(array<ECityType> arrTargetCities, optional bool bFirstBlitz
     local EMissionRewardType eReward;
     local EMissionDifficulty eDiff;
     local TGeoscapeAlert kAlert;
+    local bool bMissionAdded;
     local int I, iIndex;
 
     if (bFirstBlitz)
@@ -694,7 +696,7 @@ function LaunchBlitz(array<ECityType> arrTargetCities, optional bool bFirstBlitz
         kMission.m_iCity = kCity.m_iID;
         kMission.m_iCountry = CITY(kMission.m_iCity).GetCountry();
         kMission.m_iContinent = kCity.GetContinent();
-        kMission.m_iDuration = class'XGTacticalGameCore'.default.ABDUCTION_TIMER;
+        kMission.m_iDuration = 2 * `HL_STRATCFG(MissionGeoscapeDuration_Abduction);
         kMission.m_v2Coords = kCity.GetCoords();
         kMission.m_kDesc.m_kAlienSquad = DetermineAbductionSquad(eDiff);
         kMission.m_eDifficulty = eDiff;
@@ -730,11 +732,20 @@ function LaunchBlitz(array<ECityType> arrTargetCities, optional bool bFirstBlitz
         }
 
         GEOSCAPE().AddMission(kMission);
-        kAlert.arrData.AddItem(kMission.m_iID);
+
+        if (kMission.m_iID >= 0)
+        {
+            bMissionAdded = true;
+            kAlert.arrData.AddItem(kMission.m_iID);
+        }
     }
 
     kAlert.eType = eGA_Abduction;
-    GEOSCAPE().Alert(kAlert);
+
+    if (bMissionAdded)
+    {
+        GEOSCAPE().Alert(kAlert);
+    }
 }
 
 function bool PickMissionPlan(int Month, int Resources, int Threat, out HL_AIMissionPlan MissionPlan)
@@ -745,33 +756,40 @@ function bool PickMissionPlan(int Month, int Resources, int Threat, out HL_AIMis
 
     `HL_LOG("Selecting a mission plan out of" @ PossibleMissionPlans.Length @ "configured");
 
-    if (PossibleMissionPlans.Length == 0) {
+    if (PossibleMissionPlans.Length == 0)
+    {
         `HL_LOG("No mission plans are configured!");
         return false;
     }
 
     foreach PossibleMissionPlans(Candidate) {
-        if (Candidate.FirstValidMonth >= 0 && Month < Candidate.FirstValidMonth) {
+        if (Candidate.FirstValidMonth >= 0 && Month < Candidate.FirstValidMonth)
+        {
             continue;
         }
 
-        if (Candidate.LastValidMonth >= 0 && Month > Candidate.LastValidMonth) {
+        if (Candidate.LastValidMonth >= 0 && Month > Candidate.LastValidMonth)
+        {
             continue;
         }
 
-        if (Candidate.MinResources >= 0 && Resources < Candidate.MinResources) {
+        if (Candidate.MinResources >= 0 && Resources < Candidate.MinResources)
+        {
             continue;
         }
 
-        if (Candidate.MaxResources >= 0 && Resources > Candidate.MaxResources) {
+        if (Candidate.MaxResources >= 0 && Resources > Candidate.MaxResources)
+        {
             continue;
         }
 
-        if (Candidate.MinThreat >= 0 && Threat < Candidate.MinThreat) {
+        if (Candidate.MinThreat >= 0 && Threat < Candidate.MinThreat)
+        {
             continue;
         }
 
-        if (Candidate.MaxThreat >= 0 && Threat > Candidate.MaxThreat) {
+        if (Candidate.MaxThreat >= 0 && Threat > Candidate.MaxThreat)
+        {
             continue;
         }
 
@@ -780,7 +798,8 @@ function bool PickMissionPlan(int Month, int Resources, int Threat, out HL_AIMis
 
     `HL_LOG("Found " $ ValidCandidates.Length $ " possible mission plan(s) to choose from");
 
-    if (ValidCandidates.Length == 0) {
+    if (ValidCandidates.Length == 0)
+    {
         return false;
     }
 
@@ -791,7 +810,62 @@ function bool PickMissionPlan(int Month, int Resources, int Threat, out HL_AIMis
     return true;
 }
 
-function int RollMissionCount(float Count)
+protected function int DetermineCrashedUFOMissionTimer(XGShip_UFO kUFO)
+{
+    switch (kUFO.m_kTShip.eType)
+    {
+        case eShip_UFOSmallScout:
+            return `HL_STRATCFG(MissionGeoscapeDuration_CrashedScout);
+        case eShip_UFOLargeScout:
+            return `HL_STRATCFG(MissionGeoscapeDuration_CrashedDestroyer);
+        case eShip_UFOAbductor:
+            return `HL_STRATCFG(MissionGeoscapeDuration_CrashedAbductor);
+        case eShip_UFOSupply:
+            return `HL_STRATCFG(MissionGeoscapeDuration_CrashedTransport);
+        case eShip_UFOBattle:
+            return `HL_STRATCFG(MissionGeoscapeDuration_CrashedBattleship);
+        case eShip_UFOEthereal:
+            return `HL_STRATCFG(MissionGeoscapeDuration_CrashedOverseer);
+        case 10:
+            return `HL_STRATCFG(MissionGeoscapeDuration_CrashedFighter);
+        case 11:
+            return `HL_STRATCFG(MissionGeoscapeDuration_CrashedRaider);
+        case 12:
+            return `HL_STRATCFG(MissionGeoscapeDuration_CrashedHarvester);
+        case 13:
+            return `HL_STRATCFG(MissionGeoscapeDuration_CrashedTerrorShip);
+        case 14:
+            return `HL_STRATCFG(MissionGeoscapeDuration_CrashedAssaultCarrier);
+        default:
+            `HL_LOG_CLS("Unrecognized UFO type " $ kUFO.m_kTShip.eType $ ". Cannot determine mission timer.");
+            return -1;
+    }
+}
+
+protected function int DetermineLandedUFOMissionTimer(XGShip_UFO kUFO)
+{
+    switch (kUFO.m_kTShip.eType)
+    {
+        case eShip_UFOSmallScout:
+            return `HL_STRATCFG(MissionGeoscapeDuration_LandedScout);
+        case eShip_UFOAbductor:
+            return `HL_STRATCFG(MissionGeoscapeDuration_LandedAbductor);
+        case eShip_UFOSupply:
+            return `HL_STRATCFG(MissionGeoscapeDuration_LandedTransport);
+        case 11:
+            return `HL_STRATCFG(MissionGeoscapeDuration_LandedRaider);
+        case 12:
+            return `HL_STRATCFG(MissionGeoscapeDuration_LandedHarvester);
+        case 13:
+            return `HL_STRATCFG(MissionGeoscapeDuration_LandedTerrorShip);
+        case 14:
+            return `HL_STRATCFG(MissionGeoscapeDuration_LandedAssaultCarrier);
+        default:
+            return -1;
+    }
+}
+
+protected function int RollMissionCount(float Count)
 {
     local int iCount;
 
@@ -807,4 +881,20 @@ function int RollMissionCount(float Count)
     }
 
     return iCount;
+}
+
+protected function PopulateMissionRewards(XGMission kMission, const out array<HL_TItemQuantity> arrRewards)
+{
+    local HL_TItemQuantity kItemQuantity;
+
+    foreach arrRewards(kItemQuantity)
+    {
+        if (kItemQuantity.iItemId > 255)
+        {
+            `HL_LOG_CLS("WARNING: arbitrary item IDs aren't yet supported for mission rewards. Ignoring reward " $ kItemQuantity.iItemId);
+            continue;
+        }
+
+        kMission.m_arrArtifacts[kItemQuantity.iItemId] = kItemQuantity.iQuantity;
+    }
 }

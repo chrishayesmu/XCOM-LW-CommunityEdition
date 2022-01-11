@@ -14,6 +14,11 @@ function int AddMission(XGMission kMission, optional bool bFirst)
 {
     local XGMissionControlUI kMissionControlUI;
 
+    if (!`HL_MOD_LOADER.OnMissionCreated(kMission) && !bFirst)
+    {
+        return -1;
+    }
+
     kMission.m_iID = ++m_iNumMissions;
     m_arrMissions.AddItem(kMission);
 
@@ -112,6 +117,8 @@ function int AddMission(XGMission kMission, optional bool bFirst)
 
     UpdateUI(0.0);
     DetermineMap(kMission);
+
+    `HL_MOD_LOADER.OnMissionAddedToGeoscape(kMission);
 
     return kMission.m_iID;
 }

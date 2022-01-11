@@ -157,6 +157,21 @@ function OnResearchTechsBuilt(out array<HL_TTech> Techs) {}
 /// -----------------------------------------------------
 
 /// <summary>
+/// Called whenever a new mission is created, before it has been added to the Geoscape.
+/// </summary>
+/// <returns>
+///     If any mod returns false, the mission will not be added to the Geoscape and will be destroyed.
+///     Otherwise the mission is added to the Geoscape. Note that the first mission of the campaign cannot
+///     be prevented in this way.
+/// </returns>
+function bool OnMissionCreated(XGMission kMission) { return true; }
+
+/// <summary>
+/// Called whenever a new mission is added to the Geoscape.
+/// </summary>
+function OnMissionAddedToGeoscape(XGMission kMission) {}
+
+/// <summary>
 /// Called to display an alert on the Geoscape. Whenever a mod calls Highlander_XGGeoscape.Mod_Alert, an integer alert ID
 /// is returned. The calling mod is responsible for storing this ID and handling the PopulateAlert event. The fields in
 /// kAlert must be populated by the mod so that the alert can be shown to the player.

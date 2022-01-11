@@ -325,6 +325,32 @@ function OnResearchTechsBuilt(out array<HL_TTech> Techs)
 
 // #region Miscellaneous events
 
+function bool OnMissionCreated(XGMission kMission)
+{
+    local bool bAllTrue;
+    local HighlanderStrategyListener kStrategyListener;
+
+    bAllTrue = true;
+
+    foreach StrategyListeners(kStrategyListener)
+    {
+        bAllTrue = kStrategyListener.OnMissionCreated(kMission) && bAllTrue;
+    }
+
+    // TODO: XGFundingCouncil still shows an alert for council missions
+    return bAllTrue;
+}
+
+function OnMissionAddedToGeoscape(XGMission kMission)
+{
+    local HighlanderStrategyListener kStrategyListener;
+
+    foreach StrategyListeners(kStrategyListener)
+    {
+        kStrategyListener.OnMissionAddedToGeoscape(kMission);
+    }
+}
+
 function PopulateAlert(int iAlertId, TGeoscapeAlert kGeoAlert, out TMCAlert kAlert)
 {
     local HighlanderStrategyListener kStrategyListener;
