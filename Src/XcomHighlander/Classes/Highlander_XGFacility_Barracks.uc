@@ -288,6 +288,65 @@ function PostMission(XGShip_Dropship kSkyranger, bool bSkipSetHQLocation)
     }
 }
 
+function SelectSoldiersForSkyrangerSquad(XGShip_Dropship kSkyranger, out array<XGStrategySoldier> arrSoldiers, optional XGMission kMission = none)
+{
+    local XGStrategySoldier kSoldier, kVolunteer;
+    local int iNumToPreload;
+
+    arrSoldiers.Length = 0;
+
+    // Soldiers only get preloaded on the first mission (since there's no chance for the player to load them)
+    if (kMission != none && kMission.m_kDesc.m_bIsFirstMission == true)
+    {
+        iNumToPreload = kSkyranger.GetCapacity();
+    }
+    else
+    {
+        iNumToPreload = 0;
+    }
+
+    if (kMission != none && kMission.m_iMissionType == eMission_Final)
+    {
+        foreach m_arrSoldiers(kSoldier)
+        {
+            if (kSoldier.m_kSoldier.iPsiRank == 7)
+            {
+                kVolunteer = kSoldier;
+                arrSoldiers.AddItem(kSoldier);
+
+                break;
+            }
+        }
+
+        if (kVolunteer != none && kVolunteer.MedalCount() > 4)
+        {
+            XComOnlineEventMgr(GameEngine(class'Engine'.static.GetEngine()).OnlineEventManager).UnlockAchievement(AT_GuardianOfEarth);
+        }
+    }
+
+    foreach BARRACKS().m_aLastMissionSoldiers(kSoldier)
+    {
+        if (arrSoldiers.Length < iNumToPreload && kSoldier != kVolunteer && BARRACKS().CanLoadSoldier(kSoldier))
+        {
+            arrSoldiers.AddItem(kSoldier);
+        }
+    }
+
+    foreach BARRACKS().m_arrSoldiers(kSoldier)
+    {
+        if (arrSoldiers.Length < iNumToPreload)
+        {
+            if (arrSoldiers.Find(kSoldier) < 0 && BARRACKS().CanLoadSoldier(kSoldier))
+            {
+                if (kSoldier.GetStatus() != 8)
+                {
+                    arrSoldiers.AddItem(kSoldier);
+                }
+            }
+        }
+    }
+}
+
 function UpdateFoundryPerksForSoldier(XGStrategySoldier kSoldier)
 {
     local Highlander_XGFacility_Engineering kEngineering;

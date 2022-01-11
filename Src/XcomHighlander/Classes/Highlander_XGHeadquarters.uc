@@ -52,7 +52,7 @@ function Init(bool bLoadingFromSave)
         }
     }
 
-    if ((GEOSCAPE().m_arrCraftEncounters[9] != 0) || m_kMC.m_bDetectedOverseer)
+    if ( (GEOSCAPE().m_arrCraftEncounters.Length > 0 && GEOSCAPE().m_arrCraftEncounters[9] != 0) || (m_kMC != none && m_kMC.m_bDetectedOverseer))
     {
         m_bHyperwaveActivated = true;
     }
