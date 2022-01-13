@@ -1,5 +1,12 @@
 class Highlander_XGAbilityTree extends XGAbilityTree;
 
+simulated function BuildAbilities()
+{
+    super.BuildAbilities();
+
+    `HL_MOD_LOADER.OnAbilitiesBuilt(m_arrAbilities);
+}
+
 simulated function bool HasAutopsyTechForChar(int iCharType)
 {
     local Highlander_XGDropshipCargoInfo kCargo;

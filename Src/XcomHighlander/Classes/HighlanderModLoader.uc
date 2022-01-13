@@ -408,7 +408,23 @@ function PopulateAlert(int iAlertId, TGeoscapeAlert kGeoAlert, out TMCAlert kAle
 
 // #endregion
 
+// #region Ability-related tactical events
+
+function OnAbilitiesBuilt(array<TAbility> arrAbilities)
+{
+    local HighlanderTacticalListener kTacticalListener;
+
+    foreach TacticalListeners(kTacticalListener)
+    {
+        kTacticalListener.OnAbilitiesBuilt(arrAbilities);
+    }
+}
+
+// #endregion
+
 // #region Miscellaneous tactical events
+
+
 
 function OnUpdateItemCharges(XGUnit kUnit)
 {
