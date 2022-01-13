@@ -458,10 +458,10 @@ function int HL_GetInfiniteSecondary(XGStrategySoldier kSoldier)
 
     if (kSoldier.HasPerk(`LW_PERK_ID(FireRocket)))
     {
-        return eItem_RocketLauncher;
+        return `LW_ITEM_ID(RocketLauncher);
     }
 
-    return 0;
+    return `LW_ITEM_ID(Pistol);
 }
 
 function array<TItem> GetItemsInCategory(int iCategory, optional int iTransaction = 1, optional ESoldierClass eClassLock = 0)
