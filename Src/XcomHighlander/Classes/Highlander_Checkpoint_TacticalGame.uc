@@ -26,7 +26,7 @@ defaultproperties
     ActorClassesToRecord(21)=none
     ActorClassesToRecord(22)=class'XGItem'
     ActorClassesToRecord(23)=class'XGLevel'
-    ActorClassesToRecord(24)=none
+    ActorClassesToRecord(24)=class'XGTacticalGameCore'
     ActorClassesToRecord(25)=class'XGPlayer'
     ActorClassesToRecord(26)=none
     ActorClassesToRecord(27)=none

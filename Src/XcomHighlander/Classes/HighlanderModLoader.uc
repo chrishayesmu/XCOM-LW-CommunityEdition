@@ -17,7 +17,7 @@ static function HighlanderModLoader GetModLoader()
 {
     local HighlanderModLoader ModLoader;
 
-    foreach class'Engine'.static.GetCurrentWorldInfo().DynamicActors(class'HighlanderModLoader', ModLoader)
+    foreach `WORLDINFO.DynamicActors(class'HighlanderModLoader', ModLoader)
     {
         return ModLoader;
     }

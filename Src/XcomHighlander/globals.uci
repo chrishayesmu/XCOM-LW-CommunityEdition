@@ -24,6 +24,17 @@
 `define LW_SECOND_WAVE_ID(nm) (class'LongWarConstants'.const.SecondWaveID_`nm)
 
 // ---------------------------
+// Extension macros
+//
+// Some classes need to have methods deprecated and replaced with new versions, but since we
+// can't modify the inheritance hierarchy, it's not feasible to do this in base classes which are
+// broadly used. For those cases, we use static "extension" methods to implement the new functionality.
+// These macros provide a shorthand for accessing them.
+// ---------------------------
+
+`define HL_TWEAPON(kWeapon) (class'Highlander_XGWeapon_Extensions'.static.GetHLWeapon(`kWeapon))
+
+// ---------------------------
 // Strategy layer macros
 // ---------------------------
 
@@ -32,6 +43,7 @@
 `define HL_BARRACKS (Highlander_XGFacility_Barracks(`HQGAME.GetGameCore().GetHQ().GetBarracks()))
 `define HL_FTECH(techId, bRushResearch) (`HL_TECHTREE.HL_GetFoundryTech(`techId, `bRushResearch))
 `define HL_ENGINEERING (Highlander_XGFacility_Engineering(`HQGAME.GetGameCore().GetHQ().GetEngineering()))
+`define HL_GAMECORE (Highlander_XGTacticalGameCore(`GAMECORE))
 `define HL_GEOSCAPE (Highlander_XGGeoscape(`HQGAME.GetGameCore().GetGeoscape()))
 `define HL_HANGAR (Highlander_XGFacility_Hangar(`HQGAME.GetGameCore().GetHQ().GetHangar()))
 `define HL_HQ (Highlander_XGHeadquarters(`HQGAME.GetGameCore().GetHQ()))

@@ -63,6 +63,7 @@ function TLockerItem HL_GetLockerItem(EInventorySlot eSlotType, out HL_TItem kIt
 
 function array<TLockerItem> GetLockerItems(int iSlotType, int iSlotIndex, XGStrategySoldier kSoldier)
 {
+    local Highlander_XGTacticalGameCore kTacGameCore;
     local Highlander_XGStorage kStorage;
     local array<HL_TItem> arrItems;
     local array<TLockerItem> arrLockerItems;
@@ -70,6 +71,7 @@ function array<TLockerItem> GetLockerItems(int iSlotType, int iSlotIndex, XGStra
     local bool bDisplayItem;
     local int I, iItemId;
 
+    kTacGameCore = `HL_GAMECORE;
     kStorage = `HL_STORAGE;
 
     if (iSlotType == eInvSlot_Armor)
@@ -89,7 +91,7 @@ function array<TLockerItem> GetLockerItems(int iSlotType, int iSlotIndex, XGStra
         switch (iSlotType)
         {
             case eInvSlot_Armor:
-                if (TACTICAL().ArmorHasProperty(iItemId, eAP_Tank))
+                if (kTacGameCore.ArmorHasProperty(iItemId, eAP_Tank))
                 {
                     if (!kSoldier.IsATank())
                     {
@@ -104,7 +106,7 @@ function array<TLockerItem> GetLockerItems(int iSlotType, int iSlotIndex, XGStra
                     }
                 }
 
-                if (TACTICAL().ArmorHasProperty(iItemId, eAP_MEC))
+                if (kTacGameCore.ArmorHasProperty(iItemId, eAP_MEC))
                 {
                     if (!kSoldier.IsAugmented())
                     {
@@ -121,19 +123,19 @@ function array<TLockerItem> GetLockerItems(int iSlotType, int iSlotIndex, XGStra
 
                 break;
             case eInvSlot_Pistol:
-                if (!TACTICAL().WeaponHasProperty(iItemId, eWP_Pistol))
+                if (!kTacGameCore.WeaponHasProperty(iItemId, eWP_Pistol))
                 {
                     bDisplayItem = false;
                 }
 
                 break;
             case eInvSlot_Large:
-                if (TACTICAL().GetTWeapon(iItemId).iSize != 1)
+                if (kTacGameCore.HL_GetTWeapon(iItemId).iSize != 1)
                 {
                     bDisplayItem = false;
                 }
 
-                if (TACTICAL().WeaponHasProperty(iItemId, eWP_Integrated))
+                if (kTacGameCore.WeaponHasProperty(iItemId, eWP_Integrated))
                 {
                     if (!kSoldier.IsATank())
                     {
@@ -143,21 +145,21 @@ function array<TLockerItem> GetLockerItems(int iSlotType, int iSlotIndex, XGStra
 
                 if (kSoldier.IsAugmented())
                 {
-                    if (!TACTICAL().WeaponHasProperty(iItemId, eWP_Mec))
+                    if (!kTacGameCore.WeaponHasProperty(iItemId, eWP_Mec))
                     {
                         bDisplayItem = false;
                     }
 
                     if (iSlotIndex == 0)
                     {
-                        if (TACTICAL().WeaponHasProperty(iItemId, eWP_Secondary))
+                        if (kTacGameCore.WeaponHasProperty(iItemId, eWP_Secondary))
                         {
                             bDisplayItem = false;
                         }
                     }
                     else
                     {
-                        if (!TACTICAL().WeaponHasProperty(iItemId, eWP_Secondary))
+                        if (!kTacGameCore.WeaponHasProperty(iItemId, eWP_Secondary))
                         {
                             bDisplayItem = false;
                         }
@@ -165,12 +167,12 @@ function array<TLockerItem> GetLockerItems(int iSlotType, int iSlotIndex, XGStra
                 }
                 else
                 {
-                    if (TACTICAL().WeaponHasProperty(iItemId, eWP_Mec))
+                    if (kTacGameCore.WeaponHasProperty(iItemId, eWP_Mec))
                     {
                         bDisplayItem = false;
                     }
 
-                    if (TACTICAL().WeaponHasAbility(iItemId, eWP_CantReact))
+                    if (kTacGameCore.WeaponHasAbility(iItemId, eWP_CantReact))
                     {
                         if (iSlotIndex == 0)
                         {
@@ -178,7 +180,7 @@ function array<TLockerItem> GetLockerItems(int iSlotType, int iSlotIndex, XGStra
                         }
                     }
 
-                    if (!TACTICAL().WeaponHasAbility(iItemId, eWP_CantReact))
+                    if (!kTacGameCore.WeaponHasAbility(iItemId, eWP_CantReact))
                     {
                         if (iSlotIndex == 1)
                         {
@@ -189,14 +191,14 @@ function array<TLockerItem> GetLockerItems(int iSlotType, int iSlotIndex, XGStra
 
                 break;
             case eInvSlot_Small:
-                if (TACTICAL().GetTWeapon(iItemId).iSize != 0)
+                if (kTacGameCore.HL_GetTWeapon(iItemId).iSize != 0)
                 {
                     bDisplayItem = false;
                 }
 
                 if (kSoldier.IsATank())
                 {
-                    if (!TACTICAL().WeaponHasProperty(iItemId, eWP_Integrated))
+                    if (!kTacGameCore.WeaponHasProperty(iItemId, eWP_Integrated))
                     {
                         bDisplayItem = false;
                     }
@@ -204,13 +206,13 @@ function array<TLockerItem> GetLockerItems(int iSlotType, int iSlotIndex, XGStra
 
                 if (kSoldier.IsAugmented())
                 {
-                    if (!TACTICAL().WeaponHasProperty(iItemId, eWP_Mec))
+                    if (!kTacGameCore.WeaponHasProperty(iItemId, eWP_Mec))
                     {
                         bDisplayItem = false;
                     }
                 }
 
-                if (TACTICAL().WeaponHasProperty(iItemId, eWP_Pistol))
+                if (kTacGameCore.WeaponHasProperty(iItemId, eWP_Pistol))
                 {
                     bDisplayItem = false;
                 }
