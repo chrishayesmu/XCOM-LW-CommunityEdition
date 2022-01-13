@@ -21,7 +21,7 @@ var Class<HighlanderTacticalListener> TacticalListenerClass; // A class to insta
 
 
 /// <summary>
-/// Called when the mod is first loaded by the Highlander. This is a chance to do any initialization, or just
+/// Called when the mod is loaded by the Highlander. This is a chance to do any initialization, or just
 /// to log that the mod loaded successfully.
 ///
 /// TBD: this currently fires every time the mod loader inits, including at the main menu and each tactical/strategy transition.

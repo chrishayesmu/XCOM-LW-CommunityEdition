@@ -1020,6 +1020,8 @@ function UpdateItemCharges()
             }
         }
     }
+
+    `HL_MOD_LOADER.OnUpdateItemCharges(self);
 }
 
 protected function bool ShouldStopCombatMusicAfterBeingStunned()

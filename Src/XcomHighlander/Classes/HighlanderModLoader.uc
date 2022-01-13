@@ -2,13 +2,14 @@ class HighlanderModLoader extends Mutator
     config(HighlanderMods)
     dependson(HighlanderModBase);
 
+
+
 var config array<string> arrModClasses;
 
-var privatewrite bool bInited;
-var privatewrite array<HighlanderModBase> LoadedMods;
+var array<HighlanderModBase> LoadedMods;
 
-var private array<HighlanderStrategyListener> StrategyListeners;
-var private array<HighlanderTacticalListener> TacticalListeners;
+var array<HighlanderStrategyListener> StrategyListeners;
+var array<HighlanderTacticalListener> TacticalListeners;
 
 const bEnableDebugLogging = true;
 
@@ -26,46 +27,43 @@ static function HighlanderModLoader GetModLoader()
 
 function InitMutator(string Options, out string ErrorMessage)
 {
-    local bool bStrategy, bTactical;
     local string ModClassName;
 
-    bStrategy = IsInStrategyGame();
-    bTactical = IsInTacticalGame();
+    `HL_LOG_CLS("InitMutator: " $ self);
+    `HL_LOG_CLS("Initializing with " $ arrModClasses.Length $ " mod(s) to load");
 
-    if (!bInited)
+    foreach arrModClasses(ModClassName)
     {
-        bInited = true;
-        `HL_LOG_CLS("Initializing with " $ arrModClasses.Length $ " mod(s) to load");
-
-        foreach arrModClasses(ModClassName)
-        {
-            LoadMod(ModClassName);
-        }
-
-        `HL_LOG_CLS(LoadedMods.Length $ " mods were loaded successfully");
-
-        if (bStrategy)
-        {
-            `HL_LOG_CLS("Loading strategy listeners");
-            LoadStrategyListeners();
-            `HL_LOG_CLS("Loaded " $ StrategyListeners.Length $ " strategy listeners");
-        }
-        else if (bTactical)
-        {
-            `HL_LOG_CLS("Loading tactical listeners");
-            LoadTacticalListeners();
-            `HL_LOG_CLS("Loaded " $ TacticalListeners.Length $ " tactical listeners");
-        }
+        LoadMod(ModClassName);
     }
+
+    `HL_LOG_CLS(LoadedMods.Length $ " mod(s) were loaded successfully");
+
+    `HL_LOG_CLS("Loading strategy listeners");
+    LoadStrategyListeners();
+    `HL_LOG_CLS("Loaded " $ StrategyListeners.Length $ " strategy listener(s)");
+
+    `HL_LOG_CLS("Loading tactical listeners");
+    LoadTacticalListeners();
+    `HL_LOG_CLS("Loaded " $ TacticalListeners.Length $ " tactical listener(s)");
 
     super.InitMutator(Options, ErrorMessage);
 }
 
 function GetSeamlessTravelActorList(bool bToEntry, out array<Actor> ActorList)
 {
-    // Always keep the mod loader mutator loaded
-    // TODO: I'm not sure this is doing anything at all, might not be respected by XCOM
-    ActorList[ActorList.length] = self;
+    local HighlanderStrategyListener kStrategyListener;
+    local HighlanderTacticalListener kTacticalListener;
+
+    foreach StrategyListeners(kStrategyListener)
+    {
+        ActorList[ActorList.Length] = kStrategyListener;
+    }
+
+    foreach TacticalListeners(kTacticalListener)
+    {
+        ActorList[ActorList.Length] = kTacticalListener;
+    }
 
 	if (NextMutator != None)
 	{
@@ -75,15 +73,40 @@ function GetSeamlessTravelActorList(bool bToEntry, out array<Actor> ActorList)
 
 function LoadStrategyListeners()
 {
+    local bool bAlreadyLoaded;
     local HighlanderModBase kMod;
     local HighlanderStrategyListener kStrategyListener;
 
-    StrategyListeners.Remove(0, StrategyListeners.Length);
+    // The listeners are seamless actors, but the mod loader isn't. We need to find any
+    // already-created listeners in the level before we create new ones.
+    // TODO: this probably isn't respecting the mod load order, need to sort them
+    StrategyListeners.Length = 0;
+
+    foreach AllActors(class'HighlanderStrategyListener', kStrategyListener)
+    {
+        StrategyListeners.AddItem(kStrategyListener);
+    }
 
     foreach LoadedMods(kMod)
     {
+        bAlreadyLoaded = false;
+
         if (kMod.StrategyListenerClass != none)
         {
+            foreach StrategyListeners(kStrategyListener)
+            {
+                if (kStrategyListener != none && kStrategyListener.Class == kMod.StrategyListenerClass)
+                {
+                    bAlreadyLoaded = true;
+                    break;
+                }
+            }
+
+            if (bAlreadyLoaded)
+            {
+                continue;
+            }
+
             kStrategyListener = Spawn(kMod.StrategyListenerClass);
 
             if (kStrategyListener != none)
@@ -96,15 +119,37 @@ function LoadStrategyListeners()
 
 function LoadTacticalListeners()
 {
+    local bool bAlreadyLoaded;
     local HighlanderModBase kMod;
     local HighlanderTacticalListener kTacticalListener;
 
-    TacticalListeners.Remove(0, TacticalListeners.Length);
+    TacticalListeners.Length = 0;
+
+    foreach AllActors(class'HighlanderTacticalListener', kTacticalListener)
+    {
+        TacticalListeners.AddItem(kTacticalListener);
+    }
 
     foreach LoadedMods(kMod)
     {
+        bAlreadyLoaded = false;
+
         if (kMod.TacticalListenerClass != none)
         {
+            foreach TacticalListeners(kTacticalListener)
+            {
+                if (kTacticalListener != none && kTacticalListener.Class == kMod.TacticalListenerClass)
+                {
+                    bAlreadyLoaded = true;
+                    break;
+                }
+            }
+
+            if (bAlreadyLoaded)
+            {
+                continue;
+            }
+
             kTacticalListener = Spawn(kMod.TacticalListenerClass);
 
             if (kTacticalListener != none)
@@ -323,7 +368,7 @@ function OnResearchTechsBuilt(out array<HL_TTech> Techs)
 
 // #endregion
 
-// #region Miscellaneous events
+// #region Miscellaneous strategy events
 
 function bool OnMissionCreated(XGMission kMission)
 {
@@ -361,6 +406,29 @@ function PopulateAlert(int iAlertId, TGeoscapeAlert kGeoAlert, out TMCAlert kAle
     }
 }
 
+// #endregion
+
+// #region Miscellaneous tactical events
+
+function OnUpdateItemCharges(XGUnit kUnit)
+{
+    local HighlanderTacticalListener kTacticalListener;
+
+    foreach TacticalListeners(kTacticalListener)
+    {
+        kTacticalListener.OnUpdateItemCharges(kUnit);
+    }
+}
+
+function OnVolumeCreated(XGVolume kVolume)
+{
+    local HighlanderTacticalListener kTacticalListener;
+
+    foreach TacticalListeners(kTacticalListener)
+    {
+        kTacticalListener.OnVolumeCreated(kVolume);
+    }
+}
 
 // #endregion
 

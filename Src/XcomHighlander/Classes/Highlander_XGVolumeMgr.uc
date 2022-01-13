@@ -33,6 +33,8 @@ function XGVolume CreateVolumeByType(EVolumeType kType, Vector vCenter, optional
 
     kVolume.Init(kTVolume, vCenter);
 
+    `HL_MOD_LOADER.OnVolumeCreated(kVolume);
+
     if (kType == eVolume_Fire && class'XComWorldData'.static.GetWorldData().IsRebuildingTiles())
     {
         m_arrDelayAddVolumes.AddItem(kVolume);
@@ -80,6 +82,7 @@ function XGVolume CreateVolume(TVolume kTVolume, XGUnit kInstigator, Vector vCen
 
     kVolume = Spawn(class'Highlander_XGVolume', kInstigator);
     kVolume.Init(kTVolume, vCenter, kAbility);
+    `HL_MOD_LOADER.OnVolumeCreated(kVolume);
     AddVolume(kVolume);
     return kVolume;
 }

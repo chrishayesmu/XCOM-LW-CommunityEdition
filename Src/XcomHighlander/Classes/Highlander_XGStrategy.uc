@@ -215,11 +215,10 @@ protected function PopulateDropshipTechHistory(Highlander_XGBattleDesc kBattleDe
 {
     local int iTechId;
     local Highlander_XGDropshipCargoInfo kCargo;
-    local Highlander_XGFacility_Labs kLabs;
+    local HL_TFoundryTech kFoundryTech;
     local HL_TTech kTech;
 
     kCargo = Highlander_XGDropshipCargoInfo(kBattleDesc.m_kDropShipCargoInfo);
-    kLabs = `HL_LABS;
 
     if (kCargo == none)
     {
@@ -227,7 +226,7 @@ protected function PopulateDropshipTechHistory(Highlander_XGBattleDesc kBattleDe
         return;
     }
 
-    foreach kLabs.m_arrResearched(iTechId)
+    foreach `HL_LABS.m_arrResearched(iTechId)
     {
         kTech = `HL_TECH(iTechId);
 
@@ -240,6 +239,17 @@ protected function PopulateDropshipTechHistory(Highlander_XGBattleDesc kBattleDe
         kTech.ImagePath = "";
 
         kCargo.m_arrHLTechHistory.AddItem(kTech);
+    }
+
+    foreach `HL_ENGINEERING.m_arrHLFoundryHistory(iTechId)
+    {
+        kFoundryTech = `HL_FTECH(iTechId);
+
+        kFoundryTech.strName = "";
+        kFoundryTech.strSummary = "";
+        kFoundryTech.ImagePath = "";
+
+        kCargo.m_arrHLFoundryHistory.AddItem(kFoundryTech);
     }
 }
 
