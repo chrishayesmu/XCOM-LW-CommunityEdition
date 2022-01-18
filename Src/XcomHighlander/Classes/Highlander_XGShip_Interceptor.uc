@@ -60,3 +60,27 @@ function XGHangarShip GetWeaponViewShip()
 
     return m_kHangarShip;
 }
+
+// Custom functions for dealing with manually entering callsigns
+
+function string GetCallsign()
+{
+    if (InStr(m_strCallsign, " ") >= 0)
+    {
+        return Split(m_strCallsign, " ", true);
+    }
+
+    return m_strCallsign;
+}
+
+function SetCallsign(string strNewCallsign)
+{
+    // Only change the callsign if it's different. This covers a small case where the callsign is set after every
+    // kill to update the rank, but the rank may not be included in the callsign yet if the player has never named
+    // this interceptor. In any other case, the two strings will be different because m_strCallsign will include
+    // the rank label, and the incoming callsign should not.
+    if (strNewCallsign != m_strCallsign)
+    {
+        m_strCallsign = `HL_HANGAR.GetRankForKills(m_iConfirmedKills) @ strNewCallsign;
+    }
+}

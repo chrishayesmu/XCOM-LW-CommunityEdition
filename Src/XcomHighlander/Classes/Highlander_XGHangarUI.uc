@@ -1,6 +1,7 @@
 class Highlander_XGHangarUI extends XGHangarUI;
 
 var array<HL_TItem> m_arrHLItems;
+var UIShipSummary m_kShipSummaryScreen;
 
 function XGHangarUI.TTableItemSummary BuildItemSummary(TItem kItem)
 {

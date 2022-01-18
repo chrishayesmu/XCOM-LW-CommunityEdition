@@ -1,4 +1,10 @@
-class Highlander_XGFacility_Hangar extends XGFacility_Hangar;
+class Highlander_XGFacility_Hangar extends XGFacility_Hangar
+    config(HighlanderQualityOfLife);
+
+var const localized array<string> PilotNames;
+var const localized array<string> PilotRanks;
+
+var config bool bAutoNicknameNewPilots;
 
 var int m_iHLBestWeaponEquipped;
 
@@ -44,15 +50,31 @@ function AddFirestorm(int iContinent)
         kFirestorm.m_strCallsign = m_arrInts[iInterceptorIndex].m_strCallsign;
         kFirestorm.m_iConfirmedKills = m_arrInts[iInterceptorIndex].m_iConfirmedKills;
         m_iInterceptorCounter += 1;
-        m_arrInts[iInterceptorIndex].m_strCallsign = m_strCallsignInterceptor $ "-" $ string(m_iInterceptorCounter);
-        m_arrInts[iInterceptorIndex].m_iConfirmedKills = 0;
+
+        if (bAutoNicknameNewPilots)
+        {
+            AssignRandomCallsign(m_arrInts[iInterceptorIndex]);
+        }
+        else
+        {
+            m_arrInts[iInterceptorIndex].m_strCallsign = m_strCallsignInterceptor $ "-" $ string(m_iInterceptorCounter);
+            m_arrInts[iInterceptorIndex].m_iConfirmedKills = 0;
+        }
     }
     else
     {
-        kFirestorm.m_strCallsign = m_strCallsignFireStorm $ "-" $ string(m_iFirestormCounter);
+        if (bAutoNicknameNewPilots)
+        {
+            AssignRandomCallsign(kFirestorm);
+        }
+        else
+        {
+            kFirestorm.m_strCallsign = m_strCallsignFireStorm $ "-" $ string(m_iFirestormCounter);
+        }
     }
 
     m_arrInts.AddItem(kFirestorm);
+
     ReorderCraft();
     kFirestorm.UpdateHangarShip();
     UpdateHangarBays();
@@ -82,6 +104,11 @@ function AddInterceptor(int iContinent)
     kInterceptor.m_strCallsign = m_strCallsignInterceptor $ "-" $ string(m_iInterceptorCounter);
 
     m_arrInts.AddItem(kInterceptor);
+
+    if (bAutoNicknameNewPilots)
+    {
+        AssignRandomCallsign(kInterceptor);
+    }
 
     ReorderCraft();
     kInterceptor.UpdateHangarShip();
@@ -153,6 +180,25 @@ function TContinentInfo GetContinentInfo(EContinent eCont)
     }
 
     return kInfo;
+}
+
+function string GetRankForKills(int iKills)
+{
+    local int Index;
+
+    Index = Clamp(iKills, 0, PilotRanks.Length - 1);
+
+    while (Index >= 0)
+    {
+        if (PilotRanks[Index] != "")
+        {
+            return PilotRanks[Index];
+        }
+
+        Index--;
+    }
+
+    return "";
 }
 
 function array<TItem> GetUpgrades(XGShip_Interceptor kShip)
@@ -339,4 +385,9 @@ function UnloadArtifacts(XGShip_Dropship kSkyranger)
     }
 
     kCargo.m_kArtifactsContainer.Clear();
+}
+
+function AssignRandomCallsign(XGShip_Interceptor kShip)
+{
+    Highlander_XGShip_Interceptor(kShip).SetCallsign(PilotNames[Rand(PilotNames.Length)]);
 }
