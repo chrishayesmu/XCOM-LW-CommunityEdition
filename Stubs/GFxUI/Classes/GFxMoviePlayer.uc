@@ -14,7 +14,7 @@ Notes       :   Since 'ucc' will prefix all class names with 'U'
 Licensees may use this file in accordance with the valid Scaleform
 Commercial License Agreement provided with the software.
 
-This file is provided AS IS with NO WARRANTY OF ANY KIND, INCLUDING 
+This file is provided AS IS with NO WARRANTY OF ANY KIND, INCLUDING
 THE WARRANTY OF DESIGN, MERCHANTABILITY AND FITNESS FOR ANY PURPOSE.
 
 **********************************************************************/
@@ -66,7 +66,7 @@ struct native ExternalTexture
 /** Array of ExternalTexture bindings that will automatically replaced when the movie player loads a new movie */
 var array<ExternalTexture> ExternalTextures;
 
-/** 
+/**
  *  Structure that binds a sound theme name to an actual UISoundTheme to handle sound events from objects in this movie.  Sound events can be fired by
  *  CLIK widgets or manually by the artist.  Each event contains a theme name, and an event to play.  This mapping binds the theme names specified
  *  by the artist to a UISoundTheme asset, which then binds event names to various sound cues or actions.
@@ -81,7 +81,7 @@ struct native SoundThemeBinding
 /** Stores an array of bindings between sound theme names and actual UISoundThemes */
 var() array<SoundThemeBinding> SoundThemes;
 
-/** 
+/**
  *  Timing modes for playback of the movie
  *      - TM_Game:  Movie will be advanced using the game's delta time (i.e. pausing the game pauses the movie)
  *      - TM_Real:  Movie will proceed at normal playback speed, disregarding slomo and pause
@@ -110,7 +110,7 @@ var public GFxRenderTextureMode RenderTextureMode;
 /** Whether to gamma correct this movie before writing to the destination surface. */
 var public bool bEnableGammaCorrection;
 
-/** 
+/**
  *  Widget class binding:  To associate a CLIK widget instance in a movie with a particular UnrealScript subclass of GFxObject, add the widget's Flash name here, and specify the class.
  *  This will cause the GFxObject parameter of WidgetInitialized() to be created as the appropriate subclass.
  */
@@ -121,9 +121,9 @@ struct native GFxWidgetBinding
 };
 var array<GFxWidgetBinding> WidgetBindings;
 
-/** 
+/**
  *  Stores bindings for forwarding WidgetInitialized() calls on to a specific GFxObject instance for widgets within a certain movie object path.  Entries can be added / removed from
- *  the widget binding mapping using SetWidgetPathBinding() 
+ *  the widget binding mapping using SetWidgetPathBinding()
  */
 var const native map{FName,UGFxObject*}   WidgetPathBindings;
 
@@ -148,7 +148,7 @@ var bool        bAutoPlay;
 /** If TRUE, the game will pause while this scene is up */
 var bool        bPauseGameWhileActive;
 
-/** If TRUE, the movie will be closed on a level change 
+/** If TRUE, the movie will be closed on a level change
  *  NOTE: ONLY TIMINGMODE TM_REAL movies can stay open during level change
  */
 var bool        bCloseOnLevelChange;
@@ -159,8 +159,8 @@ var bool        bOnlyOwnerFocusable;
 /** If TRUE, movie will be forced to render to the full viewport, regardless of whether or not the scene is only owner focusable */
 var bool        bForceFullViewport;
 
-/** If TRUE, any input received from a LocalPlayer that is not the owner of this movieplayer will be discarded and not acted upon 
- *  This should be used in conjunction with bOnlyOwnerFocusable to make movieplayers that only respond to one player, but consume all input from the other players  
+/** If TRUE, any input received from a LocalPlayer that is not the owner of this movieplayer will be discarded and not acted upon
+ *  This should be used in conjunction with bOnlyOwnerFocusable to make movieplayers that only respond to one player, but consume all input from the other players
  */
 var bool        bDiscardNonOwnerInput;
 
@@ -190,7 +190,7 @@ cpptext
 	virtual void FinishDestroy();
 	virtual void Serialize(FArchive& Ar);
     UBOOL Load(const FString& Filename, UBOOL InitFirstFrame = TRUE);
-	
+
 	class UGFxObject* CreateValue(const void* GFxObject, UClass* Type);
 	class UGFxObject* CreateValueAddRef(const void* GFxObject, UClass* Type);
 	UBOOL GetPrototype(UClass *Class, void* Proto);
@@ -208,7 +208,7 @@ enum ASType
   AS_Boolean
 };
 
-/** 
+/**
  *  Generic struct used for passing generic data to and from ActionScript.  Should be used as little as possible because of overhead, except in cases where it is unavoidable
  */
 struct native ASValue
@@ -217,7 +217,7 @@ struct native ASValue
   var() bool        b;
   var() float       n;
   var() init string s;
-  
+
   structdefaultproperties
   {
     Type=AS_Undefined
@@ -279,14 +279,14 @@ native final function Advance(float time);
 
 /**
  * Called after the movie is advanced, and handles things like calling OnPostAdvance(), if specified
- * 
+ *
  * @param   DeltaTime   Time that the movie was advanced
  */
 native function PostAdvance(float DeltaTime);
 
 /**
  * Delegate that if set, will be fired whenever the movie gets an Advance() call.
- * 
+ *
  * @param   DeltaTime   Amount of time the movie has advanced
  */
 delegate OnPostAdvance(float DeltaTime);
@@ -390,7 +390,7 @@ event bool FilterButtonInput(int ControllerId, name ButtonName, EInputEvent Inpu
 
 /**
  *  Accessors for ActionScript / GFx Objects
- *  
+ *
  *  If you know the type of the variable or object you're accessing, it is best to use one of the type specific accessor functions, as they are significantly faster.
  *  Avoid using the slower ASValue functions if possible.
  */
@@ -398,7 +398,7 @@ native function ASValue GetVariable(string path);
 native function bool GetVariableBool(string path);
 native function float GetVariableNumber(string path);
 native function string GetVariableString(string path);
-/** 
+/**
  *  Returns a GFxObject for the specified path.  If the type parameter is specified, the returned object will be of the specified class.  Note the return value is
  *  not coerced though, so if you specify a type, you must manually cast the result
  */
@@ -412,7 +412,7 @@ native function SetVariableObject(string path, GFxObject Object);
 
 /**
  *  Array accessor functions
- *  
+ *
  *  As with the normal member accessor functions, it is always best to use the accessor for the specific type, rather than the generic ASValue implementations
  */
 native function bool GetVariableArray(string path, int index, out array<ASValue> arg);
@@ -431,25 +431,25 @@ native function GFxObject CreateArray();
 
 /**
  *  Function property setters
- *  
+ *
  *  Use this function to set function properties in ActionScript to UnrealScript delegates, using the delegate from the calling UnrealScript function.
  *  This is a useful method for getting callbacks from ActionScript into UnrealScript.
- *  
- *  Example:       
+ *
+ *  Example:
  *      // Sets OtherObject's "onClick" function object to the delegate specified in f
  *      function SetOnEvent(GFxObject OtherObject, delegate<OnEvent> f)
  *      {
  *          ActionScriptSetFunction(OtherObject, "onClick");
  *      }
  */
-protected native noexport final function ActionScriptSetFunction(GFxObject Object, string Member);
+native noexport final function ActionScriptSetFunction(GFxObject Object, string Member);
 
 
 //=========================================================================
 //  ActionScript Function Interfaces
 //
 
-/** 
+/**
  *  Calls an ActionScript function on the movie, with the values from the args array as its parameters.  This is slower than creating a wrapper function to call the ActionScript method
  *  using one of the ActionScript*() methods below, but does not require a subclass to implement.  Use this for one-off functions, or functions with variable length arguments
  */
@@ -457,26 +457,26 @@ native function ASValue Invoke(string method, array<ASValue> args);
 
 /**
  *  ActionScript function call wrappers
- *  
- *  These functions, when called from within a UnrealScript function, invoke an ActionScript function with the specified method name, with the parameters of the wrapping UnrealScript 
+ *
+ *  These functions, when called from within a UnrealScript function, invoke an ActionScript function with the specified method name, with the parameters of the wrapping UnrealScript
  *  function.  This is the preferred method for calling ActionScript functions from UnrealScript, as it is faster than Invoke, with less overhead.
- *  
+ *
  *  Example:    To call the following ActionScript function from UnrealScript -
- *  
+ *
  *                  function MyActionScriptFunction(Param1:String, Param2:Number, Param3:Object):Void;
- *                  
+ *
  *              Use the following UnrealScript code -
- *              
+ *
  *                  function CallMyActionScriptFunction(string Param1, float Param2, GFxObject Param3)
  *                  {
  *                      ActionScriptVoid("_root.MyActionScriptFunction");
  *                  }
  */
 native noexport final function ActionScriptVoid(string path);
-protected native noexport final function int ActionScriptInt(string path);
-protected native noexport final function float ActionScriptFloat(string path);
-protected native noexport final function string ActionScriptString(string path);
-protected native noexport final function GFxObject ActionScriptObject(string path);
+native noexport final function int ActionScriptInt(string path);
+native noexport final function float ActionScriptFloat(string path);
+native noexport final function string ActionScriptString(string path);
+native noexport final function GFxObject ActionScriptObject(string path);
 
 
 //=========================================================================
@@ -492,19 +492,19 @@ event bool WidgetUnloaded(name WidgetName, name WidgetPath, GFxObject Widget);
 /** Callback when at least one CLIK widget with enableInitCallback set to TRUE has been initialized in a frame */
 event PostWidgetInit();
 
-/** 
+/**
  *  Sets a widget to handle WidgetInitialized() callbacks for a given widget path.  Used when you want a specific widget within the movie to handle WidgetInitialized() calls
- *  for its own children.  The most derived path handler will be called for any given widget 
- *  
+ *  for its own children.  The most derived path handler will be called for any given widget
+ *
  *  Example:  For WidgetInitialized() on the widget with the path _level0.a.b.c.d, if a path binding was set for _level0.a and _level0.a.b, the widget bound to path _level0.a.b
  *              would receive the call
- *  
+ *
  *  Passing in None for WidgetToBind will remove a Widget from being bound to that path
  */
 final native function SetWidgetPathBinding(GFxObject WidgetToBind, name Path);
 
-/** 
- *  This should be called when a new GFxMoviePlayer is initialized.  Handles the setting up of the LocalPlayerIndex, as well as automatically starting / advancing the movie if desired 
+/**
+ *  This should be called when a new GFxMoviePlayer is initialized.  Handles the setting up of the LocalPlayerIndex, as well as automatically starting / advancing the movie if desired
  *
  *  @param LocPla - The LocalPlayer that owns this movie
  */
@@ -531,7 +531,7 @@ function Init(optional LocalPlayer LocPlay)
 
 /**
  * Helper function to get the owning local player for this movie
- * 
+ *
  * @return The LocalPlayer corresponding to the LocalPlayerOwnerIndex that owns this movie
  */
 event LocalPlayer GetLP()
@@ -555,13 +555,13 @@ event LocalPlayer GetLP()
 
 /**
  * Helper function to get the owning player controller for this movie
- * 
+ *
  * @return The PlayerController corresponding to the LocalPlayerOwnerIndex that owns this movie
  */
 event PlayerController GetPC()
 {
 	local LocalPlayer LocalPlayerOwner;
-	
+
 	LocalPlayerOwner = GetLP();
 	if (LocalPlayerOwner == none)
 	{
@@ -571,9 +571,9 @@ event PlayerController GetPC()
 }
 
 
-/** 
+/**
  *  Routes a console command through the player's PlayerController
- *  
+ *
  *  @param Command - The console command to run
  */
 function ConsoleCommand( string Command )
@@ -589,7 +589,7 @@ function ConsoleCommand( string Command )
 
 /**
  * Event triggered when focus is given to this MoviePlayer for a given LocalPlayer
- * 
+ *
  * @param LocalPlayerIndex - The index of the local player that is now focusing on this MoviePlayer
  */
 event OnFocusGained(int LocalPlayerIndex)
@@ -598,7 +598,7 @@ event OnFocusGained(int LocalPlayerIndex)
 
 /**
  * Event triggered when focus is removed from this MoviePlayer for a given LocalPlayer
- * 
+ *
  * @param LocalPlayerIndex - The index of the local player that is no longer focusing on this MoviePlayer
  */
 event OnFocusLost(int LocalPlayerIndex)

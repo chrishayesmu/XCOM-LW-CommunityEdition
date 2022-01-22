@@ -6,7 +6,7 @@
 `define GAMECORE (XComGameReplicationInfo(class'Engine'.static.GetCurrentWorldInfo().GRI).m_kGameCore)
 `define HQGAME (XComHeadquartersGame(class'Engine'.static.GetCurrentWorldInfo().Game))
 `define HQPRES (XComHQPresentationLayer(XComHeadquartersController(`HQGAME.PlayerController).m_Pres))
-`define PRES (XComPresentationLayer(XComPlayerController(WorldInfo.GetALocalPlayerController()).m_Pres))
+`define PRES (XComPresentationLayer(XComPlayerController(class'Engine'.static.GetCurrentWorldInfo().GetALocalPlayerController()).m_Pres))
 `define TRACEMGR (XComTacticalGRI(class'Engine'.static.GetCurrentWorldInfo().GRI).m_kTraceMgr)
 `define SHAPEMGR (XComTacticalGRI(class'Engine'.static.GetCurrentWorldInfo().GRI).mSimpleShapeManager)
 `define WORLDINFO (class'Engine'.static.GetCurrentWorldInfo())
