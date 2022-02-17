@@ -44,7 +44,7 @@ For an example of the types of configuration now possible, take a look at [Defau
 
 ## Modding hooks
 
-A system for new mod hooks has not been determined yet.
+Documentation for mod hooks not yet completed. For now, see [HighlanderTacticalListener](Src/XComHighlander/Classes/HighlanderTacticalListener.uc) and [HighlanderStrategyListener](Src/XComHighlander/Classes/HighlanderStrategyListener.uc).
 
 Mutator-based mods are still supported, as in Long War 1.0; however if these mods conflict with the Highlander (e.g. by overriding the same class as the Highlander does) their interaction may be unpredictable.
 
