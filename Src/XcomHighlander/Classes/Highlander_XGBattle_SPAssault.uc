@@ -13,7 +13,7 @@ function CollectLoot()
         return;
     }
 
-    strMapName = class'Engine'.static.GetCurrentWorldInfo().GetMapName();
+    strMapName = `WORLDINFO.GetMapName();
     class'XComCollectible'.static.CollectCollectibles(m_kDesc.m_arrArtifacts);
 
     for (Index = 0; Index < m_kDesc.m_arrArtifacts.Length; Index++)
@@ -119,7 +119,10 @@ function InitLoadedItems()
     `HL_LOG_CLS("InitLoadedItems: override successful");
 
     InitDifficulty();
+    `HL_LOG_CLS("InitDifficulty complete");
+
     m_kLevel.LoadInit();
+    `HL_LOG_CLS("Level LoadInit complete");
 
     foreach WorldInfo.AllControllers(class'XComTacticalController', kLocalPC)
     {
@@ -132,16 +135,23 @@ function InitLoadedItems()
         }
     }
 
+    `HL_LOG_CLS("PlayerController setup complete");
+
     for (I = 0; I < m_iNumPlayers; I++)
     {
+        `HL_LOG_CLS("LoadInit beginning for player " $ I);
+
         kPlayer = m_arrPlayers[I];
         kPlayer.LoadInit();
+
+        `HL_LOG_CLS("LoadInit complete for player " $ I);
     }
 
     foreach WorldInfo.AllActors(class'XGVolumeMgr', kVolumeMgr)
     {
         m_kVolumeMgr = kVolumeMgr;
         kVolumeMgr.LoadInit();
+        `HL_LOG_CLS("LoadInit complete for XGVolumeMgr");
         break;
     }
 
@@ -149,10 +159,13 @@ function InitLoadedItems()
     {
         m_kVolumeMgr = Spawn(class'Highlander_XGVolumeMgr');
         m_kVolumeMgr.Init();
+        `HL_LOG_CLS("New Init complete for XGVolumeMgr");
     }
 
     foreach WorldInfo.AllActors(class'XComSpecialMissionHandler_HQAssault', kHQAssaultHandler)
     {
         kHQAssaultHandler.StartRequestingContent();
     }
+
+    `HL_LOG_CLS("InitLoadedItems: end");
 }

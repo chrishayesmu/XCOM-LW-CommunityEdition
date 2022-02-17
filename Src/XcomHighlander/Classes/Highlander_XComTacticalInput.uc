@@ -1,5 +1,37 @@
 class Highlander_XComTacticalInput extends XComTacticalInput;
 
+simulated function CancelMousePathing(optional bool bClearPathData = true)
+{
+    local XGAction_Path kPathAction;
+    local XComPresentationLayer kPres;
+
+    if (!UseTouchInput() && !XComTacticalController(Outer).IsMouseActive())
+    {
+        return;
+    }
+
+    m_fRightMouseHoldTime = 0.0;
+
+    if (bClearPathData && GetActiveUnit() != none)
+    {
+        kPathAction = XGAction_Path(GetActiveUnit().GetAction());
+
+        if (kPathAction != none)
+        {
+            kPathAction.m_bDoPathingTick = false;
+            kPathAction.ClearPath();
+            XComTacticalController(Outer).GetCursor().MoveToUnit(GetActiveUnit().GetPawn(), true);
+        }
+    }
+
+    kPres = XComPresentationLayer(XComTacticalController(Outer).m_Pres);
+
+    if (kPres != none)
+    {
+        kPres.GetActionIconMgr().ClearCoverIcons();
+    }
+}
+
 state ActiveUnit_Moving
 {
     function bool ClickSoldier(IMouseInteractionInterface MouseTarget)

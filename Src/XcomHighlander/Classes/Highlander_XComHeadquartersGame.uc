@@ -96,6 +96,7 @@ function StartMatch()
 
 defaultproperties
 {
+    GameReplicationInfoClass=class'Highlander_XComGameReplicationInfo'
     PlayerControllerClass=class'Highlander_XComHeadquartersController'
     TacticalSaveGameClass=class'Highlander_Checkpoint_TacticalGame'
     TransportSaveGameClass=class'Highlander_Checkpoint_StrategyTransport'

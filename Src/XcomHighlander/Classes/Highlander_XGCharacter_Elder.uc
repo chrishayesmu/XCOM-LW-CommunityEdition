@@ -1,0 +1,6 @@
+class Highlander_XGCharacter_Elder extends XGCharacter_Elder;
+
+defaultproperties
+{
+    m_kUnitPawnClassToSpawn=class'Highlander_XComElder'
+}

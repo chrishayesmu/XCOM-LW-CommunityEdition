@@ -1,5 +1,29 @@
 class Highlander_XComPresentationLayer extends XComPresentationLayer;
 
+simulated state State_AbilityHUD
+{
+    simulated function Activate()
+    {
+        m_kTacticalHUD = Spawn(class'Highlander_UITacticalHUD', self);
+        m_kTacticalHUD.Init(XComTacticalController(Owner), GetHUD());
+        GetHUD().LoadScreen(m_kTacticalHUD);
+
+        if (WorldInfo.NetMode != NM_Standalone)
+        {
+            m_kMultiplayerHUD = Spawn(class'UIMultiplayerHUD', self);
+            m_kMultiplayerHUD.Init(XComTacticalController(Owner), GetHUD());
+            GetHUD().LoadScreen(m_kMultiplayerHUD);
+
+            if (!WorldInfo.IsConsoleBuild())
+            {
+                m_kMultiplayerChatManager = Spawn(class'UIMultiplayerChatManager', self);
+                m_kMultiplayerChatManager.Init(XComTacticalController(Owner), GetModalHUD());
+                GetModalHUD().LoadScreen(m_kMultiplayerChatManager);
+            }
+        }
+    }
+}
+
 simulated state State_MissionSummary
 {
     simulated function Activate()

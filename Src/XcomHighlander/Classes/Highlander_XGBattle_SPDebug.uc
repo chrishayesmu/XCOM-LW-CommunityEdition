@@ -13,7 +13,7 @@ function CollectLoot()
         return;
     }
 
-    strMapName = class'Engine'.static.GetCurrentWorldInfo().GetMapName();
+    strMapName = `WORLDINFO.GetMapName();
     class'XComCollectible'.static.CollectCollectibles(m_kDesc.m_arrArtifacts);
 
     for (Index = 0; Index < m_kDesc.m_arrArtifacts.Length; Index++)

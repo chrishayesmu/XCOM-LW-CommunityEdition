@@ -423,17 +423,17 @@ simulated function bool HL_IsItemUniqueEquip(int iItemId)
 
 function bool IsLargeWeapon(int iItem)
 {
-    return IsWeapon(iItem) && TACTICAL().GetTWeapon(iItem).iSize == 1;
+    return IsWeapon(iItem) && `HL_GAMECORE.HL_GetTWeapon(iItem).iSize == 1;
 }
 
 function bool IsSmallItem(int iItem)
 {
-    return IsItem(iItem) && TACTICAL().GetTWeapon(iItem).iSize == 0;
+    return IsItem(iItem) && `HL_GAMECORE.HL_GetTWeapon(iItem).iSize == 0;
 }
 
 function bool IsSmallWeapon(int iItem)
 {
-    return IsWeapon(iItem) && TACTICAL().GetTWeapon(iItem).iSize == 0;
+    return IsWeapon(iItem) && `HL_GAMECORE.HL_GetTWeapon(iItem).iSize == 0;
 }
 
 function bool IsWeapon(int iItem)

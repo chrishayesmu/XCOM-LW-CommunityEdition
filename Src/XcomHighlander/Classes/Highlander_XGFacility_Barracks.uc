@@ -380,7 +380,7 @@ function UpdateFoundryPerksForSoldier(XGStrategySoldier kSoldier)
         {
             kSoldier.m_kChar.aUpgrades[124] = kEngineering.IsFoundryTechResearched(`LW_FOUNDRY_ID(SentinelDrone)) ? 1 : 0;
             kSoldier.m_kChar.aUpgrades[139] = kEngineering.IsFoundryTechResearched(`LW_FOUNDRY_ID(SentinelDrone)) ? 1 : 0;
-            kSoldier.m_kChar.aUpgrades[21] = kEngineering.IsFoundryTechResearched(`LW_FOUNDRY_ID(SHIVSuppression)) ? 1 : 0;
+            kSoldier.m_kChar.aUpgrades[`LW_PERK_ID(Suppression)] = kEngineering.IsFoundryTechResearched(`LW_FOUNDRY_ID(SHIVSuppression)) ? 1 : 0;
         }
 
         if (kSoldier.IsAugmented())

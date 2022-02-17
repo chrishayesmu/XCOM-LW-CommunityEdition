@@ -47,3 +47,48 @@ OBJECT = XComGameInfo.SetGameType : AUTO
 /*(0x0234/0x01D8)*/ [#label_0x0234]
 /*(0x0234/0x01D8)*/ 04 3A <.ReturnValue>
 /*(0x023E/0x01DE)*/ 53
+
+/**
+ * XGLoadoutMgr.ApplyLoadout: sets XGItem.m_strUIImage to a string form of the item ID when instantiating an item.
+ * This bypasses the fact that XGItem only contains an EItemType field. m_strUIImage only ever has its default value
+ * read, so we should be safe to hijack it.
+ */
+OBJECT = XGLoadoutMgr.ApplyLoadout : AUTO
+[REPLACEMENT_CODE]
+/*(0x0000/0x0000)*/ 0F 00 <.kLoadoutInstances> 19 12 20 <Engine.Engine> [@] <Engine.Engine.GetCurrentWorldInfo.ReturnValue> 00 ( 1C <Engine.Engine.GetCurrentWorldInfo> 16 ) [@] <Engine.Actor.Spawn.ReturnValue> 00 ( 1C <Engine.Actor.Spawn> 20 <Class.XGLoadoutInstances> 19 00 <.kUnit> [@] <Engine.Actor.Owner> 00 ( 01 <Engine.Actor.Owner> ) 4A 4A 4A 4A 4A 4A 16 )
+/*(0x006C/0x0044)*/ 0F 19 00 <.kLoadoutInstances> [@] <XGLoadoutInstances.m_iNumItems> 00 ( 01 <XGLoadoutInstances.m_iNumItems> ) 25
+/*(0x008C/0x0058)*/ 0F 19 00 <.kLoadoutInstances> [@] <XGLoadoutInstances.m_iNumBackpackItems> 00 ( 01 <XGLoadoutInstances.m_iNumBackpackItems> ) 25
+/*(0x00AC/0x006C)*/ 0F 00 <.I> 25
+/*(0x00B7/0x0073)*/ [#label_0x00B7]
+/*(0x00B7/0x0073)*/ 07 [@label_0x04F2] 96 00 <.I> 2C 1A 16
+/*(0x00C7/0x007F)*/ 	07 [@label_0x0301] 9A 00 <.I> 2C 0D 16
+/*(0x00D7/0x008B)*/ 		0F 00 <.J> 25
+/*(0x00E2/0x0092)*/ 		[#label_0x00E2]
+/*(0x00E2/0x0092)*/ 		07 [@label_0x02FE] 96 00 <.J> 36 35 <XGLoadoutMgr.TLoadout.Backpack> <@TLoadout> 00 00 00 <.kLoad> 16
+/*(0x010D/0x00AD)*/ 			07 [@label_0x02F0] 9B 10 00 <.J> 35 <XGLoadoutMgr.TLoadout.Backpack> <@TLoadout> 00 00 00 <.kLoad> 25 16
+/*(0x0139/0x00C9)*/ 				0F 00 <.kItem> 19 12 20 <Engine.Engine> [@] <Engine.Engine.GetCurrentWorldInfo.ReturnValue> 00 ( 1C <Engine.Engine.GetCurrentWorldInfo> 16 ) [@] <Engine.Actor.Spawn.ReturnValue> 00 ( 1C <Engine.Actor.Spawn> 13 <Class.XGWeapon> 12 20 <Class.XGItemLibrary> [@] <XGItemLibrary.GetItem.ReturnValue> 00 ( 1B <GetItem> 10 00 <.J> 35 <XGLoadoutMgr.TLoadout.Backpack> <@TLoadout> 00 00 00 <.kLoad> 16 ) 19 00 <.kUnit> [@] <Engine.Actor.Owner> 00 ( 01 <Engine.Actor.Owner> ) 4A 4A 4A 4A 4A 4A 16 )
+/*(0x01EA/0x013A)*/ 				19 2E <Class.XGWeapon> 00 <.kItem> [@] <NullRef> 00 ( 1B <ApplyAmmoCost> 10 00 <.J> 35 <XGLoadoutMgr.TLoadout.Backpack> <@TLoadout> 00 00 00 <.kLoad> 16 )
+/*(0x0238/0x016C)*/ 				0F 19 00 <.kItem> [@] <XGItem.m_strUIImage> 00 ( 01 <XGItem.m_strUIImage> ) 38 53 10 00 <.J> 35 <XGLoadoutMgr.TLoadout.Backpack> <@TLoadout> 00 00 00 <.kLoad>
+/*(0x027F/0x0197)*/ 				19 00 <.kItem> [@] <NullRef> 00 ( 1B <Init> 16 )
+/*(0x029E/0x01AE)*/ 				0F 1A 00 <.J> 19 00 <.kLoadoutInstances> [@] <XGLoadoutInstances.m_aBackpackItems> 00 ( 01 <XGLoadoutInstances.m_aBackpackItems> ) 00 <.kItem>
+/*(0x02D0/0x01CC)*/ 				A3 19 00 <.kLoadoutInstances> [@] <XGLoadoutInstances.m_iNumBackpackItems> 00 ( 01 <XGLoadoutInstances.m_iNumBackpackItems> ) 16
+/*(0x02F0/0x01E0)*/ 			[#label_0x02F0]
+/*(0x02F0/0x01E0)*/ 			A5 00 <.J> 16
+/*(0x02FB/0x01E7)*/ 			06 [@label_0x00E2]
+/*(0x02FE/0x01EA)*/ 		[#label_0x02FE]
+/*(0x02FE/0x01EA)*/ 		06 [@label_0x04E4]
+/*(0x0301/0x01ED)*/ 	[#label_0x0301]
+/*(0x0301/0x01ED)*/ 	07 [@label_0x04E4] 9B 1A 00 <.I> 35 <XGLoadoutMgr.TLoadout.Items> <@TLoadout> 00 00 00 <.kLoad> 25 16
+/*(0x032D/0x0209)*/ 		0F 00 <.kItem> 19 12 20 <Engine.Engine> [@] <Engine.Engine.GetCurrentWorldInfo.ReturnValue> 00 ( 1C <Engine.Engine.GetCurrentWorldInfo> 16 ) [@] <Engine.Actor.Spawn.ReturnValue> 00 ( 1C <Engine.Actor.Spawn> 13 <Class.XGWeapon> 12 20 <Class.XGItemLibrary> [@] <XGItemLibrary.GetItem.ReturnValue> 00 ( 1B <GetItem> 1A 00 <.I> 35 <XGLoadoutMgr.TLoadout.Items> <@TLoadout> 00 00 00 <.kLoad> 16 ) 19 00 <.kUnit> [@] <Engine.Actor.Owner> 00 ( 01 <Engine.Actor.Owner> ) 4A 4A 4A 4A 4A 4A 16 )
+/*(0x03DE/0x027A)*/ 		19 2E <Class.XGWeapon> 00 <.kItem> [@] <NullRef> 00 ( 1B <ApplyAmmoCost> 1A 00 <.I> 35 <XGLoadoutMgr.TLoadout.Items> <@TLoadout> 00 00 00 <.kLoad> 16 )
+/*(0x042C/0x02AC)*/ 		0F 19 00 <.kItem> [@] <XGItem.m_strUIImage> 00 ( 01 <XGItem.m_strUIImage> ) 38 53 1A 00 <.I> 35 <XGLoadoutMgr.TLoadout.Items> <@TLoadout> 00 00 00 <.kLoad>
+/*(0x0473/0x02D7)*/ 		19 00 <.kItem> [@] <NullRef> 00 ( 1B <Init> 16 )
+/*(0x0492/0x02EE)*/ 		0F 1A 00 <.I> 19 00 <.kLoadoutInstances> [@] <XGLoadoutInstances.m_aItems> 00 ( 01 <XGLoadoutInstances.m_aItems> ) 00 <.kItem>
+/*(0x04C4/0x030C)*/ 		A3 19 00 <.kLoadoutInstances> [@] <XGLoadoutInstances.m_iNumItems> 00 ( 01 <XGLoadoutInstances.m_iNumItems> ) 16
+/*(0x04E4/0x0320)*/ 	[#label_0x04E4]
+/*(0x04E4/0x0320)*/ 	A5 00 <.I> 16
+/*(0x04EF/0x0327)*/ 	06 [@label_0x00B7]
+/*(0x04F2/0x032A)*/ [#label_0x04F2]
+/*(0x04F2/0x032A)*/ 19 00 <.kUnit> [@] <NullRef> 00 ( 1B <ApplyLoadout> 00 <.kLoadoutInstances> 2D 00 <.bLoadFromCheckpoint> 16 )
+/*(0x0524/0x034C)*/ 04 0B
+/*(0x0526/0x034E)*/ 53

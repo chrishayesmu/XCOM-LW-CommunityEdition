@@ -1,5 +1,19 @@
+/// <summary>
+/// This class allows mods to hook into events which occur in the tactical game.
+///
+/// IMPORTANT: XCOM was built in such a way that the strategy game depends on the tactical game,
+/// but not vice versa. That means many of the events here may trigger while the game is on the
+/// strategy layer, such as OnAbilitiesBuilt, despite being "tactical" events. Mods should be
+/// careful that their code doesn't assume they're in the tactical game unless it's an event that
+/// truly can only occur during that mode, such as a unit being killed.
+/// </summary>
 class HighlanderTacticalListener extends Actor
     abstract;
+
+/// <summary>
+/// TODO
+/// </summary>
+simulated function Override_GetTWeapon(out HL_TWeapon kWeapon) {}
 
 /// <summary>
 /// Called when the ability tree is built at the start of the battle.

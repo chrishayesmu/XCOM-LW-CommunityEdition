@@ -150,6 +150,7 @@ simulated function ReceivedGameClass()
     {
         if (m_kGameCore == none)
         {
+            `HL_LOG_CLS("Spawning GameCore");
             m_kGameCore = Spawn(class'Highlander_XGTacticalGameCore', self);
             m_kGameCore.Init();
         }

@@ -17,7 +17,7 @@ static function HighlanderModLoader GetModLoader()
 {
     local HighlanderModLoader ModLoader;
 
-    foreach class'Engine'.static.GetCurrentWorldInfo().DynamicActors(class'HighlanderModLoader', ModLoader)
+    foreach `WORLDINFO.DynamicActors(class'HighlanderModLoader', ModLoader)
     {
         return ModLoader;
     }
@@ -417,6 +417,20 @@ function OnAbilitiesBuilt(array<TAbility> arrAbilities)
     foreach TacticalListeners(kTacticalListener)
     {
         kTacticalListener.OnAbilitiesBuilt(arrAbilities);
+    }
+}
+
+// #endregion
+
+// #region Item-related tactical events
+
+simulated function Override_GetTWeapon(out HL_TWeapon kWeapon)
+{
+    local HighlanderTacticalListener kTacticalListener;
+
+    foreach TacticalListeners(kTacticalListener)
+    {
+        kTacticalListener.Override_GetTWeapon(kWeapon);
     }
 }
 

@@ -1,9 +1,70 @@
 class HighlanderTypes extends Object;
 
+/// <summary>A three-dimensional vector of integers.</summary>
+struct HL_Vector3Int
+{
+    var int X, Y, Z;
+};
+
+/// <summary>A simple key-value pair where both are integers.</summary>
+struct HL_IntKVP
+{
+    var int Key;
+    var int Value;
+};
+
 struct HL_TRange
 {
     var int MinInclusive;
     var int MaxInclusive;
+};
+
+/// <summary>
+/// A very generic structure meant to capture the idea of referencing both an object, and that object's source.
+/// The exact meaning is context-specific. For example, in an HL_TCharacter, this struct is used to identify a perk
+/// (the Id field), its source type (class, equipped item, Foundry, etc), and its source's ID (such as item or class ID).
+/// Check the documentation where this struct is used to understand its meaning in context, and valid values for the
+/// SourceType field.
+/// </summary>
+struct HL_TIDWithSource
+{
+    var int Id;
+    var int SourceId;
+    var int SourceType;
+};
+
+struct HL_TCharacter
+{
+    var string strName;
+    var int iCharacterId;
+    var TInventory kInventory;
+    var array<HL_TIDWithSource> arrAbilities;
+    var array<HL_TIDWithSource> arrPerks;
+    var array<HL_TIDWithSource> arrProperties;
+    var array<HL_TIDWithSource> arrTraversals;
+
+    var int aStats[ECharacterStat];
+    var int iClassId;
+    var bool bHasPsiGift;
+    var float fBioElectricParticleScale;
+};
+
+/// <summary>
+/// Encapsulates all of the stats which characters have, to make it easier to reuse methods which operate on stats.
+/// </summary>
+struct HL_TCharacterStats
+{
+    var int iAim;
+    var int iBleedoutTurns;
+    var int iCriticalChance;
+    var int iDamage;
+    var int iDamageReduction;
+    var int iDefense;
+    var int iFlightFuel;
+    var int iHP;
+    var int iMobility;
+    var int iRegen;
+    var int iWill;
 };
 
 struct HL_TItemQuantity
@@ -146,7 +207,7 @@ struct HL_TItem
 };
 
 /// <summary>
-/// Struct representing a Foundry project.
+/// Struct representing a Foundry project, replacing XGStrategyActorNativeBase.TFoundryTech.
 /// </summary>
 struct HL_TFoundryTech
 {
@@ -185,7 +246,7 @@ struct HL_TFoundryTech
 };
 
 /// <summary>
-/// Struct representing a research technology.
+/// Struct representing a research technology, replacing XGStrategyActorNativeBase.TTech.
 /// </summary>
 struct HL_TTech
 {
@@ -241,6 +302,79 @@ struct HL_TTech
         arrCredits=()
         ImagePath=""
         kCost=(iCash=0,iAlloys=0,iElerium=0,iMeld=0,iWeaponFragments=0,arrItems=())
+    }
+};
+
+/// <summary>
+/// Highlander equivalent of TWeapon. The primary changes include a more flexible system for abilities/properties, and
+/// support for affecting more stats (such as DR) without having to write code.
+/// </summary>
+struct HL_TWeapon
+{
+    // The (singular) name of the weapon to show the player.
+    var string strName;
+
+    // The ID of this weapon, which must match the ID of its equivalent HL_TItem entry.
+    var int iItemId;
+
+    // IDs of abilities granted to units with this item equipped.
+    var array<int> arrAbilities;
+
+    // IDs of this item's properties. See EWeaponProperty for base game properties, though mods can add their own.
+    var array<int> arrProperties;
+
+    // The size of the item, which dictates where it can be equipped and what role it fills. Valid values are
+    // 0 (for small items) and 1 (for large). Generally speaking, large items are primary weapons and MEC special weapons
+    // such as the flamethrower, and small items are everything else.
+    var int iSize;
+
+    // The base damage of the item. The exact damage range will depend on whether the item is an explosive or not,
+    // as well as whether the player is using the Damage Roulette second wave option.
+    var int iDamage;
+
+    // The damage this item deals to the environment. For guns, environmental damage is dealt by projectiles that don't
+    // connect with the target; for explosives, it is dealt to objects in the explosion radius.
+    var int iEnvironmentDamage;
+
+    // For items that are used against a specific target, this is the maximum distance away the target can be from the user.
+    // This includes all guns, as well as usable items like Medikits and the Arc Thrower. The range of guns can be increased
+    // if the shooter has height advantage over the target. Note that the shooter must still be able to see the target, either
+    // naturally or via Squadsight, and a weapon range greater than visual range confers no bonus otherwise.
+    // For thrown items like grenades, this is the base maximum distance that the item can be thrown.
+    // This uses the same units as TWeapon.iRange, where 1.5 units is equal to the length of the side of an in-game tile.
+    var int iRange;
+
+    // This is the same as iRange, but only applying to shots taken while on overwatch. The unit will not fire at a target
+    // using this item unless they are within this range. Range is measured in the same units as iRange.
+    var int iReactionRange;
+
+    // The radius of this item's area of effect, if it has one. This is measured in units such that 64 units
+    // is equal to the length of the side of an in-game tile.
+    // TODO: confirm this measurement
+    var int iRadius;
+
+    // If this item is a gun, this is the ammo it has without any upgrades, e.g. Ammo Conservation, or small items like Drum Mags.
+    // This only applies to reloadable weapons, not limited-use items such as grenades.
+    var int iBaseAmmo;
+
+    // The maximum chance for this item to be damaged if its wearer is injured. The max chance is applied if the wearer is reduced
+    // to 0 HP, and scales linearly for other HP values. If zero, or if the corresponding HL_TItem is infinite, it cannot be damaged.
+    // This is a percentage, so it should be in the range 0 to 100, inclusive.
+    var int iMaxChanceToBeDamaged;
+
+    // The scale to apply to the item's model, in each direction. Each value is specified as a percentage, so a value of 100 will
+    // not scale the model at all. The X direction is generally along the barrel of the weapon, but note that the orientation of
+    // the axes may depend on the specific model, so be sure to test accordingly.
+    var HL_Vector3Int vModelScale;
+
+    // The change in the wielder's stats from equipping this item. For primary or secondary weapons, the stat changes only apply
+    // to shots taken with that weapon (for offensive stats). For small items, offensive stat changes do not apply to sidearms
+    // (but can apply to rocket launchers).
+    var HL_TCharacterStats kStatChanges;
+
+    structdefaultproperties
+    {
+        vModelScale=(X=100, Y=100, Z=100)
     }
 };
 

@@ -47,6 +47,29 @@ static function HL_TItemQuantity GetItemQuantity(out array<HL_TItemQuantity> arr
     return arrItemQuantities[Index];
 }
 
+/// <summary>
+/// Checks if the given Foundry tech is researched in a way that works for both the tactical and strategy game.
+/// This function assumes the current game is fully set up, and may throw errors if called from the initialization
+/// path of either the tactical or strategy layer.
+/// </summary>
+static function bool IsFoundryTechResearched(int iTechId)
+{
+    if (`HL_IS_TAC_GAME)
+    {
+        return `HL_TAC_CARGO.HasFoundryTech(iTechId);
+    }
+
+    return `HL_ENGINEERING.IsFoundryTechResearched(iTechId);
+}
+
+/// <summary>
+/// Selects a random value from the given range.
+/// </summary>
+static function int RandInRange(HL_TRange kRange)
+{
+    return kRange.MinInclusive + Rand(kRange.MaxInclusive - kRange.MinInclusive + 1);
+}
+
 static function SetItemQuantity(out array<HL_TItemQuantity> arrItemQuantities, int iItemId, int iQuantity)
 {
     local int Index;
