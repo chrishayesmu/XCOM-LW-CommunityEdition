@@ -27,7 +27,7 @@ static simulated function ApplyShredderRocket(XComUnitPawn kUnitPawn, const Dama
 
     kVictim = XGUnit(kUnitPawn.GetGameUnit());
     kInstigator = XGUnit(Dmg.EventInstigator);
-    kInstigatorWeapon = `HL_TWEAPON(kInstigator.GetInventory().GetActiveWeapon());
+    kInstigatorWeapon = `HL_TWEAPON_FROM_XG(kInstigator.GetInventory().GetActiveWeapon());
     iAbilityId = kInstigator.GetUsedAbility();
 
     if (iAbilityId == eAbility_ShredderRocket)

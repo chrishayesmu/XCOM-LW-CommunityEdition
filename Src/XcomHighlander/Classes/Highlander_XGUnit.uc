@@ -1,5 +1,232 @@
 class Highlander_XGUnit extends XGUnit;
 
+function int AbsorbDamage(const int IncomingDamage, XGUnit kDamageCauser, XGWeapon kWeapon)
+{
+    local float fAbsorptionFieldsBasis, fReturnDmg, fDist;
+    local int iReturnDmg;
+
+    fReturnDmg = float(IncomingDamage);
+
+    // Apply the Damage Reduction stat
+    if ((m_aCurrentStats[eStat_DamageReduction] % 100) > 0)
+    {
+        fReturnDmg = fReturnDmg - (float(m_aCurrentStats[eStat_DamageReduction] % 100) / float(10));
+    }
+
+    // Mind merge bonus DR (XCOM only)
+    if (!IsAI() && m_iWillCheatBonus > 0)
+    {
+        fReturnDmg -= class'Highlander_XGTacticalGameCore'.default.fMindMergeDRPerWill * float(m_iWillCheatBonus);
+    }
+
+    // Damage Control
+    if (m_kCharacter.HasUpgrade(ePerk_DamageControl) && m_iDamageControlTurns > 0 && fReturnDmg > 1.0)
+    {
+        fReturnDmg -= class'Highlander_XGTacticalGameCore'.default.fDamageControlDRBonus;
+    }
+
+    // One for All bonus DR
+    if (m_bOneForAllActive)
+    {
+        fReturnDmg -= class'Highlander_XGTacticalGameCore'.default.fOneForAllDRBonus;
+    }
+
+    // Uber Ethereal bonus DR: 15 per remaining Ethereal in the level
+    if (m_kCharacter.m_eType == ePawnType_EtherealUber)
+    {
+        foreach AllActors(class'XGUnit', m_kZombieVictim)
+        {
+            if (m_kZombieVictim.IsAliveAndWell() && m_kZombieVictim.m_kCharacter.m_eType == ePawnType_Elder)
+            {
+                fReturnDmg -= float(15);
+            }
+        }
+    }
+
+    // Combat stims damage multiplier
+    if (GetAppliedAbility(eAbility_CombatStim) != none)
+    {
+        fReturnDmg *= class'Highlander_XGTacticalGameCore'.default.fCombatStimsIncomingDamageMultiplier;
+    }
+
+    // Reduce melee damage for soldiers with Chitin Plating and for Chryssalids
+    if (kWeapon != none)
+    {
+        if (kWeapon.IsMelee() || kWeapon.IsA('XGWeapon_MEC_KineticStrike'))
+        {
+            if (GetInventory() != none && GetInventory().GetRearBackpackItem(eItem_ChitinPlating) != none)
+            {
+                fReturnDmg *= class'Highlander_XGTacticalGameCore'.default.fIncomingMeleeDamageMultiplierForChitinPlating;
+            }
+            else if (m_kCharacter.m_kChar.iType == eChar_Chryssalid)
+            {
+                fReturnDmg *= class'Highlander_XGTacticalGameCore'.default.fIncomingMeleeDamageMultiplierForChryssalids;
+            }
+        }
+    }
+
+    // Psi Shield on Mechtoids provides DR
+    if (GetShieldHP() > 0)
+    {
+        fReturnDmg *= class'Highlander_XGTacticalGameCore'.default.fPsiShieldIncomingDamageMultiplier;
+    }
+
+    // Shock-Absorbent Armor if attacker within 4 tiles
+    if (kDamageCauser != none && m_kCharacter.HasUpgrade(ePerk_ShockAbsorbentArmor))
+    {
+        fDist = VSize(GetLocation() - kDamageCauser.GetLocation());
+
+        if (fDist <= class'Highlander_XGTacticalGameCore'.default.fShockAbsorbentArmorRadius)
+        {
+            fReturnDmg *= class'Highlander_XGTacticalGameCore'.default.fShockAbsorbentArmorIncomingDamageMultiplier;
+        }
+    }
+
+    // Absorption Fields: X% DR of remaining damage greater than Y
+    if (m_kCharacter.HasUpgrade(ePerk_AbsorptionFields))
+    {
+        if (fReturnDmg > class'Highlander_XGTacticalGameCore'.default.fAbsorptionFieldsActivationThreshold)
+        {
+            fAbsorptionFieldsBasis = fReturnDmg - class'Highlander_XGTacticalGameCore'.default.fAbsorptionFieldsActivationThreshold;
+            fReturnDmg -= fAbsorptionFieldsBasis * class'Highlander_XGTacticalGameCore'.default.fAbsorptionFieldsIncomingDamageMultiplier;
+            m_bAbsorptionFieldsWorked = true;
+        }
+    }
+
+    // Acid: negate percentage of DR, with a minimum value
+    if (IsPoisoned())
+    {
+        fReturnDmg += FMax(class'Highlander_XGTacticalGameCore'.default.fAcidMinimumDRRemoved,
+                           class'Highlander_XGTacticalGameCore'.default.fAcidDRRemovalPercentage * (float(IncomingDamage) - fReturnDmg));
+    }
+
+    if (IsInCover())
+    {
+        if (!IsFlankedBy(kDamageCauser) || (kWeapon != none && kWeapon.IsA('XGWeapon_NeedleGrenade')))
+        {
+            fDist = fReturnDmg;
+
+            // Base DR bonus from being in cover
+            if (IsInLowCover())
+            {
+                fReturnDmg -= class'Highlander_XGTacticalGameCore'.default.fLowCoverDRBonus;
+            }
+            else
+            {
+                fReturnDmg -= class'Highlander_XGTacticalGameCore'.default.fHighCoverDRBonus;
+            }
+
+            // Doubled cover DR bonus if hunkered
+            if (IsHunkeredDown())
+            {
+                if (IsInLowCover())
+                {
+                    fReturnDmg -= class'Highlander_XGTacticalGameCore'.default.fLowCoverDRBonus;
+                }
+                else
+                {
+                    fReturnDmg -= class'Highlander_XGTacticalGameCore'.default.fHighCoverDRBonus;
+                }
+            }
+
+            // Will to Survive DR
+            if (m_kCharacter.HasUpgrade(ePerk_WillToSurvive))
+            {
+                fReturnDmg -= class'Highlander_XGTacticalGameCore'.default.fWillToSurviveDRBonus;
+            }
+
+            // Fortiores Una
+            if (m_kCharacter.HasUpgrade(`LW_PERK_ID(FortioresUna)) && HasBonus(170))
+            {
+                if (IsInLowCover())
+                {
+                    fReturnDmg -= class'Highlander_XGTacticalGameCore'.default.fLowCoverDRBonus;
+                }
+                else
+                {
+                    fReturnDmg -= class'Highlander_XGTacticalGameCore'.default.fHighCoverDRBonus;
+                }
+            }
+        }
+    }
+
+    if (kDamageCauser != none)
+    {
+        // Combined Arms: negate 1 DR
+        if (kDamageCauser.m_kCharacter.HasUpgrade(`LW_PERK_ID(CombinedArms)))
+        {
+            fReturnDmg += class'Highlander_XGTacticalGameCore'.default.fCombinedArmsDRPenetration;
+        }
+
+        if (class'XGTacticalGameCoreNativeBase'.static.TInventoryHasItemType(kDamageCauser.m_kCharacter.m_kChar.kInventory, `LW_ITEM_ID(ArmorPiercingAmmo)))
+        {
+            if (kWeapon != none && !kWeapon.HasProperty(eWP_Assault) && !kWeapon.HasProperty(eWP_Pistol))
+            {
+                fReturnDmg += 2.0; // TODO: configure this value on the item itself
+            }
+        }
+
+        if (kWeapon != none)
+        {
+            if (class'XGTacticalGameCore'.static.GetWeaponClass(kWeapon.ItemType()) == 3) // Gauss tier weapon
+            {
+                fReturnDmg += class'Highlander_XGTacticalGameCore'.default.fGaussWeaponsDRPenetration;
+
+                if ((kDamageCauser.m_kCharacter.m_kChar.aUpgrades[123] & 32) > 0) // Quenchguns
+                {
+                    fReturnDmg += class'Highlander_XGTacticalGameCore'.default.fQuenchgunsDRPenetration;
+                }
+            }
+        }
+
+        fReturnDmg = FMin(fReturnDmg, float(IncomingDamage));
+    }
+
+    if (fReturnDmg < float(IncomingDamage))
+    {
+        if (kDamageCauser != none)
+        {
+            if (kWeapon != none && kWeapon.HasProperty(eWP_Assault))
+            {
+                // DR penalty for shotguns unless using Breaching Ammo
+                if (!class'XGTacticalGameCoreNativeBase'.static.TInventoryHasItemType(kDamageCauser.m_kCharacter.m_kChar.kInventory, `LW_ITEM_ID(BreachingAmmo)))
+                {
+                    fReturnDmg -= (class'Highlander_XGTacticalGameCore'.default.fShotgunDRPenalty * (float(IncomingDamage) - fReturnDmg));
+                }
+            }
+        }
+
+        fReturnDmg = FMax(fReturnDmg, float(0));
+
+        if (kWeapon != none && kWeapon.IsA('XGWeapon_MEC_KineticStrike'))
+        {
+            iReturnDmg = FFloor(fReturnDmg);
+        }
+        else if (FRand() < (fReturnDmg - float(FFloor(fReturnDmg))))
+        {
+            iReturnDmg = FCeil(fReturnDmg);
+        }
+        else if (IncomingDamage == 12345)
+        {
+            // This is some special case that I don't even want to start digging into
+            iReturnDmg = FCeil(fReturnDmg);
+        }
+        else
+        {
+            iReturnDmg = FFloor(fReturnDmg);
+        }
+
+        if (IncomingDamage - iReturnDmg > 0)
+        {
+            m_bCantBeHurt = IncomingDamage - iReturnDmg;
+        }
+
+        return iReturnDmg;
+    }
+
+    return IncomingDamage;
+}
+
 function AddCriticallyWoundedAction(optional bool bStunAlien = false, optional bool bLoading = false)
 {
     local XGAction_CriticallyWounded kAction;
@@ -36,7 +263,7 @@ function AddCriticallyWoundedAction(optional bool bStunAlien = false, optional b
         m_bStunned = true;
         m_bStabilized = true;
 
-        if (GetCharacter().m_kChar.iType == eChar_Outsider)
+        if (m_kCharacter.m_kChar.iType == eChar_Outsider)
         {
             Highlander_XGBattleDesc(`BATTLE.m_kDesc).m_kArtifactsContainer.AdjustQuantity(`LW_ITEM_ID(OutsiderShard), 1);
             PRES().UINarrative(`XComNarrativeMoment("OutsiderShardFirstSeen"));
@@ -61,6 +288,239 @@ function AddCriticallyWoundedAction(optional bool bStunAlien = false, optional b
     AddAction(kAction);
 }
 
+simulated function AddWeaponAbilities(XGTacticalGameCoreNativeBase GameCore, Vector vLocation, out array<XGAbility> arrAbilities, optional bool bForLocalUseOnly = false)
+{
+    local int Index, iAbilityId, iBackpackIndex;
+    local Highlander_XGInventory kInventory;
+    local XGCharacter kChar;
+    local XGWeapon kWeapon, kActiveWeapon;
+    local array<XGWeapon> arrWeapons, arrEquippableWeapons;
+
+    `HL_LOG_CLS("Running port of native AddWeaponAbilities");
+
+    kChar = m_kCharacter;
+    kInventory = Highlander_XGInventory(m_kInventory);
+
+    if (kChar.HasUpgrade(`LW_PERK_ID(SmokeGrenade)) && !kInventory.HL_HasItemOfType(`LW_ITEM_ID(SmokeGrenade)))
+    {
+        kWeapon = Spawn(class'XGWeapon_SmokeGrenade', self, /* SpawnTag */, /* SpawnLocation */, /* SpawnRotation */, /* ActorTemplate */, /* bNoCollisionFail */ true);
+        kWeapon.Init();
+
+        m_kInventory.AddItem(kWeapon, eSlot_RearBackPack, /* bMultipleItems */ true);
+
+        if (WorldInfo.NetMode != NM_Standalone && Role == ROLE_Authority)
+        {
+            m_kDynamicSpawnedSmokeGrenade.m_kDynamicSpawnWeapon = kWeapon;
+            m_kDynamicSpawnedSmokeGrenade.m_eDynamicSpawnWeaponSlotLocation = eSlot_RearBackPack;
+        }
+    }
+
+    if (kChar.HasUpgrade(`LW_PERK_ID(BattleScanner)) && !kInventory.HL_HasItemOfType(`LW_ITEM_ID(BattleScanner)))
+    {
+        kWeapon = Spawn(class'XGWeapon_BattleScanner', self, /* SpawnTag */, /* SpawnLocation */, /* SpawnRotation */, /* ActorTemplate */, /* bNoCollisionFail */ true);
+        kWeapon.Init();
+
+        m_kInventory.AddItem(kWeapon, eSlot_RearBackPack, /* bMultipleItems */ true);
+
+        if (WorldInfo.NetMode != NM_Standalone && Role == ROLE_Authority)
+        {
+            m_kDynamicSpawnedBattleScanner.m_kDynamicSpawnWeapon = kWeapon;
+            m_kDynamicSpawnedBattleScanner.m_eDynamicSpawnWeaponSlotLocation = eSlot_RearBackPack;
+        }
+    }
+
+    kWeapon = XGWeapon(kInventory.FindItemByEnum(`LW_ITEM_ID(Medikit)));
+
+    if (kWeapon != none)
+    {
+        if (kChar.HasUpgrade(`LW_PERK_ID(Revive)))
+        {
+            iAbilityId = eAbility_Revive;
+        }
+        else
+        {
+            iAbilityId = eAbility_Stabilize;
+        }
+
+        GenerateAbilities(iAbilityId, vLocation, arrAbilities, kWeapon, bForLocalUseOnly);
+    }
+
+    kActiveWeapon = kInventory.GetActiveWeapon();
+
+    for (Index = 0; Index < eSlot_MAX; Index++)
+    {
+        if (Index == eSlot_RearBackPack)
+        {
+            for (iBackpackIndex = 0; iBackpackIndex < kInventory.GetNumberOfItemsInSlot(eSlot_RearBackPack); iBackpackIndex++)
+            {
+                kWeapon = XGWeapon(kInventory.GetItemByIndexInSlot(iBackpackIndex, eSlot_RearBackPack));
+
+                if (kWeapon == none)
+                {
+                    continue;
+                }
+
+                // Skip reloadable weapons that are out of ammo
+                if (kWeapon.iAmmo == 0 && kWeapon.m_kTWeapon.aProperties[eWP_NoReload] != 0)
+                {
+                    continue;
+                }
+
+                // Skip overheated weapons
+                if (kWeapon.iOverheatChance == 100 && kWeapon.m_kTWeapon.aProperties[eWP_Overheats] != 0)
+                {
+                    continue;
+                }
+
+                if (kWeapon.m_kTWeapon.aProperties[eWP_Secondary] != 0)
+                {
+                    arrWeapons.AddItem(kWeapon);
+                }
+                else
+                {
+                    arrEquippableWeapons.AddItem(kWeapon);
+                }
+            }
+        }
+        else
+        {
+            kWeapon = XGWeapon(kInventory.GetItem(ELocation(Index)));
+
+            if (kWeapon == none)
+            {
+                continue;
+            }
+
+            if (kWeapon == kActiveWeapon)
+            {
+                // TODO: the active weapon might belong at the front of the array
+                arrWeapons.AddItem(kWeapon);
+            }
+            else if (kWeapon.m_kTWeapon.aProperties[eWP_Secondary] != 0)
+            {
+                arrWeapons.AddItem(kWeapon);
+            }
+            else
+            {
+                arrEquippableWeapons.AddItem(kWeapon);
+            }
+        }
+    }
+
+    foreach arrWeapons(kWeapon)
+    {
+        if (kWeapon.m_kTWeapon.aProperties[eWP_Sniper] != 0)
+        {
+            if (kChar.HasUpgrade(`LW_PERK_ID(PrecisionShot)))
+            {
+                GenerateAbilities(eAbility_PrecisionShot, vLocation, arrAbilities, kWeapon, bForLocalUseOnly);
+            }
+
+            if (kChar.HasUpgrade(`LW_PERK_ID(DisablingShot)))
+            {
+                GenerateAbilities(eAbility_DisablingShot, vLocation, arrAbilities, kWeapon, bForLocalUseOnly);
+            }
+        }
+
+        if (kWeapon.WeaponHasStandardShot())
+        {
+            // No idea what these two character types are for, maybe some kind of debug
+            if (kChar.HasUpgrade(`LW_PERK_ID(Suppression)) || kChar.m_kChar.iType == 67 || kChar.m_kChar.iType == 63)
+            {
+                if (kWeapon.m_kTWeapon.aProperties[eWP_Pistol] == 0)
+                {
+                    iAbilityID = kChar.HasUpgrade(`LW_PERK_ID(Mayhem)) ? eAbility_ShotMayhem : eAbility_ShotSuppress;
+
+                    GenerateAbilities(iAbilityID, vLocation, arrAbilities, kWeapon, bForLocalUseOnly);
+                }
+            }
+
+            if (kChar.HasUpgrade(`LW_PERK_ID(RapidFire)))
+            {
+                GenerateAbilities(eAbility_RapidFire, vLocation, arrAbilities, kWeapon, bForLocalUseOnly);
+            }
+
+            if (kChar.HasUpgrade(`LW_PERK_ID(Flush)) && kWeapon.m_kTWeapon.aProperties[eWP_Secondary] == 0)
+            {
+                GenerateAbilities(eAbility_ShotFlush, vLocation, arrAbilities, kWeapon, bForLocalUseOnly);
+            }
+
+            if (kChar.HasUpgrade(`LW_PERK_ID(CollateralDamage)))
+            {
+                GenerateAbilities(eAbility_MEC_Barrage, vLocation, arrAbilities, kWeapon, bForLocalUseOnly);
+            }
+        }
+
+        // Deliberately using enums here and not LongWarConstants, because the item named Rocket Launcher in the constants
+        // isn't actually the same item that the native code would be looking for
+        if (kWeapon.GameplayType() == eItem_RocketLauncher || kWeapon.GameplayType() == eItem_BlasterLauncher)
+        {
+            if (kChar.HasUpgrade(`LW_PERK_ID(ShredderAmmo)))
+            {
+                GenerateAbilities(eAbility_ShredderRocket, vLocation, arrAbilities, kWeapon, bForLocalUseOnly);
+            }
+
+            if (kChar.HasUpgrade(`LW_PERK_ID(FireRocket)))
+            {
+                GenerateAbilities(eAbility_RocketLauncher, vLocation, arrAbilities, kWeapon, bForLocalUseOnly);
+            }
+        }
+
+        if (kWeapon.GameplayType() == eItem_ArcThrower)
+        {
+            if (kChar.HasUpgrade(`LW_PERK_ID(DroneCapture)))
+            {
+                GenerateAbilities(eAbility_ShotDroneHack, vLocation, arrAbilities, kWeapon, bForLocalUseOnly);
+            }
+
+            if (kChar.HasUpgrade(`LW_PERK_ID(FieldRepairs)))
+            {
+                GenerateAbilities(eAbility_RepairSHIV, vLocation, arrAbilities, kWeapon, bForLocalUseOnly);
+            }
+        }
+
+        // In the base native code, there's a check for the SHIV Suppression perk here; however in Long War, that perk ID is
+        // repurposed and SHIVs just get the regular Suppression check, so that check is omitted.
+
+
+        // Look at abilities from the weapon's configuration
+        for (Index = 1; Index < 96; Index++)
+        {
+            if (kWeapon.m_kTWeapon.aAbilities[Index] <= 0)
+            {
+                continue;
+            }
+
+            if (AbilityIsInList(Index, arrAbilities))
+            {
+                continue;
+            }
+
+            GenerateAbilities(Index, vLocation, arrAbilities, kWeapon, bForLocalUseOnly);
+
+            if (Index == eAbility_Overwatch && m_eTeam == eTeam_XCom)
+            {
+                `HL_LOG_CLS("Dumping Overwatch ability " $ arrAbilities[arrAbilities.Length - 1].Name $ " from AddWeaponAbilities");
+                //ConsoleCommand("obj dump " $ arrAbilities[arrAbilities.Length - 1].Name);
+            }
+        }
+
+        // Lastly, check if we need to reload
+        if (kWeapon.iAmmo < 100 && kWeapon.m_kTWeapon.aProperties[eWP_NoReload] == 0)
+        {
+            GenerateAbilities(eAbility_Reload, vLocation, arrAbilities, kWeapon, bForLocalUseOnly);
+        }
+    }
+
+    // Loop the other array of weapons and generate eAbility_EquipWeapon for them
+    foreach arrEquippableWeapons(kWeapon)
+    {
+        GenerateAbilities(eAbility_EquipWeapon, vLocation, arrAbilities, kWeapon, bForLocalUseOnly);
+    }
+
+    `HL_LOG_CLS("AddWeaponAbilities complete");
+}
+
 function ApplyInventoryStatModifiers()
 {
     local EItemType eWeapon_GameplayType;
@@ -81,11 +541,11 @@ function ApplyInventoryStatModifiers()
         }
     }
 
-    `GAMECORE.GetBackpackItemArray(GetCharacter().m_kChar.kInventory, arrBackPackItems);
+    `GAMECORE.GetBackpackItemArray(m_kCharacter.m_kChar.kInventory, arrBackPackItems);
     m_aCurrentStats[9] = m_aCurrentStats[eStat_HP];
     RemoveStatModifiers(m_aInventoryStats);
 
-    `HL_TAC_GAMECORE.HL_GetInventoryStatModifiers(m_aInventoryStats, m_kCharacter.m_kChar, eWeapon_GameplayType, arrBackPackItems);
+    `HL_GAMECORE.HL_GetInventoryStatModifiers(m_aInventoryStats, m_kCharacter.m_kChar, eWeapon_GameplayType, arrBackPackItems);
 
     if (m_iWillCheatBonus > 0 && IsAI())
     {
@@ -251,6 +711,92 @@ simulated function ApplyLoadout(XGLoadoutInstances kLoadoutInstances, bool bLoad
     }
 }
 
+function BuildAbilities(optional bool bUpdateUI = true)
+{
+    local bool bShouldBuild;
+    local int Index;
+    local Vector vLocation;
+    local array<XGAbility> arrAbilities;
+    local XGTacticalGameCore kGameCore;
+
+    bShouldBuild = true;
+    kGameCore = `GAMECORE;
+
+    if (Role < ROLE_Authority)
+    {
+        return;
+    }
+
+    if (`WORLDINFO.NetMode != NM_Standalone)
+    {
+        // TODO
+    }
+
+    if (!m_bBuildAbilityDataDirty)
+    {
+        return;
+    }
+
+    if (!bShouldBuild)
+    {
+        return;
+    }
+
+    m_iBuildAbilityNotifier++;
+    bNetDirty = true;
+    bForceNetUpdate = true;
+    m_bBuildAbilityDataDirty = false;
+
+    ClearAbilities();
+
+    if (m_kPawn != none)
+    {
+        vLocation = m_kPawn.Location;
+    }
+
+    AddMoveAbilities(kGameCore, arrAbilities);
+    AddWeaponAbilities(kGameCore, vLocation, arrAbilities);
+    AddPerkSpecificAbilities(kGameCore, arrAbilities);
+
+    // Not entirely sure about the order on these three
+    AddPsiAbilities(vLocation, arrAbilities);
+    AddCharacterAbilities(vLocation, arrAbilities);
+    AddArmorAbilities(vLocation, arrAbilities);
+
+    // Remove any abilities which shouldn't be shown and are unavailable (doesn't matter for AI)
+    if (!IsAI())
+    {
+        for (Index = arrAbilities.Length - 1; Index >= 0; Index--)
+        {
+            if (arrAbilities[Index].aDisplayProperties[eDisplayProp_HideUnavailable] != 0 && !arrAbilities[Index].CheckAvailable())
+            {
+                arrAbilities[Index].Destroy();
+                arrAbilities.Remove(Index, 1);
+            }
+        }
+    }
+
+    // Reset m_aAbilities
+    for (Index = 0; Index < 64; Index++)
+    {
+        m_aAbilities[Index] = none;
+    }
+
+    for (Index = 0; Index < arrAbilities.Length; Index++)
+    {
+        m_aAbilities[Index] = arrAbilities[Index];
+    }
+
+    m_iNumAbilities = arrAbilities.Length;
+
+    // This part isn't in the native code; in fact I can't find reference to bUpdateUI at all.
+    // But our version doesn't work without it.
+    if (bUpdateUI && `PRES.m_kTacticalHUD != none)
+    {
+        `PRES.m_kTacticalHUD.Update();
+    }
+}
+
 function CheckForDamagedItems()
 {
     local int I, iWeaponFragments;
@@ -287,7 +833,7 @@ function CheckForDamagedItems()
 
             if (iWeaponFragments > 0)
             {
-                PRES().MSGWeaponFragments(`HL_TWEAPON(XGWeapon(kWeapon)).strName, iWeaponFragments);
+                PRES().MSGWeaponFragments(`HL_TWEAPON_FROM_XG(XGWeapon(kWeapon)).strName, iWeaponFragments);
                 Highlander_XGBattleDesc(`BATTLE.m_kDesc).m_kArtifactsContainer.AdjustQuantity(`LW_ITEM_ID(WeaponFragment), iWeaponFragments);
                 kWeapon.m_bDamaged = true;
             }
@@ -301,7 +847,7 @@ function CheckForDamagedItems()
             {
                 if (eWeapon > 211 && eWeapon < 219)
                 {
-                    PRES().MSGItemDestroyed(`HL_TWEAPON(XGWeapon(kWeapon)).strName);
+                    PRES().MSGItemDestroyed(`HL_TWEAPON_FROM_XG(XGWeapon(kWeapon)).strName);
                 }
             }
         }
@@ -375,7 +921,7 @@ simulated function DrawRangesForMedikit(optional bool bDetach = true)
         {
             kUnit = kSquad.GetMemberAt(I);
 
-            if (kUnit != self && kUnit.CanBeHealedWithMedikit() && kUnit.IsVisible() && !kUnit.IsDead() && kUnit.GetPawn() != none && !`GAMECORE.CharacterHasProperty(kUnit.GetCharacter().m_kChar.iType, eCP_Robotic))
+            if (kUnit != self && kUnit.CanBeHealedWithMedikit() && kUnit.IsVisible() && !kUnit.IsDead() && kUnit.GetPawn() != none && !`GAMECORE.CharacterHasProperty(kUnit.m_kCharacter.m_kChar.iType, eCP_Robotic))
             {
                 kUnit.GetPawn().AttachRangeIndicator(2.0 * fRadius, kUnit.GetPawn().MedikitRing);
             }
@@ -411,7 +957,7 @@ simulated function DrawRangesForRevive(optional bool bDetach = true)
         {
             kUnit = kSquad.GetMemberAt(I);
 
-            if (kUnit != self && !kUnit.IsDead() && kUnit.IsVisible() && kUnit.GetPawn() != none && kUnit.IsCriticallyWounded() && !`GAMECORE.CharacterHasProperty(kUnit.GetCharacter().m_kChar.iType, eCP_Robotic))
+            if (kUnit != self && !kUnit.IsDead() && kUnit.IsVisible() && kUnit.GetPawn() != none && kUnit.IsCriticallyWounded() && !`GAMECORE.CharacterHasProperty(kUnit.m_kCharacter.m_kChar.iType, eCP_Robotic))
             {
                 kUnit.GetPawn().AttachRangeIndicator(2.0 * fRadius, kUnit.GetPawn().MedikitRing);
             }
@@ -468,7 +1014,7 @@ simulated function DrawRangesForRepairSHIV(optional bool bDetach)
             kUnit = kSquad.GetMemberAt(I);
 
             if (kUnit != self
-              && (`GAMECORE.CharacterHasProperty(kUnit.GetCharacter().m_kChar.iType, eCP_Robotic) || kUnit.IsAugmented())
+              && (`GAMECORE.CharacterHasProperty(kUnit.m_kCharacter.m_kChar.iType, eCP_Robotic) || kUnit.IsAugmented())
               && kUnit.GetUnitHP() < kUnit.GetUnitMaxHP()
               && kUnit.IsVisible()
               && !kUnit.IsDead()
@@ -573,7 +1119,7 @@ simulated function DrawRangesForDroneHack(optional XCom3DCursor kCursor = none, 
         {
             kUnit = kSquad.GetMemberAt(I);
 
-            if (kUnit.GetCharacter().m_kChar.iType == eChar_Drone && kUnit.IsVisible() && kUnit.IsAliveAndWell() && kUnit.GetPawn() != none)
+            if (kUnit.m_kCharacter.m_kChar.iType == eChar_Drone && kUnit.IsVisible() && kUnit.IsAliveAndWell() && kUnit.GetPawn() != none)
             {
                 if (kCursor == none || VSize(kCursor.Location - kUnit.GetPawn().Location) <= float(400))
                 {
@@ -590,6 +1136,204 @@ simulated function DrawRangesForDroneHack(optional XCom3DCursor kCursor = none, 
             }
         }
     }
+}
+
+simulated function GenerateAbilities(int iAbility, Vector vLocation, out array<XGAbility> arrAbilities, optional XGWeapon kWeapon, optional bool bForLocalUseOnly = false)
+{
+    // Based on reconstruction of the native GenerateAbilities
+    local bool bIsPsionic, bIsValidTarget, bHasCustomRange, bTargetIsCriticallyWounded, bTargetNonRobotic, bTargetRobotic;
+    local float fCustomRange;
+    local int Index;
+    local EAbilityRange eRange;
+    local TAbility kTAbility;
+    local XGAbility kAbility;
+    local XGAbilityTree kAbilityTree;
+    local XGTacticalGameCore kGameCore;
+    local array<XGUnitNativeBase> arrPotentialTargets;
+    local array<XGUnit> arrActualTargets;
+
+    fCustomRange = 0.0;
+    kGameCore = `GAMECORE;
+    kAbilityTree = kGameCore.m_kAbilities;
+    kTAbility = kAbilityTree.GetTAbility(iAbility);
+    eRange = EAbilityRange(kTAbility.iRange);
+
+    if (GenerateAbilities_CheckForFlyAbility(iAbility, arrAbilities, kGameCore))
+    {
+        return;
+    }
+
+    if (GenerateAbilities_CheckForCloseAbility(iAbility, arrAbilities, kGameCore))
+    {
+        return;
+    }
+
+    bIsPsionic = kAbilityTree.AbilityHasProperty(iAbility, eProp_Psionic);
+    bHasCustomRange = kAbilityTree.AbilityHasProperty(iAbility, eProp_CustomRange);
+    bTargetNonRobotic = kAbilityTree.AbilityHasProperty(iAbility, eProp_TargetNonRobotic);
+    bTargetRobotic = kAbilityTree.AbilityHasProperty(iAbility, eProp_TargetRobotic);
+
+    if (bIsPsionic)
+    {
+        bTargetNonRobotic = true;
+    }
+
+    if (bHasCustomRange)
+    {
+        fCustomRange = 64.0 * kTAbility.iRange;
+    }
+
+    if (iAbility == eAbility_ShotStandard && IsMeleeOnly())
+    {
+        eRange = eRange_Weapon;
+    }
+
+    if (kWeapon != none && kWeapon.m_kTWeapon.aProperties[eWP_Sniper] != 0 && eRange == eRange_Sight && m_kCharacter.HasUpgrade(`LW_PERK_ID(Squadsight)))
+    {
+        eRange = eRange_Squadsight;
+    }
+
+    GetTargetsInRange(kTAbility.iTargetType, eRange, arrPotentialTargets, vLocation, kWeapon, fCustomRange, /* bNoLOSRequired */ false, bTargetNonRobotic, bTargetRobotic, iAbility);
+
+    for (Index = arrPotentialTargets.Length - 1; Index >=  0; Index--)
+    {
+        // Don't allow suppressing targets that aren't activated yet
+        if (arrPotentialTargets[Index].m_kBehavior != none && arrPotentialTargets[Index].m_kBehavior.IsDormant(/* bFalseIfActivating */ false) && kAbilityTree.AbilityHasEffect(iAbility, eEffect_Suppression))
+        {
+            bIsValidTarget = false;
+        }
+        else
+        {
+            bIsValidTarget = true;
+        }
+
+        if (arrPotentialTargets[Index].m_bStunned || !bIsValidTarget)
+        {
+            arrPotentialTargets.Remove(Index, 1);
+        }
+        else
+        {
+            arrActualTargets.AddItem(XGUnit(arrPotentialTargets[Index]));
+        }
+    }
+
+    if (kTAbility.iTargetType == eTarget_MultipleAllies ||
+        kTAbility.iTargetType == eTarget_MultipleEnemies ||
+        kTAbility.iTargetType == eTarget_SectoidAllies ||
+        kTAbility.iTargetType == eTarget_MutonAllies)
+    {
+        // Abilities that target multiple things: just create the ability once, with all targets
+        kAbility = kAbilityTree.SpawnAbility(iAbility, self, arrActualTargets, kWeapon, /* kMiscActor */ none, bForLocalUseOnly, /* bReactionFire */ false);
+        arrAbilities.AddItem(kAbility);
+    }
+    else
+    {
+        arrActualTargets.Length = 1;
+
+        for (Index = 0; Index < arrPotentialTargets.Length; Index++)
+        {
+            // TODO: not sure why this isn't just checked at the start of the function
+            if (m_kCharacter.m_kChar.aUpgrades[ePerk_Revive] != 0 && kTAbility.iType == eAbility_Stabilize)
+            {
+                continue;
+            }
+
+            bTargetIsCriticallyWounded = arrPotentialTargets[Index].IsCriticallyWounded();
+
+            // TODO: this is weirdly specific to psi panic, probably redundant with many other checks
+            if (iAbility == eAbility_PsiPanic)
+            {
+                if (bTargetIsCriticallyWounded || !arrPotentialTargets[Index].IsAlive() || arrPotentialTargets[Index].IsPossessed())
+                {
+                    continue;
+                }
+            }
+
+            if (kTAbility.aProperties[eProp_TargetCritical] != 0 && !bTargetIsCriticallyWounded)
+            {
+                continue;
+            }
+
+            if (!kAbilityTree.AbilityHasEffect(eEffect_Damage, iAbility) && arrPotentialTargets[Index].IsAnimal())
+            {
+                continue;
+            }
+
+            arrActualTargets[0] = XGUnit(arrPotentialTargets[Index]);
+            kAbility = kAbilityTree.SpawnAbility(iAbility, self, arrActualTargets, kWeapon, /* kMiscActor */ none, bForLocalUseOnly, /* bReactionFire */ false);
+            arrAbilities.AddItem(kAbility);
+        }
+    }
+
+    // If we still haven't generated the ability, do it now without any targets
+    if (!AbilityIsInList(iAbility, arrAbilities))
+    {
+        // In the native version, the array length is still 1 but arrUnknown[0] = none
+        arrActualTargets.Length = 1;
+        arrActualTargets[0] = none;
+        kAbility = kAbilityTree.SpawnAbility(iAbility, self, arrActualTargets, kWeapon, /* kMiscActor */ none, bForLocalUseOnly, /* bReactionFire */ false);
+        arrAbilities.AddItem(kAbility);
+    }
+}
+
+simulated function bool GenerateAbilities_CheckForCloseAbility(int iAbility, out array<XGAbility> arrAbilities, XGTacticalGameCoreNativeBase GameCore)
+{
+    local XGAbility kAbility;
+    local array<XGUnit> arrTargets;
+
+    if (iAbility != eAbility_CloseCyberdisc)
+    {
+        return false;
+    }
+
+    if (m_kCharacter == none || m_kCharacter.m_kChar.iType != eChar_Cyberdisc)
+    {
+        return true;
+    }
+
+    if (m_kPawn.m_eOpenCloseState != eUP_Open)
+    {
+        return true;
+    }
+
+    if (FindAbility(eAbility_CloseCyberdisc, /* kTarget */ none) != none)
+    {
+        return true;
+    }
+
+    arrTargets.AddItem(self);
+
+    kAbility = `GAMECORE.m_kAbilities.SpawnAbility(eAbility_CloseCyberdisc, self, arrTargets, /* kWeapon */ none, /* kMiscActor */ none, /* bForLocalUseOnly */ false, /* bReactionFire */ false);
+    arrAbilities.AddItem(kAbility);
+
+    return true;
+}
+
+simulated function bool GenerateAbilities_CheckForFlyAbility(int iAbility, out array<XGAbility> arrAbilities, XGTacticalGameCoreNativeBase GameCore)
+{
+    local int Index;
+    local XGAbility kAbility;
+    local array<XGUnit> arrTargets;
+
+    if (iAbility != eAbility_Fly)
+    {
+        return false;
+    }
+
+    for (Index = 0; Index < arrAbilities.Length; Index++)
+    {
+        if (arrAbilities[Index].IsA('XGAbility_Fly'))
+        {
+            return true;
+        }
+    }
+
+    arrTargets.AddItem(self);
+
+    kAbility = `GAMECORE.m_kAbilities.SpawnAbility(eAbility_Fly, self, arrTargets, /* kWeapon */ none, /* kMiscActor */ none, /* bForLocalUseOnly */ false, /* bReactionFire */ false);
+    arrAbilities.AddItem(kAbility);
+
+    return true;
 }
 
 simulated function array<EItemType_Info> GetItemInfos()
@@ -628,157 +1372,157 @@ simulated function array<EItemType_Info> GetItemInfos()
                 m_arrItemInfos.AddItem(5);
             }
 
-            if (class'XGTacticalGameCoreNativeBase'.static.TInventoryHasItemType(GetCharacter().m_kChar.kInventory, `LW_ITEM_ID(AlloyJacketedRounds)))
+            if (class'XGTacticalGameCoreNativeBase'.static.TInventoryHasItemType(m_kCharacter.m_kChar.kInventory, `LW_ITEM_ID(AlloyJacketedRounds)))
             {
                 m_arrItemInfos.AddItem(14);
             }
 
-            if (class'XGTacticalGameCoreNativeBase'.static.TInventoryHasItemType(GetCharacter().m_kChar.kInventory, `LW_ITEM_ID(EnhancedBeamOptics)))
+            if (class'XGTacticalGameCoreNativeBase'.static.TInventoryHasItemType(m_kCharacter.m_kChar.kInventory, `LW_ITEM_ID(EnhancedBeamOptics)))
             {
                 m_arrItemInfos.AddItem(15);
             }
 
-            if (class'XGTacticalGameCoreNativeBase'.static.TInventoryHasItemType(GetCharacter().m_kChar.kInventory, `LW_ITEM_ID(PlasmaStellerator)))
+            if (class'XGTacticalGameCoreNativeBase'.static.TInventoryHasItemType(m_kCharacter.m_kChar.kInventory, `LW_ITEM_ID(PlasmaStellerator)))
             {
                 m_arrItemInfos.AddItem(16);
             }
 
-            if (class'XGTacticalGameCoreNativeBase'.static.TInventoryHasItemType(GetCharacter().m_kChar.kInventory, `LW_ITEM_ID(LaserSight)))
+            if (class'XGTacticalGameCoreNativeBase'.static.TInventoryHasItemType(m_kCharacter.m_kChar.kInventory, `LW_ITEM_ID(LaserSight)))
             {
                 m_arrItemInfos.AddItem(17);
             }
 
-            if (class'XGTacticalGameCoreNativeBase'.static.TInventoryHasItemType(GetCharacter().m_kChar.kInventory, `LW_ITEM_ID(CeramicPlating)))
+            if (class'XGTacticalGameCoreNativeBase'.static.TInventoryHasItemType(m_kCharacter.m_kChar.kInventory, `LW_ITEM_ID(CeramicPlating)))
             {
                 m_arrItemInfos.AddItem(18);
             }
 
-            if (class'XGTacticalGameCoreNativeBase'.static.TInventoryHasItemType(GetCharacter().m_kChar.kInventory, `LW_ITEM_ID(HiCapMags)))
+            if (class'XGTacticalGameCoreNativeBase'.static.TInventoryHasItemType(m_kCharacter.m_kChar.kInventory, `LW_ITEM_ID(HiCapMags)))
             {
                 m_arrItemInfos.AddItem(19);
             }
 
-            if (class'XGTacticalGameCoreNativeBase'.static.TInventoryHasItemType(GetCharacter().m_kChar.kInventory, `LW_ITEM_ID(BattleComputer)))
+            if (class'XGTacticalGameCoreNativeBase'.static.TInventoryHasItemType(m_kCharacter.m_kChar.kInventory, `LW_ITEM_ID(BattleComputer)))
             {
                 m_arrItemInfos.AddItem(20);
             }
 
-            if (class'XGTacticalGameCoreNativeBase'.static.TInventoryHasItemType(GetCharacter().m_kChar.kInventory, `LW_ITEM_ID(ChameleonSuit)))
+            if (class'XGTacticalGameCoreNativeBase'.static.TInventoryHasItemType(m_kCharacter.m_kChar.kInventory, `LW_ITEM_ID(ChameleonSuit)))
             {
                 m_arrItemInfos.AddItem(21);
             }
 
-            if (class'XGTacticalGameCoreNativeBase'.static.TInventoryHasItemType(GetCharacter().m_kChar.kInventory, `LW_ITEM_ID(HoloTargeter)))
+            if (class'XGTacticalGameCoreNativeBase'.static.TInventoryHasItemType(m_kCharacter.m_kChar.kInventory, `LW_ITEM_ID(HoloTargeter)))
             {
                 m_arrItemInfos.AddItem(22);
             }
 
-            if (class'XGTacticalGameCoreNativeBase'.static.TInventoryHasItemType(GetCharacter().m_kChar.kInventory, `LW_ITEM_ID(SmartshellPod)))
+            if (class'XGTacticalGameCoreNativeBase'.static.TInventoryHasItemType(m_kCharacter.m_kChar.kInventory, `LW_ITEM_ID(SmartshellPod)))
             {
                 m_arrItemInfos.AddItem(23);
             }
 
-            if (class'XGTacticalGameCoreNativeBase'.static.TInventoryHasItemType(GetCharacter().m_kChar.kInventory, `LW_ITEM_ID(CoreArmoring)))
+            if (class'XGTacticalGameCoreNativeBase'.static.TInventoryHasItemType(m_kCharacter.m_kChar.kInventory, `LW_ITEM_ID(CoreArmoring)))
             {
                 m_arrItemInfos.AddItem(24);
             }
 
-            if (class'XGTacticalGameCoreNativeBase'.static.TInventoryHasItemType(GetCharacter().m_kChar.kInventory, `LW_ITEM_ID(TheThumper)))
+            if (class'XGTacticalGameCoreNativeBase'.static.TInventoryHasItemType(m_kCharacter.m_kChar.kInventory, `LW_ITEM_ID(TheThumper)))
             {
                 m_arrItemInfos.AddItem(25);
             }
 
-            if (class'XGTacticalGameCoreNativeBase'.static.TInventoryHasItemType(GetCharacter().m_kChar.kInventory, `LW_ITEM_ID(ImpactVest)))
+            if (class'XGTacticalGameCoreNativeBase'.static.TInventoryHasItemType(m_kCharacter.m_kChar.kInventory, `LW_ITEM_ID(ImpactVest)))
             {
                 m_arrItemInfos.AddItem(26);
             }
 
-            if (class'XGTacticalGameCoreNativeBase'.static.TInventoryHasItemType(GetCharacter().m_kChar.kInventory, `LW_ITEM_ID(FuelCell)))
+            if (class'XGTacticalGameCoreNativeBase'.static.TInventoryHasItemType(m_kCharacter.m_kChar.kInventory, `LW_ITEM_ID(FuelCell)))
             {
                 m_arrItemInfos.AddItem(27);
             }
 
-            if (class'XGTacticalGameCoreNativeBase'.static.TInventoryHasItemType(GetCharacter().m_kChar.kInventory, `LW_ITEM_ID(AlloyBipod)))
+            if (class'XGTacticalGameCoreNativeBase'.static.TInventoryHasItemType(m_kCharacter.m_kChar.kInventory, `LW_ITEM_ID(AlloyBipod)))
             {
                 m_arrItemInfos.AddItem(28);
             }
 
-            if (class'XGTacticalGameCoreNativeBase'.static.TInventoryHasItemType(GetCharacter().m_kChar.kInventory, `LW_ITEM_ID(BreachingAmmo)))
+            if (class'XGTacticalGameCoreNativeBase'.static.TInventoryHasItemType(m_kCharacter.m_kChar.kInventory, `LW_ITEM_ID(BreachingAmmo)))
             {
                 m_arrItemInfos.AddItem(29);
             }
 
-            if (class'XGTacticalGameCoreNativeBase'.static.TInventoryHasItemType(GetCharacter().m_kChar.kInventory, `LW_ITEM_ID(ArmorPiercingAmmo)))
+            if (class'XGTacticalGameCoreNativeBase'.static.TInventoryHasItemType(m_kCharacter.m_kChar.kInventory, `LW_ITEM_ID(ArmorPiercingAmmo)))
             {
                 m_arrItemInfos.AddItem(30);
             }
 
-            if (class'XGTacticalGameCoreNativeBase'.static.TInventoryHasItemType(GetCharacter().m_kChar.kInventory, `LW_ITEM_ID(WalkerServos)))
+            if (class'XGTacticalGameCoreNativeBase'.static.TInventoryHasItemType(m_kCharacter.m_kChar.kInventory, `LW_ITEM_ID(WalkerServos)))
             {
                 m_arrItemInfos.AddItem(31);
             }
 
-            if (class'XGTacticalGameCoreNativeBase'.static.TInventoryHasItemType(GetCharacter().m_kChar.kInventory, `LW_ITEM_ID(NeuralGunlink)))
+            if (class'XGTacticalGameCoreNativeBase'.static.TInventoryHasItemType(m_kCharacter.m_kChar.kInventory, `LW_ITEM_ID(NeuralGunlink)))
             {
                 m_arrItemInfos.AddItem(32);
             }
 
-            if (class'XGTacticalGameCoreNativeBase'.static.TInventoryHasItemType(GetCharacter().m_kChar.kInventory, `LW_ITEM_ID(ShredderAmmo)))
+            if (class'XGTacticalGameCoreNativeBase'.static.TInventoryHasItemType(m_kCharacter.m_kChar.kInventory, `LW_ITEM_ID(ShredderAmmo)))
             {
                 m_arrItemInfos.AddItem(33);
             }
 
-            if (class'XGTacticalGameCoreNativeBase'.static.TInventoryHasItemType(GetCharacter().m_kChar.kInventory, `LW_ITEM_ID(PsiScreen)))
+            if (class'XGTacticalGameCoreNativeBase'.static.TInventoryHasItemType(m_kCharacter.m_kChar.kInventory, `LW_ITEM_ID(PsiScreen)))
             {
                 m_arrItemInfos.AddItem(34);
             }
 
-            if (class'XGTacticalGameCoreNativeBase'.static.TInventoryHasItemType(GetCharacter().m_kChar.kInventory, `LW_ITEM_ID(IlluminatorGunsight)))
+            if (class'XGTacticalGameCoreNativeBase'.static.TInventoryHasItemType(m_kCharacter.m_kChar.kInventory, `LW_ITEM_ID(IlluminatorGunsight)))
             {
                 m_arrItemInfos.AddItem(35);
             }
 
-            if (class'XGTacticalGameCoreNativeBase'.static.TInventoryHasItemType(GetCharacter().m_kChar.kInventory, `LW_ITEM_ID(IncineratorModule)))
+            if (class'XGTacticalGameCoreNativeBase'.static.TInventoryHasItemType(m_kCharacter.m_kChar.kInventory, `LW_ITEM_ID(IncineratorModule)))
             {
                 m_arrItemInfos.AddItem(36);
             }
 
-            if (class'XGTacticalGameCoreNativeBase'.static.TInventoryHasItemType(GetCharacter().m_kChar.kInventory, `LW_ITEM_ID(TargetingModule)))
+            if (class'XGTacticalGameCoreNativeBase'.static.TInventoryHasItemType(m_kCharacter.m_kChar.kInventory, `LW_ITEM_ID(TargetingModule)))
             {
                 m_arrItemInfos.AddItem(37);
             }
 
-            if (class'XGTacticalGameCoreNativeBase'.static.TInventoryHasItemType(GetCharacter().m_kChar.kInventory, `LW_ITEM_ID(ReinforcedArmor)))
+            if (class'XGTacticalGameCoreNativeBase'.static.TInventoryHasItemType(m_kCharacter.m_kChar.kInventory, `LW_ITEM_ID(ReinforcedArmor)))
             {
                 m_arrItemInfos.AddItem(38);
             }
 
-            if (class'XGTacticalGameCoreNativeBase'.static.TInventoryHasItemType(GetCharacter().m_kChar.kInventory, `LW_ITEM_ID(EleriumTurbos)))
+            if (class'XGTacticalGameCoreNativeBase'.static.TInventoryHasItemType(m_kCharacter.m_kChar.kInventory, `LW_ITEM_ID(EleriumTurbos)))
             {
                 m_arrItemInfos.AddItem(39);
             }
 
-            if (class'XGTacticalGameCoreNativeBase'.static.TInventoryHasItemType(GetCharacter().m_kChar.kInventory, `LW_ITEM_ID(CognitiveEnhancer)))
+            if (class'XGTacticalGameCoreNativeBase'.static.TInventoryHasItemType(m_kCharacter.m_kChar.kInventory, `LW_ITEM_ID(CognitiveEnhancer)))
             {
                 m_arrItemInfos.AddItem(40);
             }
 
-            if (class'XGTacticalGameCoreNativeBase'.static.TInventoryHasItemType(GetCharacter().m_kChar.kInventory, `LW_ITEM_ID(Neuroregulator)))
+            if (class'XGTacticalGameCoreNativeBase'.static.TInventoryHasItemType(m_kCharacter.m_kChar.kInventory, `LW_ITEM_ID(Neuroregulator)))
             {
                 m_arrItemInfos.AddItem(41);
             }
 
-            if (class'XGTacticalGameCoreNativeBase'.static.TInventoryHasItemType(GetCharacter().m_kChar.kInventory, `LW_ITEM_ID(FlakAmmo)))
+            if (class'XGTacticalGameCoreNativeBase'.static.TInventoryHasItemType(m_kCharacter.m_kChar.kInventory, `LW_ITEM_ID(FlakAmmo)))
             {
                 m_arrItemInfos.AddItem(42);
             }
 
-            if (class'XGTacticalGameCoreNativeBase'.static.TInventoryHasItemType(GetCharacter().m_kChar.kInventory, `LW_ITEM_ID(AlloyPlating)))
+            if (class'XGTacticalGameCoreNativeBase'.static.TInventoryHasItemType(m_kCharacter.m_kChar.kInventory, `LW_ITEM_ID(AlloyPlating)))
             {
                 m_arrItemInfos.AddItem(43);
             }
 
-            if (class'XGTacticalGameCoreNativeBase'.static.TInventoryHasItemType(GetCharacter().m_kChar.kInventory, `LW_ITEM_ID(DrumMags)))
+            if (class'XGTacticalGameCoreNativeBase'.static.TInventoryHasItemType(m_kCharacter.m_kChar.kInventory, `LW_ITEM_ID(DrumMags)))
             {
                 m_arrItemInfos.AddItem(44);
             }
@@ -806,7 +1550,7 @@ simulated function int GetOffense()
 
     if (IsBeingSuppressed())
     {
-        iAim -= kGameCore.SuppressionAimPenalty;
+        iAim -= class'Highlander_XGTacticalGameCore'.default.iSuppressionAimPenalty;
     }
 
     if (IsPoisoned())
@@ -969,12 +1713,12 @@ function UpdateItemCharges()
     {
         m_iMediKitCharges = kInventory.HL_GetNumItems(`LW_ITEM_ID(Medikit));
 
-        if (GetCharacter().HasUpgrade(/* Packmaster */ 53))
+        if (m_kCharacter.HasUpgrade(`LW_PERK_ID(Packmaster)))
         {
             m_iMediKitCharges += kInventory.HL_GetNumItems(`LW_ITEM_ID(Medikit));
         }
 
-        if (GetCharacter().HasUpgrade(ePerk_FieldMedic))
+        if (m_kCharacter.HasUpgrade(`LW_PERK_ID(FieldMedic)))
         {
             m_iMediKitCharges += kInventory.HL_GetNumItems(`LW_ITEM_ID(Medikit)) - 1;
         }
@@ -984,26 +1728,26 @@ function UpdateItemCharges()
     {
         SetArcThrowerCharges(kInventory.HL_GetNumItems(`LW_ITEM_ID(ArcThrower)) * 1);
 
-        if (GetCharacter().HasUpgrade(/* Packmaster */ 53))
+        if (m_kCharacter.HasUpgrade(/* Packmaster */ 53))
         {
             SetArcThrowerCharges(GetArcThrowerCharges() + kInventory.HL_GetNumItems(`LW_ITEM_ID(ArcThrower)));
         }
 
-        if (GetCharacter().HasUpgrade(ePerk_Repair))
+        if (m_kCharacter.HasUpgrade(ePerk_Repair))
         {
             SetArcThrowerCharges(GetArcThrowerCharges() + (kInventory.HL_GetNumItems(`LW_ITEM_ID(ArcThrower)) * 2));
         }
     }
 
-    SetMimicBeaconCharges(kInventory.HL_GetNumItems(`LW_ITEM_ID(MimicBeacon)) * (GetCharacter().HasUpgrade(ePerk_SmokeAndMirrors) ? 2 : 1));
-    SetFragGrenades(kInventory.HL_GetNumItems(`LW_ITEM_ID(HEGrenade)) * (GetCharacter().HasUpgrade(ePerk_Grenadier) ? 2 : 1));
-    SetFlashBangs(kInventory.HL_GetNumItems(`LW_ITEM_ID(FlashbangGrenade)) * (GetCharacter().HasUpgrade(ePerk_SmokeAndMirrors) ? 2 : 1));
-    SetAlienGrenades(kInventory.HL_GetNumItems(`LW_ITEM_ID(AlienGrenade)) * (GetCharacter().HasUpgrade(ePerk_Grenadier) ? 2 : 1));
-    SetGhostGrenades(kInventory.HL_GetNumItems(`LW_ITEM_ID(ShadowDevice)) * (GetCharacter().HasUpgrade(ePerk_SmokeAndMirrors) ? 1 : 1));
-    SetGasGrenades(kInventory.HL_GetNumItems(`LW_ITEM_ID(ChemGrenade)) * (GetCharacter().HasUpgrade(ePerk_SmokeAndMirrors) ? 2 : 1));
-    SetNeedleGrenades(kInventory.HL_GetNumItems(`LW_ITEM_ID(APGrenade)) * (GetCharacter().HasUpgrade(ePerk_Grenadier) ? 2 : 1));
+    SetMimicBeaconCharges(kInventory.HL_GetNumItems(`LW_ITEM_ID(MimicBeacon)) * (m_kCharacter.HasUpgrade(`LW_PERK_ID(SmokeAndMirrors)) ? 2 : 1));
+    SetFragGrenades(kInventory.HL_GetNumItems(`LW_ITEM_ID(HEGrenade)) * (m_kCharacter.HasUpgrade(`LW_PERK_ID(Grenadier)) ? 2 : 1));
+    SetFlashBangs(kInventory.HL_GetNumItems(`LW_ITEM_ID(FlashbangGrenade)) * (m_kCharacter.HasUpgrade(`LW_PERK_ID(SmokeAndMirrors)) ? 2 : 1));
+    SetAlienGrenades(kInventory.HL_GetNumItems(`LW_ITEM_ID(AlienGrenade)) * (m_kCharacter.HasUpgrade(`LW_PERK_ID(Grenadier)) ? 2 : 1));
+    SetGhostGrenades(kInventory.HL_GetNumItems(`LW_ITEM_ID(ShadowDevice)) * (m_kCharacter.HasUpgrade(`LW_PERK_ID(SmokeAndMirrors)) ? 1 : 1));
+    SetGasGrenades(kInventory.HL_GetNumItems(`LW_ITEM_ID(ChemGrenade)) * (m_kCharacter.HasUpgrade(`LW_PERK_ID(SmokeAndMirrors)) ? 2 : 1));
+    SetNeedleGrenades(kInventory.HL_GetNumItems(`LW_ITEM_ID(APGrenade)) * (m_kCharacter.HasUpgrade(`LW_PERK_ID(Grenadier)) ? 2 : 1));
 
-    if (GetCharacter().HasUpgrade(/* Packmaster */ 53))
+    if (m_kCharacter.HasUpgrade(`LW_PERK_ID(Packmaster)))
     {
         // SetGhostGrenades(GetGhostGrenades()); // Shadow Devices don't scale
         SetFragGrenades(GetFragGrenades() + kInventory.HL_GetNumItems(`LW_ITEM_ID(HEGrenade)));
@@ -1014,143 +1758,143 @@ function UpdateItemCharges()
         SetMimicBeaconCharges((GetMimicBeaconCharges()) + kInventory.HL_GetNumItems(`LW_ITEM_ID(MimicBeacon)));
     }
 
-    if (GetCharacter().HasUpgrade(ePerk_ShredderRocket))
+    if (m_kCharacter.HasUpgrade(`LW_PERK_ID(ShredderAmmo)))
     {
         SetShredderRockets(m_kCharacter.m_kChar.aUpgrades[ePerk_ShredderRocket] & 1);
         SetShredderRockets(m_iShredderRockets + (m_kCharacter.m_kChar.aUpgrades[ePerk_ShredderRocket] >> 1));
     }
 
-    if (GetCharacter().HasUpgrade(ePerk_FireRocket))
+    if (m_kCharacter.HasUpgrade(`LW_PERK_ID(FireRocket)))
     {
         SetRockets(1);
 
-        if (GetCharacter().HasUpgrade(/* Shock and Awe */ 92))
+        if (m_kCharacter.HasUpgrade(/* Shock and Awe */ 92))
         {
             SetRockets(2);
         }
 
-        if (class'XGTacticalGameCoreNativeBase'.static.TInventoryHasItemType(GetCharacter().m_kChar.kInventory, /* Rocket */ 77))
+        if (class'XGTacticalGameCoreNativeBase'.static.TInventoryHasItemType(m_kCharacter.m_kChar.kInventory, /* Rocket */ 77))
         {
             SetRockets(GetRockets() + 1);
         }
     }
 
-    if ((m_kCharacter.m_kChar.aUpgrades[ePerk_BattleScanner] & 1) > 0)
+    if ((m_kCharacter.m_kChar.aUpgrades[`LW_PERK_ID(BattleScanner)] & 1) > 0)
     {
         SetBattleScannerCharges(2);
 
-        if (GetCharacter().HasUpgrade(/* Packmaster */ 53))
+        if (m_kCharacter.HasUpgrade(/* Packmaster */ 53))
         {
             SetBattleScannerCharges(3);
         }
 
-        if (GetCharacter().HasUpgrade(ePerk_SmokeAndMirrors))
+        if (m_kCharacter.HasUpgrade(ePerk_SmokeAndMirrors))
         {
             SetBattleScannerCharges(GetBattleScannerCharges() + 1);
         }
     }
 
-    if ((m_kCharacter.m_kChar.aUpgrades[ePerk_BattleScanner] >> 1) > 0)
+    if ((m_kCharacter.m_kChar.aUpgrades[`LW_PERK_ID(BattleScanner)] >> 1) > 0)
     {
         SetBattleScannerCharges(GetBattleScannerCharges() + (m_kCharacter.m_kChar.aUpgrades[ePerk_BattleScanner] >> 1));
 
-        if (GetCharacter().HasUpgrade(/* Packmaster */ 53))
+        if (m_kCharacter.HasUpgrade(/* Packmaster */ 53))
         {
             SetBattleScannerCharges(GetBattleScannerCharges() + (m_kCharacter.m_kChar.aUpgrades[ePerk_BattleScanner] >> 1));
         }
 
-        if (GetCharacter().HasUpgrade(ePerk_SmokeAndMirrors))
+        if (m_kCharacter.HasUpgrade(ePerk_SmokeAndMirrors))
         {
             SetBattleScannerCharges(GetBattleScannerCharges() + (m_kCharacter.m_kChar.aUpgrades[ePerk_BattleScanner] >> 1));
         }
     }
 
-    if ((m_kCharacter.m_kChar.aUpgrades[ePerk_SmokeBomb] & 1) > 0)
+    if ((m_kCharacter.m_kChar.aUpgrades[`LW_PERK_ID(SmokeGrenade)] & 1) > 0)
     {
         SetSmokeGrenadeCharges(1);
 
-        if (GetCharacter().HasUpgrade(/* Packmaster */ 53))
+        if (m_kCharacter.HasUpgrade(/* Packmaster */ 53))
         {
             SetSmokeGrenadeCharges(2);
         }
 
-        if (GetCharacter().HasUpgrade(ePerk_SmokeAndMirrors))
+        if (m_kCharacter.HasUpgrade(ePerk_SmokeAndMirrors))
         {
             SetSmokeGrenadeCharges(GetSmokeGrenadeCharges() + 1);
         }
     }
 
-    if ((m_kCharacter.m_kChar.aUpgrades[ePerk_SmokeBomb] >> 1) > 0)
+    if ((m_kCharacter.m_kChar.aUpgrades[`LW_PERK_ID(SmokeGrenade)] >> 1) > 0)
     {
         SetSmokeGrenadeCharges(GetSmokeGrenadeCharges() + (m_kCharacter.m_kChar.aUpgrades[ePerk_SmokeBomb] >> 1));
 
-        if (GetCharacter().HasUpgrade(/* Packmaster */ 53))
+        if (m_kCharacter.HasUpgrade(/* Packmaster */ 53))
         {
             SetSmokeGrenadeCharges(GetSmokeGrenadeCharges() + (m_kCharacter.m_kChar.aUpgrades[ePerk_SmokeBomb] >> 1));
         }
 
-        if (GetCharacter().HasUpgrade(ePerk_SmokeAndMirrors))
+        if (m_kCharacter.HasUpgrade(ePerk_SmokeAndMirrors))
         {
             SetSmokeGrenadeCharges(GetSmokeGrenadeCharges() + (m_kCharacter.m_kChar.aUpgrades[ePerk_SmokeBomb] >> 1));
         }
     }
 
-    if (GetCharacter().m_kChar.eClass == eSC_Mec)
+    if (m_kCharacter.m_kChar.eClass == eSC_Mec)
     {
         m_iFragGrenades = 0;
         m_iAlienGrenades = 0;
         m_iMediKitCharges = 0;
 
-        for (m_iDamageControlTurns = 0; m_iDamageControlTurns < GetCharacter().m_kChar.kInventory.iNumLargeItems; m_iDamageControlTurns++)
+        for (m_iDamageControlTurns = 0; m_iDamageControlTurns < m_kCharacter.m_kChar.kInventory.iNumLargeItems; m_iDamageControlTurns++)
         {
-            if (GetCharacter().m_kChar.kInventory.arrLargeItems[m_iDamageControlTurns] == eItem_MecFlameThrower)
+            if (m_kCharacter.m_kChar.kInventory.arrLargeItems[m_iDamageControlTurns] == eItem_MecFlameThrower)
             {
                 m_iFlamethrowerCharges += 2;
 
-                if (GetCharacter().HasUpgrade(/* Packmaster */ 53))
+                if (m_kCharacter.HasUpgrade(/* Packmaster */ 53))
                 {
                     m_iFlamethrowerCharges += 1;
                 }
             }
 
-            if (GetCharacter().m_kChar.kInventory.arrLargeItems[m_iDamageControlTurns] == eItem_MecGrenadeLauncher)
+            if (m_kCharacter.m_kChar.kInventory.arrLargeItems[m_iDamageControlTurns] == eItem_MecGrenadeLauncher)
             {
                 m_iFragGrenades += 2;
                 m_iAlienGrenades += 2;
 
-                if (GetCharacter().HasUpgrade(/* Packmaster */ 53))
+                if (m_kCharacter.HasUpgrade(/* Packmaster */ 53))
                 {
                     m_iFragGrenades += AdditionalGrenades;
                     m_iAlienGrenades += AdditionalGrenades;
                 }
 
-                if (GetCharacter().HasUpgrade(ePerk_Grenadier))
+                if (m_kCharacter.HasUpgrade(ePerk_Grenadier))
                 {
                     m_iFragGrenades += 1;
                     m_iAlienGrenades += 1;
                 }
             }
 
-            if (GetCharacter().m_kChar.kInventory.arrLargeItems[m_iDamageControlTurns] == eItem_MecRestorativeMist)
+            if (m_kCharacter.m_kChar.kInventory.arrLargeItems[m_iDamageControlTurns] == eItem_MecRestorativeMist)
             {
                 m_iMediKitCharges += 1;
 
-                if (GetCharacter().HasUpgrade(/* Packmaster */ 53))
+                if (m_kCharacter.HasUpgrade(/* Packmaster */ 53))
                 {
                     m_iMediKitCharges += AdditionalRestorativeMistShots;
                 }
 
-                if (GetCharacter().HasUpgrade(ePerk_FieldMedic))
+                if (m_kCharacter.HasUpgrade(ePerk_FieldMedic))
                 {
                     m_iMediKitCharges += 2;
                 }
             }
 
-            if (GetCharacter().m_kChar.kInventory.arrLargeItems[m_iDamageControlTurns] == eItem_MecElectroPulse)
+            if (m_kCharacter.m_kChar.kInventory.arrLargeItems[m_iDamageControlTurns] == eItem_MecElectroPulse)
             {
                 m_iProximityMines += 3;
 
-                if (GetCharacter().HasUpgrade(/* Packmaster */ 53))
+                if (m_kCharacter.HasUpgrade(/* Packmaster */ 53))
                 {
                     m_iProximityMines += AdditionalProximityMines;
                 }
@@ -1168,61 +1912,61 @@ function UpdateItemCharges()
         SetStealthCharges(5);
     }
 
-    for (m_iDamageControlTurns = 0; m_iDamageControlTurns < GetCharacter().m_kChar.kInventory.iNumSmallItems; m_iDamageControlTurns++)
+    for (m_iDamageControlTurns = 0; m_iDamageControlTurns < m_kCharacter.m_kChar.kInventory.iNumSmallItems; m_iDamageControlTurns++)
     {
-        if (GetCharacter().m_kChar.kInventory.arrSmallItems[m_iDamageControlTurns] == eItem_PsiGrenade)
+        if (m_kCharacter.m_kChar.kInventory.arrSmallItems[m_iDamageControlTurns] == eItem_PsiGrenade)
         {
-            m_iFlashBangs += GetCharacter().HasUpgrade(ePerk_SmokeAndMirrors) ? 2 : 1;
-            m_iFlashBangs += GetCharacter().HasUpgrade(/* Packmaster */ 53) ? 1 : 0;
+            m_iFlashBangs += m_kCharacter.HasUpgrade(ePerk_SmokeAndMirrors) ? 2 : 1;
+            m_iFlashBangs += m_kCharacter.HasUpgrade(/* Packmaster */ 53) ? 1 : 0;
         }
     }
 
     m_iDamageControlTurns = 0;
 
-    if (GetCharacter().m_kChar.eClass != eSC_Mec)
+    if (m_kCharacter.m_kChar.eClass != eSC_Mec)
     {
-        if (GetCharacter().HasUpgrade(ePerk_Savior))
+        if (m_kCharacter.HasUpgrade(ePerk_Savior))
         {
             m_iMediKitCharges += 2;
         }
     }
 
-    if (GetCharacter().m_kChar.eClass != eSC_Mec)
+    if (m_kCharacter.m_kChar.eClass != eSC_Mec)
     {
         if (!IsAlien_CheckByCharType())
         {
             m_iFlamethrowerCharges = 0; // Command charges
 
-            if (GetCharacter().HasUpgrade(/* Legio Patria Nostra */ 156) || GetCharacter().HasUpgrade(/* Stay Frosty */ 122))
+            if (m_kCharacter.HasUpgrade(/* Legio Patria Nostra */ 156) || m_kCharacter.HasUpgrade(/* Stay Frosty */ 122))
             {
                 m_iFlamethrowerCharges += 1;
             }
 
-            if (GetCharacter().HasUpgrade(/* Fortiores Una */ 140) || GetCharacter().HasUpgrade(/* Semper Vigilans */ 152))
+            if (m_kCharacter.HasUpgrade(/* Fortiores Una */ 140) || m_kCharacter.HasUpgrade(/* Semper Vigilans */ 152))
             {
                 m_iFlamethrowerCharges += 1;
             }
 
-            if (GetCharacter().HasUpgrade(/* So Shall You Fight */ 1) || GetCharacter().HasUpgrade(/* Into the Breach */ 161))
+            if (m_kCharacter.HasUpgrade(/* So Shall You Fight */ 1) || m_kCharacter.HasUpgrade(/* Into the Breach */ 161))
             {
                 m_iFlamethrowerCharges += 1;
             }
 
-            if (GetCharacter().HasUpgrade(/* Esprit de Corps */ 160) || GetCharacter().HasUpgrade(/* Band of Warriors */ 157))
+            if (m_kCharacter.HasUpgrade(/* Esprit de Corps */ 160) || m_kCharacter.HasUpgrade(/* Band of Warriors */ 157))
             {
                 m_iFlamethrowerCharges += 1;
             }
 
-            if (GetCharacter().HasUpgrade(/* Combined Arms */ 138) || GetCharacter().HasUpgrade(/* So Others May Live */ 158))
+            if (m_kCharacter.HasUpgrade(/* Combined Arms */ 138) || m_kCharacter.HasUpgrade(/* So Others May Live */ 158))
             {
                 m_iFlamethrowerCharges += 1;
             }
 
-            if (class'XGTacticalGameCoreNativeBase'.static.TInventoryHasItemType(GetCharacter().m_kChar.kInventory, /* Motion Tracker */ 222))
+            if (class'XGTacticalGameCoreNativeBase'.static.TInventoryHasItemType(m_kCharacter.m_kChar.kInventory, /* Motion Tracker */ 222))
             {
                 m_iProximityMines = class'XGTacticalGameCore'.default.EXALT_LOOT1;
 
-                if (GetCharacter().HasUpgrade(/* Packmaster */ 53))
+                if (m_kCharacter.HasUpgrade(/* Packmaster */ 53))
                 {
                     m_iProximityMines += 1;
                 }
@@ -1276,9 +2020,6 @@ simulated state Active
     {
         local XGAction_Path kAction;
 
-        iCustomPathLength = 0;
-        bNoCloseCombat = false;
-
         if (`BATTLE.IsTurnTimerCloseToExpiring())
         {
             AddIdleAction();
@@ -1327,6 +2068,167 @@ simulated state Active
     {
         super.EndState(nmNext);
     }
+}
+
+protected function int SortWeaponAbilities(XGAbility kAbility1, XGAbility kAbility2)
+{
+    local bool bAbilityOneHasCharges, bAbilityTwoHasCharges;
+    local int iAbilityOneId, iAbilityTwoId;
+
+    iAbilityOneId = kAbility1.GetType();
+    iAbilityTwoId = kAbility2.GetType();
+
+    if (iAbilityOneId == iAbilityTwoId)
+    {
+        return 0;
+    }
+
+    // Basic abilities
+    if (iAbilityOneId == eAbility_ShotStandard)
+    {
+        return -1;
+    }
+    else if (iAbilityTwoId == eAbility_ShotStandard)
+    {
+        return 1;
+    }
+
+    if (iAbilityOneId == eAbility_Reload)
+    {
+        return -1;
+    }
+    else if (iAbilityTwoId == eAbility_Reload)
+    {
+        return 1;
+    }
+
+    // Abilities without limited charges always come before abilities with limited charges
+    bAbilityOneHasCharges = `HL_ABILITYTREE.GetTAbility(iAbilityOneId).iCharges > 0;
+    bAbilityTwoHasCharges = `HL_ABILITYTREE.GetTAbility(iAbilityTwoId).iCharges > 0;
+
+    if (!bAbilityOneHasCharges && bAbilityTwoHasCharges)
+    {
+        return -1;
+    }
+
+    if (bAbilityOneHasCharges && !bAbilityTwoHasCharges)
+    {
+        return 1;
+    }
+
+    // Abilities without charges: hard-coded order
+    if (iAbilityOneId == eAbility_RunAndGun)
+    {
+        return -1;
+    }
+    else if (iAbilityTwoId == eAbility_RunAndGun)
+    {
+        return 1;
+    }
+
+    if (iAbilityOneId == eAbility_ShotSuppress || iAbilityOneId == eAbility_ShotMayhem)
+    {
+        return -1;
+    }
+    else if (iAbilityTwoId == eAbility_ShotSuppress || iAbilityTwoId == eAbility_ShotMayhem)
+    {
+        return 1;
+    }
+
+    if (iAbilityOneId == eAbility_RapidFire)
+    {
+        return -1;
+    }
+    else if (iAbilityTwoId == eAbility_RapidFire)
+    {
+        return 1;
+    }
+
+    if (iAbilityOneId == eAbility_ShotFlush)
+    {
+        return -1;
+    }
+    else if (iAbilityTwoId == eAbility_ShotFlush)
+    {
+        return 1;
+    }
+
+    if (iAbilityOneId == eAbility_Aim)
+    {
+        return -1;
+    }
+    else if (iAbilityTwoId == eAbility_Aim)
+    {
+        return 1;
+    }
+
+    if (iAbilityOneId == eAbility_Overwatch)
+    {
+        return -1;
+    }
+    else if (iAbilityTwoId == eAbility_Overwatch)
+    {
+        return 1;
+    }
+
+    // Abilities with charges: hard-coded order
+    if (iAbilityOneId == eAbility_RocketLauncher)
+    {
+        return -1;
+    }
+    else if (iAbilityTwoId == eAbility_RocketLauncher)
+    {
+        return 1;
+    }
+
+    if (iAbilityOneId == eAbility_ShredderRocket)
+    {
+        return -1;
+    }
+    else if (iAbilityTwoId == eAbility_ShredderRocket)
+    {
+        return 1;
+    }
+
+    if (iAbilityOneId == eAbility_FragGrenade)
+    {
+        return -1;
+    }
+    else if (iAbilityTwoId == eAbility_FragGrenade)
+    {
+        return 1;
+    }
+
+    if (iAbilityOneId == eAbility_AlienGrenade)
+    {
+        return -1;
+    }
+    else if (iAbilityTwoId == eAbility_AlienGrenade)
+    {
+        return 1;
+    }
+
+    if (iAbilityOneId == eAbility_BattleScanner)
+    {
+        return -1;
+    }
+    else if (iAbilityTwoId == eAbility_BattleScanner)
+    {
+        return 1;
+    }
+
+    return 0;
+}
+
+function bool TakeOverwatchShot(XGUnit Target, optional bool bReactionFire = false, optional bool bCloseCombatShot = false)
+{
+    local bool bResult;
+
+    `HL_LOG_CLS("TakeOverwatchShot: before");
+    bResult = super.TakeOverwatchShot(Target, bReactionFire, bCloseCombatShot);
+    `HL_LOG_CLS("TakeOverwatchShot: after. bResult = " $ bResult);
+
+    return bResult;
 }
 
 auto simulated state Inactive

@@ -23,6 +23,10 @@
 `define LW_TECH_ID(nm) (class'LongWarConstants'.const.ResearchID_`nm)
 `define LW_SECOND_WAVE_ID(nm) (class'LongWarConstants'.const.SecondWaveID_`nm)
 
+// Macros for checking the current game state
+`define HL_IS_STRAT_GAME (XComHeadquartersGame(class'Engine'.static.GetCurrentWorldInfo().Game) != none)
+`define HL_IS_TAC_GAME (XComTacticalGame(class'Engine'.static.GetCurrentWorldInfo().Game) != none)
+
 // ---------------------------
 // Extension macros
 //
@@ -32,7 +36,7 @@
 // These macros provide a shorthand for accessing them.
 // ---------------------------
 
-`define HL_TWEAPON(kWeapon) (class'Highlander_XGWeapon_Extensions'.static.GetHLWeapon(`kWeapon))
+`define HL_TWEAPON_FROM_XG(kWeapon) (class'Highlander_XGWeapon_Extensions'.static.GetHLWeapon(`kWeapon))
 
 // ---------------------------
 // Strategy layer macros
@@ -40,6 +44,7 @@
 
 `define HL_STRATCFG(nm) (class'Highlander_XGStrategyConfig'.default.`nm)
 
+`define HL_ABILITYTREE (Highlander_XGAbilityTree(`HL_GAMECORE.m_kAbilities))
 `define HL_BARRACKS (Highlander_XGFacility_Barracks(`HQGAME.GetGameCore().GetHQ().GetBarracks()))
 `define HL_FTECH(techId, bRushResearch) (`HL_TECHTREE.HL_GetFoundryTech(`techId, `bRushResearch))
 `define HL_ENGINEERING (Highlander_XGFacility_Engineering(`HQGAME.GetGameCore().GetHQ().GetEngineering()))
@@ -60,6 +65,4 @@
 // ---------------------------
 
 `define HL_CHEATMGR_TAC (Highlander_XComTacticalCheatManager(XComGameReplicationInfo(class'Engine'.static.GetCurrentWorldInfo().GRI).GetALocalPlayerController().CheatManager))
-`define HL_TAC_ABILITYTREE (Highlander_XGAbilityTree(`HL_TAC_GAMECORE.m_kAbilities))
 `define HL_TAC_CARGO (Highlander_XGDropshipCargoInfo(`BATTLE.m_kDesc.m_kDropShipCargoInfo))
-`define HL_TAC_GAMECORE (Highlander_XGTacticalGameCore(`GAMECORE))

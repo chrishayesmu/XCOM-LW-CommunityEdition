@@ -5,7 +5,7 @@ simulated function SetWeapons(XGWeapon ActiveWeapon, XGWeapon PrimaryWeapon, opt
     m_kWeaponPanel0.SetWeaponAndAmmo(PrimaryWeapon);
     m_kWeaponPanel1.SetWeaponAndAmmo(secondaryWeapon);
 
-    AS_SetWeaponName(`HL_TWEAPON(ActiveWeapon).strName);
+    AS_SetWeaponName(`HL_TWEAPON_FROM_XG(ActiveWeapon).strName);
 
     if (ActiveWeapon == none)
     {

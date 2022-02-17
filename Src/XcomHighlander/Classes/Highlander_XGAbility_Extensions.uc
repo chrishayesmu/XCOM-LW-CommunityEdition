@@ -1,5 +1,83 @@
 class Highlander_XGAbility_Extensions extends Object;
 
+static function CalcDamage(XGAbility_Targeted kAbility)
+{
+    local XGUnit kPrimTarget;
+    local bool bDoesSplashDamage;
+    local XComWeapon kTemplate;
+
+    kPrimTarget = kAbility.GetPrimaryTarget();
+
+    if (!`GAMECORE.m_kAbilities.AbilityHasProperty(kAbility.GetType(), eProp_InvulnerableWorld))
+    {
+        kAbility.m_iActualEnvironmentDamage = `GAMECORE.CalcEnvironmentalDamage(kAbility.m_kWeapon.ItemType(), kAbility.GetType(), kAbility.m_kUnit.GetCharacter().m_kChar, kAbility.m_kUnit.m_aCurrentStats, kAbility.m_bCritical, kAbility.m_bHasHeightAdvantage, kAbility.m_fDistanceToTarget, kAbility.m_bHasFlank);
+
+        if (kAbility.m_kUnit.GetCharacter().HasUpgrade(`LW_PERK_ID(Sapper)))
+        {
+            kAbility.m_iActualEnvironmentDamage *= class'Highlander_XGTacticalGameCore'.default.fSapperEnvironmentalDamageMultiplier;
+        }
+
+        if (kAbility.m_iActualEnvironmentDamage < 0)
+        {
+            kAbility.m_iActualEnvironmentDamage = 0;
+        }
+    }
+    else
+    {
+        kAbility.m_iActualEnvironmentDamage = 0;
+    }
+
+    if (kAbility.DoesDamage() && !kAbility.m_bIgnoreCalculation)
+    {
+        if (kPrimTarget != none)
+        {
+            kAbility.m_kUnit.LastHitTarget = kPrimTarget;
+        }
+
+        switch (kAbility.GetType())
+        {
+            case eAbility_DeathBlossom:
+                kAbility.m_iActualDamage = kAbility.m_kUnit.m_aCurrentStats[eStat_Damage] + `HL_UTILS.RandInRange(class'Highlander_XGTacticalGameCore'.default.DeathBlossomAddedDamage);
+                kAbility.m_iActualDamage = kPrimTarget.AbsorbDamage(kAbility.m_iActualDamage, kAbility.m_kUnit, kAbility.m_kWeapon);
+                break;
+            case eAbility_PsiLance:
+                kAbility.m_iActualDamage = `GAMECORE.CalcPsiLanceDamage(kAbility.m_kUnit, kAbility.GetPrimaryTarget());
+                break;
+            case eAbility_Mindfray:
+                kAbility.m_iActualDamage = class'Highlander_XGTacticalGameCore'.default.iMindfrayDamage;
+                break;
+            case eAbility_ShotMayhem:
+                kAbility.m_iActualDamage = class'Highlander_XGTacticalGameCore'.default.iMayhemDamageBonusForSuppression;
+                break;
+            case eAbility_BullRush:
+                kAbility.m_iActualDamage = kAbility.m_kUnit.m_aCurrentStats[eStat_Damage] + `HL_UTILS.RandInRange(class'Highlander_XGTacticalGameCore'.default.BullRushAddedDamage);
+                kAbility.m_iActualDamage = kPrimTarget.AbsorbDamage(kAbility.m_iActualDamage, kAbility.m_kUnit, kAbility.m_kWeapon);
+                break;
+            case eAbility_ShredderRocket:
+                kAbility.m_iActualEnvironmentDamage *= 0.0;
+                // Deliberate case fall-through
+            default:
+                kAbility.m_iActualDamage = `GAMECORE.CalcOverallDamage(kAbility.m_kWeapon.ItemType(), CalculateAbilityModifiedDamage(kAbility), kAbility.m_bCritical, kAbility.m_bReflected);
+                break;
+        }
+
+        kTemplate = `CONTENTMGR.GetWeaponTemplate(kAbility.m_kWeapon.GameplayType());
+
+        if (kTemplate != none && kTemplate.ProjectileTemplate != none)
+        {
+            bDoesSplashDamage = ClassIsChildOf(kTemplate.ProjectileTemplate.MyDamageType, class'XComDamageType_Explosion') && kTemplate.ProjectileTemplate.MyDamageType.default.bCausesFracture;
+        }
+
+        if (kPrimTarget != none && !bDoesSplashDamage)
+        {
+            if (kAbility.m_bHit && !kAbility.HasProperty(eProp_Psionic) && !kAbility.HasProperty(eProp_Stun))
+            {
+                kAbility.m_iActualDamage = kPrimTarget.AbsorbDamage(kAbility.m_iActualDamage, kAbility.m_kUnit, kAbility.m_kWeapon);
+            }
+        }
+    }
+}
+
 static simulated function int CalculateAbilityModifiedDamage(XGAbility_Targeted kAbility)
 {
     local int iBaseDamage, iDamage, iDamageBonusItemId;
@@ -7,6 +85,7 @@ static simulated function int CalculateAbilityModifiedDamage(XGAbility_Targeted 
     local XGWeapon kWeapon;
     local HL_TWeapon kTWeapon;
 
+    iDamage = kAbility.m_kUnit.m_aCurrentStats[eStat_Damage];
     kWeapon = kAbility.m_kWeapon;
 
     if (kWeapon == none)
@@ -14,11 +93,10 @@ static simulated function int CalculateAbilityModifiedDamage(XGAbility_Targeted 
         return iDamage;
     }
 
-    kTWeapon = class'Highlander_XGWeapon_Extensions'.static.GetHLWeapon(kWeapon);
-    iWeaponItemId = class'Highlander_XGWeapon_Extensions'.static.GetItemId(kWeapon);
+    kTWeapon = `HL_TWEAPON_FROM_XG(kWeapon);
+    iWeaponItemId = kTWeapon.iItemId;
 
     iBaseDamage = kTWeapon.iDamage;
-    iDamage = kAbility.m_kUnit.m_aCurrentStats[eStat_Damage];
 
     // Weapon class is used here to represent the weapon tech tier
     // TODO: GetWeaponClass needs a Highlander equivalent
@@ -56,7 +134,6 @@ static simulated function int CalculateAbilityModifiedDamage(XGAbility_Targeted 
     {
         case eAbility_ShotStandard:
         case eAbility_RapidFire:
-        case eAbility_ShotMayhem:
             if (kAbility.m_kUnit.m_kCharacter.HasUpgrade(`LW_PERK_ID(Mayhem)))
             {
                 if (kWeapon.HasProperty(eWP_Support)) // SAWs/LMGs
@@ -70,6 +147,9 @@ static simulated function int CalculateAbilityModifiedDamage(XGAbility_Targeted 
                 }
             }
 
+            break;
+        case eAbility_ShotMayhem:
+            iDamage += class'Highlander_XGTacticalGameCore'.default.iMayhemDamageBonusForSuppression;
             break;
         case eAbility_NeedleGrenade:
         case eAbility_MEC_GrenadeLauncher:
@@ -87,7 +167,14 @@ static simulated function int CalculateAbilityModifiedDamage(XGAbility_Targeted 
 
             if (kAbility.m_kUnit.m_kCharacter.HasUpgrade(`LW_PERK_ID(Mayhem)))
             {
-                iDamage += class'Highlander_XGTacticalGameCore'.default.iMayhemDamageBonusForGrenades;
+                if (kAbility.GetType() == eAbility_MEC_ProximityMine)
+                {
+                    iDamage += class'Highlander_XGTacticalGameCore'.default.iMayhemDamageBonusForProximityMines;
+                }
+                else
+                {
+                    iDamage += class'Highlander_XGTacticalGameCore'.default.iMayhemDamageBonusForGrenades;
+                }
             }
 
             break;
@@ -96,20 +183,7 @@ static simulated function int CalculateAbilityModifiedDamage(XGAbility_Targeted 
         case eAbility_RocketLauncher:
             if (kAbility.m_kUnit.m_kCharacter.HasUpgrade(`LW_PERK_ID(Mayhem)))
             {
-                if (iWeaponItemId == `LW_ITEM_ID(RecoillessRifle))
-                {
-                    iDamage += class'Highlander_XGTacticalGameCore'.default.iMayhemDamageBonusForRocketLaunchers;
-                }
-
-                if (iWeaponItemId == `LW_ITEM_ID(RocketLauncher))
-                {
-                    iDamage += class'Highlander_XGTacticalGameCore'.default.iMayhemDamageBonusForRocketLaunchers;
-                }
-
-                if (iWeaponItemId == `LW_ITEM_ID(BlasterLauncher))
-                {
-                    iDamage += class'Highlander_XGTacticalGameCore'.default.iMayhemDamageBonusForRocketLaunchers;
-                }
+                iDamage += class'Highlander_XGTacticalGameCore'.default.iMayhemDamageBonusForRocketLaunchers;
             }
 
             break;
@@ -142,12 +216,9 @@ static simulated function int CalculateAbilityModifiedDamage(XGAbility_Targeted 
                 }
             }
 
-            if (kAbility.m_kUnit.m_kCharacter.HasUpgrade(`LW_PERK_ID(Mayhem)))
+            if (kAbility.m_kUnit.m_kCharacter.HasUpgrade(`LW_PERK_ID(Mayhem)) && kWeapon.HasProperty(eWP_Sniper))
             {
-                if (kWeapon.HasProperty(eWP_Sniper))
-                {
-                    iDamage += class'Highlander_XGTacticalGameCore'.default.iMayhemDamageBonusForSniperRifles;
-                }
+                iDamage += class'Highlander_XGTacticalGameCore'.default.iMayhemDamageBonusForSniperRifles;
             }
 
             break;
@@ -175,7 +246,7 @@ static simulated function int CalculateAbilityModifiedDamage(XGAbility_Targeted 
         case eAbility_MEC_KineticStrike:
             if (kAbility.m_kUnit.m_kCharacter.HasUpgrade(`LW_PERK_ID(MECCloseCombat)))
             {
-                iDamage += 4;
+                iDamage += class'Highlander_XGTacticalGameCore'.default.iMecCloseCombatDamageBonus;
             }
 
             if (class'XGTacticalGameCoreNativeBase'.static.TInventoryHasItemType(kAbility.m_kUnit.GetCharacter().m_kChar.kInventory, `LW_ITEM_ID(TheThumper)))
@@ -218,15 +289,12 @@ static simulated function int CalculateAbilityModifiedDamage(XGAbility_Targeted 
     {
         if (kTWeapon.iSize == 1)
         {
-            iDamage += 1;
+            iDamage += class'Highlander_XGTacticalGameCore'.default.iRangerDamageBonusPrimary;
         }
-    }
 
-    if (kAbility.m_kUnit.m_kCharacter.HasUpgrade(`LW_PERK_ID(Ranger)))
-    {
         if (kWeapon.HasProperty(eWP_Pistol))
         {
-            iDamage += 1;
+            iDamage += class'Highlander_XGTacticalGameCore'.default.iRangerDamageBonusPistol;
         }
     }
 
@@ -234,7 +302,7 @@ static simulated function int CalculateAbilityModifiedDamage(XGAbility_Targeted 
     {
         if (kWeapon.HasProperty(eWP_Pistol))
         {
-            iDamage += 1;
+            iDamage += class'Highlander_XGTacticalGameCore'.default.iReflexPistolsDamageBonus;
         }
     }
 
@@ -246,11 +314,11 @@ static simulated function int CalculateAbilityModifiedDamage(XGAbility_Targeted 
             {
                 if (kWeapon.HasProperty(eWP_Pistol))
                 {
-                    iDamage += 1;
+                    iDamage += class'Highlander_XGTacticalGameCore'.default.iVitalPointTargetingDamageBonusPistol;
                 }
                 else
                 {
-                    iDamage += 2;
+                    iDamage += class'Highlander_XGTacticalGameCore'.default.iVitalPointTargetingDamageBonusPrimary;
                 }
             }
         }
@@ -260,7 +328,7 @@ static simulated function int CalculateAbilityModifiedDamage(XGAbility_Targeted 
     {
         if ((kAbility.m_kUnit.GetCharacter().m_kChar.aUpgrades[123] & 4) > 0) // Enhanced Plasma
         {
-            iDamage += 1;
+            iDamage += class'Highlander_XGTacticalGameCore'.default.iEnhancedPlasmaDamageBonus;
         }
     }
 
@@ -328,13 +396,13 @@ static simulated function int CalculateAbilityModifiedDamage(XGAbility_Targeted 
  * For healing abilities, returns the healing amount; for other abilities, returns the modified weapon damage, including
  * the weapon's base damage (if any).
  */
-simulated function int GetPossibleDamage(XGAbility_Targeted kAbility)
+static simulated function int GetPossibleDamage(XGAbility_Targeted kAbility)
 {
     local int iPossibleDamage, iHealing;
 
     if (kAbility.m_kWeapon != none)
     {
-        iPossibleDamage = CalculateAbilityModifiedDamage(kAbility) + `HL_GAMECORE.HL_GetTWeapon(kAbility.m_kWeapon.ItemType()).iDamage;
+        iPossibleDamage = CalculateAbilityModifiedDamage(kAbility) + `HL_TWEAPON_FROM_XG(kAbility.m_kWeapon).iDamage;
     }
 
     if (kAbility.GetType() == eAbility_Mindfray)

@@ -3,9 +3,13 @@ class Highlander_XGBattleDesc extends XGBattleDesc;
 struct CheckpointRecord_Highlander_XGBattleDesc extends XGBattleDesc.CheckpointRecord
 {
     var HighlanderItemContainer m_kArtifactsContainer;
+    var array<XGItem> arrRecordedItems;
+    var array<string> arrItemStrings;
 };
 
 var HighlanderItemContainer m_kArtifactsContainer;
+var array<XGItem> arrRecordedItems;
+var array<string> arrItemStrings;
 
 function Highlander_XGBattleDesc Init()
 {
@@ -22,6 +26,34 @@ function Highlander_XGBattleDesc Init()
     }
 
     return self;
+}
+
+function CreateCheckpointRecord()
+{
+    local XGItem kItem;
+
+    arrRecordedItems.Remove(0, arrRecordedItems.Length);
+    arrItemStrings.Remove(0, arrItemStrings.Length);
+
+    foreach AllActors(class'XGItem', kItem)
+    {
+        arrRecordedItems.AddItem(kItem);
+        arrItemStrings.AddItem(kItem.m_strUIImage);
+    }
+
+    `HL_LOG_CLS("CreateCheckpointRecord: Recorded " $ arrRecordedItems.Length $ " items to persist");
+}
+
+function ApplyCheckpointRecord()
+{
+    local int Index;
+
+    for (Index = 0; Index < arrRecordedItems.Length; Index++)
+    {
+        arrRecordedItems[Index].m_strUIImage = arrItemStrings[Index];
+    }
+
+    `HL_LOG_CLS("ApplyCheckpointRecord: Loaded " $ arrRecordedItems.Length $ " item IDs");
 }
 
 function TSoldierPawnContent BuildAlienContent(ECharacter AlienType, optional EItemType eAltWeapon = 0)

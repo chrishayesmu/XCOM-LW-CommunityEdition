@@ -2,26 +2,47 @@ class Highlander_XGTacticalGameCore extends XGTacticalGameCore
     config(HighlanderBaseTacticalGame)
     dependson(HighlanderTypes);
 
-struct CheckpointRecord
-{
-    var array<XGItem> arrRecordedItems;
-    var array<string> arrItemStrings;
-};
-
 var config array<HL_TWeapon> arrCfgWeapons;
-var config int SuppressionAimPenalty;
 
 // ----------------------------------------
 // Config for tactical game abilities
 // ----------------------------------------
 
+// Config that mostly impact the player's units, or aliens and XCOM equally
+var config float fAbsorptionFieldsActivationThreshold;
+var config float fAbsorptionFieldsIncomingDamageMultiplier;
+var config float fAcidMinimumDRRemoved;
+var config float fAcidDRRemovalPercentage;
+var config float fCombatStimsIncomingDamageMultiplier;
+var config float fCombinedArmsDRPenetration;
+var config float fDamageControlDRBonus;
+var config float fGaussWeaponsDRPenetration;
+var config float fLowCoverDRBonus;
+var config float fHighCoverDRBonus;
+var config float fOneForAllDRBonus;
+var config float fIncomingMeleeDamageMultiplierForChitinPlating;
+var config float fIncomingMeleeDamageMultiplierForChryssalids;
+var config float fMindMergeDRPerWill;
+var config float fPsiShieldIncomingDamageMultiplier;
+var config float fQuenchgunsDRPenetration;
+var config float fSapperEnvironmentalDamageMultiplier;
+var config float fShockAbsorbentArmorIncomingDamageMultiplier;
+var config float fShockAbsorbentArmorRadius;
+var config float fShotgunDRPenalty;
 var config float fShredderRocketDamageMultiplier;
+var config float fWillToSurviveDRBonus;
 
+var config int iAlienGrenadesDamageBonusForAPGrenades;
+var config int iAlienGrenadesDamageBonusForGrenadeLauncher;
+var config int iEnhancedPlasmaDamageBonus;
 var config int iImprovedMedikitHealBonus;
+var config int iMecCloseCombatDamageBonus;
 var config int iMayhemDamageBonusForGrenades;
 var config int iMayhemDamageBonusForMachineGuns;
+var config int iMayhemDamageBonusForProximityMines;
 var config int iMayhemDamageBonusForRocketLaunchers;
 var config int iMayhemDamageBonusForSniperRifles;
+var config int iMayhemDamageBonusForSuppression;
 var config int iMindfrayDamage;
 var config int iMedikitHealBase;
 var config int iPrecisionShotDamageBonusForBallisticSniper;
@@ -29,21 +50,28 @@ var config int iPrecisionShotDamageBonusForGaussSniper;
 var config int iPrecisionShotDamageBonusForLaserSniper;
 var config int iPrecisionShotDamageBonusForPulseSniper;
 var config int iPrecisionShotDamageBonusForPlasmaSniper;
+var config int iRangerDamageBonusPistol;
+var config int iRangerDamageBonusPrimary;
+var config int iReflexPistolsDamageBonus;
 var config int iRepairHealBaseAliens;
 var config int iRepairHealBaseXCOM;
 var config int iSapperDamageBonus;
 var config int iSaviorHealBonus;
 var config int iSmartMacrophagesHealBonus;
+var config int iSuppressionAimPenalty;
+var config int iVitalPointTargetingDamageBonusPistol;
+var config int iVitalPointTargetingDamageBonusPrimary;
+
+// Config for enemies
+var config HL_TRange BullRushAddedDamage;
+var config HL_TRange DeathBlossomAddedDamage;
 
 var array<HL_TWeapon> m_arrHLWeapons;
 
-// TODO document these
-var array<XGItem> arrRecordedItems;
-var array<string> arrItemStrings;
-
-
 simulated event Init()
 {
+    `HL_LOG_CLS("Init");
+
     m_arrWeapons.Add(255);
     m_arrArmors.Add(255);
     m_arrCharacters.Add(32);
@@ -60,37 +88,11 @@ simulated event Init()
     m_bInitialized = true;
 }
 
-function CreateCheckpointRecord()
-{
-    local XGItem kItem;
-
-    arrRecordedItems.Remove(0, arrRecordedItems.Length);
-    arrItemStrings.Remove(0, arrItemStrings.Length);
-
-    foreach AllActors(class'XGItem', kItem)
-    {
-        arrRecordedItems.AddItem(kItem);
-        arrItemStrings.AddItem(kItem.m_strUIImage);
-    }
-
-    `HL_LOG_CLS("Recorded " $ arrRecordedItems.Length $ " items to persist");
-}
-
-function ApplyCheckpointRecord()
-{
-    local int Index;
-
-    for (Index = 0; Index < arrRecordedItems.Length; Index++)
-    {
-        arrRecordedItems[Index].m_strUIImage = arrItemStrings[Index];
-    }
-
-    `HL_LOG_CLS("Loaded " $ arrRecordedItems.Length $ " item IDs");
-}
-
 simulated function BuildWeapons()
 {
     local HL_TWeapon kWeapon;
+
+    `HL_LOG_CLS("BuildWeapons");
 
     // TODO delete this
     super.BuildWeapons();
@@ -120,6 +122,10 @@ simulated function TWeapon GetTWeapon(int iWeapon)
     local int iAbilityId, iPropertyId;
     local HL_TWeapon kHLWeapon;
     local TWeapon kWeapon;
+
+    `HL_LOG_CLS("GetTWeapon: iWeapon = " $ iWeapon);
+
+    return super.GetTWeapon(iWeapon);
 
     // Map as much as we can into the original struct
     kHLWeapon = HL_GetTWeapon(iWeapon);
@@ -166,7 +172,9 @@ simulated function TWeapon GetTWeapon(int iWeapon)
 simulated function HL_TWeapon HL_GetTWeapon(int iWeapon)
 {
     local int Index;
-    local HL_TWeapon kBlankWeapon;
+    local HL_TWeapon kBlankWeapon, kWeapon;
+
+    //`HL_LOG_CLS("HL_GetTWeapon: iWeapon = " $ iWeapon);
 
     Index = m_arrHLWeapons.Find('iItemId', iWeapon);
 
@@ -175,7 +183,11 @@ simulated function HL_TWeapon HL_GetTWeapon(int iWeapon)
         return kBlankWeapon;
     }
 
-    return m_arrHLWeapons[Index];
+    kWeapon = m_arrHLWeapons[Index];
+
+    `HL_MOD_LOADER.Override_GetTWeapon(kWeapon);
+
+    return kWeapon;
 }
 
 // This was a rewritten function in Long War that should be deprecated, but it's called in too many
@@ -190,6 +202,8 @@ simulated function int GetUpgradeAbilities(int iRank, int iPersonality)
 simulated function int GetEquipmentItemStat(int iItemId, int iCharacterStat)
 {
     local HL_TWeapon kWeapon;
+
+    `HL_LOG_CLS("GetEquipmentItemStat: iItemId = " $ iItemId $ ", iCharacterStat = " $ iCharacterStat);
 
     if (iItemId == 0)
     {
@@ -239,7 +253,7 @@ simulated function HL_GetInventoryStatModifiers(out int aModifiers[ECharacterSta
 {
     local int iStat;
 
-    //`HL_LOG_CLS("HL_GetInventoryStatModifiers: iEquippedWeaponItemId = " $ iEquippedWeaponItemId);
+    `HL_LOG_CLS("HL_GetInventoryStatModifiers: iEquippedWeaponItemId = " $ iEquippedWeaponItemId);
 
     foreach arrBackpackItemIds(iStat)
     {
@@ -316,6 +330,8 @@ simulated function int GetOverheatIncrement(XGUnit kUnit, int iWeapon, int iAbil
 {
     local int iAmount;
 
+    `HL_LOG_CLS("GetOverheatIncrement: iWeapon = " $ iWeapon);
+
     if (iWeapon == 0)
     {
         return 0;
@@ -388,6 +404,8 @@ simulated function int TotalStatFromItem(int iItemId, ECharacterStat eStat)
     local TCharacterBalance kCharacterBalance;
     local int iTotal;
 
+    `HL_LOG_CLS("TotalStatFromItem: iItemId = " $ iItemId $ ", eStat = " $ eStat);
+
     iTotal = 0;
 
     if (ItemIsWeapon(iItemId))
@@ -455,21 +473,25 @@ function eWeaponRangeCat HL_GetWeaponCatRange(int iWeaponItemId)
 // TODO: rewrite all of the ItemIs* functions, maybe move into XGItemTree
 simulated function bool ItemIsAccessory(int iItem)
 {
+    `HL_LOG_CLS("ItemIsAccessory: iItem = " $ iItem);
     return HL_GetTWeapon(iItem).iDamage <= 0;
 }
 
 simulated function bool ItemIsWeapon(int iItem)
 {
+    `HL_LOG_CLS("ItemIsWeapon: iItem = " $ iItem);
     return HL_GetTWeapon(iItem).iDamage > 0;
 }
 
 simulated function bool ItemIsArmor(int iItem)
 {
+    `HL_LOG_CLS("ItemIsArmor: iItem = " $ iItem);
     return m_arrArmors[iItem].iHPBonus > 0;
 }
 
 simulated function bool ItemIsMecArmor(int iItem)
 {
+    `HL_LOG_CLS("ItemIsMecArmor: iItem = " $ iItem);
     switch (iItem)
     {
         case 145:
@@ -488,10 +510,16 @@ simulated function bool ItemIsMecArmor(int iItem)
 
 simulated function bool ItemIsShipWeapon(int iItem)
 {
+    `HL_LOG_CLS("ItemIsShipWeapon: iItem = " $ iItem);
     return iItem >= 116 && iItem < 123;
 }
 
 simulated function bool WeaponHasProperty(int iWeapon, int iWeaponProperty)
 {
-    return HL_GetTWeapon(iWeapon).arrProperties.Find(iWeaponProperty) != INDEX_NONE;
+    local HL_TWeapon kWeapon;
+
+    `HL_LOG_CLS("WeaponHasProperty: iWeapon = " $ iWeapon $ ", iWeaponProperty = " $ iWeaponProperty);
+    kWeapon = HL_GetTWeapon(iWeapon);
+
+    return kWeapon.arrProperties.Find(iWeaponProperty) != INDEX_NONE;
 }

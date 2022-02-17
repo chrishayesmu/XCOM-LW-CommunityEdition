@@ -482,7 +482,6 @@ function array<HL_TItem> HL_GetItemsInCategory(int iCategory, optional int iTran
 
     foreach m_arrHLItems(kItemQuantity)
     {
-
         if (kItemQuantity.iQuantity <= 0)
         {
             continue;

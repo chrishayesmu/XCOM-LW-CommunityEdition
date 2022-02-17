@@ -422,6 +422,20 @@ function OnAbilitiesBuilt(array<TAbility> arrAbilities)
 
 // #endregion
 
+// #region Item-related tactical events
+
+simulated function Override_GetTWeapon(out HL_TWeapon kWeapon)
+{
+    local HighlanderTacticalListener kTacticalListener;
+
+    foreach TacticalListeners(kTacticalListener)
+    {
+        kTacticalListener.Override_GetTWeapon(kWeapon);
+    }
+}
+
+// #endregion
+
 // #region Miscellaneous tactical events
 
 

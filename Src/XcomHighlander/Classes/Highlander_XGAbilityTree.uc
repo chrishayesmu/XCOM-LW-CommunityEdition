@@ -53,86 +53,107 @@ simulated function XGAbility SpawnAbility(int iAbility, XGUnitNativeBase kUnit, 
 {
     local class<XGAbility> kAbilityClass;
     local XGAbility kAbility;
+    local XGAbility_Targeted kAbilityTargeted;
 
+    // Pick the ability class. Note that there is an XGAbility_PrecisionShot class, but it
+    // isn't used in the native version of this function.
     switch (iAbility)
     {
         case eAbility_BullRush:
-            kAbilityClass = class'XGAbility_BullRush';
+            kAbilityClass = class'Highlander_XGAbility_BullRush';
             break;
         case eAbility_ClusterBomb:
-            kAbilityClass = class'XGAbility_ClusterBomb';
+            kAbilityClass = class'Highlander_XGAbility_ClusterBomb';
             break;
         case eAbility_DisablingShot:
-            kAbilityClass = class'XGAbility_DisablingShot';
+            kAbilityClass = class'Highlander_XGAbility_DisablingShot';
             break;
         case eAbility_FlashBang:
-            kAbilityClass = class'XGAbility_Flashbang';
+            kAbilityClass = class'Highlander_XGAbility_Flashbang';
             break;
         case eAbility_Fly:
-            kAbilityClass = class'XGAbility_Fly';
+            kAbilityClass = class'Highlander_XGAbility_Fly';
             break;
         case eAbility_FlyUp:
-            kAbilityClass = class'XGAbility_Ascend';
+            kAbilityClass = class'Highlander_XGAbility_Ascend';
             break;
         case eAbility_FlyDown:
-            kAbilityClass = class'XGAbility_Descend';
+            kAbilityClass = class'Highlander_XGAbility_Descend';
             break;
         case eAbility_Grapple:
-            kAbilityClass = class'XGAbility_Grapple';
+            kAbilityClass = class'Highlander_XGAbility_Grapple';
             break;
         case eAbility_GhostGrenade:
-            kAbilityClass = class'XGAbility_GhostGrenade';
+            kAbilityClass = class'Highlander_XGAbility_GhostGrenade';
             break;
         case eAbility_Launch:
-            kAbilityClass = class'XGAbility_Launch';
+            kAbilityClass = class'Highlander_XGAbility_Launch';
             break;
         case eAbility_MEC_ElectroPulse:
-            kAbilityClass = class'XGAbility_Electropulse';
+            kAbilityClass = class'Highlander_XGAbility_Electropulse';
             break;
         case eAbility_MEC_KineticStrike:
-            kAbilityClass = class'XGAbility_KineticStrike';
+            kAbilityClass = class'Highlander_XGAbility_KineticStrike';
+            break;
+        case eAbility_MEC_OneForAll:
+            kAbilityClass = class'Highlander_XGAbility_OneForAll';
             break;
         case eAbility_MEC_RestorativeMist:
-            kAbilityClass = class'XGAbility_RestorativeMist';
+            kAbilityClass = class'Highlander_XGAbility_RestorativeMist';
             break;
         case eAbility_Move:
-            kAbilityClass = class'XGAbility_Move';
-            break;
-        case eAbility_PrecisionShot:
-            kAbilityClass = class'XGAbility_PrecisionShot';
+            kAbilityClass = class'Highlander_XGAbility_Move';
             break;
         case eAbility_PsiInspiration:
-            kAbilityClass = class'XGAbility_PsiInspiration';
+            kAbilityClass = class'Highlander_XGAbility_PsiInspiration';
             break;
         case eAbility_RapidFire:
-            kAbilityClass = class'XGAbility_RapidFire';
+            kAbilityClass = class'Highlander_XGAbility_RapidFire';
             break;
         case eAbility_Rift:
-            kAbilityClass = class'XGAbility_Rift';
+            kAbilityClass = class'Highlander_XGAbility_Rift';
             break;
         case eAbility_ShredderRocket:
-            kAbilityClass = class'XGAbility_ShredderRocket';
+            kAbilityClass = class'Highlander_XGAbility_ShredderRocket';
             break;
         default:
-            kAbilityClass = class'XGAbility';
+            kAbilityClass = class'Highlander_XGAbility_GameCore';
             break;
     }
 
-    `HL_LOG_CLS("Spawning ability class " $ kAbilityClass $ " for iAbility " $ iAbility);
-    kAbility = Spawn(kAbilityClass);
+    kAbility = Spawn(kAbilityClass, kUnit);
 
-    kAbility.m_kGameCore = `GAMECORE;
-    //kAbility.m_kPerkManager = ;
-    kAbility.m_kUnit = XGUnit(kUnit);
-
-    if (XGAbility_Targeted(kAbility) != none)
+    // Not sure why this check is in the native code, but it is
+    if (iAbility == eAbility_BullRush && kWeapon == none)
     {
-        XGAbility_Targeted(kAbility).m_kWeapon = kWeapon;
+        kWeapon = XGWeapon(kUnit.m_kInventory.m_arrStructSlots[kUnit.m_kInventory.m_ActiveWeaponLoc].m_arrItems[0]);
     }
 
-    `HL_LOG_CLS("Calling kAbility.Init()");
-    kAbility.Init(iAbility);
-    `HL_LOG_CLS("Init complete");
+    kAbilityTargeted = XGAbility_Targeted(kAbility);
+
+    if (kAbilityTargeted != none)
+    {
+        kAbilityTargeted.ShotInit(iAbility, arrTargets, kWeapon, /* bReactionFire */ false);
+    }
+    else
+    {
+        kAbility.Init(iAbility);
+    }
+
+    if (bForLocalUseOnly)
+    {
+        kAbility.RemoteRole = ROLE_None;
+        kAbility.m_iAbilityID = -1;
+    }
+
+    if (kAbility.Role == ROLE_Authority)
+    {
+        kAbility.m_bCachedAvailable = kAbility.InternalCheckAvailable();
+        kAbility.bNetDirty = true;
+        kAbility.bForceNetUpdate = true;
+    }
+
+    kAbility.m_kInitialReplicationData_XGAbility.m_bAvailable = kAbility.m_bCachedAvailable;
 
     return kAbility;
 }

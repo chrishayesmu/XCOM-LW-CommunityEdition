@@ -167,7 +167,7 @@ simulated function Update(XGUnit kUnit, XGAbility kAbility)
 
             if (kActiveWeapon != none)
             {
-                SetWeaponStats(`HL_TWEAPON(kActiveWeapon).strName);
+                SetWeaponStats(`HL_TWEAPON_FROM_XG(kActiveWeapon).strName);
             }
         }
         else
@@ -177,7 +177,7 @@ simulated function Update(XGUnit kUnit, XGAbility kAbility)
             if (kInventory != none)
             {
                 kActiveWeapon = kInventory.GetActiveWeapon();
-                SetWeaponStats(`HL_TWEAPON(kActiveWeapon).strName);
+                SetWeaponStats(`HL_TWEAPON_FROM_XG(kActiveWeapon).strName);
             }
         }
 

@@ -32,4 +32,5 @@ simulated function Update()
     `HL_LOG_CLS("Update");
 
     super.Update();
+    `HL_LOG_CLS("After update");
 }
