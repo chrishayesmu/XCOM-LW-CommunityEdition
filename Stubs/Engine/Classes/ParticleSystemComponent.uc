@@ -17,9 +17,9 @@ var					class<ParticleLightEnvironmentComponent>		LightEnvironmentClass;
 /** Lit particle components created from the emitter pool will only share particle DLE's if they have matching SharedInstigator's. */
 var					transient	Actor								LightEnvironmentSharedInstigator;
 
-/** 
- * Limit on the number of particle components that can reuse the same particle light environment. 
- * This controls the trade off between performance and particle lighting update rate.  
+/**
+ * Limit on the number of particle components that can reuse the same particle light environment.
+ * This controls the trade off between performance and particle lighting update rate.
  */
 var					transient	int									MaxLightEnvironmentPooledReuses;
 
@@ -48,7 +48,7 @@ var private transient duplicatetransient const array<SkeletalMeshComponent> Skel
 /**
  * Stores motion blur transform info for particles
  */
-struct native ParticleEmitterInstanceMotionBlurInfo 
+struct native ParticleEmitterInstanceMotionBlurInfo
 {
 	/** Maps unique particle Id to its motion blur info */
 	var	const native transient Map_Mirror ParticleMBInfoMap{TMap<INT, struct FMeshElementMotionBlurInfo>};
@@ -56,7 +56,7 @@ struct native ParticleEmitterInstanceMotionBlurInfo
 /**
  * Stores motion blur transform info for emitter instances
  */
-struct native ViewParticleEmitterInstanceMotionBlurInfo 
+struct native ViewParticleEmitterInstanceMotionBlurInfo
 {
 	/** Maps unique emitter instance via ptr to its particle motion blur info */
 	var	const native transient Map_Mirror EmitterInstanceMBInfoMap{TMap<const struct FParticleMeshEmitterInstance*, struct FParticleEmitterInstanceMotionBlurInfo>};
@@ -105,7 +105,7 @@ struct native ParticleSysParam
 {
 	/** The name of the parameter */
 	var()	name					Name;
-	/** 
+	/**
 	 *	The type of parameters
 	 *	PSPT_None       - There is no data type
 	 *	PSPT_Scalar     - Use the scalar value
@@ -166,7 +166,7 @@ var()	float									SecondsBeforeInactive;
 /** Tracks the time since the last forced UpdateTransform. */
 var	private{private} transient float			TimeSinceLastForceUpdateTransform;
 
-/** 
+/**
  * Time between forced UpdateTransforms for systems that use dynamically calculated bounds,
  * Which is effectively how often the bounds are shrunk.
  */
@@ -247,7 +247,7 @@ enum ParticleReplayState
 	    must be specified using the ReplayFrameIndex */
 	PRS_Replaying,
 };
-				
+
 /** Current particle 'replay state'.  This setting controls whether we're currently simulating/rendering particles normally, or whether we should capture or playback particle replay data instead. */
 var transient const ParticleReplayState ReplayState;
 
@@ -264,7 +264,7 @@ var transient bool bLODUpdatePending;
 /** Check the spawn count and govern if needed */
 var	transient bool bSkipSpawnCountCheck;
 
-/** 
+/**
  *	Event type
  */
 enum EParticleEventType
@@ -370,7 +370,7 @@ native final function ActivateSystem(bool bFlagAsJustAttached = false);
 native final function DeactivateSystem();
 native final function KillParticlesForced();
 
-/** 
+/**
  *	Kill the particles in the specified emitter(s)
  *
  *	@param	InEmitterName		The name of the emitter to kill the particles in.
@@ -516,9 +516,9 @@ native function SetBeamTargetStrength(int EmitterIndex, float NewTargetStrength,
  **/
 native function int DetermineLODLevelForLocation(const out vector EffectLocation);
 
-/** 
+/**
  *	Get the longest possible lifespan for this particle system.
- *	
+ *
  *	@return	FLOAT				The longest lifespan this PSys could have; 0.0f if infinite.
  */
 native function float GetMaxLifespan();
@@ -600,9 +600,9 @@ public:
 	virtual FPrimitiveSceneProxy* CreateSceneProxy();
 	virtual void SetLightEnvironment(ULightEnvironmentComponent* NewLightEnvironment);
 
-	/** 
-	 * Retrieves the materials used in this component 
-	 * 
+	/**
+	 * Retrieves the materials used in this component
+	 *
 	 * @param OutMaterials	The list of used materials.
 	 */
 	virtual void GetUsedMaterials( TArray<UMaterialInterface*>& OutMaterials ) const;
@@ -633,8 +633,8 @@ public:
 	void InitializeSystem();
 
 #if USE_GAMEPLAY_PROFILER
-    /** 
-     * This function actually does the work for the GetProfilerAssetObject and is virtual.  
+    /**
+     * This function actually does the work for the GetProfilerAssetObject and is virtual.
      * It should only be called from GetProfilerAssetObject as GetProfilerAssetObject is safe to call on NULL object pointers
      **/
 	virtual UObject* GetProfilerAssetObjectInternal() const;
@@ -644,8 +644,8 @@ public:
 	 * This will return detail info about this specific object. (e.g. AudioComponent will return the name of the cue,
 	 * ParticleSystemComponent will return the name of the ParticleSystem)  The idea here is that in many places
 	 * you have a component of interest but what you really want is some characteristic that you can use to track
-	 * down where it came from.  
-	 * 
+	 * down where it came from.
+	 *
 	 */
 	virtual FString GetDetailedInfoInternal() const;
 
@@ -667,17 +667,17 @@ public:
 	void	FlushSMComponentsArray();
 
 	/** Event reporting... */
-	/** 
-	 *	Record a spawning event. 
+	/**
+	 *	Record a spawning event.
 	 *
 	 *	@param	InEventName			The name of the event that fired.
 	 *	@param	InEmitterTime		The emitter time when the event fired.
 	 *	@param	InLocation			The location of the particle when the event fired.
 	 *	@param	InVelocity			The velocity of the particle when the event fired.
 	 */
-	void ReportEventSpawn(FName& InEventName, FLOAT InEmitterTime, 
+	void ReportEventSpawn(FName& InEventName, FLOAT InEmitterTime,
 		FVector& InLocation, FVector& InVelocity);
-	/** 
+	/**
 	 *	Record a death event.
 	 *
 	 *	@param	InEventName			The name of the event that fired.
@@ -686,9 +686,9 @@ public:
 	 *	@param	InVelocity			The velocity of the particle when the event fired.
 	 *	@param	InParticleTime		The relative life of the particle when the event fired.
 	 */
-	void ReportEventDeath(FName& InEventName, FLOAT InEmitterTime, 
+	void ReportEventDeath(FName& InEventName, FLOAT InEmitterTime,
 		FVector& InLocation, FVector& InVelocity, FLOAT InParticleTime);
-	/** 
+	/**
 	 *	Record a collision event.
 	 *
 	 *	@param	InEventName		The name of the event that fired.
@@ -702,10 +702,10 @@ public:
 	 *	@param	InItem			Primitive data item which was hit, INDEX_NONE=none.
 	 *	@param	InBoneName		Name of bone we hit (for skeletal meshes).
 	 */
-	void ReportEventCollision(FName& InEventName, FLOAT InEmitterTime, FVector& InLocation, 
-		FVector& InDirection, FVector& InVelocity, FLOAT InParticleTime, FVector& InNormal, 
+	void ReportEventCollision(FName& InEventName, FLOAT InEmitterTime, FVector& InLocation,
+		FVector& InDirection, FVector& InVelocity, FLOAT InParticleTime, FVector& InNormal,
 		FLOAT InTime, INT InItem, FName& InBoneName);
-	/** 
+	/**
 	 *	Record a kismet event.
 	 *
 	 *	@param	InEventName				The name of the event that fired.
@@ -715,7 +715,7 @@ public:
 	 *	@param	bInUsePSysCompLocation	If TRUE, use the particle system component location as spawn location.
 	 *	@param	InNormal				Normal vector of the collision in coordinate system of the returner. Zero=none.
 	 */
-	void ReportEventKismet(FName& InEventName, FLOAT InEmitterTime, FVector& InLocation, 
+	void ReportEventKismet(FName& InEventName, FLOAT InEmitterTime, FVector& InLocation,
 		FVector& InDirection, FVector& InVelocity, UBOOL bInUsePSysCompLocation, FVector& InNormal);
 
 
@@ -747,6 +747,9 @@ public:
 	 */
 	void TrailsNotifyEnd(const UAnimNotify_Trails* AnimNotifyData);
 }
+
+// Export UParticleSystemComponent::execSetMICVectorParameter(FFrame&, void* const)
+native function SetMICVectorParameter(int ElementIndex, name ParameterName, LinearColor Param);
 
 /**
  *	SetLODLevel - sets the LOD level to use for this instance.
@@ -835,7 +838,7 @@ native final function SetActive(bool bNowActive, optional bool bFlagAsJustAttach
 /** stops the emitter, detaches the component, and resets the component's properties to the values of its template */
 native final function ResetToDefaults();
 
-/** 
+/**
  *	Calls SetStopSpawning with the given emitter instance passing in the given value.
  *
  *	@param	InEmitterIndex		The index of the emitter instance to call SetHaltSpawning on; -1 for ALL

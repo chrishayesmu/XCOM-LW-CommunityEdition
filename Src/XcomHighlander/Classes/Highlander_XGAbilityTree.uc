@@ -7,6 +7,58 @@ simulated function BuildAbilities()
     `HL_MOD_LOADER.OnAbilitiesBuilt(m_arrAbilities);
 }
 
+simulated event GetVolume(XGAbility_Targeted kAbility, out TVolume kVolume)
+{
+    if (!AbilityHasEffect(kAbility.iType, eEffect_Volume) && kAbility.iType != eAbility_Rift)
+    {
+        return;
+    }
+
+    switch (kAbility.GetType())
+    {
+        case eAbility_SmokeGrenade:
+            if (kAbility.m_kUnit.GetCharacter().HasUpgrade(ePerk_CombatDrugs))
+            {
+                kVolume = `BATTLE.m_kVolumeMgr.GetTVolume(eVolume_CombatDrugs);
+            }
+            else
+            {
+                kVolume = `BATTLE.m_kVolumeMgr.GetTVolume(eVolume_Smoke);
+            }
+
+            kVolume.fRadius = kAbility.m_kWeapon.GetDamageRadius();
+
+            if (kAbility.m_kUnit.GetCharacter().HasUpgrade(ePerk_CombatDrugs))
+            {
+                kVolume.fRadius *= class'Highlander_XGTacticalGameCore'.default.fCombatDrugsRadiusMultiplier;
+            }
+
+            break;
+        case eAbility_Torch:
+            kVolume = `BATTLE.m_kVolumeMgr.GetTVolume(eVolume_Fire);
+            break;
+        case eAbility_Overwatch:
+            kVolume = `BATTLE.m_kVolumeMgr.GetTVolume(eVolume_Suppression);
+            break;
+        case eAbility_BattleScanner:
+            kVolume = `BATTLE.m_kVolumeMgr.GetTVolume(eVolume_Spy);
+            break;
+        case eAbility_GasGrenade:
+        case eAbility_Plague:
+            kVolume = `BATTLE.m_kVolumeMgr.GetTVolume(eVolume_Poison);
+            kVolume.fRadius = kAbility.m_kWeapon.GetDamageRadius();
+            break;
+        case eAbility_Rift:
+            kVolume = `BATTLE.m_kVolumeMgr.GetTVolume(eVolume_Rift);
+            break;
+        case eAbility_TelekineticField:
+            kVolume = `BATTLE.m_kVolumeMgr.GetTVolume(eVolume_Telekinetic);
+            break;
+        default:
+            break;
+    }
+}
+
 simulated function bool HasAutopsyTechForChar(int iCharType)
 {
     local Highlander_XGDropshipCargoInfo kCargo;

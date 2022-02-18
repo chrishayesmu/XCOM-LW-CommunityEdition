@@ -16,19 +16,19 @@ function int AbsorbDamage(const int IncomingDamage, XGUnit kDamageCauser, XGWeap
     // Mind merge bonus DR (XCOM only)
     if (!IsAI() && m_iWillCheatBonus > 0)
     {
-        fReturnDmg -= class'Highlander_XGTacticalGameCore'.default.fMindMergeDRPerWill * float(m_iWillCheatBonus);
+        fReturnDmg -= `HL_TACCFG(fMindMergeDRPerWill) * float(m_iWillCheatBonus);
     }
 
     // Damage Control
     if (m_kCharacter.HasUpgrade(ePerk_DamageControl) && m_iDamageControlTurns > 0 && fReturnDmg > 1.0)
     {
-        fReturnDmg -= class'Highlander_XGTacticalGameCore'.default.fDamageControlDRBonus;
+        fReturnDmg -= `HL_TACCFG(fDamageControlDRBonus);
     }
 
     // One for All bonus DR
     if (m_bOneForAllActive)
     {
-        fReturnDmg -= class'Highlander_XGTacticalGameCore'.default.fOneForAllDRBonus;
+        fReturnDmg -= `HL_TACCFG(fOneForAllDRBonus);
     }
 
     // Uber Ethereal bonus DR: 15 per remaining Ethereal in the level
@@ -46,7 +46,7 @@ function int AbsorbDamage(const int IncomingDamage, XGUnit kDamageCauser, XGWeap
     // Combat stims damage multiplier
     if (GetAppliedAbility(eAbility_CombatStim) != none)
     {
-        fReturnDmg *= class'Highlander_XGTacticalGameCore'.default.fCombatStimsIncomingDamageMultiplier;
+        fReturnDmg *= `HL_TACCFG(fCombatStimsIncomingDamageMultiplier);
     }
 
     // Reduce melee damage for soldiers with Chitin Plating and for Chryssalids
@@ -56,11 +56,11 @@ function int AbsorbDamage(const int IncomingDamage, XGUnit kDamageCauser, XGWeap
         {
             if (GetInventory() != none && GetInventory().GetRearBackpackItem(eItem_ChitinPlating) != none)
             {
-                fReturnDmg *= class'Highlander_XGTacticalGameCore'.default.fIncomingMeleeDamageMultiplierForChitinPlating;
+                fReturnDmg *= `HL_TACCFG(fIncomingMeleeDamageMultiplierForChitinPlating);
             }
             else if (m_kCharacter.m_kChar.iType == eChar_Chryssalid)
             {
-                fReturnDmg *= class'Highlander_XGTacticalGameCore'.default.fIncomingMeleeDamageMultiplierForChryssalids;
+                fReturnDmg *= `HL_TACCFG(fIncomingMeleeDamageMultiplierForChryssalids);
             }
         }
     }
@@ -68,7 +68,7 @@ function int AbsorbDamage(const int IncomingDamage, XGUnit kDamageCauser, XGWeap
     // Psi Shield on Mechtoids provides DR
     if (GetShieldHP() > 0)
     {
-        fReturnDmg *= class'Highlander_XGTacticalGameCore'.default.fPsiShieldIncomingDamageMultiplier;
+        fReturnDmg *= `HL_TACCFG(fPsiShieldIncomingDamageMultiplier);
     }
 
     // Shock-Absorbent Armor if attacker within 4 tiles
@@ -76,19 +76,19 @@ function int AbsorbDamage(const int IncomingDamage, XGUnit kDamageCauser, XGWeap
     {
         fDist = VSize(GetLocation() - kDamageCauser.GetLocation());
 
-        if (fDist <= class'Highlander_XGTacticalGameCore'.default.fShockAbsorbentArmorRadius)
+        if (fDist <= `HL_TACCFG(fShockAbsorbentArmorRadius))
         {
-            fReturnDmg *= class'Highlander_XGTacticalGameCore'.default.fShockAbsorbentArmorIncomingDamageMultiplier;
+            fReturnDmg *= `HL_TACCFG(fShockAbsorbentArmorIncomingDamageMultiplier);
         }
     }
 
     // Absorption Fields: X% DR of remaining damage greater than Y
     if (m_kCharacter.HasUpgrade(ePerk_AbsorptionFields))
     {
-        if (fReturnDmg > class'Highlander_XGTacticalGameCore'.default.fAbsorptionFieldsActivationThreshold)
+        if (fReturnDmg > `HL_TACCFG(fAbsorptionFieldsActivationThreshold))
         {
-            fAbsorptionFieldsBasis = fReturnDmg - class'Highlander_XGTacticalGameCore'.default.fAbsorptionFieldsActivationThreshold;
-            fReturnDmg -= fAbsorptionFieldsBasis * class'Highlander_XGTacticalGameCore'.default.fAbsorptionFieldsIncomingDamageMultiplier;
+            fAbsorptionFieldsBasis = fReturnDmg - `HL_TACCFG(fAbsorptionFieldsActivationThreshold);
+            fReturnDmg -= fAbsorptionFieldsBasis * `HL_TACCFG(fAbsorptionFieldsIncomingDamageMultiplier);
             m_bAbsorptionFieldsWorked = true;
         }
     }
@@ -96,8 +96,8 @@ function int AbsorbDamage(const int IncomingDamage, XGUnit kDamageCauser, XGWeap
     // Acid: negate percentage of DR, with a minimum value
     if (IsPoisoned())
     {
-        fReturnDmg += FMax(class'Highlander_XGTacticalGameCore'.default.fAcidMinimumDRRemoved,
-                           class'Highlander_XGTacticalGameCore'.default.fAcidDRRemovalPercentage * (float(IncomingDamage) - fReturnDmg));
+        fReturnDmg += FMax(`HL_TACCFG(fAcidMinimumDRRemoved),
+                           `HL_TACCFG(fAcidDRRemovalPercentage) * (float(IncomingDamage) - fReturnDmg));
     }
 
     if (IsInCover())
@@ -109,11 +109,11 @@ function int AbsorbDamage(const int IncomingDamage, XGUnit kDamageCauser, XGWeap
             // Base DR bonus from being in cover
             if (IsInLowCover())
             {
-                fReturnDmg -= class'Highlander_XGTacticalGameCore'.default.fLowCoverDRBonus;
+                fReturnDmg -= `HL_TACCFG(fLowCoverDRBonus);
             }
             else
             {
-                fReturnDmg -= class'Highlander_XGTacticalGameCore'.default.fHighCoverDRBonus;
+                fReturnDmg -= `HL_TACCFG(fHighCoverDRBonus);
             }
 
             // Doubled cover DR bonus if hunkered
@@ -121,18 +121,18 @@ function int AbsorbDamage(const int IncomingDamage, XGUnit kDamageCauser, XGWeap
             {
                 if (IsInLowCover())
                 {
-                    fReturnDmg -= class'Highlander_XGTacticalGameCore'.default.fLowCoverDRBonus;
+                    fReturnDmg -= `HL_TACCFG(fLowCoverDRBonus);
                 }
                 else
                 {
-                    fReturnDmg -= class'Highlander_XGTacticalGameCore'.default.fHighCoverDRBonus;
+                    fReturnDmg -= `HL_TACCFG(fHighCoverDRBonus);
                 }
             }
 
             // Will to Survive DR
             if (m_kCharacter.HasUpgrade(ePerk_WillToSurvive))
             {
-                fReturnDmg -= class'Highlander_XGTacticalGameCore'.default.fWillToSurviveDRBonus;
+                fReturnDmg -= `HL_TACCFG(fWillToSurviveDRBonus);
             }
 
             // Fortiores Una
@@ -140,11 +140,11 @@ function int AbsorbDamage(const int IncomingDamage, XGUnit kDamageCauser, XGWeap
             {
                 if (IsInLowCover())
                 {
-                    fReturnDmg -= class'Highlander_XGTacticalGameCore'.default.fLowCoverDRBonus;
+                    fReturnDmg -= `HL_TACCFG(fLowCoverDRBonus);
                 }
                 else
                 {
-                    fReturnDmg -= class'Highlander_XGTacticalGameCore'.default.fHighCoverDRBonus;
+                    fReturnDmg -= `HL_TACCFG(fHighCoverDRBonus);
                 }
             }
         }
@@ -155,7 +155,7 @@ function int AbsorbDamage(const int IncomingDamage, XGUnit kDamageCauser, XGWeap
         // Combined Arms: negate 1 DR
         if (kDamageCauser.m_kCharacter.HasUpgrade(`LW_PERK_ID(CombinedArms)))
         {
-            fReturnDmg += class'Highlander_XGTacticalGameCore'.default.fCombinedArmsDRPenetration;
+            fReturnDmg += `HL_TACCFG(fCombinedArmsDRPenetration);
         }
 
         if (class'XGTacticalGameCoreNativeBase'.static.TInventoryHasItemType(kDamageCauser.m_kCharacter.m_kChar.kInventory, `LW_ITEM_ID(ArmorPiercingAmmo)))
@@ -170,11 +170,11 @@ function int AbsorbDamage(const int IncomingDamage, XGUnit kDamageCauser, XGWeap
         {
             if (class'XGTacticalGameCore'.static.GetWeaponClass(kWeapon.ItemType()) == 3) // Gauss tier weapon
             {
-                fReturnDmg += class'Highlander_XGTacticalGameCore'.default.fGaussWeaponsDRPenetration;
+                fReturnDmg += `HL_TACCFG(fGaussWeaponsDRPenetration);
 
                 if ((kDamageCauser.m_kCharacter.m_kChar.aUpgrades[123] & 32) > 0) // Quenchguns
                 {
-                    fReturnDmg += class'Highlander_XGTacticalGameCore'.default.fQuenchgunsDRPenetration;
+                    fReturnDmg += `HL_TACCFG(fQuenchgunsDRPenetration);
                 }
             }
         }
@@ -191,7 +191,7 @@ function int AbsorbDamage(const int IncomingDamage, XGUnit kDamageCauser, XGWeap
                 // DR penalty for shotguns unless using Breaching Ammo
                 if (!class'XGTacticalGameCoreNativeBase'.static.TInventoryHasItemType(kDamageCauser.m_kCharacter.m_kChar.kInventory, `LW_ITEM_ID(BreachingAmmo)))
                 {
-                    fReturnDmg -= (class'Highlander_XGTacticalGameCore'.default.fShotgunDRPenalty * (float(IncomingDamage) - fReturnDmg));
+                    fReturnDmg -= (`HL_TACCFG(fShotgunDRPenalty) * (float(IncomingDamage) - fReturnDmg));
                 }
             }
         }
@@ -1550,7 +1550,7 @@ simulated function int GetOffense()
 
     if (IsBeingSuppressed())
     {
-        iAim -= class'Highlander_XGTacticalGameCore'.default.iSuppressionAimPenalty;
+        iAim -= `HL_TACCFG(iSuppressionAimPenalty);
     }
 
     if (IsPoisoned())

@@ -1,5 +1,32 @@
 class Highlander_XGVolumeMgr extends XGVolumeMgr;
 
+simulated function BuildTVolumes()
+{
+    // TODO: not sure if suppression radius affects Danger Zone suppression or not
+    // TODO: not sure if proximity mine radius is activation radius, explosion radius, or both
+    // Once those things are figured out, make them config if appropriate
+    BuildTVolume(eVolume_Suppression, -1,                                           5.0,                                    576.0, eColor_Cyan,   0.20,            , eVolumeEffect_Suppression);
+    BuildTVolume(eVolume_Smoke,        `HL_TACCFG(iSmokeGrenadeVolumeDuration),     0.0,                                    192.0, eColor_Gray,   0.20,            , eVolumeEffect_BlocksSight);
+    BuildTVolume(eVolume_CombatDrugs,  `HL_TACCFG(iCombatDrugsVolumeDuration),      0.0,                                    192.0, eColor_Purple, 0.20,            , eVolumeEffect_BlocksSight);
+    BuildTVolume(eVolume_Poison,       `HL_TACCFG(iAcidVolumeDuration),             0.0,                                    192.0, eColor_Green,  0.20, eShade_Dark, eVolumeEffect_Poison);
+    BuildTVolume(eVolume_Fire,         `HL_TACCFG(iFireVolumeDuration),             `HL_TACCFG(fFireVolumeRadius),          192.0, eColor_Orange, 0.20,            , eVolumeEffect_Burn);
+    BuildTVolume(eVolume_Proximity,   -1,                                           3.0,                                    128.0, eColor_Purple, 0.20,            ,  );
+    BuildTVolume(eVolume_Spy,          `HL_TACCFG(iBattleScannerVolumeDuration),    `HL_TACCFG(fBattleScannerVolumeRadius), 192.0, eColor_Cyan,   0.20,            , eVolumeEffect_AddSight);
+    BuildTVolume(eVolume_Telekinetic,  `HL_TACCFG(iTelekineticFieldVolumeDuration), `HL_TACCFG(fTelekineticFieldRadius),    192.0, eColor_Purple, 0.20, eShade_Dark, eVolumeEffect_TelekineticField);
+    BuildTVolume(eVolume_Rift,         `HL_TACCFG(iRiftVolumeDuration),             `HL_TACCFG(fRiftRadius),                192.0, eColor_Purple, 0.20, eShade_Dark, eVolumeEffect_Rift);
+}
+
+simulated function BuildTVolume(EVolumeType eVolume, int iDuration, float fRadius, float fHeight, EWidgetColor eColor, float fAlpha, optional EColorShade eShade = 0, optional EVolumeEffect eEffect1, optional EVolumeEffect eEffect2)
+{
+    m_arrTVolumes[int(eVolume)].eType = eVolume;
+    m_arrTVolumes[int(eVolume)].iDuration = iDuration;
+    m_arrTVolumes[int(eVolume)].fRadius = fRadius;
+    m_arrTVolumes[int(eVolume)].fHeight = fHeight;
+    m_arrTVolumes[int(eVolume)].clrVolume = class'UIProtoWidget'.static.CreateColor(eColor, eShade, int(fAlpha * float(255)));
+    ++m_arrTVolumes[int(eVolume)].aEffects[int(eEffect1)];
+    ++m_arrTVolumes[int(eVolume)].aEffects[int(eEffect2)];
+}
+
 function XGVolume CreateVolumeByType(EVolumeType kType, Vector vCenter, optional float fRadius = -1.0, optional float fHeight = -1.0, optional int iNumTurns = -1, optional XGUnit kOwner)
 {
     local XGVolume kVolume;
