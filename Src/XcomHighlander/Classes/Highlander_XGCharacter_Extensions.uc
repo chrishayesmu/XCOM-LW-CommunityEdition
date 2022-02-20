@@ -2,10 +2,20 @@ class Highlander_XGCharacter_Extensions extends Object;
 
 static function XComUnitPawn GetPawnArchetype(XGCharacter kSelf)
 {
+    local XComAlienPawn kAlienPawn;
     local XComUnitPawn kBaseArchetype, kHLArchetype;
 
     kBaseArchetype = `CONTENTMGR.GetPawnTemplate(kSelf.m_eType);
-    kHLArchetype = `WORLDINFO.Spawn(class'Highlander_XComSectoid', kSelf, , , , , true, kSelf.m_eTeam); // TODO make dynamic
+    kHLArchetype = `WORLDINFO.Spawn(kSelf.m_kUnitPawnClassToSpawn, none, 'XComSectoid', , , , true, kSelf.m_eTeam);
+
+    kAlienPawn = XComAlienPawn(kHLArchetype);
+
+    if (kAlienPawn != none)
+    {
+        kAlienPawn.Voice = XComAlienPawn(kBaseArchetype).Voice;
+        kAlienPawn.m_bShouldWeaponExplodeOnDeath = XComAlienPawn(kBaseArchetype).m_bShouldWeaponExplodeOnDeath;
+        kAlienPawn.m_bDeathExploded = XComAlienPawn(kBaseArchetype).m_bDeathExploded;
+    }
 
     `HL_LOG("-------------------------------------------------------------------");
     `HL_LOG("Highlander_XGCharacter_Extensions: GetPawnArchetype: kSelf = " $ kSelf $ ", kSelf.m_eType = " $ kSelf.m_eType);
@@ -26,6 +36,32 @@ static function XComUnitPawn GetPawnArchetype(XGCharacter kSelf)
     `HL_LOG("Highlander_XGCharacter_Extensions: GetPawnArchetype: kHLArchetype.Mesh.Animations = " $ kHLArchetype.Mesh.Animations);
     `HL_LOG("Highlander_XGCharacter_Extensions: GetPawnArchetype: kHLArchetype.MovementNode = " $ kHLArchetype.MovementNode);
     `HL_LOG("Highlander_XGCharacter_Extensions: GetPawnArchetype: kHLArchetype.DefaultUnitPawnAnimsets.Length = " $ kHLArchetype.DefaultUnitPawnAnimsets.Length);
+
+    kHLArchetype.LightEnvironment = kBaseArchetype.LightEnvironment;
+    kHLArchetype.RangeIndicator = kBaseArchetype.RangeIndicator;
+    kHLArchetype.MindMergeFX_Send = kBaseArchetype.MindMergeFX_Send;
+    kHLArchetype.MindMergeFX_Receive = kBaseArchetype.MindMergeFX_Receive;
+    kHLArchetype.MindFrayFX_Receive = kBaseArchetype.MindFrayFX_Receive;
+    kHLArchetype.MindControlFX_Send = kBaseArchetype.MindControlFX_Send;
+    kHLArchetype.MindControlFX_Receive = kBaseArchetype.MindControlFX_Receive;
+    kHLArchetype.PsiPanicFX_Receive = kBaseArchetype.PsiPanicFX_Receive;
+    kHLArchetype.PsiInspiredFX_Receive = kBaseArchetype.PsiInspiredFX_Receive;
+    kHLArchetype.DisablingShot_Receive = kBaseArchetype.DisablingShot_Receive;
+    kHLArchetype.StunShot_Receive = kBaseArchetype.StunShot_Receive;
+    kHLArchetype.TracerBeamedFX = kBaseArchetype.TracerBeamedFX;
+    kHLArchetype.PoisonedByChryssalidFX = kBaseArchetype.PoisonedByChryssalidFX;
+    kHLArchetype.PoisonedByThinmanFX = kBaseArchetype.PoisonedByThinmanFX;
+    kHLArchetype.ElectropulsedFX = kBaseArchetype.ElectropulsedFX;
+    kHLArchetype.AOEHitMaterial = kBaseArchetype.AOEHitMaterial;
+    kHLArchetype.IndoorInfo = kBaseArchetype.IndoorInfo;
+    //kHLArchetype.NextPawn = kBaseArchetype.NextPawn;
+    kHLArchetype.Mesh = kBaseArchetype.Mesh;
+    kHLArchetype.CylinderComponent = kBaseArchetype.CylinderComponent;
+    //kHLArchetype.Physics = kBaseArchetype.Physics;
+    //kHLArchetype.bDirtyComponents = kBaseArchetype.bDirtyComponents;
+    kHLArchetype.bNetDirty = kBaseArchetype.bNetDirty;
+    //kHLArchetype.CollisionComponent = kBaseArchetype.CollisionComponent;
+    kHLArchetype.RotationRate = kBaseArchetype.RotationRate;
 
 	kHLArchetype.LocalCameraOffset = kBaseArchetype.LocalCameraOffset;
 	kHLArchetype.CameraFocusDistance = kBaseArchetype.CameraFocusDistance;
@@ -225,7 +261,7 @@ static function XComUnitPawn GetPawnArchetype(XGCharacter kSelf)
 	kHLArchetype.m_kMoveItem = kBaseArchetype.m_kMoveItem;
 	//kHLArchetype.NearbyFragileDestructibles = kBaseArchetype.NearbyFragileDestructibles;
 	kHLArchetype.DamageEvent_CauseOfDeath = kBaseArchetype.DamageEvent_CauseOfDeath;
-	kHLArchetype.Mesh = kBaseArchetype.Mesh;
+	//kHLArchetype.Mesh = `WORLDINFO.Spawn(kBaseArchetype.Mesh.Class, /* Owner */, /* SpawnTag */, kBaseArchetype.Mesh.Location, kBaseArchetype.Mesh.Rotation, kBaseArchetype.Mesh, /* bNoCollisionFail */ true);
 	//kHLArchetype.VfTable_IXComCoverInterface = kBaseArchetype.VfTable_IXComCoverInterface;
 	//kHLArchetype.VfTable_IIXComBuildingVisInterface = kBaseArchetype.VfTable_IIXComBuildingVisInterface;
 	//kHLArchetype.IndoorInfo = kBaseArchetype.IndoorInfo;
@@ -421,6 +457,14 @@ static function XComUnitPawn GetPawnArchetype(XGCharacter kSelf)
     `HL_LOG("Highlander_XGCharacter_Extensions: GetPawnArchetype: kHLArchetype.Mesh = " $ kHLArchetype.Mesh);
     `HL_LOG("Highlander_XGCharacter_Extensions: GetPawnArchetype: kHLArchetype.Mesh.Animations = " $ kHLArchetype.Mesh.Animations);
     `HL_LOG("-------------------------------------------------------------------");
+
+    `HL_LOG("Highlander_XGCharacter_Extensions: Dumping base archetype");
+    `WORLDINFO.ConsoleCommand("obj dump " $ kBaseArchetype.Name);
+
+    `HL_LOG("------------------------------------------------------------------------------");
+    `HL_LOG("Highlander_XGCharacter_Extensions: Dumping Highlander archetype");
+    `WORLDINFO.ConsoleCommand("obj dump " $ kHLArchetype.Name);
+
 
     return kHLArchetype;
 }

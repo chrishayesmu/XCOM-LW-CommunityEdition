@@ -132,7 +132,7 @@ state ServerWaitingForClientsToEndTurn
     }
 }
 
-static simulated function class<XGCharacter> Unused_AlienTypeToClass(EPawnType eAlienType)
+static simulated function class<XGCharacter> AlienTypeToClass(EPawnType eAlienType)
 {
     return class'Highlander_XGPlayer_Extensions'.static.AlienTypeToClass(eAlienType);
 }

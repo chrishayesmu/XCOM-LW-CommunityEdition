@@ -148,9 +148,7 @@ simulated function TWeapon GetTWeapon(int iWeapon)
     local HL_TWeapon kHLWeapon;
     local TWeapon kWeapon;
 
-    `HL_LOG_CLS("GetTWeapon: iWeapon = " $ iWeapon);
-
-    return super.GetTWeapon(iWeapon);
+    //return super.GetTWeapon(iWeapon);
 
     // Map as much as we can into the original struct
     kHLWeapon = HL_GetTWeapon(iWeapon);
@@ -355,8 +353,6 @@ simulated function int GetOverheatIncrement(XGUnit kUnit, int iWeapon, int iAbil
 {
     local int iAmount;
 
-    `HL_LOG_CLS("GetOverheatIncrement: iWeapon = " $ iWeapon);
-
     if (iWeapon == 0)
     {
         return 0;
@@ -543,7 +539,6 @@ simulated function bool WeaponHasProperty(int iWeapon, int iWeaponProperty)
 {
     local HL_TWeapon kWeapon;
 
-    `HL_LOG_CLS("WeaponHasProperty: iWeapon = " $ iWeapon $ ", iWeaponProperty = " $ iWeaponProperty);
     kWeapon = HL_GetTWeapon(iWeapon);
 
     return kWeapon.arrProperties.Find(iWeaponProperty) != INDEX_NONE;

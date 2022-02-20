@@ -10,7 +10,6 @@ function DoDeathOnOutsideOfBounds()
     class'Highlander_XComUnitPawn_Extensions'.static.DoDeathOnOutsideOfBounds(self);
 }
 
-/*
 simulated event AnimTreeUpdated(SkeletalMeshComponent SkelMesh)
 {
     `HL_LOG_CLS("AnimTreeUpdated");
@@ -72,12 +71,6 @@ simulated event InterpolationStarted(SeqAct_Interp InterpAction, InterpGroupInst
 simulated event InterpolationFinished(SeqAct_Interp InterpAction)
 {
     super.InterpolationFinished(InterpAction);
-}
-*/
-
-simulated event ReplicatedEvent(name VarName)
-{
-    super.ReplicatedEvent(VarName);
 }
 
 simulated event SetVisible(bool bVisible)
@@ -160,16 +153,6 @@ simulated event byte ScriptGetTeamNum()
     return super.ScriptGetTeamNum();
 }
 
-simulated event InterpolationStarted(SeqAct_Interp InterpAction, InterpGroupInst GroupInst)
-{
-    super.InterpolationStarted(InterpAction, GroupInst);
-}
-
-simulated event InterpolationFinished(SeqAct_Interp InterpAction)
-{
-    super.InterpolationFinished(InterpAction);
-}
-
 simulated event InterpolationChanged(SeqAct_Interp InterpAction)
 {
     super.InterpolationChanged(InterpAction);
@@ -200,11 +183,6 @@ simulated event OnRigidBodySpringOverextension(RB_BodyInstance BodyInstance)
     super.OnRigidBodySpringOverextension(BodyInstance);
 }
 
-simulated event AnimTreeUpdated(SkeletalMeshComponent SkelMesh)
-{
-    super.AnimTreeUpdated(SkelMesh);
-}
-
 simulated event PostDemoRewind()
 {
     super.PostDemoRewind();
@@ -213,11 +191,6 @@ simulated event PostDemoRewind()
 simulated event ReplicationEnded()
 {
     super.ReplicationEnded();
-}
-
-simulated event PostInitAnimTree(SkeletalMeshComponent SkelComp)
-{
-    super.PostInitAnimTree(SkelComp);
 }
 
 simulated event CacheAnimNodes()
@@ -233,21 +206,6 @@ simulated event BuildScriptAnimSetList()
 simulated event AnimSetListUpdated()
 {
     super.AnimSetListUpdated();
-}
-
-simulated event bool RestoreAnimSetsToDefault()
-{
-    return super.RestoreAnimSetsToDefault();
-}
-
-simulated event BeginAnimControl(InterpGroup InInterpGroup)
-{
-    super.BeginAnimControl(InInterpGroup);
-}
-
-simulated event FinishAnimControl(InterpGroup InInterpGroup)
-{
-    super.FinishAnimControl(InInterpGroup);
 }
 
 simulated event SetAnimPosition(name SlotName, int ChannelIndex, name InAnimSeqName, float InPosition, bool bFireNotifies, bool bLooping, bool bEnableRootMotion)
@@ -342,11 +300,6 @@ simulated event UpdateShadowSettings(bool bInWantShadow)
     super.UpdateShadowSettings(bInWantShadow);
 }
 
-simulated event PostBeginPlay()
-{
-    super.PostBeginPlay();
-}
-
 /*
 simulated event EndState(name NextStateName)
 {
@@ -357,11 +310,6 @@ simulated event EndState(name NextStateName)
 simulated event PlayMECEventSound(EMECEvent Event)
 {
     super.PlayMECEventSound(Event);
-}
-
-simulated event Tick(float DeltaTime)
-{
-    super.Tick(DeltaTime);
 }
 
 simulated event XComBuildingVolume GetCurrentBuildingVolumeIfInside()

@@ -5,7 +5,7 @@ class XComAlienPawn extends XComUnitPawn
 
 var() XComCharacterVoice Voice;
 var() bool m_bShouldWeaponExplodeOnDeath;
-var protectedwrite bool m_bDeathExploded;
+var bool m_bDeathExploded;
 var init const string WeaponFragmentEffectName;
 
 replication
