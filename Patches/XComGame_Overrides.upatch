@@ -1,11 +1,11 @@
 UPK_FILE = XComGame.upk
 
-/* XComGameInfo.InitGame: adds a few key mutators used by the Highlander */
+/* XComGameInfo.InitGame: adds a few key mutators used by LWCE */
 OBJECT = XComGameInfo.InitGame : AUTO
 [REPLACEMENT_CODE]
 /*(0x0000/0x0000)*/ 1B <AddMutator> 1F <%t "XComMutator.XComMutatorLoader"> 27 16
-/*(0x0000/0x0000)*/ 1B <AddMutator> 1F <%t "XComHighlander.Loader"> 27 16
-/*(0x0000/0x0000)*/ 1B <AddMutator> 1F <%t "XComHighlander.HighlanderModLoader"> 27 16
+/*(0x0000/0x0000)*/ 1B <AddMutator> 1F <%t "XComLongWarCommunityEdition.Loader"> 27 16
+/*(0x0000/0x0000)*/ 1B <AddMutator> 1F <%t "XComLongWarCommunityEdition.LWCEModLoader"> 27 16
 /*(0x002A/0x002A)*/ 07 [@label_0x0079] 77 01 <Engine.GameInfo.BaseMutator> 2A 16
 /*(0x0039/0x0035)*/     19 01 <Engine.GameInfo.BaseMutator> [@] <NullRef> 00 ( 1B <Mutate> 1F <%t "XComGameInfo.InitGame"> 1C <Engine.Actor.GetALocalPlayerController> 16 16 )
 /*(0x0079/0x0069)*/ [#label_0x0079]
@@ -27,14 +27,14 @@ OBJECT = XComGameInfo.SetGameType : AUTO
 /*(0x00DE/0x00BE)*/ 	06 [@label_0x01CF]
 /*(0x00E1/0x00C1)*/ [#label_0x00E1]
 /*(0x00E1/0x00C1)*/ 07 [@label_0x0124] 9B 7E 00 <.MapName> 1F <%t "Shell"> 4A 27 4A 16 1D <%i -1> 16
-/*(0x0100/0x00DC)*/ 	0F 00 <.GameInfoClassToUse> 1F <%t "XComHighlander.Highlander_XComShell">
+/*(0x0100/0x00DC)*/ 	0F 00 <.GameInfoClassToUse> 1F <%t "XComLongWarCommunityEdition.LWCE_XComShell">
 /*(0x0121/0x00F9)*/ 	06 [@label_0x01CF]
 /*(0x0124/0x00FC)*/ [#label_0x0124]
 /*(0x0124/0x00FC)*/ 07 [@label_0x01AA] 84 9B 7E 00 <.MapName> 1F <%t "Command1"> 4A 27 4A 16 1D <%i -1> 16 18 [@] ( 9B 7E 00 <.GameInfoClassName> 1F <%t "XComHeadquartersGame"> 27 27 4A 16 1D <%i -1> 16 16 )
-/*(0x0176/0x0146)*/ 	0F 00 <.GameInfoClassToUse> 1F <%t "XComHighlander.Highlander_XComHeadquartersGame">
+/*(0x0176/0x0146)*/ 	0F 00 <.GameInfoClassToUse> 1F <%t "XComLongWarCommunityEdition.LWCE_XComHeadquartersGame">
 /*(0x01A7/0x0173)*/ 	06 [@label_0x01CF]
 /*(0x01AA/0x0176)*/ [#label_0x01AA]
-/*(0x01AA/0x0176)*/ 0F 00 <.GameInfoClassToUse> 1F <%t "XComHighlander.Highlander_XComTacticalGame">
+/*(0x01AA/0x0176)*/ 0F 00 <.GameInfoClassToUse> 1F <%t "XComLongWarCommunityEdition.LWCE_XComTacticalGame">
 /*(0x01CF/0x0197)*/ [#label_0x01CF]
 /*(0x01CF/0x0197)*/ 07 [@label_0x020E] 72 00 <.GameInfoClass> 2A 16
 /*(0x01DE/0x01A2)*/ 	0F 00 <.GameInfoClass> 13 <Engine.GameInfo> 1C <Core.Object.DynamicLoadObject> 00 <.GameInfoClassToUse> 20 <Core.Class> 4A 16

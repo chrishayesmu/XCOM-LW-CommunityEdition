@@ -1,0 +1,1 @@
+class LWCE_XGFacility_GollopChamber extends XGFacility_GollopChamber;

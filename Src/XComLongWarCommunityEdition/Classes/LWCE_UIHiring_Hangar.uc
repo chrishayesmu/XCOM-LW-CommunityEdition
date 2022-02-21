@@ -1,0 +1,1 @@
+class LWCE_UIHiring_Hangar extends UIHiring_Hangar;

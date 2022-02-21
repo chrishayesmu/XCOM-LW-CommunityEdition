@@ -1,0 +1,1 @@
+class LWCE_XGBase extends XGBase;

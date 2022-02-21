@@ -1,1 +1,0 @@
-class Highlander_UIHiring_Hangar extends UIHiring_Hangar;

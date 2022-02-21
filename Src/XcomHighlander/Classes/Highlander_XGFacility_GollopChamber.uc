@@ -1,1 +1,0 @@
-class Highlander_XGFacility_GollopChamber extends XGFacility_GollopChamber;

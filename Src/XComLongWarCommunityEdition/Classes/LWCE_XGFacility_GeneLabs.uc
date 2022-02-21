@@ -1,0 +1,1 @@
+class LWCE_XGFacility_GeneLabs extends XGFacility_GeneLabs;

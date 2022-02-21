@@ -1,1 +1,0 @@
-class Highlander_XGCharacterGenerator extends XGCharacterGenerator;

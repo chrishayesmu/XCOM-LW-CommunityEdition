@@ -1,1 +1,0 @@
-class Highlander_XGFacility_MissionControl extends XGFacility_MissionControl;

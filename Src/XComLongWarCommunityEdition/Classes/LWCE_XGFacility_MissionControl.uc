@@ -1,0 +1,1 @@
+class LWCE_XGFacility_MissionControl extends XGFacility_MissionControl;

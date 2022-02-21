@@ -1,0 +1,69 @@
+`include(XComGame\Globals.uci);
+
+`define LWCE_LOG(msg, cond) `LOG(`msg, `cond, 'XComLongWarCommunityEdition')
+`define LWCE_LOG_CLS(msg, cond) `LOG(string(Class) $ ": " $ `msg, `cond, 'XComLongWarCommunityEdition')
+`define LWCE_LOG_DEPRECATED(funcname) `LWCE_LOG("ERROR: LWCE-incompatible function `{funcname} was called. This needs to be replaced with LWCE_`funcname. Stack trace follows."); ScriptTrace();
+`define LWCE_LOG_DEPRECATED_CLS(funcname) `LWCE_LOG_CLS("ERROR: LWCE-incompatible function `{funcname} was called. This needs to be replaced with LWCE_`funcname. Stack trace follows."); ScriptTrace();
+`define LWCE_LOG_DEPRECATED_NOREPLACE_CLS(funcname) `LWCE_LOG_CLS("ERROR: LWCE-incompatible function `{funcname}  was called. This function is deprecated and unavailable. Stack trace follows."); ScriptTrace();
+`define LWCE_MOD_LOADER (class'LWCEModLoader'.static.GetModLoader())
+
+// Convenience class of static functions
+`define LWCE_UTILS class'LWCEUtils'.static
+
+// Dynamic loading of objects that are referenced by the base game; since we aren't in the same UPK, we can't reference them the same way
+`define SoundCue(nm) (SoundCue(DynamicLoadObject(`nm, class'SoundCue')))
+`define XComNarrativeMoment(nm) (XComNarrativeMoment(DynamicLoadObject("NarrativeMoment." $ `nm, class'XComNarrativeMoment')))
+`define XComNarrativeMomentEW(nm) (XComNarrativeMoment(DynamicLoadObject("NarrativeMomentsEWI." $ `nm, class'XComNarrativeMoment')))
+
+// Shorthand macros for retrieving constant values
+`define LW_FOUNDRY_ID(nm) (class'LongWarConstants'.const.FoundryID_`nm)
+`define LW_HQ_BONUS_ID(nm) (class'LongWarConstants'.const.HQBonusID_`nm)
+`define LW_ITEM_ID(nm) (class'LongWarConstants'.const.ItemID_`nm)
+`define LW_PERK_ID(nm) (class'LongWarConstants'.const.PerkID_`nm)
+`define LW_TECH_ID(nm) (class'LongWarConstants'.const.ResearchID_`nm)
+`define LW_SECOND_WAVE_ID(nm) (class'LongWarConstants'.const.SecondWaveID_`nm)
+
+// Macros for checking the current game state
+`define LWCE_IS_STRAT_GAME (XComHeadquartersGame(class'Engine'.static.GetCurrentWorldInfo().Game) != none)
+`define LWCE_IS_TAC_GAME (XComTacticalGame(class'Engine'.static.GetCurrentWorldInfo().Game) != none)
+
+// ---------------------------
+// Extension macros
+//
+// Some classes need to have methods deprecated and replaced with new versions, but since we
+// can't modify the inheritance hierarchy, it's not feasible to do this in base classes which are
+// broadly used. For those cases, we use static "extension" methods to implement the new functionality.
+// These macros provide a shorthand for accessing them.
+// ---------------------------
+
+`define LWCE_TWEAPON_FROM_XG(kWeapon) (class'LWCE_XGWeapon_Extensions'.static.GetCEWeapon(`kWeapon))
+
+// ---------------------------
+// Strategy layer macros
+// ---------------------------
+
+`define LWCE_STRATCFG(nm) (class'LWCE_XGStrategyConfig'.default.`nm)
+
+`define LWCE_ABILITYTREE (LWCE_XGAbilityTree(`LWCE_GAMECORE.m_kAbilities))
+`define LWCE_BARRACKS (LWCE_XGFacility_Barracks(`HQGAME.GetGameCore().GetHQ().GetBarracks()))
+`define LWCE_FTECH(techId, bRushResearch) (`LWCE_TECHTREE.LWCE_GetFoundryTech(`techId, `bRushResearch))
+`define LWCE_ENGINEERING (LWCE_XGFacility_Engineering(`HQGAME.GetGameCore().GetHQ().GetEngineering()))
+`define LWCE_GAMECORE (LWCE_XGTacticalGameCore(`GAMECORE))
+`define LWCE_GEOSCAPE (LWCE_XGGeoscape(`HQGAME.GetGameCore().GetGeoscape()))
+`define LWCE_HANGAR (LWCE_XGFacility_Hangar(`HQGAME.GetGameCore().GetHQ().GetHangar()))
+`define LWCE_HQ (LWCE_XGHeadquarters(`HQGAME.GetGameCore().GetHQ()))
+`define LWCE_HQPRES (LWCE_XComHQPresentationLayer(`HQPRES))
+`define LWCE_ITEM(itemId, transactionType) (LWCE_XGItemTree(`HQGAME.GetGameCore().GetHQ().GetEngineering().m_kItems).LWCE_GetItem(`itemId, `transactionType))
+`define LWCE_ITEMTREE (LWCE_XGItemTree(`HQGAME.GetGameCore().GetHQ().GetEngineering().m_kItems))
+`define LWCE_LABS (LWCE_XGFacility_Labs(`HQGAME.GetGameCore().GetHQ().GetLabs()))
+`define LWCE_STORAGE (LWCE_XGStorage(`HQGAME.GetGameCore().GetHQ().m_kEngineering.GetStorage()))
+`define LWCE_TECH(techId) (`LWCE_TECHTREE.LWCE_GetTech(`techId))
+`define LWCE_TECHTREE (LWCE_XGTechTree(`HQGAME.GetGameCore().GetHQ().GetLabs().m_kTree))
+
+// ---------------------------
+// Tactical layer macros
+// ---------------------------
+
+`define LWCE_CHEATMGR_TAC (LWCE_XComTacticalCheatManager(XComGameReplicationInfo(class'Engine'.static.GetCurrentWorldInfo().GRI).GetALocalPlayerController().CheatManager))
+`define LWCE_TAC_CARGO (LWCE_XGDropshipCargoInfo(`BATTLE.m_kDesc.m_kDropShipCargoInfo))
+`define LWCE_TACCFG(nm) (class'LWCE_XGTacticalGameCore'.default.`nm)

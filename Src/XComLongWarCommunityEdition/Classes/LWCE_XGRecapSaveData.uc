@@ -1,0 +1,1 @@
+class LWCE_XGRecapSaveData extends XGRecapSaveData;

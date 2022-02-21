@@ -1,1 +1,0 @@
-class Highlander_XGDateTime extends XGDateTime;

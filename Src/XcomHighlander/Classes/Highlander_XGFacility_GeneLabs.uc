@@ -1,1 +1,0 @@
-class Highlander_XGFacility_GeneLabs extends XGFacility_GeneLabs;

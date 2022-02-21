@@ -1,1 +1,0 @@
-class Highlander_XGFacility_PsiLabs extends XGFacility_PsiLabs;

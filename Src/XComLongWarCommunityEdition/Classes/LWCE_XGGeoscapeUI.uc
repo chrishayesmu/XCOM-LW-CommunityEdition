@@ -1,0 +1,1 @@
+class LWCE_XGGeoscapeUI extends XGGeoscapeUI;

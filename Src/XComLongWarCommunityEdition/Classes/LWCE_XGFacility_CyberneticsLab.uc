@@ -1,0 +1,1 @@
+class LWCE_XGFacility_CyberneticsLab extends XGFacility_CyberneticsLab;
