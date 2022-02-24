@@ -32,7 +32,7 @@ var(RigidBody)	float		RadialDamageImpulse;
 var(RigidBody)	bool		bRadialDamageVelChange;
 
 /** multiply damage by this for vehicles */
-var float VehicleDamageScaling;							
+var float VehicleDamageScaling;
 
 /** multiply momentum by this for vehicles */
 var float VehicleMomentumScaling;
@@ -45,6 +45,8 @@ var ForceFeedbackWaveform KilledFFWaveform;
 
 /** Damage imparted by this damage type to fracturable meshes.  Scaled by config WorldInfo.FracturedMeshWeaponDamage. */
 var float FracturedMeshDamage;
+
+var float FracturedMeshRadiusMultiplier;
 
 static function float VehicleDamageScalingFor(Vehicle V)
 {

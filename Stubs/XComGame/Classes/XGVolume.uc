@@ -45,11 +45,11 @@ replication
         m_kInstigator;
 
     if(bNetDirty && Role == ROLE_Authority)
-        m_aUnits, m_bProximityMineExplosionRequested, 
-        m_bSightBlocking, m_iNumUnitsInVolume, 
-        m_iTurnTimer, m_kAbility, 
-        m_kActor, m_kAddToWorldReplicationInfo, 
-        m_kTVolume, m_sightHandler, 
+        m_aUnits, m_bProximityMineExplosionRequested,
+        m_bSightBlocking, m_iNumUnitsInVolume,
+        m_iTurnTimer, m_kAbility,
+        m_kActor, m_kAddToWorldReplicationInfo,
+        m_kTVolume, m_sightHandler,
         m_vCenter;
 }
 
@@ -85,7 +85,7 @@ event Tick(float DeltaTime){}
 
 defaultproperties
 {
-    begin object class=CylinderComponent name=CollisionCylinder 
+    begin object class=CylinderComponent name=CollisionCylinder
         CollisionHeight=0.0
         CollisionRadius=0.0
         ReplacementPrimitive=none

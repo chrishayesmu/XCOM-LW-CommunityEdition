@@ -53,10 +53,10 @@ var private transient const array<ActorComponent> AllComponents;
 
 // The actor's position and rotation.
 /** Actor's location; use Move or SetLocation to change. */
-var(Movement) const vector			Location;
+var(Movement) vector			Location;
 
 /** The actor's rotation; use SetRotation to change. */
-var(Movement) const rotator			Rotation;
+var(Movement) rotator			Rotation;
 
 /** Scaling factor, 1.0=normal size. */
 var(Display) const repnotify interp	float	DrawScale <UIMin=0.1 | UIMax=4.0>;
@@ -224,9 +224,9 @@ var(Physics)		bool	bAllowFluidSurfaceInteraction;
 
 /** Demo recording variables */
 /** Set when we are currently replicating this Actor into a demo */
-var transient				bool	bDemoRecording;	
+var transient				bool	bDemoRecording;
 /** Demo recording driver owns this actor. */
-var					bool	bDemoOwner;				
+var					bool	bDemoOwner;
 
 /** force Actor to be relevant for demos (only works on dynamic actors) */
 var bool bForceDemoRelevant;
@@ -392,7 +392,7 @@ struct native transient AnimSlotDesc
 var transient float		LastRenderTime;
 
 // Actor's tag name.
-var(Object)	name			Tag;			
+var(Object)	name			Tag;
 var			name			InitialState;
 // Actor's layer name.
 var(Object) name			Layer;
@@ -408,11 +408,11 @@ var const float				LatentFloat;   // Internal latent function use.
 var const AnimNodeSequence	LatentSeqNode; // Internal latent function use.
 
 // physics volume this actor is currently in
-var transient const PhysicsVolume	PhysicsVolume;	
+var transient const PhysicsVolume	PhysicsVolume;
 // Velocity.
-var					vector			Velocity;	
+var					vector			Velocity;
 // Acceleration.
-var					vector			Acceleration;	
+var					vector			Acceleration;
 // Angular velocity, in radians/sec.  Read-only, see RotationRate to set rotation.
 var	transient const	vector			AngularVelocity;
 
@@ -421,26 +421,26 @@ var(Attachment) SkeletalMeshComponent	BaseSkelComponent;
 var(Attachment) name					BaseBoneName;
 
 /** array of actors attached to this actor. */
-var const array<Actor>  Attached;	
+var const array<Actor>  Attached;
 /** location relative to base/bone (valid if base exists) */
 var const vector		RelativeLocation;
 /** rotation relative to base/bone (valid if base exists) */
-var const rotator		RelativeRotation;	
+var const rotator		RelativeRotation;
 
 /** Uses 'hard' attachment code. bBlockActor must also be false.
 	This actor cannot then move relative to base (setlocation etc.).
 	Dont set while currently based on something! */
-var(Attachment) const bool bHardAttach;		
+var(Attachment) const bool bHardAttach;
 
 /** If TRUE, this actor ignores the effects of changes in its  base's rotation on its location and rotation. */
-var(Attachment) bool bIgnoreBaseRotation;	
+var(Attachment) bool bIgnoreBaseRotation;
 
 /** If TRUE, BaseSkelComponent is used as the shadow parent for this actor.*/
-var(Attachment) bool bShadowParented;	
+var(Attachment) bool bShadowParented;
 
 /** If TRUE, Skip moveactor collision check for this actor moving as a result of its base, to which it is hard attached moving
  - only if this actor doesn't block actors.*/
-var(Attachment) bool bSkipAttachedMoves;		
+var(Attachment) bool bSkipAttachedMoves;
 
 /** Determines whether or not adhesion code should attempt to adhere to this actor. **/
 var bool bCanBeAdheredTo;
@@ -1067,13 +1067,13 @@ cpptext
 
 	/**
 	 * Check if this actor is the owner when doing relevancy checks for actors marked bOnlyRelevantToOwner
-	 * 
+	 *
 	 * @param ReplicatedActor - the actor we're doing a relevancy test on
-	 * 
+	 *
 	 * @param ActorOwner - the owner of ReplicatedActor
-	 * 
+	 *
 	 * @param ConnectionActor - the controller of the connection that we're doing relevancy checks for
-	 * 
+	 *
 	 * @return TRUE if this actor should be considered the owner
 	 */
 	virtual UBOOL IsRelevancyOwnerFor(AActor* ReplicatedActor, AActor* ActorOwner, AActor* ConnectionActor);
@@ -2250,6 +2250,8 @@ native final iterator function AllOwnedComponents(class<Component> BaseClass, ou
 native final iterator function LocalPlayerControllers(class<PlayerController> BaseClass, out PlayerController PC);
 /** Return first found LocalPlayerController. Fine for single player, in split screen, one will be picked. */
 native final function PlayerController GetALocalPlayerController();
+
+simulated function PlayerController GetOwningPlayerController(){}
 
 //=============================================================================
 // Scripted Actor functions.
@@ -3680,8 +3682,8 @@ event SetMorphWeight(name MorphNodeName, float MorphWeight);
 /** Called each frame by Matinee to update the scaling on a SkelControl. */
 event SetSkelControlScale(name SkelControlName, float Scale);
 
-/** 
-  *  Called every tick if bShouldTickOwner is true 
+/**
+  *  Called every tick if bShouldTickOwner is true
   */
 event TickSkelControl(float DeltaTime, SkeletalMeshComponent SkelComp, SkelControlBase SkelCtrl);
 
