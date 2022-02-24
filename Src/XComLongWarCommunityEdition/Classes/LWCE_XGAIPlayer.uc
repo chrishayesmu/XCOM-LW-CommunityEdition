@@ -1,12 +1,8 @@
 class LWCE_XGAIPlayer extends XGAIPlayer;
 
-simulated function LoadSquad(array<TTransferSoldier> Soldiers, array<int> arrTechHistory, array<XComSpawnPoint> arrSpawnPoints, array<EPawnType> arrPawnTypes)
-{
-    `LWCE_LOG_CLS("LoadSquad: Soldiers.Length = " $ Soldiers.Length);
+`include(generators.uci)
 
-    m_arrTechHistory.Add(61);
-    CreateSquad(arrSpawnPoints, arrPawnTypes);
-}
+`LWCE_GENERATOR_XGPLAYER
 
 function bool UpdateHealers()
 {
@@ -40,14 +36,4 @@ simulated function UpdateWeaponTactics(XGInventory kInventory)
     {
         m_fMinTeammateDistance = 224.0;
     }
-}
-
-static simulated function class<XGCharacter> Unused_AlienTypeToClass(EPawnType eAlienType)
-{
-    return class'LWCE_XGPlayer_Extensions'.static.AlienTypeToClass(eAlienType);
-}
-
-function XGUnit SpawnUnit(class<XGUnit> kUnitClassToSpawn, PlayerController kPlayerController, Vector kLocation, Rotator kRotation, XGCharacter kCharacter, XGSquad kSquad, optional bool bDestroyOnBadLocation = false, optional XComSpawnPoint kSpawnPoint, optional bool bSnapToGround = true, optional bool bBattleScanner = false)
-{
-    return class'LWCE_XGPlayer_Extensions'.static.SpawnUnit(self, kUnitClassToSpawn, kPlayerController, kLocation, kRotation, kCharacter, kSquad, bDestroyOnBadLocation, kSpawnPoint, bSnapToGround, bBattleScanner);
 }

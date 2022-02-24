@@ -1,4 +1,5 @@
-class LWCE_XGAbility_Extensions extends Object;
+class LWCE_XGAbility_Extensions extends Object
+    abstract;
 
 static function CalcDamage(XGAbility_Targeted kAbility)
 {

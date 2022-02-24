@@ -1,4 +1,5 @@
-class LWCE_XComUnitPawn_Extensions extends Object;
+class LWCE_XComUnitPawn_Extensions extends Object
+    abstract;
 
 static simulated function ApplyShredderRocket(XComUnitPawn kUnitPawn, const DamageEvent Dmg, bool enemyOfUnitHit)
 {

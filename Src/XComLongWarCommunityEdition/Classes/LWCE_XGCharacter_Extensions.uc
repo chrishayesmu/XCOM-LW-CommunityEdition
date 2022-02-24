@@ -1,4 +1,5 @@
-class LWCE_XGCharacter_Extensions extends Object;
+class LWCE_XGCharacter_Extensions extends Object
+    abstract;
 
 static function XComUnitPawn GetPawnArchetype(XGCharacter kSelf)
 {

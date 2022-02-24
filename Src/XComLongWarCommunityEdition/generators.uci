@@ -1,0 +1,44 @@
+/**************************************************************************************
+ *
+ * This file contains "generator" macros. There are some instances where a
+ * function in a class needs to be overridden, but that class has multiple child classes.
+ * Since we can't modify the inheritance hierarchy, we have to perform the override in each
+ * child class individually. To avoid repetition, the actual implementation of the
+ * function is put into a static "Extensions" class, and each child class calls that
+ * centralized implementation. To simplify further, those function definitions are placed
+ * into macros here, so that each child class only needs to call its corresponding macro.
+ *
+ **************************************************************************************/
+
+
+// -----------------
+// XGBattle
+// -----------------
+
+`define LWCE_GENERATOR_XGBATTLE \
+function InitDescription() \
+{ \
+    class'LWCE_XGBattle_Extensions'.static.InitDescription(self); \
+} \
+\
+simulated function InitLevel() \
+{ \
+    class'LWCE_XGBattle_Extensions'.static.InitLevel(self); \
+} \
+\
+function InitLoadedItems() \
+{ \
+    class'LWCE_XGBattle_Extensions'.static.InitLoadedItems(self); \
+} \
+
+
+// -----------------
+// XGPlayer
+// -----------------
+
+
+`define LWCE_GENERATOR_XGPLAYER \
+function XGUnit SpawnUnit(class<XGUnit> kUnitClassToSpawn, PlayerController kPlayerController, Vector kLocation, Rotator kRotation, XGCharacter kCharacter, XGSquad kSquad, optional bool bDestroyOnBadLocation = false, optional XComSpawnPoint kSpawnPoint, optional bool bSnapToGround = true, optional bool bBattleScanner = false) \
+{ \
+    return class'LWCE_XGPlayer_Extensions'.static.SpawnUnit(self, kUnitClassToSpawn, kPlayerController, kLocation, kRotation, kCharacter, kSquad, bDestroyOnBadLocation, kSpawnPoint, bSnapToGround, bBattleScanner); \
+} \

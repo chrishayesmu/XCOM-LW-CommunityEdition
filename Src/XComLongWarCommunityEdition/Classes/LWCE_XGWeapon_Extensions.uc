@@ -1,4 +1,5 @@
-class LWCE_XGWeapon_Extensions extends Object;
+class LWCE_XGWeapon_Extensions extends Object
+    abstract;
 
 static simulated function LWCE_TWeapon GetCEWeapon(XGWeapon kWeapon)
 {

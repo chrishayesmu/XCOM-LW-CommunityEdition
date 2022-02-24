@@ -1,4 +1,5 @@
-class LWCE_XGPlayer_Extensions extends Object;
+class LWCE_XGPlayer_Extensions extends Object
+    abstract;
 
 static simulated function class<XGCharacter> AlienTypeToClass(EPawnType eAlienType)
 {
