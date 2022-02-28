@@ -1,17 +1,15 @@
 class LWCE_XComUnitPawn_Extensions extends Object
     abstract;
 
-static simulated function ApplyShredderRocket(XComUnitPawn kUnitPawn, const DamageEvent Dmg, bool enemyOfUnitHit)
+static simulated function ApplyShredderRocket(XComUnitPawn kSelf, const DamageEvent Dmg, bool enemyOfUnitHit)
 {
-    local int iAbilityId;
+    local int iAbilityId, iShredDuration;
     local LWCE_TWeapon kInstigatorWeapon;
     local XGUnit kVictim, kInstigator;
     local XComPresentationLayer kPres;
     local XComUIBroadcastWorldMessage kBroadcastWorldMessage;
 
-    `LWCE_LOG("LWCE_XComUnitPawn_Extensions: ApplyShredderRocket");
-
-    if (kUnitPawn.Role != ROLE_Authority)
+    if (kSelf.Role != ROLE_Authority)
     {
         return;
     }
@@ -26,59 +24,156 @@ static simulated function ApplyShredderRocket(XComUnitPawn kUnitPawn, const Dama
         return;
     }
 
-    kVictim = XGUnit(kUnitPawn.GetGameUnit());
+    kVictim = XGUnit(kSelf.GetGameUnit());
     kInstigator = XGUnit(Dmg.EventInstigator);
     kInstigatorWeapon = `LWCE_TWEAPON_FROM_XG(kInstigator.GetInventory().GetActiveWeapon());
     iAbilityId = kInstigator.GetUsedAbility();
 
     if (iAbilityId == eAbility_ShredderRocket)
     {
-        kVictim.m_iShredderRocketCtr = Max(kVictim.m_iShredderRocketCtr, 4);
+        iShredDuration = `LWCE_TACCFG(iShredderDebuffDurationFromRocket);
     }
     else if (!kInstigator.IsAlien_CheckByCharType() &&
              `GAMECORE.WeaponHasProperty(kInstigator.GetInventory().GetActiveWeapon().ItemType(), eWP_Support) &&
              kInstigator.m_kCharacter.HasUpgrade(`LW_PERK_ID(ShredderAmmo)))
     {
-        kVictim.m_iShredderRocketCtr = Max(kVictim.m_iShredderRocketCtr, 4);
+        iShredDuration = `LWCE_TACCFG(iShredderDebuffDurationFromPerk);
     }
     else if (kInstigator.IsAugmented() &&
              iAbilityId == eAbility_ShotStandard &&
              kInstigator.m_kCharacter.HasUpgrade(`LW_PERK_ID(ShredderAmmo)))
     {
-        kVictim.m_iShredderRocketCtr = Max(kVictim.m_iShredderRocketCtr, 4);
+        iShredDuration = `LWCE_TACCFG(iShredderDebuffDurationFromPerk);
     }
     else if (class'XGTacticalGameCoreNativeBase'.static.TInventoryHasItemType(kInstigator.GetCharacter().m_kChar.kInventory, `LW_ITEM_ID(ShredderAmmo)) && kInstigatorWeapon.iSize == 1)
     {
-        kVictim.m_iShredderRocketCtr = Max(kVictim.m_iShredderRocketCtr, 2);
+        iShredDuration = `LWCE_TACCFG(iShredderDebuffDurationFromSmallItem);
     }
-    else if (kInstigator.IsAlien_CheckByCharType() && kInstigator.m_kCharacter.HasUpgrade(/* Shredder Ammo */ 115))
+    else if (kInstigator.IsAlien_CheckByCharType() && kInstigator.m_kCharacter.HasUpgrade(`LW_PERK_ID(ShredderAmmo)))
     {
-        // TODO: not clear if this is intended to apply to grenades, or if it's an oversight. Add a config option to disable it.
-        kVictim.m_iShredderRocketCtr = Max(kVictim.m_iShredderRocketCtr, 2);
+        if (iAbilityId == eAbility_AlienGrenade)
+        {
+            iShredDuration = `LWCE_TACCFG(iShredderDebuffDurationFromEnemyGrenade);
+        }
+        else
+        {
+            iShredDuration = `LWCE_TACCFG(iShredderDebuffDurationFromEnemyWeapon);
+        }
     }
-    else
+
+    // This check added in LWCE, in case any of the durations are configured to 0
+    if (iShredDuration == 0)
     {
         return;
     }
 
+    kVictim.m_iShredderRocketCtr = Max(kVictim.m_iShredderRocketCtr, iShredDuration);
+
     kPres = XComPresentationLayer(XComPlayerController(`WORLDINFO.GetALocalPlayerController()).m_Pres);
 
     kVictim.UpdateUnitBuffs();
-    kBroadcastWorldMessage = kPres.GetWorldMessenger().Message(`GAMECORE.GetUnexpandedLocalizedMessageString(5), kVictim.GetLocation(), 4,,, kUnitPawn.m_eTeamVisibilityFlags,,,, class'XComUIBroadcastWorldMessage_UnexpandedLocalizedString');
+    kBroadcastWorldMessage = kPres.GetWorldMessenger().Message(`GAMECORE.GetUnexpandedLocalizedMessageString(eULS_Shredded), kVictim.GetLocation(), eColor_Bad,,, kSelf.m_eTeamVisibilityFlags,,,, class'XComUIBroadcastWorldMessage_UnexpandedLocalizedString');
 
     if (kBroadcastWorldMessage != none)
     {
-        XComUIBroadcastWorldMessage_UnexpandedLocalizedString(kBroadcastWorldMessage).Init_UnexpandedLocalizedString(5, kVictim.GetLocation(), 4, kUnitPawn.m_eTeamVisibilityFlags);
+        XComUIBroadcastWorldMessage_UnexpandedLocalizedString(kBroadcastWorldMessage).Init_UnexpandedLocalizedString(eULS_Shredded, kVictim.GetLocation(), eColor_Bad, kSelf.m_eTeamVisibilityFlags);
     }
 }
 
-static function DoDeathOnOutsideOfBounds(XComUnitPawn kUnitPawn)
+static function DoDeathOnOutsideOfBounds(XComUnitPawn kSelf)
 {
     local Vector vZero;
 
-    if (kUnitPawn.m_kGameUnit != none && !XGUnit(kUnitPawn.m_kGameUnit).IsDead())
+    if (kSelf.m_kGameUnit != none && !XGUnit(kSelf.m_kGameUnit).IsDead())
     {
-        XGUnit(kUnitPawn.m_kGameUnit).m_bMPForceDeathOnMassiveTakeDamage = true;
-        XGUnit(kUnitPawn.m_kGameUnit).OnTakeDamage(1000000, class'XComDamageType_Plasma', none, vZero, vZero);
+        XGUnit(kSelf.m_kGameUnit).m_bMPForceDeathOnMassiveTakeDamage = true;
+        XGUnit(kSelf.m_kGameUnit).OnTakeDamage(1000000, class'XComDamageType_Plasma', none, vZero, vZero);
+    }
+}
+
+static simulated function TakeDirectDamage(XComUnitPawn kSelf, const DamageEvent Dmg)
+{
+    local XGUnit kDamageDealer, kSelfUnit;
+    local DamageEvent actualDamage;
+    local bool bEnemyOfUnitHit, bWasAlive, bWasVisibleOnlyWithBioelectricSkin;
+
+    kDamageDealer = XGUnit(Dmg.EventInstigator);
+    kSelfUnit = XGUnit(kSelf.GetGameUnit());
+
+    if (!kSelfUnit.CanTakeDamage())
+    {
+        return;
+    }
+
+    if (kSelfUnit.m_bIsDoingBullRush && kDamageDealer == kSelfUnit && Dmg.DamageType == class'XComDamageType_Melee')
+    {
+        return;
+    }
+
+    bWasAlive = kSelfUnit.GetUnitHP() > 0;
+    bWasVisibleOnlyWithBioelectricSkin = kSelfUnit.m_bEnableBioElectricParticles && !kSelf.IsVisible();
+    actualDamage = Dmg;
+
+    if (Dmg.EventInstigator != none && kDamageDealer != none)
+    {
+        bEnemyOfUnitHit = kDamageDealer.GetTeam() != kSelfUnit.GetTeam();
+    }
+
+    if (ClassIsChildOf(Dmg.DamageType, class'XComDamageType_Explosion'))
+    {
+        if (XComProjectile(Dmg.DamageCauser) != none)
+        {
+            if (!kDamageDealer.GetCharacter().HasUpgrade(`LW_PERK_ID(TandemWarheads)))
+            {
+                actualDamage.DamageAmount = int(0.50 + (float(Dmg.DamageAmount) * (1.0 - FMin(1.0, 0.750 * Square(VSize(Dmg.DamageCauser.Location - kSelf.Location) / XComProjectile(Dmg.DamageCauser).DamageRadius)))));
+            }
+
+            // Adjust damage by -1, 0, or 1
+            actualDamage.DamageAmount = Max(0, (actualDamage.DamageAmount + `SYNC_RAND_STATIC(3) - 1));
+        }
+    }
+
+    actualDamage.DamageAmount = kSelfUnit.OnTakeDamage(actualDamage.DamageAmount, Dmg.DamageType, kDamageDealer, Dmg.HitLocation, Dmg.Momentum, Dmg.DamageCauser);
+
+    // Shows popup with DR number
+    kSelfUnit.SetTimer(0.50, false, 'DebugTreads');
+
+    if (actualDamage.DamageAmount > 0)
+    {
+        class'LWCE_Actor_Extensions'.static.TakeDirectDamage_Actor(kSelf, actualDamage);
+    }
+
+    if (kSelfUnit.m_kBehavior != none && kSelfUnit.m_kBehavior.m_kPod != none)
+    {
+        kSelfUnit.m_kBehavior.m_kPod.OnTakeDamage();
+    }
+
+    if (!kSelfUnit.IsAlive() && bWasAlive)
+    {
+        kSelf.DamageEvent_CauseOfDeath = Dmg;
+
+        if (kDamageDealer != none)
+        {
+            kDamageDealer.RecordKill(kSelfUnit, ClassIsChildOf(Dmg.DamageType, class'XComDamageType_Explosion'));
+
+            if (kDamageDealer.IsMine() && kSelfUnit.GetCharType() == eChar_Mechtoid && kSelfUnit.m_bHadShieldThisTurn)
+            {
+                XComOnlineEventMgr(GameEngine(class'Engine'.static.GetEngine()).OnlineEventManager).UnlockAchievement(AT_Shieldbuster);
+            }
+
+            if (kDamageDealer.IsMine() && bWasVisibleOnlyWithBioelectricSkin)
+            {
+                XComOnlineEventMgr(GameEngine(class'Engine'.static.GetEngine()).OnlineEventManager).UnlockAchievement(AT_TinglingSensation);
+            }
+        }
+    }
+    else if (kSelfUnit.IsAlive())
+    {
+        if (kDamageDealer != none)
+        {
+            kDamageDealer.RecordWounding(kSelfUnit);
+        }
+
+        ApplyShredderRocket(kSelf, Dmg, bEnemyOfUnitHit);
     }
 }

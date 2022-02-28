@@ -32,6 +32,36 @@ simulated function CancelMousePathing(optional bool bClearPathData = true)
     }
 }
 
+state ActiveUnit_Firing
+{
+    ignores CancelFiring;
+
+    event BeginState(name PrevStateName)
+    {
+        super.BeginState(PrevStateName);
+    }
+
+    event EndState(name NextStateName)
+    {
+        super.EndState(NextStateName);
+    }
+
+    function bool RMouse(int Actionmask)
+    {
+        local UITacticalHUD kHUD;
+
+        if ((Actionmask & class'UI_FxsInput'.const.FXS_ACTION_RELEASE) != 0)
+        {
+            kHUD = XComPresentationLayer(XComTacticalController(Outer).m_Pres).GetTacticalHUD();
+            kHUD.CancelTargetingAction();
+            return true;
+        }
+
+        // LWCE: the superclass function is missing a return; this is just to get rid of some error logging
+        return false;
+    }
+}
+
 state ActiveUnit_Moving
 {
     function bool ClickSoldier(IMouseInteractionInterface MouseTarget)

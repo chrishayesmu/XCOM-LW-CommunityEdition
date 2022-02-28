@@ -113,3 +113,8 @@ function XGVolume CreateVolume(TVolume kTVolume, XGUnit kInstigator, Vector vCen
     AddVolume(kVolume);
     return kVolume;
 }
+
+simulated function LoadInit()
+{
+    super.LoadInit();
+}

@@ -168,6 +168,7 @@ simulated state Active
     }
 }
 
+/*
 simulated state BeginningTurn
 {
     simulated event BeginState(name PreviousStateName)
@@ -180,7 +181,7 @@ simulated state BeginningTurn
         super.PushedState();
     }
 }
-
+ */
 simulated state EndingTurn
 {
     simulated event BeginState(name PreviousStateName)
@@ -222,13 +223,3 @@ state ServerWaitingForClientsToEndTurn
         super.Tick(fDeltaTime);
     }
 }
-
-static simulated function class<XGCharacter> Unused_AlienTypeToClass(EPawnType eAlienType)
-{
-    return class'LWCE_XGPlayer_Extensions'.static.AlienTypeToClass(eAlienType);
-}
-
-//function XGUnit SpawnUnit(class<XGUnit> kUnitClassToSpawn, PlayerController kPlayerController, Vector kLocation, Rotator kRotation, XGCharacter kCharacter, XGSquad kSquad, optional bool bDestroyOnBadLocation = false, optional XComSpawnPoint kSpawnPoint, optional bool bSnapToGround = true, optional bool bBattleScanner = false)
-//{
-//    return class'LWCE_XGPlayer_Extensions'.static.SpawnUnit(self, kUnitClassToSpawn, kPlayerController, kLocation, kRotation, kCharacter, kSquad, bDestroyOnBadLocation, kSpawnPoint, bSnapToGround, bBattleScanner);
-//}

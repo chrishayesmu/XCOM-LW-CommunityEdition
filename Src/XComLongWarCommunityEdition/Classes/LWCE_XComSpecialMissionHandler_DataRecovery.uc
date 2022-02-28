@@ -1,0 +1,1 @@
+class LWCE_XComSpecialMissionHandler_DataRecovery extends XComSpecialMissionHandler_DataRecovery;

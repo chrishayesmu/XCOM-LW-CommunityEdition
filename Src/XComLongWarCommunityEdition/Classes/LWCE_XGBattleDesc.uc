@@ -50,7 +50,11 @@ function ApplyCheckpointRecord()
 
     for (Index = 0; Index < arrRecordedItems.Length; Index++)
     {
-        arrRecordedItems[Index].m_strUIImage = arrItemStrings[Index];
+        // Items don't persist into strategy layer, so need to check first
+        if (arrRecordedItems[Index] != none)
+        {
+            arrRecordedItems[Index].m_strUIImage = arrItemStrings[Index];
+        }
     }
 
     `LWCE_LOG_CLS("ApplyCheckpointRecord: Loaded " $ arrRecordedItems.Length $ " item IDs");
@@ -126,8 +130,6 @@ function TSoldierPawnContent LWCE_BuildUnitContentFromEnums(int iWeaponItemId, i
 function Generate(optional bool bSkipDropshipCargoInfo = false)
 {
     local XComMapMetaData MapData;
-
-    `LWCE_LOG_CLS("Generate");
 
     if (m_kArtifactsContainer == none)
     {

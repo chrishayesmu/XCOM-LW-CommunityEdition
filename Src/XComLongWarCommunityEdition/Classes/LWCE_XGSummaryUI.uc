@@ -250,8 +250,6 @@ function UpdateArtifacts()
     local LWCE_TItemQuantity kItemQuantity;
     local TTableMenu kTable;
 
-    `LWCE_LOG_CLS("UpdateArtifacts");
-
     kArtifactsContainer = LWCE_XGDropshipCargoInfo(Desc().m_kDropShipCargoInfo).m_kArtifactsContainer;
 
     kTable.arrCategories.AddItem(30);

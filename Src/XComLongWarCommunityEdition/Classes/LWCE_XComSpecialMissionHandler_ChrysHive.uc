@@ -1,0 +1,1 @@
+class LWCE_XComSpecialMissionHandler_ChrysHive extends XComSpecialMissionHandler_ChrysHive;

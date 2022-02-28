@@ -17,7 +17,7 @@ simulated function Init(XComTacticalController _controllerRef, UIFxsMovie _manag
     m_kStatsContainer = Spawn(class'UITacticalHUD_SoldierStatsContainer', self);
     m_kStatsContainer.Init(_controllerRef, _manager, self);
 
-    m_kRadar = Spawn(class'UITacticalHUD_Radar', self);
+    m_kRadar = Spawn(class'LWCE_UITacticalHUD_Radar', self);
     m_kRadar.Init(_controllerRef, _manager, self);
 
     m_kObjectives = Spawn(class'UITacticalHUD_ObjectivesList', self);
@@ -25,12 +25,4 @@ simulated function Init(XComTacticalController _controllerRef, UIFxsMovie _manag
 
     m_kPerks = Spawn(class'UITacticalHUD_PerkContainer', self);
     m_kPerks.Init(_controllerRef, _manager, self);
-}
-
-simulated function Update()
-{
-    `LWCE_LOG_CLS("Update");
-
-    super.Update();
-    `LWCE_LOG_CLS("After update");
 }

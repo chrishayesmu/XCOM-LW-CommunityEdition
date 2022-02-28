@@ -184,7 +184,6 @@ function OnSubmitOrder()
             case eManView_Item:
                 if (m_kCEItemProject.iQuantityLeft == 0)
                 {
-                    `LWCE_LOG_CLS("OnCancelOrder");
                     OnCancelOrder();
                 }
                 else if (IsNewProject())
@@ -193,7 +192,6 @@ function OnSubmitOrder()
                 }
                 else
                 {
-                    `LWCE_LOG_CLS("ModifyItemProject");
                     `LWCE_ENGINEERING.LWCE_ModifyItemProject(m_kCEItemProject);
                 }
 

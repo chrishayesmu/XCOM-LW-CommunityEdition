@@ -1,11 +1,14 @@
 class LWCE_XGLevel extends XGLevel;
 
+function LoadInit()
+{
+    super.LoadInit();
+}
+
 simulated function OnStreamingFinished()
 {
     local int Index;
     local XGBattle_SP BattleSP;
-
-    `LWCE_LOG_CLS("OnStreamingFinished");
 
     InitFractureSystems();
 

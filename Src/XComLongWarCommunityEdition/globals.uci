@@ -1,7 +1,7 @@
 `include(XComGame\Globals.uci);
 
 `define LWCE_LOG(msg, cond) `LOG(`msg, `cond, 'XComLongWarCommunityEdition')
-`define LWCE_LOG_CLS(msg, cond) `LOG(string(Class) $ ": " $ `msg, `cond, 'XComLongWarCommunityEdition')
+`define LWCE_LOG_CLS(msg, cond) `LOG(string(default.Class) $ ": " $ `msg, `cond, 'XComLongWarCommunityEdition')
 `define LWCE_LOG_DEPRECATED(funcname) `LWCE_LOG("ERROR: LWCE-incompatible function `{funcname} was called. This needs to be replaced with LWCE_`funcname. Stack trace follows."); ScriptTrace();
 `define LWCE_LOG_DEPRECATED_CLS(funcname) `LWCE_LOG_CLS("ERROR: LWCE-incompatible function `{funcname} was called. This needs to be replaced with LWCE_`funcname. Stack trace follows."); ScriptTrace();
 `define LWCE_LOG_DEPRECATED_NOREPLACE_CLS(funcname) `LWCE_LOG_CLS("ERROR: LWCE-incompatible function `{funcname}  was called. This function is deprecated and unavailable. Stack trace follows."); ScriptTrace();

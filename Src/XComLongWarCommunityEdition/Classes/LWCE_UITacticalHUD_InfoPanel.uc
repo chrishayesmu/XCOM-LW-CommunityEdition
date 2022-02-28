@@ -104,7 +104,7 @@ simulated function Update(XGUnit kUnit, XGAbility kAbility)
             SetShotName(kAbility.GetName(), "");
         }
 
-        SetHelp(kAbility.GetHelpText());
+        SetHelp(class'LWCE_XGAbility_Extensions'.static.GetHelpText(kAbility));
         fHitChance = float(iHitChance) / float(100);
 
         if (kAbility.HasProperty(eProp_ScatterTarget))
@@ -177,7 +177,11 @@ simulated function Update(XGUnit kUnit, XGAbility kAbility)
             if (kInventory != none)
             {
                 kActiveWeapon = kInventory.GetActiveWeapon();
-                SetWeaponStats(`LWCE_TWEAPON_FROM_XG(kActiveWeapon).strName);
+
+                if (kActiveWeapon != none)
+                {
+                    SetWeaponStats(`LWCE_TWEAPON_FROM_XG(kActiveWeapon).strName);
+                }
             }
         }
 

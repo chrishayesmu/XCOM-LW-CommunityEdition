@@ -1,0 +1,1 @@
+class LWCE_XComSpecialMissionHandler_Templeship extends XComSpecialMissionHandler_Templeship;

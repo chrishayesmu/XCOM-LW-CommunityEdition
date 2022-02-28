@@ -8,41 +8,31 @@ function ApplyInventoryOnLoad()
     local XComWeapon kWeapon;
     local array<XGWeapon> Weapons;
 
-    `LWCE_LOG_CLS("ApplyInventoryOnLoad");
-
     for (I = 0; I < 26; I++)
     {
-        `LWCE_LOG_CLS("Outer loop");
         for (J = 0; J < GetNumberOfItemsInSlot(ELocation(I)); J++)
         {
-            `LWCE_LOG_CLS("Inner loop");
             kItem = GetItemByIndexInSlot(J, ELocation(I));
-            `LWCE_LOG_CLS("After GetItemByIndexInSlot");
 
             if (kItem != none)
             {
-                `LWCE_LOG_CLS("Init: kItem = " $ kItem);
                 kItem.Init();
-                `LWCE_LOG_CLS("CreateEntity");
                 kItem.m_kEntity = kItem.CreateEntity();
                 ActiveWeapon = XGWeapon(kItem);
 
                 if (ActiveWeapon != none)
                 {
                     kWeapon = XComWeapon(kItem.m_kEntity);
-                    `LWCE_LOG_CLS("GetPawn");
                     kWeapon.m_kPawn = m_kOwner.GetPawn();
                     kWeapon.Instigator = kWeapon.m_kPawn;
-                    `LWCE_LOG_CLS("UpdateMeshMaterials");
                     kWeapon.m_kPawn.UpdateMeshMaterials(kWeapon.Mesh);
-                    `LWCE_LOG_CLS("PresAddItem");
+
                     PresAddItem(kItem);
                 }
             }
         }
     }
 
-    `LWCE_LOG_CLS("GetPrimaryItemInSlot 1");
     ActiveWeapon = XGWeapon(GetPrimaryItemInSlot(m_ActiveWeaponLoc));
 
     if (ActiveWeapon == none && m_kOwner.GetPawn().IsA('XComSectopod'))
@@ -75,21 +65,17 @@ function ApplyInventoryOnLoad()
     }
     else if (ActiveWeapon != none)
     {
-        `LWCE_LOG_CLS("EquipItem 1");
         EquipItem(ActiveWeapon, true, true);
     }
     else
     {
-        `LWCE_LOG_CLS("EquipItem 2");
         EquipItem(m_kPrimaryWeapon, true, true);
     }
 
-    `LWCE_LOG_CLS("CalculateWeaponToEquip");
     CalculateWeaponToEquip();
 
     if (m_kOwner.GetPawn().IsA('XComHumanPawn') && !m_kOwner.IsCivilian())
     {
-        `LWCE_LOG_CLS("AttachKit");
         XComHumanPawn(m_kOwner.GetPawn()).AttachKit();
     }
 }

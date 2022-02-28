@@ -64,7 +64,7 @@ static simulated function class<XGCharacter> AlienTypeToClass(EPawnType eAlienTy
     }
 }
 
-static function XGUnit SpawnUnit(XGPlayer kPlayer, class<XGUnit> kUnitClassToSpawn, PlayerController kPlayerController, Vector kLocation, Rotator kRotation, XGCharacter kCharacter, XGSquad kSquad, optional bool bDestroyOnBadLocation = false, optional XComSpawnPoint kSpawnPoint, optional bool bSnapToGround = true, optional bool bBattleScanner = false)
+static function XGUnit SpawnUnit(XGPlayer kSelf, class<XGUnit> kUnitClassToSpawn, PlayerController kPlayerController, Vector kLocation, Rotator kRotation, XGCharacter kCharacter, XGSquad kSquad, optional bool bDestroyOnBadLocation = false, optional XComSpawnPoint kSpawnPoint, optional bool bSnapToGround = true, optional bool bBattleScanner = false)
 {
     local XGUnit kUnit;
 
@@ -73,11 +73,12 @@ static function XGUnit SpawnUnit(XGPlayer kPlayer, class<XGUnit> kUnitClassToSpa
         kUnitClassToSpawn = class'LWCE_XGUnit';
     }
 
-    kUnit = kPlayer.Spawn(kUnitClassToSpawn, kPlayerController,, kLocation, kRotation,,, kPlayer.m_eTeam);
+    kUnit = kSelf.Spawn(kUnitClassToSpawn, kPlayerController,, kLocation, kRotation,,, kSelf.m_eTeam);
     kUnit.SetBattleScanner(bBattleScanner);
 
-    if (!kUnit.Init(kPlayer, kCharacter, kSquad, bDestroyOnBadLocation, bSnapToGround))
+    if (!kUnit.Init(kSelf, kCharacter, kSquad, bDestroyOnBadLocation, bSnapToGround))
     {
+        `LWCE_LOG_CLS("Could not init unit " $ kUnit $ " belonging to character " $ kCharacter);
         kUnit.Destroy();
         return none;
     }

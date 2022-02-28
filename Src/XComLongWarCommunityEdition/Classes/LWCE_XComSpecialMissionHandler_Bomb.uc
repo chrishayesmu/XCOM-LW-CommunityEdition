@@ -1,0 +1,1 @@
+class LWCE_XComSpecialMissionHandler_Bomb extends XComSpecialMissionHandler_Bomb;

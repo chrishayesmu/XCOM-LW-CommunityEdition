@@ -22,7 +22,7 @@ simulated function ReceivedGameClass()
 
     if (m_kCameraManager == none)
     {
-        m_kCameraManager = Spawn(class'XComCameraManager', self);
+        m_kCameraManager = Spawn(class'LWCE_XComCameraManager', self);
         m_kCameraManager.Init();
 
         if (Role < ROLE_Authority && GetALocalPlayerController() != none && GetALocalPlayerController().Pawn != none)

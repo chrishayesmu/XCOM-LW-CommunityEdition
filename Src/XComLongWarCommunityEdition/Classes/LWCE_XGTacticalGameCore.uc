@@ -77,6 +77,11 @@ var config int iSapperDamageBonus;
 var config int iSaviorHealBonus;
 var config int iSmartMacrophagesHealBonus;
 var config int iSmokeGrenadeVolumeDuration;
+var config int iShredderDebuffDurationFromEnemyGrenade;
+var config int iShredderDebuffDurationFromEnemyWeapon;
+var config int iShredderDebuffDurationFromPerk;
+var config int iShredderDebuffDurationFromRocket;
+var config int iShredderDebuffDurationFromSmallItem;
 var config int iSuppressionAimPenalty;
 var config int iTelekineticFieldDefenseBonus;
 var config int iTelekineticFieldVolumeDuration;
@@ -135,6 +140,41 @@ simulated function BuildWeapons()
     }
 
     // TODO add mod hook
+}
+
+function int CalcOverallDamage(int iWeapon, int iCurrDamageStat, optional bool bCritical = false, optional bool bReflected = false)
+{
+    local int iDamage, iRandDamage;
+
+    iDamage = LWCE_GetTWeapon(iWeapon).iDamage + iCurrDamageStat;
+
+    if (bReflected)
+    {
+        return 0;
+    }
+
+    iRandDamage = `SYNC_RAND( (IsOptionEnabled(eGO_RandomDamage) ? 4 : 2) * iDamage + 2 );
+
+    if (IsOptionEnabled(eGO_RandomDamage))
+    {
+        iDamage = ( (bCritical ? 6 : 2) * iDamage + 1 + iRandDamage ) / 4;
+    }
+    else
+    {
+        iDamage = ( (bCritical ? 5 : 3) * iDamage + 1 + iRandDamage) / 4;
+    }
+
+    if (bCritical)
+    {
+        iDamage = Max(iDamage, ( (IsOptionEnabled(eGO_RandomDamage) ? 6 : 5) * (m_arrWeapons[iWeapon].iDamage + iCurrDamageStat) + 2) / 4);
+    }
+
+    if (iDamage < 1)
+    {
+        iDamage = 1;
+    }
+
+    return iDamage;
 }
 
 /// <summary>
@@ -197,8 +237,6 @@ simulated function LWCE_TWeapon LWCE_GetTWeapon(int iWeapon)
     local int Index;
     local LWCE_TWeapon kBlankWeapon, kWeapon;
 
-    //`LWCE_LOG_CLS("LWCE_GetTWeapon: iWeapon = " $ iWeapon);
-
     Index = m_arrCEWeapons.Find('iItemId', iWeapon);
 
     if (Index == INDEX_NONE)
@@ -225,8 +263,6 @@ simulated function int GetUpgradeAbilities(int iRank, int iPersonality)
 simulated function int GetEquipmentItemStat(int iItemId, int iCharacterStat)
 {
     local LWCE_TWeapon kWeapon;
-
-    `LWCE_LOG_CLS("GetEquipmentItemStat: iItemId = " $ iItemId $ ", iCharacterStat = " $ iCharacterStat);
 
     if (iItemId == 0)
     {
@@ -275,13 +311,6 @@ simulated function GetInventoryStatModifiers(out int aModifiers[ECharacterStat],
 simulated function LWCE_GetInventoryStatModifiers(out int aModifiers[ECharacterStat], out TCharacter kCharacter, int iEquippedWeaponItemId, array<int> arrBackpackItemIds)
 {
     local int iStat;
-
-    `LWCE_LOG_CLS("LWCE_GetInventoryStatModifiers: iEquippedWeaponItemId = " $ iEquippedWeaponItemId);
-
-    foreach arrBackpackItemIds(iStat)
-    {
-        //`LWCE_LOG_CLS("Backpack contains item " $ iStat);
-    }
 
     for (iStat = 0; iStat < eStat_MAX; iStat++)
     {
@@ -425,8 +454,6 @@ simulated function int TotalStatFromItem(int iItemId, ECharacterStat eStat)
     local TCharacterBalance kCharacterBalance;
     local int iTotal;
 
-    `LWCE_LOG_CLS("TotalStatFromItem: iItemId = " $ iItemId $ ", eStat = " $ eStat);
-
     iTotal = 0;
 
     if (ItemIsWeapon(iItemId))
@@ -494,25 +521,21 @@ function eWeaponRangeCat LWCE_GetWeaponCatRange(int iWeaponItemId)
 // TODO: rewrite all of the ItemIs* functions, maybe move into XGItemTree
 simulated function bool ItemIsAccessory(int iItem)
 {
-    `LWCE_LOG_CLS("ItemIsAccessory: iItem = " $ iItem);
     return LWCE_GetTWeapon(iItem).iDamage <= 0;
 }
 
 simulated function bool ItemIsWeapon(int iItem)
 {
-    `LWCE_LOG_CLS("ItemIsWeapon: iItem = " $ iItem);
     return LWCE_GetTWeapon(iItem).iDamage > 0;
 }
 
 simulated function bool ItemIsArmor(int iItem)
 {
-    `LWCE_LOG_CLS("ItemIsArmor: iItem = " $ iItem);
     return m_arrArmors[iItem].iHPBonus > 0;
 }
 
 simulated function bool ItemIsMecArmor(int iItem)
 {
-    `LWCE_LOG_CLS("ItemIsMecArmor: iItem = " $ iItem);
     switch (iItem)
     {
         case 145:
@@ -531,7 +554,6 @@ simulated function bool ItemIsMecArmor(int iItem)
 
 simulated function bool ItemIsShipWeapon(int iItem)
 {
-    `LWCE_LOG_CLS("ItemIsShipWeapon: iItem = " $ iItem);
     return iItem >= 116 && iItem < 123;
 }
 

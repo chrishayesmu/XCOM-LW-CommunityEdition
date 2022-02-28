@@ -202,56 +202,11 @@ simulated state Executing
             }
         }
 
-        if (m_kShot.m_kWeapon != none)
-        {
-            fRadius = m_kShot.m_kWeapon.GetDamageRadius();
-        }
+        fRadius = class'LWCE_XGAbility_Extensions'.static.GetRadius(m_kShot);
 
-        // TODO move into config
-        switch (iType)
+        if (iType == eAbility_Rift)
         {
-            case eAbility_BullRush:
-                fRadius = `LWCE_TACCFG(fBullRushRadius);
-                break;
-            case eAbility_Rift:
-                fRadius = `LWCE_TACCFG(fRiftRadius);
-                bValid = XGAbility_Rift(m_kShot).IsValidRiftTarget(vCenter);
-                break;
-            case eAbility_TelekineticField:
-                fRadius = `LWCE_TACCFG(fTelekineticFieldRadius);
-                break;
-            case eAbility_ShotOverload:
-                fRadius = `LWCE_TACCFG(fOverloadRadius);
-                break;
-            case eAbility_DeathBlossom:
-                fRadius = `LWCE_TACCFG(fDeathBlossomRadius);
-                break;
-            case eAbility_PsiInspiration:
-                fRadius = `LWCE_TACCFG(fPsiInspirationRadius);
-                break;
-            case eAbility_MEC_Barrage:
-                fRadius = `LWCE_TACCFG(fCollateralDamageRadius);
-                break;
-            case eAbility_MEC_ElectroPulse:
-                fRadius = class'XGAbility_Electropulse'.default.ElectroPulseXY_Range;
-                break;
-            case eAbility_ShredderRocket:
-                if (`LWCE_TACCFG(fShredderRocketRadiusOverride) >= 0.0)
-                {
-                    // TODO: factor in radius increases like Danger Zone when using override
-                    fRadius = `LWCE_TACCFG(fShredderRocketRadiusOverride);
-                }
-                else
-                {
-                    fRadius *= `LWCE_TACCFG(fShredderRocketRadiusMultiplier);
-                }
-
-                break;
-            case eAbility_ShotDamageCover: // Psychokinetic Strike
-                fRadius = float(2 * 96) * Sqrt(float(m_kUnit.ReplicateActivatePerkData_ToString()) / float(100));
-                break;
-            default:
-                break;
+            bValid = XGAbility_Rift(m_kShot).IsValidRiftTarget(vCenter);
         }
 
         if (iType == eAbility_ShredderRocket)

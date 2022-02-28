@@ -185,7 +185,7 @@ simulated function XGAbility SpawnAbility(int iAbility, XGUnitNativeBase kUnit, 
 
     if (kAbilityTargeted != none)
     {
-        kAbilityTargeted.ShotInit(iAbility, arrTargets, kWeapon, /* bReactionFire */ false);
+        kAbilityTargeted.ShotInit(iAbility, arrTargets, kWeapon, bReactionFire);
     }
     else
     {

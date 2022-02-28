@@ -216,6 +216,7 @@ function int AbsorbDamage(const int IncomingDamage, XGUnit kDamageCauser, XGWeap
             iReturnDmg = FFloor(fReturnDmg);
         }
 
+        // Record the amount of DR for display later
         if (IncomingDamage - iReturnDmg > 0)
         {
             m_bCantBeHurt = IncomingDamage - iReturnDmg;
@@ -295,8 +296,6 @@ simulated function AddWeaponAbilities(XGTacticalGameCoreNativeBase GameCore, Vec
     local XGCharacter kChar;
     local XGWeapon kWeapon, kActiveWeapon;
     local array<XGWeapon> arrWeapons, arrEquippableWeapons;
-
-    `LWCE_LOG_CLS("Running port of native AddWeaponAbilities");
 
     kChar = m_kCharacter;
     kInventory = LWCE_XGInventory(m_kInventory);
@@ -497,12 +496,6 @@ simulated function AddWeaponAbilities(XGTacticalGameCoreNativeBase GameCore, Vec
             }
 
             GenerateAbilities(Index, vLocation, arrAbilities, kWeapon, bForLocalUseOnly);
-
-            if (Index == eAbility_Overwatch && m_eTeam == eTeam_XCom)
-            {
-                `LWCE_LOG_CLS("Dumping Overwatch ability " $ arrAbilities[arrAbilities.Length - 1].Name $ " from AddWeaponAbilities");
-                //ConsoleCommand("obj dump " $ arrAbilities[arrAbilities.Length - 1].Name);
-            }
         }
 
         // Lastly, check if we need to reload
@@ -517,8 +510,6 @@ simulated function AddWeaponAbilities(XGTacticalGameCoreNativeBase GameCore, Vec
     {
         GenerateAbilities(eAbility_EquipWeapon, vLocation, arrAbilities, kWeapon, bForLocalUseOnly);
     }
-
-    `LWCE_LOG_CLS("AddWeaponAbilities complete");
 }
 
 function ApplyInventoryStatModifiers()
@@ -1700,6 +1691,11 @@ simulated function GetTargetsInRange(int iTargetType, int iRangeType, out array<
     }
 }
 
+simulated event ReplicatedEvent(name VarName)
+{
+    super.ReplicatedEvent(VarName);
+}
+
 function UpdateItemCharges()
 {
     // TODO: connect this to LWCE's item system
@@ -2068,167 +2064,6 @@ simulated state Active
     {
         super.EndState(nmNext);
     }
-}
-
-protected function int SortWeaponAbilities(XGAbility kAbility1, XGAbility kAbility2)
-{
-    local bool bAbilityOneHasCharges, bAbilityTwoHasCharges;
-    local int iAbilityOneId, iAbilityTwoId;
-
-    iAbilityOneId = kAbility1.GetType();
-    iAbilityTwoId = kAbility2.GetType();
-
-    if (iAbilityOneId == iAbilityTwoId)
-    {
-        return 0;
-    }
-
-    // Basic abilities
-    if (iAbilityOneId == eAbility_ShotStandard)
-    {
-        return -1;
-    }
-    else if (iAbilityTwoId == eAbility_ShotStandard)
-    {
-        return 1;
-    }
-
-    if (iAbilityOneId == eAbility_Reload)
-    {
-        return -1;
-    }
-    else if (iAbilityTwoId == eAbility_Reload)
-    {
-        return 1;
-    }
-
-    // Abilities without limited charges always come before abilities with limited charges
-    bAbilityOneHasCharges = `LWCE_ABILITYTREE.GetTAbility(iAbilityOneId).iCharges > 0;
-    bAbilityTwoHasCharges = `LWCE_ABILITYTREE.GetTAbility(iAbilityTwoId).iCharges > 0;
-
-    if (!bAbilityOneHasCharges && bAbilityTwoHasCharges)
-    {
-        return -1;
-    }
-
-    if (bAbilityOneHasCharges && !bAbilityTwoHasCharges)
-    {
-        return 1;
-    }
-
-    // Abilities without charges: hard-coded order
-    if (iAbilityOneId == eAbility_RunAndGun)
-    {
-        return -1;
-    }
-    else if (iAbilityTwoId == eAbility_RunAndGun)
-    {
-        return 1;
-    }
-
-    if (iAbilityOneId == eAbility_ShotSuppress || iAbilityOneId == eAbility_ShotMayhem)
-    {
-        return -1;
-    }
-    else if (iAbilityTwoId == eAbility_ShotSuppress || iAbilityTwoId == eAbility_ShotMayhem)
-    {
-        return 1;
-    }
-
-    if (iAbilityOneId == eAbility_RapidFire)
-    {
-        return -1;
-    }
-    else if (iAbilityTwoId == eAbility_RapidFire)
-    {
-        return 1;
-    }
-
-    if (iAbilityOneId == eAbility_ShotFlush)
-    {
-        return -1;
-    }
-    else if (iAbilityTwoId == eAbility_ShotFlush)
-    {
-        return 1;
-    }
-
-    if (iAbilityOneId == eAbility_Aim)
-    {
-        return -1;
-    }
-    else if (iAbilityTwoId == eAbility_Aim)
-    {
-        return 1;
-    }
-
-    if (iAbilityOneId == eAbility_Overwatch)
-    {
-        return -1;
-    }
-    else if (iAbilityTwoId == eAbility_Overwatch)
-    {
-        return 1;
-    }
-
-    // Abilities with charges: hard-coded order
-    if (iAbilityOneId == eAbility_RocketLauncher)
-    {
-        return -1;
-    }
-    else if (iAbilityTwoId == eAbility_RocketLauncher)
-    {
-        return 1;
-    }
-
-    if (iAbilityOneId == eAbility_ShredderRocket)
-    {
-        return -1;
-    }
-    else if (iAbilityTwoId == eAbility_ShredderRocket)
-    {
-        return 1;
-    }
-
-    if (iAbilityOneId == eAbility_FragGrenade)
-    {
-        return -1;
-    }
-    else if (iAbilityTwoId == eAbility_FragGrenade)
-    {
-        return 1;
-    }
-
-    if (iAbilityOneId == eAbility_AlienGrenade)
-    {
-        return -1;
-    }
-    else if (iAbilityTwoId == eAbility_AlienGrenade)
-    {
-        return 1;
-    }
-
-    if (iAbilityOneId == eAbility_BattleScanner)
-    {
-        return -1;
-    }
-    else if (iAbilityTwoId == eAbility_BattleScanner)
-    {
-        return 1;
-    }
-
-    return 0;
-}
-
-function bool TakeOverwatchShot(XGUnit Target, optional bool bReactionFire = false, optional bool bCloseCombatShot = false)
-{
-    local bool bResult;
-
-    `LWCE_LOG_CLS("TakeOverwatchShot: before");
-    bResult = super.TakeOverwatchShot(Target, bReactionFire, bCloseCombatShot);
-    `LWCE_LOG_CLS("TakeOverwatchShot: after. bResult = " $ bResult);
-
-    return bResult;
 }
 
 auto simulated state Inactive

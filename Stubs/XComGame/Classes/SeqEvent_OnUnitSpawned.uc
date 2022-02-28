@@ -1,0 +1,1 @@
+class SeqEvent_OnUnitSpawned extends SequenceEvent;

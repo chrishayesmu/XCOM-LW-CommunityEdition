@@ -243,7 +243,6 @@ function UpdateScienceDebrief()
     kLabs = `LWCE_LABS;
     kHQ = `LWCE_HQ;
 
-    `LWCE_LOG_CLS("UpdateScienceDebrief: kHQ.m_kCELastCargoArtifacts.m_arrEntries.Length = " $ kHQ.m_kCELastCargoArtifacts.m_arrEntries.Length);
     PRES().CAMLookAtNamedLocation("Cargo", 0.0);
 
     kDebrief.txtOpName.StrValue = m_kSkyranger.m_strLastOpName;

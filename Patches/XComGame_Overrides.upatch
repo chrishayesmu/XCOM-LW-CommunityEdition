@@ -4,7 +4,7 @@ UPK_FILE = XComGame.upk
 OBJECT = XComGameInfo.InitGame : AUTO
 [REPLACEMENT_CODE]
 /*(0x0000/0x0000)*/ 1B <AddMutator> 1F <%t "XComMutator.XComMutatorLoader"> 27 16
-/*(0x0000/0x0000)*/ 1B <AddMutator> 1F <%t "XComLongWarCommunityEdition.Loader"> 27 16
+/*(0x0000/0x0000)*/ 1B <AddMutator> 1F <%t "XComLongWarCommunityEdition.LWCEBaseMutator"> 27 16
 /*(0x0000/0x0000)*/ 1B <AddMutator> 1F <%t "XComLongWarCommunityEdition.LWCEModLoader"> 27 16
 /*(0x002A/0x002A)*/ 07 [@label_0x0079] 77 01 <Engine.GameInfo.BaseMutator> 2A 16
 /*(0x0039/0x0035)*/     19 01 <Engine.GameInfo.BaseMutator> [@] <NullRef> 00 ( 1B <Mutate> 1F <%t "XComGameInfo.InitGame"> 1C <Engine.Actor.GetALocalPlayerController> 16 16 )
@@ -13,6 +13,10 @@ OBJECT = XComGameInfo.InitGame : AUTO
 /*(0x0083/0x0073)*/ 1C <Engine.GameInfo.InitGame> 00 <.Options> 48 <.ErrorMessage> 16
 /*(0x009F/0x0083)*/ 04 0B
 /*(0x00A1/0x0085)*/ 53
+
+
+
+
 
 /* XComGameInfo.SetGameType: overrides the class names used for which subclass of XComGameInfo to instantiate */
 OBJECT = XComGameInfo.SetGameType : AUTO
@@ -47,6 +51,11 @@ OBJECT = XComGameInfo.SetGameType : AUTO
 /*(0x0234/0x01D8)*/ [#label_0x0234]
 /*(0x0234/0x01D8)*/ 04 3A <.ReturnValue>
 /*(0x023E/0x01DE)*/ 53
+
+
+
+
+
 
 /**
  * XGLoadoutMgr.ApplyLoadout: sets XGItem.m_strUIImage to a string form of the item ID when instantiating an item.
@@ -92,3 +101,101 @@ OBJECT = XGLoadoutMgr.ApplyLoadout : AUTO
 /*(0x04F2/0x032A)*/ 19 00 <.kUnit> [@] <NullRef> 00 ( 1B <ApplyLoadout> 00 <.kLoadoutInstances> 2D 00 <.bLoadFromCheckpoint> 16 )
 /*(0x0524/0x034C)*/ 04 0B
 /*(0x0526/0x034E)*/ 53
+
+
+
+
+
+
+/*******************************************
+ * XComUnitPawn: replace functions with calls to Mutate
+ *******************************************/
+
+OBJECT = XComUnitPawn.TakeDirectDamage : AUTO
+[REPLACEMENT_CODE]
+// DamageEvent_CauseOfDeath = Dmg;
+// We need to pass this data to our mutator somehow, so we use this field
+0F 01 <XComUnitPawnNativeBase.DamageEvent_CauseOfDeath> 00 <.Dmg>
+
+// WorldInfo.Game.Mutate("XComUnitPawn.TakeDirectDamage|" $ Name, GetALocalPlayerController());
+19 19 01 <Engine.Actor.WorldInfo> [@] <Engine.WorldInfo.Game> 00 ( 01 <Engine.WorldInfo.Game> ) [@] <NullRef> 00 ( 1B <Mutate> 70 1F <%t "XComUnitPawn.TakeDirectDamage|"> 38 57 01 <Core.Object.Name> 16 1C <Engine.Actor.GetALocalPlayerController> 16 16 )
+
+// return;
+04 0B
+53
+
+
+
+
+
+
+/*******************************************
+ * XComProjectile: replace functions with calls to Mutate
+ *******************************************/
+
+OBJECT = XComProjectile.CalculateUnitDamage : AUTO
+[REPLACEMENT_CODE]
+// WorldInfo.Game.Mutate("XComProjectile.CalculateUnitDamage|" $ Name, GetALocalPlayerController());
+19 19 01 <Engine.Actor.WorldInfo> [@] <Engine.WorldInfo.Game> 00 ( 01 <Engine.WorldInfo.Game> ) [@] <NullRef> 00 ( 1B <Mutate> 70 1F <%t "XComProjectile.CalculateUnitDamage|"> 38 57 01 <Core.Object.Name> 16 1C <Engine.Actor.GetALocalPlayerController> 16 16 )
+
+// return;
+04 0B
+53
+
+
+/*******************************************
+ * XComAlienSpawnVolume: replace call to XGLoadoutMgr.ApplyInventory
+ *                       with a Mutate call for the same purpose
+ *******************************************/
+
+OBJECT = XComAlienSpawnVolume.Touch : AUTO
+[REPLACEMENT_CODE]
+// Locale = Volume.Location;
+0F 00 <.Locale> 19 01 <@Volume> [@] <Engine.Actor.Location> 00 ( 01 <Engine.Actor.Location> )
+
+// Locale.X = Locale.X + float(Rand(384));
+0F 35 <Core.Object.Vector.X> <Core.Object.Vector> 00 01 00 <.Locale> AE 35 <Core.Object.Vector.X> <Core.Object.Vector> 00 00 00 <.Locale> 38 3F A7 1D <%i 384> 16 16
+
+// Locale.Y = Locale.Y + float(Rand(384));
+0F 35 <Core.Object.Vector.Y> <Core.Object.Vector> 00 01 00 <.Locale> AE 35 <Core.Object.Vector.Y> <Core.Object.Vector> 00 00 00 <.Locale> 38 3F A7 1D <%i 384> 16 16
+
+// super(Actor).Touch(Other, OtherComp, HitLocation, HitNormal);
+1C <Engine.Actor.Touch> 00 <.Other> 00 <.OtherComp> 00 <.HitLocation> 00 <.HitNormal> 16
+
+// if (bSwappingSomeone)
+07 [@label_0x00ED] 2D 01 <@bSwappingSomeone>
+// {
+    // return
+	04 0B
+// }
+[#label_0x00ED]
+
+// XPawn = XComUnitPawn(Other);
+0F 00 <.XPawn> 2E <Class.XComUnitPawn> 00 <.Other>
+
+// if (XPawn != none)
+07 [@label_0x0359] 77 00 <.XPawn> 2A 16
+// {
+    // bSwappingSomeone = true;
+	14 2D 01 <@bSwappingSomeone> 27
+
+    // kSquad = XGBattle_SP(`BATTLE).GetAIPlayer().m_kSquad;
+	0F 00 <.kSquad> 19 19 2E <Class.XGBattle_SP> 19 2E <Class.XComTacticalGRI> 19 12 20 <Engine.Engine> [@] <Engine.Engine.GetCurrentWorldInfo.ReturnValue> 00 ( 1C <Engine.Engine.GetCurrentWorldInfo> 16 ) [@] <Engine.WorldInfo.GRI> 00 ( 01 <Engine.WorldInfo.GRI> ) [@] <XComTacticalGRI.m_kBattle> 00 ( 01 <XComTacticalGRI.m_kBattle> ) [@] <XGBattle_SP.GetAIPlayer.ReturnValue> 00 ( 1B <GetAIPlayer> 16 ) [@] <XGPlayer.m_kSquad> 00 ( 01 <XGPlayer.m_kSquad> )
+
+    // kChar = Spawn(UnitClass);
+	0F 00 <.kChar> 1C <Engine.Actor.Spawn> 01 <@UnitClass> 4A 4A 4A 4A 4A 4A 4A 16
+
+    // NewUnit = XGBattle_SP(`BATTLE).GetAIPlayer().SpawnUnit(class'XGUnit', XGBattle_SP(`BATTLE).GetAIPlayer().m_kPlayerController, Locale, rot(0, 0, 0), kChar, kSquad);
+	0F 00 <.NewUnit> 19 19 2E <Class.XGBattle_SP> 19 2E <Class.XComTacticalGRI> 19 12 20 <Engine.Engine> [@] <Engine.Engine.GetCurrentWorldInfo.ReturnValue> 00 ( 1C <Engine.Engine.GetCurrentWorldInfo> 16 ) [@] <Engine.WorldInfo.GRI> 00 ( 01 <Engine.WorldInfo.GRI> ) [@] <XComTacticalGRI.m_kBattle> 00 ( 01 <XComTacticalGRI.m_kBattle> ) [@] <XGBattle_SP.GetAIPlayer.ReturnValue> 00 ( 1B <GetAIPlayer> 16 ) [@] <XGPlayer.SpawnUnit.ReturnValue> 00 ( 1B <SpawnUnit> 20 <Class.XGUnit> 19 19 2E <Class.XGBattle_SP> 19 2E <Class.XComTacticalGRI> 19 12 20 <Engine.Engine> [@] <Engine.Engine.GetCurrentWorldInfo.ReturnValue> 00 ( 1C <Engine.Engine.GetCurrentWorldInfo> 16 ) [@] <Engine.WorldInfo.GRI> 00 ( 01 <Engine.WorldInfo.GRI> ) [@] <XComTacticalGRI.m_kBattle> 00 ( 01 <XComTacticalGRI.m_kBattle> ) [@] <XGBattle_SP.GetAIPlayer.ReturnValue> 00 ( 1B <GetAIPlayer> 16 ) [@] <XGPlayerNativeBase.m_kPlayerController> 00 ( 01 <XGPlayerNativeBase.m_kPlayerController> ) 00 <.Locale> 22 <%i 0> <%i 0> <%i 0> 00 <.kChar> 00 <.kSquad> 4A 4A 4A 4A 16 )
+
+    // WorldInfo.Game.Mutate("XGLoadoutMgr.ApplyInventory|" $ NewUnit.Name, GetALocalPlayerController());
+	19 19 01 <Engine.Actor.WorldInfo> [@] <Engine.WorldInfo.Game> 00 ( 01 <Engine.WorldInfo.Game> ) [@] <NullRef> 00 ( 1B <Mutate> 70 1F <%t "XGLoadoutMgr.ApplyInventory|"> 38 57 19 00 <.NewUnit> [@] <Core.Object.Name> 00 ( 01 <Core.Object.Name> ) 16 1C <Engine.Actor.GetALocalPlayerController> 16 16 )
+
+    // bSwappingSomeone = false;
+	14 2D 01 <@bSwappingSomeone> 28
+// }
+[#label_0x0359]
+
+// return;
+04 0B
+53

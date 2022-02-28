@@ -5,8 +5,6 @@ reliable server function ServerPerformRaisingTargetWithFireAction(optional XGUni
     local XGAction_Targeting kNewAction;
     local int I;
 
-    `LWCE_LOG_CLS("ServerPerformRaisingTargetWithFireAction");
-
     if (`BATTLE.IsTurnTimerCloseToExpiring())
     {
         ClientFailedPerformingRaisingTargetWithFireAction();

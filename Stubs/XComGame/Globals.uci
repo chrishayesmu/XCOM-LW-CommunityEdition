@@ -1,6 +1,9 @@
 `define BATTLE (XComTacticalGRI(class'Engine'.static.GetCurrentWorldInfo().GRI).m_kBattle)
 `define ISDEBUG (`BATTLE.IsA('XGBattle_SPDebug'))
 
+`define SYNC_RAND(x) (class'XComEngine'.static.SyncRand(`x, string(Name) @ string(GetStateName()) @ string(GetFuncName())))
+`define SYNC_RAND_STATIC(x) (class'XComEngine'.static.SyncRand(`x, string(default.Class.Name) @ string(GetFuncName())))
+
 `define CHEATMGR_TAC (XComTacticalCheatManager(XComGameReplicationInfo(class'Engine'.static.GetCurrentWorldInfo().GRI).GetALocalPlayerController().CheatManager))
 `define CONTENTMGR (XComContentManager(class'Engine'.static.GetEngine().GetContentManager()))
 `define GAMECORE (XComGameReplicationInfo(class'Engine'.static.GetCurrentWorldInfo().GRI).m_kGameCore)

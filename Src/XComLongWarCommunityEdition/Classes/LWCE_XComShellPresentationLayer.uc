@@ -1,5 +1,22 @@
 class LWCE_XComShellPresentationLayer extends XComShellPresentationLayer;
 
+simulated function EnterMainMenu()
+{
+    if (ShouldShowDevShell())
+    {
+        UIShellScreen();
+    }
+    else
+    {
+        UIFinalShellScreen();
+    }
+}
+
+private function bool ShouldShowDevShell()
+{
+    return false; // TODO: make this configurable
+}
+
 // ----------------------------------------------------------------------------------
 // NOTE: states past this point are from XComPresentationLayerBase, and need to be modified here,
 // in LWCE_XComPresentationLayer, and in LWCE_XComHQPresentationLayer together!
