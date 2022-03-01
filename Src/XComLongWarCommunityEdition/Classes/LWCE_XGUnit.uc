@@ -1691,6 +1691,20 @@ simulated function GetTargetsInRange(int iTargetType, int iRangeType, out array<
     }
 }
 
+function bool LoadInit(XGPlayer NewPlayer)
+{
+    if (super.LoadInit(NewPlayer))
+    {
+        // LWCE issue #23: the character's reference to the unit is not persisted, causing it to be lost
+        // if the tac game is saved and loaded. We simply restore it manually.
+        m_kCharacter.m_kUnit = self;
+
+        return true;
+    }
+
+    return false;
+}
+
 simulated event ReplicatedEvent(name VarName)
 {
     super.ReplicatedEvent(VarName);
