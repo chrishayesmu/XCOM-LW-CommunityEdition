@@ -39,3 +39,34 @@ simulated function Init(XComPlayerController _controller, UIFxsMovie _manager)
         }
     }
 }
+
+simulated function OnLoseFocus()
+{
+    m_bIsFocused = false;
+    m_bPostOnInitFocusCached = false;
+    m_kHelpBar.ClearButtonHelp();
+
+    if (m_kMgr != none)
+    {
+        m_kMgr.OnLoseFocus();
+    }
+
+    if (m_kMenu != none)
+    {
+        m_kMenu.OnLoseFocus();
+    }
+
+    if (m_kClock != none)
+    {
+        m_kClock.OnLoseFocus();
+    }
+
+    if (m_kEventList != none)
+    {
+        m_kEventList.OnLoseFocus();
+    }
+
+    AS_HideTicker();
+    AS_HideHotlink();
+    Hide();
+}
