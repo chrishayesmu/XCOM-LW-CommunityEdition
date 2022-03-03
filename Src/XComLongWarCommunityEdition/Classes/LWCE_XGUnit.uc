@@ -720,7 +720,7 @@ function BuildAbilities(optional bool bUpdateUI = true)
 
     if (`WORLDINFO.NetMode != NM_Standalone)
     {
-        // TODO
+        // TODO: add this if we want multiplayer support
     }
 
     if (!m_bBuildAbilityDataDirty)
@@ -782,9 +782,9 @@ function BuildAbilities(optional bool bUpdateUI = true)
 
     // This part isn't in the native code; in fact I can't find reference to bUpdateUI at all.
     // But our version doesn't work without it.
-    if (bUpdateUI && `PRES.m_kTacticalHUD != none)
+    if (bUpdateUI)
     {
-        `PRES.m_kTacticalHUD.Update();
+        UpdateAbilitiesUI();
     }
 }
 
@@ -1541,7 +1541,7 @@ simulated function int GetOffense()
 
     if (IsBeingSuppressed())
     {
-        iAim -= `LWCE_TACCFG(iSuppressionAimPenalty);
+        iAim -= class'XGTacticalGameCoreNativeBase'.const.SUPPRESSION_AIM_PENALTY;
     }
 
     if (IsPoisoned())
@@ -1708,6 +1708,11 @@ function bool LoadInit(XGPlayer NewPlayer)
 simulated event ReplicatedEvent(name VarName)
 {
     super.ReplicatedEvent(VarName);
+}
+
+simulated event UpdateAbilitiesUI()
+{
+    super.UpdateAbilitiesUI();
 }
 
 function UpdateItemCharges()

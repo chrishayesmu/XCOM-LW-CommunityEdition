@@ -82,7 +82,6 @@ var config int iShredderDebuffDurationFromEnemyWeapon;
 var config int iShredderDebuffDurationFromPerk;
 var config int iShredderDebuffDurationFromRocket;
 var config int iShredderDebuffDurationFromSmallItem;
-var config int iSuppressionAimPenalty;
 var config int iTelekineticFieldDefenseBonus;
 var config int iTelekineticFieldVolumeDuration;
 var config int iVitalPointTargetingDamageBonusPistol;
