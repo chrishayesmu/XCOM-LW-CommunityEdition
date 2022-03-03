@@ -408,16 +408,30 @@ static simulated function string GetHelpText(XGAbility kSelf)
 {
     local int iAbilityId;
     local string strText;
+    local XGAbility_Targeted kTargeted;
 
     iAbilityId = kSelf.GetType();
+    kTargeted = XGAbility_Targeted(kSelf);
 
     if (iAbilityId <= 255)
     {
         strText = class'XGAbilityTree'.default.HelpMessages[iAbilityId];
+    }
 
-        if (XGAbility_Targeted(kSelf) != none)
+    if (strText != "")
+    {
+        strText = Repl(strText, "<XGAbility:Duration/>", kSelf.iDuration / 2);
+        strText = Repl(strText, "<XGameCore:RepairShivHP/>", `LWCE_TACCFG(iRepairHealBaseXCOM));
+        strText = Repl(strText, "<XGAbility:StunHP/>", 3); // Not sure why this is a variable, it never seems to change
+
+        if (kTargeted != none)
         {
-            strText = Repl(strText, "<XGAbility:PossibleDamage/>", GetPossibleDamage(XGAbility_Targeted(kSelf)));
+            strText = Repl(strText, "<XGAbility:PossibleDamage/>", GetPossibleDamage(kTargeted));
+
+            if (kTargeted.m_kWeapon != none)
+            {
+                strText = Repl(strText, "<XGAbility:WeaponName/>", kTargeted.m_kWeapon.m_kTWeapon.strName);
+            }
         }
     }
 
