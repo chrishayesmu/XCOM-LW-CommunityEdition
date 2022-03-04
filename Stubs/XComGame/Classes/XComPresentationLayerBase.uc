@@ -235,14 +235,15 @@ function bool OnSystemMessage_AutomatchGameFull();
 simulated state BaseScreenState
 {
 	simulated function InitState(){}
-simulated function Activate(){}
-simulated function Deactivate(){}
-simulated event PushedState(){}
-simulated event ContinuedState(){}
-simulated event PausedState(){}
-simulated event PoppedState(){}
-simulated function RemoveSelfStateFromStack(){}
+    simulated function Activate(){}
+    simulated function Deactivate(){}
+    simulated event PushedState(){}
+    simulated event ContinuedState(){}
+    simulated event PausedState(){}
+    simulated event PoppedState(){}
+    simulated function RemoveSelfStateFromStack(){}
 }
+
 simulated state TentPoleScreenState extends BaseScreenState
 {
     simulated function Activate(){}
@@ -311,26 +312,26 @@ simulated state State_ItemCard extends BaseScreenState
 {
 	simulated function Activate(){}
     simulated function Deactivate(){}
- 
+
 }
 simulated state State_SaveScreen extends BaseScreenState
 {
 	simulated function Activate(){}
     simulated function Deactivate(){}
- 
+
 }
 
 simulated state State_LoadScreen extends BaseScreenState
 {
 	simulated function Activate(){}
     simulated function Deactivate(){}
- 
+
 }
 simulated state State_ControllerMap extends BaseScreenState
 {
 	simulated function Activate(){}
     simulated function Deactivate(){}
- 
+
 }
 
 simulated state State_PauseMenu extends BaseScreenState
@@ -358,12 +359,11 @@ simulated state State_UICredits extends BaseScreenState
 {
 	simulated function Activate(){}
     simulated function Deactivate(){}
- 
+
 }
 simulated state State_TestScreen extends BaseScreenState
 {
 	simulated function Activate(){}
     simulated function Deactivate(){}
- 
-}
 
+}

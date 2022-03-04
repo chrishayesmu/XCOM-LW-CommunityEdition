@@ -1,4 +1,7 @@
-class LWCE_XComShellPresentationLayer extends XComShellPresentationLayer;
+class LWCE_XComShellPresentationLayer extends XComShellPresentationLayer
+    config(LWCEQualityOfLife);
+
+var config bool bShowDebugShellScreen;
 
 `include(generators.uci)
 
@@ -6,7 +9,7 @@ class LWCE_XComShellPresentationLayer extends XComShellPresentationLayer;
 
 simulated function EnterMainMenu()
 {
-    if (ShouldShowDevShell())
+    if (bShowDebugShellScreen)
     {
         UIShellScreen();
     }
@@ -16,7 +19,12 @@ simulated function EnterMainMenu()
     }
 }
 
-private function bool ShouldShowDevShell()
+simulated state State_FinalShell
 {
-    return false; // TODO: make this configurable
+    simulated function Activate()
+    {
+        m_kFinalShellScreen = Spawn(class'LWCE_UIFinalShell', self);
+        m_kFinalShellScreen.Init(XComShellController(Owner), GetHUD());
+        GetHUD().LoadScreen(m_kFinalShellScreen);
+    }
 }

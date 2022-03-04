@@ -1,6 +1,8 @@
 class LWCE_UIModSettings extends UI_FxsScreen;
 // NOTE: This class is not remotely finished and is just here as a placeholder for now
 
+var const localized string m_strWindowTitle;
+
 var privatewrite GFXObject m_kGfx;
 var privatewrite array<UIWidgetHelper> m_arrWidgetHelpers;
 
@@ -36,7 +38,7 @@ simulated function OnInit()
     m_kGfx.GetObject("centerButton1").SetVisible(false);
     m_kGfx.GetObject("centerButton2").SetVisible(false);
 
-    AS_SetTitle("LWCE Mod Settings");
+    AS_SetTitle(m_strWindowTitle);
     AS_SetHelp(0, class'UIUtilities'.default.m_strGenericBack, class'UI_FxsGamepadIcons'.static.GetBackButtonIcon());
     AS_SetHelp(3, class'UIOptionsPCScreen'.default.m_strExitAndSaveSettings, "Icon_X_SQUARE");
 
@@ -44,7 +46,6 @@ simulated function OnInit()
 
     if (IsVisible())
     {
-        `LWCE_LOG_CLS("Showing UIModSettings");
         Show();
     }
 }

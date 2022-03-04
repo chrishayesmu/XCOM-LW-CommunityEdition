@@ -39,6 +39,11 @@
 `define LWCE_TWEAPON_FROM_XG(kWeapon) (class'LWCE_XGWeapon_Extensions'.static.GetCEWeapon(`kWeapon))
 
 // ---------------------------
+// Main menu shell layer macros
+// ---------------------------
+`define LWCE_SHELLPRES (LWCE_XComShellPresentationLayer(XComPlayerController(class'Engine'.static.GetCurrentWorldInfo().GetALocalPlayerController()).m_Pres))
+
+// ---------------------------
 // Strategy layer macros
 // ---------------------------
 
@@ -67,3 +72,4 @@
 `define LWCE_CHEATMGR_TAC (LWCE_XComTacticalCheatManager(XComGameReplicationInfo(class'Engine'.static.GetCurrentWorldInfo().GRI).GetALocalPlayerController().CheatManager))
 `define LWCE_TAC_CARGO (LWCE_XGDropshipCargoInfo(`BATTLE.m_kDesc.m_kDropShipCargoInfo))
 `define LWCE_TACCFG(nm) (class'LWCE_XGTacticalGameCore'.default.`nm)
+`define LWCE_TACPRES (LWCE_XComPresentationLayer(`PRES))

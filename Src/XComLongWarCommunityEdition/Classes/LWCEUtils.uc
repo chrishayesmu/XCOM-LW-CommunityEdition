@@ -63,6 +63,29 @@ static function bool IsFoundryTechResearched(int iTechId)
 }
 
 /// <summary>
+/// Opens LWCE's mod settings menu, handling checks for whichever presentation layer we're currently in.
+/// </summary>
+static simulated function OpenModSettingsMenu()
+{
+    if (`LWCE_HQPRES != none)
+    {
+        `LWCE_HQPRES.LWCE_UIModSettings();
+    }
+    else if (`LWCE_TACPRES != none)
+    {
+        `LWCE_TACPRES.LWCE_UIModSettings();
+    }/*
+    else if (`LWCE_SHELLPRES != none)
+    {
+        `LWCE_SHELLPRES.LWCE_UIModSettings();
+    } */
+    else
+    {
+        `LWCE_LOG_CLS("ERROR: could not find appropriate presentation layer to open mod settings menu");
+    }
+}
+
+/// <summary>
 /// Selects a random value from the given range.
 /// </summary>
 static function int RandInRange(LWCE_TRange kRange)

@@ -1,5 +1,7 @@
 class LWCE_UIPauseMenu extends UIPauseMenu;
 
+var const localized string m_strModSettings;
+
 var int m_optModSettings;
 
 simulated function BuildMenu()
@@ -58,13 +60,13 @@ simulated function BuildMenu()
 
     // LWCE: add custom option for mods
     m_optModSettings = ++iCurrent;
-    AS_AddOption(m_optModSettings, "Mod Settings", eUIState_Normal);
+    AS_AddOption(m_optModSettings, m_strModSettings, eUIState_Normal);
 
     if (kMPGRI == none)
     {
         if (XComPresentationLayer(controllerRef.m_Pres) != none)
         {
-            if (!m_bIsIronman || `GAMECORE.IsOptionEnabled(/* Bronzeman Mode */ 16))
+            if (!m_bIsIronman || `GAMECORE.IsOptionEnabled(`LW_SECOND_WAVE_ID(BronzemanMode)))
             {
                 m_optRestart = ++iCurrent;
                 AS_AddOption(m_optRestart, m_sRestartLevel, eUIState_Normal);
@@ -143,14 +145,10 @@ simulated function BuildMenu()
 
 simulated function OnUAccept()
 {
-    `LWCE_LOG_CLS("m_iCurrentSelection = " $ m_iCurrentSelection $ "; m_optRestart = " $ m_optRestart);
-
     if (m_iCurrentSelection == m_optModSettings)
     {
         PlaySound(`SoundCue("SoundUI.MenuSelectCue"), true);
-
-        // TODO: may not be on strat layer, need to check tac pres also
-        `LWCE_HQPRES.LWCE_UIModSettings();
+        `LWCE_UTILS.OpenModSettingsMenu();
         return;
     }
 
