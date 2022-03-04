@@ -1,5 +1,9 @@
 class LWCE_XComPresentationLayer extends XComPresentationLayer;
 
+`include(generators.uci)
+
+`LWCE_GENERATOR_XCOMPRESENTATIONLAYERBASE
+
 simulated state State_AbilityHUD
 {
     simulated function Activate()
@@ -65,19 +69,5 @@ simulated state State_PauseMenu
         ToggleUIWhenPaused(false);
         m_kPauseMenu = Spawn(class'LWCE_UIPauseMenu', self);
         m_kPauseMenu.Init(XComPlayerController(Owner), GetHUD(), m_bIsIronman, bAllowSaving);
-    }
-}
-
-// ----------------------------------------------------------------------------------
-// NOTE: states past this point are from XComPresentationLayerBase, and need to be modified here,
-// in LWCE_XComShellPresentationLayer, and in LWCE_XComHQPresentationLayer together!
-// ----------------------------------------------------------------------------------
-
-simulated state State_PCKeybindings
-{
-    simulated function Activate()
-    {
-        m_kPCKeybindings = Spawn(class'LWCE_UIKeybindingsPCScreen', self);
-        m_kPCKeybindings.Init(XComPlayerController(Owner), GetHUD());
     }
 }

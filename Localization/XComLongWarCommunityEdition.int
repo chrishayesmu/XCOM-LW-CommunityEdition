@@ -1,3 +1,12 @@
+[LWCE_UILoadGame]
+m_strSaveNotFromLWCEWarning="Incompatible with Long War: Community Edition"
+m_strSaveNotFromLWCETitle="INCOMPATIBLE SAVE"
+m_strSaveNotFromLWCEBody="This save game was made without Long War: Community Edition and will very likely crash the game immediately."
+m_strSaveFromOlderLWCETitle="OLDER SAVE VERSION"
+m_strSaveFromOlderLWCEBody="This save game was made with an older version of Long War: Community Edition. You may see odd behavior or the game may even crash."
+m_strSaveFromOlderLWCEWarning="Saved with older version of Long War: Community Edition"
+m_strLoadAnyway="Load Anyway"
+
 [LWCE_UIShipSummary]
 m_strManualRenameDialogTitle="SET CALLSIGN"
 m_strRenameDialogAccept="Enter Manually"

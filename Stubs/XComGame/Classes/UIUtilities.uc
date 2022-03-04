@@ -79,4 +79,5 @@ static simulated function string GetMedalImagePath(int iImg){}
 static simulated function string GetLargeMedalImagePath(int iImg){}
 static simulated function string GetPowerImagePath(int iImg){}
 static final function string GetEItemType_InfoIcon(EItemType_Info ItemInfo){}
-
+static simulated function bool IsDLC1Map(name MapName){}
+static simulated function bool IsDLC2Map(name MapName){}

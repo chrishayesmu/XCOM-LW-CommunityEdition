@@ -1,5 +1,9 @@
 class LWCE_XComShellPresentationLayer extends XComShellPresentationLayer;
 
+`include(generators.uci)
+
+`LWCE_GENERATOR_XCOMPRESENTATIONLAYERBASE
+
 simulated function EnterMainMenu()
 {
     if (ShouldShowDevShell())
@@ -15,18 +19,4 @@ simulated function EnterMainMenu()
 private function bool ShouldShowDevShell()
 {
     return false; // TODO: make this configurable
-}
-
-// ----------------------------------------------------------------------------------
-// NOTE: states past this point are from XComPresentationLayerBase, and need to be modified here,
-// in LWCE_XComPresentationLayer, and in LWCE_XComHQPresentationLayer together!
-// ----------------------------------------------------------------------------------
-
-simulated state State_PCKeybindings
-{
-    simulated function Activate()
-    {
-        m_kPCKeybindings = Spawn(class'LWCE_UIKeybindingsPCScreen', self);
-        m_kPCKeybindings.Init(XComPlayerController(Owner), GetHUD());
-    }
 }

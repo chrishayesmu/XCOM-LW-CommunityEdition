@@ -10,6 +10,34 @@
  *
  **************************************************************************************/
 
+// -----------------
+// XComPresentationLayerBase
+// -----------------
+
+`define LWCE_GENERATOR_XCOMPRESENTATIONLAYERBASE \
+simulated state State_PCKeybindings \
+{ \
+    simulated function Activate() \
+    { \
+        class'LWCE_XComPresentationLayerBase_Extensions'.static.State_PCKeybindings_Activate(self); \
+    } \
+} \
+\
+simulated state State_SaveScreen \
+{ \
+    simulated function Activate() \
+    { \
+        class'LWCE_XComPresentationLayerBase_Extensions'.static.State_SaveScreen_Activate(self); \
+    } \
+} \
+\
+simulated state State_LoadScreen \
+{ \
+    simulated function Activate() \
+    { \
+        class'LWCE_XComPresentationLayerBase_Extensions'.static.State_LoadScreen_Activate(self); \
+    } \
+} \
 
 // -----------------
 // XGBattle
@@ -30,6 +58,9 @@ function InitLoadedItems() \
 { \
     class'LWCE_XGBattle_Extensions'.static.InitLoadedItems(self); \
 } \
+
+
+
 
 
 // -----------------

@@ -2,6 +2,10 @@ class LWCE_XComHQPresentationLayer extends XComHQPresentationLayer;
 
 var LWCE_UIModSettings m_kModSettings;
 
+`include(generators.uci)
+
+`LWCE_GENERATOR_XCOMPRESENTATIONLAYERBASE
+
 simulated function Init()
 {
     `LWCE_LOG_CLS("Init");
@@ -372,19 +376,5 @@ simulated state State_StrategyHUD
         Sound().PlayAmbience(2);
         Sound().PlayMusic(`HQGAME.GetGameCore().GetActMusic());
         XComHeadquartersController(Owner).SetInputState('HQ_FreeMovement');
-    }
-}
-
-// ----------------------------------------------------------------------------------
-// NOTE: states past this point are from XComPresentationLayerBase, and need to be modified here,
-// in LWCE_XComShellPresentationLayer, and in LWCE_XComPresentationLayer together!
-// ----------------------------------------------------------------------------------
-
-simulated state State_PCKeybindings
-{
-    simulated function Activate()
-    {
-        m_kPCKeybindings = Spawn(class'LWCE_UIKeybindingsPCScreen', self);
-        m_kPCKeybindings.Init(XComPlayerController(Owner), GetHUD());
     }
 }
