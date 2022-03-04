@@ -69,9 +69,11 @@ simulated function BuildMenu()
                 m_optRestart = ++iCurrent;
                 AS_AddOption(m_optRestart, m_sRestartLevel, eUIState_Normal);
             }
+            else
+            {
+                m_optRestart = -1;
+            }
         }
-
-        m_optRestart = -1;
     }
 
     if (controllerRef.m_Pres.m_eUIMode != eUIMode_Shell && kMPGRI == none)
@@ -141,6 +143,8 @@ simulated function BuildMenu()
 
 simulated function OnUAccept()
 {
+    `LWCE_LOG_CLS("m_iCurrentSelection = " $ m_iCurrentSelection $ "; m_optRestart = " $ m_optRestart);
+
     if (m_iCurrentSelection == m_optModSettings)
     {
         PlaySound(`SoundCue("SoundUI.MenuSelectCue"), true);
