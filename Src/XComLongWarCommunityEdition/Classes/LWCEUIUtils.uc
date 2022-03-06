@@ -28,8 +28,8 @@ static function LWCEUICombobox CreateCombobox(GFxObject gfxParent, string strCom
     local LWCEUICombobox kCombobox;
 
     kCombobox = LWCEUICombobox(BindMovie(gfxParent, "XComCombobox", strComboboxName, class'LWCEUICombobox'));
-    AS_AddMouseListener(kCombobox);
-    AS_BindMouse(kCombobox);
+    //AS_AddMouseListener(kCombobox);
+    //AS_BindMouse(kCombobox);
 
     return kCombobox;
 }
@@ -39,14 +39,14 @@ static function LWCEUISlider CreateSlider(GFxObject gfxParent, string strSliderN
     return LWCEUISlider(BindMovie(gfxParent, "XComSlider", strSliderName, class'LWCEUISlider'));
 }
 
-static function GfxObject BindMovie(GFxObject kOwner, coerce string strFlashClass, coerce string strClipName, optional class<GfxObject> kClass = none, optional UIFxsMovie kManager = none)
+static function GfxObject BindMovie(GFxObject kOwner, coerce string strFlashClass, coerce string strClipName, optional class<GfxObject> kClass = none, optional UIFxsMovie kManager = GetHUD())
 {
     local GFxObject gfxResult;
 	local array<ASValue> myArray;
 
-	myArray.Length = 0; // silence compiler warning
-
 	gfxResult = AS_BindMovie(kOwner, strFlashClass, strClipName, kManager);
+
+	myArray.Add(1); // silence compiler warning
 	gfxResult.Invoke("onLoad", myArray);
 
 	if (kClass != none)
@@ -59,20 +59,20 @@ static function GfxObject BindMovie(GFxObject kOwner, coerce string strFlashClas
 
 protected static function AS_AddMouseListener(GfxObject kListener)
 {
-	`PRES.GetHUD().ActionScriptVoid(`PRES.GetHUD().GetMCPath() $ "._global.Mouse.addListener");
+	GetHUD().ActionScriptVoid(GetHUD().GetMCPath() $ "._global.Mouse.addListener");
 }
 
 protected static function AS_BindMouse(GfxObject kBindToObject)
 {
-	`PRES.GetHUD().ActionScriptVoid(`PRES.GetHUD().GetMCPath() $ "._global.Bind.mouse");
+	GetHUD().ActionScriptVoid(GetHUD().GetMCPath() $ "._global.Bind.mouse");
 }
 
-protected static function GfxObject AS_BindMovie(GFxObject kOwner, coerce string strTemplateFlashClass, coerce string strNewClipID, optional UIFxsMovie kManager = none)
+protected static function GfxObject AS_BindMovie(GFxObject kOwner, coerce string strTemplateFlashClass, coerce string strNewClipID, optional UIFxsMovie kManager = GetHUD())
 {
-    if (kManager == none)
-    {
-        kManager = `PRES.GetHUD();
-    }
-
 	return kManager.ActionScriptObject(kManager.GetMCPath() $ "._global.Bind.movie");
+}
+
+protected static function UIInterfaceMgr GetHUD()
+{
+    return XComPlayerController(class'Engine'.static.GetCurrentWorldInfo().GetALocalPlayerController()).m_Pres.GetHUD();
 }

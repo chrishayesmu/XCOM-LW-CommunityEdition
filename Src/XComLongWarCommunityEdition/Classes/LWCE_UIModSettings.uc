@@ -15,6 +15,10 @@ simulated function Init(XComPlayerController _controllerRef, UIFxsMovie _manager
 
 simulated function OnInit()
 {
+    local LWCEUIButton kButton;
+    local LWCEUICheckbox kCheckbox;
+    local LWCEUICombobox kCombobox;
+    local LWCEUISlider kSlider;
     local int I;
 
     super.OnInit();
@@ -48,6 +52,36 @@ simulated function OnInit()
     {
         Show();
     }
+
+    // TODO: delete. Just some testing of UI utils for now.
+    kButton = class'LWCEUIUtils'.static.CreateButton(m_kGfx, "lwceModButton");
+    kButton.SetLabel("My Button");
+    kButton.SetX(300);
+    kButton.SetY(120);
+
+    kCheckbox = class'LWCEUIUtils'.static.CreateCheckbox(m_kGfx, "lwceModCheckbox");
+    kCheckbox.SetLabel("My Checkbox");
+    kCheckbox.SetX(kButton.GetX());
+    kCheckbox.SetY(240);
+
+    kCombobox = class'LWCEUIUtils'.static.CreateCombobox(m_kGfx, "lwceModCombobox");
+    kCombobox.SetButtonLabel("My Combobox");
+    //kCombobox.SetButtonText("Item 0");
+    kCombobox.SetX(kButton.GetX());
+    kCombobox.SetY(360);
+
+    kCombobox.ClearList();
+    kCombobox.AddListItem(0, "Item 0");
+    kCombobox.AddListItem(1, "Item 1");
+    kCombobox.AddListItem(2, "Item 2");
+
+    kCombobox.SetSelectedItem(0);
+    kCombobox.Realize();
+
+    kSlider = class'LWCEUIUtils'.static.CreateSlider(m_kGfx, "lwceModSlider");
+    kSlider.SetLabel("My Slider");
+    kSlider.SetX(kButton.GetX());
+    kSlider.SetY(480);
 }
 
 simulated function bool OnMouseEvent(int Cmd, array<string> args)
