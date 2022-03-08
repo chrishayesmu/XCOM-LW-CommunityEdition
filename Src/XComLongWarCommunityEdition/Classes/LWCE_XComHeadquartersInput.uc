@@ -1,5 +1,12 @@
 class LWCE_XComHeadquartersInput extends XComHeadquartersInput;
 
+function InitInputSystem()
+{
+    super.InitInputSystem();
+
+    class'LWCE_UIKeybindingsPCScreen'.static.ApplyCustomKeybinds(self);
+}
+
 function bool HandleClickedGlobeActor(XGStrategyActor kStrategyActor)
 {
     local XGMissionControlUI kXGMissionControlUI;

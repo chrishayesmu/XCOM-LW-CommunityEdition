@@ -1,5 +1,12 @@
 class LWCE_XComTacticalInput extends XComTacticalInput;
 
+function InitInputSystem()
+{
+    super.InitInputSystem();
+
+    class'LWCE_UIKeybindingsPCScreen'.static.ApplyCustomKeybinds(self);
+}
+
 simulated function CancelMousePathing(optional bool bClearPathData = true)
 {
     local XGAction_Path kPathAction;

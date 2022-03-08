@@ -10,12 +10,57 @@ struct LWCE_UIKeybind
 
 var config array<LWCE_UIKeyBind> m_arrCEKeybinds;
 
+var const localized string m_strToggleGridLabel;
+
+static function ApplyCustomKeybinds(PlayerInput kInput)
+{
+    local KeybindCategories eBindingCategory;
+    local LWCE_UIKeybind kLWCEBinding;
+
+    if (kInput.IsA('XComTacticalInput'))
+    {
+        eBindingCategory = eKC_Tactical;
+    }
+    else
+    {
+        eBindingCategory = eKC_General;
+    }
+
+    PopulateCustomKeybinds(default.m_arrCEKeybinds);
+
+    foreach default.m_arrCEKeybinds(kLWCEBinding)
+    {
+        if (kLWCEBinding.eBindingCategory != eBindingCategory)
+        {
+            continue;
+        }
+
+        // Remove any existing bindings, in case the ini file has been edited outside of the game
+        if (kLWCEBinding.kBinding.PrimaryBind.Name != 'None')
+        {
+            kInput.RemoveBind(kLWCEBinding.kBinding.PrimaryBind.Name, kLWCEBinding.kBinding.PrimaryBind.Command, /* bSecondaryBind */ true);
+            kInput.RemoveBind(kLWCEBinding.kBinding.PrimaryBind.Name, kLWCEBinding.kBinding.PrimaryBind.Command, /* bSecondaryBind */ false);
+            kInput.AddBind(kLWCEBinding.kBinding.PrimaryBind);
+        }
+
+        if (kLWCEBinding.kBinding.SecondaryBind.Name != 'None')
+        {
+            kInput.RemoveBind(kLWCEBinding.kBinding.SecondaryBind.Name, kLWCEBinding.kBinding.SecondaryBind.Command, /* bSecondaryBind */ true);
+            kInput.RemoveBind(kLWCEBinding.kBinding.SecondaryBind.Name, kLWCEBinding.kBinding.SecondaryBind.Command, /* bSecondaryBind */ false);
+            kInput.AddBind(kLWCEBinding.kBinding.SecondaryBind);
+        }
+    }
+}
+
 /**
  * Adds new keybindings to arrKeybinds only if they're not already present. Do not modify anything
  * if a keybinding is already in the array, or you may overwrite user settings.
+ *
+ * TODO: make it easy to always update the UserLabel, in case the user has changed languages or text
  */
 static function PopulateCustomKeybinds(out array<LWCE_UIKeybind> arrKeybinds)
 {
+    local int Index;
     local LWCE_UIKeybind kBlankBinding, kCEBinding;
 
     if (arrKeybinds.Find('strIdentifier', "LWCE_ToggleDisplayOfMovementGrid") == INDEX_NONE)
@@ -23,7 +68,7 @@ static function PopulateCustomKeybinds(out array<LWCE_UIKeybind> arrKeybinds)
         kCEBinding.strIdentifier = "LWCE_ToggleDisplayOfMovementGrid";
         kCEBinding.eBindingCategory = eKC_Tactical;
 
-        kCEBinding.kBinding.UserLabel = "TOGGLE GRID";
+        kCEBinding.kBinding.UserLabel = default.m_strToggleGridLabel;
         kCEBinding.kBinding.PrimaryBind.Command = "ToggleDisplayOfMovementGrid";
         kCEBinding.kBinding.PrimaryBind.Name = 'T';
         kCEBinding.kBinding.PrimaryBind.Alt = true;
@@ -31,6 +76,20 @@ static function PopulateCustomKeybinds(out array<LWCE_UIKeybind> arrKeybinds)
         arrKeybinds.AddItem(kCEBinding);
 
         kCEBinding = kBlankBinding;
+    }
+
+    for (Index = 0; Index < arrKeybinds.Length; Index++)
+    {
+        // Make sure the command is set the same for primary and secondary binds
+        arrKeybinds[Index].kBinding.SecondaryBind.Command = arrKeybinds[Index].kBinding.PrimaryBind.Command;
+
+        // Mark all primary binds as primary
+        arrKeybinds[Index].kBinding.PrimaryBind.bPrimaryBinding = true;
+        arrKeybinds[Index].kBinding.PrimaryBind.bSecondaryBinding = false;
+
+        // Mark all secondary binds as secondary
+        arrKeybinds[Index].kBinding.SecondaryBind.bPrimaryBinding = false;
+        arrKeybinds[Index].kBinding.SecondaryBind.bSecondaryBinding = true;
     }
 }
 
@@ -67,6 +126,52 @@ simulated function bool OnAccept(optional string Arg = "")
     SaveConfig();
 
     return true;
+}
+
+function OnDisplayConfirmResetBindingsDialogAction(EUIAction eAction)
+{
+    local LWCE_UIKeybind kLWCEBinding;
+
+    if (eAction == eUIAction_Accept)
+    {
+        ResetPlayerInputBindings();
+
+        // Remove all LWCE keybindings or else they'll persist instead of resetting to default
+        // TODO: this would be slightly better if we didn't rely on actually knowing the keybinding but instead iterated
+        // what's in the Input objects, because this won't clear out keybinds that were manually put in the ini file, but
+        // those keybinds won't be visible in the UI either
+        foreach m_arrCEKeybinds(kLWCEBinding)
+        {
+            if (kLWCEBinding.kBinding.PrimaryBind.Name != 'None')
+            {
+                m_kBaseInputController.PlayerInput.RemoveBind(kLWCEBinding.kBinding.PrimaryBind.Name, kLWCEBinding.kBinding.PrimaryBind.Command, /* bSecondaryBind */ false);
+                m_kTacticalInputController.PlayerInput.RemoveBind(kLWCEBinding.kBinding.PrimaryBind.Name, kLWCEBinding.kBinding.PrimaryBind.Command, /* bSecondaryBind */ false);
+            }
+
+            if (kLWCEBinding.kBinding.SecondaryBind.Name != 'None')
+            {
+                m_kBaseInputController.PlayerInput.RemoveBind(kLWCEBinding.kBinding.SecondaryBind.Name, kLWCEBinding.kBinding.SecondaryBind.Command, /* bSecondaryBind */ true);
+                m_kTacticalInputController.PlayerInput.RemoveBind(kLWCEBinding.kBinding.SecondaryBind.Name, kLWCEBinding.kBinding.SecondaryBind.Command, /* bSecondaryBind */ true);
+            }
+        }
+
+        // Repopulate everything from scratch and save it
+        m_arrCEKeybinds.Length = 0;
+        PopulateCustomKeybinds(m_arrCEKeybinds);
+        default.m_arrCEKeybinds = m_arrCEKeybinds;
+        SaveConfig();
+
+        // Need to get our default keybinds into the base input before we reload it
+        ApplyCustomKeybinds(m_kBaseInputController.PlayerInput);
+        m_kBaseInputController.PlayerInput.SaveConfig();
+
+        ApplyCustomKeybinds(m_kTacticalInputController.PlayerInput);
+        m_kTacticalInputController.PlayerInput.SaveConfig();
+
+        // Reload the inputs and update the UI
+        ReloadPlayerInputBindings();
+        UpdateBindingsList();
+    }
 }
 
 simulated function UpdateBindingsList()
@@ -138,7 +243,7 @@ simulated function bool RawInputHandler(name Key, int Actionmask, bool bCtrl, bo
             break;
     }
 
-    if (m_arrDirtyPlayerInputs.Find(kPlayerInput) == -1)
+    if (m_arrDirtyPlayerInputs.Find(kPlayerInput) == INDEX_NONE)
     {
         m_arrDirtyPlayerInputs.AddItem(kPlayerInput);
     }
@@ -185,6 +290,55 @@ simulated function bool RawInputHandler(name Key, int Actionmask, bool bCtrl, bo
     AS_SetNewKey(m_iKeySlotBeingBound, m_bSecondaryKeyBeingBound, m_kKeybindingData.GetKeyString(kBind));
 
     return true;
+}
+
+protected static function string BindToString(KeyBind kBind)
+{
+    local string strResult, strRole;
+    local array<string> arrKeys;
+
+    if (kBind.Name == 'None')
+    {
+        return "None";
+    }
+
+    if (kBind.Control)
+    {
+        arrKeys.AddItem("Ctrl");
+    }
+
+    if (kBind.Shift)
+    {
+        arrKeys.AddItem("Shift");
+    }
+
+    if (kBind.Alt)
+    {
+        arrKeys.AddItem("Alt");
+    }
+
+    arrKeys.AddItem(string(kBind.Name));
+
+    JoinArray(arrKeys, strResult, "+");
+
+    if (kBind.bPrimaryBinding && kBind.bSecondaryBinding)
+    {
+        strRole = "ERR: PrimAndSec";
+    }
+    else if (kBind.bPrimaryBinding)
+    {
+        strRole = "Primary";
+    }
+    else if (kBind.bSecondaryBinding)
+    {
+        strRole = "Secondary";
+    }
+    else
+    {
+        strRole = "ERR: NoRole";
+    }
+
+    return "<" $ strResult $ ": " $ kBind.Command $ " | " $ strRole $ ">";
 }
 
 protected function bool IsBaseGameKeybindBeingBound()

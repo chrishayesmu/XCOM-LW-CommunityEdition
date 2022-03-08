@@ -1,6 +1,9 @@
 [LWCE_UIFinalShell]
 m_strModSettings="MOD SETTINGS"
 
+[LWCE_UIKeybindingsPCScreen]
+m_strToggleGridLabel="TOGGLE GRID"
+
 [LWCE_UIModSettings]
 m_strWindowTitle="Long War: Community Edition Mod Settings"
 
