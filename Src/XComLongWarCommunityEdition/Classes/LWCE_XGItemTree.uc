@@ -258,6 +258,10 @@ function LWCE_TItem LWCE_GetItem(int iItemId, optional int iTransactionType = eT
     {
         kItem.bIsInfinite = ENGINEERING().IsFoundryTechResearched(`LW_FOUNDRY_ID(AlienGrenades));
     }
+    else if (iItemId == `LW_ITEM_ID(BaseAugments) || iItemId == `LW_ITEM_ID(Minigun))
+    {
+        kItem.bIsInfinite = HQ().HasFacility(eFacility_CyberneticsLab);
+    }
 
     if (iTransactionType == eTransaction_Sell)
     {

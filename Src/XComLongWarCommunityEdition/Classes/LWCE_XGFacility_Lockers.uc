@@ -1,6 +1,83 @@
 class LWCE_XGFacility_Lockers extends XGFacility_Lockers
     dependson(LWCETypes);
 
+function bool EquipArmor(XGStrategySoldier kSoldier, int iArmor)
+{
+    local TInventory kOldInventory;
+    local int iItem;
+
+    if (STORAGE().GetNumItemsAvailable(iArmor) <= 0)
+    {
+        return false;
+    }
+
+    if (kSoldier.m_kChar.kInventory.iArmor == iArmor)
+    {
+        return false;
+    }
+
+    kOldInventory = kSoldier.GetInventory();
+    UnequipArmor(kSoldier);
+
+    if (iArmor == 0)
+    {
+        return true;
+    }
+
+    kSoldier.m_bForcePawnUpdateOnLoadoutChange = iArmor != kOldInventory.iArmor;
+    STORAGE().ClaimItem(iArmor, kSoldier);
+    kSoldier.m_kChar.kInventory.iArmor = iArmor;
+
+    if (kSoldier.GetStatus() == eStatus_Healing || kSoldier.GetStatus() == /* fatigued? */ 8)
+    {
+        kSoldier.m_kBackedUpLoadout.iArmor = iArmor;
+    }
+
+    if (`GAMECORE.ArmorHasProperty(kSoldier.m_kChar.kInventory.iArmor, eAP_Grapple))
+    {
+        `GAMECORE.TInventoryCustomItemsAddItem(kSoldier.m_kChar.kInventory, `LW_ITEM_ID(Grapple));
+
+        if (kSoldier.GetStatus() == eStatus_Healing || kSoldier.GetStatus() == /* fatigued? */ 8)
+        {
+            `GAMECORE.TInventoryCustomItemsAddItem(kSoldier.m_kBackedUpLoadout, `LW_ITEM_ID(Grapple));
+        }
+    }
+
+    TACTICAL().TInventoryLargeItemsAdd(kSoldier.m_kChar.kInventory, GetLargeInventorySlots(kSoldier, iArmor));
+    TACTICAL().TInventorySmallItemsAdd(kSoldier.m_kChar.kInventory, GetSmallInventorySlots(kSoldier, iArmor));
+    EquipPistol(kSoldier, kOldInventory.iPistol);
+
+    for (iItem = 0; iItem < kSoldier.m_kChar.kInventory.iNumLargeItems; iItem++)
+    {
+        if (iItem == kOldInventory.iNumLargeItems)
+        {
+            break;
+        }
+
+        EquipLargeItem(kSoldier, kOldInventory.arrLargeItems[iItem], iItem);
+    }
+
+    for (iItem = 0; iItem < kSoldier.m_kChar.kInventory.iNumSmallItems; iItem++)
+    {
+        if (iItem == kOldInventory.iNumSmallItems)
+        {
+            break;
+        }
+
+        EquipSmallItem(kSoldier, kOldInventory.arrSmallItems[iItem], iItem);
+    }
+
+    if (kOldInventory.iArmor == eItem_MecCivvies)
+    {
+        if (kOldInventory.arrLargeItems[0] == 0)
+        {
+            EquipLargeItem(kSoldier, `LWCE_STORAGE.LWCE_GetInfinitePrimary(kSoldier), 0);
+        }
+    }
+
+    return true;
+}
+
 function TLockerItem GetLockerItem(EInventorySlot eSlotType, out TItem kItem, XGStrategySoldier kSoldier)
 {
     local TLockerItem kLockerItem;

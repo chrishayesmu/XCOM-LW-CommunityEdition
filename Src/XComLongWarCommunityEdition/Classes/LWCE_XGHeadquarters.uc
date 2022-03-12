@@ -165,8 +165,8 @@ function AddFacility(int iFacility)
     else if (iFacility == eFacility_CyberneticsLab)
     {
         BARRACKS().m_kCyberneticsLab = Spawn(class'LWCE_XGFacility_CyberneticsLab');
-        STORAGE().AddInfiniteItem(/* MEC Minigun */ 28);
-        STORAGE().AddInfiniteItem(eItem_MecCivvies);
+        `LWCE_STORAGE.AddItem(`LW_ITEM_ID(Minigun), 1000);
+        `LWCE_STORAGE.AddItem(`LW_ITEM_ID(BaseAugments), 1000);
     }
     else if (iFacility == eFacility_DeusEx)
     {

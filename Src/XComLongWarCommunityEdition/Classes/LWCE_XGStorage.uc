@@ -58,7 +58,7 @@ function AddItem(int iItemId, optional int iQuantity = -1, optional int iContine
 
     kBarracks = `LWCE_BARRACKS;
 
-    if (iItemId == eItem_None)
+    if (iItemId == 0)
     {
         return;
     }

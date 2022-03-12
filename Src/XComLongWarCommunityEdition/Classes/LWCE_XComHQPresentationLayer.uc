@@ -340,3 +340,16 @@ simulated state State_StrategyHUD
         XComHeadquartersController(Owner).SetInputState('HQ_FreeMovement');
     }
 }
+
+simulated state State_UIMECInventory
+{
+    simulated function Activate()
+    {
+        m_kMECInventory = Spawn(class'LWCE_UIMECInventory', self);
+        m_kMECInventory.Init(XComPlayerController(Owner), Get3DMovie());
+
+        Get3DMovie().HideDisplay(class'UIMECUpgrade'.default.DisplayTag);
+        Get3DMovie().ShowDisplay(class'UIMECInventory'.default.DisplayTag);
+        CAMLookAtNamedLocation(class'UIMECInventory'.default.m_strCameraTag, 1.0);
+    }
+}

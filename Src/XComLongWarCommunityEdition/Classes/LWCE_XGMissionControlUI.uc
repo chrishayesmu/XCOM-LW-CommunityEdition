@@ -1187,14 +1187,14 @@ function UpdateAlert()
 
                     if (ENGINEERING().m_arrOldRebates[kGeoAlert.arrData[2]].iAlloys > 0)
                     {
-                        txtTemp.StrValue = string(ENGINEERING().m_arrOldRebates[kGeoAlert.arrData[2]].iAlloys) @ (GetResourceLabel(2));
+                        txtTemp.StrValue = string(ENGINEERING().m_arrOldRebates[kGeoAlert.arrData[2]].iAlloys) @ (GetResourceLabel(eResource_Alloys));
                         txtTemp.iState = eUIState_Alloys;
                         kAlert.arrText.AddItem(txtTemp);
                     }
 
                     if (ENGINEERING().m_arrOldRebates[kGeoAlert.arrData[2]].iElerium > 0)
                     {
-                        txtTemp.StrValue = string(ENGINEERING().m_arrOldRebates[kGeoAlert.arrData[2]].iElerium) @ (GetResourceLabel(1));
+                        txtTemp.StrValue = string(ENGINEERING().m_arrOldRebates[kGeoAlert.arrData[2]].iElerium) @ (GetResourceLabel(eResource_Elerium));
                         txtTemp.iState = eUIState_Elerium;
                         kAlert.arrText.AddItem(txtTemp);
                     }
