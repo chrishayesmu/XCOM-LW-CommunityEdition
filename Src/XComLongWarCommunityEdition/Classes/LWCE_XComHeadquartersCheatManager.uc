@@ -160,3 +160,22 @@ exec function GiveTech(optional string techType, optional int forceTechValueTo =
         }
     }
 }
+
+/// <summary>
+/// Sets the alien research to the given level. Since the alien baseline research will always be
+/// set according to how many days have passed, this command instead modifies the alien bonus research
+/// such that the correct total research is accomplished at the moment the command is run. If TotalResearch
+/// is non-positive then this function will do nothing.
+/// </summary>
+exec function SetAlienResearch(int TotalResearch)
+{
+    local int iBaseResearch;
+
+    if (TotalResearch <= 0)
+    {
+        return;
+    }
+
+    iBaseResearch = `HQGAME.GetGameCore().STAT_GetStat(1);
+    `HQGAME.GetGameCore().STAT_SetStat(2, TotalResearch - iBaseResearch);
+}
