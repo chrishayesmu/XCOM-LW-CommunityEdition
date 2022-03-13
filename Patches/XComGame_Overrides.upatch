@@ -191,6 +191,18 @@ OBJECT = XComProjectile.CalculateUnitDamage : AUTO
 04 0B
 53
 
+OBJECT = XComProjectile.InitProjectile : AUTO
+[REPLACEMENT_CODE]
+49 [@] ( 28 15 )
+49 [@] ( 27 15 )
+
+// WorldInfo.Game.Mutate("XComProjectile.InitProjectile|" $ Name $ "|" $ Direction.X $ "," $ Direction.Y $ "," $ Direction.Z $ "|" $ bPreviewOnly $ "|" $ bCanDoDamage, GetALocalPlayerController());
+19 19 01 <Engine.Actor.WorldInfo> [@] <Engine.WorldInfo.Game> 00 ( 01 <Engine.WorldInfo.Game> ) [@] <NullRef> 00 ( 1B <Mutate> 70 70 70 70 70 70 70 70 70 70 70 1F <%t "XComProjectile.InitProjectile|"> 38 57 01 <Core.Object.Name> 16 1F <%t "|"> 16 38 55 35 <Core.Object.Vector.X> <Core.Object.Vector> 00 00 00 <.Direction> 16 1F <%t ","> 16 38 55 35 <Core.Object.Vector.Y> <Core.Object.Vector> 00 00 00 <.Direction> 16 1F <%t ","> 16 38 55 35 <Core.Object.Vector.Z> <Core.Object.Vector> 00 00 00 <.Direction> 16 1F <%t "|"> 16 38 54 2D 00 <.bPreviewOnly> 16 1F <%t "|"> 16 38 54 2D 00 <.bCanDoDamage> 16 1C <Engine.Actor.GetALocalPlayerController> 16 16 )
+
+// return;
+04 0B
+53
+
 
 /*******************************************
  * XComAlienSpawnVolume: replace call to XGLoadoutMgr.ApplyInventory
@@ -247,4 +259,23 @@ OBJECT = XComAlienSpawnVolume.Touch : AUTO
 
 // return;
 04 0B
+53
+
+
+
+
+
+
+/*******************************************
+ * XGAbility_Targeted: replace GetHitChance with Mutate
+ *******************************************/
+
+OBJECT = XGAbility_Targeted.GetHitChance : AUTO
+[REPLACEMENT_CODE]
+// WorldInfo.Game.Mutate("XGAbility_Targeted.GetHitChance|" $ Name, GetALocalPlayerController());
+19 19 01 <Engine.Actor.WorldInfo> [@] <Engine.WorldInfo.Game> 00 ( 01 <Engine.WorldInfo.Game> ) [@] <NullRef> 00 ( 1B <Mutate> 70 1F <%t "XGAbility_Targeted.GetHitChance|"> 38 57 01 <Core.Object.Name> 16 1C <Engine.Actor.GetALocalPlayerController> 16 16 )
+
+// return m_iHitChance;
+04 01 <@m_iHitChance>
+04 3A <.ReturnValue>
 53

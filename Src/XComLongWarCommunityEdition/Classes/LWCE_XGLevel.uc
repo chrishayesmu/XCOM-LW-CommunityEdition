@@ -1,8 +1,21 @@
 class LWCE_XGLevel extends XGLevel;
 
+var LWCEGraphicsController m_kGfxController;
+
+function Init()
+{
+    super.Init();
+
+    m_kGfxController = Spawn(class'LWCEGraphicsController');
+    m_kGfxController.Init();
+}
+
 function LoadInit()
 {
     super.LoadInit();
+
+    m_kGfxController = Spawn(class'LWCEGraphicsController');
+    m_kGfxController.LoadInit();
 }
 
 simulated function OnStreamingFinished()

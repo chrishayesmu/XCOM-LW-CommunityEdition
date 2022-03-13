@@ -3,6 +3,7 @@ class LWCE_XGPlayer_Extensions extends Object
 
 static simulated function class<XGCharacter> AlienTypeToClass(EPawnType eAlienType)
 {
+    // Currently unused; using it will break character models
     switch (eAlienType)
     {
         case ePawnType_Sectoid:

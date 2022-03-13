@@ -11,6 +11,7 @@ struct MutateArguments
 {
     var string MutateString;
     var string SenderName;
+    var array<string> AdditionalArgs;
 };
 
 function Mutate(string MutateString, PlayerController Sender)
@@ -26,6 +27,14 @@ function Mutate(string MutateString, PlayerController Sender)
     else if (tArgs.MutateString == "XComProjectile.CalculateUnitDamage")
     {
         Handle_XComProjectile_CalculateUnitDamage(tArgs);
+    }
+    else if (tArgs.MutateString == "XComProjectile.InitProjectile")
+    {
+        Handle_XComProjectile_InitProjectile(tArgs);
+    }
+    else if (tArgs.MutateString == "XGAbility_Targeted.GetHitChance")
+    {
+        Handle_XGAbility_Targeted_GetHitChance(tArgs);
     }
     else if (tArgs.MutateString == "XGLoadoutMgr.ApplyInventory")
     {
@@ -70,7 +79,7 @@ private function MutateArguments ParseMutateString(string MutateString)
 
     for (Index = 2; Index < arrParts.Length; Index++)
     {
-        // TODO generic args structure
+        tArgs.AdditionalArgs.AddItem(arrParts[Index]);
     }
 
     return tArgs;
@@ -85,6 +94,24 @@ private function Handle_XComProjectile_CalculateUnitDamage(const out MutateArgum
     class'LWCE_XComProjectile_Extensions'.static.CalculateUnitDamage(kProjectile);
 }
 
+private function Handle_XComProjectile_InitProjectile(const out MutateArguments tArgs)
+{
+    local XComProjectile kProjectile;
+    local Vector Direction;
+    local array<string> arrDirectionParts;
+
+    `LWCE_LOG_CLS("Handle_XComProjectile_InitProjectile");
+
+    kProjectile = XComProjectile(FindActorByNameAndClass(tArgs.SenderName, class'XComProjectile'));
+
+    ParseStringIntoArray(tArgs.AdditionalArgs[0], arrDirectionParts, ",", /* bCullEmpty */ true);
+    Direction.X = float(arrDirectionParts[0]);
+    Direction.Y = float(arrDirectionParts[1]);
+    Direction.Z = float(arrDirectionParts[2]);
+
+    class'LWCE_XComProjectile_Extensions'.static.InitProjectile(kProjectile, Direction, bool(tArgs.AdditionalArgs[1]), bool(tArgs.AdditionalArgs[2]));
+}
+
 private function Handle_XComUnitPawn_TakeDirectDamage(const out MutateArguments tArgs)
 {
     local DamageEvent Dmg, DmgBlank;
@@ -97,6 +124,15 @@ private function Handle_XComUnitPawn_TakeDirectDamage(const out MutateArguments 
     kPawn.DamageEvent_CauseOfDeath = DmgBlank;
 
     class'LWCE_XComUnitPawn_Extensions'.static.TakeDirectDamage(kPawn, Dmg);
+}
+
+private function Handle_XGAbility_Targeted_GetHitChance(const out MutateArguments tArgs)
+{
+    local XGAbility_Targeted kAbility;
+
+    kAbility = XGAbility_Targeted(FindActorByNameAndClass(tArgs.SenderName, class'XGAbility_Targeted'));
+
+    class'LWCE_XGAbility_Extensions'.static.GetHitChance(kAbility);
 }
 
 private function Handle_XGLoadoutMgr_ApplyInventory(const out MutateArguments tArgs)

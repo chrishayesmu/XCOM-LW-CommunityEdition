@@ -60,6 +60,29 @@ exec function ToggleDisplayOfMovementGrid()
     bDisplayMovementGrid = !bDisplayMovementGrid;
 }
 
+exec function ToggleTacticalHUD()
+{
+    local UITacticalHUD kTacHud;
+
+    kTacHud = `LWCE_TACPRES.m_kTacticalHud;
+    `LWCE_LOG_CLS("ToggleTacticalHUD");
+
+    if (kTacHud == none)
+    {
+        `LWCE_LOG_CLS("ToggleTacticalHUD: no HUD found");
+        return;
+    }
+
+    if (kTacHud.IsVisible())
+    {
+        kTacHud.Hide();
+    }
+    else
+    {
+        kTacHud.Show();
+    }
+}
+
 function Do_AddUnitAtCursor(int iLoadout, optional Vector vOffset)
 {
     local XComSpawnPoint kSpawnPt;
