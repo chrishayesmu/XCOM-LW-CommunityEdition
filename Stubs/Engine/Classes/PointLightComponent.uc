@@ -18,7 +18,7 @@ var() float ShadowFalloffExponent;
 var float MinShadowFalloffRadius;
 
 var   const matrix							CachedParentToWorld; //@todo remove me please
-var() const vector							Translation;
+var() vector							Translation;
 
 /** Plane used for planar shadows on mobile.  */
 var const plane ShadowPlane;

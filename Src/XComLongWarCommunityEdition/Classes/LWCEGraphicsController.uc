@@ -8,6 +8,8 @@ function Init()
 
 function LoadInit()
 {
+    local ParticleSystemComponent kParticleComp;
+    local XComMeldContainerActor kMeldActor;
     local XComLevelActor kLevelActor;
     local XGVolume kVolume;
 
@@ -19,16 +21,26 @@ function LoadInit()
         AddVolumeLighting(kVolume);
     }
 
+    foreach AllActors(class'XComMeldContainerActor', kMeldActor)
+    {
+        AddMeldLighting(kMeldActor);
+    }
+
     // TODO: still need to add lights for static fires on levels and other light sources; the logging
     // below is to help identify those
-/*
+    /*
     `LWCE_LOG_CLS("----- Dumping level actor info -----");
 
     foreach AllActors(class'XComLevelActor', kLevelActor)
     {
         `LWCE_LOG_CLS(kLevelActor @ kLevelActor.ObjectArchetype.Name @ kLevelActor.Location);
+
+        foreach kLevelActor.AllOwnedComponents(class'ParticleSystemComponent', kParticleComp)
+        {
+            `LWCE_LOG_CLS("ParticleSystemComponent: " $ kParticleComp);
+        }
     }
-*/
+    */
 }
 
 simulated function OnUnitLoaded(XGUnit kUnit)
@@ -131,6 +143,23 @@ simulated function Projectile_OnShutdown(XComProjectile kProjectile)
             kPointLightComp.DetachFromAny();
         }
     }
+}
+
+protected function AddMeldLighting(XComMeldContainerActor kMeld)
+{
+    local LWCE_MeldLightComponent kMeldLightComp;
+
+    kMeldLightComp = new(kMeld) class'LWCE_MeldLightComponent';
+    kMeldLightComp.Init(kMeld, 0);
+
+    kMeldLightComp = new(kMeld) class'LWCE_MeldLightComponent';
+    kMeldLightComp.Init(kMeld, 1);
+
+    kMeldLightComp = new(kMeld) class'LWCE_MeldLightComponent';
+    kMeldLightComp.Init(kMeld, 2);
+
+    kMeldLightComp = new(kMeld) class'LWCE_MeldLightComponent';
+    kMeldLightComp.Init(kMeld, 3);
 }
 
 protected function AddUnitLighting(XGUnit kUnit)
@@ -263,16 +292,21 @@ protected function AddUnitLighting(XGUnit kUnit)
 
 protected function AddVolumeLighting(XGVolume kVolume)
 {
-    local LWCEFireLightComponent kPointLightComp;
+    local LWCE_PointLightComponent kPointLightComp;
 
     if (kVolume.m_kTVolume.eType != eVolume_Fire)
     {
         return;
     }
 
-    kPointLightComp = new(kVolume) class'LWCEFireLightComponent';
-    kVolume.AttachComponent(kPointLightComp);
+    kPointLightComp = new(kVolume) class'LWCE_PointLightComponent';
+    kPointLightComp.m_bFlickers = true;
+    kPointLightComp.LightColor.R = 255;
+    kPointLightComp.LightColor.G = 165;
+    kPointLightComp.LightColor.B = 115;
+    kPointLightComp.Translation.Z = 64.0;
 
+    kVolume.AttachComponent(kPointLightComp);
     kPointLightComp.Init(self);
 }
 
