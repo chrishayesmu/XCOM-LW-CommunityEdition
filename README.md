@@ -122,7 +122,7 @@ Once you've saved the file, execute `UDK_PATH/Binaries/Win32/UDK.exe make` again
 
 ### Installing an IDE
 
-You can edit UnrealScript files any way you like, including a basic notepad editor if you want. One setup which works well is using [Visual Studio Code](https://code.visualstudio.com/), which is free and relatively lightweight. You can install the [UnrealScript](https://marketplace.visualstudio.com/items?itemName=EliotVU.uc) extension to get language support, though many of the features may only work sporadically, due to the broken nature of the code in `SrcOrig`. It still provides syntax highlighting at minimum, which is well worth having.
+You can edit UnrealScript files any way you like, including a basic notepad editor if you want. One setup which works well is using [Visual Studio Code](https://code.visualstudio.com/), which is free and relatively lightweight. You can install the [UnrealScript](https://marketplace.visualstudio.com/items?itemName=EliotVU.uc) extension to get language support, though many of the features may only work sporadically. It still provides syntax highlighting at minimum, which is well worth having.
 
 If you're using VS Code, you can also create [a custom build task](https://code.visualstudio.com/docs/editor/tasks#_custom-tasks) which executes `UDK_PATH/Binaries/Win32/UDK.exe make`, so that you can build by simply pressing <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>B</kbd>.
 
