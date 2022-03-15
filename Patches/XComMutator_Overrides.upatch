@@ -1,42 +1,44 @@
 /*******************************************
- * XComMutator: remove logging calls
+ * XComMutator: remove logging calls, which are unnecessarily
+ * verbose and make debugging difficult. Installing this patch
+ * is optional.
  *
- * TODO: PatcherGUI fails to apply this, but PatchUPK works fine
+ * TODO: PatcherGUI fails to apply this for me, but PatchUPK works fine.
  *******************************************/
 
 UPK_FILE = XComMutator.u
 OBJECT = XComMutator.Mutate : AUTO
 [REPLACEMENT_CODE]
-/*(0x001C/0x001C)*/ 07 [@label_0x0070] 7A 00 <.MutateString> 1F <%t "XComGameInfo.InitGame"> 16
-/*(0x004F/0x004B)*/ 	1B <GameInfoInitGame> 00 <.Sender> 16
-/*(0x0070/0x0068)*/ [#label_0x0070]
-/*(0x007E/0x0076)*/ 07 [@label_0x00D7] 7A 00 <.MutateString> 1F <%t "XGHeadQuarters.InitNewGame"> 16
-/*(0x00B6/0x00AA)*/ 	1B <HeadQuartersInitNewGame> 00 <.Sender> 16
-/*(0x00D7/0x00C7)*/ [#label_0x00D7]
-/*(0x00E5/0x00D5)*/ 07 [@label_0x013F] 7A 00 <.MutateString> 1F <%t "XGBattle_SP.PostLevelLoaded"> 16
-/*(0x011E/0x010A)*/ 	1B <PostLevelLoaded> 00 <.Sender> 16
-/*(0x013F/0x0127)*/ [#label_0x013F]
-/*(0x014D/0x0135)*/ 07 [@label_0x01A8] 7A 00 <.MutateString> 1F <%t "XGBattle_SP.PostLoadSaveGame"> 16
-/*(0x0187/0x016B)*/ 	1B <PostLoadSaveGame> 00 <.Sender> 16
-/*(0x01A8/0x0188)*/ [#label_0x01A8]
-/*(0x01B6/0x0196)*/ 07 [@label_0x0210] 7A 00 <.MutateString> 1F <%t "XGBattle.DoWorldDataRebuild"> 16
-/*(0x01EF/0x01CB)*/ 	1B <DoWorldDataRebuild> 00 <.Sender> 16
-/*(0x0210/0x01E8)*/ [#label_0x0210]
-/*(0x021E/0x01F6)*/ 07 [@label_0x0280] 7A 00 <.MutateString> 1F <%t "XGBattle.Loading.NotifyKismetOfLoad"> 16
-/*(0x025F/0x0233)*/ 	1B <MutateNotifyKismetOfLoad> 00 <.Sender> 16
-/*(0x0280/0x0250)*/ [#label_0x0280]
-/*(0x028E/0x025E)*/ 07 [@label_0x02DF] 7A 00 <.MutateString> 1F <%t "XGStrategy.NewGame"> 16
-/*(0x02BE/0x028A)*/ 	1B <MutateStrategyAI> 00 <.Sender> 16
-/*(0x02DF/0x02A7)*/ [#label_0x02DF]
-/*(0x02ED/0x02B5)*/ 07 [@label_0x039F] 97 7E 00 <.MutateString> 1F <%t "SeqAct_SpawnAlien.Activated"> 4A 4A 4A 16 41 <%i 798> <%i 33> <%i 100> 40 1D <%i -1> 16
-/*(0x033E/0x0302)*/ 	1B <MutateSpawnAlien> 1C <Core.Object.Split> 00 <.MutateString> 1F <%t "SeqAct_SpawnAlien.Activated:"> 27 16 41 <%i 886> <%i 35> <%i 100> 40 00 <.Sender> 16
-/*(0x039F/0x0357)*/ [#label_0x039F]
-/*(0x03AD/0x0365)*/ 07 [@label_0x0453] 97 7E 00 <.MutateString> 1F <%t "XGPlayer.InitBehavior"> 4A 4A 4A 16 41 <%i 951> <%i 37> <%i 100> 40 1D <%i -1> 16
-/*(0x03F8/0x03AC)*/ 	1B <MutateTacticalAI> 1C <Core.Object.Split> 00 <.MutateString> 1F <%t "XGPlayer.InitBehavior:"> 27 16 41 <%i 1033> <%i 39> <%i 100> 40 00 <.Sender> 16
-/*(0x0453/0x03FB)*/ [#label_0x0453]
-/*(0x0461/0x0409)*/ 07 [@label_0x0511] 97 7E 00 <.MutateString> 1F <%t "XGUnit.UpdateInteractClaim"> 4A 4A 4A 16 41 <%i 1103> <%i 41> <%i 100> 40 1D <%i -1> 16
-/*(0x04B1/0x0455)*/ 	1B <MutateUpdateInteractClaim> 1C <Core.Object.Split> 00 <.MutateString> 1F <%t "XGUnit.UpdateInteractClaim:"> 27 16 41 <%i 1199> <%i 43> <%i 100> 40 00 <.Sender> 16
-/*(0x0511/0x04A9)*/ [#label_0x0511]
-/*(0x0606/0x058A)*/ 1C <Engine.Mutator.Mutate> 00 <.MutateString> 00 <.Sender> 16
-/*(0x063E/0x05B6)*/ 04 0B
-/*(0x064E/0x05C6)*/ 53
+07 [@label_0x0070] 7A 00 <.MutateString> 1F <%t "XComGameInfo.InitGame"> 16
+	1B <GameInfoInitGame> 00 <.Sender> 16
+[#label_0x0070]
+07 [@label_0x00D7] 7A 00 <.MutateString> 1F <%t "XGHeadQuarters.InitNewGame"> 16
+	1B <HeadQuartersInitNewGame> 00 <.Sender> 16
+[#label_0x00D7]
+07 [@label_0x013F] 7A 00 <.MutateString> 1F <%t "XGBattle_SP.PostLevelLoaded"> 16
+	1B <PostLevelLoaded> 00 <.Sender> 16
+[#label_0x013F]
+07 [@label_0x01A8] 7A 00 <.MutateString> 1F <%t "XGBattle_SP.PostLoadSaveGame"> 16
+	1B <PostLoadSaveGame> 00 <.Sender> 16
+[#label_0x01A8]
+07 [@label_0x0210] 7A 00 <.MutateString> 1F <%t "XGBattle.DoWorldDataRebuild"> 16
+	1B <DoWorldDataRebuild> 00 <.Sender> 16
+[#label_0x0210]
+07 [@label_0x0280] 7A 00 <.MutateString> 1F <%t "XGBattle.Loading.NotifyKismetOfLoad"> 16
+	1B <MutateNotifyKismetOfLoad> 00 <.Sender> 16
+[#label_0x0280]
+07 [@label_0x02DF] 7A 00 <.MutateString> 1F <%t "XGStrategy.NewGame"> 16
+	1B <MutateStrategyAI> 00 <.Sender> 16
+[#label_0x02DF]
+07 [@label_0x039F] 97 7E 00 <.MutateString> 1F <%t "SeqAct_SpawnAlien.Activated"> 4A 4A 4A 16 41 <%i 798> <%i 33> <%i 100> 40 1D <%i -1> 16
+	1B <MutateSpawnAlien> 1C <Core.Object.Split> 00 <.MutateString> 1F <%t "SeqAct_SpawnAlien.Activated:"> 27 16 41 <%i 886> <%i 35> <%i 100> 40 00 <.Sender> 16
+[#label_0x039F]
+07 [@label_0x0453] 97 7E 00 <.MutateString> 1F <%t "XGPlayer.InitBehavior"> 4A 4A 4A 16 41 <%i 951> <%i 37> <%i 100> 40 1D <%i -1> 16
+	1B <MutateTacticalAI> 1C <Core.Object.Split> 00 <.MutateString> 1F <%t "XGPlayer.InitBehavior:"> 27 16 41 <%i 1033> <%i 39> <%i 100> 40 00 <.Sender> 16
+[#label_0x0453]
+07 [@label_0x0511] 97 7E 00 <.MutateString> 1F <%t "XGUnit.UpdateInteractClaim"> 4A 4A 4A 16 41 <%i 1103> <%i 41> <%i 100> 40 1D <%i -1> 16
+	1B <MutateUpdateInteractClaim> 1C <Core.Object.Split> 00 <.MutateString> 1F <%t "XGUnit.UpdateInteractClaim:"> 27 16 41 <%i 1199> <%i 43> <%i 100> 40 00 <.Sender> 16
+[#label_0x0511]
+1C <Engine.Mutator.Mutate> 00 <.MutateString> 00 <.Sender> 16
+04 0B
+53

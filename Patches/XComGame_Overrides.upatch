@@ -1,59 +1,65 @@
 UPK_FILE = XComGame.upk
 
 /* XComGameInfo.InitGame: adds a few key mutators used by LWCE */
+
 OBJECT = XComGameInfo.InitGame : AUTO
 [REPLACEMENT_CODE]
-/*(0x0000/0x0000)*/ 1B <AddMutator> 1F <%t "XComMutator.XComMutatorLoader"> 27 16
-/*(0x0000/0x0000)*/ 1B <AddMutator> 1F <%t "XComLongWarCommunityEdition.LWCEBaseMutator"> 27 16
-/*(0x0000/0x0000)*/ 1B <AddMutator> 1F <%t "XComLongWarCommunityEdition.LWCEModLoader"> 27 16
-/*(0x002A/0x002A)*/ 07 [@label_0x0079] 77 01 <Engine.GameInfo.BaseMutator> 2A 16
-/*(0x0039/0x0035)*/     19 01 <Engine.GameInfo.BaseMutator> [@] <NullRef> 00 ( 1B <Mutate> 1F <%t "XComGameInfo.InitGame"> 1C <Engine.Actor.GetALocalPlayerController> 16 16 )
-/*(0x0079/0x0069)*/ [#label_0x0079]
-/*(0x0079/0x0069)*/ 1B <CacheMods> 16
-/*(0x0083/0x0073)*/ 1C <Engine.GameInfo.InitGame> 00 <.Options> 48 <.ErrorMessage> 16
-/*(0x009F/0x0083)*/ 04 0B
-/*(0x00A1/0x0085)*/ 53
+1B <AddMutator> 1F <%t "XComMutator.XComMutatorLoader"> 27 16
+1B <AddMutator> 1F <%t "XComLongWarCommunityEdition.LWCEBaseMutator"> 27 16
+1B <AddMutator> 1F <%t "XComLongWarCommunityEdition.LWCEModLoader"> 27 16
+07 [@label_0x0079] 77 01 <Engine.GameInfo.BaseMutator> 2A 16
+    19 01 <Engine.GameInfo.BaseMutator> [@] <NullRef> 00 ( 1B <Mutate> 1F <%t "XComGameInfo.InitGame"> 1C <Engine.Actor.GetALocalPlayerController> 16 16 )
+[#label_0x0079]
+1B <CacheMods> 16
+1C <Engine.GameInfo.InitGame> 00 <.Options> 48 <.ErrorMessage> 16
+04 0B
+53
 
 
 
 
 
 /* XComGameInfo.SetGameType: overrides the class names used for which subclass of XComGameInfo to instantiate */
+
 OBJECT = XComGameInfo.SetGameType : AUTO
 [REPLACEMENT_CODE]
-/*(0x0000/0x0000)*/ 0F 00 <.GameInfoClassName> 12 20 <Engine.GameInfo> [@] <Engine.GameInfo.ParseOption.ReturnValue> 00 ( 1B <ParseOption> 00 <.Options> 1F <%t "Game"> 16 )
-/*(0x0038/0x0028)*/ 07 [@label_0x008E] 9B 7E 00 <.GameInfoClassName> 1F <%t "XComMPTacticalGame"> 27 27 4A 16 1D <%i -1> 16
-/*(0x0064/0x0050)*/ 	0F 00 <.GameInfoClassToUse> 1F <%t "XComGame.XComMPTacticalGame">
-/*(0x008B/0x0073)*/ 	06 [@label_0x01CF]
-/*(0x008E/0x0076)*/ [#label_0x008E]
-/*(0x008E/0x0076)*/ 07 [@label_0x00E1] 9B 7E 00 <.GameInfoClassName> 1F <%t "XComMPLobbyGame"> 27 27 4A 16 1D <%i -1> 16
-/*(0x00B7/0x009B)*/ 	0F 00 <.GameInfoClassToUse> 1F <%t "XComUIShell.XComMPLobbyGame">
-/*(0x00DE/0x00BE)*/ 	06 [@label_0x01CF]
-/*(0x00E1/0x00C1)*/ [#label_0x00E1]
-/*(0x00E1/0x00C1)*/ 07 [@label_0x0124] 9B 7E 00 <.MapName> 1F <%t "Shell"> 4A 27 4A 16 1D <%i -1> 16
-/*(0x0100/0x00DC)*/ 	0F 00 <.GameInfoClassToUse> 1F <%t "XComLongWarCommunityEdition.LWCE_XComShell">
-/*(0x0121/0x00F9)*/ 	06 [@label_0x01CF]
-/*(0x0124/0x00FC)*/ [#label_0x0124]
-/*(0x0124/0x00FC)*/ 07 [@label_0x01AA] 84 9B 7E 00 <.MapName> 1F <%t "Command1"> 4A 27 4A 16 1D <%i -1> 16 18 [@] ( 9B 7E 00 <.GameInfoClassName> 1F <%t "XComHeadquartersGame"> 27 27 4A 16 1D <%i -1> 16 16 )
-/*(0x0176/0x0146)*/ 	0F 00 <.GameInfoClassToUse> 1F <%t "XComLongWarCommunityEdition.LWCE_XComHeadquartersGame">
-/*(0x01A7/0x0173)*/ 	06 [@label_0x01CF]
-/*(0x01AA/0x0176)*/ [#label_0x01AA]
-/*(0x01AA/0x0176)*/ 0F 00 <.GameInfoClassToUse> 1F <%t "XComLongWarCommunityEdition.LWCE_XComTacticalGame">
-/*(0x01CF/0x0197)*/ [#label_0x01CF]
-/*(0x01CF/0x0197)*/ 07 [@label_0x020E] 72 00 <.GameInfoClass> 2A 16
-/*(0x01DE/0x01A2)*/ 	0F 00 <.GameInfoClass> 13 <Engine.GameInfo> 1C <Core.Object.DynamicLoadObject> 00 <.GameInfoClassToUse> 20 <Core.Class> 4A 16
-/*(0x020E/0x01BE)*/ [#label_0x020E]
-/*(0x020E/0x01BE)*/ 07 [@label_0x022A] 77 00 <.GameInfoClass> 2A 16
-/*(0x021D/0x01C9)*/ 	04 00 <.GameInfoClass>
-/*(0x0227/0x01CF)*/ 	06 [@label_0x0234]
-/*(0x022A/0x01D2)*/ [#label_0x022A]
-/*(0x022A/0x01D2)*/ 04 02 <Core.Object.Class>
-/*(0x0234/0x01D8)*/ [#label_0x0234]
-/*(0x0234/0x01D8)*/ 04 3A <.ReturnValue>
-/*(0x023E/0x01DE)*/ 53
+0F 00 <.GameInfoClassName> 12 20 <Engine.GameInfo> [@] <Engine.GameInfo.ParseOption.ReturnValue> 00 ( 1B <ParseOption> 00 <.Options> 1F <%t "Game"> 16 )
+07 [@label_0x008E] 9B 7E 00 <.GameInfoClassName> 1F <%t "XComMPTacticalGame"> 27 27 4A 16 1D <%i -1> 16
+	0F 00 <.GameInfoClassToUse> 1F <%t "XComGame.XComMPTacticalGame">
+	06 [@label_0x01CF]
+[#label_0x008E]
+07 [@label_0x00E1] 9B 7E 00 <.GameInfoClassName> 1F <%t "XComMPLobbyGame"> 27 27 4A 16 1D <%i -1> 16
+	0F 00 <.GameInfoClassToUse> 1F <%t "XComUIShell.XComMPLobbyGame">
+	06 [@label_0x01CF]
+[#label_0x00E1]
+07 [@label_0x0124] 9B 7E 00 <.MapName> 1F <%t "Shell"> 4A 27 4A 16 1D <%i -1> 16
+	0F 00 <.GameInfoClassToUse> 1F <%t "XComLongWarCommunityEdition.LWCE_XComShell">
+	06 [@label_0x01CF]
+[#label_0x0124]
+07 [@label_0x01AA] 84 9B 7E 00 <.MapName> 1F <%t "Command1"> 4A 27 4A 16 1D <%i -1> 16 18 [@] ( 9B 7E 00 <.GameInfoClassName> 1F <%t "XComHeadquartersGame"> 27 27 4A 16 1D <%i -1> 16 16 )
+	0F 00 <.GameInfoClassToUse> 1F <%t "XComLongWarCommunityEdition.LWCE_XComHeadquartersGame">
+	06 [@label_0x01CF]
+[#label_0x01AA]
+0F 00 <.GameInfoClassToUse> 1F <%t "XComLongWarCommunityEdition.LWCE_XComTacticalGame">
+[#label_0x01CF]
+07 [@label_0x020E] 72 00 <.GameInfoClass> 2A 16
+	0F 00 <.GameInfoClass> 13 <Engine.GameInfo> 1C <Core.Object.DynamicLoadObject> 00 <.GameInfoClassToUse> 20 <Core.Class> 4A 16
+[#label_0x020E]
+07 [@label_0x022A] 77 00 <.GameInfoClass> 2A 16
+	04 00 <.GameInfoClass>
+	06 [@label_0x0234]
+[#label_0x022A]
+04 02 <Core.Object.Class>
+[#label_0x0234]
+04 3A <.ReturnValue>
+53
 
 
 
+/**
+ * XComOnlineEventMgr.FillInHeaderForSave: when writing the VersionNumber field, replace the default version (16) with our own.
+ * This lets us have our own save versioning in LWCE, and also to identify saves created without LWCE.
+ */
 
 OBJECT = XComOnlineEventMgr.FillInHeaderForSave : AUTO
 [REPLACEMENT_CODE]
@@ -111,45 +117,46 @@ OBJECT = XComOnlineEventMgr.FillInHeaderForSave : AUTO
  * This bypasses the fact that XGItem only contains an EItemType field. m_strUIImage only ever has its default value
  * read, so we should be safe to hijack it.
  */
+
 OBJECT = XGLoadoutMgr.ApplyLoadout : AUTO
 [REPLACEMENT_CODE]
-/*(0x0000/0x0000)*/ 0F 00 <.kLoadoutInstances> 19 12 20 <Engine.Engine> [@] <Engine.Engine.GetCurrentWorldInfo.ReturnValue> 00 ( 1C <Engine.Engine.GetCurrentWorldInfo> 16 ) [@] <Engine.Actor.Spawn.ReturnValue> 00 ( 1C <Engine.Actor.Spawn> 20 <Class.XGLoadoutInstances> 19 00 <.kUnit> [@] <Engine.Actor.Owner> 00 ( 01 <Engine.Actor.Owner> ) 4A 4A 4A 4A 4A 4A 16 )
-/*(0x006C/0x0044)*/ 0F 19 00 <.kLoadoutInstances> [@] <XGLoadoutInstances.m_iNumItems> 00 ( 01 <XGLoadoutInstances.m_iNumItems> ) 25
-/*(0x008C/0x0058)*/ 0F 19 00 <.kLoadoutInstances> [@] <XGLoadoutInstances.m_iNumBackpackItems> 00 ( 01 <XGLoadoutInstances.m_iNumBackpackItems> ) 25
-/*(0x00AC/0x006C)*/ 0F 00 <.I> 25
-/*(0x00B7/0x0073)*/ [#label_0x00B7]
-/*(0x00B7/0x0073)*/ 07 [@label_0x04F2] 96 00 <.I> 2C 1A 16
-/*(0x00C7/0x007F)*/ 	07 [@label_0x0301] 9A 00 <.I> 2C 0D 16
-/*(0x00D7/0x008B)*/ 		0F 00 <.J> 25
-/*(0x00E2/0x0092)*/ 		[#label_0x00E2]
-/*(0x00E2/0x0092)*/ 		07 [@label_0x02FE] 96 00 <.J> 36 35 <XGLoadoutMgr.TLoadout.Backpack> <@TLoadout> 00 00 00 <.kLoad> 16
-/*(0x010D/0x00AD)*/ 			07 [@label_0x02F0] 9B 10 00 <.J> 35 <XGLoadoutMgr.TLoadout.Backpack> <@TLoadout> 00 00 00 <.kLoad> 25 16
-/*(0x0139/0x00C9)*/ 				0F 00 <.kItem> 19 12 20 <Engine.Engine> [@] <Engine.Engine.GetCurrentWorldInfo.ReturnValue> 00 ( 1C <Engine.Engine.GetCurrentWorldInfo> 16 ) [@] <Engine.Actor.Spawn.ReturnValue> 00 ( 1C <Engine.Actor.Spawn> 13 <Class.XGWeapon> 12 20 <Class.XGItemLibrary> [@] <XGItemLibrary.GetItem.ReturnValue> 00 ( 1B <GetItem> 10 00 <.J> 35 <XGLoadoutMgr.TLoadout.Backpack> <@TLoadout> 00 00 00 <.kLoad> 16 ) 19 00 <.kUnit> [@] <Engine.Actor.Owner> 00 ( 01 <Engine.Actor.Owner> ) 4A 4A 4A 4A 4A 4A 16 )
-/*(0x01EA/0x013A)*/ 				19 2E <Class.XGWeapon> 00 <.kItem> [@] <NullRef> 00 ( 1B <ApplyAmmoCost> 10 00 <.J> 35 <XGLoadoutMgr.TLoadout.Backpack> <@TLoadout> 00 00 00 <.kLoad> 16 )
-/*(0x0238/0x016C)*/ 				0F 19 00 <.kItem> [@] <XGItem.m_strUIImage> 00 ( 01 <XGItem.m_strUIImage> ) 38 53 10 00 <.J> 35 <XGLoadoutMgr.TLoadout.Backpack> <@TLoadout> 00 00 00 <.kLoad>
-/*(0x027F/0x0197)*/ 				19 00 <.kItem> [@] <NullRef> 00 ( 1B <Init> 16 )
-/*(0x029E/0x01AE)*/ 				0F 1A 00 <.J> 19 00 <.kLoadoutInstances> [@] <XGLoadoutInstances.m_aBackpackItems> 00 ( 01 <XGLoadoutInstances.m_aBackpackItems> ) 00 <.kItem>
-/*(0x02D0/0x01CC)*/ 				A3 19 00 <.kLoadoutInstances> [@] <XGLoadoutInstances.m_iNumBackpackItems> 00 ( 01 <XGLoadoutInstances.m_iNumBackpackItems> ) 16
-/*(0x02F0/0x01E0)*/ 			[#label_0x02F0]
-/*(0x02F0/0x01E0)*/ 			A5 00 <.J> 16
-/*(0x02FB/0x01E7)*/ 			06 [@label_0x00E2]
-/*(0x02FE/0x01EA)*/ 		[#label_0x02FE]
-/*(0x02FE/0x01EA)*/ 		06 [@label_0x04E4]
-/*(0x0301/0x01ED)*/ 	[#label_0x0301]
-/*(0x0301/0x01ED)*/ 	07 [@label_0x04E4] 9B 1A 00 <.I> 35 <XGLoadoutMgr.TLoadout.Items> <@TLoadout> 00 00 00 <.kLoad> 25 16
-/*(0x032D/0x0209)*/ 		0F 00 <.kItem> 19 12 20 <Engine.Engine> [@] <Engine.Engine.GetCurrentWorldInfo.ReturnValue> 00 ( 1C <Engine.Engine.GetCurrentWorldInfo> 16 ) [@] <Engine.Actor.Spawn.ReturnValue> 00 ( 1C <Engine.Actor.Spawn> 13 <Class.XGWeapon> 12 20 <Class.XGItemLibrary> [@] <XGItemLibrary.GetItem.ReturnValue> 00 ( 1B <GetItem> 1A 00 <.I> 35 <XGLoadoutMgr.TLoadout.Items> <@TLoadout> 00 00 00 <.kLoad> 16 ) 19 00 <.kUnit> [@] <Engine.Actor.Owner> 00 ( 01 <Engine.Actor.Owner> ) 4A 4A 4A 4A 4A 4A 16 )
-/*(0x03DE/0x027A)*/ 		19 2E <Class.XGWeapon> 00 <.kItem> [@] <NullRef> 00 ( 1B <ApplyAmmoCost> 1A 00 <.I> 35 <XGLoadoutMgr.TLoadout.Items> <@TLoadout> 00 00 00 <.kLoad> 16 )
-/*(0x042C/0x02AC)*/ 		0F 19 00 <.kItem> [@] <XGItem.m_strUIImage> 00 ( 01 <XGItem.m_strUIImage> ) 38 53 1A 00 <.I> 35 <XGLoadoutMgr.TLoadout.Items> <@TLoadout> 00 00 00 <.kLoad>
-/*(0x0473/0x02D7)*/ 		19 00 <.kItem> [@] <NullRef> 00 ( 1B <Init> 16 )
-/*(0x0492/0x02EE)*/ 		0F 1A 00 <.I> 19 00 <.kLoadoutInstances> [@] <XGLoadoutInstances.m_aItems> 00 ( 01 <XGLoadoutInstances.m_aItems> ) 00 <.kItem>
-/*(0x04C4/0x030C)*/ 		A3 19 00 <.kLoadoutInstances> [@] <XGLoadoutInstances.m_iNumItems> 00 ( 01 <XGLoadoutInstances.m_iNumItems> ) 16
-/*(0x04E4/0x0320)*/ 	[#label_0x04E4]
-/*(0x04E4/0x0320)*/ 	A5 00 <.I> 16
-/*(0x04EF/0x0327)*/ 	06 [@label_0x00B7]
-/*(0x04F2/0x032A)*/ [#label_0x04F2]
-/*(0x04F2/0x032A)*/ 19 00 <.kUnit> [@] <NullRef> 00 ( 1B <ApplyLoadout> 00 <.kLoadoutInstances> 2D 00 <.bLoadFromCheckpoint> 16 )
-/*(0x0524/0x034C)*/ 04 0B
-/*(0x0526/0x034E)*/ 53
+0F 00 <.kLoadoutInstances> 19 12 20 <Engine.Engine> [@] <Engine.Engine.GetCurrentWorldInfo.ReturnValue> 00 ( 1C <Engine.Engine.GetCurrentWorldInfo> 16 ) [@] <Engine.Actor.Spawn.ReturnValue> 00 ( 1C <Engine.Actor.Spawn> 20 <Class.XGLoadoutInstances> 19 00 <.kUnit> [@] <Engine.Actor.Owner> 00 ( 01 <Engine.Actor.Owner> ) 4A 4A 4A 4A 4A 4A 16 )
+0F 19 00 <.kLoadoutInstances> [@] <XGLoadoutInstances.m_iNumItems> 00 ( 01 <XGLoadoutInstances.m_iNumItems> ) 25
+0F 19 00 <.kLoadoutInstances> [@] <XGLoadoutInstances.m_iNumBackpackItems> 00 ( 01 <XGLoadoutInstances.m_iNumBackpackItems> ) 25
+0F 00 <.I> 25
+[#label_0x00B7]
+07 [@label_0x04F2] 96 00 <.I> 2C 1A 16
+	07 [@label_0x0301] 9A 00 <.I> 2C 0D 16
+		0F 00 <.J> 25
+		[#label_0x00E2]
+		07 [@label_0x02FE] 96 00 <.J> 36 35 <XGLoadoutMgr.TLoadout.Backpack> <@TLoadout> 00 00 00 <.kLoad> 16
+			07 [@label_0x02F0] 9B 10 00 <.J> 35 <XGLoadoutMgr.TLoadout.Backpack> <@TLoadout> 00 00 00 <.kLoad> 25 16
+				0F 00 <.kItem> 19 12 20 <Engine.Engine> [@] <Engine.Engine.GetCurrentWorldInfo.ReturnValue> 00 ( 1C <Engine.Engine.GetCurrentWorldInfo> 16 ) [@] <Engine.Actor.Spawn.ReturnValue> 00 ( 1C <Engine.Actor.Spawn> 13 <Class.XGWeapon> 12 20 <Class.XGItemLibrary> [@] <XGItemLibrary.GetItem.ReturnValue> 00 ( 1B <GetItem> 10 00 <.J> 35 <XGLoadoutMgr.TLoadout.Backpack> <@TLoadout> 00 00 00 <.kLoad> 16 ) 19 00 <.kUnit> [@] <Engine.Actor.Owner> 00 ( 01 <Engine.Actor.Owner> ) 4A 4A 4A 4A 4A 4A 16 )
+				19 2E <Class.XGWeapon> 00 <.kItem> [@] <NullRef> 00 ( 1B <ApplyAmmoCost> 10 00 <.J> 35 <XGLoadoutMgr.TLoadout.Backpack> <@TLoadout> 00 00 00 <.kLoad> 16 )
+				0F 19 00 <.kItem> [@] <XGItem.m_strUIImage> 00 ( 01 <XGItem.m_strUIImage> ) 38 53 10 00 <.J> 35 <XGLoadoutMgr.TLoadout.Backpack> <@TLoadout> 00 00 00 <.kLoad>
+				19 00 <.kItem> [@] <NullRef> 00 ( 1B <Init> 16 )
+				0F 1A 00 <.J> 19 00 <.kLoadoutInstances> [@] <XGLoadoutInstances.m_aBackpackItems> 00 ( 01 <XGLoadoutInstances.m_aBackpackItems> ) 00 <.kItem>
+				A3 19 00 <.kLoadoutInstances> [@] <XGLoadoutInstances.m_iNumBackpackItems> 00 ( 01 <XGLoadoutInstances.m_iNumBackpackItems> ) 16
+			[#label_0x02F0]
+			A5 00 <.J> 16
+			06 [@label_0x00E2]
+		[#label_0x02FE]
+		06 [@label_0x04E4]
+	[#label_0x0301]
+	07 [@label_0x04E4] 9B 1A 00 <.I> 35 <XGLoadoutMgr.TLoadout.Items> <@TLoadout> 00 00 00 <.kLoad> 25 16
+		0F 00 <.kItem> 19 12 20 <Engine.Engine> [@] <Engine.Engine.GetCurrentWorldInfo.ReturnValue> 00 ( 1C <Engine.Engine.GetCurrentWorldInfo> 16 ) [@] <Engine.Actor.Spawn.ReturnValue> 00 ( 1C <Engine.Actor.Spawn> 13 <Class.XGWeapon> 12 20 <Class.XGItemLibrary> [@] <XGItemLibrary.GetItem.ReturnValue> 00 ( 1B <GetItem> 1A 00 <.I> 35 <XGLoadoutMgr.TLoadout.Items> <@TLoadout> 00 00 00 <.kLoad> 16 ) 19 00 <.kUnit> [@] <Engine.Actor.Owner> 00 ( 01 <Engine.Actor.Owner> ) 4A 4A 4A 4A 4A 4A 16 )
+		19 2E <Class.XGWeapon> 00 <.kItem> [@] <NullRef> 00 ( 1B <ApplyAmmoCost> 1A 00 <.I> 35 <XGLoadoutMgr.TLoadout.Items> <@TLoadout> 00 00 00 <.kLoad> 16 )
+		0F 19 00 <.kItem> [@] <XGItem.m_strUIImage> 00 ( 01 <XGItem.m_strUIImage> ) 38 53 1A 00 <.I> 35 <XGLoadoutMgr.TLoadout.Items> <@TLoadout> 00 00 00 <.kLoad>
+		19 00 <.kItem> [@] <NullRef> 00 ( 1B <Init> 16 )
+		0F 1A 00 <.I> 19 00 <.kLoadoutInstances> [@] <XGLoadoutInstances.m_aItems> 00 ( 01 <XGLoadoutInstances.m_aItems> ) 00 <.kItem>
+		A3 19 00 <.kLoadoutInstances> [@] <XGLoadoutInstances.m_iNumItems> 00 ( 01 <XGLoadoutInstances.m_iNumItems> ) 16
+	[#label_0x04E4]
+	A5 00 <.I> 16
+	06 [@label_0x00B7]
+[#label_0x04F2]
+19 00 <.kUnit> [@] <NullRef> 00 ( 1B <ApplyLoadout> 00 <.kLoadoutInstances> 2D 00 <.bLoadFromCheckpoint> 16 )
+04 0B
+53
 
 
 
