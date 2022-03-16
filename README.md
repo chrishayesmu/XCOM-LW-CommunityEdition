@@ -11,6 +11,8 @@ Each of these is explored individually in more depth [below](#project-goals).
 
 Due to this mod's extensive overriding of base game classes, it is unlikely to be compatible with other mods that perform significant modifications. This limitation is why part of the goal of LWCE is to expose modding APIs, allowing fully-featured mods to be built on top of LWCE without conflicting.
 
+Want to know more? Check out [the project wiki](https://github.com/chrishayesmu/XCOM-LW-CommunityEdition/wiki/) for developers, or [some screenshots](https://github.com/chrishayesmu/XCOM-LW-CommunityEdition/wiki/Screenshots) to get a glimpse of what we're all about.
+
 # Installation
 
 This section is TBD, as there are no releases yet. For personal use while in development, see [building locally](#building-lwce-locally).
