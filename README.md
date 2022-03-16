@@ -15,7 +15,11 @@ Want to know more? Check out [the project wiki](https://github.com/chrishayesmu/
 
 # Installation
 
-This section is TBD, as there are no releases yet. For personal use while in development, see [building locally](#building-lwce-locally).
+If you're planning to work on LWCE, or write mods for LWCE, see [building locally](#building-lwce-locally). If you just want to install LWCE to check it out, head over to [Releases](https://github.com/chrishayesmu/XCOM-LW-CommunityEdition/releases), download the latest, and look at the `README.txt` included within.
+
+# Uninstalling LWCE
+
+Uninstalling LWCE is extremely easy. During installation, you should have used PatcherGUI or Long War Mod Manager to install our bytecode patch file. These tools create an "uninstall" file that you can use to revert the bytecode to its original state. Once you've done that, you're good - no need to delete any of the `.ini` files or other files you installed (though you can if you want to).
 
 # Project goals
 
@@ -41,6 +45,8 @@ While many quality-of-life changes are still pending, we do have a few in place 
 * When customizing a soldier in HQ, you can now change their gender.
 * The game can detect saves made without LWCE, and warn you before loading them.
 * Additional keybinds have been added to the settings menu, including Long War's "Overwatch All" command, and a new input in LWCE that shows the movement grid without having to hold right click.
+
+There's much more to come! If you're the author of a QoL mod that you think should be integrated in LWCE, feel free to reach out.
 
 ## Exposing configuration
 

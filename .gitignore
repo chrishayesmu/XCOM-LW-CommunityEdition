@@ -2,3 +2,4 @@
 *.uninstall*.txt
 .vscode
 __pycache__
+Releases/
