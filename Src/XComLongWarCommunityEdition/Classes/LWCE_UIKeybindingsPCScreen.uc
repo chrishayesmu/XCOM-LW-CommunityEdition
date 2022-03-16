@@ -10,6 +10,7 @@ struct LWCE_UIKeybind
 
 var config array<LWCE_UIKeyBind> m_arrCEKeybinds;
 
+var const localized string m_strOverwatchAllLabel;
 var const localized string m_strToggleGridLabel;
 
 static function ApplyCustomKeybinds(PlayerInput kInput)
@@ -20,6 +21,8 @@ static function ApplyCustomKeybinds(PlayerInput kInput)
     if (kInput.IsA('XComTacticalInput'))
     {
         eBindingCategory = eKC_Tactical;
+
+        RemoveLegacyOverwatchAllBinding(kInput);
     }
     else
     {
@@ -63,6 +66,21 @@ static function PopulateCustomKeybinds(out array<LWCE_UIKeybind> arrKeybinds)
     local int Index;
     local LWCE_UIKeybind kBlankBinding, kCEBinding;
 
+    if (arrKeybinds.Find('strIdentifier', "LWCE_OverwatchAll") == INDEX_NONE)
+    {
+        kCEBinding.strIdentifier = "LWCE_OverwatchAll";
+        kCEBinding.eBindingCategory = eKC_Tactical;
+
+        kCEBinding.kBinding.UserLabel = default.m_strOverwatchAllLabel;
+        kCEBinding.kBinding.PrimaryBind.Command = "ForceOverwatch TRUE";
+        kCEBinding.kBinding.PrimaryBind.Name = 'O';
+        kCEBinding.kBinding.PrimaryBind.Alt = true;
+
+        arrKeybinds.AddItem(kCEBinding);
+
+        kCEBinding = kBlankBinding;
+    }
+
     if (arrKeybinds.Find('strIdentifier', "LWCE_ToggleDisplayOfMovementGrid") == INDEX_NONE)
     {
         kCEBinding.strIdentifier = "LWCE_ToggleDisplayOfMovementGrid";
@@ -90,6 +108,33 @@ static function PopulateCustomKeybinds(out array<LWCE_UIKeybind> arrKeybinds)
         // Mark all secondary binds as secondary
         arrKeybinds[Index].kBinding.SecondaryBind.bPrimaryBinding = false;
         arrKeybinds[Index].kBinding.SecondaryBind.bSecondaryBinding = true;
+    }
+}
+
+/**
+ * Deletes the "Overwatch All" keybinding provided by Long War 1.0. Unfortunately that keybinding is not
+ * configured correctly to work with the UI, so if we don't manually delete it, it will always be present
+ * (in addition to any custom keybind). We delete theirs and immediately insert our own, which defaults to the
+ * same input, so that it can be remapped freely.
+ */
+static function RemoveLegacyOverwatchAllBinding(PlayerInput kInput)
+{
+    local int Index;
+
+    for (Index = 0; Index < kInput.Bindings.Length; Index++)
+    {
+        if (kInput.Bindings[Index].Name == 'O' &&
+            kInput.Bindings[Index].Command == "ForceOverWatch TRUE" &&
+            kInput.Bindings[Index].Alt &&
+           !kInput.Bindings[Index].bPrimaryBinding &&
+           !kInput.Bindings[Index].bSecondaryBinding)
+        {
+            // Normally we would use RemoveBind, but that expects either bPrimaryBinding or bSecondaryBinding
+            // to be true, which is exactly how the Overwatch All binding is misconfigured
+            kInput.Bindings.Remove(Index, 1);
+            kInput.SaveConfig();
+            break;
+        }
     }
 }
 

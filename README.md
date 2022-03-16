@@ -36,7 +36,11 @@ For a list of Long War bugs tracked and/or fixed by LWCE, [see here](https://git
 
 ## Quality of life changes
 
-This section is TBD.
+While many quality-of-life changes are still pending, we do have a few in place already:
+
+* When customizing a soldier in HQ, you can now change their gender.
+* The game can detect saves made without LWCE, and warn you before loading them.
+* Additional keybinds have been added to the settings menu, including Long War's "Overwatch All" command, and a new input in LWCE that shows the movement grid without having to hold right click.
 
 ## Exposing configuration
 
@@ -56,20 +60,7 @@ Mutator-based mods are still supported, as in Long War 1.0; however if these mod
 
 In the base game, there are a number of systems that use enums for unique identifiers. Since UnrealScript enums are a single byte, this limits these identifiers to 256 different values, greatly limiting modding potential. In LWCE, we've rewritten these systems to replace their identifiers with 32-bit signed integers, vastly increasing the value space to 2,147,483,647 distinct values (negative values are not allowed).
 
-#### **Choosing IDs without conflicts**
-
-Even with such a large space to work in, conflicts are possible if there's no system for partitioning the space. Mods are therefore responsible for choosing an ID space according to the following:
-
-1. IDs are assigned in blocks of 10,000 elements.
-2. Negative ID values are disallowed.
-3. All IDs from 0 to 99999, inclusive, are reserved for LWCE.
-4. All IDs from 2,147,000,000 to 2,147,483,647, inclusive, are reserved for LWCE.
-5. Of the remaining 214k ID blocks, modders should choose a block for themselves using a random number generator, rolling from 10 to 214,599. This number is your **block prefix**. Multiply it by 10000 to get the first ID in your block.
-6. If for some reason a single block isn't large enough for a mod, mods should extend into the next contiguous block. (Ex: if your block is 1000000 to 1009999, you would extend into 1010000 to 1019999.)
-
-As an example, suppose a random number generator gives you the block prefix **146339**. Then your block extends from 14,633,900,000 to 14,633,909,999.
-
-Once you have your ID block, you need to update your `LWCEModBase` child class with this info, using the `ModIDRange` field. If you don't set this value to a valid block range, LWCE will not load your mod. (For forward compatibility's sake, this applies even to mods that don't intend to add any content that needs an ID.)
+Aside from obviously increasing the total amount of content the game can support, this also makes it much simpler to have multiple mods that add content without them conflicting with each other.
 
 # Building LWCE locally
 

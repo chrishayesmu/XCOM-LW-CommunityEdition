@@ -3,6 +3,7 @@ m_strModSettings="MOD SETTINGS"
 
 [LWCE_UIKeybindingsPCScreen]
 m_strToggleGridLabel="TOGGLE GRID"
+m_strOverwatchAllLabel="OVERWATCH ALL"
 
 [LWCE_UIModSettings]
 m_strWindowTitle="Long War: Community Edition Mod Settings"
