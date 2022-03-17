@@ -7,7 +7,7 @@ Thank you to everyone who has helped make this project possible! If your name sh
 | Chris Hayes (aka SwfDelicious) | Lead developer for Long War: Community Edition
 | ruderubik                      | Tool developer and reverse engineerer
 | Jewels (aka PixieV)            | Unreal Engine 3 expertise and guidance
-| TechnicallyNotTim              | [Fixed grenade previews](https://github.com/chrishayesmu/XCOM-LW-CommunityEdition/commit/82fb6d1f69fae21f5b19a743fa02e5b727d638bc)
+| Benedikt McMullin (aka moben)  | [Fixed grenade previews](https://github.com/chrishayesmu/XCOM-LW-CommunityEdition/commit/82fb6d1f69fae21f5b19a743fa02e5b727d638bc)
 
 
 ## Special thanks
