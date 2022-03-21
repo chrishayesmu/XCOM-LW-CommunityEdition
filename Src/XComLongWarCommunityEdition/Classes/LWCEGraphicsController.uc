@@ -74,11 +74,8 @@ simulated function Projectile_OnInit(XComProjectile kProjectile)
     //     iWeaponId = `LWCE_TWEAPON_FROM_XG(kProjectile.GetGameWeapon()).iItemId;
     if (kProjectile.MyDamageType == class'XComDamageType_Plasma')
     {
-        kPointLightComp = new(kProjectile.Mesh) class'PointLightComponent';
-        //kPointLightComp.CastShadows = true;
-        //kPointLightComp.CastDynamicShadows = true;
-        //kPointLightComp.CastStaticShadows = true;
-        //kPointLightComp.LightAffectsClassification = LAC_DYNAMIC_AND_STATIC_AFFECTING;
+        kPointLightComp = FindOrCreatePointLight(kProjectile);
+
         // TODO move values to config
         kPointLightComp.LightColor.R = 124;
         kPointLightComp.LightColor.G = 239;
@@ -103,15 +100,12 @@ simulated function Projectile_OnInit(XComProjectile kProjectile)
         }
 
         kProjectile.Mesh.AttachComponent(kPointLightComp, 'Bone01');
-
-        `LWCE_LOG_CLS("Original projectile speed: " $ kProjectile.Speed);
-        kProjectile.Speed *= 0.2;
     }
     else if (kProjectile.MyDamageType == class'XComDamageType_Laser')
     {
         `LWCE_LOG_CLS("Projectile appears to be laser");
 
-        kPointLightComp = new(kProjectile.Mesh) class'PointLightComponent';
+        kPointLightComp = FindOrCreatePointLight(kProjectile);
         kPointLightComp.Brightness = 1.5;
         kPointLightComp.LightColor.R = 124;
         kPointLightComp.LightColor.G = 239;
@@ -126,6 +120,11 @@ simulated function Projectile_OnShutdown(XComProjectile kProjectile)
 {
     local PointLightComponent kPointLightComp;
 
+    if (kProjectile == none || kProjectile.Mesh == none)
+    {
+        return;
+    }
+
     // Find any custom lights we've added and disable them
     foreach kProjectile.Mesh.AttachedComponents(class'PointLightComponent', kPointLightComp)
     {
@@ -135,13 +134,8 @@ simulated function Projectile_OnShutdown(XComProjectile kProjectile)
             continue;
         }
 
-        // Remove the lights we've added manually so they disappear and can be GC'd
-        // while the projectile returns to its pool
-        if (kPointLightComp != none)
-        {
-            kPointLightComp.SetEnabled(false);
-            kPointLightComp.DetachFromAny();
-        }
+        // Disable any lights we've added; detaching doesn't appear to work
+        kPointLightComp.SetEnabled(false);
     }
 }
 
@@ -308,6 +302,26 @@ protected function AddVolumeLighting(XGVolume kVolume)
 
     kVolume.AttachComponent(kPointLightComp);
     kPointLightComp.Init(self);
+}
+
+static protected function PointLightComponent FindOrCreatePointLight(XComProjectile kProjectile)
+{
+    local PointLightComponent kPointLightComp;
+
+    foreach kProjectile.Mesh.AttachedComponents(class'PointLightComponent', kPointLightComp)
+    {
+        if (kPointLightComp == kProjectile.ProjectileLightComponent)
+        {
+            // Light added by the base game
+            continue;
+        }
+
+        kPointLightComp.SetEnabled(true);
+        return kPointLightComp;
+    }
+
+    kPointLightComp = new(kProjectile.Mesh) class'PointLightComponent';
+    return kPointLightComp;
 }
 
 static function LWCEGraphicsController GetInstance()
