@@ -201,7 +201,7 @@ class UpkContent:
         matches = []
 
         for exp in self.exports:
-            if exp is not None and exp.type.name == obj_type:
+            if exp is not None and exp.type is not None and exp.type.name == obj_type:
                 matches.append(exp)
 
         return matches
