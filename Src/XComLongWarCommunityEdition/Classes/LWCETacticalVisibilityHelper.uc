@@ -120,7 +120,7 @@ function Init()
         return;
     }
 
-    if (`BATTLE == none || AnimalPlayer() == none || AnimalPlayer().m_kSquad == none)
+    if (`BATTLE == none || `LWCE_UNITFLAGMGR == none || AnimalPlayer() == none || AnimalPlayer().m_kSquad == none)
     {
         // Very slow timer; no one is looking for LOS indicators in the first 5 seconds of a battle anyway
         SetTimer(5.0, /* inbLoop */ false, 'Init');
