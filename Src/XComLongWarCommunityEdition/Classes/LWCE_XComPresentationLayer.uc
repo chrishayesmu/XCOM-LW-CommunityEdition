@@ -28,6 +28,16 @@ simulated state State_AbilityHUD
     }
 }
 
+simulated state State_FlagMgr
+{
+    simulated function Activate()
+    {
+        m_kUnitFlagManager = Spawn(class'LWCE_UIUnitFlagManager', self);
+        m_kUnitFlagManager.Init(XComTacticalController(Owner), GetHUD());
+        GetHUD().LoadScreen(m_kUnitFlagManager);
+    }
+}
+
 simulated state State_MissionSummary
 {
     simulated function Activate()

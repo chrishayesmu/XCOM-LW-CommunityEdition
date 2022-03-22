@@ -75,3 +75,5 @@
 `define LWCE_TAC_CARGO (LWCE_XGDropshipCargoInfo(`BATTLE.m_kDesc.m_kDropShipCargoInfo))
 `define LWCE_TACCFG(nm) (class'LWCE_XGTacticalGameCore'.default.`nm)
 `define LWCE_TACPRES (LWCE_XComPresentationLayer(`PRES))
+`define LWCE_UNITFLAGMGR (LWCE_UIUnitFlagManager(`LWCE_TACPRES.m_kUnitFlagManager))
+`define LWCE_VISHELPER (class'LWCETacticalVisibilityHelper'.static.GetInstance())

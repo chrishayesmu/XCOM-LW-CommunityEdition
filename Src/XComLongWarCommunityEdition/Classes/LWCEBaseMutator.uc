@@ -100,8 +100,6 @@ private function Handle_XComProjectile_InitProjectile(const out MutateArguments 
     local Vector Direction;
     local array<string> arrDirectionParts;
 
-    `LWCE_LOG_CLS("Handle_XComProjectile_InitProjectile");
-
     kProjectile = XComProjectile(FindActorByNameAndClass(tArgs.SenderName, class'XComProjectile'));
 
     ParseStringIntoArray(tArgs.AdditionalArgs[0], arrDirectionParts, ",", /* bCullEmpty */ true);

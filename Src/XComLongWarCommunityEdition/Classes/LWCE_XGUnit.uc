@@ -788,6 +788,16 @@ function BuildAbilities(optional bool bUpdateUI = true)
     }
 }
 
+simulated function bool CanTakeDamage()
+{
+    if (class'LWCETacticalVisibilityHelper'.static.IsVisHelper(self))
+    {
+        return false;
+    }
+
+    return super.CanTakeDamage();
+}
+
 function CheckForDamagedItems()
 {
     local int I, iWeaponFragments;
@@ -1707,14 +1717,47 @@ function bool LoadInit(XGPlayer NewPlayer)
     return false;
 }
 
+function OnEnterPoison(XGVolume kVolume)
+{
+    // Don't apply poison to visibility helpers or it'll be visible on the UI
+    if (class'LWCETacticalVisibilityHelper'.static.IsVisHelper(self))
+    {
+        return;
+    }
+
+    super.OnEnterPoison(kVolume);
+}
+
 simulated event ReplicatedEvent(name VarName)
 {
     super.ReplicatedEvent(VarName);
 }
 
+simulated function ShowMouseOverDisc(optional bool bShow = true)
+{
+    if (m_bShowMouseOverDisc != bShow)
+    {
+        m_bShowMouseOverDisc = bShow;
+        RefreshUnitDisc();
+
+        `LWCE_VISHELPER.UpdateVisibilityMarkers();
+    }
+}
+
 simulated event UpdateAbilitiesUI()
 {
     super.UpdateAbilitiesUI();
+}
+
+simulated function UpdateInteractClaim()
+{
+    // Prevent visibility helpers from claiming interaction points such as doors and Meld
+    if (class'LWCETacticalVisibilityHelper'.static.IsVisHelper(self))
+    {
+        return;
+    }
+
+    super.UpdateInteractClaim();
 }
 
 function UpdateItemCharges()
@@ -1992,6 +2035,17 @@ function UpdateItemCharges()
     }
 
     `LWCE_MOD_LOADER.OnUpdateItemCharges(self);
+}
+
+simulated event SetBETemplate()
+{
+    // Don't set up bioelectric skin particles for visibility helpers, so they aren't shown
+    if (class'LWCETacticalVisibilityHelper'.static.IsVisHelper(self))
+    {
+        return;
+    }
+
+    super.SetBETemplate();
 }
 
 protected function bool ShouldStopCombatMusicAfterBeingStunned()

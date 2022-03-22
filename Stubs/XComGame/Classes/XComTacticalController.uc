@@ -172,16 +172,14 @@ simulated function IncBloodlustMove(){}
 simulated function DecBloodlustMove(){}
 
 simulated state PlayerDebugCamera{
-	function SeePlayer(Pawn Seen);
-	function HearNoise(float Loudness, Actor NoiseMaker, optional name NoiseType);
-	function Bump(Actor Other, PrimitiveComponent OtherComp, Vector HitNormal);
-	event NotifyPhysicsVolumeChange(PhysicsVolume NewVolume);
     exec function ToggleDebugCamera(){}
     event PushedState(){}
     event PoppedState(){}
-
 }
+
 simulated state PlayerWalking{
+    ignores SeePlayer, HearNoise, Bump, NotifyPhysicsVolumeChange;
+
     function ProcessMove(float DeltaTime, Vector newAccel, EDoubleClickDir DoubleClickMove, Rotator DeltaRot){}
     function PlayerMove(float DeltaTime){}
     event BeginState(name PreviousStateName){}
@@ -189,18 +187,22 @@ simulated state PlayerWalking{
 }
 
 simulated state PlayerAiming{
+    ignores PlayerMove;
+
 	event BeginState(name PreviousStateName){}
 	event EndState(name NextStateName){}
-	function PlayerMove(float DeltaTime);
 }
+
 simulated state CloseCombat{
-	function PlayerMove(float DeltaTime);
+    ignores PlayerMove;
+
     event BeginState(name PreviousStateName){}
-    event EndState(name NextStateName){}   
+    event EndState(name NextStateName){}
 }
+
 state CinematicMode{
+    ignores PlayUnitSelectSound;
+
 	event BeginState(name PreviousStateName){}
 	event EndState(name NextStateName){}
-	exec function ShowMenu();
-	exec function PlayUnitSelectSound();
 }

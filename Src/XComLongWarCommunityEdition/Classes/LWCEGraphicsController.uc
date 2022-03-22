@@ -163,6 +163,11 @@ protected function AddUnitLighting(XGUnit kUnit)
     local SpotLightComponent kSpotLightComp;
     local array<name> arrBoneNames;
 
+    if (class'LWCETacticalVisibilityHelper'.static.IsVisHelper(kUnit))
+    {
+        return;
+    }
+
     iCharType = kUnit.GetCharacter().m_kChar.iType;
 
     switch (iCharType)

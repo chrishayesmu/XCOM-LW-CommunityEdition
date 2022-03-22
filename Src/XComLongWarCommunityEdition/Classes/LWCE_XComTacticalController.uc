@@ -1,5 +1,20 @@
 class LWCE_XComTacticalController extends XComTacticalController;
 
+function ParsePath(XGUnit kUnit, optional bool bNoCost = false, optional bool bSpeak = false, optional XGAbility kAbility = none, optional bool bSpawnedAlienWalkIn = false, optional XComSpawnPoint_Alien kSpawnPt = none, optional bool bOverwatch = false)
+{
+    if (Role == ROLE_Authority)
+    {
+        `LWCE_VISHELPER.MoveHelpersOutOfTheWay();
+    }
+
+    if (class'LWCETacticalVisibilityHelper'.static.IsVisHelper(kUnit))
+    {
+        return;
+    }
+
+    super.ParsePath(kUnit, bNoCost, bSpeak, kAbility, bSpawnedAlienWalkIn, kSpawnPt, bOverwatch);
+}
+
 reliable server function ServerPerformRaisingTargetWithFireAction(optional XGUnit kTargetedUnit = none, optional bool forceNewAction = false)
 {
     local XGAction_Targeting kNewAction;

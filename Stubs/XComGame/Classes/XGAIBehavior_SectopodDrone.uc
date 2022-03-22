@@ -40,15 +40,5 @@ simulated function InitPredeterminedAbility(XGAbility kAbility);
 
 state RepairMove extends MoveState
 {
-    function Vector DecideNextDestination(optional out string strFail)
-    {
-        local Vector vDestination;
-
-        if((GetNearestValidPathablePointToMeleeRange(m_kRepairTarget, vDestination)) || IsValidPathDestination(vDestination))
-        {
-            return vDestination;
-        }
-        vDestination = FindValidPathDestinationToward(m_kRepairTarget.GetLocation(),,,, strFail);
-        return vDestination;
-    }   
+    function Vector DecideNextDestination(optional out string strFail){}
 }

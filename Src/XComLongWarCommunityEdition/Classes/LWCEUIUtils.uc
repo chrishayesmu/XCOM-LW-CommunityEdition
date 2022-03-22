@@ -57,6 +57,64 @@ static function GfxObject BindMovie(GFxObject kOwner, coerce string strFlashClas
 	return gfxResult;
 }
 
+static function GfxObject DuplicateMovieClip(string strClipToDuplicatePath, string strNewClipName, optional UIFxsMovie manager = GetHUD())
+{
+	local ASValue myValue;
+	local array<ASValue> myArray;
+	local string strParent;
+	local int iCount;
+
+	iCount = InStr(strClipToDuplicatePath, ".", /* bSearchFromRight */ true);
+	strParent = Left(strClipToDuplicatePath, iCount);
+
+	myValue.Type = AS_String;
+	myValue.s = strNewClipName;
+	myArray.AddItem(myValue);
+
+	myValue.Type = AS_Number;
+	myValue.n = float(manager.ActionScriptInt(strParent $ ".getNextHighestDepth"));
+	myArray.AddItem(myValue);
+
+	manager.GetVariableObject(strClipToDuplicatePath).Invoke("duplicateMovieClip", myArray);
+
+	return manager.GetVariableObject(strParent $ "." $ strNewClipName);
+}
+
+/// <summary>
+/// Sets the object's color transform multiplication, where each color ranges from 0 to 255.
+/// </summary>
+static function SetObjectColorMultiply(GFxObject gfxObj, int Red, int Green, int Blue, optional int Alpha = -1)
+{
+    local ASColorTransform kTransform;
+
+    kTransform.Multiply.R = Red / 255.0;
+    kTransform.Multiply.G = Green / 255.0;
+    kTransform.Multiply.B = Blue / 255.0;
+
+    if (Alpha >= 0)
+    {
+        kTransform.Multiply.A = Alpha / 255.0;
+    }
+
+    gfxObj.SetColorTransform(kTransform);
+}
+
+/// <summary>
+/// Sets the object's scale, where 1.0 is the default value for each axis.
+/// </summary>
+static function SetObjectScale(GFxObject gfxObj, float X, float Y, float Z)
+{
+    local ASDisplayInfo kDisplayInfo;
+
+    kDisplayInfo = gfxObj.GetDisplayInfo();
+
+    kDisplayInfo.XScale = X * 100.0;
+    kDisplayInfo.YScale = Y * 100.0;
+    kDisplayInfo.ZScale = Z * 100.0;
+
+    gfxObj.SetDisplayInfo(kDisplayInfo);
+}
+
 protected static function AS_AddMouseListener(GfxObject kListener)
 {
 	GetHUD().ActionScriptVoid(GetHUD().GetMCPath() $ "._global.Mouse.addListener");

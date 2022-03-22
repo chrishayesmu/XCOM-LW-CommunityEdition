@@ -96,6 +96,18 @@ function InitLoadedItems() \
 { \
     class'LWCE_XGBattle_Extensions'.static.InitLoadedItems(self); \
 } \
+simulated function PostLevelLoaded() \
+{ \
+    super.PostLevelLoaded(); \
+\
+    class'LWCETacticalVisibilityHelper'.static.CreateAndInitialize(); \
+} \
+simulated function PostLoadSaveGame() \
+{ \
+    super.PostLoadSaveGame(); \
+\
+    class'LWCETacticalVisibilityHelper'.static.CreateAndInitialize(); \
+} \
 
 
 

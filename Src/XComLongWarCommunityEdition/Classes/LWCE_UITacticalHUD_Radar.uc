@@ -24,6 +24,7 @@ simulated function UpdateActiveUnit()
     }
     else if ( (XGUnit(m_kActiveUnit).m_iZombieMoraleLoss & -2147483648) != 0 )
     {
+        // This might be something accidentally decompiled from the LOS Indicators mod
         Show();
     }
     else
