@@ -81,19 +81,44 @@ static function GfxObject DuplicateMovieClip(string strClipToDuplicatePath, stri
 }
 
 /// <summary>
-/// Sets the object's color transform multiplication, where each color ranges from 0 to 255.
+/// Sets the object's additive color transform, where each color ranges from -255 to 255.
+/// The final value for each channel is computed as (origValue * multiplier) + offset, clamped to
+/// the range [0, 255].
 /// </summary>
-static function SetObjectColorMultiply(GFxObject gfxObj, int Red, int Green, int Blue, optional int Alpha = -1)
+static function SetObjectColorAdd(GFxObject gfxObj, int Red, int Green, int Blue, optional int Alpha = -1)
 {
     local ASColorTransform kTransform;
 
-    kTransform.Multiply.R = Red / 255.0;
-    kTransform.Multiply.G = Green / 255.0;
-    kTransform.Multiply.B = Blue / 255.0;
+    kTransform = gfxObj.GetColorTransform();
+    kTransform.Add.R = Red;
+    kTransform.Add.G = Green;
+    kTransform.Add.B = Blue;
 
     if (Alpha >= 0)
     {
-        kTransform.Multiply.A = Alpha / 255.0;
+        kTransform.Add.A = Alpha;
+    }
+
+    gfxObj.SetColorTransform(kTransform);
+}
+
+/// <summary>
+/// Sets the object's multiplicative color transform. The multiplier for each channel can be any value.
+/// The final value for each channel is computed as (origValue * multiplier) + offset, clamped to
+/// the range [0, 255].
+/// </summary>
+static function SetObjectColorMultiply(GFxObject gfxObj, float Red, float Green, float Blue, optional float Alpha = -1.0)
+{
+    local ASColorTransform kTransform;
+
+    kTransform = gfxObj.GetColorTransform();
+    kTransform.Multiply.R = Red;
+    kTransform.Multiply.G = Green;
+    kTransform.Multiply.B = Blue;
+
+    if (Alpha >= 0)
+    {
+        kTransform.Multiply.A = Alpha;
     }
 
     gfxObj.SetColorTransform(kTransform);

@@ -35,6 +35,15 @@
 class LWCETacticalVisibilityHelper extends Actor
     config(LWCEQualityOfLife);
 
+enum EVisDiscColor
+{
+    eVDC_Green,
+    eVDC_Gold,
+    eVDC_Orange,
+    eVDC_Red,
+    eVDC_White
+};
+
 // Pawn types for the two invisible units we use. We need one unit that can use cover, for when the
 // selected unit is a soldier, and one that can't, for SHIVs/MECs. The original Sightlines mod used
 // a Chryssalid, but that causes the Chryssalid slobber VFX to be visible when moving the cursor
@@ -47,8 +56,15 @@ const NON_COVER_USING_HELPER_PAWN_TYPE = 44; // ePawnType_Zombie
 
 const HELPER_UNIT_TEAM = 1; // eTeam_Neutral
 
-var config bool bShowInUnitDisc;
+var config bool bShowForEnemyUnits;
+var config bool bShowForFriendlyUnits;
+var config bool bShowForNeutralUnits;
 var config bool bShowInUnitFlag;
+
+var config bool bShowInUnitDisc;
+var config EVisDiscColor eDiscColorForEnemyUnits;
+var config EVisDiscColor eDiscColorForFriendlyUnits;
+var config EVisDiscColor eDiscColorForNeutralUnits;
 
 var protected bool m_bInitialized;
 var protected XGUnit m_kNonCoverUsingHelper;
@@ -263,26 +279,22 @@ protected function ConfigureHelperUnit(XGUnit kUnit)
 
 protected function HideAllVisibilityMarkers()
 {
-    local XGUnit kUnit;
+    local XGUnit kUnit, kActiveUnit;
 
     if (!m_bInitialized)
     {
         return;
     }
 
+    kActiveUnit = TacticalController().m_kActiveUnit;
+
     foreach AllActors(class'XGUnit', kUnit)
     {
-        // Only enemies for now, friendlies TBD
-        if (kUnit.GetTeam() != eTeam_Alien)
-        {
-            continue;
-        }
-
-        MarkUnit(kUnit, false);
+        MarkUnit(kUnit, false, /* bFlanked */, kActiveUnit == kUnit);
     }
 }
 
-protected function MarkUnit(XGUnit kUnit, bool bVisible, optional bool bFlanked)
+protected function MarkUnit(XGUnit kUnit, bool bVisible, optional bool bFlanked, optional bool bIsActiveUnit)
 {
     local LWCE_UIUnitFlag kFlag;
 
@@ -297,23 +309,25 @@ protected function MarkUnit(XGUnit kUnit, bool bVisible, optional bool bFlanked)
 
         if (kFlag != none)
         {
-            kFlag.ToggleVisibilityPreviewIcon(bVisible);
+            kFlag.ToggleVisibilityPreviewIcon(bIsActiveUnit ? false : bVisible);
         }
     }
 
     if (bShowInUnitDisc)
     {
-        kUnit.m_kDiscMesh.SetHidden(!bVisible);
-
-        if (bVisible)
+        if (bIsActiveUnit)
         {
-            if (bFlanked)
+            // For the active unit, we need to restore their disc to its normal state, and let the
+            // normal processes manage its color
+            kUnit.m_kDiscMesh.SetHidden(false);
+        }
+        else
+        {
+            kUnit.m_kDiscMesh.SetHidden(!bVisible);
+
+            if (bVisible)
             {
-                kUnit.m_kDiscMesh.SetMaterial(0, kUnit.UnitCursor_UnitSelect_Gold);
-            }
-            else
-            {
-                kUnit.m_kDiscMesh.SetMaterial(0, kUnit.UnitCursor_UnitSelect_Green);
+                kUnit.m_kDiscMesh.SetMaterial(0, GetMaterialForUnitDisc(kUnit));
             }
         }
     }
@@ -362,35 +376,77 @@ protected function OnCursorMoved()
     MoveHelperUnit(m_kCoverUsingHelper, vDestination);
 }
 
+protected function MaterialInterface GetMaterialForUnitDisc(XGUnit kUnit)
+{
+    local EVisDiscColor eDiscColor;
+
+    switch (kUnit.GetTeam())
+    {
+        case eTeam_Alien:
+            eDiscColor = eDiscColorForEnemyUnits;
+            break;
+        case eTeam_Neutral:
+            eDiscColor = eDiscColorForNeutralUnits;
+            break;
+        case eTeam_XCom:
+            eDiscColor = eDiscColorForFriendlyUnits;
+            break;
+    }
+
+    switch (eDiscColor)
+    {
+        case eVDC_Green:
+            return kUnit.UnitCursor_UnitSelect_Green;
+        case eVDC_Gold:
+            return kUnit.UnitCursor_UnitSelect_Gold;
+        case eVDC_Orange:
+            return kUnit.UnitCursor_UnitSelect_Orange;
+        case eVDC_Red:
+            return kUnit.UnitCursor_UnitSelect_RED;
+        case eVDC_White:
+            // For some reason the "purple" unit select is actually white
+            return kUnit.UnitCursor_UnitSelect_Purple;
+    }
+
+    `LWCE_LOG_CLS("WARNING: Unit " $ kUnit $ " couldn't be mapped to a disc color. Using a default value.");
+    return kUnit.UnitCursor_UnitSelect_RED;
+}
+
 protected function SetVisibilityMarkers(XGUnit kActiveUnit, XGUnit kHelper)
 {
-    local bool bFlanked;
-    local array<XGUnit> arrEnemies;
+    local bool bFlanked, bVisible;
+    local array<XGUnit> arrEnemies, arrFriends;
     local XGUnit kUnit;
 
     arrEnemies = kHelper.GetVisibleEnemies();
+    arrFriends = kHelper.GetVisibleFriends();
 
     foreach AllActors(class'XGUnit', kUnit)
     {
-        // Only enemies for now, friendlies TBD
-        if (!kActiveUnit.IsEnemy(kUnit))
+        switch (kUnit.GetTeam())
         {
-            continue;
+            case eTeam_Alien:
+                bVisible = bShowForEnemyUnits && arrEnemies.Find(kUnit) != INDEX_NONE && kActiveUnit.GetSquad().SquadCanSeeEnemy(kUnit);
+                break;
+            case eTeam_Neutral:
+                // TODO: needs extra testing, not sure if neutrals will count as enemies to an XCOM unit
+                bVisible = bShowForNeutralUnits && arrFriends.Find(kUnit) != INDEX_NONE && kActiveUnit.GetSquad().SquadCanSeeEnemy(kUnit);
+                break;
+            case eTeam_XCom:
+                bVisible = bShowForFriendlyUnits && arrFriends.Find(kUnit) != INDEX_NONE;
+                break;
         }
 
-        if (arrEnemies.Find(kUnit) != INDEX_NONE && kActiveUnit.GetSquad().SquadCanSeeEnemy(kUnit))
+        bFlanked = false;
+
+        if (bVisible)
         {
             // For some reason, after loading a save, IsFlankedBy stops working for our helper units.
             // Flank indicators are disabled entirely until we can figure that out.
             // bFlanked = kUnit.CanUseCover() && (!kUnit.IsInCover() || kUnit.IsFlankedBy(kHelper));
+        }
 
-            bFlanked = false;
-            MarkUnit(kUnit, true, bFlanked);
-        }
-        else
-        {
-            MarkUnit(kUnit, false);
-        }
+        MarkUnit(kUnit, bVisible, bFlanked, kUnit == kActiveUnit);
     }
 }
 
