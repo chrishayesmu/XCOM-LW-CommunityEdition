@@ -3,15 +3,24 @@ class LWCE_XGAbility_Extensions extends Object
 
 static function CalcDamage(XGAbility_Targeted kSelf)
 {
+    local EItemType eWeaponGameplayType;
+    local int iWeaponItemId;
     local XGUnit kPrimTarget;
     local bool bDoesSplashDamage;
     local XComWeapon kTemplate;
 
     kPrimTarget = kSelf.GetPrimaryTarget();
 
+    if (kSelf.m_kWeapon != none)
+    {
+        // TODO: change to integer type once all relevant weapon code is rewritten
+        eWeaponGameplayType = kSelf.m_kWeapon.GameplayType();
+        iWeaponItemId = class'LWCE_XGWeapon_Extensions'.static.GetItemId(kSelf.m_kWeapon);
+    }
+
     if (!`GAMECORE.m_kAbilities.AbilityHasProperty(kSelf.GetType(), eProp_InvulnerableWorld))
     {
-        kSelf.m_iActualEnvironmentDamage = `GAMECORE.CalcEnvironmentalDamage(kSelf.m_kWeapon.ItemType(), kSelf.GetType(), kSelf.m_kUnit.GetCharacter().m_kChar, kSelf.m_kUnit.m_aCurrentStats, kSelf.m_bCritical, kSelf.m_bHasHeightAdvantage, kSelf.m_fDistanceToTarget, kSelf.m_bHasFlank);
+        kSelf.m_iActualEnvironmentDamage = `GAMECORE.CalcEnvironmentalDamage(iWeaponItemId, kSelf.GetType(), kSelf.m_kUnit.GetCharacter().m_kChar, kSelf.m_kUnit.m_aCurrentStats, kSelf.m_bCritical, kSelf.m_bHasHeightAdvantage, kSelf.m_fDistanceToTarget, kSelf.m_bHasFlank);
 
         if (kSelf.m_kUnit.GetCharacter().HasUpgrade(`LW_PERK_ID(Sapper)))
         {
@@ -58,11 +67,11 @@ static function CalcDamage(XGAbility_Targeted kSelf)
                 kSelf.m_iActualEnvironmentDamage *= 0.0;
                 // Deliberate case fall-through
             default:
-                kSelf.m_iActualDamage = `GAMECORE.CalcOverallDamage(kSelf.m_kWeapon.ItemType(), CalculateAbilityModifiedDamage(kSelf), kSelf.m_bCritical, kSelf.m_bReflected);
+                kSelf.m_iActualDamage = `GAMECORE.CalcOverallDamage(iWeaponItemId, CalculateAbilityModifiedDamage(kSelf), kSelf.m_bCritical, kSelf.m_bReflected);
                 break;
         }
 
-        kTemplate = `CONTENTMGR.GetWeaponTemplate(kSelf.m_kWeapon.GameplayType());
+        kTemplate = `CONTENTMGR.GetWeaponTemplate(eWeaponGameplayType);
 
         if (kTemplate != none && kTemplate.ProjectileTemplate != none)
         {

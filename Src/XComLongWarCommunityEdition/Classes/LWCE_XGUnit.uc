@@ -1749,6 +1749,24 @@ simulated event UpdateAbilitiesUI()
     super.UpdateAbilitiesUI();
 }
 
+simulated function UpdateCiviliansInRange()
+{
+    local XGUnit kEnemy;
+
+    ClearCiviliansInRange();
+
+    if (m_kPlayer.GetSightMgr() == none)
+    {
+        // Might not be initialized yet
+        return;
+    }
+
+    foreach m_arrVisibleCivilians(kEnemy)
+    {
+        m_kPlayer.GetSightMgr().AddVisibleCivilian(self, kEnemy);
+    }
+}
+
 simulated function UpdateInteractClaim()
 {
     // Prevent visibility helpers from claiming interaction points such as doors and Meld
