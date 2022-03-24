@@ -1,0 +1,1 @@
+class LWCE_XGAIBehavior_Chryssalid extends XGAIBehavior_Chryssalid;

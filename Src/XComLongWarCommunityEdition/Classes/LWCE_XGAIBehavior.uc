@@ -1,0 +1,1 @@
+class LWCE_XGAIBehavior extends XGAIBehavior;

@@ -1,0 +1,1 @@
+class LWCE_XGAIBehavior_ThinMan extends XGAIBehavior_ThinMan;

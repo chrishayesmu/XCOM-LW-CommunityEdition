@@ -1,0 +1,1 @@
+class LWCE_XGAIBehavior_Mechtoid extends XGAIBehavior_Mechtoid;

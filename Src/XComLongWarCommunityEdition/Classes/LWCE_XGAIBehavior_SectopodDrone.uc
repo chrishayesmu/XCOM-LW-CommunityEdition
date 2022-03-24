@@ -1,0 +1,1 @@
+class LWCE_XGAIBehavior_SectopodDrone extends XGAIBehavior_SectopodDrone;

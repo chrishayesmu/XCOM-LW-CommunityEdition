@@ -1,0 +1,1 @@
+class LWCE_XGAIBehavior_Floater extends XGAIBehavior_Floater;

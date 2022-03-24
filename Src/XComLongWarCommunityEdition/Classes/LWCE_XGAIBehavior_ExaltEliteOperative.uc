@@ -1,0 +1,1 @@
+class LWCE_XGAIBehavior_ExaltEliteOperative extends XGAIBehavior_ExaltEliteOperative;

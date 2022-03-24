@@ -9,6 +9,66 @@ event Tick(float fDeltaT)
     super.Tick(fDeltaT);
 }
 
+simulated function class<XGAIBehavior> AlienTypeToBehaviorClass(EPawnType eAlienType)
+{
+    switch (eAlienType)
+    {
+        case ePawnType_Sectoid:
+            return class'LWCE_XGAIBehavior_Sectoid';
+        case ePawnType_Sectoid_Commander:
+            return class'LWCE_XGAIBehavior_SectoidCommander';
+        case ePawnType_Floater:
+            return class'LWCE_XGAIBehavior_Floater';
+        case ePawnType_Floater_Heavy:
+            return class'LWCE_XGAIBehavior_FloaterHeavy';
+        case ePawnType_Muton:
+            return class'LWCE_XGAIBehavior_Muton';
+        case ePawnType_Muton_Elite:
+            return class'LWCE_XGAIBehavior_MutonElite';
+        case ePawnType_Muton_Berserker:
+            return class'LWCE_XGAIBehavior_MutonBerserker';
+        case ePawnType_ThinMan:
+            return class'LWCE_XGAIBehavior_ThinMan';
+        case ePawnType_Elder:
+        case ePawnType_EtherealUber:
+            return class'LWCE_XGAIBehavior_Elder';
+        case ePawnType_CyberDisc:
+            return class'LWCE_XGAIBehavior_Cyberdisc';
+        case ePawnType_Chryssalid:
+            return class'LWCE_XGAIBehavior_Chryssalid';
+        case ePawnType_Sectopod:
+            return class'LWCE_XGAIBehavior_Sectopod';
+        case ePawnType_SectopodDrone:
+            return class'LWCE_XGAIBehavior_SectopodDrone';
+        case ePawnType_Zombie:
+            return class'LWCE_XGAIBehavior_Zombie';
+        case ePawnType_Mechtoid:
+            return class'LWCE_XGAIBehavior_Mechtoid';
+        case ePawnType_Outsider:
+            return class'LWCE_XGAIBehavior';
+        case ePawnType_ExaltOperative:
+            return class'LWCE_XGAIBehavior_ExaltOperative';
+        case ePawnType_ExaltSniper:
+            return class'LWCE_XGAIBehavior_ExaltSniper';
+        case ePawnType_ExaltHeavy:
+            return class'LWCE_XGAIBehavior_ExaltHeavy';
+        case ePawnType_ExaltMedic:
+            return class'LWCE_XGAIBehavior_ExaltMedic';
+        case ePawnType_ExaltEliteOperative:
+            return class'LWCE_XGAIBehavior_ExaltEliteOperative';
+        case ePawnType_ExaltEliteSniper:
+            return class'LWCE_XGAIBehavior_ExaltEliteSniper';
+        case ePawnType_ExaltEliteHeavy:
+            return class'LWCE_XGAIBehavior_ExaltEliteHeavy';
+        case ePawnType_ExaltEliteMedic:
+            return class'LWCE_XGAIBehavior_ExaltEliteMedic';
+        case ePawnType_Seeker:
+            return class'LWCE_XGAIBehavior_Seeker';
+        default:
+            return class'LWCE_XGAIBehavior';
+    }
+}
+
 simulated function bool IsHanging(string szDesc, optional float fHangLength = 15.0)
 {
     local XGAction kAction;
