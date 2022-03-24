@@ -173,13 +173,44 @@ exec function GiveTech(optional string techType, optional int forceTechValueTo =
 /// </summary>
 exec function SetAlienResearch(int TotalResearch)
 {
-    local int iBaseResearch;
+    local int iBaseResearch, iBonusResearch;
 
     if (TotalResearch <= 0)
     {
         return;
     }
 
-    iBaseResearch = `HQGAME.GetGameCore().STAT_GetStat(1);
-    `HQGAME.GetGameCore().STAT_SetStat(2, TotalResearch - iBaseResearch);
+    iBaseResearch = `HQGAME.GetGameCore().GetDays();
+    iBonusResearch = TotalResearch - iBaseResearch;
+
+    if (TotalResearch < iBaseResearch)
+    {
+        GetConsole().OutputTextLine("Cannot set research to " $ TotalResearch $ " because base research is already " $ iBaseResearch $ " and cannot be overridden.");
+        return;
+    }
+
+    `HQGAME.GetGameCore().STAT_SetStat(1, iBaseResearch);
+    `HQGAME.GetGameCore().STAT_SetStat(2, iBonusResearch);
+
+    GetConsole().OutputTextLine("Alien base research is " $ iBaseResearch $ " and bonus research is now " $ iBonusResearch);
+}
+
+exec function ShowAlienStats()
+{
+    local LWCE_Console kConsole;
+    local XGStrategy kStrategy;
+
+    kConsole = GetConsole();
+
+    if (kConsole == none)
+    {
+        return;
+    }
+
+    kStrategy = `HQGAME.GetGameCore();
+
+    kConsole.OutputTextLine("Alien Research (Total): " $ kStrategy.STAT_GetStat(1));
+    kConsole.OutputTextLine("Alien Research (Bonus Only): " $ kStrategy.STAT_GetStat(2));
+    kConsole.OutputTextLine("Alien Resources: " $ kStrategy.STAT_GetStat(19));
+    kConsole.OutputTextLine("XCOM Threat Level: " $ kStrategy.STAT_GetStat(21));
 }

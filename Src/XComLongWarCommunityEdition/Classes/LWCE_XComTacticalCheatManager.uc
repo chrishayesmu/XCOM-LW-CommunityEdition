@@ -34,6 +34,32 @@ exec function ReloadAmmo()
     class'LWCE_XGLoadoutMgr'.static.ApplyInventory(kSoldier);
 }
 
+exec function ShowAlienStats()
+{
+    local LWCE_Console kConsole;
+    local XGBattle_SP kBattle;
+
+    kConsole = GetConsole();
+
+    if (kConsole == none)
+    {
+        return;
+    }
+
+    kBattle = XGBattle_SP(`BATTLE);
+
+    if (kBattle == none)
+    {
+        kConsole.OutputTextLine("This command is only valid in single-player battles.");
+        return;
+    }
+
+    kConsole.OutputTextLine("Alien Research (Total): " $ kBattle.STAT_GetStat(1));
+    kConsole.OutputTextLine("Alien Research (Bonus Only): " $ kBattle.STAT_GetStat(2));
+    kConsole.OutputTextLine("Alien Resources: " $ kBattle.STAT_GetStat(19));
+    kConsole.OutputTextLine("XCOM Threat Level: " $ kBattle.STAT_GetStat(21));
+}
+
 exec function ToggleDebugMenu()
 {
     if (DebugMenu == none)
