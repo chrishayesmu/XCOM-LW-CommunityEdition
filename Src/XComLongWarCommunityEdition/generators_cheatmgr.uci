@@ -1,0 +1,22 @@
+`define LWCE_GENERATOR_XCOMCHEATMANAGER \
+\
+function LWCE_Console GetConsole() \
+{ \
+    return LWCE_Console(LocalPlayer(Outer.Player).ViewportClient.ViewportConsole); \
+} \
+\
+exec function OpenDevConsole_Full() \
+{ \
+    if (!class'LWCE_UIKeybindingsPCScreen'.static.IsKeybindingInProgress()) \
+    { \
+        GetConsole().OpenConsoleView(); \
+    } \
+} \
+\
+exec function OpenDevConsole_Small() \
+{ \
+    if (!class'LWCE_UIKeybindingsPCScreen'.static.IsKeybindingInProgress()) \
+    { \
+        GetConsole().OpenTypingView(); \
+    } \
+} \

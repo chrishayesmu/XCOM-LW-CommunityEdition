@@ -5,11 +5,14 @@ struct LWCE_UIKeybind
 {
     var UIKeyBind kBinding;
     var KeybindCategories eBindingCategory;
+    var bool bIsGlobal; // Keybinding should be applied in all input contexts
     var string strIdentifier; // Unique identifier in order to tell if a keybind is missing completely
 };
 
 var config array<LWCE_UIKeyBind> m_arrCEKeybinds;
 
+var const localized string m_strDevConsoleFullLabel;
+var const localized string m_strDevConsoleMiniLabel;
 var const localized string m_strOverwatchAllLabel;
 var const localized string m_strToggleGridLabel;
 
@@ -33,7 +36,7 @@ static function ApplyCustomKeybinds(PlayerInput kInput)
 
     foreach default.m_arrCEKeybinds(kLWCEBinding)
     {
-        if (kLWCEBinding.eBindingCategory != eBindingCategory)
+        if (kLWCEBinding.eBindingCategory != eBindingCategory && !kLWCEBinding.bIsGlobal)
         {
             continue;
         }
@@ -55,6 +58,25 @@ static function ApplyCustomKeybinds(PlayerInput kInput)
     }
 }
 
+/// <summary>
+/// Returns true if there is an open keybindings screen and the player is currently pressing keys
+/// with the intent of using them as keybindings.
+/// </summary>
+static function bool IsKeybindingInProgress()
+{
+    local UIKeybindingsPCScreen kScreen;
+
+    foreach `WORLDINFO.AllActors(class'UIKeybindingsPCScreen', kScreen)
+    {
+        if (kScreen.m_iKeySlotBeingBound >= 0)
+        {
+            return true;
+        }
+    }
+
+    return false;
+}
+
 /**
  * Adds new keybindings to arrKeybinds only if they're not already present. Do not modify anything
  * if a keybinding is already in the array, or you may overwrite user settings.
@@ -65,6 +87,36 @@ static function PopulateCustomKeybinds(out array<LWCE_UIKeybind> arrKeybinds)
 {
     local int Index;
     local LWCE_UIKeybind kBlankBinding, kCEBinding;
+
+    if (arrKeybinds.Find('strIdentifier', "LWCE_OpenDevConsole_Full") == INDEX_NONE)
+    {
+        kCEBinding.strIdentifier = "LWCE_OpenDevConsole_Full";
+        kCEBinding.eBindingCategory = eKC_General;
+        kCEBinding.bIsGlobal = true;
+
+        kCEBinding.kBinding.UserLabel = default.m_strDevConsoleFullLabel;
+        kCEBinding.kBinding.PrimaryBind.Command = "OpenDevConsole_Full";
+        kCEBinding.kBinding.PrimaryBind.Name = 'Tilde';
+
+        arrKeybinds.AddItem(kCEBinding);
+
+        kCEBinding = kBlankBinding;
+    }
+
+    if (arrKeybinds.Find('strIdentifier', "LWCE_OpenDevConsole_Small") == INDEX_NONE)
+    {
+        kCEBinding.strIdentifier = "LWCE_OpenDevConsole_Small";
+        kCEBinding.eBindingCategory = eKC_General;
+        kCEBinding.bIsGlobal = true;
+
+        kCEBinding.kBinding.UserLabel = default.m_strDevConsoleMiniLabel;
+        kCEBinding.kBinding.PrimaryBind.Command = "OpenDevConsole_Small";
+        kCEBinding.kBinding.PrimaryBind.Name = 'Backslash';
+
+        arrKeybinds.AddItem(kCEBinding);
+
+        kCEBinding = kBlankBinding;
+    }
 
     if (arrKeybinds.Find('strIdentifier', "LWCE_OverwatchAll") == INDEX_NONE)
     {
@@ -142,8 +194,6 @@ simulated function bool OnAccept(optional string Arg = "")
 {
     local int iBindingIndex, Index;
 
-    super.OnAccept(arg);
-
     // We need to sync back keybinding info from m_arrBindings for any custom bindings,
     // since all the structs we're using are being copied
     if (m_eBindingCategory == eKC_General)
@@ -169,6 +219,15 @@ simulated function bool OnAccept(optional string Arg = "")
     }
 
     SaveConfig();
+
+    // Make sure all of our keybinds, including global ones, are up-to-date before we reload the input config
+    ApplyCustomKeybinds(m_kBaseInputController.PlayerInput);
+    m_kBaseInputController.PlayerInput.SaveConfig();
+
+    ApplyCustomKeybinds(m_kTacticalInputController.PlayerInput);
+    m_kTacticalInputController.PlayerInput.SaveConfig();
+
+    super.OnAccept(arg);
 
     return true;
 }
@@ -217,6 +276,17 @@ function OnDisplayConfirmResetBindingsDialogAction(EUIAction eAction)
         ReloadPlayerInputBindings();
         UpdateBindingsList();
     }
+}
+
+simulated function InitInputClasses()
+{
+    // These classes are used to apply input changes to them, then when the changes are accepted, we save config with
+    // these instances and reload config on the instances that actually matter
+    m_kBaseInputController = Spawn(class'PlayerController');
+    m_kBaseInputController.InitInputSystem();
+
+    m_kTacticalInputController = Spawn(class'LWCE_XComTacticalController');
+    m_kTacticalInputController.InitInputSystem();
 }
 
 simulated function UpdateBindingsList()
@@ -333,6 +403,8 @@ simulated function bool RawInputHandler(name Key, int Actionmask, bool bCtrl, bo
     kPlayerInput.AddBind(kBind);
     AS_DeactivateSlot(m_iKeySlotBeingBound, m_bSecondaryKeyBeingBound);
     AS_SetNewKey(m_iKeySlotBeingBound, m_bSecondaryKeyBeingBound, m_kKeybindingData.GetKeyString(kBind));
+
+    m_iKeySlotBeingBound = -1;
 
     return true;
 }

@@ -2,6 +2,10 @@ class LWCE_XComTacticalCheatManager extends XComTacticalCheatManager;
 
 var bool bDisplayMovementGrid;
 
+`include(generators.uci)
+
+`LWCE_GENERATOR_XCOMCHEATMANAGER
+
 exec function DropMan(optional bool bAddToHumanTeam = false)
 {
     local XGCharacter kChar;
@@ -65,7 +69,6 @@ exec function ToggleTacticalHUD()
     local UITacticalHUD kTacHud;
 
     kTacHud = `LWCE_TACPRES.m_kTacticalHud;
-    `LWCE_LOG_CLS("ToggleTacticalHUD");
 
     if (kTacHud == none)
     {

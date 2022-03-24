@@ -56,59 +56,6 @@ OBJECT = XComGameInfo.SetGameType : AUTO
 
 
 
-/**
- * XComOnlineEventMgr.FillInHeaderForSave: when writing the VersionNumber field, replace the default version (16) with our own.
- * This lets us have our own save versioning in LWCE, and also to identify saves created without LWCE.
- */
-
-OBJECT = XComOnlineEventMgr.FillInHeaderForSave : AUTO
-[REPLACEMENT_CODE]
-0F 00 <.LocalWorldInfo> 12 20 <Engine.Engine> [@] <Engine.Engine.GetCurrentWorldInfo.ReturnValue> 00 ( 1C <Engine.Engine.GetCurrentWorldInfo> 16 )
-0F 00 <.LocalGameInfo> 2E <Class.XComGameInfo> 19 00 <.LocalWorldInfo> [@] <Engine.WorldInfo.Game> 00 ( 01 <Engine.WorldInfo.Game> )
-19 00 <.LocalWorldInfo> [@] <NullRef> 00 ( 1C <Core.Object.GetSystemTime> 00 <.Year> 00 <.Month> 00 <.DayOfWeek> 00 <.Day> 00 <.Hour> 00 <.Minute> 00 <.Second> 00 <.Millisecond> 16 )
-1B <FormatTimeStamp> 35 <Engine.OnlineSubsystem.SaveGameHeader.Time> <Engine.OnlineSubsystem.SaveGameHeader> 00 01 48 <.Header> 00 <.Year> 00 <.Month> 00 <.Day> 00 <.Hour> 00 <.Minute> 16
-0F 35 <Engine.OnlineSubsystem.SaveGameHeader.GameNum> <Engine.OnlineSubsystem.SaveGameHeader> 00 01 48 <.Header> 01 <@m_iCurrentGame>
-14 2D 35 <Engine.OnlineSubsystem.SaveGameHeader.bIsTacticalSave> <Engine.OnlineSubsystem.SaveGameHeader> 00 01 48 <.Header> 77 2E <Class.XComTacticalGRI> 19 00 <.LocalWorldInfo> [@] <Engine.WorldInfo.GRI> 00 ( 01 <Engine.WorldInfo.GRI> ) 2A 16
-14 2D 35 <Engine.OnlineSubsystem.SaveGameHeader.bIsIronman> <Engine.OnlineSubsystem.SaveGameHeader> 00 01 48 <.Header> 19 19 2E <Class.XComGameReplicationInfo> 19 12 20 <Engine.Engine> [@] <Engine.Engine.GetCurrentWorldInfo.ReturnValue> 00 ( 1C <Engine.Engine.GetCurrentWorldInfo> 16 ) [@] <Engine.WorldInfo.GRI> 00 ( 01 <Engine.WorldInfo.GRI> ) [@] <XComGameReplicationInfo.GetAutosaveMgr.ReturnValue> 00 ( 1B <GetAutosaveMgr> 16 ) [@] <XComAutosaveMgr.WasIronman.ReturnValue> 00 ( 1B <WasIronman> 16 )
-0F 35 <Engine.OnlineSubsystem.SaveGameHeader.Description> <Engine.OnlineSubsystem.SaveGameHeader> 00 01 48 <.Header> 35 <Engine.OnlineSubsystem.SaveGameHeader.Time> <Engine.OnlineSubsystem.SaveGameHeader> 00 00 48 <.Header>
-07 [@label_0x02A1] 2D 35 <Engine.OnlineSubsystem.SaveGameHeader.bIsIronman> <Engine.OnlineSubsystem.SaveGameHeader> 00 00 48 <.Header>
-	0E <Core.Object.AtEqual_StrStr.ReturnValue> 61 43 35 <Engine.OnlineSubsystem.SaveGameHeader.Description> <Engine.OnlineSubsystem.SaveGameHeader> 00 01 48 <.Header> 70 70 1F <%t "- "> 01 <@m_strIronmanLabel> 16 1F <%t ":"> 16 16
-	06 [@label_0x038A]
-[#label_0x02A1]
-07 [@label_0x0300] 2D 35 <Engine.OnlineSubsystem.SaveGameHeader.bIsAutosave> <Engine.OnlineSubsystem.SaveGameHeader> 00 00 48 <.Header>
-	0E <Core.Object.AtEqual_StrStr.ReturnValue> 61 43 35 <Engine.OnlineSubsystem.SaveGameHeader.Description> <Engine.OnlineSubsystem.SaveGameHeader> 00 01 48 <.Header> 70 70 1F <%t "- "> 01 <@m_strAutosaveLabel> 16 1F <%t ":"> 16 16
-	06 [@label_0x038A]
-[#label_0x0300]
-07 [@label_0x035F] 2D 35 <Engine.OnlineSubsystem.SaveGameHeader.bIsQuicksave> <Engine.OnlineSubsystem.SaveGameHeader> 00 00 48 <.Header>
-	0E <Core.Object.AtEqual_StrStr.ReturnValue> 61 43 35 <Engine.OnlineSubsystem.SaveGameHeader.Description> <Engine.OnlineSubsystem.SaveGameHeader> 00 01 48 <.Header> 70 70 1F <%t "- "> 01 <@m_strQuicksaveLabel> 16 1F <%t ":"> 16 16
-	06 [@label_0x038A]
-[#label_0x035F]
-0E <Core.Object.AtEqual_StrStr.ReturnValue> 61 43 35 <Engine.OnlineSubsystem.SaveGameHeader.Description> <Engine.OnlineSubsystem.SaveGameHeader> 00 01 48 <.Header> 1F <%t "-"> 16
-[#label_0x038A]
-0E <Core.Object.AtEqual_StrStr.ReturnValue> 61 43 35 <Engine.OnlineSubsystem.SaveGameHeader.Description> <Engine.OnlineSubsystem.SaveGameHeader> 00 01 48 <.Header> A8 A8 01 <@m_strGameLabel> 38 53 35 <Engine.OnlineSubsystem.SaveGameHeader.GameNum> <Engine.OnlineSubsystem.SaveGameHeader> 00 00 48 <.Header> 16 1F <%t "-"> 16 16
-0E <Core.Object.AtEqual_StrStr.ReturnValue> 61 43 35 <Engine.OnlineSubsystem.SaveGameHeader.Description> <Engine.OnlineSubsystem.SaveGameHeader> 00 01 48 <.Header> 19 00 <.LocalGameInfo> [@] <XComGameInfo.GetSavedGameDescription.ReturnValue> 00 ( 1B <GetSavedGameDescription> 16 ) 16
-0F 35 <Engine.OnlineSubsystem.SaveGameHeader.MapCommand> <Engine.OnlineSubsystem.SaveGameHeader> 00 01 48 <.Header> 19 00 <.LocalGameInfo> [@] <XComGameInfo.GetSavedGameCommand.ReturnValue> 00 ( 1B <GetSavedGameCommand> 16 )
-0F 35 <Engine.OnlineSubsystem.SaveGameHeader.VersionNumber> <Engine.OnlineSubsystem.SaveGameHeader> 00 01 48 <.Header> 2C 11
-0F 35 <Engine.OnlineSubsystem.SaveGameHeader.Language> <Engine.OnlineSubsystem.SaveGameHeader> 00 01 48 <.Header> 1C <Core.Object.GetLanguage> 16
-07 [@label_0x057C] 81 12 20 <Engine.WorldInfo> [@] <Engine.WorldInfo.IsConsoleBuild.ReturnValue> 00 ( 1C <Engine.WorldInfo.IsConsoleBuild> 24 00 16 ) 16
-	07 [@label_0x0522] 1B <HasSlingshotPack> 16
-		0F 35 <Engine.OnlineSubsystem.SaveGameHeader.DLCPacks> <Engine.OnlineSubsystem.SaveGameHeader> 00 01 48 <.Header> 70 35 <Engine.OnlineSubsystem.SaveGameHeader.DLCPacks> <Engine.OnlineSubsystem.SaveGameHeader> 00 00 48 <.Header> 1F <%t "Slingshot"> 16
-	[#label_0x0522]
-	07 [@label_0x057C] 1B <HasEliteSoldierPack> 16
-		0F 35 <Engine.OnlineSubsystem.SaveGameHeader.DLCPacks> <Engine.OnlineSubsystem.SaveGameHeader> 00 01 48 <.Header> 70 35 <Engine.OnlineSubsystem.SaveGameHeader.DLCPacks> <Engine.OnlineSubsystem.SaveGameHeader> 00 00 48 <.Header> 1F <%t "EliteSoldierPack"> 16
-[#label_0x057C]
-07 [@label_0x05C9] 12 20 <Engine.WorldInfo> [@] <Engine.WorldInfo.IsConsoleBuild.ReturnValue> 00 ( 1C <Engine.WorldInfo.IsConsoleBuild> 24 01 16 )
-	0F 48 <.SaveFriendlyName> 35 <Engine.OnlineSubsystem.SaveGameHeader.Time> <Engine.OnlineSubsystem.SaveGameHeader> 00 00 48 <.Header>
-	06 [@label_0x05EF]
-[#label_0x05C9]
-0F 48 <.SaveFriendlyName> 35 <Engine.OnlineSubsystem.SaveGameHeader.Description> <Engine.OnlineSubsystem.SaveGameHeader> 00 00 48 <.Header>
-[#label_0x05EF]
-04 0B
-53
-
-
-
-
 
 
 

@@ -9,5 +9,6 @@ function InitInputSystem()
 
 defaultproperties
 {
-    m_kPresentationLayerClass=class'XComLongWarCommunityEdition.LWCE_XComShellPresentationLayer'
+    m_kPresentationLayerClass=class'LWCE_XComShellPresentationLayer'
+    CheatClass=class'LWCE_XComShellCheatManager'
 }

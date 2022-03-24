@@ -151,7 +151,21 @@ Now that you've built LWCE, connecting it to the game is straightforward. You wi
 
 By using a symlink, each time you build LWCE, the latest version will be picked up by the game automatically. If you're only changing `.ini` files, you don't even need to build.
 
-There's one more step: the LWCE code is located alongside the game, but the game doesn't know to load it. There are several ways to make that happen, but we use **bytecode modification** to inject a few high-level classes into the game flow. Installing these is easy:
+Next, we're going to insert our own `GameEngine` class. This sounds fancy and powerful, and it is, but right now it doesn't give us full access to everything we need, so there's one more step after. To use our `GameEngine`, open up `XCOM_PATH/XEW/XComGame/Config/DefaultEngine.ini` and edit these two lines:
+
+```
+GameEngine=...
+ConsoleClassName=...
+```
+
+to this:
+
+```
+GameEngine=XComLongWarCommunityEdition.LWCE_XComEngine
+ConsoleClassName=XComLongWarCommunityEdition.LWCE_Console
+```
+
+There's one more step: the LWCE code is located alongside the game, but the game doesn't know to load it; our custom engine doesn't fully bridge the gap yet. For now, we use **bytecode modification** to inject a few high-level classes into the game flow. Installing these is easy:
 
 1. Open up PatcherGUI, from UPKUtils. This is an application that can apply bytecode patches in a safe and reversible way.
 2. At the top of PatcherGUI's window, there should be a path pointing to the `XEW` folder in your XCOM installation. Verify that it has detected the right path, as sometimes it can get confused depending on your installation directory.

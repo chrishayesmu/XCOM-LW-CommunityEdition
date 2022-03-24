@@ -48,11 +48,11 @@ simulated function BuildMenu()
 
         FriendlyName = Repl(FriendlyName, "(outdated)", "");
 
-        if (iSaveVersion < class'LWCE_UILoadGame'.const.FIRST_LWCE_SAVE_VERSION)
+        if (iSaveVersion < class'LWCE_XComOnlineEventMgr'.const.FIRST_LWCE_SAVE_VERSION)
         {
             FriendlyName $= class'UIUtilities'.static.GetHTMLColoredText("\n" $ class'LWCE_UILoadGame'.default.m_strSaveNotFromLWCEWarning, eUIState_Bad);
         }
-        else if (iSaveVersion < class'LWCE_UILoadGame'.const.CURRENT_LWCE_SAVE_VERSION)
+        else if (iSaveVersion < class'LWCE_XComOnlineEventMgr'.const.CURRENT_LWCE_SAVE_VERSION)
         {
             FriendlyName $= class'UIUtilities'.static.GetHTMLColoredText("\n" $ class'LWCE_UILoadGame'.default.m_strSaveFromOlderLWCEWarning, eUIState_Warning);
         }

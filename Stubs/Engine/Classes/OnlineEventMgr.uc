@@ -70,7 +70,6 @@ delegate DisplaySystemMessageComplete()
 
 delegate bool CheckReadyForGameInviteAccept()
 {
-    //return ReturnValue;
 }
 
 delegate GameInviteAccepted(bool bWasSuccessful)

@@ -1,5 +1,12 @@
 class LWCE_XComTacticalController extends XComTacticalController;
 
+function InitInputSystem()
+{
+    super.InitInputSystem();
+
+    class'LWCE_UIKeybindingsPCScreen'.static.ApplyCustomKeybinds(PlayerInput);
+}
+
 function ParsePath(XGUnit kUnit, optional bool bNoCost = false, optional bool bSpeak = false, optional XGAbility kAbility = none, optional bool bSpawnedAlienWalkIn = false, optional XComSpawnPoint_Alien kSpawnPt = none, optional bool bOverwatch = false)
 {
     if (Role == ROLE_Authority)

@@ -1045,24 +1045,10 @@ native static final function bool BasicSaveObject(Object Obj, string Pathname, b
  */
 native static final function bool BasicLoadObject(Object Obj, string Pathname, bool bIsSaveGame, int Version);
 
-function Object GetContentManager()
-{
-    return none;
-}
-
-function Object GetProfileSettings()
-{
-    return none;
-}
-
-function CreateProfileSettings()
-{
-}
-
-simulated function bool IsConsoleAllowed()
-{
-    return true;
-}
+function Object GetContentManager(){}
+function Object GetProfileSettings(){}
+function CreateProfileSettings(){}
+simulated static function bool IsConsoleAllowed(){}
 
 defaultproperties
 {

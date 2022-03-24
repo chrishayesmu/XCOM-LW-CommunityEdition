@@ -8,9 +8,9 @@ function Init()
 
 function LoadInit()
 {
-    local ParticleSystemComponent kParticleComp;
+    //local ParticleSystemComponent kParticleComp;
+    //local XComLevelActor kLevelActor;
     local XComMeldContainerActor kMeldActor;
-    local XComLevelActor kLevelActor;
     local XGVolume kVolume;
 
     // Called when the level inits after load; entities may not be spawned yet.

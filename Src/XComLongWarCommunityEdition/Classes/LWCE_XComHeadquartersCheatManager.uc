@@ -1,6 +1,10 @@
 class LWCE_XComHeadquartersCheatManager extends XComHeadquartersCheatManager
     dependson(LWCETypes);
 
+`include(generators.uci)
+
+`LWCE_GENERATOR_XCOMCHEATMANAGER
+
 exec function CreateAlienBaseAlert()
 {
     local XGMission_AlienBase kMission;

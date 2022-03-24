@@ -2,6 +2,8 @@
 m_strModSettings="MOD SETTINGS"
 
 [LWCE_UIKeybindingsPCScreen]
+m_strDevConsoleFullLabel="FULL DEV CONSOLE"
+m_strDevConsoleMiniLabel="MINI DEV CONSOLE"
 m_strToggleGridLabel="TOGGLE GRID"
 m_strOverwatchAllLabel="OVERWATCH ALL"
 
