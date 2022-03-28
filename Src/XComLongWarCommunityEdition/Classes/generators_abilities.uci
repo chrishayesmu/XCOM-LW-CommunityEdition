@@ -1,0 +1,28 @@
+// TODO: logging in GetHitChance is temporary until we're satisfied that the hit chance calculation matches
+
+`define LWCE_GENERATOR_XGABILITY_TARGETED \
+function CalcDamage() \
+{ \
+    class'LWCE_XGAbility_Extensions'.static.CalcDamage(self); \
+} \
+\
+simulated function int GetHitChance() \
+{ \
+    local int iBaseHitChance, iOurHitChance; \
+\
+\
+    iBaseHitChance = super(XGAbility_Targeted).GetHitChance(); \
+    iOurHitChance = class'LWCE_XGAbility_Extensions'.static.GetHitChance(self); \
+\
+    if (iBaseHitChance != iOurHitChance) \
+    { \
+        `LWCE_LOG_CLS("ERROR: hit chance calculation did not match base game! Our value = " $ iOurHitChance $ ", base game = " $ iBaseHitChance); \
+    } \
+\
+    return iOurHitChance; \
+} \
+\
+simulated function int GetPossibleDamage() \
+{ \
+    return class'LWCE_XGAbility_Extensions'.static.GetPossibleDamage(self); \
+} \

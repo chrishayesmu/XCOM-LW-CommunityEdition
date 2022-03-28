@@ -27,6 +27,12 @@ simulated function ToggleVisibilityPreviewIcon(bool bVisible)
     {
         // Set up a new movie clip with our desired image in it
         gfxUnitFlag = `PRES.GetHUD().GetVariableObject(GetASPath());
+
+        if (gfxUnitFlag == none)
+        {
+            return;
+        }
+
         m_gfxVisibilityPreviewIcon = gfxUnitFlag.CreateEmptyMovieClip("gfxVisIcon");
 
         arrParams.Add(1);

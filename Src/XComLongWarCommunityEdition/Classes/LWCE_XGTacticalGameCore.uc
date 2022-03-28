@@ -141,6 +141,96 @@ simulated function BuildWeapons()
     // TODO add mod hook
 }
 
+simulated function int CalcBaseHitChance(XGUnitNativeBase kShooter, XGUnitNativeBase kTarget, bool bReactionFire)
+{
+    local int MyHitChance, BaseGameHitChance;
+
+    // TODO: this is temporary until we're satisfied that the hit chance calculation matches
+    BaseGameHitChance = super.CalcBaseHitChance(kShooter, kTarget, bReactionFire);
+    MyHitChance = CalcBaseHitChance_Original(kShooter, kTarget, bReactionFire);
+
+    if (BaseGameHitChance != MyHitChance)
+    {
+        `LWCE_LOG_CLS("ERROR: hit chance calculation did not match base game! Our value = " $ MyHitChance $ ", base game = " $ BaseGameHitChance);
+    }
+
+    return MyHitChance;
+}
+
+// This function is reverse-engineered from its native version in XGTacticalGameCoreNativeBase.
+// It is unmodified and unused; this version is only kept around to see what the native
+// version does. Modifications should go in CalcBaseHitChance.
+private simulated function int CalcBaseHitChance_Original(XGUnitNativeBase kShooter, XGUnitNativeBase kTarget, bool bReactionFire)
+{
+    local int iDefense, iHitChance;
+
+    if (kTarget.m_bVIP) // Probably right, needs confirmation
+    {
+        if (kTarget.m_kCharacter.m_kChar.iType == eChar_Civilian || kShooter.m_kCharacter.m_kChar.aProperties[eCP_MeleeOnly] != 0)
+        {
+            return 100;
+        }
+    }
+
+    iDefense = kTarget.m_aCurrentStats[eStat_Defense];
+
+    if (kTarget.IsInTelekineticField())
+    {
+        iDefense += 40;
+    }
+
+    if (kTarget.m_kSquad != none && kTarget.m_kSquad.SquadHasStarOfTerra(/* PowerA */ true))
+    {
+        iDefense += class'XGTacticalGameCoreNativeBase'.default.TERRA_DEFENSE;
+    }
+
+    if (kTarget.IsFlankedBy(kShooter))
+    {
+        // Remove cover bonuses from target's defense stat
+        kTarget.UpdateCoverBonuses(kShooter);
+
+        if (kTarget.IsAffectedByAbility(eAbility_TakeCover)) // Hunker Down
+        {
+            iDefense -= kTarget.m_iCurrentCoverValue * HUNKER_BONUS;
+        }
+        else
+        {
+            iDefense -= kTarget.m_iCurrentCoverValue;
+        }
+    }
+
+    iHitChance = kShooter.m_aCurrentStats[eStat_Offense] - iDefense;
+
+    if (kShooter.HasHeightAdvantageOver(XGUnit(kTarget)))
+    {
+        iHitChance += 20;
+    }
+
+    if (bReactionFire && kShooter.m_kCharacter.m_kChar.aUpgrades[`LW_PERK_ID(Opportunist)] == 0 && kShooter.m_kCharacter.m_kChar.aUpgrades[`LW_PERK_ID(AdvancedFireControl)] == 0)
+    {
+        if (kTarget.m_bDashing)
+        {
+            iHitChance *= DASHING_REACTION_MODIFIER;
+        }
+        else
+        {
+            iHitChance *= REACTION_PENALTY;
+        }
+    }
+
+    if (kShooter.IsPoisoned())
+    {
+        iHitChance -= POISONED_AIM_PENALTY;
+    }
+
+    if (kShooter.IsMine())
+    {
+        // TODO very unclear what the hell is happening in here, or whether any of it matters
+    }
+
+    return iHitChance;
+}
+
 function int CalcOverallDamage(int iWeapon, int iCurrDamageStat, optional bool bCritical = false, optional bool bReflected = false)
 {
     local int iDamage, iRandDamage;

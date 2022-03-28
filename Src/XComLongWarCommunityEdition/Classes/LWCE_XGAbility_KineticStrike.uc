@@ -1,11 +1,5 @@
 class LWCE_XGAbility_KineticStrike extends XGAbility_KineticStrike;
 
-function CalcDamage()
-{
-    class'LWCE_XGAbility_Extensions'.static.CalcDamage(self);
-}
+`include(generators.uci)
 
-simulated function int GetPossibleDamage()
-{
-    return class'LWCE_XGAbility_Extensions'.static.GetPossibleDamage(self);
-}
+`LWCE_GENERATOR_XGABILITY_TARGETED

@@ -88,6 +88,262 @@ static function CalcDamage(XGAbility_Targeted kSelf)
     }
 }
 
+static function int CalcHitChance(XGAbility_Targeted kSelf)
+{
+    // TODO testing only
+    return CalcHitChance_Original(kSelf);
+}
+
+// This function is reverse-engineered from its native version in XGAbility_Targeted.
+// It is unmodified and unused; this version is only kept around to see what the native
+// version does. Modifications should go in CalcHitChance.
+private static function int CalcHitChance_Original(XGAbility_Targeted kSelf)
+{
+    local int iFinalWill, iHitPenalty;
+    local XGUnit kTarget;
+
+    if (kSelf.Role < ROLE_Authority)
+    {
+        // Native version has some extra logging here, we didn't bother reversing that
+        return -1;
+    }
+
+    if (kSelf.m_kGameCore == none)
+    {
+        kSelf.GetTacticalGameCore();
+    }
+
+    if (kSelf.m_kGameCore.m_kAbilities.AbilityHasProperty(kSelf.iType, eProp_NoHit))
+    {
+        return 0;
+    }
+
+    if (kSelf.m_kGameCore.m_kAbilities.AbilityHasProperty(kSelf.iType, eProp_DeadEye))
+    {
+        return 100;
+    }
+
+    kTarget = kSelf.GetPrimaryTarget();
+
+    if (kTarget == none)
+    {
+        return 0;
+    }
+
+    if (!kSelf.m_kGameCore.m_kAbilities.AbilityHasEffect(kSelf.iType, eEffect_Damage) && !kSelf.m_kGameCore.m_kAbilities.AbilityHasProperty(kSelf.iType, eProp_PsiRoll))
+    {
+        return 100;
+    }
+
+    if (kSelf.m_kGameCore.m_kAbilities.AbilityHasProperty(kSelf.iType, eProp_Stun))
+    {
+        return kSelf.m_kGameCore.CalcStunChance(kTarget, kSelf.m_kUnit, kSelf.m_kWeapon);
+    }
+
+    if (kSelf.m_kGameCore.m_kAbilities.AbilityHasProperty(kSelf.iType, eProp_PsiRoll))
+    {
+        if (kSelf.iType == eAbility_MindControl)
+        {
+            iHitPenalty = class'XGTacticalGameCoreNativeBase'.default.MIND_CONTROL_DIFFICULTY;
+        }
+
+        return kSelf.m_kUnit.WillTestChance(kTarget.m_aCurrentStats[eStat_Will], iHitPenalty, /* bUseArmorBonus */ true, /* bUseMindShieldBonus */ true, kTarget, /* iEvenStatsChanceToFail */ 50, /* unused */ iFinalWill);
+    }
+
+    kTarget.UpdateCoverBonuses(kSelf.m_kUnit);
+
+    // This call is in the native code but its return value is unused; not clear yet if it has side effects
+    kTarget.IsAffectedByAbility(eAbility_TakeCover);
+
+    return kSelf.m_kGameCore.CalcBaseHitChance(kSelf.m_kUnit, kTarget, kSelf.m_bReactionFire);
+}
+
+static function int CalcHitModFromPerks(XGAbility_Targeted kSelf, int iHitChance, float fDistanceToTarget, bool bHeightAdvantage)
+{
+    // TODO testing only
+    return CalcHitModFromPerks_Original(kSelf, iHitChance, fDistanceToTarget, bHeightAdvantage);
+}
+
+// This function is reverse-engineered from its native version in XGAbility_Targeted.
+// It is unmodified and unused; this version is only kept around to see what the native
+// version does. Modifications should go in CalcHitModFromPerks.
+private static function int CalcHitModFromPerks_Original(XGAbility_Targeted kSelf, int iHitChance, float fDistanceToTarget, bool heightAdvantage)
+{
+    local int Index, iRangeMod;
+    local XGUnit kTarget;
+
+    if (kSelf.Role < ROLE_Authority)
+    {
+        // Some error logging we didn't bother to reverse
+        return -1;
+    }
+
+    if (kSelf.m_kGameCore == none)
+    {
+        kSelf.GetTacticalGameCore();
+    }
+
+    for (Index = 0; Index < 16; Index++)
+    {
+        kSelf.m_shotHUDHitChanceStats[Index].m_iAmount = 0;
+    }
+
+    kTarget = kSelf.GetPrimaryTarget();
+
+    if (kTarget == none)
+    {
+        return 0;
+    }
+
+    iRangeMod = kSelf.m_kGameCore.CalcRangeModForWeapon(kSelf.m_kWeapon.GameplayType(), kSelf.m_kUnit, kTarget);
+
+    if (iRangeMod != 0)
+    {
+        kSelf.AddHitChanceStat(iHitChance, iRangeMod, "Range for weapon mods", iRangeMod > 0 ? ePerk_ItemRangeBonus : ePerk_ItemRangePenalty);
+    }
+
+    if (kSelf.m_kUnit.IsBeingSuppressed())
+    {
+        kSelf.AddHitChanceStat(iHitChance, -1 * kSelf.m_kGameCore.CalcSuppression(), "suppression aim penalty", ePerk_SuppressedActive);
+    }
+
+    if (kSelf.m_kUnit.m_kCharacter.m_kChar.aUpgrades[ePerk_Flush] != 0 && kSelf.iType == eAbility_ShotFlush)
+    {
+        kSelf.AddHitChanceStat(iHitChance, 20, "hit chance bonus with flush", ePerk_Flush);
+    }
+
+    if (kSelf.m_kUnit.m_kCharacter.m_kChar.aUpgrades[ePerk_GeneMod_Pupils] != 0 && kSelf.m_kUnit.m_bMissedLastShot)
+    {
+        kSelf.AddHitChanceStat(iHitChance, 10, "hit chance bonus for hyper-reactive pupils", ePerk_GeneMod_Pupils);
+    }
+
+    if (kSelf.m_kUnit.m_kCharacter.m_kChar.aUpgrades[ePerk_GeneMod_AdrenalineSurge] != 0 && kSelf.m_kUnit.GetUnitHP() < kSelf.m_kUnit.GetUnitMaxHP())
+    {
+        kSelf.AddHitChanceStat(iHitChance, 10, "hit chance bonus with adrenaline surge", EPerkType(`LW_PERK_ID(AdrenalineSurge)));
+        kSelf.m_kUnit.AddBonus(`LW_PERK_ID(AdrenalineSurge));
+    }
+
+    if (kSelf.m_bHasHeightAdvantage)
+    {
+        if (kSelf.m_kUnit.m_kCharacter.m_kChar.aUpgrades[ePerk_DamnGoodGround] != 0)
+        {
+            kSelf.AddHitChanceStat(iHitChance, 10, "additional hit chance bonus from damn good ground", EPerkType(`LW_PERK_ID(DamnGoodGround)));
+            kSelf.m_kUnit.AddBonus(`LW_PERK_ID(DamnGoodGround));
+        }
+
+        if (kSelf.m_kUnit.m_kCharacter.m_kChar.aUpgrades[ePerk_GeneMod_DepthPerception] != 0)
+        {
+            kSelf.AddHitChanceStat(iHitChance, 5, "additional hit chance for depth perception", EPerkType(`LW_PERK_ID(DepthPerception)));
+            kSelf.m_kUnit.AddBonus(`LW_PERK_ID(DepthPerception));
+        }
+    }
+
+    if (kSelf.m_kUnit.m_kCharacter.m_kChar.aUpgrades[ePerk_SnapShot] != 0)
+    {
+        if (kSelf.m_kGameCore.m_arrWeapons[kSelf.m_kWeapon.GameplayType()].aProperties[eWP_MoveLimited] != 0 && kSelf.m_kUnit.m_iMovesActionsPerformed > 0)
+        {
+            kSelf.AddHitChanceStat(iHitChance, -10, "Snap shot hit chance penalty", EPerkType(`LW_PERK_ID(SnapShot)));
+            kSelf.m_kUnit.AddPenalty(`LW_PERK_ID(SnapShot));
+        }
+    }
+
+    if (kSelf.m_kUnit.m_kCharacter.m_kChar.aUpgrades[ePerk_Executioner] != 0)
+    {
+        if (kTarget.m_aCurrentStats[eStat_HP] <= 0.5 * (kTarget.m_kCharacter.m_kChar.aStats[eStat_HP] + kTarget.m_aInventoryStats[eStat_HP]))
+        {
+            kSelf.AddHitChanceStat(iHitChance, 10, "Executioner Perk +20 Aim bonus if enemy has 50% hp or less.", EPerkType(`LW_PERK_ID(Executioner)));
+            kSelf.m_kUnit.AddBonus(`LW_PERK_ID(Executioner));
+            kTarget.AddPenalty(`LW_PERK_ID(Executioner));
+
+            // Not sure why this is needed when we just added the penalty ourselves
+            kTarget.CallUpdateUnitBuffs();
+        }
+    }
+
+    // No idea why the second check exists here, but it does
+    if (kTarget.IsTracerBeamed() && kTarget != kSelf.m_kUnit)
+    {
+        kSelf.AddHitChanceStat(iHitChance, 10, "tracer beams +aim against all tracer beamed enemies", EPerkType(`LW_PERK_ID(HoloTargeting)));
+        kSelf.m_kUnit.AddBonus(`LW_PERK_ID(HoloTargeting));
+        kTarget.AddPenalty(`LW_PERK_ID(HoloTargeting));
+    }
+
+    if (kSelf.m_kUnit.IsAffectedByAbility(ePerk_GeneMod_Adrenal))
+    {
+        kSelf.AddHitChanceStat(iHitChance, 10, "adrenal neurosymapthy aim bonus", EPerkType(`LW_PERK_ID(AdrenalNeurosympathy)));
+        kSelf.m_kUnit.AddBonus(`LW_PERK_ID(AdrenalNeurosympathy));
+    }
+
+    if (kSelf.m_kUnit.m_kCharacter.m_kChar.aUpgrades[ePerk_PlatformStability] != 0)
+    {
+        if (kSelf.m_kUnit.m_iMovesActionsPerformed == 0 || (kSelf.m_kUnit.m_iMovesActionsPerformed == 1 && kSelf.m_kUnit.m_bFreeFireActionTaken) )
+        {
+            kSelf.AddHitChanceStat(iHitChance, 10, "platform stability aim bonus", EPerkType(`LW_PERK_ID(PlatformStability)));
+            kSelf.m_kUnit.AddBonus(`LW_PERK_ID(PlatformStability));
+        }
+    }
+
+    if (kTarget.m_kCharacter.m_kChar.aUpgrades[ePerk_BodyShield] != 0)
+    {
+        if (kTarget.GetClosestVisibleEnemy() == kSelf.m_kUnit)
+        {
+            kSelf.AddHitChanceStat(iHitChance, -20, "Body Shield defense bonus / aim penalty", ePerk_BodyShield);
+            kTarget.AddBonus(ePerk_BodyShield);
+        }
+        else
+        {
+            kTarget.RemoveBonus(ePerk_BodyShield);
+        }
+    }
+
+    if (kSelf.m_kUnit.m_kCharacter.m_kChar.aUpgrades[`LW_PERK_ID(Sharpshooter)] != 0 && kTarget.IsInCover() && kTarget.GetCoverType() == CT_Standing)
+    {
+        kSelf.AddHitChanceStat(iHitChance, kSelf.m_kGameCore.URBAN_AIM, "urban medal aim bonus", EPerkType(`LW_PERK_ID(Sharpshooter)));
+        kSelf.m_kUnit.AddBonus(`LW_PERK_ID(Sharpshooter));
+    }
+
+    if (kSelf.m_kUnit.m_kCharacter.m_kChar.aUpgrades[`LW_PERK_ID(BandOfWarriors)] != 0)
+    {
+        kSelf.AddHitChanceStat(iHitChance, kSelf.m_kGameCore.CalcInternationalAimBonus(), "International medal aim bonus", EPerkType(`LW_PERK_ID(BandOfWarriors)));
+        kSelf.m_kUnit.AddBonus(`LW_PERK_ID(BandOfWarriors));
+    }
+
+    if (kSelf.m_kUnit.HasCouncilFightBonus())
+    {
+        kSelf.AddHitChanceStat(iHitChance, kSelf.m_kGameCore.COUNCIL_FIGHT_BONUS, "Council medal aim bonus", EPerkType(`LW_PERK_ID(LoneWolf)));
+        kSelf.m_kUnit.AddBonus(`LW_PERK_ID(LoneWolf));
+    }
+
+    if (kSelf.WorldInfo.NetMode == NM_Standalone && kSelf.m_kGameCore.IsOptionEnabled(eGO_AimingAngles))
+    {
+        kSelf.AddHitChanceStat(iHitChance, kSelf.m_kGameCore.CalcAimingAngleMod(kSelf.m_kUnit, kTarget), "Aiming angle aim bonus", ePerk_AimingAnglesBonus);
+    }
+
+    if (kSelf.m_kGameCore.m_kAbilities.AbilityHasProperty(kSelf.iType, eProp_Stun))
+    {
+        // Presumably stun is handled elsewhere
+        iHitChance = 100;
+    }
+
+    if (kSelf.iType == eAbility_RapidFire)
+    {
+        iHitChance -= 15;
+    }
+    else if (kSelf.iType == eAbility_DisablingShot)
+    {
+        iHitChance -= 10;
+    }
+
+    if (kSelf.m_kUnit.m_bWasJustStrangling && kSelf.m_kUnit.m_kCharacter.m_kChar.iType == eChar_Seeker)
+    {
+        iHitChance -= 50; // Catching Breath
+    }
+
+    iHitChance = Clamp(iHitChance, 1, 100);
+
+    return iHitChance;
+}
+
 static simulated function int CalculateAbilityModifiedDamage(XGAbility_Targeted kSelf)
 {
     local int iWeaponDamage, iTotalDamage, iDamageBonusItemId;
@@ -596,8 +852,8 @@ static simulated function int GetHitChance(XGAbility_Targeted kSelf)
 
     if (kSelf.m_iHitChance_NonUnitTarget != 0)
     {
-        kSelf.m_iHitChance = kSelf.CalcHitChance();
-        kSelf.m_iHitChance = kSelf.CalcHitModFromPerks(kSelf.m_iHitChance, 0.0, false);
+        kSelf.m_iHitChance = CalcHitChance(kSelf);
+        kSelf.m_iHitChance = CalcHitModFromPerks(kSelf, kSelf.m_iHitChance, 0.0, false);
         kSelf.m_kUnit.m_aCurrentStats[eStat_Offense] += kSelf.m_iHitChance_NonUnitTarget;
     }
 
