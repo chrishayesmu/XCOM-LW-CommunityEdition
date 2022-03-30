@@ -268,6 +268,7 @@ function BackupAndReleaseInventory(XGStrategySoldier kSoldier)
 
 function bool ClaimItem(int iItemId, XGStrategySoldier kSoldier)
 {
+    local bool bIsInfinite;
     local int Index, iPerkId;
     local LWCE_TItem kItem;
 
@@ -277,8 +278,9 @@ function bool ClaimItem(int iItemId, XGStrategySoldier kSoldier)
     }
 
     Index = m_arrCEItems.Find('iItemId', iItemId);
+    bIsInfinite = LWCE_IsInfinite(iItemId);
 
-    if ( !LWCE_IsInfinite(iItemId) && (Index == INDEX_NONE || m_arrCEItems[Index].iQuantity <= 0) )
+    if ( !bIsInfinite && (Index == INDEX_NONE || m_arrCEItems[Index].iQuantity <= 0) )
     {
         return false;
     }
@@ -291,7 +293,10 @@ function bool ClaimItem(int iItemId, XGStrategySoldier kSoldier)
         kSoldier.m_kChar.aUpgrades[iPerkId] += 2;
     }
 
-    m_arrCEItems[Index].iQuantity -= 1;
+    if (!bIsInfinite)
+    {
+        m_arrCEItems[Index].iQuantity -= 1;
+    }
 
     return true;
 }
