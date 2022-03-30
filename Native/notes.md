@@ -28,12 +28,12 @@ Due to the last point above, overriding native functions should be a last resort
 
 All `name` variables consist of two parts: an index into the global name table, and an integer suffix to append to the name. This approach saves memory by only allocating the string portion of each name once.
 
-The global name table is what it sounds like: an enormous array in memory with each entry representing one name. The location moves around slightly each time the game is started, but a DWORD which holds the address has been marked in IDA.
+The global name table is what it sounds like: an enormous array in memory with each entry representing one name. The location moves around slightly each time the game is started, but a DWORD which holds the address has been marked in IDA. The table doesn't hold the actual names, but instead pointers to the name entries; the name entries themselves are variable size.
 
-Each entry in the name table is composed of:
+Each entry in the name table points to a data structure composed of:
 
 * 16 bytes at the start of the entry. Bytes 9 through 12 are an `int32` which is always 2x the index of the entry. Other bytes are generally 0, and their purpose is unknown. Why the index is stored at all, and why it's 2x the index value, is also unknown.
-* The remaining bytes of the entry contain the actual string, which is null-terminated. This area would be expected to be of fixed size, but [UDK documentation](https://docs.unrealengine.com/udk/Three/UnrealScriptVariables.html#Basic%20Data%20Types) states that names can be up to 64 characters, which is inconsistent with my observations of the field size.
+* The remaining bytes of the entry contain the actual string, which is null-terminated. It appears that, following the null character, the next name entry begins immediately, with no regards for alignment.
 
 ## Virtual tables
 
