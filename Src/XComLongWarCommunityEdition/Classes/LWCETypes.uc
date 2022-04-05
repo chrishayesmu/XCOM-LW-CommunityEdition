@@ -36,17 +36,47 @@ struct LWCE_TIDWithSource
 struct LWCE_TCharacter
 {
     var string strName;
-    var int iCharacterId;
+    var int iCharacterType; // As in the ECharacter enum
     var TInventory kInventory;
+
     var array<LWCE_TIDWithSource> arrAbilities;
     var array<LWCE_TIDWithSource> arrPerks;
     var array<LWCE_TIDWithSource> arrProperties;
     var array<LWCE_TIDWithSource> arrTraversals;
 
     var int aStats[ECharacterStat];
-    var int iClassId;
+    var int iClassId; // As in the ESoldierClass enum
     var bool bHasPsiGift;
     var float fBioElectricParticleScale;
+};
+
+struct LWCE_TClass
+{
+    var string strName;
+    var int iSoldierClassId;
+    var int iWeaponType;
+};
+
+struct LWCE_TSoldier
+{
+    var int iID;
+    var string strFirstName;
+    var string strLastName;
+    var string strNickName;
+    var int iRank;
+    var int iPsiRank;
+    var int iCountry;
+    var int iXP;
+    var int iPsiXP;
+    var int iNumKills;
+    var TAppearance kAppearance;
+    var LWCE_TClass kClass;
+    var bool bBlueshirt;
+
+    structdefaultproperties
+    {
+        kAppearance=(iHead=-1,iHaircut=-1,iBody=-1,iBodyMaterial=-1,iSkinColor=-1,iEyeColor=-1,iFlag=-1,iArmorSkin=-1,iVoice=-1,iArmorDeco=-1,iArmorTint=-1)
+    }
 };
 
 /// <summary>
@@ -58,7 +88,7 @@ struct LWCE_TCharacterStats
     var int iBleedoutTurns;
     var int iCriticalChance;
     var int iDamage;
-    var int iDamageReduction;
+    var float fDamageReduction;
     var int iDefense;
     var int iFlightFuel;
     var int iHP;
@@ -246,6 +276,83 @@ struct LWCE_TFoundryTech
 };
 
 /// <summary>
+/// Struct representing a perk, replacing XComPerkManager.TPerk. Note that unlike XCOM 2, the perk's raw data
+/// does not contain anything about how the perk actually works. You must use mod hooks to interact appropriately
+/// with the game based on what your perk should do.
+/// </summary>
+struct LWCE_TPerk
+{
+    var int iPerkId;
+
+    // Text content for the perk. Bonus and penalty text are used on the F1 tactical info HUD when targeting
+    // a unit with an ability; passive text is used when pressing F1 on a unit with no ability raised.
+    var string strBonusTitle;
+    var string strBonusDescription;
+    var string strPassiveTitle;
+    var string strPassiveDescription;
+    var string strPenaltyTitle;
+    var string strPenaltyDescription;
+
+    // Which icon to use for this perk. Currently this is limited to the icons packaged with the game, e.g. "ClusterBomb".
+    // For a full list, see LWCE_XComPerkManager.BuildPerkTables. Support for arbitrary images may be added in a future update.
+    var string Icon;
+
+    var int iCategory;    // 0 for passive perks, 1 for active perks.
+
+    var bool bShowPerk; // Whether to show this perk's icon in the UI, specifically the tactical HUD's bottom left corner (UITacticalHUD_PerkContainer)
+                        // and the perk list when looking at a soldier in the barracks (XGSoldierUI). Other locations, such as the F1 tactical menu, are
+                        // not affected by this value.
+
+    var bool bIsGeneMod;
+    var bool bIsPsionic;
+};
+
+/// <summary>
+/// Represents a single option in the soldier promotion UI (or the psi training UI).
+/// </summary>
+struct LWCE_TPerkTreeChoice
+{
+    // The ID of the perk that will be gained when selecting this choice.
+    var int iPerkId;
+
+    // If not -1, then when this perk is selected, the soldier's class is set to this ID. May cause buggy
+    // results if used in a situation where the soldier already has a class ID set. If the perk tree is
+    // psionic, the soldier's psionic class is modified instead of their base class.
+    var int iNewClassId;
+
+    // The change to the character's stats which will be applied on choosing this perk. Some perks, such as
+    // Sprinter, already add stats; those stat values should not be reflected in this field.
+    var LWCE_TCharacterStats kStatChanges;
+
+    structdefaultproperties
+    {
+        iNewClassId=-1
+    }
+};
+
+/// <summary>
+/// Represents a full row of perk choices in the soldier promotion UI (or the psi training UI).
+/// </summary>
+struct LWCE_TPerkTreeRow
+{
+    // The choices available in this row of the tree. Currently, having more than 3 options in a row is not supported.
+    var array<LWCE_TPerkTreeChoice> arrPerkChoices;
+};
+
+/// <summary>
+/// Contains an entire tree of options for soldier perks or psionic training.
+/// </summary>
+struct LWCE_TPerkTree
+{
+    // Soldiers must have this class ID to access this perk tree.
+    var int iClassId;
+
+    // The rows of the perk tree. arrPerkRows[0] is available at the first rank up; arrPerkRows[1] at the second; and so on.
+    // Do not add empty rows, they will not work properly.
+    var array<LWCE_TPerkTreeRow> arrPerkRows;
+};
+
+/// <summary>
 /// Struct representing a research technology, replacing XGStrategyActorNativeBase.TTech.
 /// </summary>
 struct LWCE_TTech
@@ -267,7 +374,7 @@ struct LWCE_TTech
     //
     // In Long War 1.0, some enemies (Outsiders, zombies, EXALT) don't have autopsy research, and always count as being
     // autopsied. With LWCE, this behavior is retained even if a mod adds an autopsy tech for those enemies.
-    // If any mod author wants to add those autopsies and wants this changed, please contact LWCE team.
+    // If any mod author wants to add those autopsies and wants this changed, please contact the LWCE team.
     var bool bIsAutopsy;
     var bool bIsInterrogation;
     var int iSubjectCharacterId;
@@ -508,6 +615,23 @@ struct LWCE_TTechState
 {
     var int iTechId;
     var ETechState eAvailabilityState;
+};
+
+struct LWCE_TTransferSoldier
+{
+    var LWCE_TCharacter kChar;
+    var LWCE_TSoldier kSoldier;
+    var int aStatModifiers[ECharacterStat];
+    var int iHPAfterCombat;
+    var int iCriticalWoundsTaken;
+    var int iUnitLoadoutID;
+    var bool bLeftBehind;
+    var init string CauseOfDeathString;
+
+    structdefaultproperties
+    {
+        iUnitLoadoutID=-1
+    }
 };
 
 // ------------------------------------------------------------------------------

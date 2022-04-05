@@ -2,6 +2,14 @@ class LWCE_UIUnitFlag extends UIUnitFlag;
 
 var protected GFxObject m_gfxVisibilityPreviewIcon;
 
+simulated function OnInit()
+{
+    super.OnInit();
+
+    WorldInfo.MyWatchVariableMgr.RegisterWatchVariable(m_kUnit, 'm_arrCEBonuses', self, RealizeBuffs);
+    WorldInfo.MyWatchVariableMgr.RegisterWatchVariable(m_kUnit, 'm_arrCEPenalties', self, RealizeDebuffs);
+}
+
 simulated function Update(XGUnit kNewActiveUnit)
 {
     if (class'LWCETacticalVisibilityHelper'.static.IsVisHelper(m_kUnit))

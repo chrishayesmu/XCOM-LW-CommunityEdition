@@ -2,29 +2,29 @@ class LWCE_UITacticalHUD_Radar extends UITacticalHUD_Radar;
 
 simulated function UpdateActiveUnit()
 {
+    local LWCE_XGUnit kActiveUnit;
+    local TInventory kInventory;
+
     if (!IsInited())
     {
         return;
     }
 
     m_kActiveUnit = XComTacticalController(controllerRef).GetActiveUnit();
+    kActiveUnit = LWCE_XGUnit(m_kActiveUnit);
+    kInventory = kActiveUnit.GetTInventory();
 
-    if (m_kActiveUnit == none)
+    if (kActiveUnit == none)
     {
         Hide();
         return;
     }
-    else if (m_kActiveUnit.GetCharacter().HasUpgrade(ePerk_GeneMod_BioelectricSkin))
+    else if (kActiveUnit.HasPerk(`LW_PERK_ID(BioelectricSkin)))
     {
         Show();
     }
-    else if (class'XGTacticalGameCoreNativeBase'.static.TInventoryHasItemType(m_kActiveUnit.GetCharacter().m_kChar.kInventory, 255))
+    else if (class'XGTacticalGameCoreNativeBase'.static.TInventoryHasItemType(kInventory, 255))
     {
-        Show();
-    }
-    else if ( (XGUnit(m_kActiveUnit).m_iZombieMoraleLoss & -2147483648) != 0 )
-    {
-        // This might be something accidentally decompiled from the LOS Indicators mod
         Show();
     }
     else

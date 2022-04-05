@@ -31,25 +31,25 @@ function OnUnitLeft(XGUnit kUnit)
 
         if (GetType() == eVolume_Smoke)
         {
-            if (m_kInstigator.GetCharacter().HasUpgrade(52))
+            if (LWCE_XGUnit(m_kInstigator).HasPerk(`LW_PERK_ID(DenseSmoke)))
             {
                 kUnit.m_bInDenseSmoke = false;
-                kUnit.RemoveBonus(52);
+                kUnit.RemoveBonus(`LW_PERK_ID(DenseSmoke));
             }
 
             kUnit.m_bInSmokeBomb = false;
-            kUnit.RemoveBonus(44);
+            kUnit.RemoveBonus(`LW_PERK_ID(SmokeGrenade));
         }
         else if (GetType() == eVolume_CombatDrugs)
         {
             if (!`GAMECORE.CharacterHasProperty(kUnit.GetCharacter().m_kChar.iType, eCP_Robotic))
             {
                 kUnit.m_bInCombatDrugs = false;
-                kUnit.RemoveBonus(51);
+                kUnit.RemoveBonus(`LW_PERK_ID(CombatDrugs));
             }
 
             kUnit.m_bInSmokeBomb = false;
-            kUnit.RemoveBonus(44);
+            kUnit.RemoveBonus(`LW_PERK_ID(SmokeGrenade));
         }
 
         kUnit.RemoveVolume(self);
@@ -68,8 +68,8 @@ function OnUnitLeft(XGUnit kUnit)
                 continue;
             }
 
-            if (kBattle.m_kVolumeMgr.m_aVolumes[iEffect].GetType() != eVolume_Smoke
-            &&  kBattle.m_kVolumeMgr.m_aVolumes[iEffect].GetType() != eVolume_CombatDrugs)
+            if (kBattle.m_kVolumeMgr.m_aVolumes[iEffect].GetType() != eVolume_Smoke &&
+                kBattle.m_kVolumeMgr.m_aVolumes[iEffect].GetType() != eVolume_CombatDrugs)
             {
                 continue;
             }
@@ -77,17 +77,17 @@ function OnUnitLeft(XGUnit kUnit)
             if (kBattle.m_kVolumeMgr.m_aVolumes[iEffect].HasUnitEntered(kUnit))
             {
                 kUnit.m_bInSmokeBomb = true;
-                kUnit.AddBonus(44);
+                kUnit.AddBonus(`LW_PERK_ID(SmokeGrenade));
 
-                if (kBattle.m_kVolumeMgr.m_aVolumes[iEffect].GetType() == eVolume_Smoke && kBattle.m_kVolumeMgr.m_aVolumes[iEffect].m_kInstigator.GetCharacter().HasUpgrade(52))
+                if (kBattle.m_kVolumeMgr.m_aVolumes[iEffect].GetType() == eVolume_Smoke && LWCE_XGUnit(kBattle.m_kVolumeMgr.m_aVolumes[iEffect].m_kInstigator).HasPerk(`LW_PERK_ID(DenseSmoke)))
                 {
                     kUnit.m_bInDenseSmoke = true;
-                    kUnit.AddBonus(52);
+                    kUnit.AddBonus(`LW_PERK_ID(DenseSmoke));
                 }
                 else if (kBattle.m_kVolumeMgr.m_aVolumes[iEffect].GetType() == eVolume_CombatDrugs && !`GAMECORE.CharacterHasProperty(kUnit.GetCharacter().m_kChar.iType, eCP_Robotic))
                 {
                     kUnit.m_bInCombatDrugs = true;
-                    kUnit.AddBonus(51);
+                    kUnit.AddBonus(`LW_PERK_ID(CombatDrugs));
                 }
 
                 kUnit.UpdateCoverBonuses(none);

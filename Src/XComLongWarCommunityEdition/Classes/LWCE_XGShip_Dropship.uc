@@ -13,6 +13,48 @@ function Init(TShip kTShip)
     InitSound();
 }
 
+function BuildTransferData()
+{
+    local TTransferSoldier kTransfer;
+    local XGStrategySoldier kSoldier;
+    local LWCE_XGStrategySoldier kCESoldier;
+    local LWCE_XGDropshipCargoInfo kCargoInfo;
+
+    kCargoInfo = LWCE_XGDropshipCargoInfo(CargoInfo);
+
+    BARRACKS().MarkWussySoldiers(self);
+
+    // Transfer LWCE data into the dropship. Make sure to do so after vanilla data is done
+    // being written, since we're syncing from that data to form our own.
+    foreach m_arrSoldiers(kSoldier)
+    {
+        kCESoldier = LWCE_XGStrategySoldier(kSoldier);
+        kTransfer = kCESoldier.BuildTransferSoldier();
+
+        kCargoInfo.m_arrSoldiers.AddItem(kTransfer);
+        kCargoInfo.m_arrCESoldiers.AddItem(kCESoldier.LWCE_BuildTransferSoldier(kTransfer));
+    }
+
+    if (m_kCovertOperative != none)
+    {
+        kCESoldier = LWCE_XGStrategySoldier(m_kCovertOperative);
+        kCargoInfo.m_kCovertOperative = kCESoldier.BuildTransferSoldier();
+
+        if (kCESoldier.HasPsiGift())
+        {
+            if (`GAMECORE.TInventoryCustomItemsFind(kCargoInfo.m_kCovertOperative.kChar.kInventory, 37) == INDEX_NONE)
+            {
+                `GAMECORE.TInventoryCustomItemsAddItem(kCargoInfo.m_kCovertOperative.kChar.kInventory, 37);
+            }
+        }
+
+        kCargoInfo.m_kCovertOperative.kChar.aUpgrades[/* EXALT Comm Hack */ 151] = 1;
+        kCargoInfo.m_bHasCovertOperative = true;
+
+        kCargoInfo.m_kCECovertOperative = kCESoldier.LWCE_BuildTransferSoldier(kCargoInfo.m_kCovertOperative);
+    }
+}
+
 function int GetCapacity()
 {
     local int iCapacity;
@@ -84,4 +126,28 @@ function int GetCapacity()
     }
 
     return iCapacity;
+}
+
+function ReconstructTransferData()
+{
+    local int I;
+    local LWCE_XGStrategySoldier kSoldier;
+    local LWCE_XGDropshipCargoInfo kCargoInfo;
+
+    kCargoInfo = LWCE_XGDropshipCargoInfo(CargoInfo);
+
+    for (I = 0; I < kCargoInfo.m_arrSoldiers.Length; I++)
+    {
+        kSoldier = LWCE_XGStrategySoldier(BARRACKS().GetSoldierByID(kCargoInfo.m_arrSoldiers[I].kSoldier.iID));
+        kSoldier.LWCE_RebuildAfterCombat(kCargoInfo.m_arrSoldiers[I], kCargoInfo.m_arrCESoldiers[I]);
+    }
+
+    if (m_kCovertOperative != none)
+    {
+        kSoldier = LWCE_XGStrategySoldier(m_kCovertOperative);
+        kSoldier.LWCE_RebuildAfterCombat(kCargoInfo.m_kCovertOperative, kCargoInfo.m_kCECovertOperative);
+    }
+
+    kCargoInfo.m_arrSoldiers.Remove(0, kCargoInfo.m_arrSoldiers.Length);
+    kCargoInfo.m_arrCESoldiers.Remove(0, kCargoInfo.m_arrCESoldiers.Length);
 }

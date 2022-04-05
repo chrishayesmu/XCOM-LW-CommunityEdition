@@ -18,7 +18,7 @@ simulated function Init(XGStrategySoldier kSoldier, XComPlayerController _contro
     kMgr.SetActiveSoldier(m_kSoldier);
 
     m_kLocalMgr = kMgr;
-    m_kSoldierHeader = Spawn(class'UIStrategyComponent_SoldierInfo', self);
+    m_kSoldierHeader = Spawn(class'LWCE_UIStrategyComponent_SoldierInfo', self);
     m_kSoldierHeader.s_name = name("theStuff.soldierInfoMC");
     m_kSoldierHeader.Init(_controllerRef, _manager, self, m_kSoldier);
 

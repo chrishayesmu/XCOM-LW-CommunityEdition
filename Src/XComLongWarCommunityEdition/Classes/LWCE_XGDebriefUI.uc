@@ -1,5 +1,64 @@
 class LWCE_XGDebriefUI extends XGDebriefUI;
 
+function BuildSoldierPromotion(XGStrategySoldier kSoldier, out TSoldierPromotionItem kPromotionUI, out TSoldierDebriefItem kItem)
+{
+    local string strNickName;
+    local bool classAssigned, gotNickname;
+    local XGParamTag kTag;
+    local LWCE_XGStrategySoldier kCESoldier;
+
+    kCESoldier = LWCE_XGStrategySoldier(kSoldier);
+
+    kTag = new class'XGParamTag';
+    kItem.m_bHasPerksToAssign = false;
+    kItem.m_bIsPsiSoldier = kSoldier.m_kChar.bHasPsiGift;
+    kItem.m_bHasGeneMod = class'XComPerkManager'.static.HasAnyGeneMod(kCESoldier.m_kChar.aUpgrades);
+
+    if (kCESoldier.IsReadyToLevelUp())
+    {
+        strNickName = kCESoldier.GetName(eNameType_Nick);
+
+        if (kCESoldier.GetRank() == 0)
+        {
+            classAssigned = true;
+        }
+
+        if (ISCONTROLLED() && BARRACKS().m_iHighestRank == 0)
+        {
+            kCESoldier.LWCE_LevelUp(eSC_HeavyWeapons);
+        }
+        else
+        {
+            kCESoldier.LWCE_LevelUp();
+        }
+
+        gotNickname = kCESoldier.GetName(eNameType_Nick) != strNickName;
+
+        if (gotNickname)
+        {
+            kTag.StrValue0 = kCESoldier.GetName(eNameType_Nick);
+            kPromotionUI.txtNickname.StrValue = class'XComLocalizer'.static.ExpandStringByTag(m_strEarnedNickName, kTag);
+            kPromotionUI.txtNickname.iState = eUIState_Nickname;
+        }
+
+        if (classAssigned)
+        {
+            kTag.StrValue0 = class'XGStrategyActor'.static.GetSoldierClassName(kCESoldier.GetClass());
+            kPromotionUI.txtClassPromotion.StrValue = class'XComLocalizer'.static.ExpandStringByTag(m_strClassAssigned, kTag);
+        }
+
+        kItem.m_bWasPromoted = true;
+        kItem.m_bHasPerksToAssign = true;
+    }
+    else
+    {
+        kItem.m_bWasPromoted = false;
+    }
+
+    UpdateSoldierUIData(kCESoldier, kPromotionUI, kItem);
+}
+
+
 function bool CheckForMatinee()
 {
     local LWCE_XGHeadquarters kHQ;

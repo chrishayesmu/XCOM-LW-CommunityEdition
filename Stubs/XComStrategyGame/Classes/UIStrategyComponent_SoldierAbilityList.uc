@@ -3,7 +3,7 @@ class UIStrategyComponent_SoldierAbilityList extends UI_FxsPanel;
 
 var const localized string m_strAbilitiesTitle;
 var XGSoldierUI m_kLocalMgr;
-var private int m_iAddedAbilities;
+var int m_iAddedAbilities;
 
 
 simulated function Init(XGSoldierUI kMgr, XComPlayerController _controller, UIFxsMovie _manager, UI_FxsScreen _screen){}

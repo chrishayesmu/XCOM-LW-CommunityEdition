@@ -34,6 +34,86 @@ exec function ReloadAmmo()
     class'LWCE_XGLoadoutMgr'.static.ApplyInventory(kSoldier);
 }
 
+reliable server function ServerGivePerk(string strName)
+{
+    local int Index, iPerkId;
+    local LWCE_XGUnit kUnit;
+    local string strPerkName;
+    local bool bFound;
+    local LWCE_TPerk kPerk;
+    local LWCE_XComPerkManager kPerksMgr;
+
+    if (strName == "")
+    {
+        return;
+    }
+
+    kUnit = LWCE_XGUnit(Outer.GetActiveUnit());
+    kPerksMgr = LWCE_XComPerkManager(PERKS());
+
+    if (kUnit == none)
+    {
+        return;
+    }
+
+    iPerkId = int(strName);
+
+    if (iPerkId != 0)
+    {
+        kPerk = kPerksMgr.LWCE_GetPerk(iPerkId);
+
+        if (kPerk.iPerkId != 0)
+        {
+            bFound = true;
+        }
+    }
+    else
+    {
+        for (Index = 0; Index < kPerksMgr.m_arrCEPerks.Length; Index++)
+        {
+            strPerkName = kPerksMgr.GetPerkName(kPerksMgr.m_arrCEPerks[Index].iPerkId);
+            strPerkName = Repl(strPerkName, " ", "");
+
+            if (strPerkName ~= strName)
+            {
+                bFound = true;
+                iPerkId = kPerksMgr.m_arrCEPerks[Index].iPerkId;
+                `LWCE_LOG_CLS("ServerGivePerk: found perk ID (based on name) to be " $ iPerkId);
+                break;
+            }
+        }
+    }
+
+    if (bFound)
+    {
+        if (kUnit.HasPerk(iPerkId))
+        {
+            return;
+        }
+
+        if (iPerkId == 113) // Ammo Conservation
+        {
+            kUnit.GetCharacter().m_kChar.aUpgrades[123] = kUnit.GetCharacter().m_kChar.aUpgrades[123] | 2;
+            return;
+        }
+
+        kPerksMgr.GivePerk(kUnit, iPerkId);
+        kUnit.UpdateUnitBuffs();
+        kUnit.m_bBuildAbilityDataDirty = true;
+        kUnit.BuildAbilities(true);
+        XComPresentationLayer(Outer.m_Pres).GetTacticalHUD().m_kPerks.UpdatePerks();
+
+        if (kUnit.GetCharacter().HasAnyGeneMod())
+        {
+            kUnit.GetPawn().XComUpdateAnimSetList();
+        }
+
+        kUnit.GetPawn().CHEAT_InitPawnPerkContent(kUnit.GetCharacter().m_kChar);
+    }
+
+    // TODO: this used to be able to remove perks; need a new console command for that
+}
+
 exec function ShowAlienStats()
 {
     local LWCE_Console kConsole;

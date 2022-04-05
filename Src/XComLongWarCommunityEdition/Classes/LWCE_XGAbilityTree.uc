@@ -9,15 +9,19 @@ simulated function BuildAbilities()
 
 simulated event GetVolume(XGAbility_Targeted kAbility, out TVolume kVolume)
 {
+    local LWCE_XGUnit kUnit;
+
     if (!AbilityHasEffect(kAbility.iType, eEffect_Volume) && kAbility.iType != eAbility_Rift)
     {
         return;
     }
 
+    kUnit = LWCE_XGUnit(kAbility.m_kUnit);
+
     switch (kAbility.GetType())
     {
         case eAbility_SmokeGrenade:
-            if (kAbility.m_kUnit.GetCharacter().HasUpgrade(ePerk_CombatDrugs))
+            if (kUnit.HasPerk(ePerk_CombatDrugs))
             {
                 kVolume = `BATTLE.m_kVolumeMgr.GetTVolume(eVolume_CombatDrugs);
             }
@@ -28,7 +32,7 @@ simulated event GetVolume(XGAbility_Targeted kAbility, out TVolume kVolume)
 
             kVolume.fRadius = kAbility.m_kWeapon.GetDamageRadius();
 
-            if (kAbility.m_kUnit.GetCharacter().HasUpgrade(ePerk_CombatDrugs))
+            if (kUnit.HasPerk(ePerk_CombatDrugs))
             {
                 kVolume.fRadius *= class'LWCE_XGTacticalGameCore'.default.fCombatDrugsRadiusMultiplier;
             }

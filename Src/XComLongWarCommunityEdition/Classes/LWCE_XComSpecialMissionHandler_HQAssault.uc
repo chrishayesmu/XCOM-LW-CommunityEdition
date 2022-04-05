@@ -1,5 +1,15 @@
 class LWCE_XComSpecialMissionHandler_HQAssault extends XComSpecialMissionHandler_HQAssault;
 
+struct CheckpointRecord_LWCE_XComSpecialMissionHandler_HQAssault extends CheckpointRecord_XComSpecialMissionHandler_HQAssault
+{
+    var array<LWCE_TTransferSoldier> m_arrCEReinforcements;
+};
+
+var array<LWCE_TTransferSoldier> m_arrCEReinforcements;
+
+// TODO: need to finish adding LWCE_TTransferSoldier equivalent for reinforcements
+// TODO: need to figure out what XGBattle subclass is used on HQ assaults
+
 function XGUnit SpawnNextReinforcement(XComSpawnPoint DestinationSpawnPt, XComSpawnPoint OriginPoint, bool bLast)
 {
     local XGUnit kUnit;

@@ -157,7 +157,7 @@ simulated function ReceivedGameClass()
 
         if (m_kPerkTree == none)
         {
-            m_kPerkTree = Spawn(class'XComPerkManager', self);
+            m_kPerkTree = Spawn(class'LWCE_XComPerkManager', self);
             m_kPerkTree.Init();
         }
     }

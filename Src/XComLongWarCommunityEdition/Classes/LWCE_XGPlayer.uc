@@ -21,15 +21,19 @@ function LoadInit()
 
 function LoadSquad(array<TTransferSoldier> Soldiers, array<int> arrTechHistory, array<XComSpawnPoint> arrSpawnPoints, array<EPawnType> arrPawnTypes)
 {
+    `LWCE_LOG_DEPRECATED_CLS(LoadSquad);
+}
+
+function LWCE_LoadSquad(array<TTransferSoldier> Soldiers, array<LWCE_TTransferSoldier> ceSoldiers, array<XComSpawnPoint> arrSpawnPoints, array<EPawnType> arrPawnTypes)
+{
     local XGCharacter kChar;
-    local XGUnit kSoldier;
+    local LWCE_XGUnit kUnit;
     local int iNumSoldiersToSpawn, I;
     local XComSpawnPoint kSpawn;
 
     iNumSoldiersToSpawn = Soldiers.Length;
     m_kSquad = Spawn(class'XGSquad',,,,,,, m_eTeam);
     m_kSquad.m_kPlayer = self;
-    m_arrTechHistory = arrTechHistory;
 
     // Some sort of fixes for specific maps/missions
     if (`BATTLE.m_kDesc.m_iMissionType != eMission_Special)
@@ -79,29 +83,27 @@ function LoadSquad(array<TTransferSoldier> Soldiers, array<int> arrTechHistory, 
         kChar.SetTCharacter(Soldiers[I].kChar);
         kChar.m_eType = arrPawnTypes[I];
 
-        if (I < 6)
-        {
-            kSoldier = SpawnUnit(class'XGUnit', m_kPlayerController, kSpawn.Location, kSpawn.Rotation, kChar, m_kSquad,, kSpawn);
-        }
-        else
+        if (I >= 6)
         {
             kSpawn.Location = kSpawn.Location + (vector(kSpawn.Rotation) * -96.0);
-            kSoldier = SpawnUnit(class'XGUnit', m_kPlayerController, kSpawn.Location, kSpawn.Rotation, kChar, m_kSquad,, kSpawn);
         }
 
-        kSoldier.m_iUnitLoadoutID = Soldiers[I].iUnitLoadoutID;
-        kSoldier.AddStatModifiers(Soldiers[I].aStatModifiers);
+        kUnit = LWCE_XGUnit(SpawnUnit(class'LWCE_XGUnit', m_kPlayerController, kSpawn.Location, kSpawn.Rotation, kChar, m_kSquad,, kSpawn));
+        kUnit.m_kCEChar = ceSoldiers[I].kChar;
+        kUnit.m_kCESoldier = ceSoldiers[I].kSoldier;
+        kUnit.m_iUnitLoadoutID = Soldiers[I].iUnitLoadoutID;
+        kUnit.AddStatModifiers(ceSoldiers[I].aStatModifiers);
 
-        if (kSoldier != none)
+        if (kUnit != none)
         {
-            if (kChar.m_kChar.iType == eChar_Soldier)
+            if (kUnit.m_kCEChar.iCharacterType == eChar_Soldier)
             {
-                XComHumanPawn(kSoldier.GetPawn()).SetAppearance(XGCharacter_Soldier(kChar).m_kSoldier.kAppearance);
+                XComHumanPawn(kUnit.GetPawn()).SetAppearance(kUnit.m_kCESoldier.kAppearance);
             }
 
-            class'LWCE_XGLoadoutMgr'.static.ApplyInventory(kSoldier);
-            kSoldier.UpdateUnitBuffs();
-            kSoldier.UpdateItemCharges();
+            class'LWCE_XGLoadoutMgr'.static.ApplyInventory(kUnit);
+            kUnit.UpdateUnitBuffs();
+            kUnit.UpdateItemCharges();
         }
     }
 }

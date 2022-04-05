@@ -37,3 +37,8 @@ function CollectLoot()
         kDesc.m_kArtifactsContainer.AdjustQuantity(`LW_ITEM_ID(AlienAlloy), 80);
     }
 }
+
+function InitPlayers(optional bool bLoading = false)
+{
+    class'LWCE_XGBattle_Extensions'.static.InitPlayers(self, bLoading);
+}

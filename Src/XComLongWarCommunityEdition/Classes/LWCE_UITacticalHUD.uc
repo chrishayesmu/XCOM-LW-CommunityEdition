@@ -23,6 +23,6 @@ simulated function Init(XComTacticalController _controllerRef, UIFxsMovie _manag
     m_kObjectives = Spawn(class'UITacticalHUD_ObjectivesList', self);
     m_kObjectives.Init(_controllerRef, _manager, self);
 
-    m_kPerks = Spawn(class'UITacticalHUD_PerkContainer', self);
+    m_kPerks = Spawn(class'LWCE_UITacticalHUD_PerkContainer', self);
     m_kPerks.Init(_controllerRef, _manager, self);
 }

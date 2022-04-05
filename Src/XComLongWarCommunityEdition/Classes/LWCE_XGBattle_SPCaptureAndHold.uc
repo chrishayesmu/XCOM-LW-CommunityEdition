@@ -34,3 +34,15 @@ function CollectLoot()
         }
     }
 }
+
+function InitPlayers(optional bool bLoading = false)
+{
+    local XComCapturePointVolume kCapturePoint;
+
+    class'LWCE_XGBattle_Extensions'.static.InitPlayers(self, bLoading);
+
+    foreach AllActors(class'XComCapturePointVolume', kCapturePoint)
+    {
+        m_arrCapturePoints.AddItem(kCapturePoint);
+    }
+}

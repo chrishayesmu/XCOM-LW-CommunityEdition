@@ -17,7 +17,7 @@ function Init(bool bLoadingFromSave)
 
 function AddNewSoldiers(int iNumSoldiers, optional bool bCreatePawns = true)
 {
-    local XGStrategySoldier kSoldier;
+    local LWCE_XGStrategySoldier kSoldier;
     local int I;
 
     for (I = 0; I < iNumSoldiers; I++)
@@ -25,6 +25,7 @@ function AddNewSoldiers(int iNumSoldiers, optional bool bCreatePawns = true)
         kSoldier = Spawn(class'LWCE_XGStrategySoldier');
         kSoldier.m_kSoldier = m_kCharGen.CreateTSoldier();
         kSoldier.m_kChar = TACTICAL().GetTCharacter(eChar_Soldier);
+        kSoldier.Init();
 
         RandomizeStats(kSoldier);
         STORAGE().AutoEquip(kSoldier);
@@ -34,6 +35,7 @@ function AddNewSoldiers(int iNumSoldiers, optional bool bCreatePawns = true)
         {
             kSoldier.SetHQLocation(0, true);
         }
+
     }
 
     ReorderRanks();
@@ -46,7 +48,7 @@ function AddTank(EItemType eArmor, EItemType eWeapon)
 
 function LWCE_AddTank(int iArmorItemId, int iWeaponItemId)
 {
-    local XGStrategySoldier kTank;
+    local LWCE_XGStrategySoldier kTank;
     local TInventory kTankLoadout;
 
     kTank = Spawn(class'LWCE_XGStrategySoldier');
@@ -86,10 +88,12 @@ function LWCE_AddTank(int iArmorItemId, int iWeaponItemId)
     kTank.m_kSoldier.iRank = -1;
     kTank.m_kSoldier.iCountry = 66;
     kTankLoadout.iArmor = iArmorItemId;
+    kTank.Init();
 
     TACTICAL().TInventoryLargeItemsSetItem(kTankLoadout, 0, iWeaponItemId);
     m_kLockers.ApplyTankLoadout(kTank, kTankLoadout);
     AddNewSoldier(kTank);
+
 }
 
 function int CalcTotalSoldierRanks()
@@ -160,13 +164,15 @@ function bool CanLoadSoldier(XGStrategySoldier kSoldier, optional bool bAllowInj
 
 function XGStrategySoldier CreateSoldier(ESoldierClass eClass, int iSoldierLevel, int iCountry, optional bool bBlueshirt = false)
 {
-    local XGStrategySoldier kSoldier;
+    local LWCE_XGStrategySoldier kSoldier;
     local int I;
 
     kSoldier = Spawn(class'LWCE_XGStrategySoldier');
     kSoldier.m_kSoldier = m_kCharGen.CreateTSoldier(, iCountry);
     kSoldier.m_kSoldier.bBlueshirt = bBlueshirt;
     kSoldier.m_kChar = TACTICAL().GetTCharacter(eChar_Soldier);
+    kSoldier.Init();
+
     RandomizeStats(kSoldier);
     STORAGE().AutoEquip(kSoldier);
 
@@ -185,7 +191,7 @@ function XGStrategySoldier CreateSoldier(ESoldierClass eClass, int iSoldierLevel
 
     for (I = 0; I < iSoldierLevel; I++)
     {
-        kSoldier.LevelUp(eClass);
+        kSoldier.LWCE_LevelUp(eClass);
     }
 
     AddNewSoldier(kSoldier,, bBlueshirt);
@@ -345,6 +351,74 @@ function SelectSoldiersForSkyrangerSquad(XGShip_Dropship kSkyranger, out array<X
             }
         }
     }
+}
+
+function bool UnloadSoldier(XGStrategySoldier kSoldier)
+{
+    local XGShip_Dropship kSkyranger;
+    local LWCE_XGStrategySoldier kCESoldier;
+    local bool bFound;
+    local int I;
+
+    bFound = false;
+    kSkyranger = HANGAR().m_kSkyranger;
+    kCESoldier = LWCE_XGStrategySoldier(kSoldier);
+
+    for (I = 0; I < kSkyranger.m_arrSoldiers.Length; I++)
+    {
+        if (kSkyranger.m_arrSoldiers[I] == kCESoldier)
+        {
+            bFound = true;
+            break;
+        }
+    }
+
+    if (bFound)
+    {
+        kSkyranger.m_arrSoldiers.RemoveItem(kCESoldier);
+    }
+    else if (kSkyranger.m_kCovertOperative == kCESoldier)
+    {
+        kSkyranger.m_kCovertOperative = none;
+        bFound = true;
+    }
+
+    if (!bFound)
+    {
+        return true;
+    }
+
+    if (kCESoldier.m_bBlueShirt)
+    {
+        kCESoldier.m_bBlueShirt = false;
+        DetermineTimeOut(kCESoldier);
+        UpdateOTSPerksForSoldier(kCESoldier);
+
+        if (kCESoldier.IsReadyToLevelUp())
+        {
+            kCESoldier.LWCE_LevelUp();
+        }
+    }
+
+    if (kCESoldier.GetCurrentStat(eStat_HP) <= 0)
+    {
+        MoveToMorgue(kCESoldier, kSkyranger.m_strLastOpName, GEOSCAPE().m_kDateTime);
+    }
+    else if (kCESoldier.IsInjured())
+    {
+        MoveToInfirmary(kCESoldier);
+    }
+    else if (kCESoldier.m_bAllIn)
+    {
+        STORAGE().BackupAndReleaseInventory(kCESoldier);
+        kSoldier.SetStatus(ESoldierStatus(8));
+    }
+    else
+    {
+        kCESoldier.SetStatus(eStatus_Active);
+    }
+
+    return true;
 }
 
 function UpdateFoundryPerksForSoldier(XGStrategySoldier kSoldier)

@@ -13,7 +13,7 @@ static function ApplyInventory(XGUnit kUnit, optional bool bLoadFromCheckpoint =
     {
         ConvertTInventoryToSoldierLoadout(kUnit.GetCharacter().m_kChar, kUnit.GetCharacter().m_kChar.kInventory, Loadout);
 
-        if (kUnit.GetCharacter().HasUpgrade(ePerk_FieldMedic) && !kUnit.IsAugmented())
+        if (LWCE_XGUnit(kUnit).HasPerk(ePerk_FieldMedic) && !kUnit.IsAugmented())
         {
             Loadout.Items[eSlot_RightChest] = eItem_Medikit;
         }

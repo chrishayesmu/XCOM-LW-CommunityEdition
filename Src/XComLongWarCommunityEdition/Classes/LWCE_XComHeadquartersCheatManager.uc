@@ -165,6 +165,26 @@ exec function GiveTech(optional string techType, optional int forceTechValueTo =
     }
 }
 
+exec function LevelUpBarracks(optional int iTimes = 1)
+{
+    local XGFacility_Barracks kBarracks;
+    local XGStrategySoldier kSoldier;
+    local int I;
+
+    kBarracks = `HQGAME.GetGameCore().GetHQ().m_kBarracks;
+
+    foreach kBarracks.m_arrSoldiers(kSoldier)
+    {
+        for (I = 0; I < iTimes; I++)
+        {
+            if (!kSoldier.IsATank())
+            {
+                LWCE_XGStrategySoldier(kSoldier).LWCE_LevelUp();
+            }
+        }
+    }
+}
+
 /// <summary>
 /// Sets the alien research to the given level. Since the alien baseline research will always be
 /// set according to how many days have passed, this command instead modifies the alien bonus research

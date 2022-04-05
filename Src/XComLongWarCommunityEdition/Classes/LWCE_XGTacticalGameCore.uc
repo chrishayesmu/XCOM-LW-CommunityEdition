@@ -345,11 +345,11 @@ simulated function LWCE_TWeapon LWCE_GetTWeapon(int iWeapon)
 // that has a better name for mods to call.
 simulated function int GetUpgradeAbilities(int iRank, int iPersonality)
 {
-    return GetEquipmentItemStat(iRank, iPersonality);
+    return int(GetEquipmentItemStat(iRank, iPersonality));
 }
 
 // TODO: document that this doesn't apply to primary weapons or pistols
-simulated function int GetEquipmentItemStat(int iItemId, int iCharacterStat)
+simulated function float GetEquipmentItemStat(int iItemId, int iCharacterStat)
 {
     local LWCE_TWeapon kWeapon;
 
@@ -383,7 +383,7 @@ simulated function int GetEquipmentItemStat(int iItemId, int iCharacterStat)
         case eStat_Mobility:
             return kWeapon.kStatChanges.iMobility;
         case eStat_DamageReduction:
-            return kWeapon.kStatChanges.iDamageReduction;
+            return kWeapon.kStatChanges.fDamageReduction;
         case eStat_Will:
             return kWeapon.kStatChanges.iWill;
         default:

@@ -309,6 +309,20 @@ function OnItemsBuilt(out array<LWCE_TItem> arrItems)
 
 // #endregion
 
+// #region Perk-related events
+
+function OnPerksBuilt(out array<LWCE_TPerk> arrPerks)
+{
+    local LWCETacticalListener kTacticalListener;
+
+    foreach TacticalListeners(kTacticalListener)
+    {
+        kTacticalListener.OnPerksBuilt(arrPerks);
+    }
+}
+
+// #endregion
+
 // #region Research-related events
 
 function Override_GetTech(out LWCE_TTech kTech, bool bIncludesProgress)
@@ -438,7 +452,61 @@ simulated function Override_GetTWeapon(out LWCE_TWeapon kWeapon)
 
 // #region Miscellaneous tactical events
 
+function string GetDynamicBonusDescription(int iPerkId, LWCE_XGUnit kUnit)
+{
+    local string strCurrentText;
+    local LWCETacticalListener kTacticalListener;
 
+    foreach TacticalListeners(kTacticalListener)
+    {
+        strCurrentText = kTacticalListener.GetDynamicBonusDescription(iPerkId, strCurrentText, kUnit);
+    }
+
+    return strCurrentText;
+}
+
+function string GetDynamicPenaltyDescription(int iPerkId, LWCE_XGUnit kUnit)
+{
+    local string strCurrentText;
+    local LWCETacticalListener kTacticalListener;
+
+    foreach TacticalListeners(kTacticalListener)
+    {
+        strCurrentText = kTacticalListener.GetDynamicPenaltyDescription(iPerkId, strCurrentText, kUnit);
+    }
+
+    return strCurrentText;
+}
+
+function OnRegenBonusPerks(LWCE_XGUnit kUnit, XGAbility ContextAbility)
+{
+    local LWCETacticalListener kTacticalListener;
+
+    foreach TacticalListeners(kTacticalListener)
+    {
+        kTacticalListener.OnRegenBonusPerks(kUnit, ContextAbility);
+    }
+}
+
+function OnRegenPassivePerks(LWCE_XGUnit kUnit)
+{
+    local LWCETacticalListener kTacticalListener;
+
+    foreach TacticalListeners(kTacticalListener)
+    {
+        kTacticalListener.OnRegenPassivePerks(kUnit);
+    }
+}
+
+function OnRegenPenaltyPerks(LWCE_XGUnit kUnit)
+{
+    local LWCETacticalListener kTacticalListener;
+
+    foreach TacticalListeners(kTacticalListener)
+    {
+        kTacticalListener.OnRegenPenaltyPerks(kUnit);
+    }
+}
 
 function OnUpdateItemCharges(XGUnit kUnit)
 {
@@ -446,7 +514,7 @@ function OnUpdateItemCharges(XGUnit kUnit)
 
     foreach TacticalListeners(kTacticalListener)
     {
-        kTacticalListener.OnUpdateItemCharges(kUnit);
+        kTacticalListener.OnUpdateItemCharges(LWCE_XGUnit(kUnit));
     }
 }
 

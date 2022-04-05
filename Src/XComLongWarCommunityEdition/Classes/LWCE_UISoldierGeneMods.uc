@@ -48,13 +48,13 @@ simulated function Init(XGStrategySoldier kSoldier, XComPlayerController _contro
         DisplayTag = 'UIDisplay_SoldierPromote';
     }
 
-    m_kSoldierHeader = Spawn(class'UIStrategyComponent_SoldierInfo', self);
+    m_kSoldierHeader = Spawn(class'LWCE_UIStrategyComponent_SoldierInfo', self);
     m_kSoldierHeader.Init(_controllerRef, _manager, self, m_kSoldier);
 
     m_kSoldierStats = Spawn(class'UIStrategyComponent_SoldierStats', self);
     m_kSoldierStats.Init(GetMgr(), _controllerRef, _manager, self);
 
-    m_kAbilityList = Spawn(class'UIStrategyComponent_SoldierAbilityList', self);
+    m_kAbilityList = Spawn(class'LWCE_UIStrategyComponent_SoldierAbilityList', self);
     m_kAbilityList.Init(GetMgr(), _controllerRef, _manager, self);
 
     manager.LoadScreen(self);

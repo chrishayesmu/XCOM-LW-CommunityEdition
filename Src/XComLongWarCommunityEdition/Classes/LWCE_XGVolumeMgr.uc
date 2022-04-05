@@ -5,12 +5,12 @@ simulated function BuildTVolumes()
     // TODO: not sure if suppression radius affects Danger Zone suppression or not
     // TODO: not sure if proximity mine radius is activation radius, explosion radius, or both
     // Once those things are figured out, make them config if appropriate
-    BuildTVolume(eVolume_Suppression, -1,                                           5.0,                                    576.0, eColor_Cyan,   0.20,            , eVolumeEffect_Suppression);
-    BuildTVolume(eVolume_Smoke,        `LWCE_TACCFG(iSmokeGrenadeVolumeDuration),     0.0,                                    192.0, eColor_Gray,   0.20,            , eVolumeEffect_BlocksSight);
-    BuildTVolume(eVolume_CombatDrugs,  `LWCE_TACCFG(iCombatDrugsVolumeDuration),      0.0,                                    192.0, eColor_Purple, 0.20,            , eVolumeEffect_BlocksSight);
-    BuildTVolume(eVolume_Poison,       `LWCE_TACCFG(iAcidVolumeDuration),             0.0,                                    192.0, eColor_Green,  0.20, eShade_Dark, eVolumeEffect_Poison);
+    BuildTVolume(eVolume_Suppression,  -1,                                            5.0,                                      576.0, eColor_Cyan,   0.20,            , eVolumeEffect_Suppression);
+    BuildTVolume(eVolume_Smoke,        `LWCE_TACCFG(iSmokeGrenadeVolumeDuration),     0.0,                                      192.0, eColor_Gray,   0.20,            , eVolumeEffect_BlocksSight);
+    BuildTVolume(eVolume_CombatDrugs,  `LWCE_TACCFG(iCombatDrugsVolumeDuration),      0.0,                                      192.0, eColor_Purple, 0.20,            , eVolumeEffect_BlocksSight);
+    BuildTVolume(eVolume_Poison,       `LWCE_TACCFG(iAcidVolumeDuration),             0.0,                                      192.0, eColor_Green,  0.20, eShade_Dark, eVolumeEffect_Poison);
     BuildTVolume(eVolume_Fire,         `LWCE_TACCFG(iFireVolumeDuration),             `LWCE_TACCFG(fFireVolumeRadius),          192.0, eColor_Orange, 0.20,            , eVolumeEffect_Burn);
-    BuildTVolume(eVolume_Proximity,   -1,                                           3.0,                                    128.0, eColor_Purple, 0.20,            ,  );
+    BuildTVolume(eVolume_Proximity,    -1,                                            3.0,                                      128.0, eColor_Purple, 0.20,            ,  );
     BuildTVolume(eVolume_Spy,          `LWCE_TACCFG(iBattleScannerVolumeDuration),    `LWCE_TACCFG(fBattleScannerVolumeRadius), 192.0, eColor_Cyan,   0.20,            , eVolumeEffect_AddSight);
     BuildTVolume(eVolume_Telekinetic,  `LWCE_TACCFG(iTelekineticFieldVolumeDuration), `LWCE_TACCFG(fTelekineticFieldRadius),    192.0, eColor_Purple, 0.20, eShade_Dark, eVolumeEffect_TelekineticField);
     BuildTVolume(eVolume_Rift,         `LWCE_TACCFG(iRiftVolumeDuration),             `LWCE_TACCFG(fRiftRadius),                192.0, eColor_Purple, 0.20, eShade_Dark, eVolumeEffect_Rift);

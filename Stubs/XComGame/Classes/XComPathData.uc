@@ -6,14 +6,14 @@ class XComPathData extends Object
 struct native PathPoint
 {
     var Vector Position;
-    var XComWorldData.ETraversalType Traversal;
+    var ETraversalType Traversal;
     var Actor Actor;
 };
 
 struct native ReplicatedPathPoint
 {
     var Vector vRawPathPoint;
-    var XComWorldData.ETraversalType eTraversal;
+    var ETraversalType eTraversal;
     var float fTimestamp;
     var bool bPathPointSet;
 

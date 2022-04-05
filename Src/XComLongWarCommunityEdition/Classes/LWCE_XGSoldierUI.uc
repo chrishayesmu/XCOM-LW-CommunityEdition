@@ -1,5 +1,13 @@
 class LWCE_XGSoldierUI extends XGSoldierUI;
 
+var const localized string m_strStatBonusesPrefix;
+var const localized string m_strStatBonusesSeparator;
+var const localized string m_strStatBonusesAim;
+var const localized string m_strStatBonusesDamageReduction;
+var const localized string m_strStatBonusesHP;
+var const localized string m_strStatBonusesMobility;
+var const localized string m_strStatBonusesWill;
+
 event Destroyed()
 {
     super.Destroyed();
@@ -115,6 +123,141 @@ function TInventoryOption BuildLockerOption(TLockerItem kItem, int iOptionType)
 
     return kOption;
 }
+
+function bool CanPromote()
+{
+    local bool bIsPsiPromotion;
+    local int iRow, iPerkId;
+    local LWCE_XGStrategySoldier kSoldier;
+
+    bIsPsiPromotion = m_iCurrentView == eSoldierView_PsiPromotion;
+    kSoldier = LWCE_XGStrategySoldier(m_kSoldier);
+    iRow = GetAbilityTreeBranch() - 1;
+
+    iPerkId = kSoldier.LWCE_GetPerkInClassTree(iRow, GetAbilityTreeColumnAsPerkIndex(), bIsPsiPromotion);
+
+    if (bIsPsiPromotion && PSILABS().m_arrTraining.Length >= class'XGTacticalGameCore'.default.PSI_NUM_TRAINING_SLOTS)
+    {
+        return false;
+    }
+
+    if (kSoldier.PerkLockedOut(iPerkId, iRow, bIsPsiPromotion))
+    {
+        return false;
+    }
+
+    return true;
+}
+
+// Clamps the highlighted row/column of the ability tree so that they're never selecting an empty space on the tree.
+simulated function ClampAbilityTreeSelection()
+{
+    local int iRow, iNumColumns;
+    local LWCE_XComPerkManager kPerkMgr;
+
+    kPerkMgr = `LWCE_PERKS_STRAT;
+
+    iRow = GetAbilityTreeBranch() - 1;
+    iNumColumns = kPerkMgr.GetNumColumnsInTreeRow(LWCE_XGStrategySoldier(m_kSoldier), iRow, m_iCurrentView == eSoldierView_PsiPromotion);
+
+    if (iNumColumns == 1)
+    {
+        SetAbilityTreeOption(1);
+    }
+    else if (iNumColumns == 2 && GetAbilityTreeOption() == 1)
+    {
+        SetAbilityTreeOption(2);
+    }
+}
+
+simulated function int GetAbilityTreeBranch()
+{
+    return Max(1, super.GetAbilityTreeBranch());
+}
+
+function string GetHighlightedPerkDescription()
+{
+    local bool bIsPsiPromotion;
+    local int iPerk;
+    local string strStatChanges;
+    local LWCE_XComPerkManager kPerkMgr;
+    local LWCE_XGStrategySoldier kSoldier;
+    local LWCE_TCharacterStats kStatChanges;
+
+    bIsPsiPromotion = m_iCurrentView == eSoldierView_PsiPromotion;
+    kSoldier = LWCE_XGStrategySoldier(m_kSoldier);
+    kPerkMgr = `LWCE_PERKS_STRAT;
+
+    iPerk = kSoldier.LWCE_GetPerkInClassTree(GetAbilityTreeBranch() - 1, GetAbilityTreeColumnAsPerkIndex(), bIsPsiPromotion);
+
+    if (bIsPsiPromotion && kSoldier.PerkLockedOut(iPerk, GetAbilityTreeBranch() - 1, bIsPsiPromotion) && !kSoldier.HasPerk(iPerk))
+    {
+        // Rift training: uses a set bit in the Mind Control perk upgrade slot to check if the soldier has MC'd an Ethereal yet
+        // TODO: consolidate the Rift/psi stuff into a few methods
+        if (iPerk == `LW_PERK_ID(Rift))
+        {
+            if ((m_kSoldier.m_kChar.aUpgrades[`LW_PERK_ID(MindControl)] & 254) == 0)
+            {
+                return m_strLockedPsiAbilityDescription;
+            }
+        }
+
+        if (!LABS().IsResearched(kPerkMgr.GetPerkInTreePsi(iPerk | (1 << 8), 0)))
+        {
+            return m_strLockedPsiAbilityDescription;
+        }
+    }
+
+    // TODO: with Hidden Trees, only disable for unreached ranks
+    if (!IsOptionEnabled(`LW_SECOND_WAVE_ID(HiddenTrees)))
+    {
+        kStatChanges = kPerkMgr.GetPerkStatChanges(kSoldier, GetAbilityTreeBranch() - 1, GetAbilityTreeColumnAsPerkIndex(), bIsPsiPromotion);
+        strStatChanges = GetStatChangesString(kStatChanges);
+
+        if (strStatChanges != "")
+        {
+            return strStatChanges $ "\n" $ kPerkMgr.GetBriefSummary(iPerk);
+        }
+    }
+
+    return kPerkMgr.GetBriefSummary(iPerk);
+}
+
+function string GetHighlightedPromoPerkName()
+{
+    local bool bIsPsiPromotion;
+    local int iPerk;
+    local LWCE_XGStrategySoldier kSoldier;
+
+    bIsPsiPromotion = m_iCurrentView == eSoldierView_PsiPromotion;
+    kSoldier = LWCE_XGStrategySoldier(m_kSoldier);
+    iPerk = kSoldier.LWCE_GetPerkInClassTree(GetAbilityTreeBranch() - 1, GetAbilityTreeColumnAsPerkIndex(), bIsPsiPromotion);
+
+    if (iPerk == 0)
+    {
+        return "";
+    }
+
+    if (bIsPsiPromotion && m_kSoldier.PerkLockedOut(iPerk, GetAbilityTreeColumnAsPerkIndex(), bIsPsiPromotion) && !m_kSoldier.HasPerk(iPerk))
+    {
+        // Rift training: uses a set bit in the Mind Control perk upgrade slot to check if the soldier has MC'd an Ethereal yet
+        if (iPerk == ePerk_Rift)
+        {
+            if ((m_kSoldier.m_kChar.aUpgrades[ePerk_MindControl] & 254) == 0)
+            {
+                return m_strLockedAbilityLabel;
+            }
+        }
+
+        if (!LABS().IsResearched(perkMgr().GetPerkInTreePsi(iPerk | (1 << 8), 0)))
+        {
+            return m_strLockedAbilityLabel;
+        }
+    }
+
+    return `LWCE_PERKS_STRAT.GetPerkName(iPerk);
+}
+
 
 function TItemCard GetItemCardFromOption(TInventoryOption kItemOp)
 {
@@ -327,6 +470,62 @@ function bool HasItemEquipped(int iItemId)
     return `GAMECORE.TInventoryHasItemType(m_kSoldier.m_kChar.kInventory, iItemId);
 }
 
+function bool OnAcceptPromotion()
+{
+    local LWCE_TPerkTreeChoice kPerkChoice;
+    local LWCE_XGStrategySoldier kSoldier;
+
+    kSoldier = LWCE_XGStrategySoldier(m_kSoldier);
+
+    if (!`LWCE_PERKS_STRAT.TryGetPerkChoiceInTree(kPerkChoice, kSoldier, GetAbilityTreeBranch() - 1, GetAbilityTreeColumnAsPerkIndex(), m_iCurrentView == eSoldierView_PsiPromotion))
+    {
+        `LWCE_LOG_CLS("Couldn't find the selected perk for this promotion! Not applying promotion.");
+        return true;
+    }
+
+    if (m_iCurrentView == eSoldierView_PsiPromotion)
+    {
+        PSILABS().AddSoldier(kSoldier, kPerkChoice.iPerkId);
+
+        if (m_bReturnToDebriefUI)
+        {
+            PRES().GetPsiLabsUI().GetMgr().UpdateView();
+            OnLeavePromotion();
+        }
+        else
+        {
+            SetActiveSoldier(kSoldier);
+        }
+    }
+    else
+    {
+        // Perk 46 is used by Long War to select a random subclass for a new soldier
+        if (kPerkChoice.iPerkId == 46)
+        {
+            // Signals for the soldier's class to be set randomly
+            kSoldier.LWCE_SetSoldierClass(0);
+            UpdateDoll();
+        }
+        else
+        {
+            kSoldier.GivePerk(kPerkChoice.iPerkId);
+
+            if (kPerkChoice.iNewClassId != -1)
+            {
+                kSoldier.LWCE_SetSoldierClass(kPerkChoice.iNewClassId);
+                UpdateDoll();
+            }
+        }
+
+        // TODO replace stats string
+        kSoldier.LevelUpStats((GetAbilityTreeBranch() << 8) | GetAbilityTreeOption());
+        Sound().PlaySFX(SNDLIB().SFX_UI_ChoosePromotion);
+    }
+
+    UpdateView();
+    return true;
+}
+
 /**
  * Callback for when gear is clicked in the loadout screen, either currently-equipped gear or gear in the locker.
  */
@@ -367,6 +566,249 @@ function OnGearAccept()
             PRES().m_kSoldierLoadout.UpdatePanels();
         }
     }
+}
+
+function OnPromotionRight()
+{
+    local int iOption, iNumColumns;
+
+    iOption = Clamp(GetAbilityTreeOption() - 1, 0, 2);
+    iNumColumns = `LWCE_PERKS_STRAT.GetNumColumnsInTreeRow(LWCE_XGStrategySoldier(m_kSoldier), GetAbilityTreeBranch() - 1, m_iCurrentView == eSoldierView_PsiPromotion);
+
+    if (iNumColumns == 1)
+    {
+        iOption = 1;
+    }
+    else if (iNumColumns == 2)
+    {
+        iOption = 0;
+    }
+
+    SetAbilityTreeOption(iOption);
+    PlayScrollSound();
+}
+
+function OnPromotionLeft()
+{
+    local int iOption, iNumColumns;
+
+    iOption = Clamp(GetAbilityTreeOption() + 1, 0, 2);
+    iNumColumns = `LWCE_PERKS_STRAT.GetNumColumnsInTreeRow(LWCE_XGStrategySoldier(m_kSoldier), GetAbilityTreeBranch() - 1, m_iCurrentView == eSoldierView_PsiPromotion);
+
+    if (iNumColumns == 1)
+    {
+        iOption = 1;
+    }
+    else if (iNumColumns == 2)
+    {
+        iOption = 2;
+    }
+
+    SetAbilityTreeOption(iOption);
+    PlayScrollSound();
+}
+
+function OnPromotionUp()
+{
+    super.OnPromotionUp();
+    ClampAbilityTreeSelection();
+}
+
+function OnPromotionDown()
+{
+    super.OnPromotionDown();
+    ClampAbilityTreeSelection();
+}
+
+
+function bool PreviousPerksToAssign()
+{
+    local int iRow, iColumn;
+    local int iNumColumns;
+    local bool bHasPerkFromRow, bIsPsiPromotion;
+    local LWCE_XComPerkManager kPerkMgr;
+    local LWCE_XGStrategySoldier kSoldier;
+
+    bIsPsiPromotion = m_iCurrentView == eSoldierView_PsiPromotion;
+    kPerkMgr = `LWCE_PERKS_STRAT;
+    kSoldier = LWCE_XGStrategySoldier(m_kSoldier);
+
+    if (GetAbilityTreeBranch() <= 0)
+    {
+        return false;
+    }
+
+    for (iRow = 1; iRow < GetAbilityTreeBranch(); iRow++)
+    {
+        bHasPerkFromRow = false;
+        iNumColumns = kPerkMgr.GetNumColumnsInTreeRow(kSoldier, iRow - 1, bIsPsiPromotion);
+
+        for (iColumn = 0; iColumn < iNumColumns; iColumn++)
+        {
+            if (kSoldier.HasPerk(kSoldier.LWCE_GetPerkInClassTree(iRow - 1, GetAbilityTreeColumnAsPerkIndex(iRow - 1, iColumn), bIsPsiPromotion)))
+            {
+                bHasPerkFromRow = true;
+                break;
+            }
+        }
+
+        if (!bHasPerkFromRow)
+        {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+function bool ShouldAutoAssignPerk(out int iColumnToAssign)
+{
+    local bool bIsPsiPromotion;
+    local int iRow;
+    local LWCE_XComPerkManager kPerkMgr;
+    local LWCE_XGStrategySoldier kSoldier;
+
+    bIsPsiPromotion = m_iCurrentView == eSoldierView_PsiPromotion;
+    kPerkMgr = `LWCE_PERKS_STRAT;
+    kSoldier = LWCE_XGStrategySoldier(m_kSoldier);
+    iRow = GetAbilityTreeBranch() - 1;
+
+    if (kPerkMgr.GetNumColumnsInTreeRow(kSoldier, iRow, bIsPsiPromotion) == 1 && CanPromote())
+    {
+        iColumnToAssign = 1;
+        return true;
+    }
+
+    iColumnToAssign = -1;
+    return false;
+}
+
+function UpdateAbilities()
+{
+    local int Index;
+    local TTableMenu kMenu;
+    local TTableMenuOption kOption;
+    local LWCE_XGStrategySoldier kSoldier;
+
+    kSoldier = LWCE_XGStrategySoldier(m_KSoldier);
+
+    kMenu.arrCategories.AddItem(21);
+
+    for (Index = 0; Index < kSoldier.m_kCEChar.arrPerks.Length; Index++)
+    {
+        kOption.arrStates[0] = kSoldier.m_kCEChar.arrPerks[Index].Id;
+        kOption.iState = eUIState_Normal;
+        kMenu.arrOptions.AddItem(kOption);
+    }
+
+    kMenu.kHeader.arrStrings = GetHeaderStrings(kMenu.arrCategories);
+    kMenu.kHeader.arrStates = GetHeaderStates(kMenu.arrCategories);
+    kMenu.bTakesNoInput = true;
+    m_kAbilities.tblAbilities = kMenu;
+}
+
+/// <summary>
+/// Returns the current column in the order [0, 1, 2], as opposed to the way the base game does it, [2, 1, 0] (and sometimes 3).
+/// </summary>
+function int GetAbilityTreeColumnAsPerkIndex(optional int iRow = -1, optional int iColumn = -1)
+{
+    local int iNumColumns;
+
+    if (iRow == -1)
+    {
+        iRow = GetAbilityTreeBranch() - 1;
+    }
+
+    if (iColumn == -1)
+    {
+        iColumn = GetAbilityTreeOption();
+    }
+
+    iNumColumns = `LWCE_PERKS_STRAT.GetNumColumnsInTreeRow(LWCE_XGStrategySoldier(m_kSoldier), iRow, m_iCurrentView == eSoldierView_PsiPromotion);
+
+    if (iNumColumns == 1)
+    {
+        return 0;
+    }
+
+    if (iNumColumns == 2)
+    {
+        if (iColumn == 3)
+        {
+            return 0;
+        }
+        else
+        {
+            return 1;
+        }
+    }
+
+    // Column numbers from UI range from 1 to 3, but backwards (i.e. index 3 is the leftmost, not rightmost).
+    // Flip them around and subtract 1 to get the array index.
+    return iNumColumns - iColumn - 1;
+}
+
+function string GetStatChangesString(LWCE_TCharacterStats kStats)
+{
+    local int Index;
+    local array<string> arrStatValues;
+    local array<string> arrStatStrings;
+    local string strOutput;
+
+    if (kStats.iAim > 0)
+    {
+        arrStatValues.AddItem("+" $ kStats.iAim);
+        arrStatStrings.AddItem(m_strStatBonusesAim);
+    }
+
+    if (kStats.iHP > 0)
+    {
+        arrStatValues.AddItem("+" $ kStats.iHP);
+        arrStatStrings.AddItem(m_strStatBonusesHP);
+    }
+
+    if (kStats.iMobility > 0)
+    {
+        arrStatValues.AddItem("+" $ kStats.iMobility);
+        arrStatStrings.AddItem(m_strStatBonusesMobility);
+    }
+
+    if (kStats.iWill > 0)
+    {
+        arrStatValues.AddItem("+" $ kStats.iWill);
+        arrStatStrings.AddItem(m_strStatBonusesWill);
+    }
+
+    // Damage Reduction is the only non-int stat so it has to be handled specially
+    if (arrStatValues.Length == 0 && kStats.fDamageReduction == 0.0)
+    {
+        return "";
+    }
+
+    strOutput = m_strStatBonusesPrefix;
+
+    if (kStats.fDamageReduction != 0.0)
+    {
+        strOutput $= m_strStatBonusesDamageReduction $ kStats.fDamageReduction; // TODO rounding issues
+
+        if (arrStatValues.Length > 0)
+        {
+            strOutput $= m_strStatBonusesSeparator;
+        }
+    }
+
+    for (Index = 0; Index < arrStatValues.Length; Index++)
+    {
+        // TODO: this assumes stat numbers should always be appended, but it's hard to localize an unknown number of values
+        strOutput $= arrStatValues[Index] $ arrStatStrings[Index];
+
+        if (Index != arrStatValues.Length - 1)
+        {
+            strOutput $= m_strStatBonusesSeparator;
+        }
+    }
+
+    return strOutput;
 }
 
 function TItemCard SOLDIERUIGetItemCard()

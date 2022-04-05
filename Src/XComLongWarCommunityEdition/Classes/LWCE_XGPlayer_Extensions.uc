@@ -65,6 +65,19 @@ static simulated function class<XGCharacter> AlienTypeToClass(EPawnType eAlienTy
     }
 }
 
+static function LoadSquad(XGPlayer kSelf, array<TTransferSoldier> Soldiers, array<LWCE_TTransferSoldier> ceSoldiers, array<int> arrTechHistory, array<XComSpawnPoint> arrSpawnPoints, array<EPawnType> arrPawnTypes)
+{
+    if (LWCE_XGPlayer(kSelf) != none)
+    {
+        LWCE_XGPlayer(kSelf).LWCE_LoadSquad(Soldiers, ceSoldiers, arrSpawnPoints, arrPawnTypes);
+    }
+    else
+    {
+        // Other player types ultimately just delegate to this
+        kSelf.CreateSquad(arrSpawnPoints, arrPawnTypes);
+    }
+}
+
 static function XGUnit SpawnUnit(XGPlayer kSelf, class<XGUnit> kUnitClassToSpawn, PlayerController kPlayerController, Vector kLocation, Rotator kRotation, XGCharacter kCharacter, XGSquad kSquad, optional bool bDestroyOnBadLocation = false, optional XComSpawnPoint kSpawnPoint, optional bool bSnapToGround = true, optional bool bBattleScanner = false)
 {
     local XGUnit kUnit;

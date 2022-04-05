@@ -63,6 +63,7 @@
 `define LWCE_ITEM(itemId, transactionType) (LWCE_XGItemTree(`HQGAME.GetGameCore().GetHQ().GetEngineering().m_kItems).LWCE_GetItem(`itemId, `transactionType))
 `define LWCE_ITEMTREE (LWCE_XGItemTree(`HQGAME.GetGameCore().GetHQ().GetEngineering().m_kItems))
 `define LWCE_LABS (LWCE_XGFacility_Labs(`HQGAME.GetGameCore().GetHQ().GetLabs()))
+`define LWCE_PERKS_STRAT (LWCE_XComPerkManager(`LWCE_BARRACKS.m_kPerkManager))
 `define LWCE_STORAGE (LWCE_XGStorage(`HQGAME.GetGameCore().GetHQ().m_kEngineering.GetStorage()))
 `define LWCE_TECH(techId) (`LWCE_TECHTREE.LWCE_GetTech(`techId))
 `define LWCE_TECHTREE (LWCE_XGTechTree(`HQGAME.GetGameCore().GetHQ().GetLabs().m_kTree))
@@ -72,6 +73,7 @@
 // ---------------------------
 
 `define LWCE_CHEATMGR_TAC (LWCE_XComTacticalCheatManager(XComGameReplicationInfo(class'Engine'.static.GetCurrentWorldInfo().GRI).GetALocalPlayerController().CheatManager))
+`define LWCE_PERKS_TAC (LWCE_XComPerkManager(XComGameReplicationInfo(class'Engine'.static.GetCurrentWorldInfo().GRI).m_kPerkTree))
 `define LWCE_TAC_CARGO (LWCE_XGDropshipCargoInfo(`BATTLE.m_kDesc.m_kDropShipCargoInfo))
 `define LWCE_TACCFG(nm) (class'LWCE_XGTacticalGameCore'.default.`nm)
 `define LWCE_TACPRES (LWCE_XComPresentationLayer(`PRES))

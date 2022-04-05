@@ -1,3 +1,6 @@
+// This class contains utilities related to manipulating Flash movies and UI elements. It is not
+// a parallel to the base game's UIUtilities class, which is more related to string lookups and
+// forming HTML strings.
 class LWCEUIUtils extends Object;
 
 static function bool TryGetPanelReference(UI_FxsPanel kPanel, out GFxObject gfxRef)

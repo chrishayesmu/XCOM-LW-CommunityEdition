@@ -132,3 +132,99 @@ static function InitLoadedItems(XGBattle kSelf)
 
     `LWCE_LOG_CLS("InitLoadedItems: end");
 }
+
+static function InitPlayers(XGBattle_SP kSelf, optional bool bLoading = false)
+{
+    local XGPlayer kPlayer;
+    local XGAIPlayer kAIPlayer;
+    local int I, J;
+    local XGUnit kUnit;
+    local XCom3DCursor kCursor;
+    local array<int> arrTechHistory;
+    local array<TTransferSoldier> arrTransfers, arrReinforcements;
+    local array<LWCE_TTransferSoldier> arrCETransfers;
+
+    if (bLoading)
+    {
+        for (I = 0; I < kSelf.m_iNumPlayers; I++)
+        {
+            kPlayer = kSelf.m_arrPlayers[I];
+            kAIPlayer = XGAIPlayer(kPlayer);
+
+            if (kAIPlayer != none)
+            {
+                kAIPlayer.Init(bLoading);
+                kAIPlayer.InitRules();
+            }
+        }
+    }
+    else
+    {
+        kSelf.m_kPodMgr = kSelf.Spawn(class'XComAlienPodManager');
+        kSelf.m_kPodMgr.InitPods();
+
+        for (I = 0; I < kSelf.m_iNumPlayers; I++)
+        {
+            kPlayer = kSelf.m_arrPlayers[I];
+
+            if (kSelf.m_kTransferSave != none)
+            {
+                `LWCE_LOG_CLS("Branch: kSelf.m_kTransferSave");
+
+                if (XGAIPlayer_Animal(kPlayer) != none || XGAIPlayer(kPlayer) == none)
+                {
+                    if (kSelf.m_kDesc.m_iMissionType == eMission_HQAssault && XGAIPlayer_Animal(kPlayer) == none)
+                    {
+                        // Human player
+                        for (J = 0; J < 3; J++)
+                        {
+                            arrTransfers.AddItem(kSelf.m_kTransferSave.m_kBattleDesc.m_kDropShipCargoInfo.m_arrSoldiers[J]);
+                        }
+
+                        for (J = 3; J < kSelf.m_kTransferSave.m_kBattleDesc.m_kDropShipCargoInfo.m_arrSoldiers.Length; J++)
+                        {
+                            arrReinforcements.AddItem(kSelf.m_kTransferSave.m_kBattleDesc.m_kDropShipCargoInfo.m_arrSoldiers[J]);
+                        }
+
+                        kSelf.SaveHQAssaultReinforcements(kPlayer, arrReinforcements);
+                    }
+                    else
+                    {
+                        arrTransfers = kSelf.m_kTransferSave.m_kBattleDesc.m_kDropShipCargoInfo.m_arrSoldiers;
+                        arrCETransfers = LWCE_XGDropshipCargoInfo(kSelf.m_kTransferSave.m_kBattleDesc.m_kDropShipCargoInfo).m_arrCESoldiers;
+                    }
+
+                    class'LWCE_XGPlayer_Extensions'.static.LoadSquad(kPlayer, arrTransfers, arrCETransfers, kSelf.m_kTransferSave.m_kBattleDesc.m_kDropShipCargoInfo.m_arrTechHistory, kSelf.GetSpawnPoints(kPlayer.m_eTeam), kSelf.GetPawnTypes(kPlayer.m_eTeam));
+                }
+            }
+            else if (kSelf.m_kProfileSettings != none)
+            {
+                arrTechHistory.Add(61);
+                // TODO: not clear if this branch is anything other than tactical quick start; can ignore if so, otherwise need to populate
+                // arrCETransfers from somewhere
+                `LWCE_LOG_CLS("Branch: kSelf.m_kProfileSettings");
+                class'LWCE_XGPlayer_Extensions'.static.LoadSquad(kPlayer, kSelf.m_kProfileSettings.m_aSoldiers, arrCETransfers, arrTechHistory, kSelf.GetSpawnPoints(kPlayer.m_eTeam), kSelf.GetPawnTypes(kPlayer.m_eTeam));
+            }
+            else
+            {
+                arrCETransfers = LWCE_XGDropshipCargoInfo(kSelf.m_kDesc.m_kDropShipCargoInfo).m_arrCESoldiers;
+                class'LWCE_XGPlayer_Extensions'.static.LoadSquad(kPlayer, kSelf.m_kDesc.m_kDropShipCargoInfo.m_arrSoldiers, arrCETransfers, kSelf.m_kDesc.m_kDropShipCargoInfo.m_arrTechHistory, kSelf.GetSpawnPoints(kPlayer.m_eTeam), kSelf.GetPawnTypes(kPlayer.m_eTeam));
+            }
+        }
+    }
+
+    kPlayer = kSelf.GetHumanPlayer();
+    kUnit = kPlayer.GetSquad().GetMemberAt(0);
+
+    if (kUnit != none)
+    {
+        kCursor = kPlayer.m_kPlayerController.GetCursor();
+
+        if (kCursor != none)
+        {
+            kSelf.PRES().GetCamera().m_kLookAtView.SetTransition(eTransition_Cut);
+            kSelf.PRES().GetCamera().LookAt(kUnit.Location);
+            kSelf.PRES().GetCamera().m_kLookAtView.SetTransition(eTransition_Blend);
+        }
+    }
+}

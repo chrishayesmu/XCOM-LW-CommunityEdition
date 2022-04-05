@@ -5,7 +5,7 @@ static simulated function ApplyShredderRocket(XComUnitPawn kSelf, const DamageEv
 {
     local int iAbilityId, iShredDuration;
     local LWCE_TWeapon kInstigatorWeapon;
-    local XGUnit kVictim, kInstigator;
+    local LWCE_XGUnit kVictim, kInstigator;
     local XComPresentationLayer kPres;
     local XComUIBroadcastWorldMessage kBroadcastWorldMessage;
 
@@ -24,8 +24,8 @@ static simulated function ApplyShredderRocket(XComUnitPawn kSelf, const DamageEv
         return;
     }
 
-    kVictim = XGUnit(kSelf.GetGameUnit());
-    kInstigator = XGUnit(Dmg.EventInstigator);
+    kVictim = LWCE_XGUnit(kSelf.GetGameUnit());
+    kInstigator = LWCE_XGUnit(Dmg.EventInstigator);
     kInstigatorWeapon = `LWCE_TWEAPON_FROM_XG(kInstigator.GetInventory().GetActiveWeapon());
     iAbilityId = kInstigator.GetUsedAbility();
 
@@ -35,21 +35,22 @@ static simulated function ApplyShredderRocket(XComUnitPawn kSelf, const DamageEv
     }
     else if (!kInstigator.IsAlien_CheckByCharType() &&
              `GAMECORE.WeaponHasProperty(kInstigator.GetInventory().GetActiveWeapon().ItemType(), eWP_Support) &&
-             kInstigator.m_kCharacter.HasUpgrade(`LW_PERK_ID(ShredderAmmo)))
+             kInstigator.HasPerk(`LW_PERK_ID(ShredderAmmo)))
     {
         iShredDuration = `LWCE_TACCFG(iShredderDebuffDurationFromPerk);
     }
     else if (kInstigator.IsAugmented() &&
              iAbilityId == eAbility_ShotStandard &&
-             kInstigator.m_kCharacter.HasUpgrade(`LW_PERK_ID(ShredderAmmo)))
+             kInstigator.HasPerk(`LW_PERK_ID(ShredderAmmo)))
     {
+        // TODO: rapid fire should probably be able to apply shred for MECs also; make configurable
         iShredDuration = `LWCE_TACCFG(iShredderDebuffDurationFromPerk);
     }
     else if (class'XGTacticalGameCoreNativeBase'.static.TInventoryHasItemType(kInstigator.GetCharacter().m_kChar.kInventory, `LW_ITEM_ID(ShredderAmmo)) && kInstigatorWeapon.iSize == 1)
     {
         iShredDuration = `LWCE_TACCFG(iShredderDebuffDurationFromSmallItem);
     }
-    else if (kInstigator.IsAlien_CheckByCharType() && kInstigator.m_kCharacter.HasUpgrade(`LW_PERK_ID(ShredderAmmo)))
+    else if (kInstigator.IsAlien_CheckByCharType() && kInstigator.HasPerk(`LW_PERK_ID(ShredderAmmo)))
     {
         if (iAbilityId == eAbility_AlienGrenade)
         {
@@ -93,12 +94,12 @@ static function DoDeathOnOutsideOfBounds(XComUnitPawn kSelf)
 
 static simulated function TakeDirectDamage(XComUnitPawn kSelf, const DamageEvent Dmg)
 {
-    local XGUnit kDamageDealer, kSelfUnit;
+    local LWCE_XGUnit kDamageDealer, kSelfUnit;
     local DamageEvent actualDamage;
     local bool bEnemyOfUnitHit, bWasAlive, bWasVisibleOnlyWithBioelectricSkin;
 
-    kDamageDealer = XGUnit(Dmg.EventInstigator);
-    kSelfUnit = XGUnit(kSelf.GetGameUnit());
+    kDamageDealer = LWCE_XGUnit(Dmg.EventInstigator);
+    kSelfUnit = LWCE_XGUnit(kSelf.GetGameUnit());
 
     if (!kSelfUnit.CanTakeDamage())
     {
@@ -123,7 +124,7 @@ static simulated function TakeDirectDamage(XComUnitPawn kSelf, const DamageEvent
     {
         if (XComProjectile(Dmg.DamageCauser) != none)
         {
-            if (!kDamageDealer.GetCharacter().HasUpgrade(`LW_PERK_ID(TandemWarheads)))
+            if (!kDamageDealer.HasPerk(`LW_PERK_ID(TandemWarheads)))
             {
                 actualDamage.DamageAmount = int(0.50 + (float(Dmg.DamageAmount) * (1.0 - FMin(1.0, 0.750 * Square(VSize(Dmg.DamageCauser.Location - kSelf.Location) / XComProjectile(Dmg.DamageCauser).DamageRadius)))));
             }

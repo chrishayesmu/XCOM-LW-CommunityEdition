@@ -34,6 +34,15 @@ m_strGenderLabel="GENDER"
 m_strGenderMale="Male"
 m_strGenderFemale="Female"
 
+[LWCE_XGSoldierUI]
+m_strStatBonusesPrefix="Stat changes: "
+m_strStatBonusesSeparator=", "
+m_strStatBonusesAim=" Aim"
+m_strStatBonusesDamageReduction=" DR"
+m_strStatBonusesHP=" HP"
+m_strStatBonusesMobility=" Mobility"
+m_strStatBonusesWill=" Will"
+
 [LWCE_XGFacility_Hangar]
 PilotRanks="F.O."
 PilotRanks="Lt."

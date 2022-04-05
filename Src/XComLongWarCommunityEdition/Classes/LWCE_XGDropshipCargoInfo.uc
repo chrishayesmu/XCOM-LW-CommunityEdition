@@ -5,11 +5,15 @@ struct CheckpointRecord_LWCE_XGDropshipCargoInfo extends CheckpointRecord
     var LWCEItemContainer m_kArtifactsContainer;
     var array<LWCE_TTech> m_arrCETechHistory;
     var array<LWCE_TFoundryTech> m_arrCEFoundryHistory;
+    var array<LWCE_TTransferSoldier> m_arrCESoldiers;
+    var LWCE_TTransferSoldier m_kCECovertOperative;
 };
 
 var LWCEItemContainer m_kArtifactsContainer;
 var array<LWCE_TTech> m_arrCETechHistory;
 var array<LWCE_TFoundryTech> m_arrCEFoundryHistory;
+var array<LWCE_TTransferSoldier> m_arrCESoldiers;
+var LWCE_TTransferSoldier m_kCECovertOperative;
 
 function Init()
 {
