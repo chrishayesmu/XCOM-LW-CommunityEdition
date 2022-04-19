@@ -1,8 +1,34 @@
 class XComWorldData extends Object
     native(Core)
 	dependsOn(XGTacticalGameCoreData);
-//complete stub
 
+const COVER_North = 0x00000001;
+const COVER_South = 0x00000002;
+const COVER_East = 0x00000004;
+const COVER_West = 0x00000008;
+const COVER_NLow = 0x00000010;
+const COVER_SLow = 0x00000020;
+const COVER_ELow = 0x00000040;
+const COVER_WLow = 0x00000080;
+const COVER_NPeekLeft = 0x00000100;
+const COVER_SPeekLeft = 0x00000200;
+const COVER_EPeekLeft = 0x00000400;
+const COVER_WPeekLeft = 0x00000800;
+const COVER_NPeekRight = 0x00001000;
+const COVER_SPeekRight = 0x00002000;
+const COVER_EPeekRight = 0x00004000;
+const COVER_WPeekRight = 0x00008000;
+const COVER_Diagonal = 0x00010000;
+const COVER_ClimbOnto_N = 0x00020000;
+const COVER_ClimbOnto_S = 0x00040000;
+const COVER_ClimbOnto_E = 0x00080000;
+const COVER_ClimbOnto_W = 0x00100000;
+const COVER_ClimbOver_N = 0x00200000;
+const COVER_ClimbOver_S = 0x00400000;
+const COVER_ClimbOver_E = 0x00800000;
+const COVER_ClimbOver_W = 0x01000000;
+const COVER_DIR_ANY = 0x0000000F;
+const COVER_LOW_ANY = 0x000000F0;
 const WORLD_StepSize = 96.0f;
 const WORLD_StepSizeSquared = 9216.0f;
 const WORLD_StepSize_2D_Diagonal = 135.7645f;
@@ -13,6 +39,27 @@ const WORLD_FloorHeight = 64.0f;
 const WORLD_HalfFloorHeight = 32.0f;
 const WORLD_BaseHeight = 24.0f;
 const WORLD_PartialRadius = 20.0f;
+const WORLD_RampDotMaxThreshold = 0.9848f;
+const WORLD_RampDotMinThreshold = 0.7f;
+const WORLD_PATHING_ANY_DIR_BLOCKED = 0x0000003F;
+const WORLD_VIS_ANY_DIR_BLOCKED = 0x00000FC0;
+const WORLD_METERS_TO_UNITS_MULTIPLIER = 64.0f;
+const WORLD_UNITS_TO_METERS_MULTIPLIER = 0.015625f;
+const DEFAULT_REBUILD_TILE_RATE = 16;
+const Cover_BufferDistance = 4.0f;
+const Cover_ClimbOverLateralDistance = 64.0f;
+const Cover_ClimbOntoLateralDistance = 80.0f;
+const Cover_OffsetDistanceFromWall = 40.0f;
+const Cover_PeekHeightTolerance = 16.0f;
+const Cover_PeekTestHeight = 96.0f;
+const Cover_LowCoverHeight = 64.0f;
+const Cover_HighCoverHeight = 96.0f;
+const Cover_MinClimbOverHeight = 160.0f;
+const Cover_ClimbOverHeightTolerance = 8.0f;
+const Cover_TraceDensity = 16.0f;
+const Cover_BaseNormalDotThreshold = 0.71f;
+const Cover_DropDownOffset = 20.0f;
+const Cover_DropDownLandingOffset = 4.0f;
 
 
 enum ETraversalType
@@ -117,7 +164,7 @@ struct native PathingTraversalData
     var init array<init ETraversalType> TraversalTypes;
     var init array<init Vector> Positions;
 
- 
+
 };
 
 struct native FloorTileData
@@ -164,7 +211,7 @@ struct native PeekAroundInfo
     var Vector PeekaroundDirectionFromCoverPt;
     var TTile PeekTile;
 
-   
+
 };
 
 struct native CoverDirectionPeekData

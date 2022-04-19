@@ -51,6 +51,13 @@ function ReplaceClassWithLWCEEquivalent(out class<Actor> kClass)
     }
 }
 
+reliable client simulated function UIChooseSquad(XGMission kMission)
+{
+    m_kSquadSelect = Spawn(class'LWCE_UISquadSelect', self);
+    m_kSquadSelect.Init(XComPlayerController(Owner), GetHUD(), kMission, true);
+    PushState('State_ChooseSquad');
+}
+
 simulated function UIChooseTech(optional int iView = 1)
 {
     m_kChooseTech = Spawn(class'LWCE_UIChooseTech', self);

@@ -434,6 +434,26 @@ function OnAbilitiesBuilt(array<TAbility> arrAbilities)
     }
 }
 
+function AddCritChanceModifiers(XGAbility_Targeted kAbility, out TShotInfo kInfo)
+{
+    local LWCETacticalListener kTacticalListener;
+
+    foreach TacticalListeners(kTacticalListener)
+    {
+        kTacticalListener.AddCritChanceModifiers(kAbility, kInfo);
+    }
+}
+
+function AddHitChanceModifiers(XGAbility_Targeted kAbility, out TShotInfo kInfo)
+{
+    local LWCETacticalListener kTacticalListener;
+
+    foreach TacticalListeners(kTacticalListener)
+    {
+        kTacticalListener.AddHitChanceModifiers(kAbility, kInfo);
+    }
+}
+
 // #endregion
 
 // #region Item-related tactical events

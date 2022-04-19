@@ -74,7 +74,7 @@ simulated function Update(XGUnit kUnit, XGAbility kAbility)
                 SetCriticalChance(m_sCriticalLabel, string(Max(iCriticalChance, 0)) $ "%");
             }
 
-            if (((iHitChance > -1) && kTargetingAction.m_kShot.ShouldShowPercentage()) && !kTargetingAction.m_kUnit.IsAbilityOnCooldown(kTargetingAction.m_kShot.iType))
+            if (iHitChance > -1 && kTargetingAction.m_kShot.ShouldShowPercentage() && !kTargetingAction.m_kUnit.IsAbilityOnCooldown(kTargetingAction.m_kShot.iType))
             {
                 if (kAbility.HasProperty(eProp_ScatterTarget))
                 {

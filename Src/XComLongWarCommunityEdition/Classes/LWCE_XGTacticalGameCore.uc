@@ -21,8 +21,11 @@ var config float fCombatStimsIncomingDamageMultiplier;
 var config float fCombinedArmsDRPenetration;
 var config float fDamageControlDRBonus;
 var config float fDeathBlossomRadius;
+var config float fExecutionerHealthThreshold;
 var config float fFireVolumeRadius;
 var config float fGaussWeaponsDRPenetration;
+var config float fGreenFogAimLossPerTurn;
+var config float fGreenFogWillLossPerTurn;
 var config float fLowCoverDRBonus;
 var config float fHighCoverDRBonus;
 var config float fOneForAllDRBonus;
@@ -30,11 +33,21 @@ var config float fOverloadRadius;
 var config float fIncomingMeleeDamageMultiplierForChitinPlating;
 var config float fIncomingMeleeDamageMultiplierForChryssalids;
 var config float fMindMergeDRPerWill;
+var config float fPistolAimPenaltyPerMeter;
+var config float fPistolMaxEffectiveRange;
 var config float fPsiInspirationRadius;
 var config float fPsiShieldIncomingDamageMultiplier;
 var config float fPsychokineticStrikeRadius;
 var config float fQuenchgunsDRPenetration;
+var config float fReactionFireAimDivisorLargeTarget;
+var config float fReactionFireAimMultiplier;
+var config float fReactionFireAimMultiplierDashing;
+var config float fReactionFireAimMultiplierUnusedLightningReflexes;
+var config float fReactionFireAimMultiplierUsedLightningReflexes;
+var config float fReactionFireAimMultiplierWithChameleonSuit;
 var config float fRiftRadius;
+var config float fRocketScatterMultiplierAfterMove;
+var config float fRocketScatterMultiplierAfterMoveWithSnapShot;
 var config float fSapperEnvironmentalDamageMultiplier;
 var config float fShockAbsorbentArmorIncomingDamageMultiplier;
 var config float fShockAbsorbentArmorRadius;
@@ -42,17 +55,56 @@ var config float fShotgunDRPenalty;
 var config float fShredderRocketDamageMultiplier;
 var config float fShredderRocketRadiusMultiplier;
 var config float fShredderRocketRadiusOverride;
+var config float fSuppressionReactionFireCoverPenetration;
 var config float fTelekineticFieldRadius;
 var config float fWillToSurviveDRBonus;
 
 var config int iAcidVolumeDuration;
+var config int iAdrenalNeurosympathyAimBonus;
+var config int iAdrenalNeurosympathyCritChanceBonus;
+var config int iAdrenalineSurgeAimBonus;
+var config int iAdrenalineSurgeCritChanceBonus;
+var config int iAggressionCritChanceBonusPerVisibleEnemy;
+var config int iAggressionMaximumBonus;
 var config int iAlienGrenadesDamageBonusForAPGrenades;
 var config int iAlienGrenadesDamageBonusForGrenadeLauncher;
+var config int iAutomatedThreatAssessmentDefenseBonus;
+var config int iBattleRifleSecondActionAimPenalty;
 var config int iBattleScannerVolumeDuration;
+var config int iBloodCallAimBonus;
+var config int iBodyShieldAimPenalty;
+var config int iCatchingBreathAimPenalty;
+var config int iCombatDrugsCritChanceBonus;
 var config int iCombatDrugsVolumeDuration;
+var config int iCombatDrugsWillBonus;
+var config int iCombatStimsWillBonus;
+var config int iConcealmentCritChanceBonus;
+var config int iDamnGoodGroundAimBonus;
+var config int iDamnGoodGroundDefenseBonus;
+var config int iDeadeyeAimBonus;
+var config int iDenseSmokeDefenseBonus;
+var config int iDepthPerceptionAimBonus;
+var config int iDepthPerceptionCritChanceBonus;
+var config int iDisablingShotAimPenalty;
+var config int iDisorientedAimPenalty;
+var config int iDistortionFieldDefenseBonus;
 var config int iEnhancedPlasmaDamageBonus;
+var config int iEspritDeCorpsDefenseBonus;
+var config int iEspritDeCorpsWillBonus;
+var config int iExecutionerAimBonus;
+var config int iExecutionerCritChanceBonus;
+var config int iFireInTheHoleAimBonusForRockets;
 var config int iFireVolumeDuration;
+var config int iFlushAimBonus;
+var config int iGreenFogMaximumAimLoss;
+var config int iGreenFogMaximumWillLoss;
+var config int iHeightAdvantageAimBonus;
+var config int iHoloTargetingAimBonus;
+var config int iHyperReactivePupilsAimBonus;
+var config int iInTheZoneCritPenaltyPerShot;
 var config int iImprovedMedikitHealBonus;
+var config int iLoneWolfAimBonus;
+var config int iLoneWolfCritChanceBonus;
 var config int iMecCloseCombatDamageBonus;
 var config int iMayhemDamageBonusForGrenades;
 var config int iMayhemDamageBonusForMachineGuns;
@@ -60,28 +112,46 @@ var config int iMayhemDamageBonusForProximityMines;
 var config int iMayhemDamageBonusForRocketLaunchers;
 var config int iMayhemDamageBonusForSniperRifles;
 var config int iMayhemDamageBonusForSuppression;
+var config int iMindControlHitModifier;
+var config int iMindfrayAimPenalty;
+var config int iMindfrayHitModifier;
 var config int iMindfrayDamage;
 var config int iMedikitHealBase;
+var config int iNeuralDampingWillBonus;
+var config int iPlatformStabilityAimBonus;
+var config int iPlatformStabilityAimBonusForRockets;
+var config int iPlatformStabilityCritChanceBonus;
 var config int iPrecisionShotDamageBonusForBallisticSniper;
 var config int iPrecisionShotDamageBonusForGaussSniper;
 var config int iPrecisionShotDamageBonusForLaserSniper;
 var config int iPrecisionShotDamageBonusForPulseSniper;
 var config int iPrecisionShotDamageBonusForPlasmaSniper;
+var config int iPsiPanicHitModifier;
 var config int iRangerDamageBonusPistol;
 var config int iRangerDamageBonusPrimary;
+var config int iRapidFireAimPenalty;
 var config int iReflexPistolsDamageBonus;
 var config int iRepairHealBaseAliens;
 var config int iRepairHealBaseXCOM;
 var config int iRiftVolumeDuration;
 var config int iSapperDamageBonus;
 var config int iSaviorHealBonus;
+var config int iSemperVigilansDefenseBonus;
 var config int iSmartMacrophagesHealBonus;
+var config int iSmokeGrenadeDefenseBonus;
 var config int iSmokeGrenadeVolumeDuration;
+var config int iSnapShotAimPenalty;
+var config int iSharpshooterAimBonus;
+var config int iSharpshooterCritChanceBonus;
 var config int iShredderDebuffDurationFromEnemyGrenade;
 var config int iShredderDebuffDurationFromEnemyWeapon;
 var config int iShredderDebuffDurationFromPerk;
 var config int iShredderDebuffDurationFromRocket;
 var config int iShredderDebuffDurationFromSmallItem;
+var config int iSquadsightCritChancePenalty;
+var config int iSuppressionAimPenalty;
+var config int iTacticalSenseDefenseBonusPerVisibleEnemy;
+var config int iTacticalSenseMaximumBonus;
 var config int iTelekineticFieldDefenseBonus;
 var config int iTelekineticFieldVolumeDuration;
 var config int iVitalPointTargetingDamageBonusPistol;
@@ -143,18 +213,75 @@ simulated function BuildWeapons()
 
 simulated function int CalcBaseHitChance(XGUnitNativeBase kShooter, XGUnitNativeBase kTarget, bool bReactionFire)
 {
-    local int MyHitChance, BaseGameHitChance;
+    local int iDefense, iHitChance;
 
-    // TODO: this is temporary until we're satisfied that the hit chance calculation matches
-    BaseGameHitChance = super.CalcBaseHitChance(kShooter, kTarget, bReactionFire);
-    MyHitChance = CalcBaseHitChance_Original(kShooter, kTarget, bReactionFire);
+    `LWCE_LOG_CLS("CalcBaseHitChance");
 
-    if (BaseGameHitChance != MyHitChance)
+    if (kTarget.m_bVIP) // Probably right, needs confirmation
     {
-        `LWCE_LOG_CLS("ERROR: hit chance calculation did not match base game! Our value = " $ MyHitChance $ ", base game = " $ BaseGameHitChance);
+        if (kTarget.m_kCharacter.m_kChar.iType == eChar_Civilian || kShooter.m_kCharacter.m_kChar.aProperties[eCP_MeleeOnly] != 0)
+        {
+            return 100;
+        }
     }
 
-    return MyHitChance;
+    iDefense = kTarget.m_aCurrentStats[eStat_Defense];
+
+    if (kTarget.IsInTelekineticField())
+    {
+        iDefense += iTelekineticFieldDefenseBonus;
+    }
+
+    if (kTarget.m_kSquad != none && kTarget.m_kSquad.SquadHasStarOfTerra(/* PowerA */ true))
+    {
+        iDefense += class'XGTacticalGameCoreNativeBase'.default.TERRA_DEFENSE;
+    }
+
+    if (kTarget.IsFlankedBy(kShooter))
+    {
+        // Remove cover bonuses from target's defense stat
+        kTarget.UpdateCoverBonuses(kShooter);
+
+        if (kTarget.IsAffectedByAbility(eAbility_TakeCover)) // Hunker Down
+        {
+            iDefense -= kTarget.m_iCurrentCoverValue * HUNKER_BONUS;
+        }
+        else
+        {
+            iDefense -= kTarget.m_iCurrentCoverValue;
+        }
+    }
+
+    iHitChance = kShooter.m_aCurrentStats[eStat_Offense] - iDefense;
+
+    if (kShooter.HasHeightAdvantageOver(XGUnit(kTarget)))
+    {
+        iHitChance += iHeightAdvantageAimBonus;
+    }
+
+    if (bReactionFire && kShooter.m_kCharacter.m_kChar.aUpgrades[`LW_PERK_ID(Opportunist)] == 0 && kShooter.m_kCharacter.m_kChar.aUpgrades[`LW_PERK_ID(AdvancedFireControl)] == 0)
+    {
+        if (kTarget.m_bDashing)
+        {
+            iHitChance *= DASHING_REACTION_MODIFIER;
+        }
+        else
+        {
+            iHitChance *= REACTION_PENALTY;
+        }
+    }
+
+    if (kShooter.IsPoisoned())
+    {
+        iHitChance -= POISONED_AIM_PENALTY;
+    }
+
+    if (kShooter.IsMine())
+    {
+        // TODO very unclear what the hell is happening in here, or whether any of it matters
+    }
+
+    return iHitChance;
 }
 
 // This function is reverse-engineered from its native version in XGTacticalGameCoreNativeBase.

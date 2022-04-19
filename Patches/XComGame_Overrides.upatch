@@ -214,22 +214,3 @@ OBJECT = XComAlienSpawnVolume.Touch : AUTO
 // return;
 04 0B
 53
-
-
-
-
-
-
-/*******************************************
- * XGAbility_Targeted: replace GetHitChance with Mutate
- *******************************************/
-
-OBJECT = XGAbility_Targeted.GetHitChance : AUTO
-[REPLACEMENT_CODE]
-// WorldInfo.Game.Mutate("XGAbility_Targeted.GetHitChance|" $ Name, GetALocalPlayerController());
-19 19 01 <Engine.Actor.WorldInfo> [@] <Engine.WorldInfo.Game> 00 ( 01 <Engine.WorldInfo.Game> ) [@] <NullRef> 00 ( 1B <Mutate> 70 1F <%t "XGAbility_Targeted.GetHitChance|"> 38 57 01 <Core.Object.Name> 16 1C <Engine.Actor.GetALocalPlayerController> 16 16 )
-
-// return m_iHitChance;
-04 01 <@m_iHitChance>
-04 3A <.ReturnValue>
-53

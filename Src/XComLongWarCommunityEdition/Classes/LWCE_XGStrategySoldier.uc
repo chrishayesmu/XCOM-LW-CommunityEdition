@@ -27,6 +27,11 @@ static function string GetSoldierClassName(int iClassId)
 {
     local string strName;
 
+    if (iClassId == 0)
+    {
+        return "";
+    }
+
     if (iClassId <= 44) // Long War's highest class ID, for the Valkyrie
     {
         strName = class'XGLocalizedData'.default.SoldierClassNames[iClassId];

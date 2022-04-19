@@ -32,10 +32,6 @@ function Mutate(string MutateString, PlayerController Sender)
     {
         Handle_XComProjectile_InitProjectile(tArgs);
     }
-    else if (tArgs.MutateString == "XGAbility_Targeted.GetHitChance")
-    {
-        Handle_XGAbility_Targeted_GetHitChance(tArgs);
-    }
     else if (tArgs.MutateString == "XGLoadoutMgr.ApplyInventory")
     {
         Handle_XGLoadoutMgr_ApplyInventory(tArgs);
@@ -122,15 +118,6 @@ private function Handle_XComUnitPawn_TakeDirectDamage(const out MutateArguments 
     kPawn.DamageEvent_CauseOfDeath = DmgBlank;
 
     class'LWCE_XComUnitPawn_Extensions'.static.TakeDirectDamage(kPawn, Dmg);
-}
-
-private function Handle_XGAbility_Targeted_GetHitChance(const out MutateArguments tArgs)
-{
-    local XGAbility_Targeted kAbility;
-
-    kAbility = XGAbility_Targeted(FindActorByNameAndClass(tArgs.SenderName, class'XGAbility_Targeted'));
-
-    class'LWCE_XGAbility_Extensions'.static.GetHitChance(kAbility);
 }
 
 private function Handle_XGLoadoutMgr_ApplyInventory(const out MutateArguments tArgs)

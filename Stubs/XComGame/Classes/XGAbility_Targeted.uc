@@ -153,12 +153,12 @@ replication
         m_kInitialReplicationData_XGAbility_Targeted;
 
     if(bNetDirty && Role == ROLE_Authority)
-        m_aTargets, m_bCritical, 
-        m_bHit, m_bHit_NonUnitTarget, 
-        m_bReflected, m_bRemoveAbility, 
-        m_iActualDamage, m_iActualEnvironmentDamage, 
-        m_iCriticalChance, m_iHitChance, 
-        m_kVolume, m_shotHUDCritChanceStats, 
+        m_aTargets, m_bCritical,
+        m_bHit, m_bHit_NonUnitTarget,
+        m_bReflected, m_bRemoveAbility,
+        m_iActualDamage, m_iActualEnvironmentDamage,
+        m_iCriticalChance, m_iHitChance,
+        m_kVolume, m_shotHUDCritChanceStats,
         m_shotHUDDMGStats, m_shotHUDHitChanceStats;
 }
 
@@ -216,9 +216,9 @@ native simulated function int GetPrecisionShotPerkDamageDamageAdd();
 native simulated function int GetMayhemPerkBonusDamage();
 native simulated function int GetXenobiologyOverlaysBonusDamage();
 native simulated function AddShotHUDStat(XGAbility_Targeted.ShotHUDStatType StatType, const out TShotHUDStat kStat);
-native simulated function AddDamageStat(out float BaseDamage, float fDelta, optional string strTitle=" | ", optional XGTacticalGameCoreNativeBase.EPerkType iPerk);
-native simulated function AddHitChanceStat(out int iHitChance, int iDelta, optional string strTitle=" | ", optional XGTacticalGameCoreNativeBase.EPerkType iPerk, optional string strBuffTitleForce);
-native simulated function AddCritChanceStat(out int iCritChance, int iDelta, optional string strTitle=" | ", optional XGTacticalGameCoreNativeBase.EPerkType iPerk);
+native simulated function AddDamageStat(out float BaseDamage, float fDelta, optional string strTitle=" | ", optional EPerkType iPerk);
+native simulated function AddHitChanceStat(out int iHitChance, int iDelta, optional string strTitle=" | ", optional EPerkType iPerk, optional string strBuffTitleForce);
+native simulated function AddCritChanceStat(out int iCritChance, int iDelta, optional string strTitle=" | ", optional EPerkType iPerk);
 native simulated function int CalcOverallDamageModFromPerk(float BaseDamage);
 simulated function int GetActualDamage(){}
 simulated function int GetActualEnvironmentalDamage(){}

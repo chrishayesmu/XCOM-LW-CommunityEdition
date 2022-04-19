@@ -24,6 +24,16 @@ simulated function Override_GetTWeapon(out LWCE_TWeapon kWeapon) {}
 function OnAbilitiesBuilt(array<TAbility> arrAbilities) {}
 
 /// <summary>
+/// TODO
+/// </summary>
+function AddCritChanceModifiers(XGAbility_Targeted kAbility, out TShotInfo kInfo) {}
+
+/// <summary>
+/// TODO
+/// </summary>
+function AddHitChanceModifiers(XGAbility_Targeted kAbility, out TShotInfo kInfo) {}
+
+/// <summary>
 /// Called when the perks list is built at the start of the battle. This is also called on the strategy
 /// layer, so that perks can be shown in the Barracks, on items, etc.
 /// </summary>

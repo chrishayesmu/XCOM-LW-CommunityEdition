@@ -1,28 +1,45 @@
-// TODO: logging in GetHitChance is temporary until we're satisfied that the hit chance calculation matches
-
 `define LWCE_GENERATOR_XGABILITY_TARGETED \
 function CalcDamage() \
 { \
     class'LWCE_XGAbility_Extensions'.static.CalcDamage(self); \
 } \
 \
+simulated function int GetCriticalChance() \
+{ \
+    return class'LWCE_XGAbility_Extensions'.static.GetCriticalChance(self); \
+} \
+\
+simulated function GetCritSummary(out TShotResult kResult, out TShotInfo kInfo) \
+{ \
+    class'LWCE_XGAbility_Extensions'.static.GetCritSummary(self, kInfo); \
+} \
+\
 simulated function int GetHitChance() \
 { \
-    local int iBaseHitChance, iOurHitChance; \
-\
-\
-    iBaseHitChance = super(XGAbility_Targeted).GetHitChance(); \
-    iOurHitChance = class'LWCE_XGAbility_Extensions'.static.GetHitChance(self); \
-\
-    if (iBaseHitChance != iOurHitChance) \
-    { \
-        `LWCE_LOG_CLS("ERROR: hit chance calculation did not match base game! Our value = " $ iOurHitChance $ ", base game = " $ iBaseHitChance); \
-    } \
-\
-    return iOurHitChance; \
+    return class'LWCE_XGAbility_Extensions'.static.GetHitChance(self); \
 } \
 \
 simulated function int GetPossibleDamage() \
 { \
     return class'LWCE_XGAbility_Extensions'.static.GetPossibleDamage(self); \
+} \
+\
+simulated function int GetScatterChance(float fUnrealDist) \
+{ \
+    return class'LWCE_XGAbility_Extensions'.static.GetScatterChance(self, fUnrealDist); \
+} \
+\
+simulated function GetShotSummary(out TShotResult kResult, out TShotInfo kInfo) \
+{ \
+    class'LWCE_XGAbility_Extensions'.static.GetShotSummary(self, kResult, kInfo); \
+} \
+\
+simulated function GetUIHitChance(out int iUIHitChance, out int iUICriticalChance) \
+{ \
+    class'LWCE_XGAbility_Extensions'.static.GetUIHitChance(self, iUIHitChance, iUICriticalChance); \
+} \
+\
+function RollForHit(XGAction_Fire kFireAction) \
+{ \
+    class'LWCE_XGAbility_Extensions'.static.RollForHit(self, kFireAction); \
 } \

@@ -29,6 +29,9 @@ m_strRenameDialogCancel="Random"
 m_strRenameDialogText="How do you want to choose a new name?"
 m_strRenameDialogTitle="Rename Ship"
 
+[LWCE_UISquadSelect_SquadList]
+m_strPromotionAvailable="Can Promote"
+
 [LWCE_XGCustomizeUI]
 m_strGenderLabel="GENDER"
 m_strGenderMale="Male"

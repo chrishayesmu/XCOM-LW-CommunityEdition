@@ -34,6 +34,100 @@ function TInventory GetTInventory()
     return m_kCEChar.kInventory;
 }
 
+function int GetSituationalWill(bool bIncludeBaseStat, bool bIncludeNeuralDamping, bool bIncludeCombatStims)
+{
+    local int iMod, iWill;
+    local XGTacticalGameCore kGameCore;
+
+    kGameCore = `GAMECORE;
+
+    if (bIncludeBaseStat)
+    {
+        iWill += GetWill();
+    }
+
+    if (bIncludeNeuralDamping && HasPerk(`LW_PERK_ID(NeuralDamping)))
+    {
+        iWill += `LWCE_TACCFG(iNeuralDampingWillBonus);
+    }
+
+    if (bIncludeCombatStims && GetAppliedAbility(eAbility_CombatStim) != none)
+    {
+        iWill += `LWCE_TACCFG(iCombatStimsWillBonus);
+    }
+
+    if (m_bInCombatDrugs)
+    {
+        iWill += `LWCE_TACCFG(iCombatDrugsWillBonus);
+    }
+
+    if (HasPerk(`LW_PERK_ID(LegioPatriaNostra)))
+    {
+        iWill += kGameCore.CalcInternationalWillBonus();
+    }
+
+    // Esprit de Corps
+    if (GetSquad().SquadHasStarOfTerra(/* PowerA */ true) && !kGameCore.CharacterHasProperty(GetCharType(), eCP_Robotic))
+    {
+        iWill += `LWCE_TACCFG(iEspritDeCorpsWillBonus);
+    }
+
+    iWill += GetBattleFatigueWillPenalty() + GetFallenComradesWillPenalty();
+
+    if (kGameCore.IsOptionEnabled(`LW_SECOND_WAVE_ID(GreenFog)) && !IsAI())
+    {
+        iMod = `BATTLE.m_iTurn * `LWCE_TACCFG(fGreenFogWillLossPerTurn);
+        iMod = Clamp(iMod, `LWCE_TACCFG(iGreenFogMaximumWillLoss), 0);
+
+        iWill += iMod;
+    }
+
+    return iWill;
+}
+
+/// <summary>
+/// Retrieves the actual amount of defense this unit is receiving from cover versus the given attacker.
+/// While XGUnit contains a field called "m_iCurrentCoverValue", for some reason that field includes some
+/// perk bonuses and other effects.
+/// </summary>
+function int GetTrueCoverValue(XGUnit kAttacker)
+{
+    local int iNonCoverBonus;
+
+    UpdateCoverBonuses(kAttacker);
+
+    // Use superclass function to get the value that would've been baked into m_iCurrentCoverValue
+    iNonCoverBonus = super.GetTacticalSenseCoverBonus();
+
+    // TODO what perk values are in m_iCurrentCoverValue? probably not ours from config
+    if (HasBonus(`LW_PERK_ID(DamnGoodGround)) && HasHeightAdvantageOver(kAttacker))
+    {
+        iNonCoverBonus += 10;
+    }
+
+    if (m_bInSmokeBomb)
+    {
+        iNonCoverBonus += 20;
+    }
+
+    if (m_bInDenseSmoke)
+    {
+        iNonCoverBonus += 20;
+    }
+
+    if (HasBonus(`LW_PERK_ID(AutomatedThreatAssessment)))
+    {
+        iNonCoverBonus += 15;
+    }
+
+    if (HasAirEvadeBonus())
+    {
+        iNonCoverBonus += `GAMECORE.AIR_EVADE_DEF;
+    }
+
+    return Max(0, m_iCurrentCoverValue - iNonCoverBonus);
+}
+
 function GivePerk(int iPerkId, optional int iSourceTypeId = 0, optional int iSourceId = 0)
 {
     local LWCE_TIDWithSource kPerkData;
@@ -74,6 +168,12 @@ function bool HasCharacterProperty(int iCharPropId)
 
 function bool HasPerk(int iPerkId)
 {
+    // Need to check base game data as well for effects that only apply there
+    if (iPerkId < ePerk_MAX && m_kCharacter.m_kChar.aUpgrades[iPerkId] != 0)
+    {
+        return true;
+    }
+
     if (m_kCEChar.arrPerks.Find('Id', iPerkId) != INDEX_NONE)
     {
         return true;
@@ -90,6 +190,11 @@ function bool HasTraversal(int iTraversalId)
     }
 
     return false;
+}
+
+function bool IsInExecutionerRange()
+{
+    return GetHealthPct() <= `LWCE_TACCFG(fExecutionerHealthThreshold);
 }
 
 function bool IsPsionic()
@@ -331,8 +436,6 @@ function int AbsorbDamage(const int IncomingDamage, XGUnit kDamageCauser, XGWeap
 
 function AddBonus(int iBonus)
 {
-    `LWCE_LOG_CLS("AddBonus: iBonus = " $ iBonus);
-
     if (iBonus < ePerk_MAX)
     {
         super.AddBonus(iBonus);
@@ -1513,6 +1616,11 @@ simulated function bool GenerateAbilities_CheckForFlyAbility(int iAbility, out a
     return true;
 }
 
+simulated function int GetAggressionBonus()
+{
+    return Clamp(`LWCE_TACCFG(iAggressionCritChanceBonusPerVisibleEnemy) * m_arrVisibleEnemies.Length, 0, `LWCE_TACCFG(iAggressionMaximumBonus));
+}
+
 simulated function array<int> GetBonusesPerkList()
 {
     m_iNumOfBonuses = m_arrCEBonuses.Length;
@@ -1755,15 +1863,26 @@ simulated function int GetOffense()
 
     if (IsBeingSuppressed())
     {
-        iAim -= class'XGTacticalGameCoreNativeBase'.const.SUPPRESSION_AIM_PENALTY;
+        iAim -= `LWCE_TACCFG(iSuppressionAimPenalty);
     }
 
     if (IsPoisoned())
     {
+        // TODO move this to LWCE config
         iAim -= kGameCore.POISONED_AIM_PENALTY;
     }
 
     return iAim;
+}
+
+simulated function int GetTacticalSenseCoverBonus()
+{
+    if (!HasPerk(`LW_PERK_ID(TacticalSense)))
+    {
+        return 0;
+    }
+
+    return Clamp(`LWCE_TACCFG(iTacticalSenseDefenseBonusPerVisibleEnemy) * m_arrVisibleEnemies.Length, 0, `LWCE_TACCFG(iTacticalSenseMaximumBonus));
 }
 
 simulated function GetTargetsInRange(int iTargetType, int iRangeType, out array<XGUnitNativeBase> arrTargets, Vector vLocation, optional XGWeapon kWeapon, optional float fCustomRange = 0.0, optional bool bNoLOSRequired, optional bool bSkipRoboticUnits = false, optional bool bSkipNonRoboticUnits = false, optional int eType = 0)

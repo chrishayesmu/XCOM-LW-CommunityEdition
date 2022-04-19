@@ -213,6 +213,57 @@ function bool HasSoldierOfRankOrHigher(int iRank)
     return false;
 }
 
+// Rewritten for Long War: tries to find the index of the soldier who's going to be commanding this mission,
+// based on who has the highest officer rank, with a tie-breaker for which soldier has the highest will.
+// In LWCE, this has been moved to GetCommandingSoldierIndex.
+function int LoadOrUnloadSoldier(int kSoldier, XGShip_Dropship kSkyranger, optional int kMission = -2)
+{
+    `LWCE_LOG_CLS("ERROR: LWCE-incompatible function LoadOrUnloadSoldier was called. This needs to be replaced with GetCommandingSoldierIndex. Stack trace follows.");
+    ScriptTrace();
+    return -1;
+}
+
+// Rewritten for Long War: tries to find the index of the soldier who's going to be commanding this mission,
+// based on who has the highest officer rank, with a tie-breaker for which soldier has the highest will.
+function int GetCommandingSoldierIndex(XGShip_Dropship kSkyranger)
+{
+    local int iSoldier, iOfficer;
+
+    // LWCE: fix a None access when soldier slot 0 is empty
+    // Override kMission and ignore whatever's passed in, so we always use a valid soldier slot
+    iOfficer = -1;
+
+    for (iSoldier = 0; iSoldier < kSkyranger.m_arrSoldiers.Length; iSoldier++)
+    {
+        if (kSkyranger.m_arrSoldiers[iSoldier] == none)
+        {
+            continue;
+        }
+
+        if (iOfficer < 0)
+        {
+            iOfficer = iSoldier;
+        }
+
+        if (kSkyranger.m_arrSoldiers[iSoldier].MedalCount() >= kSkyranger.m_arrSoldiers[iOfficer].MedalCount())
+        {
+            if (kSkyranger.m_arrSoldiers[iSoldier].MedalCount() == kSkyranger.m_arrSoldiers[iOfficer].MedalCount())
+            {
+                if (kSkyranger.m_arrSoldiers[iSoldier].GetCurrentStat(eStat_Will) > kSkyranger.m_arrSoldiers[iOfficer].GetCurrentStat(eStat_Will))
+                {
+                    iOfficer = iSoldier;
+                }
+            }
+            else
+            {
+                iOfficer = iSoldier;
+            }
+        }
+    }
+
+    return iOfficer;
+}
+
 function PostMission(XGShip_Dropship kSkyranger, bool bSkipSetHQLocation)
 {
     local LWCE_XGStorage kStorage;
