@@ -311,12 +311,12 @@ function int GetCommandingSoldierIndex(XGShip_Dropship kSkyranger)
             continue;
         }
 
-        if (iOfficer < 0)
+        if (iOfficer < 0 && kSkyranger.m_arrSoldiers[iSoldier].MedalCount() > 0)
         {
             iOfficer = iSoldier;
         }
 
-        if (kSkyranger.m_arrSoldiers[iSoldier].MedalCount() >= kSkyranger.m_arrSoldiers[iOfficer].MedalCount())
+        if (iOfficer >= 0 && kSkyranger.m_arrSoldiers[iSoldier].MedalCount() >= kSkyranger.m_arrSoldiers[iOfficer].MedalCount())
         {
             if (kSkyranger.m_arrSoldiers[iSoldier].MedalCount() == kSkyranger.m_arrSoldiers[iOfficer].MedalCount())
             {
