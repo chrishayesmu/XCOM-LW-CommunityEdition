@@ -3,3 +3,9 @@
 .vscode
 __pycache__
 Releases/
+
+# output directores for Makefile build
+/build
+/install
+# output directory for nix build
+/result
