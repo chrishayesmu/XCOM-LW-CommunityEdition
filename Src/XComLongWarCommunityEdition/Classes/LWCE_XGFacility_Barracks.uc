@@ -284,6 +284,11 @@ function string GetClassName(int iClassId)
 {
     local int Index;
 
+    if (iClassId == 0)
+    {
+        return "";
+    }
+
     Index = arrSoldierClasses.Find('iSoldierClassId', iClassId);
 
     if (Index == INDEX_NONE)
