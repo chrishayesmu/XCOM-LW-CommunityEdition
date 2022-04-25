@@ -136,7 +136,7 @@ function bool CanPromote()
 
     iPerkId = kSoldier.LWCE_GetPerkInClassTree(iRow, GetAbilityTreeColumnAsPerkIndex(), bIsPsiPromotion);
 
-    if (bIsPsiPromotion && PSILABS().m_arrTraining.Length >= class'XGTacticalGameCore'.default.PSI_NUM_TRAINING_SLOTS)
+    if (bIsPsiPromotion && `LWCE_PSILABS.m_arrCETraining.Length >= class'XGTacticalGameCore'.default.PSI_NUM_TRAINING_SLOTS)
     {
         return false;
     }
@@ -178,23 +178,31 @@ simulated function int GetAbilityTreeBranch()
 function string GetHighlightedPerkDescription()
 {
     local bool bIsPsiPromotion;
-    local int iPerk;
+    local int iRow, iColumn;
     local string strStatChanges;
+    local LWCE_TCharacterStats kStatChanges;
+    local LWCE_TPerkTreeChoice kPerkChoice;
     local LWCE_XComPerkManager kPerkMgr;
     local LWCE_XGStrategySoldier kSoldier;
-    local LWCE_TCharacterStats kStatChanges;
 
     bIsPsiPromotion = m_iCurrentView == eSoldierView_PsiPromotion;
     kSoldier = LWCE_XGStrategySoldier(m_kSoldier);
     kPerkMgr = `LWCE_PERKS_STRAT;
+    iRow = GetAbilityTreeBranch() - 1;
+    iColumn = GetAbilityTreeColumnAsPerkIndex();
 
-    iPerk = kSoldier.LWCE_GetPerkInClassTree(GetAbilityTreeBranch() - 1, GetAbilityTreeColumnAsPerkIndex(), bIsPsiPromotion);
+    // TODO: doesn't work for Training Roulette
+    if (!kPerkMgr.TryGetPerkChoiceInTree(kPerkChoice, kSoldier, iRow, iColumn, bIsPsiPromotion))
+    {
+        `LWCE_LOG_CLS("Couldn't find perk in tree at row " $ iRow $ ", column " $ iColumn);
+        return "ERROR";
+    }
 
-    if (bIsPsiPromotion && kSoldier.PerkLockedOut(iPerk, GetAbilityTreeBranch() - 1, bIsPsiPromotion) && !kSoldier.HasPerk(iPerk))
+    if (bIsPsiPromotion && kSoldier.PerkLockedOut(kPerkChoice.iPerkId, iRow, bIsPsiPromotion) && !kSoldier.HasPerk(kPerkChoice.iPerkId))
     {
         // Rift training: uses a set bit in the Mind Control perk upgrade slot to check if the soldier has MC'd an Ethereal yet
         // TODO: consolidate the Rift/psi stuff into a few methods
-        if (iPerk == `LW_PERK_ID(Rift))
+        if (kPerkChoice.iPerkId == `LW_PERK_ID(Rift))
         {
             if ((m_kSoldier.m_kChar.aUpgrades[`LW_PERK_ID(MindControl)] & 254) == 0)
             {
@@ -202,7 +210,7 @@ function string GetHighlightedPerkDescription()
             }
         }
 
-        if (!LABS().IsResearched(kPerkMgr.GetPerkInTreePsi(iPerk | (1 << 8), 0)))
+        if (!`LWCE_HQ.ArePrereqsFulfilled(kPerkChoice.kPrereqs))
         {
             return m_strLockedPsiAbilityDescription;
         }
@@ -216,32 +224,38 @@ function string GetHighlightedPerkDescription()
 
         if (strStatChanges != "")
         {
-            return strStatChanges $ "\n" $ kPerkMgr.GetBriefSummary(iPerk);
+            return strStatChanges $ "\n" $ kPerkMgr.GetBriefSummary(kPerkChoice.iPerkId);
         }
     }
 
-    return kPerkMgr.GetBriefSummary(iPerk);
+    return kPerkMgr.GetBriefSummary(kPerkChoice.iPerkId);
 }
 
 function string GetHighlightedPromoPerkName()
 {
     local bool bIsPsiPromotion;
-    local int iPerk;
+    local int iRow, iColumn;
+    local LWCE_TPerkTreeChoice kPerkChoice;
     local LWCE_XGStrategySoldier kSoldier;
+    local LWCE_XComPerkManager kPerkMgr;
 
     bIsPsiPromotion = m_iCurrentView == eSoldierView_PsiPromotion;
     kSoldier = LWCE_XGStrategySoldier(m_kSoldier);
-    iPerk = kSoldier.LWCE_GetPerkInClassTree(GetAbilityTreeBranch() - 1, GetAbilityTreeColumnAsPerkIndex(), bIsPsiPromotion);
+    kPerkMgr = `LWCE_PERKS_STRAT;
+    iRow = GetAbilityTreeBranch() - 1;
+    iColumn = GetAbilityTreeColumnAsPerkIndex();
 
-    if (iPerk == 0)
+    // TODO: doesn't work for Training Roulette
+    if (!kPerkMgr.TryGetPerkChoiceInTree(kPerkChoice, kSoldier, iRow, iColumn, bIsPsiPromotion))
     {
-        return "";
+        `LWCE_LOG_CLS("Couldn't find perk in tree at row " $ iRow $ ", column " $ iColumn);
+        return "ERROR";
     }
 
-    if (bIsPsiPromotion && m_kSoldier.PerkLockedOut(iPerk, GetAbilityTreeColumnAsPerkIndex(), bIsPsiPromotion) && !m_kSoldier.HasPerk(iPerk))
+    if (bIsPsiPromotion && m_kSoldier.PerkLockedOut(kPerkChoice.iPerkId, iRow, bIsPsiPromotion) && !m_kSoldier.HasPerk(kPerkChoice.iPerkId))
     {
         // Rift training: uses a set bit in the Mind Control perk upgrade slot to check if the soldier has MC'd an Ethereal yet
-        if (iPerk == ePerk_Rift)
+        if (kPerkChoice.iPerkId == ePerk_Rift)
         {
             if ((m_kSoldier.m_kChar.aUpgrades[ePerk_MindControl] & 254) == 0)
             {
@@ -249,13 +263,13 @@ function string GetHighlightedPromoPerkName()
             }
         }
 
-        if (!LABS().IsResearched(perkMgr().GetPerkInTreePsi(iPerk | (1 << 8), 0)))
+        if (!`LWCE_HQ.ArePrereqsFulfilled(kPerkChoice.kPrereqs))
         {
             return m_strLockedAbilityLabel;
         }
     }
 
-    return `LWCE_PERKS_STRAT.GetPerkName(iPerk);
+    return `LWCE_PERKS_STRAT.GetPerkName(kPerkChoice.iPerkId);
 }
 
 
@@ -470,23 +484,50 @@ function bool HasItemEquipped(int iItemId)
     return `GAMECORE.TInventoryHasItemType(m_kSoldier.m_kChar.kInventory, iItemId);
 }
 
+function bool IsSlotValid(EInventorySlot eSlot)
+{
+    if (IsInCovertOperativeMode())
+    {
+        switch (eSlot)
+        {
+            case eInvSlot_Armor:
+            case eInvSlot_Large:
+                return false;
+        }
+    }
+
+    if (eSlot == eInvSlot_Pistol)
+    {
+        if (m_kSoldier.IsATank() || m_kSoldier.IsAugmented() || m_kSoldier.HasPerk(`LW_PERK_ID(FireRocket)))
+        {
+            return false;
+        }
+    }
+
+    return true;
+}
+
 function bool OnAcceptPromotion()
 {
+    local int iRow, iColumn;
     local LWCE_TPerkTreeChoice kPerkChoice;
     local LWCE_XGStrategySoldier kSoldier;
 
+    iRow = GetAbilityTreeBranch() - 1;
+    iColumn = GetAbilityTreeColumnAsPerkIndex();
     kSoldier = LWCE_XGStrategySoldier(m_kSoldier);
 
-    if (!`LWCE_PERKS_STRAT.TryGetPerkChoiceInTree(kPerkChoice, kSoldier, GetAbilityTreeBranch() - 1, GetAbilityTreeColumnAsPerkIndex(), m_iCurrentView == eSoldierView_PsiPromotion))
+    if (!`LWCE_PERKS_STRAT.TryGetPerkChoiceInTree(kPerkChoice, kSoldier, iRow, iColumn, m_iCurrentView == eSoldierView_PsiPromotion))
     {
         `LWCE_LOG_CLS("Couldn't find the selected perk for this promotion! Not applying promotion.");
-        return true;
+        return false;
     }
 
     if (m_iCurrentView == eSoldierView_PsiPromotion)
     {
-        PSILABS().AddSoldier(kSoldier, kPerkChoice.iPerkId);
+        LWCE_XGFacility_PsiLabs(PSILABS()).LWCE_AddSoldier(kSoldier, kPerkChoice);
 
+        // TODO: always go to psi labs UI, even if we came from the barracks? does this work in LW?
         if (m_bReturnToDebriefUI)
         {
             PRES().GetPsiLabsUI().GetMgr().UpdateView();
@@ -496,6 +537,8 @@ function bool OnAcceptPromotion()
         {
             SetActiveSoldier(kSoldier);
         }
+
+        return true;
     }
     else
     {
@@ -517,8 +560,7 @@ function bool OnAcceptPromotion()
             }
         }
 
-        // TODO replace stats string
-        kSoldier.LevelUpStats((GetAbilityTreeBranch() << 8) | GetAbilityTreeOption());
+        kSoldier.LWCE_LevelUpStats(kPerkChoice, GetAbilityTreeBranch());
         Sound().PlaySFX(SNDLIB().SFX_UI_ChoosePromotion);
     }
 
@@ -616,10 +658,17 @@ function OnPromotionUp()
 
 function OnPromotionDown()
 {
-    super.OnPromotionDown();
+    local bool bIsPsiPromotion;
+    local int iNewBranch, iNumPerkRows;
+
+    bIsPsiPromotion = m_iCurrentView == eSoldierView_PsiPromotion;
+    iNumPerkRows = `LWCE_PERKS_STRAT.GetNumRowsInTree(LWCE_XGStrategySoldier(m_kSoldier), bIsPsiPromotion);
+    iNewBranch = Min(GetAbilityTreeBranch() + 1, iNumPerkRows);
+
+    SetAbilityTreeBranch(iNewBranch);
+    PlayScrollSound();
     ClampAbilityTreeSelection();
 }
-
 
 function bool PreviousPerksToAssign()
 {
@@ -707,6 +756,80 @@ function UpdateAbilities()
     m_kAbilities.tblAbilities = kMenu;
 }
 
+function UpdateView()
+{
+    local LWCE_XGStrategySoldier kSoldier;
+
+    kSoldier = LWCE_XGStrategySoldier(m_kSoldier);
+
+    UpdateHeader();
+    UpdateButtonHelp();
+
+    switch (m_iCurrentView)
+    {
+        case eSoldierView_MainMenu:
+            UpdateDoll();
+            UpdateMainMenu();
+            UpdateAbilities();
+            break;
+        case eSoldierView_Promotion:
+        case eSoldierView_PsiPromotion:
+        case eSoldierView_MECPromotion:
+            UpdateDoll();
+            UpdateAbilities();
+            break;
+        case eSoldierView_Gear:
+            UpdateDoll();
+            UpdateAbilities();
+            UpdateGear();
+            UpdateLocker();
+            break;
+        case eSoldierView_GeneMods:
+            UpdateDoll();
+            UpdateAbilities();
+            break;
+        default:
+            UpdateDoll();
+            break;
+    }
+
+    super(XGScreenMgr).UpdateView();
+
+    if (m_iCurrentView == eSoldierView_Gear)
+    {
+        if (LOCKERS().m_bNarrArcWarning)
+        {
+            Narrative(`XComNarrativeMoment("ArcWarning"));
+            LOCKERS().m_bNarrArcWarning = false;
+        }
+        else if (m_bUrgeGollop)
+        {
+            m_bUrgeGollop = false;
+            Narrative(`XComNarrativeMoment("UrgeGollopEntry"));
+        }
+    }
+    else if (m_iCurrentView == eSoldierView_Promotion)
+    {
+        if (kSoldier.LWCE_GetClass() == eSC_Sniper)
+        {
+            Narrative(`XComNarrativeMoment("FirstSniper"));
+        }
+        else if (kSoldier.LWCE_GetClass() == eSC_Assault)
+        {
+            Narrative(`XComNarrativeMoment("FirstAssault"));
+        }
+        else if (kSoldier.LWCE_GetClass() == eSC_HeavyWeapons && !ISCONTROLLED())
+        {
+            Narrative(`XComNarrativeMoment("FirstHeavy"));
+        }
+        else if (kSoldier.LWCE_GetClass() == eSC_Support)
+        {
+            Narrative(`XComNarrativeMoment("FirstSupport"));
+        }
+    }
+}
+
+
 /// <summary>
 /// Returns the current column in the order [0, 1, 2], as opposed to the way the base game does it, [2, 1, 0] (and sometimes 3).
 /// </summary>
@@ -733,7 +856,7 @@ function int GetAbilityTreeColumnAsPerkIndex(optional int iRow = -1, optional in
 
     if (iNumColumns == 2)
     {
-        if (iColumn == 3)
+        if (iColumn == 2 || iColumn == 3)
         {
             return 0;
         }
@@ -856,17 +979,17 @@ function UpdateHeader()
     m_kHeader.txtStatus.iState = m_kSoldier.GetStatusUIState();
 
     m_kHeader.txtOffense.strLabel = m_strLabelOffense;
-    m_kHeader.txtOffense.StrValue = string(m_kSoldier.GetCurrentStat(eStat_Offense));
+    m_kHeader.txtOffense.StrValue = string(m_kSoldier.GetMaxStat(eStat_Offense));
     m_kHeader.txtOffense.iState = eUIState_Normal;
     m_kHeader.txtOffense.bNumber = true;
 
     m_kHeader.txtDefense.strLabel = m_strLabelDefense;
-    m_kHeader.txtDefense.StrValue = string(m_kSoldier.GetCurrentStat(eStat_Defense));
+    m_kHeader.txtDefense.StrValue = string(m_kSoldier.GetMaxStat(eStat_Defense));
     m_kHeader.txtDefense.iState = eUIState_Normal;
     m_kHeader.txtDefense.bNumber = true;
 
     m_kHeader.txtHP.strLabel = m_strLabelHPSPACED;
-    m_kHeader.txtHP.StrValue = string(m_kSoldier.GetCurrentStat(eStat_HP));
+    m_kHeader.txtHP.StrValue = string(m_kSoldier.GetMaxStat(eStat_HP));
 
     if (m_kSoldier.IsInjured())
     {

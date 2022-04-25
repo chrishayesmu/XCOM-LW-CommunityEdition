@@ -1,6 +1,40 @@
 class LWCE_XGFacility_Lockers extends XGFacility_Lockers
     dependson(LWCETypes);
 
+function bool ApplySoldierLoadout(XGStrategySoldier kSoldier, TInventory kInventory)
+{
+    local int I;
+
+    UnequipArmor(kSoldier);
+
+    if (kInventory.iArmor != 0)
+    {
+        EquipArmor(kSoldier, kInventory.iArmor);
+    }
+
+    if (kInventory.iPistol != 0 && LWCE_XGStrategySoldier(kSoldier).LWCE_GetClass() != eSC_HeavyWeapons)
+    {
+        EquipPistol(kSoldier, kInventory.iPistol);
+    }
+
+    for (I = 0; I < kInventory.iNumLargeItems; I++)
+    {
+        EquipLargeItem(kSoldier, kInventory.arrLargeItems[I], I);
+    }
+
+    for (I = 0; I < kInventory.iNumSmallItems; I++)
+    {
+        EquipSmallItem(kSoldier, kInventory.arrSmallItems[I], I);
+    }
+
+    for (I = 0; I < kInventory.iNumCustomItems; I++)
+    {
+        EquipCustomItem(kSoldier, kInventory.arrCustomItems[I], I);
+    }
+
+    return true;
+}
+
 function bool EquipArmor(XGStrategySoldier kSoldier, int iArmor)
 {
     local TInventory kOldInventory;
@@ -73,6 +107,35 @@ function bool EquipArmor(XGStrategySoldier kSoldier, int iArmor)
         {
             EquipLargeItem(kSoldier, `LWCE_STORAGE.LWCE_GetInfinitePrimary(kSoldier), 0);
         }
+    }
+
+    return true;
+}
+
+function bool EquipPistol(XGStrategySoldier kSoldier, int iPistol)
+{
+    if (LWCE_XGStrategySoldier(kSoldier).LWCE_GetClass() == eSC_HeavyWeapons)
+    {
+        return false;
+    }
+
+    if (STORAGE().GetNumItemsAvailable(iPistol) <= 0)
+    {
+        return false;
+    }
+
+    if (kSoldier.m_kChar.kInventory.iPistol == iPistol)
+    {
+        return false;
+    }
+
+    UnequipPistol(kSoldier);
+    STORAGE().ClaimItem(iPistol, kSoldier);
+    kSoldier.m_kChar.kInventory.iPistol = iPistol;
+
+    if (kSoldier.GetStatus() == eStatus_Healing || kSoldier.GetStatus() == 8)
+    {
+        kSoldier.m_kBackedUpLoadout.iPistol = iPistol;
     }
 
     return true;

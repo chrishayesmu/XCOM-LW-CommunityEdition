@@ -45,7 +45,7 @@ simulated function Init(XGStrategySoldier kSoldier, XComPlayerController _contro
     m_kSoldierStats = Spawn(class'UIStrategyComponent_SoldierStats', self);
     m_kSoldierStats.Init(GetMgr(), _controllerRef, _manager, self);
 
-    m_kMecSoldierStats = Spawn(class'UISoldierPromotion_MecBonusAbility', self);
+    m_kMecSoldierStats = Spawn(class'LWCE_UISoldierPromotion_MecBonusAbility', self);
     m_kMecSoldierStats.Init(_controllerRef, _manager, self, m_kSoldier);
 
     foreach AllActors(class'SkeletalMeshActor', m_kCameraRig)
@@ -107,7 +107,7 @@ simulated function InitializeTree()
 
 simulated function UpdateAbilityData()
 {
-    local int iRow, iColumn, iColumn_AS, iPerkId, iNumColumns, iNumActualRows, iNumMaximumRows, iSoldierRank;
+    local int iRow, iColumn, iColumn_AS, iPerkId, iNumColumns, iNumActualRows, iSoldierRank;
     local bool bIsRowPromotable, bIsFirstPromotableRow;
     local EColumnHighlightState eHighlightState;
     local LWCE_XGSoldierUI kMgr;
@@ -133,10 +133,9 @@ simulated function UpdateAbilityData()
     }
 
     iNumActualRows = kPerkMgr.GetNumRowsInTree(kSoldier, m_bPsiPromotion);
-    iNumMaximumRows = m_bPsiPromotion ? 6 : 7; // TODO: expose to modding somehow? the Flash movie would need to be changed
     bIsFirstPromotableRow = true;
 
-    for (iRow = 0; iRow < iNumMaximumRows; iRow++)
+    for (iRow = 0; iRow < 7; iRow++)
     {
         // Only populate the row (except for the rank name) if there are perks in the current tree
         if (iRow < iNumActualRows)
@@ -177,6 +176,11 @@ simulated function UpdateAbilityData()
                     {
                         // The AS columns number (2, 1, 0) instead of (0, 1, 2)
                         iColumn_AS = iNumColumns - iColumn - 1;
+
+                        if (iColumn_AS == 1 && iNumColumns == 2)
+                        {
+                            iColumn_AS = 2;
+                        }
                     }
 
                     if (iPerkId > 0)
@@ -220,7 +224,7 @@ simulated function UpdateAbilityData()
         }
         else
         {
-            eHighlightState = eCHS_Off;
+            eHighlightState = eCHS_Locked;
         }
 
         if (kSoldier.HasAnyMedal() && iRow >= 2)

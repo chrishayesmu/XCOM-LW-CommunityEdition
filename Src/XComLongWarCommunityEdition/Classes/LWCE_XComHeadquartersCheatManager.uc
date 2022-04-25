@@ -185,6 +185,24 @@ exec function LevelUpBarracks(optional int iTimes = 1)
     }
 }
 
+exec function LevelUpPsi(optional int iTimes = 1)
+{
+    local XGSoldierUI kSoldierUI;
+    local XComHQPresentationLayer kPres;
+
+    if (XGFacility_Barracks(`HQGAME.GetGameCore().GetHQ().CurrentFacility()) != none)
+    {
+        kPres = `HQPRES;
+        kSoldierUI = XGSoldierUI(kPres.GetMgr(class'LWCE_XGSoldierUI',,, true));
+
+        if (kSoldierUI != none && kSoldierUI.m_kSoldier != none)
+        {
+            kSoldierUI.m_kSoldier.m_kSoldier.iPsiXP = `GAMECORE.GetPsiXPRequired(kSoldierUI.m_kSoldier.GetPsiRank() + iTimes);
+            kSoldierUI.UpdateView();
+        }
+    }
+}
+
 /// <summary>
 /// Sets the alien research to the given level. Since the alien baseline research will always be
 /// set according to how many days have passed, this command instead modifies the alien bonus research

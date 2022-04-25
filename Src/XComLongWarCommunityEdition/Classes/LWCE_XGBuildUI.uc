@@ -118,7 +118,7 @@ protected function LWCE_ConfirmRemovalDialogue(int X, int Y)
     }
     else if (eFacility == eFacility_PsiLabs)
     {
-        if (PSILABS().m_arrTraining.Length > 0)
+        if (`LWCE_PSILABS.m_arrCETraining.Length > 0)
         {
             kDialogData.strText = m_strPsiLabsCantRemoveBody;
             m_bCantRemove = true;

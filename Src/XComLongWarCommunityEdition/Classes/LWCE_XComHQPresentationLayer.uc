@@ -360,3 +360,11 @@ simulated state State_UIMECInventory
         CAMLookAtNamedLocation(class'UIMECInventory'.default.m_strCameraTag, 1.0);
     }
 }
+
+simulated state State_UISoldierAugmentation
+{
+    simulated function Activate()
+    {
+        m_kAugmentSoldier = Spawn(class'LWCE_UISoldierAugmentation', self);
+    }
+}

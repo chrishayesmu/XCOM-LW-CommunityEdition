@@ -23,25 +23,6 @@ var LWCE_TSoldier m_kCESoldier;
 //     1 - Perk from an equipped item
 var array<LWCE_TIDWithSource> m_arrPerks;
 
-static function string GetSoldierClassName(int iClassId)
-{
-    local string strName;
-
-    if (iClassId == 0)
-    {
-        return "";
-    }
-
-    if (iClassId <= 44) // Long War's highest class ID, for the Valkyrie
-    {
-        strName = class'XGLocalizedData'.default.SoldierClassNames[iClassId];
-    }
-
-    // TODO insert mod hook here
-
-    return strName;
-}
-
 function Init()
 {
     // Called after the soldier is first spawned and set up; use this opportunity
@@ -62,9 +43,7 @@ function Init()
     m_kCESoldier.iNumKills = m_kSoldier.iNumKills;
     m_kCESoldier.kAppearance = m_kSoldier.kAppearance;
     m_kCESoldier.bBlueshirt = m_kSoldier.bBlueshirt;
-    m_kCESoldier.kClass.strName = m_kSoldier.kClass.strName;
-    m_kCESoldier.kClass.iSoldierClassId = m_kSoldier.kClass.eType;
-    m_kCESoldier.kClass.iWeaponType = m_kSoldier.kClass.eWeaponType;
+    m_kCESoldier.iSoldierClassId = m_kSoldier.kClass.eType;
 }
 
 function DEMOUltimateSoldier()
@@ -74,11 +53,23 @@ function DEMOUltimateSoldier()
 }
 
 /// <summary>
-/// TODO
+/// Applies the stat changes given to this soldier permanently. Note that not all stat types are valid
+/// for soldiers, and any that are not applicable will be ignored.
 /// </summary>
-function ApplyStatChanges(LWCE_TCharacterStats kStatChanges)
+function ApplyPermanentStatChanges(LWCE_TCharacterStats kStatChanges)
 {
-    // TODO
+    // TODO, figure out a system to make floats work for DR
+    m_kChar.aStats[eStat_HP] += kStatChanges.iHP;
+    m_kChar.aStats[eStat_Offense] += kStatChanges.iAim;
+    m_kChar.aStats[eStat_Defense] += kStatChanges.iDefense;
+    m_kChar.aStats[eStat_Mobility] += kStatChanges.iMobility;
+    m_kChar.aStats[eStat_DamageReduction] += 100 * kStatChanges.fDamageReduction;
+    m_kChar.aStats[eStat_Will] += kStatChanges.iWill;
+    m_kChar.aStats[eStat_Damage] += kStatChanges.iDamage;
+    m_kChar.aStats[eStat_CriticalShot] += kStatChanges.iCriticalChance;
+    m_kChar.aStats[eStat_FlightFuel] += kStatChanges.iFlightFuel;
+
+    SyncCharacterStatsFromVanilla();
 }
 
 function LWCE_TTransferSoldier LWCE_BuildTransferSoldier(TTransferSoldier kTransfer)
@@ -95,10 +86,56 @@ function LWCE_TTransferSoldier LWCE_BuildTransferSoldier(TTransferSoldier kTrans
         kCETransfer.aStatModifiers[iStat] = m_aStatModifiers[iStat];
     }
 
-    kCETransfer.kSoldier.kClass.iSoldierClassId = m_kCEChar.iClassId;
-    kCETransfer.kSoldier.kClass.iWeaponType = kTransfer.kSoldier.kClass.eWeaponType;
+    kCETransfer.kSoldier.iSoldierClassId = m_kCEChar.iClassId;
 
     return kCETransfer;
+}
+
+function bool CanBeAugmented()
+{
+    local int iMecClassId;
+
+    iMecClassId = `LWCE_BARRACKS.GetResultingMecClass(m_kCEChar.iClassId);
+
+    if (iMecClassId < 0)
+    {
+        return false;
+    }
+
+    switch (GetStatus())
+    {
+        case eStatus_Active:
+        case eStatus_Healing:
+        case 8: // Fatigued?
+            if (IsAugmented())
+            {
+                return false;
+            }
+
+            if (GetPsiRank() > 0) // Psions can't become MECs
+            {
+                return false;
+            }
+
+            if (IsATank())
+            {
+                return false;
+            }
+
+            if (MedalCount() > 0) // Officers can't become MECs
+            {
+                return false;
+            }
+
+            if (GetRank() < 2)
+            {
+                return false;
+            }
+
+            return true;
+        default:
+            return false;
+    }
 }
 
 /// <summary>
@@ -202,256 +239,100 @@ function CheckForDamagedOrLostItems()
     }
 }
 
-function string GetClassName()
+/// <summary>
+/// Deletes all of the soldier's perks. The optional parameter is deprecated and unused.
+/// </summary>
+function ClearPerks(optional bool /* unused */ _bClearMedalPerks = false)
 {
-    return GetSoldierClassName(m_kCEChar.iClassId);
+    local int iPerkId;
+
+    for (iPerkId = 0; iPerkId < ePerk_MAX; iPerkId++)
+    {
+        m_kChar.aUpgrades[iPerkId] = 0;
+    }
+
+    m_kCEChar.arrPerks.Length = 0;
 }
 
-function SetSoldierClass(ESoldierClass eNewClass)
+/// <summary>
+/// Converts this soldier into whichever MEC class their class augments into. This is instantaneous;
+/// it does not queue them for augmentation in the Cybernetics Lab. If this soldier's class does not
+/// have a MEC version set, this function does nothing.
+/// </summary>
+function ConvertToMecClass()
 {
-    `LWCE_LOG_DEPRECATED_CLS(SetSoldierClass);
+    local int iMecClassId;
+
+    iMecClassId = `LWCE_BARRACKS.GetResultingMecClass(LWCE_GetClass());
+
+    if (iMecClassId <= 0)
+    {
+        return;
+    }
+
+    LWCE_SetSoldierClass(eSC_Mec);
 }
 
-function LWCE_SetSoldierClass(int iNewClassId)
+/// <summary>
+/// Removes the soldier's pistol and equips a standard rocket launcher in its place.
+/// </summary>
+function EquipRocketLauncher()
 {
-    local LWCE_XGStorage kStorage;
-    local TInventory kNewLoadout;
-    local int iPreviousClassId;
-    local array<ECharacterVoice> PossibleVoices;
-    local int iEquipmentGroup;
+    // Largely copied from XGStrategySoldier.GivePsiPerks, which was rewritten to do this
+    local int iArmorItemId;
 
-    kStorage = `LWCE_STORAGE;
-    iPreviousClassId = m_kCEChar.iClassId;
-    m_kCEChar.iClassId = iNewClassId;
-    m_kCESoldier.kClass.iSoldierClassId = iNewClassId;
-    kNewLoadout = m_kChar.kInventory;
+    LOCKERS().UnequipPistol(self);
 
-    switch (iNewClassId)
+    iArmorItemId = m_kChar.kInventory.iArmor;
+
+    if (iArmorItemId == `LW_ITEM_ID(TacArmor))
     {
-        case eSC_Sniper: // Scout-Sniper
-            if (HQ().HasBonus(`LW_HQ_BONUS_ID(FirstRecce)) > 0)
-            {
-                m_kChar.aStats[eStat_Defense] += HQ().HasBonus(`LW_HQ_BONUS_ID(FirstRecce));
-            }
-
-            break;
-        case eSC_HeavyWeapons: // Weapons
-            if (HQ().HasBonus(`LW_HQ_BONUS_ID(ArmyOfTheSouthernCross)) > 0)
-            {
-                m_kChar.aStats[eStat_Offense] += HQ().HasBonus(`LW_HQ_BONUS_ID(ArmyOfTheSouthernCross));
-            }
-            break;
-        case eSC_Support: // Support
-            if (HQ().HasBonus(`LW_HQ_BONUS_ID(TaskForceArrowhead)) > 0)
-            {
-                m_kChar.aStats[eStat_Will] += HQ().HasBonus(`LW_HQ_BONUS_ID(TaskForceArrowhead));
-            }
-
-            break;
-        case eSC_Assault: // Tactical
-            if (HQ().HasBonus(`LW_HQ_BONUS_ID(Spetznaz)) > 0)
-            {
-                m_kChar.aStats[eStat_HP] += HQ().HasBonus(`LW_HQ_BONUS_ID(Spetznaz));
-            }
-
-            break;
-        case eSC_Mec:
-            m_bPsiTested = true;
-            LOCKERS().UnequipArmor(self);
-            m_kSoldier.iPsiXP = m_kChar.aStats[eStat_Will];
-            m_kChar = TACTICAL().GetTCharacter(eChar_Soldier);
-
-            CopyFromVanillaCharacter();
-            m_kCEChar.iClassId = iNewClassId;
-            m_kSoldier.iPsiRank = 0;
-
-            ClearPerks(true);
-            GivePerk(ePerk_OneForAll);
-            GivePerk(/* Combined Arms */ 138);
-
-            m_kChar.aStats[eStat_HP] += 4;
-
-            if (IsOptionEnabled(`LW_SECOND_WAVE_ID(CinematicMode)))
-            {
-                m_kChar.aStats[eStat_Offense] += int(class'XGTacticalGameCore'.default.ABDUCTION_REWARD_SCI);
-            }
-
-            if (HQ().HasBonus(`LW_HQ_BONUS_ID(Robotics)) > 0)
-            {
-                m_kChar.aStats[eStat_Offense] += HQ().HasBonus(`LW_HQ_BONUS_ID(Robotics));
-            }
-
-            // Carry over some will from the non-MEC unit
-            if ( m_kSoldier.iPsiXP - m_kChar.aStats[eStat_Will] - (4 * GetRank()) > 0)
-            {
-                m_kChar.aStats[eStat_Will] += m_kSoldier.iPsiXP - m_kChar.aStats[eStat_Will] - (4 * GetRank());
-            }
-
-            m_kSoldier.iPsiXP = 0;
-            BARRACKS().UpdateFoundryPerksForSoldier(self);
-            kNewLoadout = m_kChar.kInventory;
-            kNewLoadout.iArmor = eItem_MecCivvies;
-
-            iEquipmentGroup = 20;
-            m_kCEChar.iClassId += 20; // Base class +20 maps to the corresponding MEC class
-            m_kCESoldier.kClass.iSoldierClassId = m_kCEChar.iClassId;
-
-            if (GetRank() < 7)
-            {
-                m_kSoldier.iXP = TACTICAL().GetXPRequired(GetRank() - 1) + int(float(TACTICAL().GetXPRequired(GetRank()) - TACTICAL().GetXPRequired(GetRank() - 1)) * (float(1) - (float(TACTICAL().GetXPRequired(GetRank() + 1) - m_kSoldier.iXP) / float(TACTICAL().GetXPRequired(GetRank() + 1) - TACTICAL().GetXPRequired(GetRank())))));
-            }
-            else
-            {
-                m_kSoldier.iXP = TACTICAL().GetXPRequired(GetRank() - 1);
-            }
-
-            m_kSoldier.iRank -= 1;
-
-            if (m_kSoldier.iRank > BARRACKS().m_iHighestMecRank)
-            {
-                BARRACKS().m_iHighestMecRank = m_kSoldier.iRank;
-            }
-
-            if (!IsASpecialSoldier())
-            {
-                `CONTENTMGR.GetPossibleVoices(EGender(m_kSoldier.kAppearance.iGender), m_kSoldier.kAppearance.iLanguage, true, PossibleVoices);
-                m_kSoldier.kAppearance.iVoice = PossibleVoices[Rand(PossibleVoices.Length)];
-            }
-
-            m_bAllIn = false;
-            break;
-        case 11: // Sniper
-            iEquipmentGroup = 7;
-            break;
-        case 12: // Rocketeer
-            iEquipmentGroup = 8;
-            TACTICAL().TInventoryLargeItemsSetItem(kNewLoadout, 1, `LW_ITEM_ID(RocketLauncher));
-            TACTICAL().TInventoryLargeItemsSetItem(m_kBackedUpLoadout, 1, `LW_ITEM_ID(RocketLauncher));
-            break;
-        case 13: // Medic
-            iEquipmentGroup = 5;
-            break;
-        case 14: // Assault
-            iEquipmentGroup = 6;
-            break;
-        case 21: // Scout
-            iEquipmentGroup = 11; // strike rifles
-            break;
-        case 22: // Gunner
-            iEquipmentGroup = 4;
-            break;
-        case 23: // Engineer
-            iEquipmentGroup = 10;
-            break;
-        case 24: // Infantry
-            iEquipmentGroup = 5;
-            break;
-        case 0:
-            // TODO: incorporate classes from mods
-            iNewClassId = 1 + Rand(4);
-
-            while (iPreviousClassId == iNewClassId)
-            {
-                iNewClassId = 1 + Rand(4);
-            }
-
-            m_kCEChar.iClassId = iNewClassId;
-            m_kCESoldier.kClass.iSoldierClassId = iNewClassId;
-            GivePerk(GetPerkInClassTree(1, 2 * Rand(2), false));
-            LWCE_SetSoldierClass(iNewClassId);
-
-            return;
-        default:
-            `LWCE_LOG_CLS("LWCE_SetSoldierClass received unknown class ID " $ iNewClassId $ ". Can't assign this soldier a class.");
-            return;
+        LOCKERS().EquipArmor(self, `LW_ITEM_ID(TacVest));
+    }
+    else
+    {
+        LOCKERS().EquipArmor(self, `LW_ITEM_ID(TacArmor));
     }
 
-    m_kSoldier.kClass.eWeaponType = EWeaponProperty(iEquipmentGroup);
-    m_kCESoldier.kClass.iWeaponType = iEquipmentGroup;
-    m_kSoldier.kClass.strName = GetSoldierClassName(iNewClassId);
-    m_kCESoldier.kClass.strName = m_kSoldier.kClass.strName;
-
-    TACTICAL().TInventoryLargeItemsSetItem(kNewLoadout, 0, kStorage.LWCE_GetInfinitePrimary(self));
-    TACTICAL().TInventoryLargeItemsSetItem(m_kBackedUpLoadout, 0, kStorage.LWCE_GetInfinitePrimary(self));
-
-    if (iNewClassId != eSC_Mec)
-    {
-        if (HasPerk(`LW_PERK_ID(FireRocket)))
-        {
-            TACTICAL().TInventoryLargeItemsSetItem(kNewLoadout, 1, kStorage.LWCE_GetInfiniteSecondary(self));
-            TACTICAL().TInventoryLargeItemsSetItem(m_kBackedUpLoadout, 1, kStorage.LWCE_GetInfiniteSecondary(self));
-        }
-        else
-        {
-            kNewLoadout.iPistol = kStorage.LWCE_GetInfiniteSecondary(self);
-            m_kBackedUpLoadout.iPistol = kStorage.LWCE_GetInfiniteSecondary(self);
-        }
-    }
-
-    LOCKERS().ApplySoldierLoadout(self, kNewLoadout);
-
-    if (IsOptionEnabled(`LW_SECOND_WAVE_ID(TrainingRoulette)) && !IsASuperSoldier())
-    {
-        AssignRandomPerks();
-    }
-
-    // Set the soldier's cosmetics based on their class
-    if (iNewClassId != eSC_Mec)
-    {
-        // ePreviousClass: index into cosmetics config
-        iPreviousClassId = 0;
-
-        switch (m_iEnergy)
-        {
-            case 11: // Sniper
-                iPreviousClassId = 4;
-                break;
-            case 21: // Scout
-                iPreviousClassId = 6;
-                break;
-            case 12: // Rocketeer
-                iPreviousClassId = 8;
-                break;
-            case 22: // Gunner
-                iPreviousClassId = 10;
-                break;
-            case 13: // Medic
-                iPreviousClassId = 12;
-                break;
-            case 23: // Engineer
-                iPreviousClassId = 14;
-                break;
-            case 14: // Assault
-                iPreviousClassId = 16;
-                break;
-            case 24: // Infantry
-                iPreviousClassId = 18;
-                break;
-        }
-
-        if (iPreviousClassId != 0)
-        {
-            if (class'XGTacticalGameCore'.default.HQ_BASE_POWER[iPreviousClassId] >= 1)
-            {
-                m_kSoldier.kAppearance.iArmorTint = class'XGTacticalGameCore'.default.HQ_BASE_POWER[iPreviousClassId] - 1;
-
-                if (class'XGTacticalGameCore'.default.HQ_BASE_POWER[iPreviousClassId + 1] >= 1)
-                {
-                    m_kSoldier.kAppearance.iHaircut = class'XGTacticalGameCore'.default.HQ_BASE_POWER[iPreviousClassId + 1];
-                }
-            }
-        }
-    }
-
+    // Forcibly re-equips the current armor for some reason (maybe to force the pawn to update?)
+    LOCKERS().EquipArmor(self, iArmorItemId);
+    LOCKERS().EquipLargeItem(self, `LW_ITEM_ID(RocketLauncher), 1);
     OnLoadoutChange();
 }
 
-protected function DamageItem(int iItemId, LWCE_XGStorage kStorage)
+function int LWCE_GetBaseClass()
 {
-    kStorage.LWCE_DamageItem(iItemId, 1);
+    return m_kCEChar.iBaseClassId;
+}
 
-    // Mark that an item was damaged, for the debrief UI
-    `LWCE_UTILS.AdjustItemQuantity(kStorage.m_arrCEItemsDamagedLastMission, iItemId, 1);
+function string GetClassName()
+{
+    return `LWCE_BARRACKS.GetClassName(m_kCEChar.iClassId);
+}
+
+function ESoldierClass GetClass()
+{
+    `LWCE_LOG_DEPRECATED_CLS(GetClass);
+    return eSC_None;
+}
+
+/// <summary>
+/// Retrieves the soldier's class. Note that unlike GetClass in LW 1.0, which returned the *base* class (e.g. Scout-Sniper, or MEC),
+/// this returns the *current* class (e.g. Sniper, or Jaeger). If you want the base class, which is the first non-rookie class that this
+/// soldier had (or the first MEC class they had, if a MEC), use LWCE_GetBaseClass.
+/// </summary>
+function int LWCE_GetClass()
+{
+    return m_kCEChar.iClassId;
+}
+
+/// <summary>
+/// Long War adapted this function to return the soldier's class, and it has been modified for
+/// LWCE to do the same. Mod authors should prefer using LWCE_GetClass directly.
+/// </summary>
+function int GetEnergy()
+{
+    return LWCE_GetClass();
 }
 
 function EPerkType GetPerkInClassTree(int branch, int Option, optional bool bIsPsiTree)
@@ -462,7 +343,7 @@ function EPerkType GetPerkInClassTree(int branch, int Option, optional bool bIsP
 
 function int LWCE_GetPerkInClassTree(int iRow, int iColumn, optional bool bIsPsiTree)
 {
-    if (IsOptionEnabled(`LW_SECOND_WAVE_ID(TrainingRoulette)) && !IsASuperSoldier() && iRow != 1)
+    if (IsOptionEnabled(`LW_SECOND_WAVE_ID(TrainingRoulette)) && !IsASuperSoldier() && iRow != 0)
     {
         return m_arrRandomPerks[(3 * (iRow - 1)) + iColumn];
     }
@@ -517,6 +398,13 @@ function GivePerk(int iPerkId)
     }
 }
 
+function GivePsiPerks()
+{
+
+}
+
+
+
 function bool HasAvailablePerksToAssign(optional bool CheckForPsiPromotion = false)
 {
     local int I, J, iPerkId;
@@ -539,7 +427,7 @@ function bool HasAvailablePerksToAssign(optional bool CheckForPsiPromotion = fal
                 {
                     iPerkId = kPerkMgr.LWCE_GetPerkInTree(self, I, J, /* bIsPsiTree */ true);
 
-                    if (!PerkLockedOut(iPerkId, I, true))
+                    if (!PerkLockedOut(iPerkId, I, /* isPsiPerk */ true))
                     {
                         return true;
                     }
@@ -566,21 +454,15 @@ function bool HasAvailablePerksToAssign(optional bool CheckForPsiPromotion = fal
     return false;
 }
 
+// Rewritten in LW: seems to return true if the soldier is ineligible to be augmented into a MEC.
+function bool HasMedal(int iMedal)
+{
+    return !CanBeAugmented();
+}
+
 function bool IsAugmented()
 {
-    if (m_kCEChar.iClassId >= 31 && m_kCEChar.iClassId <= 34)
-    {
-        return true;
-    }
-
-    if (m_kCEChar.iClassId >= 41 && m_kCEChar.iClassId <= 44)
-    {
-        return true;
-    }
-
-    // TODO: need a way to determine if mod-added classes are MECs
-
-    return false;
+    return `LWCE_BARRACKS.GetClassDefinition(m_kCEChar.iClassId).bIsAugmented;
 }
 
 function LevelUp(optional ESoldierClass eClass, optional out string statsString)
@@ -598,10 +480,11 @@ function LWCE_LevelUp(optional int iClassId)
     {
         if (iClassId == 0)
         {
-            iClassId = kBarracks.PickAClass(); // TODO add LWCE version
+            iClassId = kBarracks.LWCE_PickAClass();
         }
 
-        m_kCESoldier.kClass.iSoldierClassId = iClassId;
+        m_kCESoldier.iSoldierClassId = iClassId;
+        m_kCEChar.iBaseClassId = iClassId;
         m_kCEChar.iClassId = iClassId;
     }
 
@@ -643,18 +526,18 @@ function LWCE_LevelUp(optional int iClassId)
     }
 }
 
-
 function LevelUpStats(optional int statsString)
+{
+    `LWCE_LOG_DEPRECATED_CLS(LevelUpStats);
+}
+
+function LWCE_LevelUpStats(LWCE_TPerkTreeChoice kSelectedPerk, int iRank)
 {
     local int statOffense, statWill, statHealth;
     local bool bRand;
-    local int iRank, iColumn, iStatProgression;
-    local LWCE_XComPerkManager kPerksMgr;
-    local LWCE_TPerkTreeChoice kPerkChoice;
+    local int iStatProgression;
 
     bRand = IsOptionEnabled(`LW_SECOND_WAVE_ID(HiddenPotential));
-    iColumn = statsString & 255; // TODO confirm these
-    iRank = ((statsString >> 8) & 255);
 
     // TODO: move these to new config that's easier to write and includes all stat types
     for (iStatProgression = 0; iStatProgression < class'XGTacticalGameCore'.default.SoldierStatProgression.Length; iStatProgression++)
@@ -685,31 +568,30 @@ function LevelUpStats(optional int statsString)
 
     if (!IsOptionEnabled(`LW_SECOND_WAVE_ID(TrainingRoulette)))
     {
-        if (statsString > 1)
+        if (kSelectedPerk.iPerkId > 0 && kSelectedPerk.iPerkId != `LW_PERK_ID(RandomSubclass))
         {
-            kPerksMgr = `LWCE_PERKS_STRAT;
-
-            // TODO: see if we can do without the bit fiddling somehow
-            if (kPerksMgr.TryGetPerkChoiceInTree(kPerkChoice, self, iRank, iColumn, /* bIsPsiTree */ false))
-            {
-                ApplyStatChanges(kPerkChoice.kStatChanges);
-            }
+            ApplyPermanentStatChanges(kSelectedPerk.kStatChanges);
         }
     }
 
     m_kChar.aStats[eStat_HP] += statHealth;
     m_kChar.aStats[eStat_Offense] += statOffense;
     m_kChar.aStats[eStat_Will] += statWill;
+
+    SyncCharacterStatsFromVanilla();
 }
 
-function bool PerkLockedOut(int iPerkId, int iRow, optional bool isPsiPerk = false)
+function bool PerkLockedOut(int iPerkId, int iRow, optional bool bIsPsiPerk = false)
 {
-    local int iOptions, iPerk;
-    local int iRequiredRank;
+    local bool bMeetsPrereqs;
+    local int iColumn, iRequiredRank;
+    local LWCE_TPerkTreeChoice kPerkChoice, kRequestedPerkChoice;
+    local LWCE_XComPerkManager kPerkMgr;
 
+    kPerkMgr = `LWCE_PERKS_STRAT;
     iRequiredRank = iRow + 1;
 
-    if (isPsiPerk)
+    if (bIsPsiPerk)
     {
         if (IsReadyToPsiLevelUp())
         {
@@ -736,25 +618,36 @@ function bool PerkLockedOut(int iPerkId, int iRow, optional bool isPsiPerk = fal
         }
     }
 
-    for (iOptions = 0; iOptions < 3; iOptions++)
+    for (iColumn = 0; iColumn < kPerkMgr.GetNumColumnsInTreeRow(self, iRow, bIsPsiPerk); iColumn++)
     {
-        iPerk = LWCE_GetPerkInClassTree(iRow, iOptions, isPsiPerk);
+        if (!kPerkMgr.TryGetPerkChoiceInTree(kPerkChoice, self, iRow, iColumn, bIsPsiPerk))
+        {
+            `LWCE_LOG_CLS("Error: couldn't retrieve perk choice at row " $ iRow $ " and column " $ iColumn);
+            continue;
+        }
 
-        if (HasPerk(iPerk))
+        if (HasPerk(kPerkChoice.iPerkId))
         {
             return true;
         }
+
+        if (kPerkChoice.iPerkId == iPerkId)
+        {
+            kRequestedPerkChoice = kPerkChoice;
+        }
     }
 
-    if (isPsiPerk)
+    if (bIsPsiPerk)
     {
+        bMeetsPrereqs = true;
+
         if (iPerkId == ePerk_Rift)
         {
-            return (m_kChar.aUpgrades[ePerk_MindControl] & 254) == 0;
+            bMeetsPrereqs = (m_kChar.aUpgrades[ePerk_MindControl] & 254) == 1;
         }
 
-        // TODO better system for psi perk prerequisites
-        return !LABS().IsResearched(`LWCE_PERKS_STRAT.GetPerkInTreePsi(iPerkId | (1 << 8), 0));
+        bMeetsPrereqs = bMeetsPrereqs && `LWCE_HQ.ArePrereqsFulfilled(kRequestedPerkChoice.kPrereqs);
+        return !bMeetsPrereqs;
     }
 
     return false;
@@ -776,6 +669,201 @@ function LWCE_RebuildAfterCombat(TTransferSoldier kTransfer, LWCE_TTransferSoldi
     m_strCauseOfDeath = kTransfer.CauseOfDeathString;
 }
 
+function SetSoldierClass(ESoldierClass eNewClass)
+{
+    `LWCE_LOG_DEPRECATED_CLS(SetSoldierClass);
+}
+
+function LWCE_SetSoldierClass(int iNewClassId)
+{
+    local int iCarryOverWill, iEquipmentGroup, iMecClassId, iOriginalWill, iPerkColumn, iPreviousClassId;
+    local LWCE_XGFacility_Barracks kBarracks;
+    local LWCE_XGHeadquarters kHQ;
+    local LWCE_XGStorage kStorage;
+    local LWCE_XGTacticalGameCore kGameCore;
+    local LWCE_TClassDefinition kNewClassDef;
+    local LWCE_TPerkTreeChoice kPerkChoice;
+    local TInventory kNewLoadout;
+    local array<ECharacterVoice> PossibleVoices;
+
+    kBarracks = LWCE_XGFacility_Barracks(BARRACKS());
+    kGameCore = LWCE_XGTacticalGameCore(TACTICAL());
+    kHQ = LWCE_XGHeadquarters(HQ());
+    kStorage = `LWCE_STORAGE;
+    iPreviousClassId = m_kCEChar.iClassId;
+    kNewLoadout = m_kChar.kInventory;
+
+    if (iNewClassId == eSC_Mec)
+    {
+        iMecClassId = kBarracks.GetResultingMecClass(LWCE_GetClass());
+        kNewClassDef = kBarracks.GetClassDefinition(iMecClassId);
+
+        m_kCEChar.iBaseClassId = iMecClassId;
+        m_kCEChar.iClassId = iMecClassId;
+        m_kCESoldier.iSoldierClassId = iMecClassId;
+    }
+    else if (iNewClassId != 0)
+    {
+        kNewClassDef = kBarracks.GetClassDefinition(iNewClassId);
+
+        m_kCEChar.iClassId = iNewClassId;
+        m_kCESoldier.iSoldierClassId = iNewClassId;
+
+        if (m_kCEChar.iBaseClassId == 0 && kNewClassDef.bIsBaseClass)
+        {
+            `LWCE_LOG_CLS("Setting base class to " $ iNewClassId);
+            m_kCEChar.iBaseClassId = iNewClassId;
+        }
+    }
+
+    iEquipmentGroup = kNewClassDef.iWeaponType;
+
+    switch (iNewClassId)
+    {
+        case eSC_Sniper: // Scout-Sniper
+            if (kHQ.HasBonus(`LW_HQ_BONUS_ID(FirstRecce)) > 0)
+            {
+                m_kChar.aStats[eStat_Defense] += kHQ.HasBonus(`LW_HQ_BONUS_ID(FirstRecce));
+            }
+
+            break;
+        case eSC_HeavyWeapons: // Weapons
+            if (kHQ.HasBonus(`LW_HQ_BONUS_ID(ArmyOfTheSouthernCross)) > 0)
+            {
+                m_kChar.aStats[eStat_Offense] += kHQ.HasBonus(`LW_HQ_BONUS_ID(ArmyOfTheSouthernCross));
+            }
+            break;
+        case eSC_Support: // Support
+            if (kHQ.HasBonus(`LW_HQ_BONUS_ID(TaskForceArrowhead)) > 0)
+            {
+                m_kChar.aStats[eStat_Will] += kHQ.HasBonus(`LW_HQ_BONUS_ID(TaskForceArrowhead));
+            }
+
+            break;
+        case eSC_Assault: // Tactical
+            if (kHQ.HasBonus(`LW_HQ_BONUS_ID(Spetznaz)) > 0)
+            {
+                m_kChar.aStats[eStat_HP] += kHQ.HasBonus(`LW_HQ_BONUS_ID(Spetznaz));
+            }
+
+            break;
+        case eSC_Mec:
+            LOCKERS().UnequipArmor(self);
+
+            m_bPsiTested = true;
+            iOriginalWill = m_kChar.aStats[eStat_Will];
+            m_kChar = kGameCore.GetTCharacter(eChar_Soldier);
+            m_kSoldier.iPsiRank = 0;
+
+            ClearPerks();
+            GivePerk(`LW_PERK_ID(OneForAll));
+            GivePerk(`LW_PERK_ID(CombinedArms));
+
+            ApplyPermanentStatChanges(`LWCE_STRATCFG(BaseStatsChangeWhenAugmented));
+
+            if (IsOptionEnabled(`LW_SECOND_WAVE_ID(CinematicMode)))
+            {
+                m_kChar.aStats[eStat_Offense] += int(class'XGTacticalGameCore'.default.ABDUCTION_REWARD_SCI);
+            }
+
+            if (kHQ.HasBonus(`LW_HQ_BONUS_ID(Robotics)) > 0)
+            {
+                m_kChar.aStats[eStat_Offense] += kHQ.HasBonus(`LW_HQ_BONUS_ID(Robotics));
+            }
+
+            // Carry over some will from the non-MEC unit
+            iCarryOverWill = iOriginalWill - m_kChar.aStats[eStat_Will] - 4 * GetRank();
+            if (iCarryOverWill > 0)
+            {
+                m_kChar.aStats[eStat_Will] += iCarryOverWill;
+            }
+
+            m_kSoldier.iPsiXP = 0;
+            kBarracks.UpdateFoundryPerksForSoldier(self);
+            kNewLoadout = m_kChar.kInventory;
+            kNewLoadout.iArmor = eItem_MecCivvies;
+
+            m_kCEChar.iClassId = iMecClassId;
+            m_kCESoldier.iSoldierClassId = m_kCEChar.iClassId;
+
+            if (GetRank() < 7)
+            {
+                m_kSoldier.iXP = kGameCore.GetXPRequired(GetRank() - 1) + int(float(kGameCore.GetXPRequired(GetRank()) - kGameCore.GetXPRequired(GetRank() - 1)) * (float(1) - (float(kGameCore.GetXPRequired(GetRank() + 1) - m_kSoldier.iXP) / float(kGameCore.GetXPRequired(GetRank() + 1) - kGameCore.GetXPRequired(GetRank())))));
+            }
+            else
+            {
+                m_kSoldier.iXP = kGameCore.GetXPRequired(GetRank() - 1);
+            }
+
+            m_kSoldier.iRank -= 1;
+
+            if (m_kSoldier.iRank > kBarracks.m_iHighestMecRank)
+            {
+                kBarracks.m_iHighestMecRank = m_kSoldier.iRank;
+            }
+
+            if (!IsASpecialSoldier())
+            {
+                `CONTENTMGR.GetPossibleVoices(EGender(m_kSoldier.kAppearance.iGender), m_kSoldier.kAppearance.iLanguage, true, PossibleVoices);
+                m_kSoldier.kAppearance.iVoice = PossibleVoices[Rand(PossibleVoices.Length)];
+            }
+
+            m_bAllIn = false;
+            break;
+        case 0:
+            // TODO: incorporate classes from mods
+            iNewClassId = 1 + Rand(4);
+
+            while (iPreviousClassId == iNewClassId)
+            {
+                iNewClassId = 1 + Rand(4);
+            }
+
+            m_kCEChar.iClassId = iNewClassId;
+            m_kCESoldier.iSoldierClassId = iNewClassId;
+
+            // Choose column  0 or 2; have to avoid column 1, that's Random Subclass
+            // TODO: this should be more generic since there's no guarantee a tree contains Random Subclass
+            iPerkColumn = 2 * Rand(2);
+            `LWCE_PERKS_STRAT.TryGetPerkChoiceInTree(kPerkChoice, self, 0, iPerkColumn);
+            GivePerk(kPerkChoice.iPerkId);
+            LWCE_SetSoldierClass(kPerkChoice.iNewClassId);
+
+            return;
+    }
+
+    m_kSoldier.kClass.eWeaponType = EWeaponProperty(iEquipmentGroup);
+    m_kSoldier.kClass.strName = GetClassName();
+
+    kGameCore.TInventoryLargeItemsSetItem(kNewLoadout, 0, kStorage.LWCE_GetInfinitePrimary(self));
+    kGameCore.TInventoryLargeItemsSetItem(m_kBackedUpLoadout, 0, kStorage.LWCE_GetInfinitePrimary(self));
+
+    if (iNewClassId != eSC_Mec)
+    {
+        if (HasPerk(`LW_PERK_ID(FireRocket)))
+        {
+            kGameCore.TInventoryLargeItemsSetItem(kNewLoadout, 1, kStorage.LWCE_GetInfiniteSecondary(self));
+            kGameCore.TInventoryLargeItemsSetItem(m_kBackedUpLoadout, 1, kStorage.LWCE_GetInfiniteSecondary(self));
+        }
+        else
+        {
+            kNewLoadout.iPistol = kStorage.LWCE_GetInfiniteSecondary(self);
+            m_kBackedUpLoadout.iPistol = kStorage.LWCE_GetInfiniteSecondary(self);
+        }
+    }
+
+    LOCKERS().ApplySoldierLoadout(self, kNewLoadout);
+
+    if (IsOptionEnabled(`LW_SECOND_WAVE_ID(TrainingRoulette)) && !IsASuperSoldier())
+    {
+        AssignRandomPerks();
+    }
+
+    SetCosmeticsByClass();
+    OnLoadoutChange();
+    CopyFromVanillaCharacter();
+}
+
 protected function CopyFromVanillaCharacter()
 {
     local int Index;
@@ -783,10 +871,14 @@ protected function CopyFromVanillaCharacter()
 
     m_kCEChar.strName = m_kChar.strName;
     m_kCEChar.iCharacterType = m_kChar.iType;
-    m_kCEChar.iClassId = m_kChar.eClass;
     m_kCEChar.fBioElectricParticleScale = m_kChar.fBioElectricParticleScale;
     m_kCEChar.bHasPsiGift = m_kChar.bHasPsiGift;
     m_kCEChar.kInventory = m_kChar.kInventory;
+
+    m_kCEChar.arrAbilities.Length = 0;
+    m_kCEChar.arrPerks.Length = 0;
+    m_kCEChar.arrProperties.Length = 0;
+    m_kCEChar.arrTraversals.Length = 0;
 
     // Assume for now that anything the soldier has at this point is innate, i.e. has no source
     for (Index = 0; Index < eAbility_MAX; Index++)
@@ -837,10 +929,15 @@ protected function CopyFromVanillaCharacter()
         }
     }
 
-    for (Index = 0; Index < eStat_MAX; Index++)
-    {
-        m_kCEChar.aStats[Index] = m_kChar.aStats[Index];
-    }
+    SyncCharacterStatsFromVanilla();
+}
+
+protected function DamageItem(int iItemId, LWCE_XGStorage kStorage)
+{
+    kStorage.LWCE_DamageItem(iItemId, 1);
+
+    // Mark that an item was damaged, for the debrief UI
+    `LWCE_UTILS.AdjustItemQuantity(kStorage.m_arrCEItemsDamagedLastMission, iItemId, 1);
 }
 
 protected function LoseItem(int iItemId, LWCE_XGStorage kStorage)
@@ -849,6 +946,52 @@ protected function LoseItem(int iItemId, LWCE_XGStorage kStorage)
 
     // Mark that an item was lost, for the debrief UI
     `LWCE_UTILS.AdjustItemQuantity(kStorage.m_arrCEItemsLostLastMission, iItemId, 1);
+}
+
+protected function SetCosmeticsByClass()
+{
+    local int Index;
+
+    switch (m_kCEChar.iClassId)
+    {
+        case 11: // Sniper
+            Index = 4;
+            break;
+        case 21: // Scout
+            Index = 6;
+            break;
+        case 12: // Rocketeer
+            Index = 8;
+            break;
+        case 22: // Gunner
+            Index = 10;
+            break;
+        case 13: // Medic
+            Index = 12;
+            break;
+        case 23: // Engineer
+            Index = 14;
+            break;
+        case 14: // Assault
+            Index = 16;
+            break;
+        case 24: // Infantry
+            Index = 18;
+            break;
+    }
+
+    if (Index != 0)
+    {
+        if (class'XGTacticalGameCore'.default.HQ_BASE_POWER[Index] >= 1)
+        {
+            m_kSoldier.kAppearance.iArmorTint = class'XGTacticalGameCore'.default.HQ_BASE_POWER[Index] - 1;
+
+            if (class'XGTacticalGameCore'.default.HQ_BASE_POWER[Index + 1] >= 1)
+            {
+                m_kSoldier.kAppearance.iHaircut = class'XGTacticalGameCore'.default.HQ_BASE_POWER[Index + 1];
+            }
+        }
+    }
 }
 
 protected function bool ShouldItemBeDamaged(int iItemId)
@@ -905,4 +1048,19 @@ protected function bool ShouldItemBeLost(int iItemId)
     // TODO: potential place to add a mod hook
 
     return Roll(BLUESHIRT_HP_MOD);
+}
+
+protected function SyncCharacterStatsFromVanilla()
+{
+    local int Index;
+
+    for (Index = 0; Index < eStat_MAX; Index++)
+    {
+        m_kCEChar.aStats[Index] = m_kChar.aStats[Index];
+    }
+}
+
+defaultproperties
+{
+    m_iPsionicClassId=1
 }

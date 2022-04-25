@@ -30,7 +30,6 @@ function TTableMenuOption BuildSoldierOption(XGStrategySoldier kSoldier, array<i
                 strCategory = string(kSoldier.GetRank());
                 break;
             case 2:
-                `LWCE_LOG_CLS("Setting category 2 to " $ LWCE_XGStrategySoldier(kSoldier).m_kCEChar.iClassId);
                 strCategory = string(LWCE_XGStrategySoldier(kSoldier).m_kCEChar.iClassId);
                 break;
             case 3:
@@ -115,4 +114,54 @@ function TTableMenuOption BuildSoldierOption(XGStrategySoldier kSoldier, array<i
     }
 
     return kOption;
+}
+
+function UpdateView()
+{
+    local LWCE_XGFacility_PsiLabs kPsiLabs;
+
+    kPsiLabs = `LWCE_PSILABS;
+
+    switch (m_iCurrentView)
+    {
+        case eBarracksView_MainMenu:
+            UpdateMainMenu();
+            break;
+        case eBarracksView_SoldierList:
+            UpdateSoldierList(/* bHideTanks */ false);
+            break;
+        case eBarracksView_SoldierListCovertOps:
+            UpdateSoldierList(/* bHideTanks */ true);
+            break;
+        case eBarracksView_Hire:
+            UpdateHiring();
+            break;
+    }
+
+    super(XGScreenMgr).UpdateView();
+
+    if (kPsiLabs != none && kPsiLabs.m_arrCECompleted.Length > 0)
+    {
+        PRES().UIPsiLabs();
+    }
+    else if ((BARRACKS().GetNumAvailableSoldiers() + HQ().GetStaffOnOrder(eStaff_Soldier)) < 8)
+    {
+        if (BARRACKS().m_iMoreSoldiersCounter <= 0)
+        {
+            if (!ISCONTROLLED())
+            {
+                Narrative(`XComNarrativeMoment("BarracksNeedSoldiers"));
+                BARRACKS().m_iMoreSoldiersCounter = 4;
+            }
+        }
+    }
+
+    if (m_iCurrentView == eBarracksView_MainMenu && BARRACKS().m_bNotifyPromotions && !PRES().m_bRecentlyPlayedPromotions)
+    {
+        Narrative(`XComNarrativeMoment("RoboHQ_NewPromotions"));
+        BARRACKS().m_bNotifyPromotions = false;
+
+        PRES().SetTimer(30.0, false, 'ClearPlayedPromotions');
+        PRES().m_bRecentlyPlayedPromotions = true;
+    }
 }

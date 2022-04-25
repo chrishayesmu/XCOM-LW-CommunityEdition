@@ -45,16 +45,29 @@ struct LWCE_TCharacter
     var array<LWCE_TIDWithSource> arrTraversals;
 
     var int aStats[ECharacterStat];
-    var int iClassId; // As in the ESoldierClass enum
+    var int iBaseClassId; // The first non-rookie class this character had; resets if the character becomes a MEC
+    var int iClassId;     // The character's current class
     var bool bHasPsiGift;
     var float fBioElectricParticleScale;
 };
 
-struct LWCE_TClass
+struct LWCE_TClassDefinition
 {
-    var string strName;
-    var int iSoldierClassId;
-    var int iWeaponType;
+    var string strName;           // Friendly name for this class to show the player.
+    var bool bIsAugmented;        // Whether this class is augmented (i.e. a MEC class).
+    var bool bIsBaseClass;        // Whether this is a base class. If so, rookies can be promoted directly into this class. If not, soldiers
+                                  // must be assigned this class based on selecting a perk. (Ex: Scout-Sniper is a base class, and soldiers
+                                  // are assigned the non-base class Scout when they select the Lightning Reflexes perk.)
+    var bool bIsPsionic;          // Whether this is a psionic class or not (a new concept in LWCE).
+    var int iSoldierClassId;      // The class ID.
+    var int iWeaponType;          // The type of weapon usable by this class.
+    var int iAugmentsIntoClassId; // The ID of the MEC class that this class turns into if augmented. If not set, this class cannot be augmented.
+                                  // Setting this and bIsAugmented within the same class definition will break things.
+
+    var string IconBase; // Icon without gene mods or psi training.
+    var string IconGeneModded;
+    var string IconGeneModdedAndPsionic;
+    var string IconPsionic;
 };
 
 struct LWCE_TSoldier
@@ -70,7 +83,7 @@ struct LWCE_TSoldier
     var int iPsiXP;
     var int iNumKills;
     var TAppearance kAppearance;
-    var LWCE_TClass kClass;
+    var int iSoldierClassId;
     var bool bBlueshirt;
 
     structdefaultproperties
@@ -323,6 +336,14 @@ struct LWCE_TPerkTreeChoice
     // The change to the character's stats which will be applied on choosing this perk. Some perks, such as
     // Sprinter, already add stats; those stat values should not be reflected in this field.
     var LWCE_TCharacterStats kStatChanges;
+
+    // The prerequisites that must be met before this perk can be trained. Note that this is currently only
+    // implemented for psi perk trees, and has no effect on soldier perk trees.
+    var LWCE_TPrereqs kPrereqs;
+
+    // The target will for training this perk; training time will depend on the soldier's will compared to
+    // this value. This is only implemented for psi training, not soldier perks.
+    var int iTargetWill;
 
     structdefaultproperties
     {

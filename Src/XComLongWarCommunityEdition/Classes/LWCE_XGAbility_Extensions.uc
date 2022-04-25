@@ -1746,7 +1746,7 @@ static simulated function GetShotSummary(XGAbility_Targeted kSelf, out TShotResu
     if (kTarget.HasAirEvadeBonus())
     {
         kInfo.arrHitPenaltyStrings.AddItem(kSelf.m_strPenaltyEvasion);
-        kInfo.arrHitPenaltyValues.AddItem(-1 * kGameCore.AIR_EVADE_DEF);
+        kInfo.arrHitPenaltyValues.AddItem(-1 * `LWCE_TACCFG(iFlyingDefenseBonus));
     }
 
     // Acid

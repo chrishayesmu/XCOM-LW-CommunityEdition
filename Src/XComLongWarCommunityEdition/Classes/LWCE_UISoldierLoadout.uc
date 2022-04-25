@@ -55,6 +55,13 @@ simulated function XGSoldierUI GetMgr(optional int iStaringView = -1)
     return m_kLocalMgr;
 }
 
+simulated function GFxObject GetMecArmorIconsArray(int iArmorItem)
+{
+    // Long War made most of this function not fire, but it still contains a deprecated function call
+    // so we just boil it down to this
+    return manager.CreateArray();
+}
+
 simulated function ShowItemCard()
 {
     local LWCE_TItemCard cardData;
@@ -78,6 +85,31 @@ simulated function ShowItemCard()
     }
 }
 
+simulated function UpdateData()
+{
+    local Vector kCameraOffset;
+
+    UpdateInventoryList();
+    UpdateLockerList();
+
+    if (!manager.IsMouseActive())
+    {
+        RealizeSelected();
+    }
+
+    // For MECs in suits, the camera has to be moved to accommodate their size
+    if (m_kSoldier.IsAugmented())
+    {
+        if (m_kSoldier.m_kChar.kInventory.iArmor != `LW_ITEM_ID(BaseAugments))
+        {
+            kCameraOffset += (TransformVectorByRotation(m_kCameraRig.Rotation, vect(0.0, 0.0, 1.0)) * m_kCameraRigMecVerticalOffset);
+        }
+    }
+
+    m_kCameraRig.SetLocation(m_kCameraRigDefaultLocation - kCameraOffset);
+    `HQPRES.CAMLookAtNamedLocation(m_strCameraTag, 1.0);
+}
+
 simulated function UpdateInventoryList()
 {
     local int I, Length, Type;
@@ -89,9 +121,14 @@ simulated function UpdateInventoryList()
     kMgr = LWCE_XGSoldierUI(GetMgr());
     Length = kMgr.m_kGear.arrOptions.Length;
 
+    `LWCE_LOG_CLS("UpdateInventoryList: kMgr.m_kGear.arrOptions.Length = " $ kMgr.m_kGear.arrOptions.Length);
+
     for (I = 0; I < Length; I++)
     {
         kOption = kMgr.m_kGear.arrOptions[I];
+
+        `LWCE_LOG_CLS("Option " $ I $ ": iOptionType = " $ kOption.iOptionType $ "; iState = " $ kOption.iState $ "; iSlot = " $ kOption.iSlot $ "; iItem = " $ kOption.iItem);
+        `LWCE_LOG_CLS("txtName = " $ kOption.txtName.strValue $ "; txtLabel = " $ kOption.txtLabel.StrValue);
 
         switch (kOption.iOptionType)
         {
@@ -102,7 +139,7 @@ simulated function UpdateInventoryList()
                 Type = 2;
                 break;
             case 2:
-                if (m_kSoldier.GetClass() == eSC_Mec && kOption.iSlot > 0)
+                if (m_kSoldier.IsAugmented() && kOption.iSlot > 0)
                 {
                     Type = 3;
                 }

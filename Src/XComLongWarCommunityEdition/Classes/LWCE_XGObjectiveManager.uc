@@ -174,7 +174,7 @@ function TSubObjective BuildSubObjective(ESubObjective eSubObj)
             {
                 kSub.eStatus = eObjStatus_Complete;
             }
-            else if (PSILABS().m_arrTraining.Length > 0)
+            else if (`LWCE_PSILABS.m_arrCETraining.Length > 0)
             {
                 kSub.eStatus = eObjStatus_InProgress;
             }

@@ -1,4 +1,10 @@
-class LWCE_XGFacility_Barracks extends XGFacility_Barracks;
+class LWCE_XGFacility_Barracks extends XGFacility_Barracks
+    config(LWCEClasses);
+
+var config array<LWCE_TClassDefinition> arrSoldierClassDefs;
+
+var array<LWCE_TClassDefinition> arrSoldierClasses;
+
 
 function Init(bool bLoadingFromSave)
 {
@@ -12,6 +18,7 @@ function Init(bool bLoadingFromSave)
     m_kPerkManager = Spawn(class'LWCE_XComPerkManager');
     m_kPerkManager.Init();
 
+    BuildClassDefinitions();
     BuildMedals();
 }
 
@@ -94,6 +101,21 @@ function LWCE_AddTank(int iArmorItemId, int iWeaponItemId)
     m_kLockers.ApplyTankLoadout(kTank, kTankLoadout);
     AddNewSoldier(kTank);
 
+}
+
+function BuildClassDefinitions()
+{
+    local int iClassId, Index;
+
+    arrSoldierClasses.Length = arrSoldierClassDefs.Length;
+
+    for (Index = 0; Index < arrSoldierClassDefs.Length; Index++)
+    {
+        arrSoldierClasses[Index] = arrSoldierClassDefs[Index];
+
+        iClassId = arrSoldierClasses[Index].iSoldierClassId;
+        arrSoldierClasses[Index].strName = class'XGLocalizedData'.default.SoldierClassNames[iClassId];
+    }
 }
 
 function int CalcTotalSoldierRanks()
@@ -213,14 +235,63 @@ function bool HasSoldierOfRankOrHigher(int iRank)
     return false;
 }
 
-// Rewritten for Long War: tries to find the index of the soldier who's going to be commanding this mission,
-// based on who has the highest officer rank, with a tie-breaker for which soldier has the highest will.
-// In LWCE, this has been moved to GetCommandingSoldierIndex.
-function int LoadOrUnloadSoldier(int kSoldier, XGShip_Dropship kSkyranger, optional int kMission = -2)
+function LWCE_TClassDefinition GetClassDefinition(int iClassId)
 {
-    `LWCE_LOG_CLS("ERROR: LWCE-incompatible function LoadOrUnloadSoldier was called. This needs to be replaced with GetCommandingSoldierIndex. Stack trace follows.");
-    ScriptTrace();
-    return -1;
+    local int Index;
+    local LWCE_TClassDefinition kClassDef;
+
+    Index = arrSoldierClasses.Find('iSoldierClassId', iClassId);
+
+    if (Index == INDEX_NONE)
+    {
+        kClassDef.iSoldierClassId = -1;
+        return kClassDef;
+    }
+
+    return arrSoldierClasses[Index];
+}
+
+function string GetClassIcon(int iClassId, bool bIsGeneModded, bool bIsPsionic)
+{
+    local int Index;
+
+    Index = arrSoldierClasses.Find('iSoldierClassId', iClassId);
+
+    if (Index == INDEX_NONE)
+    {
+        return "";
+    }
+
+    if (bIsGeneModded && bIsPsionic)
+    {
+        return "img:///" $ arrSoldierClasses[Index].IconGeneModdedAndPsionic;
+    }
+    else if (bIsGeneModded)
+    {
+        return "img:///" $ arrSoldierClasses[Index].IconGeneModded;
+    }
+    else if (bIsPsionic)
+    {
+        return "img:///" $ arrSoldierClasses[Index].IconPsionic;
+    }
+    else
+    {
+        return "img:///" $ arrSoldierClasses[Index].IconBase;
+    }
+}
+
+function string GetClassName(int iClassId)
+{
+    local int Index;
+
+    Index = arrSoldierClasses.Find('iSoldierClassId', iClassId);
+
+    if (Index == INDEX_NONE)
+    {
+        return "";
+    }
+
+    return arrSoldierClasses[Index].strName;
 }
 
 // Rewritten for Long War: tries to find the index of the soldier who's going to be commanding this mission,
@@ -262,6 +333,203 @@ function int GetCommandingSoldierIndex(XGShip_Dropship kSkyranger)
     }
 
     return iOfficer;
+}
+
+function ESoldierClass GetLeastCommonClass()
+{
+    `LWCE_LOG_DEPRECATED_CLS(GetLeastCommonClass);
+    return eSC_None;
+}
+
+function LWCE_TClassDefinition LWCE_GetLeastCommonClass()
+{
+    local int Index, iLeastCommonIndex;
+    local array<LWCE_TClassDefinition> arrBaseClasses;
+    local array<int> arrOccurrences;
+    local LWCE_TClassDefinition kClassDef;
+
+    foreach arrSoldierClasses(kClassDef)
+    {
+        if (kClassDef.bIsBaseClass)
+        {
+            arrBaseClasses.AddItem(kClassDef);
+        }
+    }
+
+    for (Index = 0; Index < arrBaseClasses.Length; Index++)
+    {
+        arrOccurrences[Index] = LWCE_GetNumSoldiersOfClass(arrBaseClasses[Index].iSoldierClassId);
+    }
+
+    iLeastCommonIndex = 0;
+
+    for (Index = 1; Index < arrBaseClasses.Length; Index++)
+    {
+        if (arrOccurrences[Index] < arrOccurrences[iLeastCommonIndex])
+        {
+            iLeastCommonIndex = Index;
+        }
+        else if (arrOccurrences[Index] == arrOccurrences[iLeastCommonIndex])
+        {
+            // If two classes are equally sparse, 50% chance to swap
+            if (Rand(2) == 1)
+            {
+                iLeastCommonIndex = Index;
+            }
+        }
+    }
+
+    return arrBaseClasses[iLeastCommonIndex];
+}
+
+function int LWCE_GetNumSoldiersOfBaseClass(int iClassId)
+{
+    local int iNum;
+    local XGStrategySoldier kSoldier;
+
+    foreach m_arrSoldiers(kSoldier)
+    {
+        if (LWCE_XGStrategySoldier(kSoldier).LWCE_GetBaseClass() == iClassId)
+        {
+            iNum++;
+        }
+    }
+
+    return iNum;
+}
+
+function int GetNumSoldiersOfClass(ESoldierClass eClass)
+{
+    `LWCE_LOG_DEPRECATED_CLS(GetNumSoldiersOfClass);
+    return -1;
+}
+
+function int LWCE_GetNumSoldiersOfClass(int iClassId)
+{
+    local int iNum;
+    local XGStrategySoldier kSoldier;
+
+    foreach m_arrSoldiers(kSoldier)
+    {
+        if (LWCE_XGStrategySoldier(kSoldier).LWCE_GetClass() == iClassId)
+        {
+            iNum++;
+        }
+    }
+
+    return iNum;
+}
+
+/// <summary>
+/// Returns the ID of the corresponding MEC class for the input class.
+/// If the input class cannot be augmented, returns -1.
+/// </summary>
+function int GetResultingMecClass(int iClassId)
+{
+    local LWCE_TClassDefinition kClassDef;
+
+    kClassDef = GetClassDefinition(iClassId);
+
+    if (kClassDef.iSoldierClassId < 0 || kClassDef.iAugmentsIntoClassId <= 0)
+    {
+        return -1;
+    }
+
+    return kClassDef.iAugmentsIntoClassId;
+}
+
+// Rewritten for Long War: tries to find the index of the soldier who's going to be commanding this mission,
+// based on who has the highest officer rank, with a tie-breaker for which soldier has the highest will.
+// In LWCE, this has been moved to GetCommandingSoldierIndex.
+function int LoadOrUnloadSoldier(int kSoldier, XGShip_Dropship kSkyranger, optional int kMission = -2)
+{
+    `LWCE_LOG_CLS("ERROR: LWCE-incompatible function LoadOrUnloadSoldier was called. This needs to be replaced with GetCommandingSoldierIndex. Stack trace follows.");
+    ScriptTrace();
+    return -1;
+}
+
+function ESoldierClass NeverGiven()
+{
+    `LWCE_LOG_DEPRECATED_CLS(NeverGiven);
+    return eSC_None;
+}
+
+/// <summary>
+/// Returns a base class ID which has never been assigned to a soldier in this campaign, if any exist.
+/// </summary>
+function int LWCE_NeverGiven()
+{
+    local array<LWCE_TClassDefinition> arrBaseClasses;
+    local XGStrategySoldier kSoldier;
+    local LWCE_XGStrategySoldier kCESoldier;
+    local int iClassIndex;
+    local LWCE_TClassDefinition kClassDef;
+
+    foreach arrSoldierClasses(kClassDef)
+    {
+        if (kClassDef.bIsBaseClass)
+        {
+            arrBaseClasses.AddItem(kClassDef);
+        }
+    }
+
+    foreach m_arrSoldiers(kSoldier)
+    {
+        kCESoldier = LWCE_XGStrategySoldier(kSoldier);
+        iClassIndex = arrBaseClasses.Find('iSoldierClassId', kCESoldier.LWCE_GetBaseClass());
+
+        if (iClassIndex != INDEX_NONE)
+        {
+            arrBaseClasses.Remove(iClassIndex, 1);
+        }
+    }
+
+    foreach m_arrFallen(kSoldier)
+    {
+        kCESoldier = LWCE_XGStrategySoldier(kSoldier);
+        iClassIndex = arrBaseClasses.Find('iSoldierClassId', kCESoldier.LWCE_GetBaseClass());
+
+        if (iClassIndex != INDEX_NONE)
+        {
+            arrBaseClasses.Remove(iClassIndex, 1);
+        }
+    }
+
+    if (arrBaseClasses.Length > 0)
+    {
+        return arrBaseClasses[Rand(arrBaseClasses.Length)].iSoldierClassId;
+    }
+    else
+    {
+        return 0;
+    }
+}
+
+function ESoldierClass PickAClass()
+{
+    `LWCE_LOG_DEPRECATED_CLS(PickAClass);
+    return eSC_None;
+}
+
+function int LWCE_PickAClass()
+{
+    local int iClassId;
+
+    iClassId = LWCE_NeverGiven();
+
+    if (iClassId != 0)
+    {
+        return iClassId;
+    }
+
+    if (Rand(100) > class'XGTacticalGameCore'.default.LATE_UFO_CHANCE)
+    {
+        return SelectRandomBaseClassId();
+    }
+    else
+    {
+        return LWCE_GetLeastCommonClass().iSoldierClassId;
+    }
 }
 
 function PostMission(XGShip_Dropship kSkyranger, bool bSkipSetHQLocation)
@@ -343,6 +611,31 @@ function PostMission(XGShip_Dropship kSkyranger, bool bSkipSetHQLocation)
     {
         SetAllSoldierHQLocations();
     }
+}
+
+/// <summary>
+/// Selects the class ID of a base class at random, without regard for the current or historical XCOM roster.
+/// </summary>
+function int SelectRandomBaseClassId()
+{
+    local array<LWCE_TClassDefinition> arrBaseClasses;
+    local LWCE_TClassDefinition kClassDef;
+
+    foreach arrSoldierClasses(kClassDef)
+    {
+        if (kClassDef.bIsBaseClass)
+        {
+            arrBaseClasses.AddItem(kClassDef);
+        }
+    }
+
+    // This shouldn't ever happen, but may as well check
+    if (arrBaseClasses.Length == 0)
+    {
+        return -1;
+    }
+
+    return arrBaseClasses[Rand(arrBaseClasses.Length)].iSoldierClassId;
 }
 
 function SelectSoldiersForSkyrangerSquad(XGShip_Dropship kSkyranger, out array<XGStrategySoldier> arrSoldiers, optional XGMission kMission = none)

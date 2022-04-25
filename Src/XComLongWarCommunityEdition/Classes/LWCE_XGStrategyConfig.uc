@@ -7,6 +7,8 @@ class LWCE_XGStrategyConfig extends Object
  * (such as mission rewards).
  ******************************************************************************/
 
+var config LWCE_TCharacterStats BaseStatsChangeWhenAugmented;
+
 // Config for mission rewards
 var config array<LWCE_TItemQuantity> AlienBaseAssaultRewards;
 

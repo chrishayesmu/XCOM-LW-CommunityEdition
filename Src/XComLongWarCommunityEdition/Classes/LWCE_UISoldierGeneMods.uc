@@ -32,7 +32,7 @@ simulated function Init(XGStrategySoldier kSoldier, XComPlayerController _contro
 
     if (!m_bViewOnly)
     {
-        m_kSoldier.SetHQLocation(9, true);
+        m_kSoldier.SetHQLocation(eSoldierLoc_GeneticsLab, true);
         m_kSoldier.PlaceOnPlinth(eSoldierLoc_GeneticsLab);
         class'SeqEvent_HQUnits'.static.PlayRoomSequence("GeneLab");
         m_strCameraTag = "GeneLab_UIDisplayCam";
@@ -41,7 +41,7 @@ simulated function Init(XGStrategySoldier kSoldier, XComPlayerController _contro
     }
     else
     {
-        m_kSoldier.SetHQLocation(9, true);
+        m_kSoldier.SetHQLocation(eSoldierLoc_GeneticsLab, true);
         m_kSoldier.PlaceOnPlinth(eSoldierLoc_Armory);
         ShowXRayView();
         m_strCameraTag = "Armory_UIDisplayCam_Promote";

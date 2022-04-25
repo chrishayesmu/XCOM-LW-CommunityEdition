@@ -96,6 +96,7 @@ var config int iExecutionerCritChanceBonus;
 var config int iFireInTheHoleAimBonusForRockets;
 var config int iFireVolumeDuration;
 var config int iFlushAimBonus;
+var config int iFlyingDefenseBonus;
 var config int iGreenFogMaximumAimLoss;
 var config int iGreenFogMaximumWillLoss;
 var config int iHeightAdvantageAimBonus;

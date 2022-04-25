@@ -2,6 +2,128 @@ class LWCE_XGCyberneticsUI extends XGCyberneticsUI;
 
 // TODO: remove EItemType from everywhere in this class
 
+function TTableMenuOption BuildSoldierOption(XGStrategySoldier kSoldier, array<int> arrCategories, int soldierListIndex)
+{
+    local TTableMenuOption kOption;
+    local LWCE_XGStrategySoldier kCESoldier;
+    local int iCategory;
+    local string strCategory;
+    local int iState;
+
+    kCESoldier = LWCE_XGStrategySoldier(kSoldier);
+
+    if (!kCESoldier.CanBeAugmented())
+    {
+        kOption.iState = eUIState_Disabled;
+    }
+    else
+    {
+        kOption.iState = eUIState_Good;
+    }
+
+    for (iCategory = 0; iCategory < arrCategories.Length; iCategory++)
+    {
+        iState = eUIState_Normal;
+        strCategory = "";
+
+        switch (arrCategories[iCategory])
+        {
+            case 7:
+                if (kCESoldier.m_kCEChar.iClassId == 0 || kCESoldier.GetRank() < 2)
+                {
+                    strCategory = m_strRookieState;
+                    iState = eUIState_Disabled;
+                }
+                else
+                {
+                    strCategory = kCESoldier.GetStatusString();
+                    iState = kCESoldier.GetStatusUIState();
+                }
+
+                break;
+            case 0:
+                strCategory = string(kCESoldier.m_kSoldier.iCountry);
+                break;
+            case 1:
+                strCategory = string(kCESoldier.GetRank());
+                break;
+            case 2:
+                strCategory = string(kCESoldier.GetEnergy());
+                break;
+            case 3:
+                strCategory = kCESoldier.GetClassName();
+                break;
+            case 4:
+                strCategory = kCESoldier.GetName(8); // exp I think
+                break;
+            case 5:
+                strCategory = kCESoldier.GetName(eNameType_Last);
+                break;
+            case 6:
+                strCategory = kCESoldier.GetName(eNameType_Nick);
+                break;
+            case 8:
+                if (kCESoldier.HasAvailablePerksToAssign())
+                {
+                    iState = eUIState_Disabled;
+                }
+                else
+                {
+                    iState = eUIState_Normal;
+                }
+
+                break;
+            case 9:
+                if (kCESoldier.HasAvailablePerksToAssign(true))
+                {
+                    iState = eUIState_Disabled;
+                }
+                else
+                {
+                    iState = eUIState_Normal;
+                }
+
+                break;
+            case 10:
+                if (kCESoldier.m_kChar.bHasPsiGift)
+                {
+                    iState = eUIState_Disabled;
+                }
+                else
+                {
+                    iState = eUIState_Normal;
+                }
+
+                break;
+            case 11:
+                if (class'LWCE_XComPerkManager'.static.LWCE_HasAnyGeneMod(kCESoldier.m_kCEChar))
+                {
+                    iState = eUIState_Disabled;
+                }
+                else
+                {
+                    iState = eUIState_Normal;
+                }
+
+                break;
+            case 13:
+                iState = kCESoldier.GetSHIVRank();
+                break;
+            case 12:
+                strCategory = class'UIUtilities'.static.GetMedalLabels(kCESoldier.m_arrMedals);
+                break;
+            case 14:
+                strCategory = string(soldierListIndex);
+                break;
+        }
+
+        kOption.arrStrings.AddItem(strCategory);
+        kOption.arrStates.AddItem(iState);
+    }
+
+    return kOption;
+}
+
 function UpdateInventory()
 {
     local array<LWCE_TItem> arrMecArmor;
@@ -181,6 +303,24 @@ simulated function array<TLabeledText> GetRepairCosts(int iBaseArmorId, bool bIs
     }
 
     return arrCosts;
+}
+
+function bool OnChooseSoldier(int iOption)
+{
+    local int soldierListIndex;
+
+    if (m_kSoldierTable.mnuSoldiers.arrOptions[iOption].iState == eUIState_Good)
+    {
+        soldierListIndex = int(m_kSoldierTable.mnuSoldiers.arrOptions[iOption].arrStrings[14]);
+        PRES().UISoldierAugmentation(BARRACKS().m_arrSoldiers[soldierListIndex]);
+        PlayGoodSound();
+        return true;
+    }
+    else
+    {
+        PlayBadSound();
+        return false;
+    }
 }
 
 simulated function RepairAll()

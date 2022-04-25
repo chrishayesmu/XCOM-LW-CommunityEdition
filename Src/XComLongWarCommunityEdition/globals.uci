@@ -64,6 +64,7 @@
 `define LWCE_ITEMTREE (LWCE_XGItemTree(`HQGAME.GetGameCore().GetHQ().GetEngineering().m_kItems))
 `define LWCE_LABS (LWCE_XGFacility_Labs(`HQGAME.GetGameCore().GetHQ().GetLabs()))
 `define LWCE_PERKS_STRAT (LWCE_XComPerkManager(`LWCE_BARRACKS.m_kPerkManager))
+`define LWCE_PSILABS (LWCE_XGFacility_PsiLabs(`LWCE_BARRACKS.m_kPsiLabs))
 `define LWCE_STORAGE (LWCE_XGStorage(`HQGAME.GetGameCore().GetHQ().m_kEngineering.GetStorage()))
 `define LWCE_TECH(techId) (`LWCE_TECHTREE.LWCE_GetTech(`techId))
 `define LWCE_TECHTREE (LWCE_XGTechTree(`HQGAME.GetGameCore().GetHQ().GetLabs().m_kTree))

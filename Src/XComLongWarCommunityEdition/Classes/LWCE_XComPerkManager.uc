@@ -206,12 +206,14 @@ simulated function LWCE_BuildPerk(int iPerkId, int iCategory, string strImage, b
     // For base game perks, pull their strings from localization
     if (iPerkId < ePerk_MAX)
     {
-        kPerk.strBonusDescription = m_strBonusTxt[iPerkId];
-        kPerk.strBonusTitle = m_strBonusTitle[iPerkId];
-        kPerk.strPassiveDescription = m_strPassiveTxt[iPerkId];
-        kPerk.strPassiveTitle = m_strPassiveTitle[iPerkId];
-        kPerk.strPenaltyDescription = m_strPenaltyTxt[iPerkId];
-        kPerk.strPenaltyTitle = m_strPenaltyTitle[iPerkId];
+        SetPerkStrings(iPerkId);
+
+        kPerk.strBonusDescription = m_arrPerks[iPerkId].strDescription[ePerkBuff_Bonus];
+        kPerk.strBonusTitle = m_arrPerks[iPerkId].strName[ePerkBuff_Bonus];
+        kPerk.strPassiveDescription = m_arrPerks[iPerkId].strDescription[ePerkBuff_Passive];
+        kPerk.strPassiveTitle = m_arrPerks[iPerkId].strName[ePerkBuff_Passive];
+        kPerk.strPenaltyDescription = m_arrPerks[iPerkId].strDescription[ePerkBuff_Penalty];
+        kPerk.strPenaltyTitle = m_arrPerks[iPerkId].strName[ePerkBuff_Penalty];
     }
 
     m_arrCEPerks.AddItem(kPerk);
@@ -354,6 +356,38 @@ simulated function string GetDynamicPerkDescription(int iPerkId, LWCE_XGUnit kUn
     }
 
     return strText;
+}
+
+static function EPerkType GetMecPerkForClass(ESoldierClass eSoldier)
+{
+    `LWCE_LOG_DEPRECATED_CLS(GetMecPerkForClass);
+    return ePerk_None;
+}
+
+/// <summary>
+/// Returns the ID of the perk which the input class would receive for free if augmented into a MEC. If the
+/// input class cannot be augmented, returns -1.
+/// </summary>
+function int LWCE_GetMecPerkForClass(int iSoldierClassId)
+{
+    local int iMecClassId;
+    local LWCE_TPerkTree kPerkTree;
+    local LWCE_XGFacility_Barracks kBarracks;
+
+    kBarracks = `LWCE_BARRACKS;
+    iMecClassId = kBarracks.GetResultingMecClass(iSoldierClassId);
+
+    if (iMecClassId < 0)
+    {
+        return -1;
+    }
+
+    if (!TryFindMatchingTreeByClassId(kPerkTree, arrSoldierClasses, iMecClassId))
+    {
+        return -1;
+    }
+
+    return kPerkTree.arrPerkRows[0].arrPerkChoices[0].iPerkId;
 }
 
 function EPerkType GetPerkInTreePsi(int branch, int Option)
@@ -511,13 +545,19 @@ function GivePerk(XGUnit kUnit, int iPerkId)
 
 protected function bool TryFindMatchingTree(out LWCE_TPerkTree kMatchingTree, LWCE_XGStrategySoldier kSoldier, bool bIsPsiTree)
 {
-    local bool bFoundTree;
     local int iClassId;
     local array<LWCE_TPerkTree> arrTrees;
-    local LWCE_TPerkTree kTree;
 
-    iClassId = kSoldier.m_kCEChar.iClassId;
+    iClassId = bIsPsiTree ? kSoldier.m_iPsionicClassId : kSoldier.m_kCEChar.iClassId;
     arrTrees = bIsPsiTree ? arrPsionicClasses : arrSoldierClasses;
+
+    return TryFindMatchingTreeByClassId(kMatchingTree, arrTrees, iClassId);
+}
+
+protected function bool TryFindMatchingTreeByClassId(out LWCE_TPerkTree kMatchingTree, array<LWCE_TPerkTree> arrTrees, int iClassId)
+{
+    local bool bFoundTree;
+    local LWCE_TPerkTree kTree;
 
     foreach arrTrees(kTree)
     {
@@ -528,7 +568,7 @@ protected function bool TryFindMatchingTree(out LWCE_TPerkTree kMatchingTree, LW
 
         if (bFoundTree)
         {
-            `LWCE_LOG_CLS("WARNING: found multiple trees matching iClassId = " $ iClassId $ ", bIsPsiTree = " $ bIsPsiTree);
+            `LWCE_LOG_CLS("WARNING: found multiple trees matching iClassId = " $ iClassId);
             ScriptTrace();
             continue;
         }
@@ -539,7 +579,8 @@ protected function bool TryFindMatchingTree(out LWCE_TPerkTree kMatchingTree, LW
 
     if (!bFoundTree)
     {
-        `LWCE_LOG_CLS("ERROR: did not find any tree matching iClassId = " $ iClassId $ ", bIsPsiTree = " $ bIsPsiTree);
+        `LWCE_LOG_CLS("ERROR: did not find any tree matching iClassId = " $ iClassId);
+        ScriptTrace();
         return false;
     }
 
