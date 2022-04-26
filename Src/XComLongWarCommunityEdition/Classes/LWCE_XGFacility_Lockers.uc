@@ -114,7 +114,7 @@ function bool EquipArmor(XGStrategySoldier kSoldier, int iArmor)
 
 function bool EquipPistol(XGStrategySoldier kSoldier, int iPistol)
 {
-    if (LWCE_XGStrategySoldier(kSoldier).LWCE_GetClass() == eSC_HeavyWeapons)
+    if (kSoldier.HasPerk(`LW_PERK_ID(FireRocket)))
     {
         return false;
     }

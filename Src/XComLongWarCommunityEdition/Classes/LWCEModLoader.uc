@@ -257,6 +257,21 @@ function Override_GetItem(out LWCE_TItem kItem, int iTransactionType)
     }
 }
 
+function bool Override_GetInfinitePistol(XGStrategySoldier kSoldier, out int iItemId)
+{
+    local bool bAnyTrue;
+    local LWCEStrategyListener kStrategyListener;
+
+    bAnyTrue = false;
+
+    foreach StrategyListeners(kStrategyListener)
+    {
+        bAnyTrue = kStrategyListener.Override_GetInfinitePistol(kSoldier, iItemId) || bAnyTrue;
+    }
+
+    return bAnyTrue;
+}
+
 function bool Override_GetInfinitePrimary(XGStrategySoldier kSoldier, out int iItemId)
 {
     local bool bAnyTrue;

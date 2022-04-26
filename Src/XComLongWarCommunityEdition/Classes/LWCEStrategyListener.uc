@@ -72,6 +72,17 @@ function UpdateFoundryPerksForSoldier(XGStrategySoldier kSoldier, LWCE_XGFacilit
 function Override_GetItem(out LWCE_TItem kItem, int iTransactionType) {}
 
 /// <summary>
+/// Called when equipping a soldier with their default pistol, such as when a new soldier is hired, or when the
+/// player unequips all equipped items at the Skyranger screen. Can override what weapon the soldier equips.
+///
+/// Note that this is also called when creating a blueshirt soldier for base defense. You can check kSoldier.m_bBlueShirt for this.
+/// </summary>
+/// <param name="kSoldier">The soldier to be equipped.</param>
+/// <param name="iItemId">The ID of the pistol they will be equipped with.</param>
+/// <returns>True if iItemId was modified by this function, false otherwise.</returns>
+function bool Override_GetInfinitePistol(XGStrategySoldier kSoldier, out int iItemId) { return false; }
+
+/// <summary>
 /// Called when equipping a soldier with their default primary weapon, such as when a new soldier is hired, or when the
 /// player unequips all equipped items at the Skyranger screen. Can override what weapon the soldier equips.
 ///
@@ -84,7 +95,8 @@ function bool Override_GetInfinitePrimary(XGStrategySoldier kSoldier, out int iI
 
 /// <summary>
 /// Called when equipping a soldier with their default secondary weapon, such as when a new soldier is hired, or when the
-/// player unequips all equipped items at the Skyranger screen. Can override what weapon the soldier equips.
+/// player unequips all equipped items at the Skyranger screen. Can override what weapon the soldier equips. Note that a pistol
+/// is not a secondary weapon; secondary weapons are large items such as rocket launchers.
 ///
 /// Note that this is also called when creating a blueshirt soldier for base defense. You can check kSoldier.m_bBlueShirt for this.
 /// </summary>

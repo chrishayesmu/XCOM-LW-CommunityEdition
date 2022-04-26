@@ -419,11 +419,22 @@ function EItemType GetInfinitePrimary(XGStrategySoldier kSoldier)
     return eItem_None;
 }
 
+function int LWCE_GetInfinitePistol(XGStrategySoldier kSoldier)
+{
+    local int iItemId;
+
+    if (`LWCE_MOD_LOADER.Override_GetInfinitePistol(kSoldier, iItemId))
+    {
+        return iItemId;
+    }
+
+    return `LW_ITEM_ID(Pistol);
+}
+
 function int LWCE_GetInfinitePrimary(XGStrategySoldier kSoldier)
 {
     local int iItemId;
 
-    // TODO add mod hook
     if (`LWCE_MOD_LOADER.Override_GetInfinitePrimary(kSoldier, iItemId))
     {
         return iItemId;
@@ -466,7 +477,7 @@ function int LWCE_GetInfiniteSecondary(XGStrategySoldier kSoldier)
         return `LW_ITEM_ID(RocketLauncher);
     }
 
-    return `LW_ITEM_ID(Pistol);
+    return 0;
 }
 
 function array<TItem> GetItemsInCategory(int iCategory, optional int iTransaction = 1, optional ESoldierClass eClassLock = 0)

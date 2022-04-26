@@ -847,8 +847,8 @@ function LWCE_SetSoldierClass(int iNewClassId)
         }
         else
         {
-            kNewLoadout.iPistol = kStorage.LWCE_GetInfiniteSecondary(self);
-            m_kBackedUpLoadout.iPistol = kStorage.LWCE_GetInfiniteSecondary(self);
+            kNewLoadout.iPistol = kStorage.LWCE_GetInfinitePistol(self);
+            m_kBackedUpLoadout.iPistol = kStorage.LWCE_GetInfinitePistol(self);
         }
     }
 
