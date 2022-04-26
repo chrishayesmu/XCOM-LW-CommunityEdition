@@ -37,6 +37,7 @@ class LWCETacticalVisibilityHelper extends Actor
 
 enum EVisDiscColor
 {
+    eVDC_None,
     eVDC_Green,
     eVDC_Gold,
     eVDC_Orange,
@@ -295,6 +296,7 @@ protected function HideAllVisibilityMarkers()
 
 protected function MarkUnit(XGUnit kUnit, bool bVisible, optional bool bFlanked, optional bool bIsActiveUnit)
 {
+    local MaterialInterface kMaterial;
     local LWCE_UIUnitFlag kFlag;
 
     if (!m_bInitialized)
@@ -322,11 +324,14 @@ protected function MarkUnit(XGUnit kUnit, bool bVisible, optional bool bFlanked,
         }
         else
         {
+            kMaterial = GetMaterialForUnitDisc(kUnit);
+            bVisible = bVisible && kMaterial != none;
+
             kUnit.m_kDiscMesh.SetHidden(!bVisible);
 
             if (bVisible)
             {
-                kUnit.m_kDiscMesh.SetMaterial(0, GetMaterialForUnitDisc(kUnit));
+                kUnit.m_kDiscMesh.SetMaterial(0, kMaterial);
             }
         }
     }
@@ -394,6 +399,8 @@ protected function MaterialInterface GetMaterialForUnitDisc(XGUnit kUnit)
 
     switch (eDiscColor)
     {
+        case eVDC_None:
+            return none;
         case eVDC_Green:
             return kUnit.UnitCursor_UnitSelect_Green;
         case eVDC_Gold:
