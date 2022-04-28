@@ -1328,8 +1328,6 @@ static simulated function int GetPsiHitChance(XGAbility_Targeted kSelf)
     iHitChance = kAttacker.WillTestChance(0, iFinalWillMod, false, false, kDefender);
     `BATTLE.m_kDesc.m_iDifficulty = iTemp;
 
-    `LWCE_LOG_CLS("GetPsiHitChance: iDefenderWill = " $ iDefenderWill $ ", iAttackerWill = " $ iAttackerWill $ ", iHitChanceModifier = " $ iHitChanceModifier $ ", iHitChance = " $ iHitChance);
-
     return iHitChance;
 }
 
@@ -1605,6 +1603,8 @@ static simulated function GetShotSummary(XGAbility_Targeted kSelf, out TShotResu
         // Nothing else applies to these abilities
         return;
     }
+
+    kSelf.m_iHitChance = 0;
 
     // No more special cases, now we can calculate the hit chance
     kGameCore = LWCE_XGTacticalGameCore(kSelf.m_kGameCore);
