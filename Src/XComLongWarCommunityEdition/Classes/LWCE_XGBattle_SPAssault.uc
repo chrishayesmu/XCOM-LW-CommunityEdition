@@ -16,6 +16,7 @@ function CollectLoot()
 
     if (kDesc.m_eCouncilType == eFCM_ChryssalidHive)
     {
+        // You don't get any loot from the Chryssalid Hive mission
         return;
     }
 
@@ -35,11 +36,11 @@ function CollectLoot()
     if (strMapName == "DLC1_3_Gangplank")
     {
         arrRewards = `LWCE_STRATCFG(GangplankRewards);
+    }
 
-        foreach arrRewards(kItemQuantity)
-        {
-            kDesc.m_kArtifactsContainer.AdjustQuantity(kItemQuantity.iItemId, kItemQuantity.iQuantity);
-        }
+    foreach arrRewards(kItemQuantity)
+    {
+        kDesc.m_kArtifactsContainer.AdjustQuantity(kItemQuantity.iItemId, kItemQuantity.iQuantity);
     }
 }
 

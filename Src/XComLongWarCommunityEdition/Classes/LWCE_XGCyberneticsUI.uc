@@ -228,7 +228,7 @@ simulated function array<TLabeledText> GetRepairCosts(int iBaseArmorId, bool bIs
     {
         if (!bIsRepairAll)
         {
-            iHours = CYBERNETICSLAB().GetHoursToRepairMec(EItemType(iBaseArmorId)) / 24; // TODO
+            iHours = CYBERNETICSLAB().GetHoursToRepairMec(EItemType(iBaseArmorId)) / 24;
             kResourceText.StrValue = string(iHours);
             kResourceText.strLabel = m_strLabelDays;
             kResourceText.iState = eUIState_Normal;

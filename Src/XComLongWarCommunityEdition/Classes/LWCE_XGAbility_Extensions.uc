@@ -138,12 +138,12 @@ static function int CalcCriticalChance_Original(XGAbility_Targeted kSelf)
                                             /* iWeaponBonus */ 0);
 }
 
-function int CalcCritModFromPerks_Original(XGAbility_Targeted kSelf, XGAbility_Targeted kAbility, int iCritChance, float fDistanceToTarget, bool heightAdvantage)
+// Reverse-engineered version of the native XGAbility_Targeted.CalcCritModFromPerks. Left here just to look at, not use.
+private static function int CalcCritModFromPerks_Original(XGAbility_Targeted kSelf, int iCritChance, float fDistanceToTarget, bool heightAdvantage)
 {
     local int Index;
     local XGUnit kShooter, kTarget;
 
-    // TODO: is kAbility in the signature just kSelf??
     kShooter = kSelf.m_kUnit;
     kTarget = kSelf.GetPrimaryTarget();
 
@@ -162,7 +162,7 @@ function int CalcCritModFromPerks_Original(XGAbility_Targeted kSelf, XGAbility_T
         kSelf.m_shotHUDCritChanceStats[Index].m_iAmount = 0;
     }
 
-    if (kShooter.m_kCharacter.m_kChar.aUpgrades[ePerk_DisablingShot] != 0 && kAbility.iType == eAbility_DisablingShot)
+    if (kShooter.m_kCharacter.m_kChar.aUpgrades[ePerk_DisablingShot] != 0 && kSelf.iType == eAbility_DisablingShot)
     {
         return 0;
     }
@@ -186,7 +186,6 @@ static function CalcDamage(XGAbility_Targeted kSelf)
 
     if (kSelf.m_kWeapon != none)
     {
-        // TODO: change to integer type once all relevant weapon code is rewritten
         eWeaponGameplayType = kSelf.m_kWeapon.GameplayType();
         iWeaponItemId = class'LWCE_XGWeapon_Extensions'.static.GetItemId(kSelf.m_kWeapon);
     }
@@ -259,12 +258,6 @@ static function CalcDamage(XGAbility_Targeted kSelf)
             }
         }
     }
-}
-
-static function int CalcHitChance(XGAbility_Targeted kSelf)
-{
-    // TODO testing only
-    return CalcHitChance_Original(kSelf);
 }
 
 // This function is reverse-engineered from its native version in XGAbility_Targeted.
@@ -1193,6 +1186,7 @@ static simulated function string GetHelpText(XGAbility kSelf)
         strText = class'XGAbilityTree'.default.HelpMessages[iAbilityId];
     }
 
+    // TODO replace all of this with a proper localization system
     if (strText != "")
     {
         strText = Repl(strText, "<XGAbility:Duration/>", kSelf.iDuration / 2);
@@ -1210,7 +1204,6 @@ static simulated function string GetHelpText(XGAbility kSelf)
         }
     }
 
-    // TODO: support help messages for custom abilities if we ever add those
     return strText;
 }
 
@@ -1364,7 +1357,6 @@ static simulated function int GetPossibleDamage(XGAbility_Targeted kSelf)
             iHealing += `LWCE_TACCFG(iSaviorHealBonus);
         }
 
-        // TODO convert to normal perk
         if ((kSelf.m_kUnit.GetCharacter().m_kChar.aUpgrades[123] & 64) > 0) // Improved Medikit
         {
             iHealing += `LWCE_TACCFG(iImprovedMedikitHealBonus);
@@ -1525,13 +1517,11 @@ static simulated function GetShotSummary(XGAbility_Targeted kSelf, out TShotResu
     local float fDistanceToTarget, fOverDistance;
     local int iBackpackItem, iDefense, iMod, iType;
     local array<int> arrItems;
-    local XGParamTag kTag;
     local LWCE_XGUnit kShooter, kTarget;
     local LWCE_XComPerkManager kPerksMgr;
     local LWCE_XGTacticalGameCore kGameCore;
     local XGWeapon kWeapon;
 
-    kTag = XGParamTag(XComEngine(class'Engine'.static.GetEngine()).LocalizeContext.FindTag("XGParam"));
     kShooter = LWCE_XGUnit(kSelf.m_kUnit);
     kTarget = LWCE_XGUnit(kSelf.GetPrimaryTarget());
     kWeapon = kSelf.m_kWeapon;
@@ -1543,7 +1533,6 @@ static simulated function GetShotSummary(XGAbility_Targeted kSelf, out TShotResu
 
     if (kSelf.HasProperty(eProp_PsiRoll))
     {
-        // TODO
         return;
     }
 
@@ -1626,21 +1615,18 @@ static simulated function GetShotSummary(XGAbility_Targeted kSelf, out TShotResu
     }
 
     // Weapon aim
-    // TODO localization might not be needed here
     if (kWeapon != none)
     {
         iMod = kGameCore.GetWeaponStatBonus(eStat_Offense, kWeapon.ItemType(), kShooter.GetCharacter().m_kChar);
 
         if (iMod > 0)
         {
-            kTag.StrValue0 = kWeapon.m_kTWeapon.strName;
-            kInfo.arrHitBonusStrings.AddItem(class'XComLocalizer'.static.ExpandString(kSelf.m_strItemBonus));
+            kInfo.arrHitBonusStrings.AddItem(`LWCE_TWEAPON_FROM_XG(kWeapon).strName);
             kInfo.arrHitBonusValues.AddItem(iMod);
         }
         else if (iMod < 0)
         {
-            kTag.StrValue0 = kWeapon.m_kTWeapon.strName;
-            kInfo.arrHitPenaltyStrings.AddItem(class'XComLocalizer'.static.ExpandString(kSelf.m_strItemPenalty));
+            kInfo.arrHitPenaltyStrings.AddItem(`LWCE_TWEAPON_FROM_XG(kWeapon).strName);
             kInfo.arrHitPenaltyValues.AddItem(iMod);
         }
     }
@@ -1653,16 +1639,15 @@ static simulated function GetShotSummary(XGAbility_Targeted kSelf, out TShotResu
         if (kWeapon != none && !kWeapon.HasProperty(eWP_Pistol))
         {
             iMod = kGameCore.GetUpgradeAbilities(arrItems[iBackpackItem], eStat_Offense);
-            //kTag.StrValue0 = kGameCore.GetTWeapon(arrItems[iBackpackItem]).strName; // TODO
 
             if (iMod > 0)
             {
-                kInfo.arrHitBonusStrings.AddItem(kGameCore.GetTWeapon(arrItems[iBackpackItem]).strName);
+                kInfo.arrHitBonusStrings.AddItem(kGameCore.LWCE_GetTWeapon(arrItems[iBackpackItem]).strName);
                 kInfo.arrHitBonusValues.AddItem(iMod);
             }
             else if (iMod < 0)
             {
-                kInfo.arrHitPenaltyStrings.AddItem(kGameCore.GetTWeapon(arrItems[iBackpackItem]).strName);
+                kInfo.arrHitPenaltyStrings.AddItem(kGameCore.LWCE_GetTWeapon(arrItems[iBackpackItem]).strName);
                 kInfo.arrHitPenaltyValues.AddItem(iMod);
             }
         }

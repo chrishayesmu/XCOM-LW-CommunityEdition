@@ -8,6 +8,8 @@ function CollectLoot()
 {
     local int Index;
     local string strMapName;
+    local array<LWCE_TItemQuantity> arrRewards;
+    local LWCE_TItemQuantity kItemQuantity;
     local LWCE_XGBattleDesc kDesc;
 
     kDesc = LWCE_XGBattleDesc(m_kDesc);
@@ -32,9 +34,12 @@ function CollectLoot()
 
     if (strMapName == "DLC1_3_Gangplank")
     {
-        // TODO move these amounts into config
-        kDesc.m_kArtifactsContainer.AdjustQuantity(`LW_ITEM_ID(Elerium), 80);
-        kDesc.m_kArtifactsContainer.AdjustQuantity(`LW_ITEM_ID(AlienAlloy), 80);
+        arrRewards = `LWCE_STRATCFG(GangplankRewards);
+    }
+
+    foreach arrRewards(kItemQuantity)
+    {
+        kDesc.m_kArtifactsContainer.AdjustQuantity(kItemQuantity.iItemId, kItemQuantity.iQuantity);
     }
 }
 

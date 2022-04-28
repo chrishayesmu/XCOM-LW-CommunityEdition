@@ -527,7 +527,6 @@ function bool OnAcceptPromotion()
     {
         LWCE_XGFacility_PsiLabs(PSILABS()).LWCE_AddSoldier(kSoldier, kPerkChoice);
 
-        // TODO: always go to psi labs UI, even if we came from the barracks? does this work in LW?
         if (m_bReturnToDebriefUI)
         {
             PRES().GetPsiLabsUI().GetMgr().UpdateView();

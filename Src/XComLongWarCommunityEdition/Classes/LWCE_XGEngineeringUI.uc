@@ -357,8 +357,6 @@ function int LWCE_SortItems(LWCE_TItem kItem1, LWCE_TItem kItem2)
 
     kEngineering = `LWCE_ENGINEERING;
 
-    // TODO: there's a good QoL opportunity in the future here, by either making the sort less confusing or
-    // expanding the UI to include filters or more tabs
     if (kEngineering.LWCE_IsPriorityItem(kItem1.iItemId))
     {
         return 0;
@@ -564,7 +562,6 @@ function UpdateItemTable()
 
     for (iTab = 0; iTab < m_kTable.arrTabs.Length; iTab++)
     {
-        // TODO: might be a minor optimization to make here by only loading one tab's items at a time, if needed
         arrItems = kEngineering.LWCE_GetItemsByCategory(m_kTable.arrTabs[iTab], GetCurrentTransactionType());
         arrItems.Sort(LWCE_SortItems);
 

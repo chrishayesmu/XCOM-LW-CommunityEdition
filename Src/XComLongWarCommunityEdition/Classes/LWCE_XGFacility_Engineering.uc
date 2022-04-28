@@ -170,7 +170,6 @@ function OnFoundryProjectCompleted(int iProject)
 
     if (m_arrFoundryProjects[iProject].bNotify)
     {
-        // TODO: remove rebates entirely from Foundry projects and related code
         m_arrOldRebates.AddItem(m_arrFoundryProjects[iProject].kRebate);
 
         // UE Explorer failed to decompile this line. I've put it together as best I could based on the bytecode and the alert handling code in
@@ -515,7 +514,6 @@ function bool LWCE_GetItemCostSummary(out TCostSummary kCostSummary, int iItemId
     local bool bCanAfford;
     local TProjectCost kCost;
 
-    // TODO: possibly delete this, vanilla doesn't need a similar block
     if (iProjectIndex >= m_arrCEItemProjects.Length)
     {
         return false;

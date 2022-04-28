@@ -457,8 +457,8 @@ struct LWCE_TWeapon
     var array<int> arrProperties;
 
     // The size of the item, which dictates where it can be equipped and what role it fills. Valid values are
-    // 0 (for small items) and 1 (for large). Generally speaking, large items are primary weapons and MEC special weapons
-    // such as the flamethrower, and small items are everything else.
+    // 0 (for small items) and 1 (for large). Generally speaking, large items are primary weapons, rocket launchers,
+    // and MEC special weapons such as the flamethrower, and small items are everything else.
     var int iSize;
 
     // The base damage of the item. The exact damage range will depend on whether the item is an explosive or not,

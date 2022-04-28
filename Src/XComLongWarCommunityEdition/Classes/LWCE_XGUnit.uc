@@ -671,7 +671,6 @@ simulated function AddWeaponAbilities(XGTacticalGameCoreNativeBase GameCore, Vec
 
             if (kWeapon == kActiveWeapon)
             {
-                // TODO: the active weapon might belong at the front of the array
                 arrWeapons.AddItem(kWeapon);
             }
             else if (kWeapon.m_kTWeapon.aProperties[eWP_Secondary] != 0)

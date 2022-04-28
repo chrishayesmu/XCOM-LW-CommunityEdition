@@ -343,7 +343,6 @@ function UnloadArtifacts(XGShip_Dropship kSkyranger)
 
                     if (iItemId >= 0 && iItemId <= 255)
                     {
-                        // TODO: Captives from mods currently will not trigger the alien containment cutscenes
                         Base().BeginAlienContainment(EItemType(iItemId));
                     }
                 }
