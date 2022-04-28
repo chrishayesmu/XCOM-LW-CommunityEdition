@@ -206,6 +206,23 @@ function TPsiTraineeList BuildTrainees()
     return kList;
 }
 
+function OnChooseSlot(int iSlot)
+{
+    if (PSILABS().IsSlotOccupied(iSlot))
+    {
+        m_iTraineeToBeRemoved = iSlot;
+        OnConfirmRemoveTrainee();
+    }
+    else
+    {
+        m_iHighlightedSlot = iSlot;
+        GoToView(ePsiLabsView_Add);
+        `HQPRES.UISoldierList(class'LWCE_UISoldierList_PsiLabs');
+    }
+
+    PlayGoodSound();
+}
+
 function OnConfirmRemoveTrainee()
 {
     local TDialogueBoxData kData;

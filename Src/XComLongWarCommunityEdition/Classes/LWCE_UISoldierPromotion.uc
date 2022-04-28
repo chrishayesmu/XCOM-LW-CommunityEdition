@@ -90,7 +90,7 @@ simulated function InitializeTree()
         strTitle = class'XComLocalizer'.static.ExpandString(m_strNormalAbilitiesTitle);
     }
 
-    AS_InitializeTree(strTitle, class'UIUtilities'.static.GetClassLabel(kSoldier.m_kCEChar.iClassId), m_bPsiPromotion);
+    AS_InitializeTree(strTitle, kSoldier.GetClassIcon(), m_bPsiPromotion);
 
     if (kSoldier.IsAugmented())
     {

@@ -1,0 +1,5 @@
+class LWCE_UISoldierList_SelectCovertOperative extends UISoldierList_SelectCovertOperative;
+
+`include(generators.uci)
+
+`LWCE_GENERATOR_UISOLDIERLIST

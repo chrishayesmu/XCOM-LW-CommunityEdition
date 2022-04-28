@@ -1,0 +1,5 @@
+`define LWCE_GENERATOR_UISOLDIERLIST \
+simulated function UpdateDisplay() \
+{ \
+    class'LWCE_UISoldierListBase_Extensions'.static.UpdateDisplay(self); \
+}

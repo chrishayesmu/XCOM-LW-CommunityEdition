@@ -1,0 +1,5 @@
+class LWCE_UISoldierList_CyberneticsLab extends UISoldierList_CyberneticsLab;
+
+`include(generators.uci)
+
+`LWCE_GENERATOR_UISOLDIERLIST

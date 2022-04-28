@@ -5,7 +5,6 @@ struct CheckpointRecord_LWCE_XGStrategySoldier extends CheckpointRecord
     var int m_iPsionicClassId;
     var LWCE_TCharacter m_kCEChar;
     var LWCE_TSoldier m_kCESoldier;
-    var array<LWCE_TIDWithSource> m_arrPerks;
 };
 
 var int m_iPsionicClassId;
@@ -17,11 +16,6 @@ var int m_iPsionicClassId;
 // failure to do so can cause broken behavior or even game crashes.
 var LWCE_TCharacter m_kCEChar;
 var LWCE_TSoldier m_kCESoldier;
-
-// Perks this soldier has, and where they came from. For the SourceType field, valid values are:
-//     0 - Innate perk (e.g. from promotions, the Foundry, or starting perk for hero units like Zhang)
-//     1 - Perk from an equipped item
-var array<LWCE_TIDWithSource> m_arrPerks;
 
 function Init()
 {
@@ -305,6 +299,12 @@ function int LWCE_GetBaseClass()
     return m_kCEChar.iBaseClassId;
 }
 
+function string GetClassIcon()
+{
+    return `LWCE_BARRACKS.GetClassIcon(m_kCEChar.iClassId, class'LWCE_XComPerkManager'.static.LWCE_HasAnyGeneMod(m_kCEChar), m_kCEChar.bHasPsiGift);
+
+}
+
 function string GetClassName()
 {
     return `LWCE_BARRACKS.GetClassName(m_kCEChar.iClassId);
@@ -361,11 +361,16 @@ function GivePerk(int iPerkId)
     local bool bHadGeneMod, bIsGeneMod;
     local LWCE_TIDWithSource kPerkData;
 
+    if (HasPerk(iPerkId))
+    {
+        return;
+    }
+
     bHadGeneMod = class'LWCE_XComPerkManager'.static.LWCE_HasAnyGeneMod(m_kCEChar);
 
     if (iPerkId < ePerk_MAX)
     {
-        ++ m_kChar.aUpgrades[iPerkId];
+        ++m_kChar.aUpgrades[iPerkId];
     }
 
     kPerkData.Id = iPerkId;
@@ -378,7 +383,7 @@ function GivePerk(int iPerkId)
     if (iPerkId == `LW_PERK_ID(FireRocket))
     {
         // Remove soldier's pistol and give them a rocket launcher
-        GivePsiPerks();
+        EquipRocketLauncher();
     }
 
     if (!bHadGeneMod && bIsGeneMod)
@@ -400,10 +405,9 @@ function GivePerk(int iPerkId)
 
 function GivePsiPerks()
 {
-
+    `LWCE_LOG_CLS("ERROR: LWCE-incompatible function GivePsiPerks was called. This needs to be replaced with EquipRocketLauncher. Stack trace follows.");
+    ScriptTrace();
 }
-
-
 
 function bool HasAvailablePerksToAssign(optional bool CheckForPsiPromotion = false)
 {
@@ -458,6 +462,29 @@ function bool HasAvailablePerksToAssign(optional bool CheckForPsiPromotion = fal
 function bool HasMedal(int iMedal)
 {
     return !CanBeAugmented();
+}
+
+/// <summary>
+/// Returns true if this soldier has the given perk innately (i.e. not from equipment).
+/// </summary>
+function bool HasPerk(int iPerk)
+{
+    local int Index;
+
+    if (iPerk < ePerk_MAX)
+    {
+        return super.HasPerk(iPerk);
+    }
+
+    for (Index = 0; Index < m_kCEChar.arrPerks.Length; Index++)
+    {
+        if (m_kCEChar.arrPerks[Index].Id == iPerk && m_kCEChar.arrPerks[Index].SourceType == 0)
+        {
+            return true;
+        }
+    }
+
+    return false;
 }
 
 function bool IsAugmented()

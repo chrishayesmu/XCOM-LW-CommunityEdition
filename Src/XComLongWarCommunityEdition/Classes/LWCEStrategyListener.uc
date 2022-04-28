@@ -2,6 +2,11 @@ class LWCEStrategyListener extends XGStrategyActor
     abstract;
 
 /// -----------------------------------------------------
+/// Class events
+/// -----------------------------------------------------
+function OnClassDefinitionsBuilt(out array<LWCE_TClassDefinition> arrSoldierClasses) {}
+
+/// -----------------------------------------------------
 /// Foundry events
 /// -----------------------------------------------------
 

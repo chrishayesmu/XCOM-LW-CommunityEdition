@@ -30,6 +30,29 @@ simulated function XGChooseSquadUI GetMgr()
     return XGChooseSquadUI(XComHQPresentationLayer(controllerRef.m_Pres).GetMgr(class'LWCE_XGChooseSquadUI', self, 0));
 }
 
+simulated function GoToView(int iView)
+{
+    m_iView = iView;
+
+    switch (m_iView)
+    {
+        case eCSView_Main:
+            if (m_kSquadList != none)
+            {
+                XComHQPresentationLayer(controllerRef.m_Pres).GetStrategyHUD().Hide();
+                m_kSquadList.UpdateData();
+                UpdateObjective();
+                Show();
+            }
+
+            break;
+        case eCSView_ChooseSoldier:
+            Hide();
+            `HQPRES.UISoldierList(class'LWCE_UISoldierList_SquadSelect');
+            break;
+    }
+}
+
 simulated function Remove()
 {
     XComHQPresentationLayer(controllerRef.m_Pres).RemoveMgr(class'LWCE_XGChooseSquadUI');

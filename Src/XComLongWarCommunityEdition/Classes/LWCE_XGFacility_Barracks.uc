@@ -116,6 +116,8 @@ function BuildClassDefinitions()
         iClassId = arrSoldierClasses[Index].iSoldierClassId;
         arrSoldierClasses[Index].strName = class'XGLocalizedData'.default.SoldierClassNames[iClassId];
     }
+
+    `LWCE_MOD_LOADER.OnClassDefinitionsBuilt(arrSoldierClasses);
 }
 
 function int CalcTotalSoldierRanks()

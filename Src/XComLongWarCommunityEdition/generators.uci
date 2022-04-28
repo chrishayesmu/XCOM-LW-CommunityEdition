@@ -12,6 +12,7 @@
 
 `include(generators_abilities.uci)
 `include(generators_cheatmgr.uci)
+`include(generators_uisoldierlist.uci)
 
 // -----------------
 // XComPresentationLayerBase

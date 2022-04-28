@@ -1,6 +1,152 @@
 class LWCE_XGDebriefUI extends XGDebriefUI;
 
+struct LWCE_TSoldierDebriefItem
+{
+    var TImage imgSoldier;
+    var TImage imgFlag;
+    var TText txtName;
+    var TText txtStatus;
+    var TLabeledText txtMissions;
+    var TLabeledText txtKills;
+    var EUIState eState;
+    var TSoldierPromotionItem kPromotion;
+    var int iSoldierClassId;
+    var int iSoldierRank;
+    var bool m_bWasPromoted;
+    var bool m_bPsiPromoted;
+    var bool m_bIsPsiSoldier;
+    var bool m_bHasGeneMod;
+    var bool m_isDead;
+    var bool m_bHasPerksToAssign;
+    var bool m_bIsTank;
+};
+
+struct LWCE_TSoldierDebrief
+{
+    var TText txtOpName;
+    var TText txtTitle;
+    var TButtonText txtHireOption;
+    var array<LWCE_TSoldierDebriefItem> arrItems;
+    var bool bHireHighlighted;
+    var int iHighlighted;
+};
+
+var LWCE_TSoldierDebrief m_kCESoldierDebrief;
+
+function Init(int iView)
+{
+    m_kSkyranger = HANGAR().m_kSkyranger;
+    m_bFirstTime = m_kSkyranger.m_bReturnedFromFirstMission;
+
+    if (m_kSkyranger.m_bExtendSquadForHQAssault)
+    {
+        m_kSkyranger.m_bExtendSquadForHQAssault = false;
+        m_kSkyranger.m_bReinforcementsForHQAssault = false;
+
+        if (STAT_GetStat(22) == 1)
+        {
+            PRES().PlayCinematic(eCinematic_HQAssault_Win);
+        }
+    }
+    else
+    {
+        PRES().PlayCinematic(eCinematic_DropshipLand);
+    }
+
+    PRES().CAMLookAtNamedLocation("Cargo");
+
+    m_kCESoldierDebrief.iHighlighted = BARRACKS().m_aLastMissionSoldiers.Length + 1;
+    m_kScienceDebrief.iHighlighted = 1;
+
+    BuildSoldierUI();
+    GoToView(eDebriefView_Soldiers);
+    PlayOpenSound();
+}
+
+function TSoldierDebriefItem BuildSoldierOption(XGStrategySoldier kSoldier)
+{
+    local TSoldierDebriefItem kBlank;
+
+    `LWCE_LOG_DEPRECATED_CLS(BuildSoldierOption);
+
+    return kBlank;
+}
+
+function LWCE_TSoldierDebriefItem LWCE_BuildSoldierOption(XGStrategySoldier kSoldier)
+{
+    local LWCE_TSoldierDebriefItem kItem;
+
+    kItem.txtName.StrValue = kSoldier.GetName(eNameType_FullNick);
+    kItem.txtName.iState = eUIState_Warning;
+
+    if (kSoldier.m_kSoldier.kAppearance.iGender == eGender_Female)
+    {
+        kItem.imgSoldier.iImage = eImage_MugshotFemale;
+    }
+    else
+    {
+        kItem.imgSoldier.iImage = eImage_MugshotMale;
+    }
+
+    kItem.imgFlag.strPath = class'UIScreen'.static.GetFlagPath(kSoldier.GetCountry());
+    kItem.m_bIsTank = kSoldier.IsATank();
+    kItem.txtStatus.StrValue = kSoldier.GetStatusString();
+    kItem.iSoldierClassId = LWCE_XGStrategySoldier(kSoldier).LWCE_GetClass();
+
+    kItem.txtStatus.iState = kSoldier.GetStatusUIState();
+    kItem.txtMissions.strLabel = m_strLabelMissions;
+    kItem.txtMissions.StrValue = string(kSoldier.GetNumMissions());
+    kItem.txtMissions.iState = eUIState_Bad;
+    kItem.txtKills.strLabel = m_strLabelKills;
+    kItem.txtKills.StrValue = string(kSoldier.GetNumKills());
+    kItem.txtKills.iState = eUIState_Bad;
+
+    if (kSoldier.IsDead())
+    {
+        kItem.eState = eUIState_Disabled;
+
+        if (kItem.m_bIsTank)
+        {
+            kItem.iSoldierRank = kSoldier.GetSHIVRank();
+        }
+        else
+        {
+            kItem.iSoldierRank = kSoldier.GetRank();
+        }
+
+        kItem.m_isDead = true;
+    }
+    else if (kSoldier.IsReadyToLevelUp() || (kSoldier.HasPsiGift() && kSoldier.IsReadyToPsiLevelUp()) )
+    {
+        LWCE_BuildSoldierPromotion(kSoldier, kItem.kPromotion, kItem);
+        kItem.eState = eUIState_Good;
+        BARRACKS().ReorderRanks();
+        kItem.iSoldierClassId = 0; // TODO: this might be fake from a decompilation error
+    }
+    else
+    {
+        kItem.m_bHasGeneMod = class'LWCE_XComPerkManager'.static.LWCE_HasAnyGeneMod(LWCE_XGStrategySoldier(kSoldier).m_kCEChar);
+        kItem.m_bIsPsiSoldier = kSoldier.m_kChar.bHasPsiGift;
+
+        if (kItem.m_bIsTank)
+        {
+            kItem.iSoldierRank = kSoldier.GetSHIVRank();
+        }
+        else
+        {
+            kItem.iSoldierRank = kSoldier.GetRank();
+        }
+    }
+
+    return kItem;
+}
+
 function BuildSoldierPromotion(XGStrategySoldier kSoldier, out TSoldierPromotionItem kPromotionUI, out TSoldierDebriefItem kItem)
+{
+    `LWCE_LOG_DEPRECATED_CLS(BuildSoldierPromotion);
+}
+
+function LWCE_BuildSoldierPromotion(XGStrategySoldier kSoldier, out TSoldierPromotionItem kPromotionUI, out LWCE_TSoldierDebriefItem kItem)
 {
     local string strNickName;
     local bool classAssigned, gotNickname;
@@ -12,7 +158,7 @@ function BuildSoldierPromotion(XGStrategySoldier kSoldier, out TSoldierPromotion
     kTag = new class'XGParamTag';
     kItem.m_bHasPerksToAssign = false;
     kItem.m_bIsPsiSoldier = kSoldier.m_kChar.bHasPsiGift;
-    kItem.m_bHasGeneMod = class'XComPerkManager'.static.HasAnyGeneMod(kCESoldier.m_kChar.aUpgrades);
+    kItem.m_bHasGeneMod = class'LWCE_XComPerkManager'.static.LWCE_HasAnyGeneMod(kCESoldier.m_kCEChar);
 
     if (kCESoldier.IsReadyToLevelUp())
     {
@@ -43,7 +189,7 @@ function BuildSoldierPromotion(XGStrategySoldier kSoldier, out TSoldierPromotion
 
         if (classAssigned)
         {
-            kTag.StrValue0 = class'XGStrategyActor'.static.GetSoldierClassName(kCESoldier.GetClass());
+            kTag.StrValue0 = kCESoldier.GetClassName();
             kPromotionUI.txtClassPromotion.StrValue = class'XComLocalizer'.static.ExpandStringByTag(m_strClassAssigned, kTag);
         }
 
@@ -55,9 +201,29 @@ function BuildSoldierPromotion(XGStrategySoldier kSoldier, out TSoldierPromotion
         kItem.m_bWasPromoted = false;
     }
 
-    UpdateSoldierUIData(kCESoldier, kPromotionUI, kItem);
+    LWCE_UpdateSoldierUIData(kCESoldier, kPromotionUI, kItem);
 }
 
+function BuildSoldierUI()
+{
+    local int iSoldier, iNumSoldierOptions;
+    local XGFacility_Barracks kBarracks;
+
+    kBarracks = BARRACKS();
+    iNumSoldierOptions = kBarracks.m_aLastMissionSoldiers.Length;
+
+    for (iSoldier = 0; iSoldier < iNumSoldierOptions; iSoldier++)
+    {
+        m_kCESoldierDebrief.arrItems.AddItem(LWCE_BuildSoldierOption(kBarracks.m_aLastMissionSoldiers[iSoldier]));
+    }
+
+    if (ITEMTREE().CanFacilityBeBuilt(eFacility_OTS))
+    {
+        UnlockFacility(eFacility_OTS);
+    }
+
+    RefreshSoldierUIPerks();
+}
 
 function bool CheckForMatinee()
 {
@@ -164,6 +330,19 @@ function int LWCE_GetUnlockItem(out LWCE_TTech kTech)
     return 0;
 }
 
+function bool IsAdvanceHighlighted()
+{
+    switch (m_iCurrentView)
+    {
+        case eDebriefView_Soldiers:
+            return m_kCESoldierDebrief.iHighlighted == (BARRACKS().m_aLastMissionSoldiers.Length + 1);
+        case eDebriefView_Science:
+            return m_kScienceDebrief.iHighlighted == 1;
+        default:
+            return true;
+    }
+}
+
 function OnExit()
 {
     local TMissionReward kEmptyReward;
@@ -232,6 +411,70 @@ function OnExit()
     }
 
     PRES().m_kStrategyHUD.m_kMenu.Show();
+}
+
+function OnScrollUp()
+{
+    local array<int> arrOptions;
+    local int iHighlight;
+
+    if (m_iCurrentView == eDebriefView_Soldiers)
+    {
+        arrOptions = GetSoldierOptions();
+        iHighlight = arrOptions.Find(m_kCESoldierDebrief.iHighlighted);
+
+        if (iHighlight != -1)
+        {
+            m_kCESoldierDebrief.iHighlighted = arrOptions[((iHighlight - 1) + arrOptions.Length) % arrOptions.Length];
+        }
+        else
+        {
+            m_kCESoldierDebrief.iHighlighted = arrOptions[0];
+        }
+    }
+
+    UpdateView();
+}
+
+function OnScrollDown()
+{
+    local array<int> arrOptions;
+    local int iHighlight;
+
+    if (m_iCurrentView == eDebriefView_Soldiers)
+    {
+        arrOptions = GetSoldierOptions();
+        iHighlight = arrOptions.Find(m_kCESoldierDebrief.iHighlighted);
+
+        if (iHighlight != -1)
+        {
+            m_kCESoldierDebrief.iHighlighted = arrOptions[(iHighlight + 1) % arrOptions.Length];
+        }
+        else
+        {
+            m_kCESoldierDebrief.iHighlighted = arrOptions[0];
+        }
+    }
+
+    UpdateView();
+}
+
+function RefreshSoldierUIPerks()
+{
+    local int Index;
+    local XGFacility_Barracks kBarracks;
+    local XGStrategySoldier kSoldier;
+    local LWCE_TSoldierDebriefItem kItem;
+
+    kBarracks = BARRACKS();
+
+    for (Index = 0; Index < kBarracks.m_aLastMissionSoldiers.Length; Index++)
+    {
+        kSoldier = kBarracks.m_aLastMissionSoldiers[Index];
+        kItem = m_kCESoldierDebrief.arrItems[Index];
+        LWCE_UpdateSoldierUIData(kSoldier, kItem.kPromotion, kItem);
+        m_kCESoldierDebrief.arrItems[Index] = kItem;
+    }
 }
 
 function UpdateEngineeringDebrief()
@@ -451,6 +694,91 @@ function UpdateScienceDebrief()
     }
 
     m_kScienceDebrief = kDebrief;
+}
+
+function UpdateSoldierDebrief()
+{
+    m_kCESoldierDebrief.txtOpName.StrValue = m_kSkyranger.m_strLastOpName;
+    m_kCESoldierDebrief.txtOpName.iState = eUIState_Warning;
+    m_kCESoldierDebrief.txtTitle.StrValue = m_strLabelAfterReport;
+    m_kCESoldierDebrief.txtTitle.iState = eUIState_Bad;
+}
+
+simulated function UpdateSoldierUIData(XGStrategySoldier kSoldier, out TSoldierPromotionItem kPromotionUI, out TSoldierDebriefItem kItem)
+{
+    `LWCE_LOG_DEPRECATED_CLS(UpdateSoldierUIData);
+}
+
+simulated function LWCE_UpdateSoldierUIData(XGStrategySoldier kSoldier, out TSoldierPromotionItem kPromotionUI, out LWCE_TSoldierDebriefItem kItem)
+{
+    local string NickName;
+    local XGParamTag kTag;
+    local XGTacticalGameCore kGameCore;
+
+    kGameCore = TACTICAL();
+    kTag = new class'XGParamTag';
+
+    kItem.m_bWasPromoted = false;
+    kItem.m_bPsiPromoted = false;
+    kPromotionUI.txtPromotion.StrValue = "";
+
+    if (kSoldier.HasAvailablePerksToAssign(/* CheckForPsiPromotion */ false))
+    {
+        kItem.m_bWasPromoted = true;
+        kItem.m_bPsiPromoted = false;
+        kTag.StrValue1 = kSoldier.GetName(eNameType_Last);
+
+        if (kSoldier.HasAnyMedal())
+        {
+            kTag.StrValue0 = kSoldier.GetName(eNameType_Rank) @ string(kSoldier.GetRank() - 3);
+            kTag.StrValue2 = kSoldier.GetName(eNameType_Rank) @ string(kSoldier.GetRank() - 2);
+        }
+        else
+        {
+            kTag.StrValue0 = kGameCore.GetRankString(kSoldier.GetRank() - 1, true);
+            kTag.StrValue2 = kGameCore.GetRankString(kSoldier.GetRank());
+        }
+
+        kPromotionUI.txtPromotion.StrValue = class'XComLocalizer'.static.ExpandStringByTag(m_strRankNamePromoteRank, kTag);
+        NickName = kSoldier.GetName(eNameType_Nick);
+
+        if (kSoldier.HasAnyMedal())
+        {
+            kItem.txtName.StrValue = kSoldier.GetName(eNameType_FullNick);
+        }
+        else if (NickName == "")
+        {
+            kItem.txtName.StrValue = kGameCore.GetRankString(kSoldier.GetRank() - 1, true) @ kSoldier.GetName(eNameType_First) @ kSoldier.GetName(eNameType_Last);
+        }
+        else
+        {
+            kItem.txtName.StrValue = kGameCore.GetRankString(kSoldier.GetRank() - 1, true) @ kSoldier.GetName(eNameType_First) @ kSoldier.GetName(eNameType_Nick) @ kSoldier.GetName(eNameType_Last);
+        }
+    }
+    else
+    {
+        kItem.txtName.StrValue = kSoldier.GetName(eNameType_FullNick);
+    }
+
+    kItem.iSoldierClassId = LWCE_XGStrategySoldier(kSoldier).LWCE_GetClass();
+
+    if (kItem.m_bIsTank)
+    {
+        kItem.iSoldierRank = kSoldier.GetSHIVRank();
+    }
+    else
+    {
+        kItem.iSoldierRank = kSoldier.GetRank();
+    }
+
+    if (kSoldier.GetCurrentStat(eStat_HP) <= 0)
+    {
+        kItem.m_isDead = true;
+    }
+    else
+    {
+        kItem.m_isDead = false;
+    }
 }
 
 function UpdateView()

@@ -324,7 +324,17 @@ function OnItemsBuilt(out array<LWCE_TItem> arrItems)
 
 // #endregion
 
-// #region Perk-related events
+// #region Perk-and-class-related events
+
+function OnClassDefinitionsBuilt(out array<LWCE_TClassDefinition> arrSoldierClasses)
+{
+    local LWCEStrategyListener kStrategyListener;
+
+    foreach StrategyListeners(kStrategyListener)
+    {
+        kStrategyListener.OnClassDefinitionsBuilt(arrSoldierClasses);
+    }
+}
 
 function OnPerksBuilt(out array<LWCE_TPerk> arrPerks)
 {
@@ -333,6 +343,16 @@ function OnPerksBuilt(out array<LWCE_TPerk> arrPerks)
     foreach TacticalListeners(kTacticalListener)
     {
         kTacticalListener.OnPerksBuilt(arrPerks);
+    }
+}
+
+function OnPerkTreesBuilt(out array<LWCE_TPerkTree> arrSoldierPerkTrees, out array<LWCE_TPerkTree> arrPsionicPerkTrees)
+{
+    local LWCETacticalListener kTacticalListener;
+
+    foreach TacticalListeners(kTacticalListener)
+    {
+        kTacticalListener.OnPerkTreesBuilt(arrSoldierPerkTrees, arrPsionicPerkTrees);
     }
 }
 

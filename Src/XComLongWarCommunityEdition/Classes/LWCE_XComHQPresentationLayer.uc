@@ -231,6 +231,16 @@ simulated state State_Archives
     }
 }
 
+simulated state State_BarracksMenu
+{
+    simulated function Activate()
+    {
+        m_kSubMenu = Spawn(class'LWCE_UIStrategyHUD_FSM_Barracks', m_kStrategyHUD);
+        m_kSubMenu.Init(XComPlayerController(Owner), m_kHUD, m_kStrategyHUD, m_iFacilityView);
+        m_kStrategyHUD.m_kMenu.SetSelectedFacility(`HQGAME.GetGameCore().GetHQ().BARRACKS());
+    }
+}
+
 simulated state State_BaseBuild
 {
     simulated function Activate()
@@ -319,6 +329,15 @@ simulated state State_MC
     {
         m_kUIMissionControl = Spawn(class'LWCE_UIMissionControl', self);
         m_kUIMissionControl.Init(XComPlayerController(Owner), GetHUD());
+    }
+}
+
+simulated state State_MedalsScreen
+{
+    simulated function Activate()
+    {
+        m_kMedals = Spawn(class'LWCE_UIMedals', self);
+        m_kMedals.Init(XComPlayerController(Owner), GetHUD());
     }
 }
 

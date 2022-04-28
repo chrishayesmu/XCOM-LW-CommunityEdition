@@ -40,7 +40,12 @@ struct LWCE_TCharacter
     var TInventory kInventory;
 
     var array<LWCE_TIDWithSource> arrAbilities;
+
+    // Perks this character has, and where they came from. For the SourceType field, valid values are:
+    //     0 - Innate perk (e.g. from promotions, the Foundry, or starting perk for hero units like Zhang)
+    //     1 - Perk from an equipped item
     var array<LWCE_TIDWithSource> arrPerks;
+
     var array<LWCE_TIDWithSource> arrProperties;
     var array<LWCE_TIDWithSource> arrTraversals;
 

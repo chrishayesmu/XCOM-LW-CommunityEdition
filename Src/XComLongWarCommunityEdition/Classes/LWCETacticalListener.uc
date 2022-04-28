@@ -40,12 +40,19 @@ function AddHitChanceModifiers(XGAbility_Targeted kAbility, out TShotInfo kInfo)
 function OnPerksBuilt(out array<LWCE_TPerk> arrPerks) {}
 
 /// <summary>
+/// TODO
+/// </summary>
+function OnPerkTreesBuilt(out array<LWCE_TPerkTree> arrSoldierPerkTrees, out array<LWCE_TPerkTree> arrPsionicPerkTrees) {}
+
+/// <summary>
 /// Called when a unit bonus is being displayed, such as in the shot HUD where it shows various active perks (e.g. showing that
 /// Tactical Sense is active). Ordinarily the text displayed under the bonus is static, and is set in the LWCE_TPerk.strBonusDescription
 /// field. This method provides an opportunity for mods to provide a dynamic value, so instead of the bonus text being "Tactical Sense: Active",
 /// it could (for example) be "Tactical Sense: +10 Defense".
 ///
 /// If your mod is not modifying the description text for the given perk ID, simply return strCurrentText.
+///
+/// TODO: replace this method with localization tags
 /// </summary>
 function string GetDynamicBonusDescription(int iPerkId, string strCurrentText, LWCE_XGUnit kUnit) { return strCurrentText; }
 

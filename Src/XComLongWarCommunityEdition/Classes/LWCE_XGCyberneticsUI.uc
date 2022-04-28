@@ -323,6 +323,20 @@ function bool OnChooseSoldier(int iOption)
     }
 }
 
+function OnChooseSlot(int iSlot)
+{
+    if (iSlot < CYBERNETICSLAB().m_arrPatients.Length)
+    {
+        PlayBadSound();
+    }
+    else
+    {
+        GoToView(eCyberneticsLabView_Add);
+        `HQPRES.UISoldierList(class'LWCE_UISoldierList_CyberneticsLab');
+        PlayGoodSound();
+    }
+}
+
 simulated function RepairAll()
 {
     local int Index, iCount;

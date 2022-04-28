@@ -2,10 +2,20 @@ class LWCE_XComPerkManager extends XComPerkManager
     config(LWCEClasses)
     dependson(LWCETypes);
 
-var config array<LWCE_TPerkTree> arrPsionicClasses;
-var config array<LWCE_TPerkTree> arrSoldierClasses; // includes MECs
+var config array<LWCE_TPerkTree> arrPsionicClassesCfg;
+var config array<LWCE_TPerkTree> arrSoldierClassesCfg;
+
+var array<LWCE_TPerkTree> arrPsionicClasses;
+var array<LWCE_TPerkTree> arrSoldierClasses; // includes MECs
 
 var array<LWCE_TPerk> m_arrCEPerks;
+
+simulated function Init()
+{
+    BuildPerkTables();
+    BuildPerkTrees();
+    m_bInitialized = true;
+}
 
 simulated function BuildPerkTables()
 {
@@ -186,6 +196,23 @@ simulated function BuildPerkTables()
     LWCE_BuildPerk(171, ePerkCat_Passive, "LeadByExample",             true,       false,       false);
 
     `LWCE_MOD_LOADER.OnPerksBuilt(m_arrCEPerks);
+}
+
+simulated function BuildPerkTrees()
+{
+    local LWCE_TPerkTree kPerkTree;
+
+    foreach arrPsionicClassesCfg(kPerkTree)
+    {
+        arrPsionicClasses.AddItem(kPerkTree);
+    }
+
+    foreach arrSoldierClassesCfg(kPerkTree)
+    {
+        arrSoldierClasses.AddItem(kPerkTree);
+    }
+
+    `LWCE_MOD_LOADER.OnPerkTreesBuilt(arrSoldierClasses, arrPsionicClasses);
 }
 
 simulated function LWCE_BuildPerk(int iPerkId, int iCategory, string strImage, bool bShowPerk, bool bIsGeneMod, bool bIsPsionic)

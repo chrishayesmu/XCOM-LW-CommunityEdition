@@ -2,8 +2,7 @@ class LWCE_UIStrategyComponent_SoldierInfo extends UIStrategyComponent_SoldierIn
 
 function UpdateData()
 {
-    local string theName, NickName, Status, flagIcon, classLabel, classText,
-	    rankLabel, rankText, missionsText, killsText;
+    local string theName, NickName, Status, flagIcon, classLabel, classText, rankLabel, rankText, missionsText, killsText;
     local int iRank;
     local bool bIsShiv;
     local LWCE_XGStrategySoldier kSoldier;
@@ -14,7 +13,7 @@ function UpdateData()
     NickName = kSoldier.GetName(eNameType_Nick);
     Status = class'UIUtilities'.static.GetHTMLColoredText(m_strStatusLabel, eUIState_Normal) @ class'UIUtilities'.static.GetHTMLColoredText(kSoldier.GetStatusString(), kSoldier.GetStatusUIState()) $ "   ";
     flagIcon = class'UIScreen'.static.GetFlagPath(kSoldier.GetCountry());
-    classLabel = class'UIUtilities'.static.GetClassLabel(kSoldier.m_kCEChar.iClassId, kSoldier.m_kCEChar.bHasPsiGift, class'LWCE_XComPerkManager'.static.LWCE_HasAnyGeneMod(kSoldier.m_kCEChar));
+    classLabel = kSoldier.GetClassIcon();
     classText = Caps(kSoldier.GetClassName());
 
     if (kSoldier.IsATank())

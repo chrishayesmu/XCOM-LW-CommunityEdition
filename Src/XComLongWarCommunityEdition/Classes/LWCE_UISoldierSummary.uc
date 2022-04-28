@@ -37,3 +37,9 @@ simulated function XGSoldierUI GetMgr(optional int iStartingView = -1)
 
     return m_kLocalMgr;
 }
+
+simulated function OnSoldierList()
+{
+    Hide();
+    `HQPRES.UISoldierList(class'LWCE_UISoldierList_SelectCovertOperative');
+}
