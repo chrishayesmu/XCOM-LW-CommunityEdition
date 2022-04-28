@@ -11,6 +11,7 @@ var config LWCE_TCharacterStats BaseStatsChangeWhenAugmented;
 
 // Config for mission rewards
 var config array<LWCE_TItemQuantity> AlienBaseAssaultRewards;
+var config array<LWCE_TItemQuantity> GangplankRewards;
 
 // Config for other mission parameters
 var config int MissionGeoscapeDuration_Abduction;
