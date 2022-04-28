@@ -1230,6 +1230,8 @@ static simulated function int GetHitChance(XGAbility_Targeted kSelf)
         return kSelf.m_iHitChance;
     }
 
+    kSelf.m_iHitChance = 0;
+
     for (Index = 0; Index < 16; Index++)
     {
         kSelf.m_shotHUDHitChanceStats[Index].m_iAmount = 0;
@@ -1537,6 +1539,7 @@ static simulated function GetShotSummary(XGAbility_Targeted kSelf, out TShotResu
     iType = kSelf.iType;
 
     // TODO: we might need to be clearing unit buffs and applying bonuses/penalties here
+    kGameCore = LWCE_XGTacticalGameCore(kSelf.m_kGameCore);
 
     if (kSelf.HasProperty(eProp_PsiRoll))
     {
@@ -1586,28 +1589,25 @@ static simulated function GetShotSummary(XGAbility_Targeted kSelf, out TShotResu
 
     if (kSelf.HasProperty(eProp_Stun))
     {
+        iMod = kGameCore.CalcStunChance(kTarget, kShooter, kWeapon);
         kInfo.arrHitBonusStrings.AddItem(kSelf.m_strChanceToStun);
 
         if (iType == eAbility_ShotStun)
         {
             // Arc Thrower stun
-            // TODO probably broken with the rewrite
-            kInfo.arrHitBonusValues.AddItem(int(float(kSelf.m_iHitChance) * class'XGTacticalGameCore'.default.UFO_PSI_LINK_SURVIVE));
+            kInfo.arrHitBonusValues.AddItem(int(iMod * class'XGTacticalGameCore'.default.UFO_PSI_LINK_SURVIVE));
         }
         else
         {
             // This should only be drone hacking
-            kInfo.arrHitBonusValues.AddItem(kSelf.m_iHitChance);
+            kInfo.arrHitBonusValues.AddItem(iMod);
         }
 
         // Nothing else applies to these abilities
         return;
     }
 
-    kSelf.m_iHitChance = 0;
-
     // No more special cases, now we can calculate the hit chance
-    kGameCore = LWCE_XGTacticalGameCore(kSelf.m_kGameCore);
     fDistanceToTarget = VSize(kTarget.GetLocation() - kShooter.GetLocation());
 
     // Baseline unit aim
