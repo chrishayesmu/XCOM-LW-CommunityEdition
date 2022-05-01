@@ -29,7 +29,7 @@ function Init(bool bLoadingFromSave)
 
     if (m_kEntity == none)
     {
-        SetEntity(Spawn(class'XGBaseEntity'), 0);
+        SetEntity(Spawn(class'LWCE_XGBaseEntity'), eEntityGraphic_HQ);
     }
 
     foreach m_arrOutposts(kOutpost)
@@ -44,7 +44,7 @@ function Init(bool bLoadingFromSave)
     {
         if (m_arrSatellites[iSat].kSatEntity == none)
         {
-            m_arrSatellites[iSat].kSatEntity = Spawn(class'XGEntity');
+            m_arrSatellites[iSat].kSatEntity = Spawn(class'LWCE_XGEntity');
             m_arrSatellites[iSat].kSatEntity.AssignGameActor(self, m_arrSatellites.Length);
             m_arrSatellites[iSat].kSatEntity.Init(eEntityGraphic_Sat_Persistent);
             m_arrSatellites[iSat].kSatEntity.SetHidden(true);
@@ -110,43 +110,81 @@ function InitNewGame()
     }
 }
 
-function CreateFacilities()
+function AddOutpost(int iContinent)
 {
-    local XGFacility kFacility;
+    local XGOutpost kOutpost;
 
-    // Replace all facilities with our own subclasses. We do this even for facilities we currently
-    // don't have any changes to, since if we change our minds about a facility later, it's not easy
-    // to insert a new class into existing save games.
+    kOutpost = Spawn(class'LWCE_XGOutpost');
+    kOutpost.Init(iContinent);
+    m_arrOutposts.AddItem(kOutpost);
+}
 
-    kFacility = Spawn(class'LWCE_XGFacility_MissionControl');
-    kFacility.Init(false);
-    m_arrFacilities.AddItem(kFacility);
-    m_kMC = XGFacility_MissionControl(kFacility);
+function AddSatelliteNode(int iCountry, int iType, optional bool bInstant)
+{
+    local TSatellite kSatellite;
+    local XGCountry kCountry;
+    local TSatNode kNode;
 
-    kFacility = Spawn(class'LWCE_XGFacility_Labs');
-    kFacility.Init(false);
-    m_arrFacilities.AddItem(kFacility);
-    m_kLabs = XGFacility_Labs(kFacility);
+    kNode = World().GetSatelliteNode(iCountry);
+    kSatellite.iType = iType;
+    kSatellite.v2Loc = kNode.v2Coords;
+    kSatellite.iCountry = iCountry;
 
-    kFacility = Spawn(class'LWCE_XGFacility_Engineering');
-    kFacility.Init(false);
-    m_arrFacilities.AddItem(kFacility);
-    m_kEngineering = XGFacility_Engineering(kFacility);
+    if (!bInstant)
+    {
+        kSatellite.iTravelTime = GEOSCAPE().GetSatTravelTime(iCountry) * 24;
+    }
 
-    kFacility = Spawn(class'LWCE_XGFacility_Barracks');
-    kFacility.Init(false);
-    m_arrFacilities.AddItem(kFacility);
-    m_kBarracks = XGFacility_Barracks(kFacility);
+    kCountry = Country(iCountry);
+    kCountry.SetSatelliteCoverage(true);
 
-    kFacility = Spawn(class'LWCE_XGFacility_Hangar');
-    kFacility.Init(false);
-    m_arrFacilities.AddItem(kFacility);
-    m_kHangar = XGFacility_Hangar(kFacility);
+    if (!bInstant)
+    {
+        Continent(kCountry.GetContinent()).m_kMonthly.iSatellitesLaunched += 1;
+    }
 
-    kFacility = Spawn(class'LWCE_XGFacility_SituationRoom');
-    kFacility.Init(false);
-    m_arrFacilities.AddItem(kFacility);
-    m_kSitRoom = XGFacility_SituationRoom(kFacility);
+    kSatellite.kSatEntity = Spawn(class'LWCE_XGEntity');
+    kSatellite.kSatEntity.AssignGameActor(self, m_arrSatellites.Length);
+    kSatellite.kSatEntity.Init(eEntityGraphic_Sat_Persistent);
+    kSatellite.kSatEntity.SetHidden(true);
+    kSatellite.kSatEntity.SetBase(none);
+    m_arrSatellites.AddItem(kSatellite);
+    STORAGE().RemoveItem(iType);
+
+    if (bInstant)
+    {
+        ActivateSatellite(m_arrSatellites.Length - 1, false);
+    }
+    else
+    {
+        World().m_kFundingCouncil.OnSatelliteTransferExecuted(m_arrSatellites[m_arrSatellites.Length - 1]);
+    }
+
+    if (!WorldInfo.IsConsoleBuild(CONSOLE_Xbox360) && !WorldInfo.IsConsoleBuild(CONSOLE_PS3))
+    {
+        GetRecapSaveData().RecordEvent(RecordSatelliteLaunch(kCountry));
+    }
+
+    STAT_AddStat(eRecap_SatellitesLaunched, 1);
+
+    if (STAT_GetStat(eRecap_SecondSatellite) == 0 && m_arrSatellites.Length == 2)
+    {
+        STAT_SetStat(eRecap_SecondSatellite, Game().GetDays());
+    }
+    else if (STAT_GetStat(eRecap_ThirdSatellite) == 0 && m_arrSatellites.Length == 3)
+    {
+        STAT_SetStat(eRecap_ThirdSatellite, Game().GetDays());
+    }
+
+    // If just now getting the We Have Ways continent bonus, and current research is an autopsy or interrogation,
+    // complete the research right away
+    if (Continent(kCountry.GetContinent()).HasBonus() && Continent(kCountry.GetContinent()).m_eBonus == eCB_WeHaveWays)
+    {
+        if (LABS().IsInterrogationTech(LABS().m_kProject.iTech) || LABS().IsAutopsyTech(LABS().m_kProject.iTech))
+        {
+            LABS().m_kProject.iActualHoursLeft = 0;
+        }
+    }
 }
 
 function AddFacility(int iFacility)
@@ -259,6 +297,45 @@ function bool ArePrereqsFulfilled(LWCE_TPrereqs kPrereqs)
     }
 
     return true;
+}
+
+function CreateFacilities()
+{
+    local XGFacility kFacility;
+
+    // Replace all facilities with our own subclasses. We do this even for facilities we currently
+    // don't have any changes to, since if we change our minds about a facility later, it's not easy
+    // to insert a new class into existing save games.
+
+    kFacility = Spawn(class'LWCE_XGFacility_MissionControl');
+    kFacility.Init(false);
+    m_arrFacilities.AddItem(kFacility);
+    m_kMC = XGFacility_MissionControl(kFacility);
+
+    kFacility = Spawn(class'LWCE_XGFacility_Labs');
+    kFacility.Init(false);
+    m_arrFacilities.AddItem(kFacility);
+    m_kLabs = XGFacility_Labs(kFacility);
+
+    kFacility = Spawn(class'LWCE_XGFacility_Engineering');
+    kFacility.Init(false);
+    m_arrFacilities.AddItem(kFacility);
+    m_kEngineering = XGFacility_Engineering(kFacility);
+
+    kFacility = Spawn(class'LWCE_XGFacility_Barracks');
+    kFacility.Init(false);
+    m_arrFacilities.AddItem(kFacility);
+    m_kBarracks = XGFacility_Barracks(kFacility);
+
+    kFacility = Spawn(class'LWCE_XGFacility_Hangar');
+    kFacility.Init(false);
+    m_arrFacilities.AddItem(kFacility);
+    m_kHangar = XGFacility_Hangar(kFacility);
+
+    kFacility = Spawn(class'LWCE_XGFacility_SituationRoom');
+    kFacility.Init(false);
+    m_arrFacilities.AddItem(kFacility);
+    m_kSitRoom = XGFacility_SituationRoom(kFacility);
 }
 
 function OrderInterceptors(int iContinent, int iQuantity)

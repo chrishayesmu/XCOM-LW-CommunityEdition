@@ -1,0 +1,1 @@
+class LWCE_XGContinent extends XGContinent;

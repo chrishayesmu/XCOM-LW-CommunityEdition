@@ -1,5 +1,4 @@
 class XGMissionEntity extends XGEntity;
-//complete stub
 
 enum EMissionAnimation
 {
@@ -12,3 +11,7 @@ function Vector2D GetCoords(){}
 function XGMission GetMission(){}
 function EMissionType GetMissionModel(){}
 function EMissionAnimation GetAnim(){}
+
+defaultproperties
+{
+}

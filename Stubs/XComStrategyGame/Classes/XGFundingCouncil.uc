@@ -548,13 +548,13 @@ function OnShipSuccessfullyTransferred(XGShip_Interceptor kShip, optional bool b
 {
 }
 
-/*function OnSatelliteSuccessfullyTransferred(TSatellite kSatellite, optional bool bSitRoomAttention, optional bool bTurnInRequest)
+function OnSatelliteSuccessfullyTransferred(TSatellite kSatellite, optional bool bSitRoomAttention = true, optional bool bTurnInRequest = false)
 {
 }
 
 function OnSatelliteTransferExecuted(TSatellite kSatellite)
 {
-}*/
+}
 
 function GiveCustomSoldier(const out TFundingCouncilRewardSoldier CustomSoldier)
 {
