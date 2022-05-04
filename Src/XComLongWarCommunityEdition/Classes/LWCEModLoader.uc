@@ -1,8 +1,5 @@
 class LWCEModLoader extends Mutator
-    config(LWCEMods)
     dependson(LWCEModBase);
-
-var config array<string> arrModClasses;
 
 var array<LWCEModBase> LoadedMods;
 
@@ -25,25 +22,13 @@ static function LWCEModLoader GetModLoader()
 
 function InitMutator(string Options, out string ErrorMessage)
 {
-    local string ModClassName;
+    local DownloadableContentEnumerator kDLCEnum;
 
     `LWCE_LOG_CLS("InitMutator: " $ self);
-    `LWCE_LOG_CLS("Initializing with " $ arrModClasses.Length $ " mod(s) to load");
 
-    foreach arrModClasses(ModClassName)
-    {
-        LoadMod(ModClassName);
-    }
-
-    `LWCE_LOG_CLS(LoadedMods.Length $ " mod(s) were loaded successfully");
-
-    `LWCE_LOG_CLS("Loading strategy listeners");
-    LoadStrategyListeners();
-    `LWCE_LOG_CLS("Loaded " $ StrategyListeners.Length $ " strategy listener(s)");
-
-    `LWCE_LOG_CLS("Loading tactical listeners");
-    LoadTacticalListeners();
-    `LWCE_LOG_CLS("Loaded " $ TacticalListeners.Length $ " tactical listener(s)");
+    kDLCEnum = class'LWCE_XComEngine'.static.LWCE_GetDLCEnumerator();
+    kDLCEnum.AddFindDLCDelegate(OnFindDLCComplete);
+    kDLCEnum.FindDLC();
 
     super.InitMutator(Options, ErrorMessage);
 }
@@ -166,6 +151,32 @@ static function bool IsInStrategyGame()
 static function bool IsInTacticalGame()
 {
     return XComTacticalGRI(XComGameReplicationInfo(class'Engine'.static.GetCurrentWorldInfo().GRI)) != none;
+}
+
+protected function OnFindDLCComplete()
+{
+    local int Index;
+    local DownloadableContentEnumerator kDLCEnum;
+
+    kDLCEnum = class'LWCE_XComEngine'.static.LWCE_GetDLCEnumerator();
+    kDLCEnum.ClearFindDLCDelegate(OnFindDLCComplete);
+
+    `LWCE_LOG_CLS("Initializing with " $ kDLCEnum.DLCBundles.Length $ " mod(s) to load");
+
+    for (Index = 0; Index < kDLCEnum.DLCBundles.Length; Index++)
+    {
+        LoadMod(kDLCEnum.DLCBundles[Index].FriendlyName);
+    }
+
+    `LWCE_LOG_CLS(LoadedMods.Length $ " mod(s) were loaded successfully");
+
+    `LWCE_LOG_CLS("Loading strategy listeners");
+    LoadStrategyListeners();
+    `LWCE_LOG_CLS("Loaded " $ StrategyListeners.Length $ " strategy listener(s)");
+
+    `LWCE_LOG_CLS("Loading tactical listeners");
+    LoadTacticalListeners();
+    `LWCE_LOG_CLS("Loaded " $ TacticalListeners.Length $ " tactical listener(s)");
 }
 
 // #region Mod event entry points
@@ -583,12 +594,13 @@ function OnVolumeCreated(XGVolume kVolume)
 
 // #endregion
 
-private function LoadMod(string ModClassName)
+private function LoadMod(string ModPackageName)
 {
     local Class ModClass;
     local LWCEModBase Mod;
-    local string ErrorMsg;
+    local string ErrorMsg, ModClassName;
 
+    ModClassName = ModPackageName $ "." $ ModPackageName $ "Mod";
     ModClass = class<LWCEModBase>(DynamicLoadObject(ModClassName, class'Class'));
 
     if (ModClass == none)
@@ -597,7 +609,7 @@ private function LoadMod(string ModClassName)
         return;
     }
 
-    `LWCE_LOG_CLS("Successfully loaded mod class " $ ModClassName);
+    `LWCE_LOG_CLS("Successfully loaded mod package " $ ModPackageName);
 
     Mod = LWCEModBase(new (self) ModClass);
 
