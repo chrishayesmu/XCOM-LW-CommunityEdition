@@ -22,6 +22,8 @@ function Init()
         m_arrCEItems.AddItem(kItem);
     }
 
+    // TODO: need items to be built every time we reach strat layer, or else you won't
+    // be able to add mods mid-campaign to affect items
     `LWCE_MOD_LOADER.OnItemsBuilt(m_arrCEItems);
 
     m_arrFacilities.Add(24);

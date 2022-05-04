@@ -11,7 +11,7 @@ class DownloadableContentEnumerator extends Object
 var protectedwrite array<OnlineContent> DLCBundles;
 
 /** The root directory to look for DLC in */
-var const string DLCRootDir;
+var string DLCRootDir;
 
 /** List of listeners for the find DLC event */
 var protected array<delegate<OnFindDLCComplete> > FindDLCDelegates;

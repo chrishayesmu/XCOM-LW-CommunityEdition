@@ -2,8 +2,6 @@ class LWCEModLoader extends Mutator
     config(LWCEMods)
     dependson(LWCEModBase);
 
-
-
 var config array<string> arrModClasses;
 
 var array<LWCEModBase> LoadedMods;

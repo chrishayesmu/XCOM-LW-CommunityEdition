@@ -33,7 +33,7 @@ var		native transient	const	array<pointer>					EmitterInstances{struct FParticle
  *	The static mesh components for a mesh emitter.
  *	This is to prevent the SMCs from being garbage collected.
  */
-var private transient duplicatetransient const array<StaticMeshComponent> SMComponents;
+var transient duplicatetransient const array<StaticMeshComponent> SMComponents;
 /**
  *	The static mesh MaterialInterfaces for a mesh emitter.
  *	This is to prevent them from being garbage collected.

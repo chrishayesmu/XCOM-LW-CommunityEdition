@@ -108,13 +108,13 @@ var const transient bool bStartedLoadMapMovie;
 var const transient OnlineSubsystem OnlineSubsystem;
 
 /** The singleton interface that enumerates available DLC */
-var const transient DownloadableContentEnumerator DLCEnumerator;
+var transient DownloadableContentEnumerator DLCEnumerator;
 
 /** The name of the class to use for the DLC enumeration */
 var config string DownloadableContentEnumeratorClassName;
 
 /** The singleton interface that manages the installation and removal of DLC */
-var const transient DownloadableContentManager DLCManager;
+var transient DownloadableContentManager DLCManager;
 
 /** The name of the class to use for the DLC manager */
 var config string DownloadableContentManagerClassName;
@@ -235,7 +235,7 @@ struct native AnimTag
  * Animation tag for stat system: This is temporary until we can add content tag to animation
  * Currently it auto tags based on "contains" - Check DefaultEngine.ini for modification
  */
-var config array<AnimTag> AnimTags;	
+var config array<AnimTag> AnimTags;
 //XCOM related
 var string OnlineEventMgrClassName;
 var const transient OnlineEventMgr OnlineEventManager;
@@ -279,7 +279,7 @@ cpptext
 	 * @param	bShouldPresent	Whether we want this frame to be presented
 	 */
 	void RedrawViewports( UBOOL bShouldPresent = TRUE );
-	
+
 	/**
 	 * Called to allow overloading by child engines
 	 */
