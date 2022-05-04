@@ -26,6 +26,10 @@ function InitMutator(string Options, out string ErrorMessage)
 
     `LWCE_LOG_CLS("InitMutator: " $ self);
 
+    // We need to do FindDLC again, even though we could get the DLCBundles data that has
+    // already been loaded when we installed mods in the first place. The reason is that after
+    // FindDLC, something tries to localize the mod names and fails, leaving mangled data behind
+    // that we can't make use of.
     kDLCEnum = class'LWCE_XComEngine'.static.LWCE_GetDLCEnumerator();
     kDLCEnum.AddFindDLCDelegate(OnFindDLCComplete);
     kDLCEnum.FindDLC();
