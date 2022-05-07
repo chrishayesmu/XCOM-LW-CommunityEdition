@@ -35,8 +35,13 @@
           export WINEARCH='win32'
           export WINEDEBUG='fixme-all,trace-all'
 
+          # Silence some warnings that can drown out useful output
+          mkdir -p cache
+          export XDG_CACHE_HOME="$PWD/cache"
           export FONTCONFIG_FILE="${pkgs.fontconfig.out}/etc/fonts/fonts.conf";
           export FONTCONFIG_PATH="${pkgs.fontconfig.out}/etc/fonts/";
+
+          # Needed to get software rendering OpenGL / GLX to work in our xserver
           export LD_LIBRARY_PATH="${pkgs.libglvnd}/lib:${pkgs.pkgsi686Linux.mesa.drivers}/lib:${pkgs.mesa.drivers}/lib:''${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
           export XDG_DATA_DIRS="${pkgs.pkgsi686Linux.mesa.drivers}/share:${pkgs.mesa.drivers}/share''${XDG_DATA_DIRS:+:$XDG_DATA_DIRS}"
           export LIBGL_DRIVERS_PATH="${pkgs.pkgsi686Linux.mesa.drivers}/lib/dri:${pkgs.mesa.drivers}/lib/dri''${LIBGL_DRIVERS_PATH:+:''${LIBGL_DRIVERS_PATH}}"
@@ -48,9 +53,6 @@
             wait
           }
           trap "stop_dummy $!" EXIT
-
-          mkdir -p cache
-          export XDG_CACHE_HOME="$PWD/cache"
         ''
         + cmd
         + ''
@@ -93,6 +95,7 @@
           buildPhase = winesetup {
             pfx = "$PWD/build/wpfx";
             cmd = ''
+              # wine requires that the wineprefix is owned by the current user, so we can't use it from the store path directly
               mkdir -p "$WINEPREFIX"
               cp -rfP --no-preserve=all -t "$WINEPREFIX" "${packages.udk_wpfx}"/*
 
