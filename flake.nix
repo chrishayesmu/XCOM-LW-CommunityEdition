@@ -2,16 +2,11 @@
   description = "A nix flake for Long War Community Edition";
 
   inputs.nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
-  inputs.flake-compat = {
-    url = "github:edolstra/flake-compat";
-    flake = false;
-  };
   inputs.flake-utils.url = "github:numtide/flake-utils";
 
   outputs = {
     self,
     nixpkgs,
-    flake-compat,
     flake-utils,
   }:
     flake-utils.lib.eachDefaultSystem (system: let
