@@ -206,7 +206,7 @@ function modifyBinary(exeFilePath) {
  */
 function modifyGameConfig(configPath) {
     // Since this ini file is pretty small, we just read the whole thing at once, change it, and write it back
-    const engineCfgPath = path.resolve(configPath, "../../Engine/DefaultEngine.ini");
+    const engineCfgPath = path.resolve(configPath, "DefaultEngine.ini");
     const gameEngineString = "GameEngine=XComLongWarCommunityEdition.LWCE_XComEngine";
     const consoleClassString = "ConsoleClassName=XComLongWarCommunityEdition.LWCE_Console";
 
