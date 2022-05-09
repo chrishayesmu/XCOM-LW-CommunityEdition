@@ -9,6 +9,8 @@ init_wpfx() {
     local engine_conf_out=${4}
     shift 4
 
+    local d
+
     env | grep WINE
     rm -rf "${WINEPREFIX}"
     mkdir -p "${WINEPREFIX}"
@@ -31,6 +33,8 @@ lwce_udk() {
     local engine_conf_in=${2}
     local engine_conf_out=${3}
     shift 3
+
+    local d sample_config lwce_config
 
     for d in "${@}"; do
         if [[ -d "${d}" ]]; then
