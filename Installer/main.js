@@ -206,12 +206,33 @@ function modifyBinary(exeFilePath) {
  */
 function modifyGameConfig(configPath) {
     // Since this ini file is pretty small, we just read the whole thing at once, change it, and write it back
-    const engineCfgPath = path.resolve(configPath, "DefaultEngine.ini");
+    const engineCfgPath = path.resolve(configPath, "../../Engine/DefaultEngine.ini");
+    const gameEngineString = "GameEngine=XComLongWarCommunityEdition.LWCE_XComEngine";
+    const consoleClassString = "ConsoleClassName=XComLongWarCommunityEdition.LWCE_Console";
+
     let fileContents = fs.readFileSync(engineCfgPath, { encoding: "utf8" });
 
-    fileContents = fileContents
-        .replace("GameEngine=Engine.GameEngine", "GameEngine=XComLongWarCommunityEdition.LWCE_XComEngine")
-        .replace("ConsoleClassName=Engine.Console", "ConsoleClassName=XComLongWarCommunityEdition.LWCE_Console");
+    // A few weird patterns to match here. Ideally we could just modify Engine/XComEngine.ini, but if anyone has
+    // the same entry in Config/DefaultEngine.ini, that one would take priority, and that breaks LWCE completely.
+    if (fileContents.includes("GameEngine=")) {
+        if (fileContents.includes("ConsoleClassName=")) {
+            // If both keys are present, replace them individually
+            fileContents = fileContents.replace("GameEngine=Engine.GameEngine", gameEngineString)
+                                       .replace("ConsoleClassName=Engine.Console", consoleClassString);
+        }
+        else {
+            // If only the GameEngine key is present, append the ConsoleClassName key right after it
+            fileContents = fileContents.replace("GameEngine=Engine.GameEngine", gameEngineString + os.EOL + consoleClassString);
+        }
+    }
+    else if (fileContents.includes("[Engine.Engine]")) {
+        // In case the Engine config is present but somehow lacking both keys
+        fileContents = fileContents.replace("[Engine.Engine]", "[Engine.Engine]" + os.EOL + gameEngineString + os.EOL + consoleClassString);
+    }
+    else {
+        // If someone somehow doesn't even have [Engine.Engine] in their config file
+        fileContents += os.EOL + "[Engine.Engine]" + os.EOL + gameEngineString + os.EOL + consoleClassString;
+    }
 
     fs.writeFileSync(engineCfgPath, fileContents);
 }
@@ -260,7 +281,6 @@ ipcMain.on("begin-installation", (_event, params) => {
     const xcomGameDirPath = path.resolve(ewExePath, "../../../XComGame/");
     const patchUpkPath = params.patchUpkPath;
 
-    // TODO check if we need to decompress game UPKs before patching
     const pathsObj = {
         Config: path.resolve(xcomGameDirPath, "./Config"),
         CookedPCConsole: path.resolve(xcomGameDirPath, "./CookedPCConsole"),
