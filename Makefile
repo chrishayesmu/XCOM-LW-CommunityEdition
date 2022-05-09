@@ -6,6 +6,7 @@ DESTDIR = install
 ew_stub_packages = Core Engine GFxUI
 lwce_stub_packages = XComGame XComStrategyGame XComUIShell XComMutator XComLZMutator
 lwce_packages = XComLongWarCommunityEdition
+lwce_mods = LWCEGraphicsPack
 
 
 WPFX = $(BUILDDIR)/wpfx
@@ -22,25 +23,32 @@ export WINEPREFIX=$(abspath $(WPFX))
 export WINEARCH=win32
 export WINEDEBUG=fixme-all,trace-all
 
-all: $(foreach pkg,$(lwce_packages),$(BUILDDIR)/$(pkg).u)
+all: $(foreach pkg,$(lwce_packages) $(lwce_mods),$(BUILDDIR)/$(pkg).u)
 
 $(engine_conf).default: $(SRCDIR)/wine_build $(UDK)
 	bash $(SRCDIR)/wine_build init_wpfx "$(UDK)" "$(UDK_SRCPATH)" "$(engine_conf)" "$(engine_conf).default"
 
-$(engine_conf): $(SRCDIR)/wine_build $(engine_conf).default $(SRCDIR)/Stubs $(SRCDIR)/Src
-	bash $(SRCDIR)/wine_build lwce_udk "$(UDK_SRCPATH)" "$(SRCDIR)" "$(engine_conf).default" "$(engine_conf)" $(ew_stub_packages) $(lwce_stub_packages) $(lwce_packages)
+$(engine_conf): $(SRCDIR)/wine_build $(engine_conf).default $(SRCDIR)/Stubs $(SRCDIR)/LWCE_Core/Src
+	bash $(SRCDIR)/wine_build lwce_udk "$(UDK_SRCPATH)" \
+		"$(engine_conf).default" "$(engine_conf)" \
+		$(foreach pkg,$(ew_stub_packages),"$(SRCDIR)/Stubs/$(pkg)") \
+		$(foreach pkg,$(lwce_stub_packages),"$(SRCDIR)/Stubs/$(pkg)") \
+		$(foreach pkg,$(lwce_packages),"$(SRCDIR)/LWCE_Core/Src/$(pkg)") \
+		$(foreach pkg,$(lwce_mods),"$(SRCDIR)/LWCE_BundledMods/$(pkg)/Src/$(pkg)") \
+
 
 udk_rebuild:
+	bash $(SRCDIR)/wine_build lwce_build "$(WINE_UDK)"
 
 $(BUILDDIR)/%.u: $(SRCDIR)/wine_build $(engine_conf) udk_rebuild
-	bash $(SRCDIR)/wine_build lwce_build "$(WINE_UDK)"
 	cp "$(WINE_UDK)/UDKGame/Script/$(notdir $@)" "$@"
 
-install: $(wildcard Config/* Localization/* Patches/* README*) all
-	mkdir -p "$(DESTDIR)"/{CookedPCConsole,Config,Localization}
-	$(foreach pkg,$(lwce_packages),cp "$(BUILDDIR)/$(pkg).u" "$(DESTDIR)/CookedPCConsole")
-	for f in Config/* Localization/*; do unix2dos <"$$f" >"$(DESTDIR)/$$f"; done
-	unix2dos <Patches/XComGame_Overrides.upatch > "$(DESTDIR)/LWCE_Install.txt"
+install: $(wildcard LWCE_Core/Config/* LWCE_Core/Localization/*/* LWCE_Core/Patches/* README*) all
+	mkdir -p "$(DESTDIR)"/{Config,CookedPCConsole,Localization/INT,UPK\ patches}
+	cp -t "$(DESTDIR)/CookedPCConsole" $(foreach pkg,$(lwce_packages) $(lwce_mods),"$(BUILDDIR)/$(pkg).u")
+	for f in "LWCE_Core/Config"/*; do unix2dos <"$$f" >"$(DESTDIR)/Config/$${f##*/}"; done
+	for f in "LWCE_Core/Localization/INT"/*; do unix2dos <"$$f" >"$(DESTDIR)/Localization/INT/$${f##*/}"; done
+	for f in "LWCE_Core/Patches"/*; do unix2dos <"$$f" >"$(DESTDIR)/UPK patches/$${f##*/}"; done
 	unix2dos <README_installation.txt > "$(DESTDIR)/README.txt"
 
 
