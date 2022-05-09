@@ -107,5 +107,7 @@ static function XGUnit SpawnUnit(XGPlayer kSelf, class<XGUnit> kUnitClassToSpawn
         kCharacter.m_kUnit = kUnit;
     }
 
+    `LWCE_MOD_LOADER.OnUnitSpawned(kUnit);
+
     return kUnit;
 }

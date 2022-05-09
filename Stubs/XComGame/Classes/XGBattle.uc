@@ -228,21 +228,24 @@ simulated state LevelCinematicIntro
 }
 
 simulated state Initing
-{    
+{
 	simulated function bool WaitingForUnitVisualization()
 	{}
 }
 simulated state StartUI
 {}
 state Loading
-{   
-	function NotifyKismetOfLoad()
-	{}
-	    function RequestAlienContentOnLoad(){}
+{
+	function NotifyKismetOfLoad(){}
+    function RequestAlienContentOnLoad(){}
     function SetupCamera(){}
 
 }
-simulated state Running{}
+simulated state Running
+{
+    event BeginState(name PrevState){}
+}
+
 state Paused
 {}
 state TransitioningPlayers

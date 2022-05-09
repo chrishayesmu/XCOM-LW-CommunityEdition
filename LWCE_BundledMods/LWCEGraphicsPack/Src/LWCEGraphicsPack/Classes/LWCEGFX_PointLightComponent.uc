@@ -1,4 +1,4 @@
-class LWCE_PointLightComponent extends PointLightComponent;
+class LWCEGFX_PointLightComponent extends PointLightComponent;
 
 const TimerFrequency = 0.05;
 
@@ -9,10 +9,10 @@ var float m_fBaseRadius;
 var float m_fVariableBrightness;
 var float m_fVariableRadius;
 
-function Init(LWCEGraphicsController kGfx)
+function Init()
 {
     FxTick();
-    kGfx.SetTimer(TimerFrequency, /* inbLoop */ true, 'FxTick', self);
+    Owner.SetTimer(TimerFrequency, /* inbLoop */ true, 'FxTick', self);
 }
 
 function FxTick()

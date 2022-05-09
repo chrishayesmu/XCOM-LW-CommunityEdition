@@ -7,8 +7,6 @@
 `define LWCE_LOG_DEPRECATED_NOREPLACE_CLS(funcname) `LWCE_LOG_CLS("ERROR: LWCE-incompatible function `{funcname}  was called. This function is deprecated and unavailable. Stack trace follows."); ScriptTrace();
 `define LWCE_MOD_LOADER (class'LWCEModLoader'.static.GetModLoader())
 
-`define LWCE_GFX (class'LWCEGraphicsController'.static.GetInstance())
-
 // Convenience class of static functions
 `define LWCE_UTILS class'LWCEUtils'.static
 

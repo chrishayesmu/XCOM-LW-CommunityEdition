@@ -24,8 +24,6 @@ function InitMutator(string Options, out string ErrorMessage)
 {
     local DownloadableContentEnumerator kDLCEnum;
 
-    `LWCE_LOG_CLS("InitMutator: " $ self);
-
     // We need to do FindDLC again, even though we could get the DLCBundles data that has
     // already been loaded when we installed mods in the first place. The reason is that after
     // FindDLC, something tries to localize the mod names and fails, leaving mangled data behind
@@ -546,6 +544,33 @@ function string GetDynamicPenaltyDescription(int iPerkId, LWCE_XGUnit kUnit)
     return strCurrentText;
 }
 
+function OnBattleBegin(XGBattle kBattle)
+{
+    local LWCETacticalListener kTacticalListener;
+
+    foreach TacticalListeners(kTacticalListener)
+    {
+        kTacticalListener.OnBattleBegin(kBattle);
+    }
+}
+
+/// <summary>
+/// Unlike most functions in this class, this does not directly call any mod listener methods. Instead, any LWCETacticalListener
+/// which implements XComProjectileEventListener will be subscribed to events for the projectile.
+/// </summary>
+function OnInitProjectile(XComProjectile kSelf)
+{
+    local LWCETacticalListener kTacticalListener;
+
+    foreach TacticalListeners(kTacticalListener)
+    {
+        if (XComProjectileEventListener(kTacticalListener) != none)
+        {
+            kSelf.AddProjectileEventListenter(XComProjectileEventListener(kTacticalListener));
+        }
+    }
+}
+
 function OnRegenBonusPerks(LWCE_XGUnit kUnit, XGAbility ContextAbility)
 {
     local LWCETacticalListener kTacticalListener;
@@ -583,6 +608,16 @@ function OnUpdateItemCharges(XGUnit kUnit)
     foreach TacticalListeners(kTacticalListener)
     {
         kTacticalListener.OnUpdateItemCharges(LWCE_XGUnit(kUnit));
+    }
+}
+
+function OnUnitSpawned(XGUnit kUnit)
+{
+    local LWCETacticalListener kTacticalListener;
+
+    foreach TacticalListeners(kTacticalListener)
+    {
+        kTacticalListener.OnUnitSpawned(LWCE_XGUnit(kUnit));
     }
 }
 

@@ -2052,8 +2052,6 @@ function bool LoadInit(XGPlayer NewPlayer)
         // if the tac game is saved and loaded. We simply restore it manually.
         m_kCharacter.m_kUnit = self;
 
-        `LWCE_GFX.OnUnitLoaded(self);
-
         return true;
     }
 

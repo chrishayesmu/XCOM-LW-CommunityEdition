@@ -1,4 +1,4 @@
-class LWCE_MeldLightComponent extends SpotLightComponent;
+class LWCEGFX_MeldLightComponent extends SpotLightComponent;
 
 const WindDownDurationSeconds = 1.5f;
 const WindDownTickFrequency = 0.03f;

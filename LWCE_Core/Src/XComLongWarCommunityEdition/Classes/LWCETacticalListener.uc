@@ -26,6 +26,11 @@ function OnAbilitiesBuilt(array<TAbility> arrAbilities) {}
 /// <summary>
 /// TODO
 /// </summary>
+function OnBattleBegin(XGBattle kBattle) {}
+
+/// <summary>
+/// TODO
+/// </summary>
 function AddCritChanceModifiers(XGAbility_Targeted kAbility, out TShotInfo kInfo) {}
 
 /// <summary>
@@ -91,6 +96,11 @@ function OnRegenPenaltyPerks(LWCE_XGUnit kUnit) {}
 /// NOTE: This is called for all units, not just XCOM soldiers!
 /// </summary>
 function OnUpdateItemCharges(LWCE_XGUnit kUnit) {}
+
+/// <summary>
+/// TODO
+/// </summary>
+function OnUnitSpawned(LWCE_XGUnit kUnit) {}
 
 /// <summary>
 /// Called after an XGVolume is created, such as from a smoke grenade, Telekinetic Field, etc. When this

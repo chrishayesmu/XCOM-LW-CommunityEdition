@@ -1,0 +1,1 @@
+`define LWCEGFX_LOG(msg, cond) `LOG(string(default.Class) $ ": " $ `msg, `cond, 'LWCEGraphicsPack')

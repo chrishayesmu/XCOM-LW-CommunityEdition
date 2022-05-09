@@ -1,20 +1,18 @@
-class LWCEGraphicsController extends Actor
+class LWCEGraphicsPackTacticalListener extends LWCETacticalListener
     implements(XComProjectileEventListener);
 
-function Init()
+function OnBattleBegin(XGBattle kBattle)
 {
-    // Called when the level inits; entities may not be spawned yet
-}
-
-function LoadInit()
-{
-    //local ParticleSystemComponent kParticleComp;
-    //local XComLevelActor kLevelActor;
     local XComMeldContainerActor kMeldActor;
+    local LWCE_XGUnit kUnit;
     local XGVolume kVolume;
 
-    // Called when the level inits after load; entities may not be spawned yet.
-    // Units are reloaded but they don't have pawns.
+    // TODO: need some testing when loading saves; our lights might be persisted
+
+    foreach AllActors(class'LWCE_XGUnit', kUnit)
+    {
+        AddUnitLighting(kUnit);
+    }
 
     foreach AllActors(class'XGVolume', kVolume)
     {
@@ -25,35 +23,14 @@ function LoadInit()
     {
         AddMeldLighting(kMeldActor);
     }
-
-    // TODO: still need to add lights for static fires on levels and other light sources; the logging
-    // below is to help identify those
-    /*
-    `LWCE_LOG_CLS("----- Dumping level actor info -----");
-
-    foreach AllActors(class'XComLevelActor', kLevelActor)
-    {
-        `LWCE_LOG_CLS(kLevelActor @ kLevelActor.ObjectArchetype.Name @ kLevelActor.Location);
-
-        foreach kLevelActor.AllOwnedComponents(class'ParticleSystemComponent', kParticleComp)
-        {
-            `LWCE_LOG_CLS("ParticleSystemComponent: " $ kParticleComp);
-        }
-    }
-    */
 }
 
-simulated function OnUnitLoaded(XGUnit kUnit)
+function OnUnitSpawned(LWCE_XGUnit kUnit)
 {
     AddUnitLighting(kUnit);
 }
 
-simulated function OnUnitSpawned(XGUnit kUnit)
-{
-    AddUnitLighting(kUnit);
-}
-
-simulated function OnVolumeSpawned(XGVolume kVolume)
+function OnVolumeCreated(XGVolume kVolume)
 {
     AddVolumeLighting(kVolume);
 }
@@ -103,7 +80,7 @@ simulated function Projectile_OnInit(XComProjectile kProjectile)
     }
     else if (kProjectile.MyDamageType == class'XComDamageType_Laser')
     {
-        `LWCE_LOG_CLS("Projectile appears to be laser");
+        `LWCEGFX_LOG("Projectile appears to be laser");
 
         kPointLightComp = FindOrCreatePointLight(kProjectile);
         kPointLightComp.Brightness = 1.5;
@@ -141,27 +118,29 @@ simulated function Projectile_OnShutdown(XComProjectile kProjectile)
 
 protected function AddMeldLighting(XComMeldContainerActor kMeld)
 {
-    local LWCE_MeldLightComponent kMeldLightComp;
+    local LWCEGFX_MeldLightComponent kMeldLightComp;
 
-    kMeldLightComp = new(kMeld) class'LWCE_MeldLightComponent';
+    kMeldLightComp = new(kMeld) class'LWCEGFX_MeldLightComponent';
     kMeldLightComp.Init(kMeld, 0);
 
-    kMeldLightComp = new(kMeld) class'LWCE_MeldLightComponent';
+    kMeldLightComp = new(kMeld) class'LWCEGFX_MeldLightComponent';
     kMeldLightComp.Init(kMeld, 1);
 
-    kMeldLightComp = new(kMeld) class'LWCE_MeldLightComponent';
+    kMeldLightComp = new(kMeld) class'LWCEGFX_MeldLightComponent';
     kMeldLightComp.Init(kMeld, 2);
 
-    kMeldLightComp = new(kMeld) class'LWCE_MeldLightComponent';
+    kMeldLightComp = new(kMeld) class'LWCEGFX_MeldLightComponent';
     kMeldLightComp.Init(kMeld, 3);
 }
 
-protected function AddUnitLighting(XGUnit kUnit)
+protected function AddUnitLighting(LWCE_XGUnit kUnit)
 {
     local int Index, iCharType;
     local PointLightComponent kPointLightComp;
     local SpotLightComponent kSpotLightComp;
     local array<name> arrBoneNames;
+
+    `LWCEGFX_LOG("Adding unit lighting");
 
     if (class'LWCETacticalVisibilityHelper'.static.IsVisHelper(kUnit))
     {
@@ -279,26 +258,26 @@ protected function AddUnitLighting(XGUnit kUnit)
             // TODO SHIV headlights
         //    break;
         default:
-            `LWCE_LOG_CLS("Getting bone names for pawn " $ kUnit.m_kPawn);
+            `LWCEGFX_LOG("Getting bone names for pawn " $ kUnit.m_kPawn);
             kUnit.m_kPawn.Mesh.GetBoneNames(arrBoneNames);
 
             for (Index = 0; Index < arrBoneNames.Length; Index++)
             {
-                `LWCE_LOG_CLS("Bone " $ Index $ ": " $ arrBoneNames[Index]);
+                `LWCEGFX_LOG("Bone " $ Index $ ": " $ arrBoneNames[Index]);
             }
     }
 }
 
 protected function AddVolumeLighting(XGVolume kVolume)
 {
-    local LWCE_PointLightComponent kPointLightComp;
+    local LWCEGFX_PointLightComponent kPointLightComp;
 
     if (kVolume.m_kTVolume.eType != eVolume_Fire)
     {
         return;
     }
 
-    kPointLightComp = new(kVolume) class'LWCE_PointLightComponent';
+    kPointLightComp = new (kVolume) class'LWCEGFX_PointLightComponent';
     kPointLightComp.m_bFlickers = true;
     kPointLightComp.LightColor.R = 255;
     kPointLightComp.LightColor.G = 165;
@@ -306,7 +285,7 @@ protected function AddVolumeLighting(XGVolume kVolume)
     kPointLightComp.Translation.Z = 64.0;
 
     kVolume.AttachComponent(kPointLightComp);
-    kPointLightComp.Init(self);
+    kPointLightComp.Init();
 }
 
 static protected function PointLightComponent FindOrCreatePointLight(XComProjectile kProjectile)
@@ -327,16 +306,4 @@ static protected function PointLightComponent FindOrCreatePointLight(XComProject
 
     kPointLightComp = new(kProjectile.Mesh) class'PointLightComponent';
     return kPointLightComp;
-}
-
-static function LWCEGraphicsController GetInstance()
-{
-    local LWCEGraphicsController kController;
-
-    foreach `WORLDINFO.AllActors(class'LWCEGraphicsController', kController)
-    {
-        return kController;
-    }
-
-    return none;
 }

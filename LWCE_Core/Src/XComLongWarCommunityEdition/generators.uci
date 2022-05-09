@@ -112,8 +112,16 @@ simulated function PostLoadSaveGame() \
 \
     class'LWCETacticalVisibilityHelper'.static.CreateAndInitialize(); \
 } \
-
-
+\
+simulated state Running \
+{ \
+    event BeginState(name PrevState) \
+    { \
+        super.BeginState(PrevState); \
+\
+        `LWCE_MOD_LOADER.OnBattleBegin(self); \
+    } \
+} \
 
 
 
@@ -147,7 +155,7 @@ function FinishPendingSpawnUnit() \
             SpawnedUnit.m_bVIP = true; \
         } \
 \
-        class'XGLoadoutMgr'.static.ApplyInventory(SpawnedUnit); \
+        class'LWCE_XGLoadoutMgr'.static.ApplyInventory(SpawnedUnit); \
 \
         if (m_kPendingSpawnUnit.kNewChar.m_kChar.iType == eChar_Soldier) \
         { \
@@ -167,6 +175,6 @@ function FinishPendingSpawnUnit() \
 \
         TriggerGlobalEventClass(class'SeqEvent_OnUnitSpawned', SpawnedUnit); \
 \
-        `LWCE_GFX.OnUnitSpawned(SpawnedUnit); \
+        `LWCE_MOD_LOADER.OnUnitSpawned(SpawnedUnit); \
     } \
 } \

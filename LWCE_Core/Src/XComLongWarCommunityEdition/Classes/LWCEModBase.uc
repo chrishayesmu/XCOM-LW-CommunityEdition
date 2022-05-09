@@ -12,7 +12,8 @@ class LWCEModBase extends Object
 
 var string ModFriendlyName;  // A string that can be shown to the player as the mod's name
 var TModVersion VersionInfo; // Version information for the mod
-var LWCE_TRange ModIDRange;    // See README for info on setting this
+var LWCE_TRange ModIDRange;    // See https://github.com/chrishayesmu/XCOM-LW-CommunityEdition/wiki/Choosing-an-ID-range-for-your-mod
+                               // You must set this for your mod to be loaded!
 var Class<LWCEStrategyListener> StrategyListenerClass; // A class to instantiate while in XCOM HQ.
 var Class<LWCETacticalListener> TacticalListenerClass; // A class to instantiate at the beginning of tactical battles.
 

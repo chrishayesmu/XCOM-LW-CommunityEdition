@@ -39,7 +39,7 @@ static simulated function InitProjectile(XComProjectile kSelf, Vector Direction,
     local XGAction kAction;
     local DamageDealingAction DamageAction;
 
-    kSelf.AddProjectileEventListenter(`LWCE_GFX);
+    `LWCE_MOD_LOADER.OnInitProjectile(kSelf);
 
     kWeapon = XComWeapon(kSelf.Owner);
     kSelf.bPreview = bPreviewOnly;
