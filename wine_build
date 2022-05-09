@@ -18,7 +18,8 @@ init_wpfx() {
     wineserver -w
 
     for d in "${udk_srcpath}/"*; do
-        cp -af --reflink=auto "${d}"{,_sample}
+        mv "${d}" "${d}_sample"
+        ln -sT "${d}_sample" "${d}"
     done
 
     mv -f "${engine_conf_in}" "${engine_conf_out}"
@@ -27,18 +28,13 @@ init_wpfx() {
 
 lwce_udk() {
     local udk_srcpath=${1}
-    local stub_dir=${2}
-    local src_dir=${3}
-    local engine_conf_in=${4}
-    local engine_conf_out=${5}
-    shift 5
+    local engine_conf_in=${2}
+    local engine_conf_out=${3}
+    shift 3
 
     for d in "${@}"; do
-        if [[ -d "${stub_dir}/${d}" ]]; then
-            rm -rf "${udk_srcpath:?}/${d}"
-            ln -sfT "$(realpath --relative-to="${udk_srcpath}" "${stub_dir}")/${d}" "${udk_srcpath}/${d}"
-        elif [[ -d "${src_dir}/${d}" ]]; then
-            ln -sfT "$(realpath --relative-to="${udk_srcpath}" "${src_dir}")/${d}" "${udk_srcpath}/${d}"
+        if [[ -d "${d}" ]]; then
+            ln -sft "${udk_srcpath}" "$(realpath --relative-to="${udk_srcpath}" "${d}")"
         else
             echo "Missing package: ${d}" >&2
             exit 1
@@ -46,7 +42,7 @@ lwce_udk() {
     done
 
     sample_config="$(printf '+EditPackages=%s\\r\\n' 'UTGame' 'UTGameContent')"
-    lwce_config="$(printf '+EditPackages=%s\\r\\n' "${@}")"
+    lwce_config="$(printf '+EditPackages=%s\\r\\n' "${@##*/}")"
     sed -z -e "s@${sample_config}@${lwce_config}@g" \
         "${engine_conf_in}" > "${engine_conf_out}"
 }
