@@ -92,10 +92,14 @@
           pname = "XCOM-LW-CommunityEdition";
           version = "0.0.1";
           srcs = [
-            (pkgs.lib.cleanSource ./.)
+            (builtins.path {
+              filter = path: type: ! builtins.elem (baseNameOf path) [".git"];
+              path = ./.;
+              name = "lwce_source";
+            })
             packages.udk_wpfx
           ];
-          sourceRoot = "source";
+          sourceRoot = "lwce_source";
           nativeBuildInputs = [pkgs.dos2unix] ++ winedeps;
           preBuild = winesetup {
             pfx = "$PWD/build/wpfx";

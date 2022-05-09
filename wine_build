@@ -27,18 +27,18 @@ init_wpfx() {
 
 lwce_udk() {
     local udk_srcpath=${1}
-    local src_root=${2}
-    local engine_conf_in=${3}
-    local engine_conf_out=${4}
-    shift 4
+    local stub_dir=${2}
+    local src_dir=${3}
+    local engine_conf_in=${4}
+    local engine_conf_out=${5}
+    shift 5
 
-    relpath=$(echo "${udk_srcpath}" | sed -e "s#^${src_root}/##g" -e 's#[^/]\+#..#g')
     for d in "${@}"; do
-        if [[ -d "${src_root}/Stubs/${d}" ]]; then
+        if [[ -d "${stub_dir}/${d}" ]]; then
             rm -rf "${udk_srcpath:?}/${d}"
-            ln -sfT "${relpath}/Stubs/${d}" "${udk_srcpath}/${d}"
-        elif [[ -d "${src_root}/Src/${d}" ]]; then
-            ln -sfT "${relpath}/Src/${d}" "${udk_srcpath}/${d}"
+            ln -sfT "$(realpath --relative-to="${udk_srcpath}" "${stub_dir}")/${d}" "${udk_srcpath}/${d}"
+        elif [[ -d "${src_dir}/${d}" ]]; then
+            ln -sfT "$(realpath --relative-to="${udk_srcpath}" "${src_dir}")/${d}" "${udk_srcpath}/${d}"
         else
             echo "Missing package: ${d}" >&2
             exit 1

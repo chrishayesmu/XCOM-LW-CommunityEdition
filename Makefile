@@ -27,8 +27,8 @@ all: $(foreach pkg,$(lwce_packages),$(BUILDDIR)/$(pkg).u)
 $(engine_conf).default: $(SRCDIR)/wine_build $(UDK)
 	bash $(SRCDIR)/wine_build init_wpfx "$(UDK)" "$(UDK_SRCPATH)" "$(engine_conf)" "$(engine_conf).default"
 
-$(engine_conf): $(SRCDIR)/wine_build $(engine_conf).default $(SRCDIR)/Stubs $(SRCDIR)/Src
-	bash $(SRCDIR)/wine_build lwce_udk "$(UDK_SRCPATH)" "$(SRCDIR)" "$(engine_conf).default" "$(engine_conf)" $(ew_stub_packages) $(lwce_stub_packages) $(lwce_packages)
+$(engine_conf): $(SRCDIR)/wine_build $(engine_conf).default $(SRCDIR)/Stubs $(SRCDIR)/LWCE_Core/Src
+	bash $(SRCDIR)/wine_build lwce_udk "$(UDK_SRCPATH)" "$(SRCDIR)/Stubs" "$(SRCDIR)/LWCE_Core/Src" "$(engine_conf).default" "$(engine_conf)" $(ew_stub_packages) $(lwce_stub_packages) $(lwce_packages)
 
 udk_rebuild:
 
@@ -36,11 +36,12 @@ $(BUILDDIR)/%.u: $(SRCDIR)/wine_build $(engine_conf) udk_rebuild
 	bash $(SRCDIR)/wine_build lwce_build "$(WINE_UDK)"
 	cp "$(WINE_UDK)/UDKGame/Script/$(notdir $@)" "$@"
 
-install: $(wildcard Config/* Localization/* Patches/* README*) all
-	mkdir -p "$(DESTDIR)"/{CookedPCConsole,Config,Localization}
+install: $(wildcard LWCE_Core/Config/* LWCE_Core/Localization/*/* LWCE_Core/Patches/* README*) all
+	mkdir -p "$(DESTDIR)"/{Config,CookedPCConsole,Localization/INT,UPK\ patches}
 	$(foreach pkg,$(lwce_packages),cp "$(BUILDDIR)/$(pkg).u" "$(DESTDIR)/CookedPCConsole")
-	for f in Config/* Localization/*; do unix2dos <"$$f" >"$(DESTDIR)/$$f"; done
-	unix2dos <Patches/XComGame_Overrides.upatch > "$(DESTDIR)/LWCE_Install.txt"
+	for f in "LWCE_Core/Config"/*; do unix2dos <"$$f" >"$(DESTDIR)/Config/$${f##*/}"; done
+	for f in "LWCE_Core/Localization/INT"/*; do unix2dos <"$$f" >"$(DESTDIR)/Localization/INT/$${f##*/}"; done
+	for f in "LWCE_Core/Patches"/*; do unix2dos <"$$f" >"$(DESTDIR)/UPK patches/$${f##*/}"; done
 	unix2dos <README_installation.txt > "$(DESTDIR)/README.txt"
 
 
