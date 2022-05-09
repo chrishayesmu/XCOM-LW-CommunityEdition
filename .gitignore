@@ -4,8 +4,13 @@
 __pycache__
 Releases/
 
-# output directores for Makefile build
+# LWCE installer directories
+Installer/dist
+Installer/node_modules
+
+# output directories for Makefile build
 /build
 /install
+
 # output directory for nix build
 /result
