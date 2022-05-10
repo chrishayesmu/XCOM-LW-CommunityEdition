@@ -22,6 +22,7 @@
         url = "https://mcmullin.de/public/games/modding/xcom/udk/UDKInstall-2011-09-BETA.exe";
         sha256 = "sha256-224tDCt4iOcLMCNYqvHgIvC+psnsnNC52p0ejkMEo9c=";
       };
+      lwce_src = pkgs.nix-gitignore.gitignoreSource [] ./.;
 
       winesetup = {
         pfx,
@@ -92,22 +93,18 @@
           pname = "XCOM-LW-CommunityEdition";
           version = "0.0.1";
           srcs = [
-            (builtins.path {
-              filter = path: type: ! builtins.elem (baseNameOf path) [".git"];
-              path = ./.;
-              name = "lwce_source";
-            })
+            lwce_src
             packages.udk_wpfx
           ];
           sourceRoot = ".";
           nativeBuildInputs = [pkgs.dos2unix] ++ winedeps;
           preBuild = winesetup {
-            pfx = "$PWD/lwce_source/build/wpfx";
+            pfx = ''$PWD/$(stripHash "${lwce_src}")/build/wpfx'';
             cmd = ''
               # wine requires that the wineprefix is owned by the current user, so we can't use it from the store path directly
-              mkdir -p lwce_source/build
+              mkdir -p "$(stripHash "${lwce_src}")/build"
               mv -T "$(stripHash "${packages.udk_wpfx}")" "$WINEPREFIX"
-              cd lwce_source
+              cd "$(stripHash "${lwce_src}")"
             '';
           };
           makeFlags = ["UDK=${udk}"];
