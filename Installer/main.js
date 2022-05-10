@@ -231,13 +231,13 @@ async function modifyGameConfig(configPath) {
         if (fileContents.includes("ConsoleClassName=")) {
             log("Found (and replacing) both target keys for [Engine.Engine]");
             // If both keys are present, replace them individually
-            fileContents = fileContents.replace("GameEngine=Engine.GameEngine", gameEngineString)
+            fileContents = fileContents.replace("GameEngine=XComGame.XComEngine", gameEngineString)
                                        .replace("ConsoleClassName=Engine.Console", consoleClassString);
         }
         else {
             // If only the GameEngine key is present, append the ConsoleClassName key right after it
             log("Found only the GameEngine target key for [Engine.Engine]; replacing and appending");
-            fileContents = fileContents.replace("GameEngine=Engine.GameEngine", gameEngineString + os.EOL + consoleClassString);
+            fileContents = fileContents.replace("GameEngine=XComGame.XComEngine", gameEngineString + os.EOL + consoleClassString);
         }
     }
     else if (fileContents.includes("[Engine.Engine]")) {
