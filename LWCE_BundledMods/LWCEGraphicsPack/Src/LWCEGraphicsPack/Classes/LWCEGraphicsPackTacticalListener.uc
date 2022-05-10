@@ -1,13 +1,21 @@
 class LWCEGraphicsPackTacticalListener extends LWCETacticalListener
     implements(XComProjectileEventListener);
 
+var private ParticleSystem m_kParticleSystem_FireMidNoChunks;
+
 function OnBattleBegin(XGBattle kBattle)
 {
+    local Emitter kEmitter;
     local XComMeldContainerActor kMeldActor;
     local LWCE_XGUnit kUnit;
     local XGVolume kVolume;
 
     // TODO: need some testing when loading saves; our lights might be persisted
+
+    foreach AllActors(class'Emitter', kEmitter)
+    {
+        ModifyEmitter(kEmitter);
+    }
 
     foreach AllActors(class'LWCE_XGUnit', kUnit)
     {
@@ -286,6 +294,27 @@ protected function AddVolumeLighting(XGVolume kVolume)
 
     kVolume.AttachComponent(kPointLightComp);
     kPointLightComp.Init();
+}
+
+protected function ModifyEmitter(Emitter kEmitter)
+{
+    if (kEmitter.ParticleSystemComponent == none)
+    {
+        return;
+    }
+
+    if (kEmitter.ParticleSystemComponent.Template.Name == 'P_Fire_Mid_No_Chunks')
+    {
+        if (m_kParticleSystem_FireMidNoChunks == none)
+        {
+            m_kParticleSystem_FireMidNoChunks = ParticleSystem(`CONTENTMGR.LoadObjectFromContentPackage("LWCEGraphicsPack_Content.FX_Fire.P_Fire_Mid_No_Chunks"));
+        }
+
+        if (m_kParticleSystem_FireMidNoChunks != none)
+        {
+            kEmitter.ParticleSystemComponent.SetTemplate(m_kParticleSystem_FireMidNoChunks);
+        }
+    }
 }
 
 static protected function PointLightComponent FindOrCreatePointLight(XComProjectile kProjectile)
