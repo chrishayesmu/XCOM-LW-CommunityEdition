@@ -1,28 +1,26 @@
 const { app, BrowserWindow, dialog, ipcMain, shell } = require("electron");
-const { execSync } = require("child_process");
 const fs = require("fs");
+const fsPromises = require("fs/promises");
 const os = require("os");
 const path = require("path");
+const util = require('util')
+
+const exec = util.promisify(require("child_process").exec);
 
 // These are the bytestrings in the game executable that need to be modified as part of installation.
-// NOTE: THESE MUST BE IN ORDER by starting address.
 const bytestrings = [
-    // Starts around 0x008701AA
     {
         "original":    Buffer.from([ 0xA9, 0xCE, 0x07, 0x00, 0x00, 0x0F, 0x84, 0xCC, 0x01, 0x00, 0x00 ]),
         "replacement": Buffer.from([ 0xA9, 0xCE, 0x07, 0x00, 0x00, 0x0F, 0x89, 0xCC, 0x01, 0x00, 0x00 ])
     },
-    // Starts around 0x0091B1C5
     {
         "original":    Buffer.from([ 0x39, 0x7E, 0xFC, 0x75, 0x43, 0x8B, 0x0D, 0xEC, 0x7D ]),
         "replacement": Buffer.from([ 0x39, 0x7E, 0xFC, 0xEB, 0x43, 0x8B, 0x0D, 0xEC, 0x7D ])
     },
-    // Starts around 0x0091B216
     {
         "original":    Buffer.from([ 0x7C, 0xAD, 0x84, 0xDB, 0x0F, 0x85, 0x86, 0x00, 0x00, 0x00 ]),
         "replacement": Buffer.from([ 0x7C, 0xAD, 0x84, 0xDB, 0x0F, 0x89, 0x86, 0x00, 0x00, 0x00 ])
     },
-    // Starts around 0x00B22ED0
     {
         "original":    Buffer.from([ 0x8D, 0x44, 0x24, 0x38, 0x8B, 0xCF, 0x50, 0x74, 0x7A ]),
         "replacement": Buffer.from([ 0x8D, 0x44, 0x24, 0x38, 0x8B, 0xCF, 0x50, 0xEB, 0x7A ])
@@ -38,6 +36,7 @@ const resourcePaths = {
 };
 
 let debug = false; // TODO connect to argv
+let logFileHandle = null;
 let mainWindow = null;
 
 function createWindow() {
@@ -69,13 +68,14 @@ function createWindow() {
  * @param {string} cookedPcConsolePath The full path to the CookedPCConsole folder in the game installation.
  * @param {string} patchUpkPath The full path to the PatchUPK executable file.
  */
-function applyBytecodePatches(cookedPcConsolePath, patchUpkPath) {
+async function applyBytecodePatches(cookedPcConsolePath, patchUpkPath) {
     // Read files in directory and translate to absolute paths we can hand off to PatchUPK
-    const patchFiles = fs.readdirSync(resourcePaths.UpkPatches)
-                         .filter(f => !f.includes(".gitkeep") && !f.includes("uninstall"))
-                         .map(file => path.resolve(resourcePaths.UpkPatches, file));
+    const patchFiles = (await fsPromises.readdir(resourcePaths.UpkPatches))
+                                        .filter(f => !f.includes(".gitkeep") && !f.includes("uninstall"))
+                                        .map(file => path.resolve(resourcePaths.UpkPatches, file));
 
     if (patchFiles.length === 0) {
+        log("No UPK patches were found to apply!");
         return;
     }
 
@@ -93,11 +93,11 @@ function applyBytecodePatches(cookedPcConsolePath, patchUpkPath) {
     let combinedPatchFile = "";
 
     for (let i = 0; i < patchFiles.length; i++) {
-        const fileContents = fs.readFileSync(patchFiles[i], { encoding: "utf8" });
-        combinedPatchFile += fileContents + "\r\n";
+        const fileContents = await fsPromises.readFile(patchFiles[i], { encoding: "utf8" });
+        combinedPatchFile += fileContents + os.EOL;
     }
 
-    fs.writeFileSync(tmpPatchFilePath, combinedPatchFile);
+    await fsPromises.writeFile(tmpPatchFilePath, combinedPatchFile);
     log("Wrote patch file at " + tmpPatchFilePath);
 
     const sysCmd = `"${patchUpkPath}" "${tmpPatchFilePath}" "${cookedPcConsolePath}"`;
@@ -105,7 +105,7 @@ function applyBytecodePatches(cookedPcConsolePath, patchUpkPath) {
     log("Executing system command: " + sysCmd);
 
     try {
-        execSync(sysCmd);
+        await exec(sysCmd);
     }
     catch (e) {
         log("Error while applying bytecode patch: " + e.message);
@@ -120,10 +120,10 @@ function applyBytecodePatches(cookedPcConsolePath, patchUpkPath) {
  * @param {string} sourceDir
  * @param {string} destDir
  */
-function copyResourceFiles(sourceDir, destDir) {
+async function copyResourceFiles(sourceDir, destDir) {
     log("Copying from " + sourceDir + " to " + destDir);
 
-    fs.cpSync(sourceDir, destDir, {
+    await fsPromises.cp(sourceDir, destDir, {
         preserveTimestamps: true,
         recursive: true,
         filter: f => !f.includes(".gitkeep")
@@ -148,6 +148,7 @@ function getBestGuessGameExePath() {
 
     for (let i = 0; i < possiblePaths.length; i++) {
         if (fs.existsSync(possiblePaths[i])) {
+            log("Determined XComEW executable exists at " + possiblePaths[i]);
             return possiblePaths[i];
         }
     }
@@ -155,9 +156,17 @@ function getBestGuessGameExePath() {
     return "";
 }
 
-function log(msg) {
+async function log(msg) {
+    if (logFileHandle == null) {
+        logFileHandle = await fsPromises.open(path.resolve(os.tmpdir(), "lwce-installer.log"), "w");
+    }
+
+    const d = new Date();
+    const timestamp = "[" + d.toLocaleDateString() + " " + d.toLocaleTimeString() + "] ";
+    logFileHandle.write(timestamp + msg + os.EOL);
+
     if (debug) {
-        console.log(msg);
+        console.log(timestamp + msg);
     }
 }
 
@@ -171,6 +180,9 @@ function modifyBinary(exeFilePath) {
     let filePos = 0;
     let replacementsDone = 0;
 
+    log("Opening exe file for modification at path " + exeFilePath);
+
+    // TODO: make method async
     const fileBuffer = Buffer.alloc(1024);
     const fd = fs.openSync(exeFilePath, "r+");
 
@@ -197,6 +209,7 @@ function modifyBinary(exeFilePath) {
     }
 
     fs.closeSync(fd);
+    log(`Binary modification of exe file complete. ${replacementsDone} bytestring instances were found and replaced.`);
 }
 
 /**
@@ -204,40 +217,45 @@ function modifyBinary(exeFilePath) {
  *
  * @param {string} configPath The absolute path to the game's Config folder
  */
-function modifyGameConfig(configPath) {
+async function modifyGameConfig(configPath) {
     // Since this ini file is pretty small, we just read the whole thing at once, change it, and write it back
     const engineCfgPath = path.resolve(configPath, "DefaultEngine.ini");
     const gameEngineString = "GameEngine=XComLongWarCommunityEdition.LWCE_XComEngine";
     const consoleClassString = "ConsoleClassName=XComLongWarCommunityEdition.LWCE_Console";
 
-    let fileContents = fs.readFileSync(engineCfgPath, { encoding: "utf8" });
+    let fileContents = await fsPromises.readFile(engineCfgPath, { encoding: "utf8" });
 
     // A few weird patterns to match here. Ideally we could just modify Engine/XComEngine.ini, but if anyone has
     // the same entry in Config/DefaultEngine.ini, that one would take priority, and that breaks LWCE completely.
     if (fileContents.includes("GameEngine=")) {
         if (fileContents.includes("ConsoleClassName=")) {
+            log("Found (and replacing) both target keys for [Engine.Engine]");
             // If both keys are present, replace them individually
             fileContents = fileContents.replace("GameEngine=Engine.GameEngine", gameEngineString)
                                        .replace("ConsoleClassName=Engine.Console", consoleClassString);
         }
         else {
             // If only the GameEngine key is present, append the ConsoleClassName key right after it
+            log("Found only the GameEngine target key for [Engine.Engine]; replacing and appending");
             fileContents = fileContents.replace("GameEngine=Engine.GameEngine", gameEngineString + os.EOL + consoleClassString);
         }
     }
     else if (fileContents.includes("[Engine.Engine]")) {
         // In case the Engine config is present but somehow lacking both keys
+        log("Did not find target keys in [Engine.Engine], appending them");
         fileContents = fileContents.replace("[Engine.Engine]", "[Engine.Engine]" + os.EOL + gameEngineString + os.EOL + consoleClassString);
     }
     else {
         // If someone somehow doesn't even have [Engine.Engine] in their config file
+        log("[Engine.Engine] config missing entirely, adding new section");
         fileContents += os.EOL + "[Engine.Engine]" + os.EOL + gameEngineString + os.EOL + consoleClassString;
     }
 
-    fs.writeFileSync(engineCfgPath, fileContents);
+    await fsPromises.writeFile(engineCfgPath, fileContents);
 }
 
 function updateInstallationProgress(text) {
+    log(text);
     mainWindow.webContents.send("installation-progress", { title: text });
 }
 
@@ -276,7 +294,7 @@ ipcMain.handle("open-file-picker-dialog", (_event, params) => {
     });
 });
 
-ipcMain.on("begin-installation", (_event, params) => {
+ipcMain.on("begin-installation", async (_event, params) => {
     const ewExePath = params.exePath;
     const xcomGameDirPath = path.resolve(ewExePath, "../../../XComGame/");
     const patchUpkPath = params.patchUpkPath;
@@ -290,30 +308,34 @@ ipcMain.on("begin-installation", (_event, params) => {
         PatchUPK: patchUpkPath
     };
 
+    log("Beginning installation process");
+
     updateInstallationProgress("Modifying game executable..");
     modifyBinary(pathsObj.ExeFile);
 
     updateInstallationProgress("Patching base game UPKs..");
-    applyBytecodePatches(pathsObj.CookedPCConsole, pathsObj.PatchUPK);
+    await applyBytecodePatches(pathsObj.CookedPCConsole, pathsObj.PatchUPK);
 
     updateInstallationProgress("Updating base game INIs..");
-    modifyGameConfig(pathsObj.Config);
+    await modifyGameConfig(pathsObj.Config);
 
     updateInstallationProgress("Copying config files..");
-    copyResourceFiles(resourcePaths.Config, pathsObj.Config);
+    await copyResourceFiles(resourcePaths.Config, pathsObj.Config);
 
     updateInstallationProgress("Copying localization files..");
-    copyResourceFiles(resourcePaths.Localization, pathsObj.Localization);
+    await copyResourceFiles(resourcePaths.Localization, pathsObj.Localization);
 
     updateInstallationProgress("Copying UPK files..");
-    copyResourceFiles(resourcePaths.CookedPCConsole, pathsObj.CookedPCConsole);
+    await copyResourceFiles(resourcePaths.CookedPCConsole, pathsObj.CookedPCConsole);
 
-    //updateInstallationProgress("Copying LWCE-included mods..");
-    //copyResourceFiles(resourcePaths.Mods, pathsObj.Mods);
+    updateInstallationProgress("Copying LWCE-included mods..");
+    await copyResourceFiles(resourcePaths.Mods, pathsObj.Mods);
 
+    log("Installation process complete");
     mainWindow.webContents.send("installation-complete");
 });
 
 ipcMain.on("close-installer", () => {
+    log("Closing installer app..");
     app.exit(0);
 });
