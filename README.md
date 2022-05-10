@@ -15,11 +15,13 @@ Want to know more? Check out [the project wiki](https://github.com/chrishayesmu/
 
 # Installation
 
-If you're planning to work on LWCE, or write mods for LWCE, see [building locally](#building-lwce-locally). If you just want to install LWCE to check it out, head over to [Releases](https://github.com/chrishayesmu/XCOM-LW-CommunityEdition/releases), download the latest, and look at the `README.txt` included within.
+> :warning: Long War: Community Edition is a work in progress. Any release not marked as Stable is likely to be full of bugs, and you will probably not be able to play an entire campaign.
+
+If you're planning to work on LWCE, or write mods for LWCE, see [building locally](#building-lwce-locally). If you just want to install LWCE to check it out, head over to [Releases](https://github.com/chrishayesmu/XCOM-LW-CommunityEdition/releases), download the latest, and run the installer.
 
 # Uninstalling LWCE
 
-Uninstalling LWCE is extremely easy. During installation, you should have used PatcherGUI or Long War Mod Manager to install our bytecode patch file. These tools create an "uninstall" file that you can use to revert the bytecode to its original state. Once you've done that, you're good - no need to delete any of the `.ini` files or other files you installed (though you can if you want to).
+As LWCE modifies game binaries directly, there is no easy way to revert back to Long War 1.0. You can use Steam to validate game files and restore those binaries, then reinstall Long War 1.0 on top of that.
 
 # Project goals
 
@@ -62,7 +64,7 @@ Mutator-based mods are still supported, as in Long War 1.0; however if these mod
 
 ### **Adding items, perks, and technologies**
 
-(Note that not all of these are supported fully yet. Currently you can freely add new research and Foundry techs, and limited aspects of new items.)
+(Note that not all of these are supported fully yet. Currently you can freely add new research and Foundry techs, perks, soldier classes, and limited aspects of new items.)
 
 In the base game, there are a number of systems that use enums for unique identifiers. Since UnrealScript enums are a single byte, this limits these identifiers to 256 different values, greatly limiting modding potential. In LWCE, we've rewritten these systems to replace their identifiers with 32-bit signed integers, vastly increasing the value space to 2,147,483,647 distinct values (negative values are not allowed).
 
@@ -131,17 +133,24 @@ If you're using VS Code, you can also create [a custom build task](https://code.
 
 The steps for building LWCE are quite similar to the setup for the stub files.
 
-1. Create a symlink in `UDK_PATH/Development/Src` which points to the LWCE source code (`LWCE_DIR/Src`).
+1. Create a symlink in `UDK_PATH/Development/Src` which points to the LWCE source code (`LWCE_DIR/LWCE_Core/Src`).
 2. Modify `UDK_PATH/UDKGame/Config/DefaultEngine.ini` and add the line `+EditPackages=XComLongWarCommunityEdition` to the end of the `EditPackages` block from before. (It must be at the end!)
-3. Build using `UDK_PATH/Binaries/Win32/UDK.exe make` and verify that the build succeeds.
+3. Repeat these steps for each mod folder located in `LWCE_DIR/LWCE_BundledMods`.
+4. Build using `UDK_PATH/Binaries/Win32/UDK.exe make` and verify that the build succeeds.
 
 If the build succeeds then you should be good to go as far as building LWCE locally.
 
 ### Running the LWCE code in game
 
-> :warning: Before following these steps, make sure you have XCOM: Enemy Within installed, with [Long War 1.0](https://www.nexusmods.com/xcom/mods/88/) installed on top. We're using bytecode modification to inject LWCE, so any differences in your environment could cause it to fail. Leaving other small mods installed should be fine, but if you have another Long War version, or a similarly large mod installed, things are likely to break.
+> :warning: Before following these steps, make sure you have XCOM: Enemy Within installed, with [Long War 1.0](https://www.nexusmods.com/xcom/mods/88/) installed on top. We're using bytecode modification to inject LWCE, so any differences in your environment could cause it to fail. Leaving other small mods installed might be fine, but if you have another Long War version, or you have a similarly large mod installed, things are likely to break.
 
-Now that you've built LWCE, connecting it to the game is straightforward. You will need to have PatcherGUI available, which is part of [UPKUtils](https://www.nexusmods.com/xcom/mods/448). You will also need to know the directory that XCOM is installed in, such as `D:\SteamLibrary\steamapps\common\XCom-Enemy-Unknown`. This will be referred to as `XCOM_PATH`.
+Now that you've built LWCE, connecting it to the game is straightforward. We're going to start by using the same installation process that players use. This will apply binary patches to `XComEW.exe` that are annoying to apply by hand, as well as a few other changes. Head over to [Releases](https://github.com/chrishayesmu/XCOM-LW-CommunityEdition/releases) and grab the most recent release, then install it.
+
+Now you're running LWCE, but it's the same version as everyone else - it isn't your locally built version. Let's change that. You will need to know the directory that XCOM is installed in, such as `C:\Program Files (x86)\Steam\steamapps\common\XCom-Enemy-Unknown`. This will be referred to as `XCOM_PATH`.
+
+The steps below will instruct you to create symbolic links for many files. Those files will already exist under `XCOM_PATH` due to running the installer. Any time you're making a symlink, make sure to go delete the existing file in `XCOM_PATH` first. By using a symlink, each time you build LWCE, the latest version will be picked up by the game automatically. If you're only changing `.ini` files, you won't even need to build.
+
+### Setting up LWCE Core
 
 1. Navigate to `UDK_PATH/UDKGame/Script`. If you built LWCE successfully, you should see the file `XComLongWarCommunityEdition.u` there.
 2. Also navigate to `XCOM_PATH/XEW/XComGame/CookedPCConsole`. This is where `.upk` and `.u` files are stored for XCOM: Enemy Within. Make sure your path includes `XEW`, otherwise it is for XCOM: Enemy Unknown.
@@ -149,31 +158,17 @@ Now that you've built LWCE, connecting it to the game is straightforward. You wi
 4. Repeat this process, creating a symbolic link in `XCOM_PATH/XEW/XComGame/Config` for each of the `.ini` files under `LWCE_DIR/Config`.
 5. Create one more symlink in `XCOM_PATH/XEW/XComGame/Localization/INT`, which points to `LWCE_DIR/Localization/XComLongWarCommunityEdition.int`.
 
-By using a symlink, each time you build LWCE, the latest version will be picked up by the game automatically. If you're only changing `.ini` files, you don't even need to build.
+### Setting up LWCE Bundled Mods
 
-Next, we're going to insert our own `GameEngine` class. This sounds fancy and powerful, and it is, but right now it doesn't give us full access to everything we need, so there's one more step after. To use our `GameEngine`, open up `XCOM_PATH/XEW/XComGame/Config/DefaultEngine.ini` and edit these two lines:
+These steps are similar to LWCE Core, but the paths are different.
 
-```
-GameEngine=...
-ConsoleClassName=...
-```
+1. Look in `LWCE_DIR/LWCE_BundledMods`. You will need to repeat these steps for each mod you find there.
+2. Navigate to `XCOM_PATH/XEW/XComGame/Mods`. There is likely already a folder for each mod within `LWCE_BundledMods`, but create any missing ones.
+3. In each folder, you will need to create certain directories. Which ones are necessary depends on the contents of the mod.
+   * If the mod source contains `Config`, `Content`, or `Localization` folders, so should the mod in `XCOM_PATH`. You can symlink the entire folder from the source directory, or each file individually.
+   * If the mod source contains any code, the mod in `XCOM_PATH` should have a folder called `Script`. Inside of that, make a symlink to the mod's `.u` file from `UDK_PATH/UDKGame/Script`. (For example, `Mods/LWCEGraphicsPack/Script` contains a symlink pointing to `UDK_PATH/UDKGame/Script/LWCEGraphicsPack.u`.)
 
-to this:
-
-```
-GameEngine=XComLongWarCommunityEdition.LWCE_XComEngine
-ConsoleClassName=XComLongWarCommunityEdition.LWCE_Console
-```
-
-There's one more step: the LWCE code is located alongside the game, but the game doesn't know to load it; our custom engine doesn't fully bridge the gap yet. For now, we use **bytecode modification** to inject a few high-level classes into the game flow. Installing these is easy:
-
-1. Open up PatcherGUI, from UPKUtils. This is an application that can apply bytecode patches in a safe and reversible way.
-2. At the top of PatcherGUI's window, there should be a path pointing to the `XEW` folder in your XCOM installation. Verify that it has detected the right path, as sometimes it can get confused depending on your installation directory.
-3. Click the Browse button next to the line that just says "Mod file". Browse to `LWCE_DIR/Patches` and select `XComGame_Overrides.upatch`. (You'll need to change the filetype filter to see `.upatch` files.)
-4. After you select the file, you will see its contents appear in PatcherGUI. Click Apply on the right side to modify the game files. You should receive a pop-up stating that the mod installed successfully.
-5. Make note of (or back up) the uninstall file generated by PatcherGUI. It will allow you to return to Long War 1.0 without having to reinstall everything from scratch.
-
-At this point, if you launch XCOM, you should be running LWCE. But since the point of LWCE is to fix bugs and look as much like Long War 1.0 as possible, it may be tough to verify this. The simplest way - and a good idea regardless if you're going to be modding XCOM - is to enable the log window while playing.
+At this point, if you launch XCOM, you should be running LWCE. The easiest way to confirm this is that the main menu will have a (non-functional) button called "Mod Settings". The next step is to enable the log window while playing, to make debugging much easier.
 
 ### Viewing XCOM logs
 
