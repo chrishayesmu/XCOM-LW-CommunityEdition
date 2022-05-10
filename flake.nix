@@ -99,15 +99,15 @@
             })
             packages.udk_wpfx
           ];
-          sourceRoot = "lwce_source";
+          sourceRoot = ".";
           nativeBuildInputs = [pkgs.dos2unix] ++ winedeps;
           preBuild = winesetup {
-            pfx = "$PWD/build/wpfx";
+            pfx = "$PWD/lwce_source/build/wpfx";
             cmd = ''
               # wine requires that the wineprefix is owned by the current user, so we can't use it from the store path directly
-              mkdir -p build
-              chmod -R u+w "''${PWD%$sourceRoot}/$(stripHash "${packages.udk_wpfx}")"
-              mv "''${PWD%$sourceRoot}/$(stripHash "${packages.udk_wpfx}")" "$WINEPREFIX"
+              mkdir -p lwce_source/build
+              mv -T "$(stripHash "${packages.udk_wpfx}")" "$WINEPREFIX"
+              cd lwce_source
             '';
           };
           makeFlags = ["UDK=${udk}"];
