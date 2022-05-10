@@ -20,8 +20,9 @@ init_wpfx() {
     wineserver -w
 
     for d in "${udk_srcpath}/"*; do
-        mv "${d}" "${d}_sample"
-        ln -sT "${d}_sample" "${d}"
+        # Symlink all existing sources so it's easier to replace the ones that xcom changes later
+        mv -fT "${d}" "${d}_sample"
+        ln -sfT "${d##*/}_sample" "${d}"
     done
 
     mv -f "${engine_conf_in}" "${engine_conf_out}"
