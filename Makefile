@@ -46,6 +46,7 @@ $(BUILDDIR)/%.u: $(SRCDIR)/wine_build $(engine_conf) udk_rebuild
 install: $(wildcard LWCE_Core/Config/* LWCE_Core/Localization/*/* LWCE_Core/Patches/* README*) all
 	mkdir -p "$(DESTDIR)"/{Config,CookedPCConsole,Localization/INT,UPK\ patches}
 	cp -t "$(DESTDIR)/CookedPCConsole" $(foreach pkg,$(lwce_packages) $(lwce_mods),"$(BUILDDIR)/$(pkg).u")
+	for f in $(foreach pkg,$(lwce_mods),"LWCE_BundledMods/$(pkg)/Config"/*); do unix2dos <"$$f" >"$(DESTDIR)/Config/$${f##*/}"; done
 	for f in "LWCE_Core/Config"/*; do unix2dos <"$$f" >"$(DESTDIR)/Config/$${f##*/}"; done
 	for f in "LWCE_Core/Localization/INT"/*; do unix2dos <"$$f" >"$(DESTDIR)/Localization/INT/$${f##*/}"; done
 	for f in "LWCE_Core/Patches"/*; do unix2dos <"$$f" >"$(DESTDIR)/UPK patches/$${f##*/}"; done
