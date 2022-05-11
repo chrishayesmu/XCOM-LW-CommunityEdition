@@ -73,6 +73,9 @@ struct LWCE_TClassDefinition
     var string IconGeneModded;
     var string IconGeneModdedAndPsionic;
     var string IconPsionic;
+
+    var array<string> NicknamesFemale; // Nicknames that can be randomly assigned to female soldiers of this class.
+    var array<string> NicknamesMale;   // Nicknames that can be randomly assigned to male soldiers of this class.
 };
 
 struct LWCE_TSoldier

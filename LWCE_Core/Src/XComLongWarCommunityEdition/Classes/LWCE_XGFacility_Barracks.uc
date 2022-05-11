@@ -114,7 +114,54 @@ function BuildClassDefinitions()
         arrSoldierClasses[Index] = arrSoldierClassDefs[Index];
 
         iClassId = arrSoldierClasses[Index].iSoldierClassId;
-        arrSoldierClasses[Index].strName = class'XGLocalizedData'.default.SoldierClassNames[iClassId];
+
+        if (iClassId < 48)
+        {
+            arrSoldierClasses[Index].strName = class'XGLocalizedData'.default.SoldierClassNames[iClassId];
+        }
+
+        // Populate possible nicknames for the class. This isn't the most flexible way - someone could make a mod that uses the
+        // same supraclasses and new subclasses or something, and maybe invalidate some assumptions here. If someone does that, they
+        // can handle it in their mod.
+        switch (iClassId)
+        {
+            case 1:  // Scout-Sniper
+            case 11: // Sniper
+            case 21: // Scout
+                arrSoldierClasses[Index].NicknamesFemale = class'XGCharacterGenerator'.default.m_arrFSniperNicknames;
+                arrSoldierClasses[Index].NicknamesMale = class'XGCharacterGenerator'.default.m_arrMSniperNicknames;
+                break;
+            case 2:  // Weapons
+            case 12: // Rocketeer
+            case 22: // Gunner
+                arrSoldierClasses[Index].NicknamesFemale = class'XGCharacterGenerator'.default.m_arrFHeavyNicknames;
+                arrSoldierClasses[Index].NicknamesMale = class'XGCharacterGenerator'.default.m_arrMHeavyNicknames;
+                break;
+            case 3:  // Support
+            case 13: // Medic
+            case 23: // Engineer
+                arrSoldierClasses[Index].NicknamesFemale = class'XGCharacterGenerator'.default.m_arrFSupportNicknames;
+                arrSoldierClasses[Index].NicknamesMale = class'XGCharacterGenerator'.default.m_arrMSupportNicknames;
+                break;
+            case 4:  // Tactical
+            case 14: // Assault
+            case 24: // Infantry
+                arrSoldierClasses[Index].NicknamesFemale = class'XGCharacterGenerator'.default.m_arrFAssaultNicknames;
+                arrSoldierClasses[Index].NicknamesMale = class'XGCharacterGenerator'.default.m_arrMAssaultNicknames;
+                break;
+            case 6:  // MEC supraclass
+            case 31: // Jaeger
+            case 32: // Archer
+            case 33: // Guardian
+            case 34: // Marauder
+            case 41: // Pathfinder
+            case 42: // Goliath
+            case 43: // Shogun
+            case 44: // Valkyrie
+                arrSoldierClasses[Index].NicknamesFemale = class'XGCharacterGenerator'.default.m_arrFMECNicknames;
+                arrSoldierClasses[Index].NicknamesMale = class'XGCharacterGenerator'.default.m_arrMMECNicknames;
+                break;
+        }
     }
 
     `LWCE_MOD_LOADER.OnClassDefinitionsBuilt(arrSoldierClasses);
@@ -222,19 +269,25 @@ function XGStrategySoldier CreateSoldier(ESoldierClass eClass, int iSoldierLevel
     return kSoldier;
 }
 
-function bool HasSoldierOfRankOrHigher(int iRank)
+function GenerateNewNickname(XGStrategySoldier kNickSoldier)
 {
-    local XGStrategySoldier kSoldier;
+    local LWCE_TClassDefinition kClassDef;
+    local array<string> NickNames;
 
-    foreach m_arrSoldiers(kSoldier)
+    if (kNickSoldier.m_kSoldier.strNickName == "")
     {
-        if (kSoldier.GetRank() >= iRank)
-        {
-            return true;
-        }
-    }
+        kClassDef = GetClassDefinition(LWCE_XGStrategySoldier(kNickSoldier).LWCE_GetClass());
+        NickNames = kNickSoldier.m_kSoldier.kAppearance.iGender == eGender_Female ? kClassDef.NicknamesFemale : kClassDef.NicknamesMale;
 
-    return false;
+        if (NickNames.Length == 0)
+        {
+            `LWCE_LOG_CLS("WARNING! Class ID " $ kClassDef.iSoldierClassId $ " does not have any nicknames configured for gender " $ (kNickSoldier.m_kSoldier.kAppearance.iGender == eGender_Female ? "female" : "male"));
+            return;
+        }
+
+        kNickSoldier.m_kSoldier.strNickName = NickNames[Rand(NickNames.Length)];
+        NickNameCheck(kNickSoldier);
+    }
 }
 
 function LWCE_TClassDefinition GetClassDefinition(int iClassId)
@@ -445,6 +498,21 @@ function int GetResultingMecClass(int iClassId)
     return kClassDef.iAugmentsIntoClassId;
 }
 
+function bool HasSoldierOfRankOrHigher(int iRank)
+{
+    local XGStrategySoldier kSoldier;
+
+    foreach m_arrSoldiers(kSoldier)
+    {
+        if (kSoldier.GetRank() >= iRank)
+        {
+            return true;
+        }
+    }
+
+    return false;
+}
+
 // Rewritten for Long War: tries to find the index of the soldier who's going to be commanding this mission,
 // based on who has the highest officer rank, with a tie-breaker for which soldier has the highest will.
 // In LWCE, this has been moved to GetCommandingSoldierIndex.
@@ -509,6 +577,28 @@ function int LWCE_NeverGiven()
     else
     {
         return 0;
+    }
+}
+
+function NickNameCheck(XGStrategySoldier kSoldier)
+{
+    local int iCounter;
+    local LWCE_TClassDefinition kClassDef;
+    local array<string> NickNames;
+
+    if (kSoldier.IsATank())
+    {
+        return;
+    }
+
+    kClassDef = GetClassDefinition(LWCE_XGStrategySoldier(kSoldier).LWCE_GetClass());
+    NickNames = kSoldier.m_kSoldier.kAppearance.iGender == eGender_Female ? kClassDef.NicknamesFemale : kClassDef.NicknamesMale;
+
+    iCounter = 20;
+    while (NickNameMatch(kSoldier) && iCounter > 0)
+    {
+        kSoldier.m_kSoldier.strNickName = NickNames[Rand(NickNames.Length)];
+        iCounter--;
     }
 }
 
