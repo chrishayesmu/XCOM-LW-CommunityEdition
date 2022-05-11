@@ -1412,6 +1412,8 @@ native function ToggleHostMigration(bool bEnabled);
  */
 native final function ClearObjectPools();
 
+native function RebuildWorldLightEnvironments();
+
 defaultproperties
 {
 	Components.Remove(Sprite)

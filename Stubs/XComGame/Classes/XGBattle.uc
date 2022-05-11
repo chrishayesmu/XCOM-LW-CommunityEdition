@@ -229,21 +229,28 @@ simulated state LevelCinematicIntro
 
 simulated state Initing
 {
-	simulated function bool WaitingForUnitVisualization()
-	{}
+	simulated function bool WaitingForUnitVisualization(){}
 }
-simulated state StartUI
-{}
+
+simulated state StartUI {}
+
 state Loading
 {
 	function NotifyKismetOfLoad(){}
     function RequestAlienContentOnLoad(){}
     function SetupCamera(){}
-
 }
+
 simulated state Running
 {
+    function FixupStreamingBuildingVis(){}
     event BeginState(name PrevState){}
+    function bool IsPaused(){}
+    simulated event Tick(float fDeltaT){}
+    simulated function AlienContentLongLoad(){}
+    simulated function StartMCPMatch(){}
+    simulated function PostLoadInitUnits(){}
+    simulated function BattleRunningInitUnits(){}
 }
 
 state Paused

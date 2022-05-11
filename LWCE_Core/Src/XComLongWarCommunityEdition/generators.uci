@@ -121,6 +121,11 @@ simulated state Running \
 \
         `LWCE_MOD_LOADER.OnBattleBegin(self); \
     } \
+\
+    simulated event Tick(float fDeltaT) \
+    { \
+        super.Tick(fDeltaT); \
+    } \
 } \
 
 
