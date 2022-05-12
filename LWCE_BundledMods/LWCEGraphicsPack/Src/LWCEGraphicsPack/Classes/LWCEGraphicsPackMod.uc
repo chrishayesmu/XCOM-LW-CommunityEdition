@@ -2,6 +2,7 @@ class LWCEGraphicsPackMod extends LWCEModBase
     config(LWCEGraphicsPack);
 
 var config bool bEnableDynamicLighting;
+var config bool bMeldLightingAlwaysActive;
 
 defaultproperties
 {

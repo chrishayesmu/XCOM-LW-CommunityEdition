@@ -11,7 +11,6 @@ var protected XComMeldContainerActor m_kMeld;
 
 function Init(XComMeldContainerActor kMeld, int iLightNum)
 {
-    m_bIsActive = true;
     m_bHasDeactivated = false;
     m_fInitialBrightness = Brightness;
 
@@ -19,6 +18,9 @@ function Init(XComMeldContainerActor kMeld, int iLightNum)
     m_kMeld.SetTimer(0.1, /* inbLoop */ true, 'FxTick', self);
 
     GetSkeletalMeshComponent().AttachComponent(self, name("topPanel" $ iLightNum $ "_b"));
+
+    m_bIsActive = `LWCEGFX_CFG(bMeldLightingAlwaysActive) || m_kMeld.m_bHasBeenSeen;
+    SetEnabled(m_bIsActive);
 }
 
 function Deactivate()
@@ -29,6 +31,7 @@ function Deactivate()
     }
 
     m_bIsActive = false;
+    m_bHasDeactivated = true;
     m_kMeld.ClearTimer('FxTick', self);
 
     if (m_kMeld.m_bCollected)
@@ -45,9 +48,16 @@ function Deactivate()
 
 function FxTick()
 {
-    if (!m_bIsActive || m_kMeld.IsDestroyed() || m_kMeld.m_bCollected)
+    if (m_kMeld.IsDestroyed() || m_kMeld.m_bCollected)
     {
         Deactivate();
+        return;
+    }
+
+    if (!m_bIsActive && !m_bHasDeactivated && m_kMeld.m_bHasBeenSeen)
+    {
+        m_bIsActive = true;
+        SetEnabled(true);
     }
 }
 
