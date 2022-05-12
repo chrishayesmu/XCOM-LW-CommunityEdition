@@ -114,6 +114,39 @@ exec function GiveItem(string ItemType, optional int Amount = 1)
     `LWCE_LOG_CLS("GiveItem: Couldn't find requested item type " $ ItemType);
 }
 
+exec function GivePerk(string strName)
+{
+    local XGSoldierUI kSoldierUI;
+    local XComHQPresentationLayer kPres;
+    local XComPlayerController PC;
+    local int iPerkId;
+    local LWCE_XComPerkManager kPerksMgr;
+
+    kPerksMgr = LWCE_XComPerkManager(`HQGAME.GetGameCore().GetHQ().GetBarracks().m_kPerkManager);
+
+    iPerkId = class'LWCE_XComCheatManager_Extensions'.static.FindPerkByString(strName, kPerksMgr);
+
+    if (iPerkId <= 0)
+    {
+        GetConsole().OutputTextLine("Could not find perk " $ strName);
+        return;
+    }
+
+    PC = XComPlayerController(Outer.GetALocalPlayerController());
+
+    if (XGFacility_Barracks(`HQGAME.GetGameCore().GetHQ().CurrentFacility()) != none)
+    {
+        kPres = XComHQPresentationLayer(PC.m_Pres);
+        kSoldierUI = XGSoldierUI(kPres.GetMgr(class'XGSoldierUI',,, true));
+
+        if (kSoldierUI != none && kSoldierUI.m_kSoldier != none)
+        {
+            GetConsole().OutputTextLine("Giving perk " $ iPerkId);
+            kSoldierUI.m_kSoldier.GivePerk(iPerkId);
+        }
+    }
+}
+
 /**
  * Completes the specified research tech, or all uncompleted research if no argument is supplied.
  *

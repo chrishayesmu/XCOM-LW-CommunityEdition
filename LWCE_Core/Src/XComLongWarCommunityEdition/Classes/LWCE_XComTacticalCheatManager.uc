@@ -217,12 +217,10 @@ exec function ReloadAmmo()
 
 reliable server function ServerGivePerk(string strName)
 {
-    local bool bFound;
     local int iPerkId, Index;
     local TInventory kInventory;
     local TLoadout Loadout;
     local XGTacticalGameCore kGameCore;
-    local LWCE_TPerk kPerk;
     local LWCE_XComPerkManager kPerksMgr;
     local LWCE_XGUnit kUnit;
 
@@ -240,26 +238,11 @@ reliable server function ServerGivePerk(string strName)
     }
 
     kGameCore = `GAMECORE;
-    iPerkId = int(strName);
+    iPerkId = class'LWCE_XComCheatManager_Extensions'.static.FindPerkByString(strName, kPerksMgr);
 
-    if (iPerkId != 0)
+    if (iPerkId <= 0)
     {
-        kPerk = kPerksMgr.LWCE_GetPerk(iPerkId);
-
-        if (kPerk.iPerkId != 0)
-        {
-            bFound = true;
-        }
-    }
-    else
-    {
-        iPerkId = FindPerkByName(strName);
-
-        bFound = iPerkId > 0;
-    }
-
-    if (!bFound)
-    {
+        GetConsole().OutputTextLine("Could not find perk " $ strName);
         return;
     }
 
@@ -267,6 +250,8 @@ reliable server function ServerGivePerk(string strName)
     {
         return;
     }
+
+    GetConsole().OutputTextLine("Giving perk " $ iPerkId);
 
     if (iPerkId == 113) // Ammo Conservation
     {
