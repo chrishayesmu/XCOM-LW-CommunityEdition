@@ -89,6 +89,8 @@ function int GetSituationalWill(bool bIncludeBaseStat, bool bIncludeNeuralDampin
 /// Retrieves the actual amount of defense this unit is receiving from cover versus the given attacker.
 /// While XGUnit contains a field called "m_iCurrentCoverValue", for some reason that field includes some
 /// perk bonuses and other effects.
+///
+/// This function should only be called if you have verified that the unit is in cover from the attacker.
 /// </summary>
 function int GetTrueCoverValue(XGUnit kAttacker)
 {
@@ -98,6 +100,7 @@ function int GetTrueCoverValue(XGUnit kAttacker)
 
     // Use superclass function to get the value that would've been baked into m_iCurrentCoverValue
     iNonCoverBonus = super.GetTacticalSenseCoverBonus();
+    iNonCoverBonus += super.GetLowProfileCoverBonus();
 
     // TODO what perk values are in m_iCurrentCoverValue? probably not ours from config
     if (HasBonus(`LW_PERK_ID(DamnGoodGround)) && HasHeightAdvantageOver(kAttacker))
@@ -123,6 +126,11 @@ function int GetTrueCoverValue(XGUnit kAttacker)
     if (HasAirEvadeBonus())
     {
         iNonCoverBonus += `GAMECORE.AIR_EVADE_DEF;
+    }
+
+    if (HasPerk(`LW_PERK_ID(SemperVigilans)))
+    {
+        iNonCoverBonus += 5;
     }
 
     return Max(0, m_iCurrentCoverValue - iNonCoverBonus);

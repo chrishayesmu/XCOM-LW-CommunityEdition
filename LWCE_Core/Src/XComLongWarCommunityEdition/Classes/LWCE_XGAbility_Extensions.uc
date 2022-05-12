@@ -1691,7 +1691,7 @@ static simulated function GetShotSummary(XGAbility_Targeted kSelf, out TShotResu
                 iMod = kGameCore.HIGH_COVER_BONUS - kGameCore.LOW_COVER_BONUS;
 
                 kInfo.arrHitPenaltyStrings.AddItem(kPerksMgr.GetPenaltyTitle(`LW_PERK_ID(LowProfile)));
-                kInfo.arrHitPenaltyValues.AddItem(iMod);
+                kInfo.arrHitPenaltyValues.AddItem(-1 * iMod);
             }
         }
 
@@ -1855,7 +1855,8 @@ static simulated function GetShotSummary(XGAbility_Targeted kSelf, out TShotResu
     // Esprit de Corps
     if (kTarget.m_kSquad != none && kTarget.m_kSquad.SquadHasStarOfTerra(/* PowerA */ true))
     {
-        kInfo.arrHitPenaltyStrings.AddItem(kPerksMgr.GetPenaltyTitle(`LW_PERK_ID(EspritDeCorps)));
+        // Esprit de Corps doesn't have a penalty title, so use bonus
+        kInfo.arrHitPenaltyStrings.AddItem(kPerksMgr.GetBonusTitle(`LW_PERK_ID(EspritDeCorps)));
         kInfo.arrHitPenaltyValues.AddItem(-1 * `LWCE_TACCFG(iEspritDeCorpsDefenseBonus));
     }
 
@@ -1963,7 +1964,7 @@ static simulated function GetShotSummary(XGAbility_Targeted kSelf, out TShotResu
     {
         // Semper Vigilans doesn't have a penalty title, so use bonus
         kInfo.arrHitPenaltyStrings.AddItem(kPerksMgr.GetBonusTitle(`LW_PERK_ID(SemperVigilans)));
-        kInfo.arrHitPenaltyValues.AddItem(`LWCE_TACCFG(iSemperVigilansDefenseBonus));
+        kInfo.arrHitPenaltyValues.AddItem(-1 * `LWCE_TACCFG(iSemperVigilansDefenseBonus));
     }
 
     // Sharpshooter
