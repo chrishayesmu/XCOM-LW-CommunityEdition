@@ -1958,11 +1958,11 @@ static simulated function GetShotSummary(XGAbility_Targeted kSelf, out TShotResu
         kInfo.arrHitPenaltyValues.AddItem(kShooter.m_iBWAimPenalty);
     }
 
-    // Semper Vigilans
-    // TODO: does Semper Vigilans still apply if flanked?
+    // Semper Vigilans (appears to apply even when flanked)
     if (kTarget.HasBonus(`LW_PERK_ID(SemperVigilans)) && kTarget.IsInCover())
     {
-        kInfo.arrHitPenaltyStrings.AddItem(kPerksMgr.GetPenaltyTitle(`LW_PERK_ID(SemperVigilans)));
+        // Semper Vigilans doesn't have a penalty title, so use bonus
+        kInfo.arrHitPenaltyStrings.AddItem(kPerksMgr.GetBonusTitle(`LW_PERK_ID(SemperVigilans)));
         kInfo.arrHitPenaltyValues.AddItem(`LWCE_TACCFG(iSemperVigilansDefenseBonus));
     }
 
