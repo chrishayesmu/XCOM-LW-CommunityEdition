@@ -70,7 +70,7 @@ var const LightEnvironmentComponent LightEnvironment;
 var transient private const LightEnvironmentComponent PreviousLightEnvironment;
 
 /**
- * The minimum distance at which the primitive should be rendered, 
+ * The minimum distance at which the primitive should be rendered,
  * measured in world space units from the center of the primitive's bounding sphere to the camera position.
  */
 var(Rendering) float MinDrawDistance;
@@ -82,14 +82,14 @@ var(Rendering) float MinDrawDistance;
  */
 var(Rendering) float MassiveLODDistance;
 
-/** 
- * Max draw distance exposed to LDs. The real max draw distance is the min (disregarding 0) of this and volumes affecting this object. 
+/**
+ * Max draw distance exposed to LDs. The real max draw distance is the min (disregarding 0) of this and volumes affecting this object.
  * This is renamed to LDMaxDrawDistance in c++
  */
 var(Rendering) const private noexport float MaxDrawDistance;
 
 /**
- * The distance to cull this primitive at.  
+ * The distance to cull this primitive at.
  * A CachedMaxDrawDistance of 0 indicates that the primitive should not be culled by distance.
  */
 var(Rendering) editconst float CachedMaxDrawDistance;
@@ -168,8 +168,8 @@ var(Rendering) const bool bOnlyOwnerSee;
 /** If true, bHidden on the Owner of this component will be ignored. */
 var(Rendering) const bool bIgnoreOwnerHidden;
 
-/** 
- * Whether to render the primitive in the depth only pass.  
+/**
+ * Whether to render the primitive in the depth only pass.
  * Setting this to FALSE will cause artifacts with dominant light shadows and potentially large performance loss,
  * So it should be TRUE on all lit objects, setting it to FALSE is mostly only useful for debugging.
  */
@@ -233,14 +233,14 @@ var(Lighting)	bool		bCastDynamicShadow;
 /** Whether the object should cast a static shadow from shadow casting lights.  Also requires Cast Shadow to be set to True. */
 var(Lighting)	bool		bCastStaticShadow;
 
-/** 
- * If true, the primitive will only shadow itself and will not cast a shadow on other primitives. 
+/**
+ * If true, the primitive will only shadow itself and will not cast a shadow on other primitives.
  * This can be used as an optimization when the shadow on other primitives won't be noticeable.
  */
 var(Lighting)	bool		bSelfShadowOnly;
 
 /**
- * Optimization for objects which don't need to receive dominant light shadows. 
+ * Optimization for objects which don't need to receive dominant light shadows.
  * This is useful for objects which eat up a lot of GPU time and are heavily texture bound yet never receive noticeable shadows from dominant lights like trees.
  */
 var(Lighting)	bool		bAcceptsDynamicDominantLightShadows;
@@ -271,8 +271,8 @@ var(Lighting)	const bool	bAcceptsLights;
  **/
 var(Lighting)	const bool	bAcceptsDynamicLights;
 
-/** 
- * If TRUE, dynamically lit translucency on this primitive will render in one pass, 
+/**
+ * If TRUE, dynamically lit translucency on this primitive will render in one pass,
  * Which is cheaper and ensures correct blending but approximates lighting using one directional light and all other lights in an unshadowed SH environment.
  * If FALSE, dynamically lit translucency will render in multiple passes which uses more shader instructions and results in incorrect blending.
  */
@@ -281,8 +281,8 @@ var(Lighting)	const bool bUseOnePassLightingOnTranslucency;
 /** Whether to allow the primitive to use precomputed shadows or lighting. */
 var(Lighting)	const bool	bUsePrecomputedShadows;
 
-/** 
-* TRUE if ShadowParent was set through SetShadowParent, 
+/**
+* TRUE if ShadowParent was set through SetShadowParent,
 * FALSE if ShadowParent is set automatically based on Owner->bShadowParented.
 */
 var private transient const bool bHasExplicitShadowParent;
@@ -368,7 +368,7 @@ var const native transient array<int> OctreeNodes;
  * Translucent objects with the same priority are rendered from back-to-front based on their bounds origin.
  *
  * Ignored if the object is not translucent.  The default priority is zero.
- * Warning: This should never be set to a non-default value unless you know what you are doing, as it will prevent the renderer from sorting correctly.  
+ * Warning: This should never be set to a non-default value unless you know what you are doing, as it will prevent the renderer from sorting correctly.
  * It is especially problematic on dynamic gameplay effects.
  **/
 var(Rendering) int TranslucencySortPriority;
@@ -413,10 +413,10 @@ struct RBCollisionChannelContainer
 var(Collision) const RBCollisionChannelContainer	RBCollideWithChannels;
 
 /** Return codes for ClosestPointToPrimitive functions */
-enum GJKResult 
+enum GJKResult
 {
 	GJK_Intersect,      //two primitives overlap (results invalid)
-	GJK_NoIntersection, //two primitives don't overlap (results valid) 
+	GJK_NoIntersection, //two primitives don't overlap (results valid)
 	GJK_Fail            //failed to find result in max iteration time (results valid but unoptimal)
 };
 
@@ -436,9 +436,9 @@ var() const vector			Translation;
 var() const rotator			Rotation;
 var() const float			Scale <UIMin=0.0 | UIMax=4.0>;
 var() const vector			Scale3D;
-/** 
+/**
  * Scales the bounds of the object.
- * This is useful when using World Position Offset to animate the vertices of the object outside of its bounds. 
+ * This is useful when using World Position Offset to animate the vertices of the object outside of its bounds.
  * Warning: Increasing the bounds of an object will reduce performance and shadow quality!
  * Currently only used by StaticMeshComponent and SkeletalMeshComponent.
  */
@@ -499,7 +499,7 @@ native final function AddRadialImpulse(vector Origin, float Radius, float Streng
 
 /**
  *	Add a force to this component.
- *  
+ *
  * This is like a thruster. Good for adding a burst over some (non zero) time.
  *
  *	@param Force		Force vector to apply. Magnitude indicates strength of force.
@@ -645,7 +645,7 @@ native final function RB_BodyInstance GetRootBodyInstance();
  */
 native final function SetRBDominanceGroup(BYTE InDomGroup);
 
-/** 
+/**
  *  Looking at various values of the component, determines if this
  *  component should be added to the scene
  * @return TRUE if the component is visible and should be added to the scene, FALSE otherwise
@@ -734,10 +734,10 @@ native function rotator GetRotation();
 /**
 * Calculates the closest point on this primitive to a point given
 * @param POI - Point in world space to determine closest point to
-* @param Extent - Convex primitive 
+* @param Extent - Convex primitive
 * @param OutPointA - The point closest on the extent box
 * @param OutPointB - Point on this primitive closest to the extent box
-* 
+*
 * @return An enumeration indicating the result of the query (intersection/non-intersection/failure)
 */
 native final function GJKResult ClosestPointOnComponentToPoint(out vector POI, out vector Extent, out vector OutPointA, out vector OutPointB);
@@ -747,10 +747,13 @@ native final function GJKResult ClosestPointOnComponentToPoint(out vector POI, o
 * @param PrimitiveComponent - Another Primitive Component
 * @param PointOnComponentA - Point on this primitive closest to other primitive
 * @param PointOnComponentB - Point on other primitive closest to this primitive
-* 
+*
 * @return An enumeration indicating the result of the query (intersection/non-intersection/failure)
 */
 native function GJKResult ClosestPointOnComponentToComponent(out PrimitiveComponent OtherComponent, out vector PointOnComponentA, out vector PointOnComponentB);
+
+native final function SetAcceptsDynamicDecals(bool bAccepts);
+native final function SetAcceptsStaticDecals(bool bAccepts);
 
 defaultproperties
 {

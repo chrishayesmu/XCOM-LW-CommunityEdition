@@ -121,14 +121,9 @@ simulated function UpdateInventoryList()
     kMgr = LWCE_XGSoldierUI(GetMgr());
     Length = kMgr.m_kGear.arrOptions.Length;
 
-    `LWCE_LOG_CLS("UpdateInventoryList: kMgr.m_kGear.arrOptions.Length = " $ kMgr.m_kGear.arrOptions.Length);
-
     for (I = 0; I < Length; I++)
     {
         kOption = kMgr.m_kGear.arrOptions[I];
-
-        `LWCE_LOG_CLS("Option " $ I $ ": iOptionType = " $ kOption.iOptionType $ "; iState = " $ kOption.iState $ "; iSlot = " $ kOption.iSlot $ "; iItem = " $ kOption.iItem);
-        `LWCE_LOG_CLS("txtName = " $ kOption.txtName.strValue $ "; txtLabel = " $ kOption.txtLabel.StrValue);
 
         switch (kOption.iOptionType)
         {

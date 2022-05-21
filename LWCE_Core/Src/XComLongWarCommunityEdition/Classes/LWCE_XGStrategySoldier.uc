@@ -46,6 +46,25 @@ function DEMOUltimateSoldier()
     ScriptTrace();
 }
 
+function ApplyCheckpointRecord()
+{
+    // Needs to be on a slight delay; game core must be set before running
+    SetTimer(0.5, /* inBLoop */ false, nameof(DelayedApplyCheckpointRecord));
+}
+
+protected function DelayedApplyCheckpointRecord()
+{
+    // Base game code would remove soldiers from the Skyranger here, but there's
+    // no reason to undo squad selections just for loading the game
+
+    if (m_iHQLocation == eSoldierLoc_Armory)
+    {
+        m_iHQLocation = eSoldierLoc_Barracks;
+    }
+
+    SetHQLocation(ESoldierLocation(m_iHQLocation), true);
+}
+
 /// <summary>
 /// Applies the stat changes given to this soldier permanently. Note that not all stat types are valid
 /// for soldiers, and any that are not applicable will be ignored.
@@ -70,6 +89,10 @@ function LWCE_TTransferSoldier LWCE_BuildTransferSoldier(TTransferSoldier kTrans
 {
     local LWCE_TTransferSoldier kCETransfer;
     local int iStat;
+
+    // A lot of soldier customization is hard to override, so just sync our appearance up
+    // before sending anyone out on any missions
+    m_kCESoldier.kAppearance = m_kSoldier.kAppearance;
 
     kCETransfer.kChar = m_kCEChar;
     kCETransfer.kSoldier = m_kCESoldier;

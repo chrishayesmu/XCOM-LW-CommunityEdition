@@ -289,5 +289,3 @@ simulated function bool GetCivilianTemplate(name TemplateName, out CivilianTempl
 function OnAsyncAlienArchetypeLoaded(){}
 static simulated function EArmorKit MapArmorAndWeaponToArmorKit(XGGameData.EItemType ArmorType, XGGameData.EItemType PrimaryWeaponType){}
 static simulated function EArmorKit MapArmorToArmorDeco(XGGameData.EItemType ArmorType){}
-
-

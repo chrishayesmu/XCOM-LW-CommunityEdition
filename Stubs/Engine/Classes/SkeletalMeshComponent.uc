@@ -55,7 +55,7 @@ var		const transient editinline export PhysicsAssetInstance	PhysicsAssetInstance
  */
 var const native transient pointer ApexClothing;
 
-/** 
+/**
  *  Enum to define how to scale max distance
  *  @see SetApexClothingMaxDistanceScale
  */
@@ -261,7 +261,7 @@ var bool		bSkipAllUpdateWhenPhysicsAsleep;
 /** When true, skip using the physics asset etc. and always use the fixed bounds defined in the SkeletalMesh. */
 var() bool		bComponentUseFixedSkelBounds;
 
-/** 
+/**
  * When true, we will just using the bounds from our ParentAnimComponent.  This is useful for when we have a Mesh Parented
  * to the main SkelMesh (e.g. outline mesh or a full body overdraw effect that is toggled) that is always going to be the same
  * bounds as parent.  We want to do no calculations in that case.
@@ -829,7 +829,7 @@ native final iterator function AttachedComponents(class<ActorComponent> BaseClas
 
 /**
  * Return Transform Matrix for SkeletalMeshComponent considering root motion setups
- * 
+ *
  * @param SkelComp SkeletalMeshComponent to get transform matrix from
  */
 native final function Matrix GetTransformMatrix();
@@ -1089,7 +1089,7 @@ final native function	RB_BodyInstance	FindBodyInstanceNamed(Name BoneName);
 /**
  *	Set value of bHasPhysicsAssetInstance flag.
  *	Will create/destroy PhysicsAssetInstance as desired.
- *	
+ *
  * @param bHasInstance - Sets value of flag
  * @param bUseCurrentPosition - If true, skip the skeletal update and use current positions
  */
@@ -1189,6 +1189,8 @@ native final function HideBone( int BoneIndex, EPhysBodyOp PhysBodyOption );
 native final function UnHideBone( int BoneIndex );
 /** Determines if the specified bone is hidden. */
 native final function bool IsBoneHidden( int BoneIndex );
+
+native final function AppendSockets(out array<SkeletalMeshSocket> aSockets, bool bReplaceDuplicates);
 
 /**
  *	Hides the specified bone with name.  Currently this just enforces a scale of 0 for the hidden bones.
@@ -1308,10 +1310,10 @@ function StopAnim()
 event bool CreateForceField( const AnimNotify_Forcefield AnimNotifyData )
 {
 	local NxForceFieldComponent NewForceFieldComponent;
-	
-	NewForceFieldComponent = 
+
+	NewForceFieldComponent =
 		new(self) AnimNotifyData.ForceFieldComponent.Class(AnimNotifyData.ForceFieldComponent);
-		
+
 	NewForceFieldComponent.DoInitRBPhys();
 	if( AnimNotifyData.SocketName != '' )
 	{
@@ -1550,7 +1552,7 @@ defaultproperties
 
 	ChunkIndexPreview=-1
 	SectionIndexPreview=-1
-	
+
 	WireframeColor=(R=221,G=221,B=28,A=255)
 	bTransformFromAnimParent=1
 	// by default, update kinematic when the mesh is far in the distance as things falling out of the world and are hard to track down
@@ -1595,7 +1597,7 @@ defaultproperties
 	LineCheckBoundsScale=(X=1,Y=1,Z=1)
 
 	ProgressiveDrawingFraction=1.0
-	
+
 	bCanHighlightSelectedSections=false;
 
 	AnimationLODFrameRate=2
