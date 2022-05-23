@@ -20,7 +20,11 @@ body {
     background-color: lightgray;
     flex-grow: 1;
     font-family: Courier, monospace;
+    margin-bottom: 8px;
+    overflow-x: hidden;
+    overflow-y: auto;
     padding: 5px;
+    word-wrap: wrap;
 }
 
 #installer-title {

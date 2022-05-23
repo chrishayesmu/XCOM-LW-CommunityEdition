@@ -52,7 +52,11 @@ async function goToStep(stepNum) {
     stepContainer.innerHTML = stepHtml;
 
     const versionPlaceholders = [...document.querySelectorAll(".replace-with-version")];
-    versionPlaceholders.forEach(e => e.replaceWith("PLACEHOLDER STRING"));
+    versionPlaceholders.forEach(e => e.replaceWith("PLACEHOLDER STRING")); // TODO
+
+    const logFilePath = await ipcRenderer.invoke("get-log-file-path");
+    const logPathPlaceholders = [...document.querySelectorAll(".replace-with-log-path")];
+    logPathPlaceholders.forEach(e => e.replaceWith(logFilePath));
 
     if (stepNum === 0 || stepNum == installStep) {
         previousButton.classList.add("hidden");
@@ -106,6 +110,8 @@ async function goToStep(stepNum) {
     }
 }
 
+cancelButton.addEventListener("click", () => ipcRenderer.send("close-installer"));
+
 nextButton.addEventListener("click", async () => {
     if (isInstallationComplete) {
         ipcRenderer.send("close-installer");
@@ -148,6 +154,19 @@ ipcRenderer.on("installation-complete", () => {
         isInstallationComplete = true;
 
         nextButton.innerText = "Finish";
+        nextButton.removeAttribute("disabled");
+        nextButton.classList.remove("hidden");
+    }, 250);
+});
+
+ipcRenderer.on("installation-failed", (e, msg) => {
+    setTimeout(() => {
+        const progressContainer = document.getElementById("installer-output");
+        progressContainer.innerHTML += `<br/><span style='font-weight: bold; color: red'>Installation failed.</span><br/><br/>${msg}<br/><br/>Long War: Community Edition did not install properly. You may need to validate your game files to restore XCOM to a good state.`;
+
+        isInstallationComplete = true;
+
+        nextButton.innerText = "Close";
         nextButton.removeAttribute("disabled");
         nextButton.classList.remove("hidden");
     }, 250);

@@ -37,6 +37,7 @@ const resourcePaths = {
 
 let debug = false; // TODO connect to argv
 let logFileHandle = null;
+let logFilePath = null;
 let mainWindow = null;
 
 function createWindow() {
@@ -130,6 +131,18 @@ async function copyResourceFiles(sourceDir, destDir) {
     });
 }
 
+async function executeInstallationStep(title, stepFn) {
+    updateInstallationProgress(title + "..");
+
+    try {
+        await stepFn();
+    }
+    catch (e) {
+        log(`Installation failed at step "${title}": ${e.message}`);
+        throw e; // TODO: return true/false
+    }
+}
+
 /**
  * Checks several popular locations on the disk for XComEW.exe.
  *
@@ -158,7 +171,8 @@ function getBestGuessGameExePath() {
 
 async function log(msg) {
     if (logFileHandle == null) {
-        logFileHandle = await fsPromises.open(path.resolve(os.tmpdir(), "lwce-installer.log"), "w");
+        logFilePath = path.resolve(os.tmpdir(), "lwce-installer.log");
+        logFileHandle = await fsPromises.open(logFilePath, "w");
     }
 
     const d = new Date();
@@ -283,6 +297,10 @@ ipcMain.handle("get-ew-exe-best-guess", () => {
     return getBestGuessGameExePath();
 });
 
+ipcMain.handle("get-log-file-path", () => {
+    return logFilePath;
+});
+
 ipcMain.handle("open-file-picker-dialog", (_event, params) => {
     return dialog.showOpenDialogSync(mainWindow, {
         title: params.title,
@@ -310,29 +328,31 @@ ipcMain.on("begin-installation", async (_event, params) => {
 
     log("Beginning installation process");
 
-    updateInstallationProgress("Modifying game executable..");
-    modifyBinary(pathsObj.ExeFile);
+    let installationFailed = false;
+    let err = null;
 
-    updateInstallationProgress("Patching base game UPKs..");
-    await applyBytecodePatches(pathsObj.CookedPCConsole, pathsObj.PatchUPK);
-
-    updateInstallationProgress("Updating base game INIs..");
-    await modifyGameConfig(pathsObj.Config);
-
-    updateInstallationProgress("Copying config files..");
-    await copyResourceFiles(resourcePaths.Config, pathsObj.Config);
-
-    updateInstallationProgress("Copying localization files..");
-    await copyResourceFiles(resourcePaths.Localization, pathsObj.Localization);
-
-    updateInstallationProgress("Copying UPK files..");
-    await copyResourceFiles(resourcePaths.CookedPCConsole, pathsObj.CookedPCConsole);
-
-    updateInstallationProgress("Copying LWCE-included mods..");
-    await copyResourceFiles(resourcePaths.Mods, pathsObj.Mods);
+    try {
+        await executeInstallationStep("Modifying game executable", () => modifyBinary(pathsObj.ExeFile));
+        await executeInstallationStep("Patching base game UPKs", () => applyBytecodePatches(pathsObj.CookedPCConsole, pathsObj.PatchUPK));
+        await executeInstallationStep("Updating base game INIs", () => modifyGameConfig(pathsObj.Config));
+        await executeInstallationStep("Copying config files", () => copyResourceFiles(resourcePaths.Config, pathsObj.Config));
+        await executeInstallationStep("Copying localization files", () => copyResourceFiles(resourcePaths.Localization, pathsObj.Localization));
+        await executeInstallationStep("Copying UPK files", () => copyResourceFiles(resourcePaths.CookedPCConsole, pathsObj.CookedPCConsole));
+        await executeInstallationStep("Copying LWCE-included mods", () => copyResourceFiles(resourcePaths.Mods, pathsObj.Mods));
+    }
+    catch (e) {
+        err = e;
+        installationFailed = true;
+    }
 
     log("Installation process complete");
-    mainWindow.webContents.send("installation-complete");
+
+    if (installationFailed || err) {
+        mainWindow.webContents.send("installation-failed", err.message);
+    }
+    else {
+        mainWindow.webContents.send("installation-complete");
+    }
 });
 
 ipcMain.on("close-installer", () => {
