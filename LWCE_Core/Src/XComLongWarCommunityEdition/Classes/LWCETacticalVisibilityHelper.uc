@@ -258,6 +258,12 @@ protected function InitializeHelpers()
 
     ConfigureHelperUnit(m_kNonCoverUsingHelper);
     ConfigureHelperUnit(m_kCoverUsingHelper);
+    // This is needed because after loading the helper from a save,
+    // ProcessNewPosition() is called, which makes it stick to cover in the
+    // location where it was saved. Calling ProcessNewPosition(false) again
+    // resets this. Otherwise flanking indicators break.
+    m_kNonCoverUsingHelper.ProcessNewPosition(false);
+    m_kCoverUsingHelper.ProcessNewPosition(false);
 }
 
 protected function ConfigureHelperUnit(XGUnit kUnit)
