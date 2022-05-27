@@ -72,3 +72,11 @@ simulated function RealizeBuffs(){}
 simulated function RealizeDebuffs(){}
 simulated function ShowBuff(bool bShow){}
 simulated function ShowDebuff(bool bShow){}
+
+defaultproperties
+{
+    m_bIsFriendly=true
+    m_ekgState=-1
+    m_WatchReticleLocation=-1
+    s_name="<UnitFlag name is Dynamically Set>"
+}

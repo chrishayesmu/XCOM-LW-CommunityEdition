@@ -34,3 +34,10 @@ simulated function LockFlagToReticle(bool bShouldLock, UITargetingReticle kRetic
 simulated function ClearShotFlagInfo(){}
 simulated function RealizeTargetedStates(){}
 simulated function RealizeCover(){}
+
+defaultproperties
+{
+    s_package="/ package/gfxUnitFlag/UnitFlag"
+    s_screenId=gfxUnitFlag
+    s_name=theUnitFlagManager
+}

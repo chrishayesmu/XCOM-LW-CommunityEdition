@@ -7,6 +7,12 @@ simulated function AddFlag(XGUnit kUnit)
     local array<ASValue> myArray;
     local int I;
 
+    // Vis helpers are invisible and should never have flags
+    if (class'LWCETacticalVisibilityHelper'.static.IsVisHelper(kUnit))
+    {
+        return;
+    }
+
     for (I = 0; I < m_arrFlags.Length; I++)
     {
         if (m_arrFlags[I].m_kUnit == kUnit)

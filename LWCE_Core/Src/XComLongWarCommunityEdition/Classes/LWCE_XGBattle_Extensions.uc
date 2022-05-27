@@ -207,6 +207,7 @@ static function InitPlayers(XGBattle_SP kSelf, optional bool bLoading = false)
             }
             else
             {
+                `LWCE_LOG_CLS("Branch: neither transfer save nor profile settings");
                 arrCETransfers = LWCE_XGDropshipCargoInfo(kSelf.m_kDesc.m_kDropShipCargoInfo).m_arrCESoldiers;
                 class'LWCE_XGPlayer_Extensions'.static.LoadSquad(kPlayer, kSelf.m_kDesc.m_kDropShipCargoInfo.m_arrSoldiers, arrCETransfers, kSelf.m_kDesc.m_kDropShipCargoInfo.m_arrTechHistory, kSelf.GetSpawnPoints(kPlayer.m_eTeam), kSelf.GetPawnTypes(kPlayer.m_eTeam));
             }

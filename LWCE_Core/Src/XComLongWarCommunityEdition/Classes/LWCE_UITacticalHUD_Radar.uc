@@ -12,14 +12,16 @@ simulated function UpdateActiveUnit()
 
     m_kActiveUnit = XComTacticalController(controllerRef).GetActiveUnit();
     kActiveUnit = LWCE_XGUnit(m_kActiveUnit);
-    kInventory = kActiveUnit.GetTInventory();
 
     if (kActiveUnit == none)
     {
         Hide();
         return;
     }
-    else if (kActiveUnit.HasPerk(`LW_PERK_ID(BioelectricSkin)))
+
+    kInventory = kActiveUnit.GetTInventory();
+
+    if (kActiveUnit.HasPerk(`LW_PERK_ID(BioelectricSkin)))
     {
         Show();
     }

@@ -1196,7 +1196,7 @@ event PlayerController Login(string Portal, string Options, const UniqueNetID Un
 	NewPlayer.PlayerReplicationInfo.PlayerID = GetNextPlayerID();
 	NewPlayer.PlayerReplicationInfo.SetUniqueId(UniqueId);
 
-	if (OnlineSub != None && 
+	if (OnlineSub != None &&
 		OnlineSub.GameInterface != None &&
 		UniqueId != ZeroId)
 	{
@@ -1387,8 +1387,8 @@ function RestartPlayer(Controller NewPlayer)
 	local int TeamNum, Idx;
 	local array<SequenceObject> Events;
 	local SeqEvent_PlayerSpawned SpawnedEvent;
-	local LocalPlayer LP; 
-	local PlayerController PC; 
+	local LocalPlayer LP;
+	local PlayerController PC;
 
 	if( bRestartLevel && WorldInfo.NetMode!=NM_DedicatedServer && WorldInfo.NetMode!=NM_ListenServer )
 	{
@@ -1466,15 +1466,15 @@ function RestartPlayer(Controller NewPlayer)
 			}
 		}
 	}
-	
+
 	// To fix custom post processing chain when not running in editor or PIE.
 	PC = PlayerController(NewPlayer);
-	LP = LocalPlayer(PC.Player); 
-	if(LP != None) 
-	{ 
-		LP.RemoveAllPostProcessingChains(); 
-		LP.InsertPostProcessingChain(LP.Outer.GetWorldPostProcessChain(),INDEX_NONE,true); 
-	} 
+	LP = LocalPlayer(PC.Player);
+	if(LP != None)
+	{
+		LP.RemoveAllPostProcessingChains();
+		LP.InsertPostProcessingChain(LP.Outer.GetWorldPostProcessChain(),INDEX_NONE,true);
+	}
 }
 
 /**
@@ -1652,7 +1652,7 @@ function UpdateBestNextHosts()
 	// copy list of remote PCs
 	foreach WorldInfo.AllControllers(class'PlayerController',PC)
 	{
-		if (!PC.IsLocalPlayerController() && 
+		if (!PC.IsLocalPlayerController() &&
 			PC.PlayerReplicationInfo != None &&
 			PC.PlayerReplicationInfo.UniqueId != ZeroId &&
 			PC.IsPrimaryPlayer())
@@ -3502,7 +3502,7 @@ function TellClientsToReturnToPartyHost()
 			// Tell all clients to return using the net id of the host
 			foreach WorldInfo.AllControllers(class'PlayerController',PC)
 			{
-				if (!PC.IsLocalPlayerController() && 
+				if (!PC.IsLocalPlayerController() &&
 					PC.IsPrimaryPlayer())
 				{
 					PC.ClientReturnToParty(RequestingPlayerId);
