@@ -43,14 +43,25 @@ udk_rebuild:
 $(BUILDDIR)/%.u: $(SRCDIR)/wine_build $(engine_conf) udk_rebuild
 	cp "$(WINE_UDK)/UDKGame/Script/$(notdir $@)" "$@"
 
-install: $(wildcard LWCE_Core/Config/* LWCE_Core/Localization/*/* LWCE_Core/Patches/* README*) all
+
+install-mod-%: $(BUILDDIR)/%.u $(wildcard LWCE_BundledMods/%/Config/* LWCE_BundledMods/%/Content/* LWCE_BundledMods/%/Localization/*/*)
+	mkdir -p "$(DESTDIR)/Mods/$*/Script"
+	cp -t "$(DESTDIR)/Mods/$*/Script" "$(BUILDDIR)/$*.u"
+	cd "LWCE_BundledMods/$*" && \
+		for d in Config Content Localization; do \
+			if [ -d "$$d" ]; then \
+				find "$$d" -type d -exec mkdir -p "$(abspath $(DESTDIR))/Mods/$*/{}" \; \
+					-or -type f -exec unix2dos -n {} "$(abspath $(DESTDIR))/Mods/$*/{}" \; \
+			; fi \
+		; done
+
+install: all $(wildcard LWCE_Core/Config/* LWCE_Core/Localization/*/* LWCE_Core/Patches/* README*) $(foreach pkg,$(lwce_mods),install-mod-$(pkg))
 	mkdir -p "$(DESTDIR)"/{Config,CookedPCConsole,Localization/INT,UPK\ patches}
-	cp -t "$(DESTDIR)/CookedPCConsole" $(foreach pkg,$(lwce_packages) $(lwce_mods),"$(BUILDDIR)/$(pkg).u")
-	for f in $(foreach pkg,$(lwce_mods),"LWCE_BundledMods/$(pkg)/Config"/*); do unix2dos <"$$f" >"$(DESTDIR)/Config/$${f##*/}"; done
-	for f in "LWCE_Core/Config"/*; do unix2dos <"$$f" >"$(DESTDIR)/Config/$${f##*/}"; done
-	for f in "LWCE_Core/Localization/INT"/*; do unix2dos <"$$f" >"$(DESTDIR)/Localization/INT/$${f##*/}"; done
-	for f in "LWCE_Core/Patches"/*; do unix2dos <"$$f" >"$(DESTDIR)/UPK patches/$${f##*/}"; done
-	unix2dos <README_installation.txt > "$(DESTDIR)/README.txt"
+	cp -t "$(DESTDIR)/CookedPCConsole" $(foreach pkg,$(lwce_packages),"$(BUILDDIR)/$(pkg).u")
+	for f in "LWCE_Core/Config"/*; do unix2dos -n "$$f" "$(DESTDIR)/Config/$${f##*/}"; done
+	for f in "LWCE_Core/Localization/INT"/*; do unix2dos -n "$$f" "$(DESTDIR)/Localization/INT/$${f##*/}"; done
+	for f in "LWCE_Core/Patches"/*.upatch; do unix2dos -n "$$f" "$(DESTDIR)/UPK patches/$${f##*/}"; done
+	unix2dos -n README_installation.txt "$(DESTDIR)/README.txt"
 
 
 clean:
