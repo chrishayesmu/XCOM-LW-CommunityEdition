@@ -6,6 +6,41 @@ var bool bDisplayMovementGrid;
 
 `LWCE_GENERATOR_XCOMCHEATMANAGER
 
+exec function DebugFlankLoc(optional Vector vLoc)
+{
+    local XGUnit kUnit;
+    local XGPlayer kPlayer;
+
+    kPlayer = XGBattle_SP(`BATTLE).GetHumanPlayer();
+    kUnit = kPlayer.GetNearestEnemy(Outer.GetCursorPosition());
+
+    GetConsole().OutputTextLine("Nearest unit to cursor is " $ kUnit $ ", char type " $ kUnit.m_kCharacter.m_kChar.iType);
+    GetConsole().OutputTextLine("Target unit location: " $ kUnit.Location);
+    GetConsole().OutputTextLine("kUnit.IsFlankedByLoc() = " $ kUnit.IsFlankedByLoc(vLoc));
+    GetConsole().OutputTextLine("vLoc = " $ vLoc);
+    GetConsole().OutputTextLine("kUnit.IsFlankedByLoc() (cursor loc) = " $ kUnit.IsFlankedByLoc(Outer.GetCursorPosition()));
+    GetConsole().OutputTextLine("Cursor location = " $ Outer.GetCursorPosition());
+}
+
+exec function DebugCoverTemp()
+{
+    local XGUnit kUnit;
+    local XGPlayer kPlayer;
+
+    kPlayer = XGBattle_SP(`BATTLE).GetHumanPlayer();
+    kUnit = kPlayer.GetNearestEnemy(Outer.GetCursorPosition());
+
+    GetConsole().OutputTextLine("Nearest unit to cursor is " $ kUnit $ ", char type " $ kUnit.m_kCharacter.m_kChar.iType);
+    GetConsole().OutputTextLine("Cursor position is " $ Outer.GetCursorPosition() $ "; vis helper location is " $ `LWCE_VISHELPER.m_kCoverUsingHelper.Location);
+    GetConsole().OutputTextLine("Target unit location: " $ kUnit.Location);
+    GetConsole().OutputTextLine("kUnit.CanUseCover() = " $ kUnit.CanUseCover());
+    GetConsole().OutputTextLine("kUnit.IsInCover() = " $ kUnit.IsInCover());
+    GetConsole().OutputTextLine("kUnit.IsFlankedBy() (cover-using helper) = " $ kUnit.IsFlankedBy(`LWCE_VISHELPER.m_kCoverUsingHelper));
+    GetConsole().OutputTextLine("kUnit.IsFlankedByLoc() (cover-using helper's location) = " $ kUnit.IsFlankedByLoc(`LWCE_VISHELPER.m_kCoverUsingHelper.Location));
+    //GetConsole().OutputTextLine("kUnit.IsFlankedBy() (non-cover-using helper) = " $ kUnit.IsFlankedBy(`LWCE_VISHELPER.m_kNonCoverUsingHelper));
+    //GetConsole().OutputTextLine("kUnit.IsFlankedByLoc() (non-cover-using helper's location) = " $ kUnit.IsFlankedByLoc(`LWCE_VISHELPER.m_kNonCoverUsingHelper.Location));
+}
+
 exec function DebugShotAgainstTarget(optional int iAbilityId = eAbility_ShotStandard)
 {
     local int Index;

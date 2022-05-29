@@ -64,12 +64,15 @@ var config bool bShowInUnitFlag;
 
 var config bool bShowInUnitDisc;
 var config EVisDiscColor eDiscColorForEnemyUnits;
+var config EVisDiscColor eDiscColorForFlankedEnemyUnits;
 var config EVisDiscColor eDiscColorForFriendlyUnits;
+var config EVisDiscColor eDiscColorForFlankedFriendlyUnits;
 var config EVisDiscColor eDiscColorForNeutralUnits;
+var config EVisDiscColor eDiscColorForFlankedNeutralUnits;
 
 var protected bool m_bInitialized;
-var protected XGUnit m_kNonCoverUsingHelper;
-var protected XGUnit m_kCoverUsingHelper;
+var XGUnit m_kNonCoverUsingHelper;
+var XGUnit m_kCoverUsingHelper;
 
 static function LWCETacticalVisibilityHelper GetInstance()
 {
@@ -248,22 +251,36 @@ protected function InitializeHelpers()
 
     if (m_kNonCoverUsingHelper == none)
     {
+        `LWCE_LOG_CLS("Spawning non-cover-using helper unit with pawn type " $ NON_COVER_USING_HELPER_PAWN_TYPE);
         m_kNonCoverUsingHelper = SpawnHelperUnit(NON_COVER_USING_HELPER_PAWN_TYPE);
     }
 
     if (m_kCoverUsingHelper == none)
     {
+        `LWCE_LOG_CLS("Spawning cover-using helper unit with pawn type " $ COVER_USING_HELPER_PAWN_TYPE);
         m_kCoverUsingHelper = SpawnHelperUnit(COVER_USING_HELPER_PAWN_TYPE);
     }
 
+    `LWCE_LOG_CLS("Configuring non-cover-using helper unit " $ m_kNonCoverUsingHelper);
     ConfigureHelperUnit(m_kNonCoverUsingHelper);
+
+    `LWCE_LOG_CLS("Configuring cover-using helper unit " $ m_kCoverUsingHelper);
     ConfigureHelperUnit(m_kCoverUsingHelper);
+
     // This is needed because after loading the helper from a save,
     // ProcessNewPosition() is called, which makes it stick to cover in the
     // location where it was saved. Calling ProcessNewPosition(false) again
     // resets this. Otherwise flanking indicators break.
-    m_kNonCoverUsingHelper.ProcessNewPosition(false);
-    m_kCoverUsingHelper.ProcessNewPosition(false);
+    //m_kNonCoverUsingHelper.UnClaimCover();
+    //m_kCoverUsingHelper.UnClaimCover();
+
+    //m_kNonCoverUsingHelper.ProcessNewPosition(false);
+    //m_kCoverUsingHelper.ProcessNewPosition(false);
+
+    class'XComWorldData'.static.GetWorldData().SetTileBlockedByUnitFlag(m_kNonCoverUsingHelper);
+    class'XComWorldData'.static.GetWorldData().ClearTileBlockedByUnitFlag(m_kNonCoverUsingHelper);
+    class'XComWorldData'.static.GetWorldData().SetTileBlockedByUnitFlag(m_kCoverUsingHelper);
+    class'XComWorldData'.static.GetWorldData().ClearTileBlockedByUnitFlag(m_kCoverUsingHelper);
 }
 
 protected function ConfigureHelperUnit(XGUnit kUnit)
@@ -273,13 +290,14 @@ protected function ConfigureHelperUnit(XGUnit kUnit)
     kUnit.m_kPawn.bCollideWorld = false;
     kUnit.m_kPawn.SetPhysics(PHYS_None);
 
+    kUnit.UnClaimCover();
     kUnit.SetVisible(false);
     kUnit.SetHidden(true);
     kUnit.SetHiding(true);
     kUnit.SetVisibleToTeams(eTeam_None);
 
-    kUnit.m_kPawn.SetHidden(true);
-    kUnit.m_kPawn.HideMainPawnMesh();
+    //kUnit.m_kPawn.SetHidden(true);
+    //kUnit.m_kPawn.HideMainPawnMesh();
     kUnit.m_kPawn.Weapon.Mesh.SetHidden(true);
 }
 
@@ -316,7 +334,7 @@ protected function MarkUnit(XGUnit kUnit, bool bVisible, optional bool bFlanked,
 
         if (kFlag != none)
         {
-            kFlag.ToggleVisibilityPreviewIcon(bIsActiveUnit ? false : bVisible);
+            kFlag.ToggleVisibilityPreviewIcon(bIsActiveUnit ? false : bVisible, bFlanked);
         }
     }
 
@@ -330,7 +348,7 @@ protected function MarkUnit(XGUnit kUnit, bool bVisible, optional bool bFlanked,
         }
         else
         {
-            kMaterial = GetMaterialForUnitDisc(kUnit);
+            kMaterial = GetMaterialForUnitDisc(kUnit, bFlanked);
             bVisible = bVisible && kMaterial != none;
 
             kUnit.m_kDiscMesh.SetHidden(!bVisible);
@@ -345,6 +363,10 @@ protected function MarkUnit(XGUnit kUnit, bool bVisible, optional bool bFlanked,
 
 protected function MoveHelperUnit(XGUnit kUnit, out Vector vLoc)
 {
+    vLoc.X = 48.0f + 96.0f * FFloor(vLoc.X / 96.0f);
+    vLoc.Y = 48.0f + 96.0f * FFloor(vLoc.Y / 96.0f);
+
+    kUnit.SetLocation(vLoc);
     kUnit.GetPawn().SetLocation(vLoc);
 
     // Make sure the tile isn't registered as blocked so it doesn't affect nearby units
@@ -386,20 +408,20 @@ protected function OnCursorMoved()
     MoveHelperUnit(m_kCoverUsingHelper, vDestination);
 }
 
-protected function MaterialInterface GetMaterialForUnitDisc(XGUnit kUnit)
+protected function MaterialInterface GetMaterialForUnitDisc(XGUnit kUnit, bool bFlanked)
 {
     local EVisDiscColor eDiscColor;
 
     switch (kUnit.GetTeam())
     {
         case eTeam_Alien:
-            eDiscColor = eDiscColorForEnemyUnits;
+            eDiscColor = bFlanked ? eDiscColorForFlankedEnemyUnits : eDiscColorForEnemyUnits;
             break;
         case eTeam_Neutral:
-            eDiscColor = eDiscColorForNeutralUnits;
+            eDiscColor = bFlanked ? eDiscColorForFlankedNeutralUnits : eDiscColorForNeutralUnits;
             break;
         case eTeam_XCom:
-            eDiscColor = eDiscColorForFriendlyUnits;
+            eDiscColor = bFlanked ? eDiscColorForFlankedFriendlyUnits : eDiscColorForFriendlyUnits;
             break;
     }
 
@@ -455,7 +477,7 @@ protected function SetVisibilityMarkers(XGUnit kActiveUnit, XGUnit kHelper)
         {
             // For some reason, after loading a save, IsFlankedBy stops working for our helper units.
             // Flank indicators are disabled entirely until we can figure that out.
-            // bFlanked = kUnit.CanUseCover() && (!kUnit.IsInCover() || kUnit.IsFlankedBy(kHelper));
+            bFlanked = !kUnit.IsFlying() && kUnit.CanUseCover() && (!kUnit.IsInCover() || kUnit.IsFlankedBy(kHelper) || kUnit.IsFlankedByLoc(kHelper.Location));
         }
 
         MarkUnit(kUnit, bVisible, bFlanked, kUnit == kActiveUnit);

@@ -1,12 +1,38 @@
 class LWCE_XComTacticalGame extends XComTacticalGame;
 
+event PlayerController Login(string Portal, string Options, const UniqueNetId UniqueId, out string ErrorMessage)
+{
+    return super.Login(Portal, Options, UniqueId, ErrorMessage);
+}
+
+event PostLogin(PlayerController NewPlayer)
+{
+    super.PostLogin(NewPlayer);
+}
+
+event GetSeamlessTravelActorList(bool bToTransitionMap, out array<Actor> ActorList)
+{
+    super.GetSeamlessTravelActorList(bToTransitionMap, ActorList);
+}
+
+event PostSeamlessTravel()
+{
+    super.PostSeamlessTravel();
+}
+
+event HandleSeamlessTravelPlayer(out Controller C)
+{
+    super.HandleSeamlessTravelPlayer(C);
+}
+
 event InitGame(string Options, out string ErrorMessage)
 {
     local string InOpt, InOpt2, InOpt3;
 
     `LWCE_LOG_CLS("InitGame");
+    Tag = 'XComTacticalGame';
 
-    super.InitGame(Options, ErrorMessage);
+    super(XComGameInfo).InitGame(Options, ErrorMessage);
     InOpt = ParseOption(Options, "DebugCombat");
 
     if (InOpt != "")
@@ -67,6 +93,19 @@ event GameEnding()
     super.GameEnding();
 }
 
+auto state PendingMatch
+{
+    event BeginState(name PrevState)
+    {
+        super.BeginState(PrevState);
+    }
+
+    event EndState(name NextState)
+    {
+        super.EndState(NextState);
+    }
+}
+
 defaultproperties
 {
     GameReplicationInfoClass=class'LWCE_XComTacticalGRI'
@@ -75,3 +114,15 @@ defaultproperties
     TacticalSaveGameClass=class'LWCE_Checkpoint_TacticalGame'
     TransportSaveGameClass=class'LWCE_Checkpoint_StrategyTransport'
 }
+/*
+defaultproperties
+{
+    m_bLoadingFromShell=true
+    bUseSeamlessTravel=true
+    HUDType=class'XComTacticalHUD'
+    GameReplicationInfoClass=class'XComTacticalGRI'
+    PlayerControllerClass=class'XComTacticalController'
+    TacticalSaveGameClass=class'Checkpoint_TacticalGame'
+    TransportSaveGameClass=class'Checkpoint_StrategyTransport'
+}
+ */
