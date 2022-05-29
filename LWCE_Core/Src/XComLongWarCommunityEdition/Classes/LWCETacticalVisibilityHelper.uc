@@ -296,11 +296,11 @@ protected function HideAllVisibilityMarkers()
 
     foreach AllActors(class'XGUnit', kUnit)
     {
-        MarkUnit(kUnit, false, /* bFlanked */, kActiveUnit == kUnit);
+        MarkUnit(kUnit, false, /* bFlanked */ false, kActiveUnit == kUnit);
     }
 }
 
-protected function MarkUnit(XGUnit kUnit, bool bVisible, optional bool bFlanked, optional bool bIsActiveUnit)
+protected function MarkUnit(XGUnit kUnit, bool bVisible, bool bFlanked, bool bIsActiveUnit)
 {
     local MaterialInterface kMaterial;
     local LWCE_UIUnitFlag kFlag;
@@ -450,12 +450,11 @@ protected function SetVisibilityMarkers(XGUnit kActiveUnit, XGUnit kHelper)
         }
 
         bFlanked = false;
-
         if (bVisible)
         {
-            // For some reason, after loading a save, IsFlankedBy stops working for our helper units.
-            // Flank indicators are disabled entirely until we can figure that out.
-            // bFlanked = kUnit.CanUseCover() && (!kUnit.IsInCover() || kUnit.IsFlankedBy(kHelper));
+            // Condition from UISightlineHUD_SightlineContainer
+            bFlanked = kUnit.CanUseCover() && !kUnit.IsFlying()
+                && ( !kUnit.IsInCover() || kUnit.IsFlankedByLoc(kHelper.Location) || kUnit.IsFlankedBy(kHelper) );
         }
 
         MarkUnit(kUnit, bVisible, bFlanked, kUnit == kActiveUnit);
