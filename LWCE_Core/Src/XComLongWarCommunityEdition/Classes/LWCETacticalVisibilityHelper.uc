@@ -57,6 +57,7 @@ const NON_COVER_USING_HELPER_PAWN_TYPE = 44; // ePawnType_Zombie
 
 const HELPER_UNIT_TEAM = 1; // eTeam_Neutral
 
+var config bool bShowFlanks;
 var config bool bShowForEnemyUnits;
 var config bool bShowForFriendlyUnits;
 var config bool bShowForNeutralUnits;
@@ -64,12 +65,16 @@ var config bool bShowInUnitFlag;
 
 var config bool bShowInUnitDisc;
 var config EVisDiscColor eDiscColorForEnemyUnits;
+var config EVisDiscColor eDiscColorForFlankedEnemyUnits;
 var config EVisDiscColor eDiscColorForFriendlyUnits;
+var config EVisDiscColor eDiscColorForFlankedFriendlyUnits;
 var config EVisDiscColor eDiscColorForNeutralUnits;
+var config EVisDiscColor eDiscColorForFlankedNeutralUnits;
+
+var XGUnit m_kNonCoverUsingHelper;
+var XGUnit m_kCoverUsingHelper;
 
 var protected bool m_bInitialized;
-var protected XGUnit m_kNonCoverUsingHelper;
-var protected XGUnit m_kCoverUsingHelper;
 
 static function LWCETacticalVisibilityHelper GetInstance()
 {
@@ -239,25 +244,38 @@ protected function InitializeHelpers()
         if (kUnit.GetCharacter().m_eType == NON_COVER_USING_HELPER_PAWN_TYPE)
         {
             m_kNonCoverUsingHelper = kUnit;
+
+            // Need to do this to make sure any tile occupied at the time the game was saved is now cleared
+            class'XComWorldData'.static.GetWorldData().SetTileBlockedByUnitFlag(m_kNonCoverUsingHelper);
+            class'XComWorldData'.static.GetWorldData().ClearTileBlockedByUnitFlag(m_kNonCoverUsingHelper);
         }
         else if (kUnit.GetCharacter().m_eType == COVER_USING_HELPER_PAWN_TYPE)
         {
             m_kCoverUsingHelper = kUnit;
+
+            class'XComWorldData'.static.GetWorldData().SetTileBlockedByUnitFlag(m_kCoverUsingHelper);
+            class'XComWorldData'.static.GetWorldData().ClearTileBlockedByUnitFlag(m_kCoverUsingHelper);
         }
     }
 
     if (m_kNonCoverUsingHelper == none)
     {
+        `LWCE_LOG_CLS("Spawning non-cover-using helper unit with pawn type " $ NON_COVER_USING_HELPER_PAWN_TYPE);
         m_kNonCoverUsingHelper = SpawnHelperUnit(NON_COVER_USING_HELPER_PAWN_TYPE);
     }
 
     if (m_kCoverUsingHelper == none)
     {
+        `LWCE_LOG_CLS("Spawning cover-using helper unit with pawn type " $ COVER_USING_HELPER_PAWN_TYPE);
         m_kCoverUsingHelper = SpawnHelperUnit(COVER_USING_HELPER_PAWN_TYPE);
     }
 
+    `LWCE_LOG_CLS("Configuring non-cover-using helper unit " $ m_kNonCoverUsingHelper);
     ConfigureHelperUnit(m_kNonCoverUsingHelper);
+
+    `LWCE_LOG_CLS("Configuring cover-using helper unit " $ m_kCoverUsingHelper);
     ConfigureHelperUnit(m_kCoverUsingHelper);
+
     // This is needed because after loading the helper from a save,
     // ProcessNewPosition() is called, which makes it stick to cover in the
     // location where it was saved. Calling ProcessNewPosition(false) again
@@ -316,7 +334,7 @@ protected function MarkUnit(XGUnit kUnit, bool bVisible, bool bFlanked, bool bIs
 
         if (kFlag != none)
         {
-            kFlag.ToggleVisibilityPreviewIcon(bIsActiveUnit ? false : bVisible);
+            kFlag.ToggleVisibilityPreviewIcon(bIsActiveUnit ? false : bVisible, bFlanked);
         }
     }
 
@@ -330,7 +348,7 @@ protected function MarkUnit(XGUnit kUnit, bool bVisible, bool bFlanked, bool bIs
         }
         else
         {
-            kMaterial = GetMaterialForUnitDisc(kUnit);
+            kMaterial = GetMaterialForUnitDisc(kUnit, bFlanked);
             bVisible = bVisible && kMaterial != none;
 
             kUnit.m_kDiscMesh.SetHidden(!bVisible);
@@ -386,20 +404,20 @@ protected function OnCursorMoved()
     MoveHelperUnit(m_kCoverUsingHelper, vDestination);
 }
 
-protected function MaterialInterface GetMaterialForUnitDisc(XGUnit kUnit)
+protected function MaterialInterface GetMaterialForUnitDisc(XGUnit kUnit, bool bFlanked)
 {
     local EVisDiscColor eDiscColor;
 
     switch (kUnit.GetTeam())
     {
         case eTeam_Alien:
-            eDiscColor = eDiscColorForEnemyUnits;
+            eDiscColor = bFlanked ? eDiscColorForFlankedEnemyUnits : eDiscColorForEnemyUnits;
             break;
         case eTeam_Neutral:
-            eDiscColor = eDiscColorForNeutralUnits;
+            eDiscColor = bFlanked ? eDiscColorForFlankedNeutralUnits : eDiscColorForNeutralUnits;
             break;
         case eTeam_XCom:
-            eDiscColor = eDiscColorForFriendlyUnits;
+            eDiscColor = bFlanked ? eDiscColorForFlankedFriendlyUnits : eDiscColorForFriendlyUnits;
             break;
     }
 
