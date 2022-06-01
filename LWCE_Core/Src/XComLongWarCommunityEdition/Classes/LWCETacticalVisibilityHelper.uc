@@ -438,14 +438,15 @@ protected function SetVisibilityMarkers(XGUnit kActiveUnit, XGUnit kHelper)
         switch (kUnit.GetTeam())
         {
             case eTeam_Alien:
-                bVisible = bShowForEnemyUnits && arrEnemies.Find(kUnit) != INDEX_NONE && kActiveUnit.GetSquad().SquadCanSeeEnemy(kUnit);
+                bVisible = bShowForEnemyUnits && kUnit.IsAliveAndWell() && arrEnemies.Find(kUnit) != INDEX_NONE && kActiveUnit.GetSquad().SquadCanSeeEnemy(kUnit);
                 break;
             case eTeam_Neutral:
                 // TODO: needs extra testing, not sure if neutrals will count as enemies to an XCOM unit
-                bVisible = bShowForNeutralUnits && arrFriends.Find(kUnit) != INDEX_NONE && kActiveUnit.GetSquad().SquadCanSeeEnemy(kUnit);
+                bVisible = bShowForNeutralUnits && kUnit.IsAliveAndWell() && arrFriends.Find(kUnit) != INDEX_NONE && kActiveUnit.GetSquad().SquadCanSeeEnemy(kUnit);
                 break;
             case eTeam_XCom:
-                bVisible = bShowForFriendlyUnits && arrFriends.Find(kUnit) != INDEX_NONE;
+                // IsAlive instead of IsAliveAndWell for bleeding out/stabilized units
+                bVisible = bShowForFriendlyUnits && kUnit.IsAlive() && arrFriends.Find(kUnit) != INDEX_NONE;
                 break;
         }
 
