@@ -67,6 +67,8 @@ var config EVisDiscColor eDiscColorForEnemyUnits;
 var config EVisDiscColor eDiscColorForFriendlyUnits;
 var config EVisDiscColor eDiscColorForNeutralUnits;
 
+var Vector m_vLastValidCursor;
+var Vector m_vLastValidDestination;
 var protected bool m_bInitialized;
 var protected XGUnit m_kNonCoverUsingHelper;
 var protected XGUnit m_kCoverUsingHelper;
@@ -190,6 +192,10 @@ function UpdateVisibilityMarkers()
     {
         HideAllVisibilityMarkers();
         return;
+    }
+    if (Cursor().Location != m_vLastValidCursor || vDestination != m_vLastValidDestination)
+    {
+        OnCursorMoved();
     }
 
     if (kActiveUnit.CanUseCover())
@@ -379,6 +385,9 @@ protected function OnCursorMoved()
         // Zero vector: don't move the helpers, cursor is not on a valid tile
         return;
     }
+
+    m_vLastValidCursor = Cursor().Location;
+    m_vLastValidDestination = vDestination;
 
     // We just move the helper units, without updating any visibility markers. It
     // will take a few frames for visibility info to fully update.
