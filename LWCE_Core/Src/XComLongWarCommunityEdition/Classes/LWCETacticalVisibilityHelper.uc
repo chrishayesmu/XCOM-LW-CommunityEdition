@@ -161,6 +161,8 @@ simulated event Tick(float fDeltaT)
         if (m_fTimeUntilProcessPosition <= 0.0f)
         {
             m_kCoverUsingHelper.ProcessNewPosition(false);
+
+            class'XComWorldData'.static.GetWorldData().ClearTileBlockedByUnitFlag(m_kCoverUsingHelper);
         }
     }
 
