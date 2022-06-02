@@ -20,7 +20,7 @@ simulated function Update(XGUnit kNewActiveUnit)
     super.Update(kNewActiveUnit);
 }
 
-simulated function ToggleVisibilityPreviewIcon(bool bVisible)
+simulated function ToggleVisibilityPreviewIcon(bool bVisible, bool bFlanking)
 {
     local array<ASValue> arrParams;
     local GFxObject gfxUnitFlag;
@@ -69,7 +69,17 @@ simulated function ToggleVisibilityPreviewIcon(bool bVisible)
             class'LWCEUIUtils'.static.SetObjectColorAdd(m_gfxVisibilityPreviewIcon, 180, 180, 180); // grayscale reduction
             break;
         case eTeam_Alien:
-            class'LWCEUIUtils'.static.SetObjectColorMultiply(m_gfxVisibilityPreviewIcon, 230.0 / 255.0, 0, 0); // lighten the red channel a little
+            if (bFlanking)
+            {
+                class'LWCEUIUtils'.static.SetObjectColorMultiply(m_gfxVisibilityPreviewIcon, 0, 0, 0);
+                class'LWCEUIUtils'.static.SetObjectColorAdd(m_gfxVisibilityPreviewIcon, 254, 209, 56);
+            }
+            else
+            {
+                class'LWCEUIUtils'.static.SetObjectColorMultiply(m_gfxVisibilityPreviewIcon, 230.0 / 255.0, 0, 0); // lighten the red channel a little
+                class'LWCEUIUtils'.static.SetObjectColorAdd(m_gfxVisibilityPreviewIcon, 0, 0, 0);
+            }
+
             break;
     }
 

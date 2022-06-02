@@ -56,7 +56,10 @@ const COVER_USING_HELPER_PAWN_TYPE     = 30; // ePawnType_Sectoid
 const NON_COVER_USING_HELPER_PAWN_TYPE = 44; // ePawnType_Zombie
 
 const HELPER_UNIT_TEAM = 1; // eTeam_Neutral
+const PROCESS_POSITION_DELAY_SECONDS = 0.075f; // How many seconds to wait between when the cursor moves and when
+                                               // XGUnit.ProcessNewPosition is called, for performance
 
+var config bool bShowFlanks;
 var config bool bShowForEnemyUnits;
 var config bool bShowForFriendlyUnits;
 var config bool bShowForNeutralUnits;
@@ -64,14 +67,19 @@ var config bool bShowInUnitFlag;
 
 var config bool bShowInUnitDisc;
 var config EVisDiscColor eDiscColorForEnemyUnits;
+var config EVisDiscColor eDiscColorForFlankedEnemyUnits;
 var config EVisDiscColor eDiscColorForFriendlyUnits;
+var config EVisDiscColor eDiscColorForFlankedFriendlyUnits;
 var config EVisDiscColor eDiscColorForNeutralUnits;
+var config EVisDiscColor eDiscColorForFlankedNeutralUnits;
 
-var Vector m_vLastValidCursor;
-var Vector m_vLastValidDestination;
+var XGUnit m_kNonCoverUsingHelper;
+var XGUnit m_kCoverUsingHelper;
+
+var protected Vector m_vLastValidCursor;
+var protected Vector m_vLastValidDestination;
 var protected bool m_bInitialized;
-var protected XGUnit m_kNonCoverUsingHelper;
-var protected XGUnit m_kCoverUsingHelper;
+var protected float m_fTimeUntilProcessPosition;
 
 static function LWCETacticalVisibilityHelper GetInstance()
 {
@@ -141,6 +149,21 @@ simulated event Tick(float fDeltaT)
         return;
     }
 
+    // For flanking indicators, we need to call ProcessNewPosition to make the helper unit properly
+    // handle when it's in cover. This is only needed for the helper that can actually use cover, and
+    // it's an expensive call, so we only call it for one unit, and only after moves. We wait a brief
+    // time before making the call so that if the player is quickly moving the mouse around, we aren't
+    // stacking up expensive calls and tanking the frame rate.
+    if (m_fTimeUntilProcessPosition > 0.0f)
+    {
+        m_fTimeUntilProcessPosition -= fDeltaT;
+
+        if (m_fTimeUntilProcessPosition <= 0.0f)
+        {
+            m_kCoverUsingHelper.ProcessNewPosition(false);
+        }
+    }
+
     UpdateVisibilityMarkers();
 }
 
@@ -193,6 +216,7 @@ function UpdateVisibilityMarkers()
         HideAllVisibilityMarkers();
         return;
     }
+
     if (Cursor().Location != m_vLastValidCursor || vDestination != m_vLastValidDestination)
     {
         OnCursorMoved();
@@ -254,22 +278,36 @@ protected function InitializeHelpers()
 
     if (m_kNonCoverUsingHelper == none)
     {
+        `LWCE_LOG_CLS("Spawning non-cover-using helper unit with pawn type " $ NON_COVER_USING_HELPER_PAWN_TYPE);
         m_kNonCoverUsingHelper = SpawnHelperUnit(NON_COVER_USING_HELPER_PAWN_TYPE);
     }
 
     if (m_kCoverUsingHelper == none)
     {
+        `LWCE_LOG_CLS("Spawning cover-using helper unit with pawn type " $ COVER_USING_HELPER_PAWN_TYPE);
         m_kCoverUsingHelper = SpawnHelperUnit(COVER_USING_HELPER_PAWN_TYPE);
     }
 
+    `LWCE_LOG_CLS("Configuring non-cover-using helper unit " $ m_kNonCoverUsingHelper);
     ConfigureHelperUnit(m_kNonCoverUsingHelper);
+
+    `LWCE_LOG_CLS("Configuring cover-using helper unit " $ m_kCoverUsingHelper);
     ConfigureHelperUnit(m_kCoverUsingHelper);
+
     // This is needed because after loading the helper from a save,
     // ProcessNewPosition() is called, which makes it stick to cover in the
     // location where it was saved. Calling ProcessNewPosition(false) again
     // resets this. Otherwise flanking indicators break.
     m_kNonCoverUsingHelper.ProcessNewPosition(false);
     m_kCoverUsingHelper.ProcessNewPosition(false);
+
+    // Need to do this to make sure any tile occupied at the time the game was saved is now cleared.
+    // This has to come after ProcessNewPosition, for reasons unknown.
+    class'XComWorldData'.static.GetWorldData().SetTileBlockedByUnitFlag(m_kNonCoverUsingHelper);
+    class'XComWorldData'.static.GetWorldData().ClearTileBlockedByUnitFlag(m_kNonCoverUsingHelper);
+
+    class'XComWorldData'.static.GetWorldData().SetTileBlockedByUnitFlag(m_kCoverUsingHelper);
+    class'XComWorldData'.static.GetWorldData().ClearTileBlockedByUnitFlag(m_kCoverUsingHelper);
 }
 
 protected function ConfigureHelperUnit(XGUnit kUnit)
@@ -322,7 +360,7 @@ protected function MarkUnit(XGUnit kUnit, bool bVisible, bool bFlanked, bool bIs
 
         if (kFlag != none)
         {
-            kFlag.ToggleVisibilityPreviewIcon(bIsActiveUnit ? false : bVisible);
+            kFlag.ToggleVisibilityPreviewIcon(bIsActiveUnit ? false : bVisible, bFlanked);
         }
     }
 
@@ -336,7 +374,7 @@ protected function MarkUnit(XGUnit kUnit, bool bVisible, bool bFlanked, bool bIs
         }
         else
         {
-            kMaterial = GetMaterialForUnitDisc(kUnit);
+            kMaterial = GetMaterialForUnitDisc(kUnit, bFlanked);
             bVisible = bVisible && kMaterial != none;
 
             kUnit.m_kDiscMesh.SetHidden(!bVisible);
@@ -351,6 +389,7 @@ protected function MarkUnit(XGUnit kUnit, bool bVisible, bool bFlanked, bool bIs
 
 protected function MoveHelperUnit(XGUnit kUnit, out Vector vLoc)
 {
+    kUnit.SetLocation(vLoc);
     kUnit.GetPawn().SetLocation(vLoc);
 
     // Make sure the tile isn't registered as blocked so it doesn't affect nearby units
@@ -393,22 +432,25 @@ protected function OnCursorMoved()
     // will take a few frames for visibility info to fully update.
     MoveHelperUnit(m_kNonCoverUsingHelper, vDestination);
     MoveHelperUnit(m_kCoverUsingHelper, vDestination);
+
+    // Queue up for position processing later
+    m_fTimeUntilProcessPosition = PROCESS_POSITION_DELAY_SECONDS;
 }
 
-protected function MaterialInterface GetMaterialForUnitDisc(XGUnit kUnit)
+protected function MaterialInterface GetMaterialForUnitDisc(XGUnit kUnit, bool bFlanked)
 {
     local EVisDiscColor eDiscColor;
 
     switch (kUnit.GetTeam())
     {
         case eTeam_Alien:
-            eDiscColor = eDiscColorForEnemyUnits;
+            eDiscColor = bFlanked ? eDiscColorForFlankedEnemyUnits : eDiscColorForEnemyUnits;
             break;
         case eTeam_Neutral:
-            eDiscColor = eDiscColorForNeutralUnits;
+            eDiscColor = bFlanked ? eDiscColorForFlankedNeutralUnits : eDiscColorForNeutralUnits;
             break;
         case eTeam_XCom:
-            eDiscColor = eDiscColorForFriendlyUnits;
+            eDiscColor = bFlanked ? eDiscColorForFlankedFriendlyUnits : eDiscColorForFriendlyUnits;
             break;
     }
 
@@ -460,11 +502,12 @@ protected function SetVisibilityMarkers(XGUnit kActiveUnit, XGUnit kHelper)
         }
 
         bFlanked = false;
-        if (bVisible)
+
+        if (bVisible && bShowFlanks && kUnit.GetTeam() == eTeam_Alien)
         {
             // Condition from UISightlineHUD_SightlineContainer
             bFlanked = kUnit.CanUseCover() && !kUnit.IsFlying()
-                && ( !kUnit.IsInCover() || kUnit.IsFlankedByLoc(kHelper.Location) || kUnit.IsFlankedBy(kHelper) );
+                 && ( !kUnit.IsInCover() || kUnit.IsFlankedByLoc(kHelper.Location) || kUnit.IsFlankedBy(kHelper) );
         }
 
         MarkUnit(kUnit, bVisible, bFlanked, kUnit == kActiveUnit);
