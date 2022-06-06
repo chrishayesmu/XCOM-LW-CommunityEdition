@@ -609,6 +609,98 @@ function OnGearAccept()
     }
 }
 
+function bool OnNextSoldier(optional bool includeSHIV = false, optional bool SkipSpecial = false, optional bool includeMEC = true)
+{
+    local LWCE_XGStrategySoldier kCESoldier;
+    local XGStrategySoldier NextSoldier;
+    local int iClassId, iNextSoldierIndex;
+
+    if (BARRACKS().m_arrSoldiers.Length <= 1 || m_bPreventSoldierCycling)
+    {
+        return false;
+    }
+
+    iNextSoldierIndex = CycleSoldierIndex(1, m_iCurrentView == eSoldierView_PsiPromotion, includeSHIV, SkipSpecial, includeMEC);
+    NextSoldier = BARRACKS().m_arrSoldiers[iNextSoldierIndex];
+
+    if (HANGAR().m_kSkyranger.m_arrSoldiers.Find(m_kSoldier) == INDEX_NONE)
+    {
+        `CONTENTMGR.RequestContentCacheFlush();
+    }
+
+    if (m_kSoldier.PerkLockedOut(1, 0, false) || m_iCurrentView != eSoldierView_Promotion || m_kSoldier.IsATank() || m_kSoldier.IsAugmented())
+    {
+        SetActiveSoldier(NextSoldier);
+    }
+    else if (IsOptionEnabled(`LW_SECOND_WAVE_ID(CommandersChoice)))
+    {
+        kCESoldier = LWCE_XGStrategySoldier(m_kSoldier);
+
+        iClassId = GetNextValidClassId(1, kCESoldier.m_kCEChar.iBaseClassId);
+        kCESoldier.m_kCESoldier.iSoldierClassId = iClassId;
+        kCESoldier.m_kCEChar.iBaseClassId = iClassId;
+        kCESoldier.m_kCEChar.iClassId = iClassId;
+
+        STORAGE().AutoEquip(m_kSoldier);
+        UpdateDoll();
+    }
+    else
+    {
+        SetActiveSoldier(NextSoldier);
+    }
+
+    m_kGear.iHighlight = 0;
+    UpdateView();
+    PlayScrollSound();
+    return true;
+}
+
+function bool OnPrevSoldier(optional bool includeSHIV = false, optional bool SkipSpecial = false, optional bool includeMEC = true)
+{
+    local LWCE_XGStrategySoldier kCESoldier;
+    local XGStrategySoldier PrevSoldier;
+    local int iClassId, iPrevSoldierIndex;
+
+    if (BARRACKS().m_arrSoldiers.Length <= 1 || m_bPreventSoldierCycling)
+    {
+        return false;
+    }
+
+    iPrevSoldierIndex = CycleSoldierIndex(-1, m_iCurrentView == eSoldierView_PsiPromotion, includeSHIV, SkipSpecial, includeMEC);
+    PrevSoldier = BARRACKS().m_arrSoldiers[iPrevSoldierIndex];
+
+    if (HANGAR().m_kSkyranger.m_arrSoldiers.Find(m_kSoldier) == INDEX_NONE)
+    {
+        `CONTENTMGR.RequestContentCacheFlush();
+    }
+
+    if (m_kSoldier.PerkLockedOut(1, 0, false) || m_iCurrentView != 1 || m_kSoldier.IsATank() || m_kSoldier.IsAugmented())
+    {
+        SetActiveSoldier(PrevSoldier);
+    }
+    else if (IsOptionEnabled(`LW_SECOND_WAVE_ID(CommandersChoice)))
+    {
+        kCESoldier = LWCE_XGStrategySoldier(m_kSoldier);
+
+        iClassId = GetNextValidClassId(1, kCESoldier.m_kCEChar.iBaseClassId);
+        kCESoldier.m_kCESoldier.iSoldierClassId = iClassId;
+        kCESoldier.m_kCEChar.iBaseClassId = iClassId;
+        kCESoldier.m_kCEChar.iClassId = iClassId;
+
+        STORAGE().AutoEquip(m_kSoldier);
+        UpdateDoll();
+    }
+    else
+    {
+        SetActiveSoldier(PrevSoldier);
+    }
+
+    m_kGear.iHighlight = 0;
+    UpdateView();
+    PlayScrollSound();
+    return true;
+}
+
 function OnPromotionRight()
 {
     local int iOption, iNumColumns;
@@ -1033,4 +1125,35 @@ function UpdateHeader()
     m_kHeader.txtWillMod.StrValue = string(aModifiers[eStat_Will]);
     m_kHeader.txtCritShot.StrValue = string(aModifiers[eStat_FlightFuel]);
     m_kHeader.txtStrength.StrValue = (string((aModifiers[eStat_DamageReduction] % 100) / 10) $ ".") $ string((aModifiers[eStat_DamageReduction] % 100) % 10); // Damage Reduction
+}
+
+protected function int GetNextValidClassId(int iDirection, int iClassId)
+{
+    local int Index, iCurrentIndex;
+    local LWCE_XGFacility_Barracks kBarracks;
+
+    iDirection = iDirection > 0 ? 1 : -1; // normalize direction value
+    kBarracks = LWCE_XGFacility_Barracks(BARRACKS());
+
+    iCurrentIndex = kBarracks.arrSoldierClasses.Find('iSoldierClassId', iClassId);
+
+    if (iCurrentIndex == INDEX_NONE)
+    {
+        `LWCE_LOG_CLS("ERROR: could not locate class definition for soldier class ID " $ iClassId);
+        return -1;
+    }
+
+    // Start just after the current class; keep going (using modular arithmetic to stay in bounds) until we get back where we started
+    for (Index = iCurrentIndex + iDirection; Index != iCurrentIndex; Index = (Index + iDirection) % kBarracks.arrSoldierClasses.Length)
+    {
+        if (!kBarracks.arrSoldierClasses[Index].bIsBaseClass || kBarracks.arrSoldierClasses[Index].bIsPsionic)
+        {
+            continue;
+        }
+
+        return kBarracks.arrSoldierClasses[Index].iSoldierClassId;
+    }
+
+    `LWCE_LOG_CLS("WARNING: could not find any valid next class ID for soldier class ID " $ iClassId);
+    return iClassId;
 }
