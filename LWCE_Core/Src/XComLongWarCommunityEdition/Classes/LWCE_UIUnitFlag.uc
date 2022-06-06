@@ -54,9 +54,16 @@ simulated function ToggleVisibilityPreviewIcon(bool bVisible, bool bFlanking)
     switch (m_kUnit.GetTeam())
     {
         case eTeam_XCom:
-            // Wipe out the original colors and replace with XCOM's
-            class'LWCEUIUtils'.static.SetObjectColorMultiply(m_gfxVisibilityPreviewIcon, 0, 0, 0);
-            class'LWCEUIUtils'.static.SetObjectColorAdd(m_gfxVisibilityPreviewIcon, 103, 232, 237);
+            if (bFlanking)
+            {
+                class'LWCEUIUtils'.static.SetObjectColorMultiply(m_gfxVisibilityPreviewIcon, 0, 0, 0);
+                class'LWCEUIUtils'.static.SetObjectColorAddFromStruct(m_gfxVisibilityPreviewIcon, class'LWCEUIUtils'.default.FlankColor);
+            }
+            else
+            {
+                class'LWCEUIUtils'.static.SetObjectColorMultiply(m_gfxVisibilityPreviewIcon, 0, 0, 0);
+                class'LWCEUIUtils'.static.SetObjectColorAddFromStruct(m_gfxVisibilityPreviewIcon, class'LWCEUIUtils'.default.XComLightColor);
+            }
 
             // Unit flags for inactive XCOM soldiers are set to 30% alpha; we need to counter that by
             // setting our own icon to absurdly high alpha that cancels out
@@ -72,7 +79,7 @@ simulated function ToggleVisibilityPreviewIcon(bool bVisible, bool bFlanking)
             if (bFlanking)
             {
                 class'LWCEUIUtils'.static.SetObjectColorMultiply(m_gfxVisibilityPreviewIcon, 0, 0, 0);
-                class'LWCEUIUtils'.static.SetObjectColorAdd(m_gfxVisibilityPreviewIcon, 254, 209, 56);
+                class'LWCEUIUtils'.static.SetObjectColorAddFromStruct(m_gfxVisibilityPreviewIcon, class'LWCEUIUtils'.default.FlankColor);
             }
             else
             {

@@ -2077,6 +2077,48 @@ function OnEnterPoison(XGVolume kVolume)
     super.OnEnterPoison(kVolume);
 }
 
+simulated event OnUpdatedVisibility(bool bVisibilityChanged)
+{
+    local XGBattle_SP kBattle;
+    local XGAIPlayer kAIPlayer;
+
+    // This almost certainly does nothing, but better safe than sorry with UE3 events
+    super(XGUnitNativeBase).OnUpdatedVisibility(bVisibilityChanged);
+
+    FlankCheck();
+    m_bBuildAbilityDataDirty = true;
+    kBattle = XGBattle_SP(`BATTLE);
+
+    if (kBattle != none)
+    {
+        kAIPlayer = XGAIPlayer(kBattle.GetAIPlayer());
+
+        if (kAIPlayer != none)
+        {
+            kAIPlayer.MarkDestinationCacheDirty();
+        }
+    }
+
+    if (IsAliveAndWell() && GetPlayer().IsHumanPlayer() && self == GetPlayer().GetActiveUnit() && !GetPlayer().GetSquad().IsAnyoneElsePerformingAction(none))
+    {
+        // Don't allow abilities to rebuild while using the grapple. Normally this wouldn't be possible, but our LOS helpers move around
+        // to provide an accurate LOS preview when grappling, and we don't want to rebuild an ability that's in use. (Hat tip to the Sightlines mod
+        // by tracktwo which originally spotted the need for this logic.)
+        if (XGAction_Targeting(GetAction()) != none && XGAction_Targeting(GetAction()).m_kShot != none && XGAbility_Grapple(XGAction_Targeting(GetAction()).m_kShot) != none)
+        {
+            m_bBuildAbilitiesTriggeredFromVisibilityChange = false;
+            return;
+        }
+
+        m_bBuildAbilitiesTriggeredFromVisibilityChange = bVisibilityChanged;
+        BuildAbilities(bVisibilityChanged);
+    }
+    else
+    {
+        m_bBuildAbilitiesTriggeredFromVisibilityChange = false;
+    }
+}
+
 simulated event ReplicatedEvent(name VarName)
 {
     super.ReplicatedEvent(VarName);

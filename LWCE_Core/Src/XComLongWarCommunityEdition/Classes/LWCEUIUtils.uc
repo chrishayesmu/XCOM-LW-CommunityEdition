@@ -3,6 +3,9 @@
 // forming HTML strings.
 class LWCEUIUtils extends Object;
 
+var Color FlankColor;
+var Color XComLightColor;
+
 static function bool TryGetPanelReference(UI_FxsPanel kPanel, out GFxObject gfxRef)
 {
     gfxRef = kPanel.manager.GetVariableObject(string(kPanel.GetMCPath()));
@@ -106,6 +109,21 @@ static function SetObjectColorAdd(GFxObject gfxObj, int Red, int Green, int Blue
 }
 
 /// <summary>
+/// Identical to SetObjectColorAdd, but using a struct.
+/// </summary>
+static function SetObjectColorAddFromStruct(GFxObject gfxObj, const out Color kColor, optional bool bUseAlpha = false)
+{
+    if (bUseAlpha)
+    {
+        SetObjectColorAdd(gfxObj, kColor.R, kColor.G, kColor.B, kColor.A);
+    }
+    else
+    {
+        SetObjectColorAdd(gfxObj, kColor.R, kColor.G, kColor.B);
+    }
+}
+
+/// <summary>
 /// Sets the object's multiplicative color transform. The multiplier for each channel can be any value.
 /// The final value for each channel is computed as (origValue * multiplier) + offset, clamped to
 /// the range [0, 255].
@@ -161,4 +179,10 @@ protected static function GfxObject AS_BindMovie(GFxObject kOwner, coerce string
 protected static function UIInterfaceMgr GetHUD()
 {
     return XComPlayerController(class'Engine'.static.GetCurrentWorldInfo().GetALocalPlayerController()).m_Pres.GetHUD();
+}
+
+defaultproperties
+{
+    FlankColor=(R=254, G=209, B=56, A=255)
+    XComLightColor=(R=103, G=232, B=237, A=255)
 }
