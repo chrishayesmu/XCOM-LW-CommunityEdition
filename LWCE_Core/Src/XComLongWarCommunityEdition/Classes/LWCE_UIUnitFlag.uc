@@ -20,7 +20,7 @@ simulated function Update(XGUnit kNewActiveUnit)
     super.Update(kNewActiveUnit);
 }
 
-simulated function ToggleVisibilityPreviewIcon(bool bVisible)
+simulated function ToggleVisibilityPreviewIcon(bool bVisible, bool bFlanking)
 {
     local array<ASValue> arrParams;
     local GFxObject gfxUnitFlag;
@@ -54,9 +54,16 @@ simulated function ToggleVisibilityPreviewIcon(bool bVisible)
     switch (m_kUnit.GetTeam())
     {
         case eTeam_XCom:
-            // Wipe out the original colors and replace with XCOM's
-            class'LWCEUIUtils'.static.SetObjectColorMultiply(m_gfxVisibilityPreviewIcon, 0, 0, 0);
-            class'LWCEUIUtils'.static.SetObjectColorAdd(m_gfxVisibilityPreviewIcon, 103, 232, 237);
+            if (bFlanking)
+            {
+                class'LWCEUIUtils'.static.SetObjectColorMultiply(m_gfxVisibilityPreviewIcon, 0, 0, 0);
+                class'LWCEUIUtils'.static.SetObjectColorAddFromStruct(m_gfxVisibilityPreviewIcon, class'LWCEUIUtils'.default.FlankColor);
+            }
+            else
+            {
+                class'LWCEUIUtils'.static.SetObjectColorMultiply(m_gfxVisibilityPreviewIcon, 0, 0, 0);
+                class'LWCEUIUtils'.static.SetObjectColorAddFromStruct(m_gfxVisibilityPreviewIcon, class'LWCEUIUtils'.default.XComLightColor);
+            }
 
             // Unit flags for inactive XCOM soldiers are set to 30% alpha; we need to counter that by
             // setting our own icon to absurdly high alpha that cancels out
@@ -69,7 +76,17 @@ simulated function ToggleVisibilityPreviewIcon(bool bVisible)
             class'LWCEUIUtils'.static.SetObjectColorAdd(m_gfxVisibilityPreviewIcon, 180, 180, 180); // grayscale reduction
             break;
         case eTeam_Alien:
-            class'LWCEUIUtils'.static.SetObjectColorMultiply(m_gfxVisibilityPreviewIcon, 230.0 / 255.0, 0, 0); // lighten the red channel a little
+            if (bFlanking)
+            {
+                class'LWCEUIUtils'.static.SetObjectColorMultiply(m_gfxVisibilityPreviewIcon, 0, 0, 0);
+                class'LWCEUIUtils'.static.SetObjectColorAddFromStruct(m_gfxVisibilityPreviewIcon, class'LWCEUIUtils'.default.FlankColor);
+            }
+            else
+            {
+                class'LWCEUIUtils'.static.SetObjectColorMultiply(m_gfxVisibilityPreviewIcon, 230.0 / 255.0, 0, 0); // lighten the red channel a little
+                class'LWCEUIUtils'.static.SetObjectColorAdd(m_gfxVisibilityPreviewIcon, 0, 0, 0);
+            }
+
             break;
     }
 
