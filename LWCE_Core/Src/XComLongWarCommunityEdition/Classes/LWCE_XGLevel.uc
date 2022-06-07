@@ -33,3 +33,74 @@ simulated function OnStreamingFinished()
 
     m_bStreamingLevelsComplete = true;
 }
+
+state Streaming
+{
+    function StreamMapsIfNeeded()
+    {
+        local bool bIsRestart;
+
+        bIsRestart = InStr(WorldInfo.GetLocalURL(), "restart", false, true) != INDEX_NONE;
+
+        // Only stream maps when loading saves or doing a mission restart. When launching a mission from the strategy layer,
+        // the servertravel command will include the streaming maps already, and loading them twice can cause all kinds of problems.
+        if (m_bLoadingSaveGame || bIsRestart)
+        {
+            class'XComMapManager'.static.AddStreamingMaps(class'XComMapManager'.static.GetCurrentMapMetaData().DisplayName, /* bAllowDropshipIntro */ !m_bLoadingSaveGame);
+
+            GetALocalPlayerController().ClientFlushLevelStreaming();
+        }
+    }
+
+Begin:
+    if (WorldInfo.NetMode == NM_Standalone)
+    {
+        StreamMapsIfNeeded();
+
+        while (WorldInfo.bRequestedBlockOnAsyncLoading)
+        {
+            Sleep(0.10);
+        }
+    }
+
+    if (XComEngine(class'Engine'.static.GetEngine()).MapManager != none)
+    {
+        SleepFrames = 0;
+
+        while (!XComEngine(class'Engine'.static.GetEngine()).MapManager.IsInitialized())
+        {
+            Sleep(0.10);
+            SleepFrames++;
+        }
+
+        XComEngine(class'Engine'.static.GetEngine()).MapManager.AddGlamCamMaps((WorldInfo.NetMode != NM_Standalone) || m_bLoadingSaveGame);
+    }
+
+    SleepFrames = 0;
+    while (!IsLevelStreamingReplicated())
+    {
+        Sleep(0.10);
+        SleepFrames++;
+    }
+
+    InitDynamicElements();
+
+    SleepFrames = 0;
+    Sleep(0.0);
+    SleepFrames++;
+
+    while (!IsStreamingComplete())
+    {
+        Sleep(0.0);
+    }
+
+    OnStreamingFinished();
+
+    if (m_bLoadingSaveGame)
+    {
+        GetALocalPlayerController().RemoteEvent('CIN_DS_OnLoadedSaveGame');
+    }
+
+    GotoState('None');
+    stop;
+}

@@ -87,3 +87,9 @@ state Streaming{
     function InitDynamicElements(){}
     function bool IsLevelStreamingReplicated(){}
 }
+
+defaultproperties
+{
+    m_bBuildingAndPropHiding=true
+    SavedCameraCache=(TimeStamp=0.0,POV=(Location=(X=0.0,Y=0.0,Z=0.0),Rotation=(Pitch=0,Yaw=0,Roll=0),FOV=90.0))
+}
