@@ -72,8 +72,8 @@ var config EVisDiscColor eDiscColorForFriendlyUnits;
 var config EVisDiscColor eDiscColorForFlankedFriendlyUnits;
 var config EVisDiscColor eDiscColorForNeutralUnits;
 
-var XGUnit m_kNonCoverUsingHelper;
-var XGUnit m_kCoverUsingHelper;
+var protected XGUnit m_kNonCoverUsingHelper;
+var protected XGUnit m_kCoverUsingHelper;
 
 var protected Vector m_vLastValidCursor;
 var protected Vector m_vLastValidDestination;
