@@ -268,3 +268,42 @@ function UpdateArtifacts()
     kTable.bTakesNoInput = true;
     m_kArtifacts.mnuSummary = kTable;
 }
+
+function UpdateHeader()
+{
+    local LWCE_XGBattleDesc kDesc;
+    local TText txtBulletin;
+
+    kDesc = LWCE_XGBattleDesc(Desc());
+
+    // LWCE issue #60: prepend the time with the mission's date
+    m_kHeader.txtOpName.StrValue = kDesc.m_strOpName;
+    m_kHeader.txtMissionType.StrValue = kDesc.m_strDesc;
+    m_kHeader.txtLocation.StrValue = kDesc.m_strLocation;
+    m_kHeader.txtTime.StrValue = kDesc.m_strDate $ " - " $ kDesc.m_strTime;
+    m_kHeader.arrBulletins[0] = txtBulletin;
+
+    if (BATTLE().m_iResult == eResult_Victory)
+    {
+        m_kHeader.txtResult.StrValue = m_strMissionComplete;
+        m_kHeader.txtResult.iState = eUIState_Good;
+        m_kHeader.iStatus = 2;
+    }
+    else if (XComPresentationLayer(Owner.Owner).m_bConfirmedAbortMission)
+    {
+        m_kHeader.txtResult.StrValue = m_strMissionAbandoned;
+        m_kHeader.txtResult.iState = eUIState_Bad;
+        m_kHeader.iStatus = 1;
+    }
+    else if (BATTLE().m_iResult == eResult_Defeat)
+    {
+        m_kHeader.txtResult.StrValue = m_strMissionFailed;
+        m_kHeader.txtResult.iState = eUIState_Bad;
+        m_kHeader.iStatus = 3;
+    }
+    else
+    {
+        m_kHeader.txtResult.StrValue = "???";
+        m_kHeader.txtResult.iState = eUIState_Normal;
+    }
+}

@@ -5,11 +5,13 @@ struct CheckpointRecord_LWCE_XGBattleDesc extends XGBattleDesc.CheckpointRecord
     var LWCEItemContainer m_kArtifactsContainer;
     var array<XGItem> arrRecordedItems;
     var array<string> arrItemStrings;
+    var string m_strDate;
 };
 
 var LWCEItemContainer m_kArtifactsContainer;
 var array<XGItem> arrRecordedItems;
 var array<string> arrItemStrings;
+var string m_strDate;
 
 function LWCE_XGBattleDesc Init()
 {

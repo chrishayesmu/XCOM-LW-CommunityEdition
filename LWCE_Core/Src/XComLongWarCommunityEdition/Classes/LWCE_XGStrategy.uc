@@ -71,12 +71,14 @@ function Init(bool bLoadingFromSave)
 
 function BeginCombat(XGMission kMission)
 {
+    local int iMissionNum;
     local UIFxsMovieMgr UIMgr;
     local XGShip_Dropship kSkyranger;
     local TPawnContent Content;
     local XComDropshipAudioMgr DropshipAudioManager;
     local XGStrategySoldier kSoldier;
 
+    iMissionNum = STAT_GetStat(eRecap_Missions) + 1;
     kSkyranger = kMission.GetAssignedSkyranger();
 
     if (kMission.m_iMissionType == eMission_AlienBase)
@@ -113,6 +115,12 @@ function BeginCombat(XGMission kMission)
     m_kStrategyTransport.m_iMissionID = kMission.m_iID;
     m_kStrategyTransport.m_kRecapSaveData = m_kRecapSaveData;
     m_kStrategyTransport.m_kBattleDesc.m_strMapCommand = class'XComMapManager'.static.GetMapCommandLine(m_kStrategyTransport.m_kBattleDesc.m_strMapName, true, true, m_kStrategyTransport.m_kBattleDesc);
+
+    // LWCE issue #60: append the mission number to the op name, which will make it appear anywhere the op is referenced (loading screen, mission debriefing, morgue, etc).
+    // Also provide the current Geoscape date for display during the mission. We do this in BeginCombat so that it's definitely accurate, versus doing it when the
+    // mission spawns or when the Skyranger first takes flight.
+    m_kStrategyTransport.m_kBattleDesc.m_strOpName @= "(#" $ iMissionNum $ ")";
+    LWCE_XGBattleDesc(m_kStrategyTransport.m_kBattleDesc).m_strDate = GEOSCAPE().m_kDateTime.GetDateString();
 
     if (kMission.m_iMissionType == eMission_CovertOpsExtraction || kMission.m_iMissionType == eMission_CaptureAndHold)
     {
