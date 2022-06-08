@@ -116,8 +116,6 @@ function BeginCombat(XGMission kMission)
 
     if (kMission.m_iMissionType == eMission_CovertOpsExtraction || kMission.m_iMissionType == eMission_CaptureAndHold)
     {
-        // DebugMode:False
-        assert(EXALT().IsOperativeInField());
         kSkyranger.m_kCovertOperative = EXALT().GetOperative();
     }
 

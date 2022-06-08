@@ -16,3 +16,9 @@ var XGShip_Dropship m_kSkyranger;
 simulated function string GetTitle(){}
 function XGShip_Dropship GetAssignedSkyranger(){}
 function TBriefingInfo GetBriefingInfo(){}
+
+defaultproperties
+{
+    m_iMissionType=11
+    m_strTitle="Council Mission"
+}

@@ -96,18 +96,14 @@ function InitNewGame()
         }
     }
 
-    if (class'Engine'.static.GetCurrentWorldInfo().Game.BaseMutator != none)
-    {
-        `WORLDINFO.Game.BaseMutator.Mutate("XGHeadQuarters.InitNewGame", `WORLDINFO.GetALocalPlayerController());
-    }
+    // Normally there's a Mutate call with "XGHeadQuarters.InitNewGame" here. We try not to remove those calls,
+    // but if it's left in, the XComFCMutator mod (which is included in Long War) will spawn its own XGFundingCouncil_Mod
+    // class, which we inherit from for our own.
 
-    // TODO: add mod hook here
+    // TODO: add our own mod hook here to replace the Mutate call
 
-    if (World().m_kFundingCouncil == none)
-    {
-        World().m_kFundingCouncil = Spawn(class'LWCE_XGFundingCouncil');
-        World().m_kFundingCouncil.InitNewGame();
-    }
+    World().m_kFundingCouncil = Spawn(class'LWCE_XGFundingCouncil');
+    World().m_kFundingCouncil.InitNewGame();
 }
 
 function AddOutpost(int iContinent)

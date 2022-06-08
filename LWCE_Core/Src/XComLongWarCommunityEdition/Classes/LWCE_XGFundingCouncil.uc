@@ -1,4 +1,4 @@
-class LWCE_XGFundingCouncil extends XGFundingCouncil;
+class LWCE_XGFundingCouncil extends XGFundingCouncil_Mod;
 
 function XGMission_FundingCouncil CreateMission(TFCMission MissionData)
 {
@@ -70,7 +70,7 @@ function XGMission_FundingCouncil CreateMission(TFCMission MissionData)
         }
     }
 
-    kMission = Spawn(class'XGMission_FundingCouncil');
+    kMission = Spawn(class'LWCE_XGMission_FundingCouncil');
     kMission.m_kTMission = MissionData;
     kCountry = Country(kMission.m_kTMission.ECountry);
 
@@ -86,7 +86,7 @@ function XGMission_FundingCouncil CreateMission(TFCMission MissionData)
     kMission.m_kDesc = Spawn(class'LWCE_XGBattleDesc').Init();
     kMission.m_iCountry = kCountry.GetID();
     kMission.m_iContinent = kCountry.GetContinent();
-    kMission.m_iDuration = class'XGTacticalGameCore'.default.ABDUCTION_TIMER;
+    kMission.m_iDuration = 2 * `LWCE_STRATCFG(MissionGeoscapeDuration_Council);
     kMission.m_v2Coords = CITY(kMission.m_iCity).m_v2Coords;
     kMission.m_iDetectedBy = 0;
     kMission.m_iMissionType = eMission_Special;
@@ -112,5 +112,6 @@ function XGMission_FundingCouncil CreateMission(TFCMission MissionData)
 
     m_iLastAddedMissionID = GEOSCAPE().AddMission(kMission);
     kDateTime.Destroy();
+
     return kMission;
 }
