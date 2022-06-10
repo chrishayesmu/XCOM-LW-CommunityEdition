@@ -2,11 +2,29 @@ class LWCE_XGTacticalGameCore extends XGTacticalGameCore
     config(LWCEBaseTacticalGame)
     dependson(LWCETypes);
 
+enum EHitChanceCalcStyle
+{
+    // 100% chance to hit, no matter what.
+    eHCCS_AlwaysHit,
+
+    // Hit chance calculated the same way chances are calculated against civilians in LW 1.0:
+    // 100% chance to hit, modified only by suppression (due to a bug).
+    eHCCS_CivilianBaseGame,
+
+    // 0% chance to hit, no matter what.
+    eHCCS_NeverHit,
+
+    // Normal hit chance calculation
+    eHCCS_Normal
+};
+
 var config array<LWCE_TWeapon> arrCfgWeapons;
 
 // ----------------------------------------
 // Config for tactical game abilities
 // ----------------------------------------
+
+var config EHitChanceCalcStyle eCivilianHitChanceCalcStyle;
 
 // Config that mostly impact the player's units, or aliens and XCOM equally
 var config float fAbsorptionFieldsActivationThreshold;

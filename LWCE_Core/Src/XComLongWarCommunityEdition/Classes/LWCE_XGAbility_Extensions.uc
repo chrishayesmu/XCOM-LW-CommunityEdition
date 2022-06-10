@@ -1209,6 +1209,7 @@ static simulated function string GetHelpText(XGAbility kSelf)
 
 static simulated function int GetHitChance(XGAbility_Targeted kSelf)
 {
+    local bool bAlwaysHit, bAlwaysMiss;
     local LWCE_XGUnit kShooter, kTarget;
     local TShotInfo kInfo;
     local TShotResult kResult;
@@ -1235,11 +1236,23 @@ static simulated function int GetHitChance(XGAbility_Targeted kSelf)
     for (Index = 0; Index < kInfo.arrHitBonusValues.Length; Index++)
     {
         kSelf.m_iHitChance += kInfo.arrHitBonusValues[Index];
+
+        // Special value: any bonus adding more than 255 aim at once guarantees a hit
+        if (kInfo.arrHitBonusValues[Index] > 255)
+        {
+            bAlwaysHit = true;
+        }
     }
 
     for (Index = 0; Index < kInfo.arrHitPenaltyValues.Length; Index++)
     {
         kSelf.m_iHitChance += kInfo.arrHitPenaltyValues[Index];
+
+        // Same special value but for guaranteed misses
+        if (kInfo.arrHitPenaltyValues[Index] < -255)
+        {
+            bAlwaysMiss = true;
+        }
     }
 
     // Reaction fire logic is split between this and RollForHit for some reason. It would be nice to consolidate, but
@@ -1256,7 +1269,19 @@ static simulated function int GetHitChance(XGAbility_Targeted kSelf)
         }
     }
 
-    kSelf.m_iHitChance = Clamp(kSelf.m_iHitChance, 1, 100);
+    if (bAlwaysHit)
+    {
+        kSelf.m_iHitChance = 100;
+    }
+    else if (bAlwaysMiss)
+    {
+        kSelf.m_iHitChance = 0;
+    }
+    else
+    {
+        kSelf.m_iHitChance = Clamp(kSelf.m_iHitChance, 1, 100);
+    }
+
     kSelf.m_iHitChance_NonUnitTarget = 100;
 
     return kSelf.m_iHitChance;
@@ -1566,14 +1591,41 @@ static simulated function GetShotSummary(XGAbility_Targeted kSelf, out TShotResu
 
     kResult.bKillshot = (kTarget.GetUnitHP() + kResult.iPossibleDamage) <= 0;
 
-    if (kTarget.m_bVIP) // Probably right, needs confirmation
+    if (kTarget.m_kCharacter.m_kChar.iType == eChar_Civilian)
     {
-        if (kTarget.m_kCharacter.m_kChar.iType == eChar_Civilian || kShooter.m_kCharacter.m_kChar.aProperties[eCP_MeleeOnly] != 0)
+        switch (`LWCE_TACCFG(eCivilianHitChanceCalcStyle))
         {
-            kInfo.arrHitBonusStrings.AddItem(kSelf.m_strBonusAim);
-            kInfo.arrHitBonusValues.AddItem(100);
-            return;
+            case eHCCS_AlwaysHit:
+                kInfo.arrHitBonusStrings.AddItem(kSelf.m_strBonusAim);
+                kInfo.arrHitBonusValues.AddItem(1000);
+                return;
+            case eHCCS_NeverHit:
+                kInfo.arrHitPenaltyStrings.AddItem(kSelf.m_strBonusAim);
+                kInfo.arrHitPenaltyValues.AddItem(-1000);
+                return;
+            case eHCCS_CivilianBaseGame:
+                // Base game: 100% chance to hit, but suppression also helps
+                kInfo.arrHitBonusStrings.AddItem(kSelf.m_strBonusAim);
+                kInfo.arrHitBonusValues.AddItem(100);
+
+                if (kShooter.IsBeingSuppressed())
+                {
+                    kInfo.arrHitPenaltyStrings.AddItem(kPerksMgr.GetPenaltyTitle(`LW_PERK_ID(Suppression)));
+                    kInfo.arrHitPenaltyValues.AddItem(`LWCE_TACCFG(iSuppressionAimPenalty));
+                }
+
+                return;
+            default:
+                // Any other case, just do normal hit chance calculations
+                break;
         }
+    }
+
+    if (kShooter.m_kCharacter.m_kChar.aProperties[eCP_MeleeOnly] != 0)
+    {
+        kInfo.arrHitBonusStrings.AddItem(kSelf.m_strBonusAim);
+        kInfo.arrHitBonusValues.AddItem(100);
+        return;
     }
 
     if (kSelf.HasProperty(eProp_Stun))
