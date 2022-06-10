@@ -1,6 +1,40 @@
 class LWCEGraphicsPackTacticalListener extends LWCETacticalListener
     implements(XComProjectileEventListener);
 
+const TIME_BETWEEN_LOS_CHECKS = 0.25f;
+
+var private float m_fTimeUntilNextLosCheck;
+
+simulated event Tick(float fDeltaT)
+{
+    local LightComponent kLightComp;
+    local LWCE_XGUnit kUnit;
+
+    m_fTimeUntilNextLosCheck -= fDeltaT;
+
+    if (m_fTimeUntilNextLosCheck > 0.0f)
+    {
+        return;
+    }
+
+    // Periodically enable/disable unit lighting based on their visibility to the player.
+    // This prevents exploiting the unit lights to know where an enemy is after they leave LOS.
+    foreach AllActors(class'LWCE_XGUnit', kUnit)
+    {
+        foreach kUnit.m_kPawn.Mesh.AttachedComponents(class'LightComponent', kLightComp)
+        {
+            if (kUnit.GetTeam() != eTeam_Alien)
+            {
+                continue;
+            }
+
+            kLightComp.SetEnabled(kUnit.IsVisible());
+        }
+    }
+
+    m_fTimeUntilNextLosCheck = TIME_BETWEEN_LOS_CHECKS;
+}
+
 function OnBattleBegin(XGBattle kBattle)
 {
     local XComMeldContainerActor kMeldActor;
