@@ -862,7 +862,6 @@ static simulated function GetCritSummary(XGAbility_Targeted kSelf, out TShotInfo
     local TShotHUDStat kStat;
     local int I, iBackpackItem, iCritStat, iMod;
     local array<int> arrItems;
-    local XGParamTag kTag;
     local XGTacticalGameCore kGameCore;
     local LWCE_XComPerkManager kPerksMgr;
     local LWCE_XGUnit kShooter, kTarget;
@@ -973,12 +972,10 @@ static simulated function GetCritSummary(XGAbility_Targeted kSelf, out TShotInfo
     }
 
     kGameCore.GetBackpackItemArray(kShooter.GetCharacter().m_kChar.kInventory, arrItems);
-    kTag = XGParamTag(XComEngine(class'Engine'.static.GetEngine()).LocalizeContext.FindTag("XGParam"));
 
     for (iBackpackItem = 0; iBackpackItem < arrItems.Length; iBackpackItem++)
     {
         iMod = kGameCore.GetUpgradeAbilities(arrItems[iBackpackItem], eStat_CriticalShot);
-        kTag.StrValue0 = kGameCore.GetTWeapon(arrItems[iBackpackItem]).strName;
 
         if (arrItems[iBackpackItem] == `LW_ITEM_ID(TargetingModule) ||
             arrItems[iBackpackItem] == `LW_ITEM_ID(AlloyBipod) ||
@@ -993,12 +990,12 @@ static simulated function GetCritSummary(XGAbility_Targeted kSelf, out TShotInfo
 
         if (iMod > 0)
         {
-            kInfo.arrCritBonusStrings.AddItem(class'XComLocalizer'.static.ExpandString(kSelf.m_strItemBonus));
+            kInfo.arrCritBonusStrings.AddItem(kGameCore.GetTWeapon(arrItems[iBackpackItem]).strName);
             kInfo.arrCritBonusValues.AddItem(iMod);
         }
         else if (iMod < 0)
         {
-            kInfo.arrCritPenaltyStrings.AddItem(class'XComLocalizer'.static.ExpandString(kSelf.m_strItemPenalty));
+            kInfo.arrCritPenaltyStrings.AddItem(kGameCore.GetTWeapon(arrItems[iBackpackItem]).strName);
             kInfo.arrCritPenaltyValues.AddItem(iMod);
         }
     }
