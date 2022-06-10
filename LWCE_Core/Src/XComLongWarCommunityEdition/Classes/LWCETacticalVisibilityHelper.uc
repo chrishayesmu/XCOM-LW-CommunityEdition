@@ -332,14 +332,14 @@ protected function bool CanSafelyUpdateVisibility()
 
     if (kActiveUnit == none)
     {
-        return true;
+        return false;
     }
 
     kAction = kActiveUnit.GetAction();
 
     if (kAction == none)
     {
-        return true;
+        return false;
     }
 
     kTargetingAction = XGAction_Targeting(kActiveUnit.GetAction());
