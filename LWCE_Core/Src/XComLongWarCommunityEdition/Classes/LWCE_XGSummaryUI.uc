@@ -244,6 +244,74 @@ function CollectArtifactsFromDeadAliens()
     }
 }
 
+function TMissionFactor GetCiviliansSavedFactor()
+{
+    local TMissionFactor kFactor;
+    local XGSquad kCivSquad;
+    local XGUnit kUnit;
+    local int iDeadVisHelpers, iKilled, iTotal, iTotalVisHelpers, iPercentageKilled, iRating;
+
+    kCivSquad = BATTLE().GetAnimalPlayer().GetSquad();
+
+    // LWCE: since vis helpers are on the civilian team, they end up getting shown in the summary UI and are
+    // also included in the data transferred back to the strategy layer. We just want to get rid of them here.
+
+    foreach AllActors(class'XGUnit', kUnit)
+    {
+        if (kUnit.GetSquad() == kCivSquad && class'LWCETacticalVisibilityHelper'.static.IsVisHelper(kUnit))
+        {
+            iTotalVisHelpers++;
+
+            // Vis helpers shouldn't be able to die, but just to be safe
+            if (kUnit.IsDeadOrDying())
+            {
+                iDeadVisHelpers++;
+            }
+        }
+    }
+
+    if (BATTLE().m_iResult == eResult_Victory)
+    {
+        iKilled = kCivSquad.GetNumDead() - iDeadVisHelpers;
+    }
+    else
+    {
+        iKilled = kCivSquad.GetNumPermanentMembers() - iDeadVisHelpers;
+    }
+
+    iTotal = kCivSquad.GetNumPermanentMembers() - iTotalVisHelpers;
+    Desc().m_kDropShipCargoInfo.m_iCiviliansSaved = iTotal - iKilled;
+    Desc().m_kDropShipCargoInfo.m_iCiviliansTotal = iTotal;
+    iPercentageKilled = (iKilled * 100) / iTotal;
+
+    if (iPercentageKilled <= 25)
+    {
+        iRating = 3;
+    }
+    else if (iPercentageKilled <= 50)
+    {
+        iRating = 2;
+    }
+    else if (iPercentageKilled < 90)
+    {
+        iRating = 1;
+    }
+    else
+    {
+        iRating = 0;
+    }
+
+    kFactor.strFactor = m_strLabelCiviliansSaved;
+    kFactor.iIcon = 1;
+    kFactor.strResult = string(iTotal - iKilled) $ "/" $ string(iTotal);
+    kFactor.iRating = iRating;
+    kFactor.iResult = iTotal - iKilled;
+    kFactor.strRating = GetRatingString(iRating);
+    kFactor.iState = GetRatingState(iRating);
+
+    return kFactor;
+}
+
 function UpdateArtifacts()
 {
     local LWCEItemContainer kArtifactsContainer;
