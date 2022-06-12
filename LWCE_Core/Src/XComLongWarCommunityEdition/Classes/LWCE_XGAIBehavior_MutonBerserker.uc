@@ -1,1 +1,5 @@
 class LWCE_XGAIBehavior_MutonBerserker extends XGAIBehavior_MutonBerserker;
+
+`include(generators.uci)
+
+`LWCE_GENERATOR_XGAIBEHAVIOR

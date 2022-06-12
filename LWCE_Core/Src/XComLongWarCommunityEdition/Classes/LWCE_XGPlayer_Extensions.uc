@@ -65,6 +65,35 @@ static simulated function class<XGCharacter> AlienTypeToClass(EPawnType eAlienTy
     }
 }
 
+static function XGUnit GetNearestEnemy(XGPlayer kSelf, Vector vPoint, optional out float fClosestDist, optional bool bUseVisibleList = false, optional bool bConsiderCiviliansEnemies = false)
+{
+    local XGSquad kEnemySquad;
+    local XGUnit kEnemy, kClosest;
+    local float fDist;
+
+    kEnemySquad = `BATTLE.GetEnemySquad(kSelf);
+    kEnemy = kEnemySquad.GetNextGoodMember(kEnemy,, false);
+    fClosestDist = -1.0;
+
+    while (kEnemy != none)
+    {
+        if (!class'LWCETacticalVisibilityHelper'.static.IsVisHelper(kEnemy))
+        {
+            fDist = VSizeSq(kEnemy.GetLocation() - vPoint);
+
+            if (kClosest == none || fDist < fClosestDist)
+            {
+                kClosest = kEnemy;
+                fClosestDist = fDist;
+            }
+        }
+
+        kEnemy = kEnemySquad.GetNextGoodMember(kEnemy,, false);
+    }
+
+    return kClosest;
+}
+
 static function LoadSquad(XGPlayer kSelf, array<TTransferSoldier> Soldiers, array<LWCE_TTransferSoldier> ceSoldiers, array<int> arrTechHistory, array<XComSpawnPoint> arrSpawnPoints, array<EPawnType> arrPawnTypes)
 {
     if (LWCE_XGPlayer(kSelf) != none)

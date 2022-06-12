@@ -1,1 +1,5 @@
 class LWCE_XGAIBehavior_ExaltEliteSniper extends XGAIBehavior_ExaltEliteSniper;
+
+`include(generators.uci)
+
+`LWCE_GENERATOR_XGAIBEHAVIOR

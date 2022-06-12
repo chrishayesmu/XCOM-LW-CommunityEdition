@@ -429,6 +429,7 @@ protected function ConfigureHelperUnit(XGUnit kUnit)
     kUnit.SetHidden(true);
     kUnit.SetHiding(true);
     kUnit.SetVisibleToTeams(eTeam_None);
+    kUnit.m_bForceHidden = true;
 
     kUnit.m_kPawn.SetHidden(true);
     kUnit.m_kPawn.HideMainPawnMesh();

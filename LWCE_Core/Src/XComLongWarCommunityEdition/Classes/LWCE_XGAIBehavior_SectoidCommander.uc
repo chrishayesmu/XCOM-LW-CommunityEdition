@@ -1,1 +1,5 @@
 class LWCE_XGAIBehavior_SectoidCommander extends XGAIBehavior_SectoidCommander;
+
+`include(generators.uci)
+
+`LWCE_GENERATOR_XGAIBEHAVIOR

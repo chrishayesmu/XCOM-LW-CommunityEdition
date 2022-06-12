@@ -219,6 +219,11 @@ function int AbsorbDamage(const int IncomingDamage, XGUnit kDamageCauser, XGWeap
     local float fAbsorptionFieldsBasis, fReturnDmg, fDist;
     local int iReturnDmg;
 
+    if (class'LWCETacticalVisibilityHelper'.static.IsVisHelper(self))
+    {
+        return 0;
+    }
+
     fReturnDmg = float(IncomingDamage);
 
     // Apply the Damage Reduction stat
@@ -2031,6 +2036,59 @@ simulated function GetTargetsInRange(int iTargetType, int iRangeType, out array<
     }
 }
 
+function bool HasAttackableCivilians(optional out XGUnitNativeBase kUnit_Out)
+{
+    local XGUnit kUnit;
+
+    foreach m_arrCiviliansInRange(kUnit)
+    {
+        if (class'LWCETacticalVisibilityHelper'.static.IsVisHelper(kUnit))
+        {
+            continue;
+        }
+
+        if (kUnit.IsAliveAndWell())
+        {
+            kUnit_Out = kUnit;
+            return true;
+        }
+    }
+
+    return false;
+}
+
+function bool HasAttackableEnemies(optional out XGUnitNativeBase kUnit_Out)
+{
+    local UnitDirectionInfo kEnemyVisInfo;
+
+    foreach m_arrUnitDirectionInfos(kEnemyVisInfo)
+    {
+        if (kEnemyVisInfo.bVisible && kEnemyVisInfo.TargetUnit.IsAliveAndWell() && kEnemyVisInfo.TargetUnit.m_eTeam != m_eTeam)
+        {
+            if (class'LWCETacticalVisibilityHelper'.static.IsVisHelper(kEnemyVisInfo.TargetUnit))
+            {
+                continue;
+            }
+
+            if (IsMeleeOnly())
+            {
+                if (IsInMeleeRange(kEnemyVisInfo.TargetUnit))
+                {
+                    kUnit_Out = kEnemyVisInfo.TargetUnit;
+                    return true;
+                }
+
+                continue;
+            }
+
+            kUnit_Out = kEnemyVisInfo.TargetUnit;
+            return true;
+        }
+    }
+
+    return false;
+}
+
 simulated function bool HasBonuses()
 {
     local int I;
@@ -2154,7 +2212,10 @@ simulated function UpdateCiviliansInRange()
 
     foreach m_arrVisibleCivilians(kEnemy)
     {
-        m_kPlayer.GetSightMgr().AddVisibleCivilian(self, kEnemy);
+        if (!class'LWCETacticalVisibilityHelper'.static.IsVisHelper(kEnemy))
+        {
+            m_kPlayer.GetSightMgr().AddVisibleCivilian(self, kEnemy);
+        }
     }
 }
 

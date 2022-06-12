@@ -1,0 +1,16 @@
+`define LWCE_GENERATOR_XGAIBEHAVIOR \
+\
+simulated function XGUnit GetClosestCivilian() \
+{ \
+    return class'LWCE_XGAIBehavior_Extensions'.static.GetClosestCivilian(self); \
+} \
+\
+simulated function InitTargets() \
+{ \
+    class'LWCE_XGAIBehavior_Extensions'.static.InitTargets(self); \
+} \
+\
+function XGUnit SelectCivilianTarget() \
+{ \
+    return class'LWCE_XGAIBehavior_Extensions'.static.SelectCivilianTarget(self); \
+}

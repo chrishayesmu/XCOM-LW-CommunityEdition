@@ -11,8 +11,10 @@
  **************************************************************************************/
 
 `include(generators_abilities.uci)
+`include(generators_aibehavior.uci)
 `include(generators_cheatmgr.uci)
 `include(generators_uisoldierlist.uci)
+`include(generators_xgplayer.uci)
 
 // -----------------
 // XComPresentationLayerBase
@@ -126,60 +128,4 @@ simulated state Running \
     { \
         super.Tick(fDeltaT); \
     } \
-} \
-
-
-
-// -----------------
-// XGPlayer
-// -----------------
-
-// Note: ideally FinishPendingSpawnUnit would be an extension method, but the compiler doesn't
-// like us using the callback from a static context, for no apparent reason.
-
-`define LWCE_GENERATOR_XGPLAYER \
-function XGUnit SpawnUnit(class<XGUnit> kUnitClassToSpawn, PlayerController kPlayerController, Vector kLocation, Rotator kRotation, XGCharacter kCharacter, XGSquad kSquad, optional bool bDestroyOnBadLocation = false, optional XComSpawnPoint kSpawnPoint, optional bool bSnapToGround = true, optional bool bBattleScanner = false) \
-{ \
-    return class'LWCE_XGPlayer_Extensions'.static.SpawnUnit(self, kUnitClassToSpawn, kPlayerController, kLocation, kRotation, kCharacter, kSquad, bDestroyOnBadLocation, kSpawnPoint, bSnapToGround, bBattleScanner); \
-} \
-\
-function FinishPendingSpawnUnit() \
-{ \
-    local XGUnit SpawnedUnit; \
-    local delegate<UnitSpawnCallback> Callback; \
-    local bool bGeneMods; \
-\
-    if (m_kPendingSpawnUnit.kNewChar != none) \
-    { \
-        bGeneMods = class'XComPerkManager'.static.HasAnyGeneMod(m_kPendingSpawnUnit.kNewChar.m_kChar.aUpgrades); \
-        m_kPendingSpawnUnit.kNewChar.m_eType = EPawnType(class'XGBattleDesc'.static.MapSoldierToPawn(m_kPendingSpawnUnit.kNewChar.m_kChar.kInventory.iArmor, m_kPendingSpawnUnit.kNewChar.m_kSoldier.kAppearance.iGender, bGeneMods)); \
-        SpawnedUnit = XGBattle_SP(`BATTLE).GetHumanPlayer().SpawnUnit(class'XGUnit', m_kPlayerController, m_kPendingSpawnUnit.kSpawnPoint.Location, m_kPendingSpawnUnit.kSpawnPoint.Rotation, m_kPendingSpawnUnit.kNewChar, m_kSquad,, m_kPendingSpawnUnit.kSpawnPoint); \
-\
-        if (m_kPendingSpawnUnit.bVIP) \
-        { \
-            SpawnedUnit.m_bVIP = true; \
-        } \
-\
-        class'LWCE_XGLoadoutMgr'.static.ApplyInventory(SpawnedUnit); \
-\
-        if (m_kPendingSpawnUnit.kNewChar.m_kChar.iType == eChar_Soldier) \
-        { \
-            XComHumanPawn(SpawnedUnit.GetPawn()).SetAppearance(m_kPendingSpawnUnit.kNewChar.m_kSoldier.kAppearance); \
-        } \
-\
-        Callback = m_kPendingSpawnUnit.Callback; \
-        m_kPendingSpawnUnit.kNewChar = none; \
-        m_kPendingSpawnUnit.kSpawnPoint = none; \
-        m_kPendingSpawnUnit.iContentRequests = 0; \
-        m_kPendingSpawnUnit.Callback = None; \
-\
-        if (Callback != none) \
-        { \
-            Callback(SpawnedUnit); \
-        } \
-\
-        TriggerGlobalEventClass(class'SeqEvent_OnUnitSpawned', SpawnedUnit); \
-\
-        `LWCE_MOD_LOADER.OnUnitSpawned(SpawnedUnit); \
-    } \
-} \
+}
