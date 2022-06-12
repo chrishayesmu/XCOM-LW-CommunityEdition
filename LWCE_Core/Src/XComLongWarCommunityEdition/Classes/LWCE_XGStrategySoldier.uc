@@ -349,6 +349,11 @@ function int LWCE_GetClass()
     return m_kCEChar.iClassId;
 }
 
+function LWCE_TClassDefinition GetClassDefinition()
+{
+    return `LWCE_BARRACKS.GetClassDefinition(m_kCEChar.iClassId);
+}
+
 /// <summary>
 /// Long War adapted this function to return the soldier's class, and it has been modified for
 /// LWCE to do the same. Mod authors should prefer using LWCE_GetClass directly.
@@ -512,7 +517,47 @@ function bool HasPerk(int iPerk)
 
 function bool IsAugmented()
 {
-    return `LWCE_BARRACKS.GetClassDefinition(m_kCEChar.iClassId).bIsAugmented;
+    return GetClassDefinition().bIsAugmented;
+}
+
+function bool IsAvailableForCovertOps()
+{
+    if (HasPerk(`LW_PERK_ID(FireRocket)))
+    {
+        return false;
+    }
+
+    if (IsATank())
+    {
+        return false;
+    }
+
+    if (IsAugmented())
+    {
+        return false;
+    }
+
+    if (GetStatus() != eStatus_Active)
+    {
+        return false;
+    }
+
+    if (IsInjured())
+    {
+        return false;
+    }
+
+    if (GetRank() == 0) // PFCs are ineligible
+    {
+        return false;
+    }
+
+    if (!GetClassDefinition().bCanDoCovertOps)
+    {
+        return false;
+    }
+
+    return true;
 }
 
 function LevelUp(optional ESoldierClass eClass, optional out string statsString)

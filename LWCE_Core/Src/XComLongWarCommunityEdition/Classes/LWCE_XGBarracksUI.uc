@@ -7,7 +7,11 @@ function TTableMenuOption BuildSoldierOption(XGStrategySoldier kSoldier, array<i
     local string strCategory;
     local int iState;
 
-    if (kSoldier.IsInjured())
+    if (m_iCurrentView == eBarracksView_SoldierListCovertOps && !kSoldier.IsAvailableForCovertOps())
+    {
+        kOption.iState = eUIState_Disabled;
+    }
+    else if (kSoldier.IsInjured())
     {
         kOption.iState = eUIState_Bad;
     }

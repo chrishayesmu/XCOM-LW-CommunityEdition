@@ -63,6 +63,8 @@ struct LWCE_TClassDefinition
     var bool bIsBaseClass;        // Whether this is a base class. If so, rookies can be promoted directly into this class. If not, soldiers
                                   // must be assigned this class based on selecting a perk. (Ex: Scout-Sniper is a base class, and soldiers
                                   // are assigned the non-base class Scout when they select the Lightning Reflexes perk.)
+    var bool bCanDoCovertOps;     // Whether units of this class are eligible for covert ops duty. MEC soldiers are never eligible, regardless of this
+                                  // field. This field is ignored for psionic classes.
     var bool bIsPsionic;          // Whether this is a psionic class or not (a new concept in LWCE).
     var int iSoldierClassId;      // The class ID.
     var int iWeaponType;          // The type of weapon usable by this class.
