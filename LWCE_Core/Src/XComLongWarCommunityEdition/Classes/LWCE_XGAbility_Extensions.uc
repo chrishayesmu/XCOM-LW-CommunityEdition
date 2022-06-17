@@ -1550,8 +1550,8 @@ static simulated function GetShotSummary(XGAbility_Targeted kSelf, out TShotResu
     kPerksMgr = `LWCE_PERKS_TAC;
     iType = kSelf.iType;
 
-    // TODO: we might need to be clearing unit buffs and applying bonuses/penalties here
     kGameCore = LWCE_XGTacticalGameCore(kSelf.m_kGameCore);
+    kShooter.UpdateUnitBuffs();
 
     if (kSelf.HasProperty(eProp_PsiRoll))
     {
@@ -1567,6 +1567,8 @@ static simulated function GetShotSummary(XGAbility_Targeted kSelf, out TShotResu
     {
         return;
     }
+
+    kTarget.UpdateUnitBuffs();
 
     kResult.strTargetName = kTarget.SafeGetCharacterName();
 
@@ -1866,7 +1868,7 @@ static simulated function GetShotSummary(XGAbility_Targeted kSelf, out TShotResu
         kInfo.arrHitPenaltyValues.AddItem(`LWCE_TACCFG(iCatchingBreathAimPenalty));
     }
 
-    // Damn Good Ground (for target)
+    // Damn Good Ground (for target; shooter is below, under Height Advantage)
     if (kTarget.HasBonus(`LW_PERK_ID(DamnGoodGround)) && kTarget.HasHeightAdvantageOver(kShooter))
     {
         kInfo.arrHitPenaltyStrings.AddItem(kPerksMgr.GetPenaltyTitle(`LW_PERK_ID(DamnGoodGround)));
