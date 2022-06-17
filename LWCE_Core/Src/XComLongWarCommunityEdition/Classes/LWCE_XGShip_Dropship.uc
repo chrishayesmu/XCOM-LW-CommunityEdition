@@ -42,9 +42,9 @@ function BuildTransferData()
 
         if (kCESoldier.HasPsiGift())
         {
-            if (`GAMECORE.TInventoryCustomItemsFind(kCargoInfo.m_kCovertOperative.kChar.kInventory, 37) == INDEX_NONE)
+            if (`GAMECORE.TInventoryCustomItemsFind(kCargoInfo.m_kCovertOperative.kChar.kInventory, `LW_ITEM_ID(PsiAmp)) == INDEX_NONE)
             {
-                `GAMECORE.TInventoryCustomItemsAddItem(kCargoInfo.m_kCovertOperative.kChar.kInventory, 37);
+                `GAMECORE.TInventoryCustomItemsAddItem(kCargoInfo.m_kCovertOperative.kChar.kInventory, `LW_ITEM_ID(PsiAmp));
             }
         }
 

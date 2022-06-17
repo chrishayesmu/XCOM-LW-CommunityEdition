@@ -14,6 +14,7 @@
 `include(generators_aibehavior.uci)
 `include(generators_cheatmgr.uci)
 `include(generators_uisoldierlist.uci)
+`include(generators_xgbattle.uci)
 `include(generators_xgplayer.uci)
 
 // -----------------
@@ -81,51 +82,4 @@ simulated state State_ModSettings extends BaseScreenState \
     } \
 \
     stop; \
-} \
-
-// -----------------
-// XGBattle
-// -----------------
-
-`define LWCE_GENERATOR_XGBATTLE \
-function InitDescription() \
-{ \
-    class'LWCE_XGBattle_Extensions'.static.InitDescription(self); \
-} \
-\
-simulated function InitLevel() \
-{ \
-    class'LWCE_XGBattle_Extensions'.static.InitLevel(self); \
-} \
-\
-function InitLoadedItems() \
-{ \
-    class'LWCE_XGBattle_Extensions'.static.InitLoadedItems(self); \
-} \
-simulated function PostLevelLoaded() \
-{ \
-    super.PostLevelLoaded(); \
-\
-    class'LWCETacticalVisibilityHelper'.static.CreateAndInitialize(); \
-} \
-simulated function PostLoadSaveGame() \
-{ \
-    super.PostLoadSaveGame(); \
-\
-    class'LWCETacticalVisibilityHelper'.static.CreateAndInitialize(); \
-} \
-\
-simulated state Running \
-{ \
-    event BeginState(name PrevState) \
-    { \
-        super.BeginState(PrevState); \
-\
-        `LWCE_MOD_LOADER.OnBattleBegin(self); \
-    } \
-\
-    simulated event Tick(float fDeltaT) \
-    { \
-        super.Tick(fDeltaT); \
-    } \
 }

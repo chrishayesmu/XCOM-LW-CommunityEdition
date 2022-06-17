@@ -1,0 +1,48 @@
+
+`define LWCE_GENERATOR_XGBATTLE \
+function InitDescription() \
+{ \
+    class'LWCE_XGBattle_Extensions'.static.InitDescription(self); \
+} \
+\
+simulated function InitLevel() \
+{ \
+    class'LWCE_XGBattle_Extensions'.static.InitLevel(self); \
+} \
+\
+function InitLoadedItems() \
+{ \
+    class'LWCE_XGBattle_Extensions'.static.InitLoadedItems(self); \
+} \
+simulated function PostLevelLoaded() \
+{ \
+    super.PostLevelLoaded(); \
+\
+    class'LWCETacticalVisibilityHelper'.static.CreateAndInitialize(); \
+} \
+simulated function PostLoadSaveGame() \
+{ \
+    super.PostLoadSaveGame(); \
+\
+    class'LWCETacticalVisibilityHelper'.static.CreateAndInitialize(); \
+} \
+\
+function PutSoldiersOnDropship() \
+{ \
+    class'LWCE_XGBattle_Extensions'.static.PutSoldiersOnDropship(self); \
+} \
+\
+simulated state Running \
+{ \
+    event BeginState(name PrevState) \
+    { \
+        super.BeginState(PrevState); \
+\
+        `LWCE_MOD_LOADER.OnBattleBegin(self); \
+    } \
+\
+    simulated event Tick(float fDeltaT) \
+    { \
+        super.Tick(fDeltaT); \
+    } \
+}

@@ -57,7 +57,7 @@ static function ApplyLoadout(XGUnit kUnit, TLoadout kLoad, bool bLoadFromCheckpo
                     XGWeapon(kItem).ApplyAmmoCost(kLoad.Backpack[J]);
                     kItem.Init();
                     kLoadoutInstances.m_aBackpackItems[J] = kItem;
-                    ++kLoadoutInstances.m_iNumBackpackItems;
+                    kLoadoutInstances.m_iNumBackpackItems++;
                 }
             }
         }
@@ -68,7 +68,7 @@ static function ApplyLoadout(XGUnit kUnit, TLoadout kLoad, bool bLoadFromCheckpo
             XGWeapon(kItem).ApplyAmmoCost(kLoad.Items[I]);
             kItem.Init();
             kLoadoutInstances.m_aItems[I] = kItem;
-            ++kLoadoutInstances.m_iNumItems;
+            kLoadoutInstances.m_iNumItems++;
         }
     }
 

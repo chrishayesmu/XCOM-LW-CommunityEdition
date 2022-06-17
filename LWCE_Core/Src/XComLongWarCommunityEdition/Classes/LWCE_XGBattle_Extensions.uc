@@ -200,6 +200,7 @@ static function InitPlayers(XGBattle_SP kSelf, optional bool bLoading = false)
             else if (kSelf.m_kProfileSettings != none)
             {
                 arrTechHistory.Add(61);
+
                 // TODO: not clear if this branch is anything other than tactical quick start; can ignore if so, otherwise need to populate
                 // arrCETransfers from somewhere
                 `LWCE_LOG_CLS("Branch: kSelf.m_kProfileSettings");
@@ -228,4 +229,134 @@ static function InitPlayers(XGBattle_SP kSelf, optional bool bLoading = false)
             kSelf.PRES().GetCamera().m_kLookAtView.SetTransition(eTransition_Blend);
         }
     }
+}
+
+static function PutSoldiersOnDropship(XGBattle_SP kSelf)
+{
+    local bool bFound, bSquadHasFieldSurgeon;
+    local int iSoldier, iMember;
+    local TTransferSoldier kTransferSoldier;
+    local XGUnit kCovertOperative, kSoldier;
+    local XGSquad kSquad;
+
+    kSquad = kSelf.GetHumanPlayer().GetSquad();
+    iSoldier = 0;
+
+    for (iSoldier = 0; iSoldier < kSquad.GetNumPermanentMembers(); iSoldier++)
+    {
+        kSoldier = kSquad.GetPermanentMemberAt(iSoldier);
+
+        if (kSoldier.GetCharacter().HasUpgrade(`LW_PERK_ID(FieldSurgeon)))
+        {
+            if (!kSoldier.IsDeadOrDying() && !kSoldier.IsCriticallyWounded() && !kSoldier.m_bLeftBehind)
+            {
+                bSquadHasFieldSurgeon = true;
+            }
+        }
+    }
+
+    for (iSoldier = 0; iSoldier < kSelf.Desc().m_kDropShipCargoInfo.m_arrSoldiers.Length; iSoldier++)
+    {
+        bFound = false;
+
+        for (iMember = 0; iMember < kSquad.GetNumPermanentMembers(); iMember++)
+        {
+            kSoldier = kSquad.GetPermanentMemberAt(iMember);
+
+            if (kSoldier != none && kSoldier.GetCharacter().IsA('XGCharacter_Soldier') && XGCharacter_Soldier(kSoldier.GetCharacter()).m_kSoldier.iID == kSelf.Desc().m_kDropShipCargoInfo.m_arrSoldiers[iSoldier].kSoldier.iID)
+            {
+                if (!kSoldier.IsDeadOrDying() && !kSoldier.m_bLeftBehind && !kSoldier.IsCriticallyWounded())
+                {
+                    if (bSquadHasFieldSurgeon)
+                    {
+                        kSoldier.m_iLowestHP += 1;
+                    }
+                }
+
+                kTransferSoldier = kSelf.BuildReturningDropshipSoldier(kSoldier, iSoldier == 0);
+                kSelf.Desc().m_kDropShipCargoInfo.m_arrSoldiers[iSoldier] = kTransferSoldier;
+
+                bFound = true;
+                break;
+            }
+        }
+
+        if (!bFound)
+        {
+            kSelf.Desc().m_kDropShipCargoInfo.m_arrSoldiers[iSoldier].iHPAfterCombat = kSelf.Desc().m_kDropShipCargoInfo.m_arrSoldiers[iSoldier].kChar.aStats[0];
+        }
+    }
+
+    if (LWCE_XGBattle_SPCaptureAndHold(kSelf) != none)
+    {
+        kCovertOperative = LWCE_XGBattle_SPCaptureAndHold(kSelf).m_kCovertOperative;
+    }
+
+    if (LWCE_XGBattle_SPCovertOpsExtraction(kSelf) != none)
+    {
+        kCovertOperative = LWCE_XGBattle_SPCovertOpsExtraction(kSelf).m_kCovertOperative;
+    }
+
+    if (kCovertOperative != none)
+    {
+        kTransferSoldier = kSelf.BuildReturningDropshipSoldier(kCovertOperative, false);
+        kSelf.Desc().m_kDropShipCargoInfo.m_kCovertOperative = kTransferSoldier;
+        kSelf.Desc().m_kDropShipCargoInfo.m_bHasCovertOperative = true;
+    }
+}
+
+static function SpawnCovertOperative(XGBattle_SPCovertOpsExtraction kSelf)
+{
+    local XGPlayer kPlayer;
+    local XComSpawnPoint kSpawnPoint;
+    local TTransferSoldier kTransferSoldier;
+    local LWCE_TTransferSoldier kCETransferSoldier;
+    local XGCharacter_Soldier kChar;
+    local LWCE_XGUnit kUnit;
+    local bool bGeneMod;
+
+    kSpawnPoint = kSelf.ChooseCovertOperativeSpawnPoint();
+
+    if (kSpawnPoint == none)
+    {
+        return;
+    }
+
+    kPlayer = kSelf.GetHumanPlayer();
+
+    if (kPlayer == none)
+    {
+        return;
+    }
+
+    if (kSelf.m_kTransferSave != none)
+    {
+        kTransferSoldier = kSelf.m_kTransferSave.m_kBattleDesc.m_kDropShipCargoInfo.m_kCovertOperative;
+        kCETransferSoldier = LWCE_XGDropshipCargoInfo(kSelf.m_kTransferSave.m_kBattleDesc.m_kDropShipCargoInfo).m_kCECovertOperative;
+    }
+    else
+    {
+        kTransferSoldier = kSelf.CreateDebugCovertOperative(kPlayer.GetSquad().GetMemberAt(0));
+    }
+
+    bGeneMod = class'LWCE_XComPerkManager'.static.LWCE_HasAnyGeneMod(kCETransferSoldier.kChar);
+
+    kSelf.ForceCovertOperativeLoadout(kTransferSoldier);
+
+    kChar = kSelf.Spawn(class'XGCharacter_Soldier');
+    kChar.SetTSoldier(kTransferSoldier.kSoldier);
+    kChar.SetTCharacter(kTransferSoldier.kChar);
+    kChar.m_eType = EPawnType(class'XGBattleDesc'.static.MapSoldierToPawn(kTransferSoldier.kChar.kInventory.iArmor, kTransferSoldier.kSoldier.kAppearance.iGender, bGeneMod));
+
+    kUnit = LWCE_XGUnit(kPlayer.SpawnUnit(class'LWCE_XGUnit', kPlayer.m_kPlayerController, kSpawnPoint.Location, kSpawnPoint.Rotation, kChar, kPlayer.GetSquad(),, kSpawnPoint));
+    kUnit.m_iUnitLoadoutID = kTransferSoldier.iUnitLoadoutID;
+    kUnit.m_kCEChar = kCETransferSoldier.kChar;
+    kUnit.m_kCESoldier = kCETransferSoldier.kSoldier;
+    kUnit.AddStatModifiers(kTransferSoldier.aStatModifiers);
+
+    XComHumanPawn(kUnit.GetPawn()).SetAppearance(kChar.m_kSoldier.kAppearance);
+    class'LWCE_XGLoadoutMgr'.static.ApplyInventory(kUnit);
+    kUnit.UpdateItemCharges();
+
+    kSelf.m_kCovertOperative = kUnit;
 }

@@ -80,13 +80,69 @@ simulated function RealizeLabels()
     soldierDebriefText = m_kCEMgr.m_kCESoldierDebrief.txtTitle.StrValue;
     scienceDebriefText = m_kCEMgr.m_kScienceDebrief.txtTitle.StrValue;
     councilDebriefText = m_kCEMgr.m_kCouncilDebrief.txtTitle.StrValue;
-    covertOpDebriefTitle = m_kCEMgr.m_kCovertOpDebrief.txtTitle.StrValue;
-    covertOpDebriefSubTitle = m_kCEMgr.m_kCovertOpDebrief.txtSubTitle.StrValue;
+    covertOpDebriefTitle = m_kCEMgr.m_kCECovertOpDebrief.txtTitle.StrValue;
+    covertOpDebriefSubTitle = m_kCEMgr.m_kCECovertOpDebrief.txtSubTitle.StrValue;
     strContinue = m_strContinue;
     strPromote = class'UI_FxsGamepadIcons'.static.HTML("Icon_Y_TRIANGLE", 20, -5) $ m_strPromote;
 
     AS_SetTitles(m_strDebrief, operationTitleText, soldierDebriefText, scienceDebriefText, councilDebriefText, covertOpDebriefTitle, covertOpDebriefSubTitle);
     AS_SetLabels(m_strKills, m_strMissions, m_strActive, m_strWounded, m_strDays, m_strKIA, strContinue, strPromote, m_strPromoteMouse);
+}
+
+simulated function ShowCovertOpDebrief()
+{
+    local string portraitPath, flagImageLabel, rankIconLabel, classIconLabel, nameStr, NickName;
+    local int killsOverall, killsThisMission, Missions, promoteRank;
+    local string promoteText, classPromoteText;
+    local bool isPsiPromoted;
+    local string Status;
+    local LWCE_TSoldierDebriefItem Soldier;
+    local LWCE_XGDebriefUI kMgr;
+
+    kMgr = LWCE_XGDebriefUI(m_kMgr);
+
+    RealizeLabels();
+    XComHQPresentationLayer(Owner).GetStrategyHUD().ClearButtonHelp();
+    XComHQPresentationLayer(Owner).GetStrategyHUD().Hide();
+
+    m_iCurrentSelection = -1;
+    Soldier = kMgr.m_kCECovertOpDebrief.covertSoldier;
+    portraitPath = Soldier.imgSoldier.strPath;
+    flagImageLabel = Soldier.imgFlag.strPath;
+    rankIconLabel = class'UIUtilities'.static.GetRankLabel(Soldier.iSoldierRank, Soldier.m_bIsTank);
+    classIconLabel = `LWCE_BARRACKS.GetClassIcon(Soldier.iSoldierClassId, Soldier.m_bIsPsiSoldier, Soldier.m_bHasGeneMod);
+    nameStr = Soldier.txtName.StrValue;
+    NickName = Soldier.kPromotion.txtNickname.StrValue;
+    killsOverall = int(Soldier.txtKills.StrValue);
+    killsThisMission = -1;
+    Missions = int(Soldier.txtMissions.StrValue);
+    promoteRank = Soldier.iSoldierRank;
+    promoteText = Soldier.kPromotion.txtPromotion.StrValue;
+    classPromoteText = Soldier.kPromotion.txtClassPromotion.StrValue;
+    isPsiPromoted = Soldier.m_bPsiPromoted;
+    Status = class'UIUtilities'.static.GetHTMLColoredText(Caps(Soldier.txtStatus.StrValue), Soldier.txtStatus.iState);
+
+    if (Soldier.m_bPsiPromoted || Soldier.m_bWasPromoted)
+    {
+        if (m_iCurrentSelection == -1 && !manager.IsMouseActive())
+        {
+            m_iCurrentSelection = 0;
+        }
+    }
+
+    AS_SetCovertSoldier(portraitPath, flagImageLabel, rankIconLabel, classIconLabel, nameStr, NickName, killsOverall, killsThisMission, Missions, promoteRank, promoteText, classPromoteText, Status, Soldier.m_isDead, isPsiPromoted);
+
+    if (m_iCurrentSelection == -1)
+    {
+        AS_SetSoldierSelection(-1);
+    }
+    else if (!manager.IsMouseActive())
+    {
+        AS_SetSoldierSelection(0);
+    }
+
+    AS_SetCovertInfo(kMgr.m_kCECovertOpDebrief.bSuccessful, kMgr.m_kCECovertOpDebrief.txtFeedback.StrValue, kMgr.m_kCECovertOpDebrief.txtClueTitle.StrValue $ "\n" $ kMgr.m_kCECovertOpDebrief.txtClueBody.StrValue);
+    AS_ShowCovertOpDebrief();
 }
 
 simulated function ShowScienceDebrief()

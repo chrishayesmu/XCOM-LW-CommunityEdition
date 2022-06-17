@@ -21,6 +21,17 @@ struct LWCE_TSoldierDebriefItem
     var bool m_bIsTank;
 };
 
+struct LWCE_TCovertOpDebrief
+{
+    var TText txtTitle;
+    var TText txtSubTitle;
+    var TText txtFeedback;
+    var TText txtClueTitle;
+    var TText txtClueBody;
+    var LWCE_TSoldierDebriefItem covertSoldier;
+    var bool bSuccessful;
+};
+
 struct LWCE_TSoldierDebrief
 {
     var TText txtOpName;
@@ -31,6 +42,7 @@ struct LWCE_TSoldierDebrief
     var int iHighlighted;
 };
 
+var LWCE_TCovertOpDebrief m_kCECovertOpDebrief;
 var LWCE_TSoldierDebrief m_kCESoldierDebrief;
 
 function Init(int iView)
@@ -90,13 +102,15 @@ function LWCE_TSoldierDebriefItem LWCE_BuildSoldierOption(XGStrategySoldier kSol
 
     kItem.imgFlag.strPath = class'UIScreen'.static.GetFlagPath(kSoldier.GetCountry());
     kItem.m_bIsTank = kSoldier.IsATank();
-    kItem.txtStatus.StrValue = kSoldier.GetStatusString();
     kItem.iSoldierClassId = LWCE_XGStrategySoldier(kSoldier).LWCE_GetClass();
 
+    kItem.txtStatus.StrValue = kSoldier.GetStatusString();
     kItem.txtStatus.iState = kSoldier.GetStatusUIState();
+
     kItem.txtMissions.strLabel = m_strLabelMissions;
     kItem.txtMissions.StrValue = string(kSoldier.GetNumMissions());
     kItem.txtMissions.iState = eUIState_Bad;
+
     kItem.txtKills.strLabel = m_strLabelKills;
     kItem.txtKills.StrValue = string(kSoldier.GetNumKills());
     kItem.txtKills.iState = eUIState_Bad;
@@ -274,8 +288,7 @@ function bool CheckForMatinee()
 /// </summary>
 function CheckForMedals()
 {
-    `LWCE_LOG_CLS("XGDebriefUI.CheckForMedals is deprecated in LWCE. Stack track follows.");
-    ScriptTrace();
+    `LWCE_LOG_DEPRECATED_NOREPLACE_CLS(CheckForMedals);
 }
 
 function int GetUnlockItem(out TTech kTech)
@@ -413,6 +426,24 @@ function OnExit()
     PRES().m_kStrategyHUD.m_kMenu.Show();
 }
 
+function OnPromoteCovertOperative()
+{
+    local XGStrategySoldier kCovertOp;
+
+    kCovertOp = BARRACKS().m_kLastMissionCovertOperative;
+
+    if (m_kCECovertOpDebrief.covertSoldier.m_bWasPromoted)
+    {
+        PRES().UISoldier(kCovertOp, eSoldierView_Promotion, true, true);
+        PlayOpenSound();
+    }
+    else if (m_kCECovertOpDebrief.covertSoldier.m_bPsiPromoted)
+    {
+        PRES().UISoldier(kCovertOp, eSoldierView_PsiPromotion, true, true);
+        PlayOpenSound();
+    }
+}
+
 function OnScrollUp()
 {
     local array<int> arrOptions;
@@ -474,6 +505,62 @@ function RefreshSoldierUIPerks()
         kItem = m_kCESoldierDebrief.arrItems[Index];
         LWCE_UpdateSoldierUIData(kSoldier, kItem.kPromotion, kItem);
         m_kCESoldierDebrief.arrItems[Index] = kItem;
+    }
+}
+
+function UpdateCovertOpDebrief()
+{
+    local XGParamTag kTag;
+
+    kTag = new class'XGParamTag';
+    m_kCECovertOpDebrief.txtTitle.StrValue = m_strCovertOpTitle;
+    m_kCECovertOpDebrief.txtTitle.iState = eUIState_Normal;
+    m_kCECovertOpDebrief.covertSoldier = LWCE_BuildSoldierOption(BARRACKS().m_kLastMissionCovertOperative);
+
+    if (HQ().m_kLastResult.bSuccess)
+    {
+        m_kCECovertOpDebrief.txtSubTitle.StrValue = m_strCovertOpSubTitleSuccess;
+        m_kCECovertOpDebrief.txtSubTitle.iState = eUIState_Good;
+
+        m_kCECovertOpDebrief.txtClueTitle.StrValue = m_strCovertOpClueTitle;
+        m_kCECovertOpDebrief.txtClueTitle.iState = eUIState_Good;
+
+        m_kCECovertOpDebrief.txtClueBody.StrValue = EXALT().GetCurrentClueDescription();
+        m_kCECovertOpDebrief.txtClueBody.iState = eUIState_Good;
+
+        kTag.StrValue0 = ConvertCashToString(HQ().m_kLastReward.iCredits);
+        m_kCECovertOpDebrief.txtFeedback.StrValue = class'XComLocalizer'.static.ExpandStringByTag(m_strCovertOpFeedbackSuccess, kTag);
+        m_kCECovertOpDebrief.txtFeedback.iState = eUIState_Good;
+
+        if (!Country(HQ().m_kLastResult.iCountryTarget).LeftXCom())
+        {
+            kTag.StrValue0 = Country(HQ().m_kLastResult.iCountryTarget).GetName();
+            m_kCECovertOpDebrief.txtFeedback.StrValue $= "\n" $ class'XComLocalizer'.static.ExpandStringByTag(m_strCovertOpFeedbackPanicReduction, kTag);
+        }
+
+        if (HQ().m_kLastResult.bAllPointsHeld && HQ().m_kLastResult.eType == eMission_CaptureAndHold)
+        {
+            m_kCECovertOpDebrief.txtFeedback.StrValue $= "\n" $ m_strCovertOpFeedbackAllPointsCaptured;
+        }
+
+        if (EXALT().GetNumCountriesNotRuledOutByClues() == 1)
+        {
+            XComOnlineEventMgr(GameEngine(class'Engine'.static.GetEngine()).OnlineEventManager).UnlockAchievement(AT_WhereInTheWorld);
+        }
+    }
+    else
+    {
+        m_kCECovertOpDebrief.txtSubTitle.StrValue = m_strCovertOpSubTitleFailure;
+        m_kCECovertOpDebrief.txtSubTitle.iState = eUIState_Bad;
+
+        m_kCECovertOpDebrief.txtFeedback.StrValue = m_strCovertOpFeedbackFailure;
+        m_kCECovertOpDebrief.txtFeedback.iState = eUIState_Bad;
+
+        m_kCECovertOpDebrief.txtClueTitle.StrValue = "";
+        m_kCECovertOpDebrief.txtClueTitle.iState = eUIState_Bad;
+
+        m_kCECovertOpDebrief.txtClueBody.StrValue = "";
+        m_kCECovertOpDebrief.txtClueBody.iState = eUIState_Bad;
     }
 }
 

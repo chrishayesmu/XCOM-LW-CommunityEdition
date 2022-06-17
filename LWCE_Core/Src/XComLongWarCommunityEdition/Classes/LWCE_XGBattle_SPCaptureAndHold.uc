@@ -41,8 +41,18 @@ function InitPlayers(optional bool bLoading = false)
 
     class'LWCE_XGBattle_Extensions'.static.InitPlayers(self, bLoading);
 
+    if (!bLoading)
+    {
+        SpawnCovertOperative();
+    }
+
     foreach AllActors(class'XComCapturePointVolume', kCapturePoint)
     {
         m_arrCapturePoints.AddItem(kCapturePoint);
     }
+}
+
+function SpawnCovertOperative()
+{
+    class'LWCE_XGBattle_Extensions'.static.SpawnCovertOperative(self);
 }
