@@ -2,9 +2,21 @@ class LWCEStrategyListener extends XGStrategyActor
     abstract;
 
 /// -----------------------------------------------------
-/// Class events
+/// Soldier class events
 /// -----------------------------------------------------
+
 function OnClassDefinitionsBuilt(out array<LWCE_TClassDefinition> arrSoldierClasses) {}
+
+/// -----------------------------------------------------
+/// Funding council events
+/// -----------------------------------------------------
+
+/// <summary>
+/// Called after the list of possible council requests is built (see LWCE_XGFundingCouncil). Can be
+/// used to modify the list or any individual request(s) in it, though generally this is advised to
+/// be done via config overrides instead.
+/// </summary>
+function OnCouncilRequestsBuilt(out array<LWCE_TFCRequestConfig> arrPossibleRequests) {}
 
 /// -----------------------------------------------------
 /// Foundry events

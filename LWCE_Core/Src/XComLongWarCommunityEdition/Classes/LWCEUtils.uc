@@ -125,3 +125,51 @@ static function int SortItemsById(LWCE_TItem kItem1, LWCE_TItem kItem2)
 
     return -1;
 }
+
+// #region Helper functions related to key-value pairs
+
+/// <summary>
+/// Looks for a key in the given array and retrieves the corresponding value.
+/// </summary>
+/// <returns>True if the key was found, false otherwise.</returns>
+static function bool TryFindValue(array<LWCE_IntKVP> arrData, int iKey, out int iValue)
+{
+    local int Index;
+
+    for (Index = 0; Index < arrData.Length; Index++)
+    {
+        if (arrData[Index].Key == iKey)
+        {
+            iValue = arrData[Index].Value;
+            return true;
+        }
+    }
+
+    return false;
+}
+
+/// <summary>
+/// Updates-or-inserts a value into an array of key-value pairs. Note that if a key is present on multiple
+/// entries in the array, the value will only be updated for one of those entries.
+/// </summary>
+static function UpsertKeyValuePair(out array<LWCE_IntKVP> arrData, int iKey, int iValue)
+{
+    local LWCE_IntKVP kPair;
+    local int Index;
+
+    for (Index = 0; Index < arrData.Length; Index++)
+    {
+        if (arrData[Index].Key == iKey)
+        {
+            arrData[Index].Value = iValue;
+            return;
+        }
+    }
+
+    kPair.Key = iKey;
+    kPair.Value = iValue;
+
+    arrData.AddItem(kPair);
+}
+
+// #endregion

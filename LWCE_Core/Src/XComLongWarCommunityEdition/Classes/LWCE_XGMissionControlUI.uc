@@ -1,4 +1,5 @@
-class LWCE_XGMissionControlUI extends XGMissionControlUI;
+class LWCE_XGMissionControlUI extends XGMissionControlUI
+    implements(LWCE_IFCRequestInterface);
 
 function AddNotice(EGeoscapeAlert eNotice, optional int iData1, optional int iData2, optional int iData3)
 {
@@ -271,6 +272,16 @@ function BuildEventOptions()
     }
 
     m_kEvents.iHighlight = -1;
+}
+
+simulated function GetRequestData(out TFCRequest kRequestRef)
+{
+    `LWCE_LOG_DEPRECATED_CLS(GetRequestData);
+}
+
+simulated function LWCE_GetRequestData(out LWCE_TFCRequest kRequestRef)
+{
+    kRequestRef = LWCE_XGFundingCouncil(World().m_kFundingCouncil).m_arrCEPendingRequests[0];
 }
 
 event Tick(float fDeltaT)
@@ -1437,6 +1448,12 @@ function UpdateAlert()
 
     m_kCurrentAlert = kAlert;
     m_kCurrentAlert.iAlertType = kGeoAlert.eType;
+}
+
+function UpdateRequest()
+{
+    // No point was found where this ends up getting called, so it is simply removed
+    `LWCE_LOG_DEPRECATED_NOREPLACE_CLS(UpdateRequest);
 }
 
 protected function HandleModAlert(TGeoscapeAlert kGeoAlert, out TMCAlert kAlert)

@@ -1,6 +1,7 @@
 class XGMission extends XGStrategyActor
     hidecategories(Navigation)
     config(GameData)
+    dependson(UIBriefing)
     abstract
     notplaceable;
 //complete stub
@@ -22,7 +23,7 @@ struct CheckpointRecord
     var EMissionTime m_eTimeOfDay;
     var XGAlienObjective m_kAlienObjective;
     var TMissionReward m_kReward;
-    var XGStrategyActorNativeBase.EMissionDifficulty m_eDifficulty;
+    var EMissionDifficulty m_eDifficulty;
     var XGEntity m_kEntity;
     var string m_strTip;
 };

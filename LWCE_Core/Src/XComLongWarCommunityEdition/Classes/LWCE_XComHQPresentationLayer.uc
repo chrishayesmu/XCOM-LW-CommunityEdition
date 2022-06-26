@@ -354,6 +354,15 @@ simulated state State_PauseMenu
     }
 }
 
+simulated state State_PendingRequests
+{
+    simulated function Activate()
+    {
+        m_kPendingRequestsUI = Spawn(class'LWCE_UIPendingRequests', self);
+        m_kPendingRequestsUI.Init(XComPlayerController(Owner), GetHUD());
+    }
+}
+
 simulated state State_StrategyHUD
 {
     simulated function Activate()

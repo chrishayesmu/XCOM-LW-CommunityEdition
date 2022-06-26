@@ -99,3 +99,7 @@ simulated function OnLoseFocus(){}
 
 state LaunchingMission{}
 
+defaultproperties
+{
+    m_iWorkingSlot=-1
+}

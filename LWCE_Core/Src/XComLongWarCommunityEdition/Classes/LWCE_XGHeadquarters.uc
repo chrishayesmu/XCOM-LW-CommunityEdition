@@ -334,6 +334,138 @@ function CreateFacilities()
     m_kSitRoom = XGFacility_SituationRoom(kFacility);
 }
 
+function GetEvents(out array<THQEvent> arrEvents)
+{
+    local LWCE_XGFundingCouncil kFundingCouncil;
+    local THQEvent kEvent;
+    local int Index, iEvent;
+    local bool bAdded;
+
+    kFundingCouncil = LWCE_XGFundingCouncil(World().m_kFundingCouncil);
+
+    for (Index = 0; Index < m_arrHiringOrders.Length; Index++)
+    {
+        kEvent.EEvent = 5;
+        kEvent.iData = m_arrHiringOrders[Index].iStaffType;
+        kEvent.iData2 = m_arrHiringOrders[Index].iNumStaff;
+        kEvent.iHours = m_arrHiringOrders[Index].iHours;
+        bAdded = false;
+
+        for (iEvent = 0; iEvent < arrEvents.Length; iEvent++)
+        {
+            if (arrEvents[iEvent].iHours > kEvent.iHours)
+            {
+                arrEvents.InsertItem(iEvent, kEvent);
+                bAdded = true;
+                break;
+            }
+        }
+
+        if (!bAdded)
+        {
+            arrEvents.AddItem(kEvent);
+        }
+    }
+
+
+    for (Index = 0; Index < m_akInterceptorOrders.Length; Index++)
+    {
+        kEvent.EEvent = eHQEvent_InterceptorOrdering;
+        kEvent.iData = m_akInterceptorOrders[Index].iDestinationContinent;
+        kEvent.iData2 = m_akInterceptorOrders[Index].iNumInterceptors;
+        kEvent.iHours = m_akInterceptorOrders[Index].iHours;
+        bAdded = false;
+
+        for (iEvent = 0; iEvent < arrEvents.Length; iEvent++)
+        {
+            if (arrEvents[iEvent].iHours > kEvent.iHours)
+            {
+                arrEvents.InsertItem(iEvent, kEvent);
+                bAdded = true;
+                break;
+            }
+        }
+
+        if (!bAdded)
+        {
+            arrEvents.AddItem(kEvent);
+        }
+    }
+
+    for (Index = 0; Index < m_arrShipTransfers.Length; Index++)
+    {
+        kEvent.EEvent = eHQEvent_ShipTransfers;
+        kEvent.iData = m_arrShipTransfers[Index].iDestination;
+        kEvent.iData2 = m_arrShipTransfers[Index].iNumShips;
+        kEvent.iHours = m_arrShipTransfers[Index].iHours;
+        bAdded = false;
+
+        for (iEvent = 0; iEvent < arrEvents.Length; iEvent++)
+        {
+            if (arrEvents[iEvent].iHours > kEvent.iHours)
+            {
+                arrEvents.InsertItem(iEvent, kEvent);
+                bAdded = true;
+                break;
+            }
+        }
+
+        if (!bAdded)
+        {
+            arrEvents.AddItem(kEvent);
+        }
+    }
+
+    for (Index = 0; Index < kFundingCouncil.m_arrCECurrentRequests.Length; Index++)
+    {
+        kEvent.EEvent = eHQEvent_FCRequest;
+        kEvent.iData = Country(kFundingCouncil.m_arrCECurrentRequests[Index].eRequestingCountry).GetContinent();
+        kEvent.iHours = kFundingCouncil.m_arrCECurrentRequests[Index].iHoursToRespond;
+        bAdded = false;
+
+        for (iEvent = 0; iEvent < arrEvents.Length; iEvent++)
+        {
+            if (arrEvents[iEvent].iHours > kEvent.iHours)
+            {
+                arrEvents.InsertItem(iEvent, kEvent);
+                bAdded = true;
+                break;
+            }
+        }
+
+        if (!bAdded)
+        {
+            arrEvents.AddItem(kEvent);
+        }
+    }
+
+    for (Index = 0; Index < m_arrSatellites.Length; Index++)
+    {
+        if (m_arrSatellites[Index].iTravelTime > 0)
+        {
+            kEvent.EEvent = eHQEvent_SatOperational;
+            kEvent.iData = m_arrSatellites[Index].iCountry;
+            kEvent.iHours = m_arrSatellites[Index].iTravelTime;
+            bAdded = false;
+
+            for (iEvent = 0; iEvent < arrEvents.Length; iEvent++)
+            {
+                if (arrEvents[iEvent].iHours > kEvent.iHours)
+                {
+                    arrEvents.InsertItem(iEvent, kEvent);
+                    bAdded = true;
+                    break;
+                }
+            }
+
+            if (!bAdded)
+            {
+                arrEvents.AddItem(kEvent);
+            }
+        }
+    }
+}
+
 function OrderInterceptors(int iContinent, int iQuantity)
 {
     local TShipOrder kOrder;

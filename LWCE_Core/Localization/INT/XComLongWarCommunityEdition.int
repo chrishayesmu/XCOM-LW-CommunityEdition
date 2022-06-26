@@ -37,6 +37,12 @@ m_strGenderLabel="GENDER"
 m_strGenderMale="Male"
 m_strGenderFemale="Female"
 
+[LWCE_XGPendingRequestsUI]
+m_strDefenseIncrease="<XGParam:StrValue0/>: +<XGParam:IntValue0/> Defense"
+m_strDefenseReduction="<XGParam:StrValue0/>: <XGParam:IntValue0/> Defense"
+m_strPanicIncrease="Panic Increase: <XGParam:IntValue0/>"
+m_strPanicReduction="Panic Reduction: <XGParam:IntValue0/>"
+
 [LWCE_XGSoldierUI]
 m_strStatBonusesPrefix="Stat changes: "
 m_strStatBonusesSeparator=", "

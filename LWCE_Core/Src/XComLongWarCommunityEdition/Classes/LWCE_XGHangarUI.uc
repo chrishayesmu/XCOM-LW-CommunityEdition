@@ -195,7 +195,7 @@ function UpdateHireDisplay()
     m_kHiring.txtButtonHelp.StrValue = m_strLabelIncreaseOrder;
     m_kHiring.txtButtonHelp.iButton = 7;
 
-    m_kHiring.txtMoney = GetResourceText(0);
+    m_kHiring.txtMoney = GetResourceText(eResource_Money);
 
     m_kHiring.imgHire.iImage = eImage_Interceptor;
 }

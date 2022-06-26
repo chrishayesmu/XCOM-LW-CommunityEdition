@@ -23,6 +23,7 @@ function RealizeSelected(int newSelection){}
 simulated function bool OnCancel(optional string Arg){}
 simulated function GoToView(int iView);
 simulated function AS_OpenRequestCompleteDialog(string Title, string subtitle, string Description, string rewards, string buttonLabel){}
+simulated function AS_OpenSalesRequest(string Title, string subtitle, string requestLabel, string requestData, string storageLabel, string storageData, string timeLabel, string timeData, string DescriptionText, string reward, string imagePath, float imageScale, string topSecretLabel){}
 simulated function AS_SetSalesRequestImage(string imgPath, float imgScale){}
 simulated function AS_SetButtonData(int buttonIndex, string Text, bool Disabled){}
 simulated function AS_SetButtonFocus(int buttonIndex, bool bFocus){}

@@ -22,6 +22,46 @@ function Init(bool bLoadingFromSave)
     BuildMedals();
 }
 
+function InitNewGame()
+{
+    bInitingNewGame = true;
+    m_iCapacity = class'XGTacticalGameCore'.default.BARRACKS_CAPACITY;
+    m_arrOTSUpgrades.Add(8);
+    LWCE_CreateSoldier(0, 0, HQ().GetHomeCountry());
+
+    if (!ISCONTROLLED())
+    {
+        AddNewSoldiers(class'XGTacticalGameCore'.default.NUM_STARTING_SOLDIERS - 1, false);
+    }
+
+    if (HQ().HasBonus(`LW_HQ_BONUS_ID(ForeignLegion)) > 0)
+    {
+        AddNewSoldiers(HQ().HasBonus(`LW_HQ_BONUS_ID(ForeignLegion)));
+    }
+
+    if (HQ().HasBonus(`LW_HQ_BONUS_ID(KiryuKaiCommander)) > 0) // Kiryu-Kai Commander
+    {
+        LWCE_CreateSoldier(SelectRandomBaseClassId(), HQ().HasBonus(`LW_HQ_BONUS_ID(KiryuKaiCommander)), eCountry_Japan);
+    }
+
+    if (HQ().HasBonus(`LW_HQ_BONUS_ID(Cadre)) > 0) // Cadre
+    {
+        // TODO: how to handle Cadre with class mods?
+        LWCE_CreateSoldier(1, HQ().HasBonus(`LW_HQ_BONUS_ID(Cadre)), Rand(36));
+        LWCE_CreateSoldier(2, HQ().HasBonus(`LW_HQ_BONUS_ID(Cadre)), Rand(36));
+        LWCE_CreateSoldier(3, HQ().HasBonus(`LW_HQ_BONUS_ID(Cadre)), Rand(36));
+        LWCE_CreateSoldier(4, HQ().HasBonus(`LW_HQ_BONUS_ID(Cadre)), Rand(36));
+    }
+
+    if (IsOptionEnabled(`LW_SECOND_WAVE_ID(WeAreLegion)))
+    {
+        m_arrOTSUpgrades[1] = 1;
+        m_arrOTSUpgrades[2] = 1;
+    }
+
+    bInitingNewGame = false;
+}
+
 function AddNewSoldiers(int iNumSoldiers, optional bool bCreatePawns = true)
 {
     local LWCE_XGStrategySoldier kSoldier;
@@ -233,7 +273,40 @@ function bool CanLoadSoldier(XGStrategySoldier kSoldier, optional bool bAllowInj
     return true;
 }
 
-function XGStrategySoldier CreateSoldier(ESoldierClass eClass, int iSoldierLevel, int iCountry, optional bool bBlueshirt = false)
+function ChooseHQAssaultSquad(XGShip_Dropship kSkyranger, bool bReinforcements)
+{
+    local XGStrategySoldier kSoldier;
+
+    if (bReinforcements)
+    {
+        while (kSkyranger.m_arrSoldiers.Length > 8)
+        {
+            kSoldier = kSkyranger.m_arrSoldiers[Rand(kSkyranger.m_arrSoldiers.Length)];
+            UnloadSoldier(kSoldier);
+        }
+
+        kSkyranger.m_bReinforcementsForHQAssault = true;
+
+        while (!kSkyranger.IsFull())
+        {
+            kSoldier = LWCE_CreateSoldier(0, 0, Continent(HQ().GetContinent()).GetRandomCouncilCountry(), true);
+            kSoldier.m_bBlueShirt = true;
+            kSoldier.m_kSoldier.kAppearance.iArmorTint = 7;
+            kSoldier.m_kSoldier.kAppearance.iHaircut = 425;
+            kSoldier.m_kSoldier.kAppearance.iVoice = kSoldier.m_kSoldier.kAppearance.iGender == eGender_Male ? 61 : 64;
+            kSoldier.m_kSoldier.kAppearance.iLanguage = 0;
+            LoadSoldier(kSoldier, kSkyranger);
+        }
+    }
+}
+
+function XGStrategySoldier CreateSoldier(ESoldierClass iClassId, int iSoldierLevel, int iCountry, optional bool bBlueshirt = false)
+{
+    `LWCE_LOG_DEPRECATED_CLS(CreateSoldier);
+    return none;
+}
+
+function XGStrategySoldier LWCE_CreateSoldier(int iClassId, int iSoldierLevel, int iCountry, optional bool bBlueshirt = false)
 {
     local LWCE_XGStrategySoldier kSoldier;
     local int I;
@@ -262,7 +335,7 @@ function XGStrategySoldier CreateSoldier(ESoldierClass eClass, int iSoldierLevel
 
     for (I = 0; I < iSoldierLevel; I++)
     {
-        kSoldier.LWCE_LevelUp(eClass);
+        kSoldier.LWCE_LevelUp(iClassId);
     }
 
     AddNewSoldier(kSoldier,, bBlueshirt);

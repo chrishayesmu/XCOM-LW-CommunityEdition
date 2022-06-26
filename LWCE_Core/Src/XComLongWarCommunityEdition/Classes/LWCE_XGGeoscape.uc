@@ -152,6 +152,16 @@ function InitNewGame()
     m_arrCraftEncounters.Add(15);
 }
 
+function OnFundingCouncilRequestAdded(const TFCRequest kRequest)
+{
+    `LWCE_LOG_DEPRECATED_CLS(OnFundingCouncilRequestAdded);
+}
+
+function LWCE_OnFundingCouncilRequestAdded()
+{
+    m_bActiveFundingCouncilRequestPopup = true;
+}
+
 function SpawnTempleEntity()
 {
     m_kTemple = Spawn(class'LWCE_XGEntity');

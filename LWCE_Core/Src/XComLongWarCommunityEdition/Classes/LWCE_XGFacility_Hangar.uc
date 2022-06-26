@@ -232,6 +232,30 @@ function array<LWCE_TItem> LWCE_GetUpgrades(XGShip_Interceptor kShip)
     return arrItems;
 }
 
+function GiveMissionReward(XGShip_Dropship kSkyranger)
+{
+    if (kSkyranger.CargoInfo.m_kReward.iScientists > 0)
+    {
+        AddResource(eResource_Scientists, kSkyranger.CargoInfo.m_kReward.iScientists);
+    }
+
+    if (kSkyranger.CargoInfo.m_kReward.iEngineers > 0)
+    {
+        AddResource(eResource_Engineers, kSkyranger.CargoInfo.m_kReward.iEngineers);
+    }
+
+    if (kSkyranger.CargoInfo.m_kReward.iCredits > 0)
+    {
+        AddResource(eResource_Money, kSkyranger.CargoInfo.m_kReward.iCredits);
+    }
+
+    if (kSkyranger.CargoInfo.m_kReward.iSoldierClass != 0)
+    {
+        LWCE_XGFacility_Barracks(BARRACKS()).LWCE_CreateSoldier(kSkyranger.CargoInfo.m_kReward.iSoldierClass, kSkyranger.CargoInfo.m_kReward.iSoldierLevel, kSkyranger.CargoInfo.m_kReward.iCountry);
+        STAT_AddStat(eRecap_SoldiersCollected, 1);
+    }
+}
+
 static function EShipWeapon ItemTypeToShipWeapon(EItemType eItem)
 {
     `LWCE_LOG_DEPRECATED(ItemTypeToShipWeapon);
