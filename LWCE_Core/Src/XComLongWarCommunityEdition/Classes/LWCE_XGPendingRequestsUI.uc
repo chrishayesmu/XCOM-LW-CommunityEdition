@@ -3,7 +3,6 @@ class LWCE_XGPendingRequestsUI extends XGPendingRequestsUI
 
 struct LWCE_TPendingRequest
 {
-    var int iRequestId;
     var ECountry eRequestingCountry;
     var EFCRequestType eType;
     var TText txtTitle;
@@ -79,7 +78,7 @@ function bool CanSelectCurrentRequest()
         return false;
     }
 
-    if (m_arrCERequests[m_iHighlight].iRequestId == 0)
+    if (m_arrCERequests[m_iHighlight].RequestName == '')
     {
         return false;
     }
@@ -264,7 +263,6 @@ function LWCE_UpdateRequest(LWCE_TFCRequest kRequest)
     }
 
     kUI.eRequestingCountry = kRequest.eRequestingCountry;
-    kUI.iRequestId = kRequest.iRequestId;
     kUI.img.strPath = kDisplayItem.ImagePath;
 
     kTag.StrValue0 = Country(kRequest.eRequestingCountry).m_kTCountry.strName;

@@ -1,5 +1,9 @@
-class LWCE_XComEngine extends XComEngine;
+class LWCE_XComEngine extends XComEngine
+    config(LWCEEngine);
 
+var config array<string> arrDataTemplateManagers;
+
+var private array<LWCEDataTemplateManager> m_arrDataTemplateManagers;
 var private bool m_bInitialized;
 
 static function DownloadableContentEnumerator LWCE_GetDLCEnumerator()
@@ -35,6 +39,24 @@ static function DownloadableContentManager LWCE_GetDLCManager()
     return kEngine.DLCManager;
 }
 
+static function LWCEDataTemplateManager GetTemplateManager(class<LWCEDataTemplateManager> TemplateManagerClass)
+{
+    local int Index;
+    local LWCE_XComEngine kEngine;
+
+    kEngine = LWCE_XComEngine(GetEngine());
+
+    for (Index = 0; Index < kEngine.m_arrDataTemplateManagers.Length; Index++)
+    {
+        if (kEngine.m_arrDataTemplateManagers[Index].IsA(TemplateManagerClass.name))
+        {
+            return kEngine.m_arrDataTemplateManagers[Index];
+        }
+    }
+
+    return none;
+}
+
 // There aren't really any good hooks for us to initialize the engine, but building localization happens pretty
 // early on, so we just go ahead and ride on this.
 event BuildLocalization()
@@ -58,6 +80,34 @@ function LWCE_Init()
 
     `LWCE_LOG_CLS("Searching for mods to install...");
     InstallMods();
+
+    `LWCE_LOG_CLS("Initializing data template managers...");
+    CreateDataTemplateManagers();
+}
+
+private function CreateDataTemplateManagers()
+{
+    local int Index;
+    local class<LWCEDataTemplateManager> kClass;
+    local LWCEDataTemplateManager kTemplateManager;
+
+    `LWCE_LOG_CLS("Attempting to load " $ arrDataTemplateManagers.Length $ " data template managers");
+
+    for (Index = 0; Index < arrDataTemplateManagers.Length; Index++)
+    {
+        kClass = class<LWCEDataTemplateManager>(DynamicLoadObject(arrDataTemplateManagers[Index], class'Class'));
+
+        if (kClass == none)
+        {
+            `LWCE_LOG_CLS("ERROR: failed to load template manager with class name '" $ arrDataTemplateManagers[Index] $ "'");
+            continue;
+        }
+
+        kTemplateManager = new (none) kClass;
+        kTemplateManager.InitTemplates();
+
+        m_arrDataTemplateManagers.AddItem(kTemplateManager);
+    }
 }
 
 /// <summary>

@@ -310,3 +310,290 @@ PilotNames="\"Tripper\" Gonzalez"
 PilotNames="\"Blender\" Iyengar"
 PilotNames="\"Blinker\" Kamala"
 PilotNames="\"Stuntman\" Silva"
+
+[LWCE_CouncilRequest_AlienAlloy LWCECouncilRequestTemplate]
+strName="Artifact Sales: Alien Alloys"
+strIntro="Many of the nations impacted by this crisis have been contacting XCOM for help, but <XGCountry:NameWithArticleLowerCase/> has been the most persistent. They're hoping to gain access to our supply of alien alloys in hopes of replicating them somehow. They feel if they can examine our materials, they can reinforce critical structures from future attacks."
+strCompletion="Armor plating only an inch thick that works like five-inch steel? Needless to say, <XGCountry:NameWithArticleLowerCase/> is extremely happy.\n<XGCountry:NameWithArticleUpperCase/> is now better able to defend itself against the alien threat."
+strTickerSuccess="<XGCountry:NameWithArticleUpperCase/> reinforces critical infrastructure using advanced materials and building techniques"
+strTickerIgnore="<XGCountry:NameWithArticleUpperCase/> struggles with power outages as alien attacks destroy critical infrastructure"
+
+[LWCE_CouncilRequest_AlienCarbine LWCECouncilRequestTemplate]
+strName="Arms Sales: Plasma Carbines"
+strIntro="The entire military defense of <XGCountry:NameWithArticleLowerCase/> is dependent on getting new weapons, as their traditional ammunition isn't even making a dent. Fully operational Plasma Carbines would allow <XGCountry:NameWithArticleLowerCase/> to exponentially \"beef up\" their military might against the aliens. They've offered us substantial compensation."
+strCompletion="<XGCountry:NameAdjective/> troopers are going to be better equipped to face the aliens.\n<XGCountry:NameWithArticleUpperCase/> is now better able to defend itself against the alien threat."
+strTickerSuccess="Government spokesman: <XGCountry:NameAdjective/> troopers fight with a new, advanced weapon"
+strTickerIgnore="Dump sites filled with stockpiles of useless weapons found in <XGCountry:NameWithArticleLowerCase/>"
+
+[LWCE_CouncilRequest_AlienEntertainment LWCECouncilRequestTemplate]
+strName="Artifact Sales: Alien Entertainment"
+strIntro="A media conglomerate from <XGCountry:NameWithArticleLowerCase/>, with the backing of the government, has requested one of these items we recovered from an alien base."
+strCompletion="Let's hope <XGCountry:NameWithArticleLowerCase/> has more fun with this than we did.\n<XGCountry:NameWithArticleUpperCase/> is now better able to defend itself against the alien threat."
+strTickerSuccess="Calm returns to the streets of <XGCountry:NameWithArticleLowerCase/> as police implement new non-lethal weapons"
+strTickerIgnore="Rioting in <XGCountry:NameWithArticleLowerCase/> overwhelms local authorities"
+
+[LWCE_CouncilRequest_AlienHeavyWeapon LWCECouncilRequestTemplate]
+strName="Arms Sales: Heavy Plasma Guns"
+strIntro="A military contractor from <XGCountry:NameWithArticleLowerCase/> is asking for our research into Heavy Plasma. Their hope is to retrofit some of their heavier equipment, like tanks and jets, with this technology. They're prepared to contribute to the XCOM project if we help them with getting a leg up on the invaders."
+strCompletion="The <XGCountry:NameAdjective/> military was able to integrate the plasma technology we provided.\n<XGCountry:NameWithArticleUpperCase/> is now better able to defend itself against the alien threat."
+strTickerSuccess="According to military sources, <XGCountry:NameWithArticleLowerCase/> increases assaults on hostile alien forces"
+strTickerIgnore="More UFOs spotted over <XGCountry:NameAdjective/> airspace"
+
+[LWCE_CouncilRequest_AlienPistol LWCECouncilRequestTemplate]
+strName="Arms Sales: Plasma Pistols"
+strIntro="A leading manufacturer of <XGCountry:NameAdjective/> military equipment is promising us a very lucrative return if we allow them access to the alien plasma pistols we've recovered. It's possible they'll uncover better ways to utilize the alien technology that we can appropriate, and we'll be compensated in either case."
+strCompletion="The <XGCountry:NameAdjective/> plasma pistol development is already underway, and they're very thankful to XCOM for providing material support.\n<XGCountry:NameWithArticleUpperCase/> is now better able to defend itself against the alien threat."
+strTickerSuccess="<XGCountry:NameAdjective/> troops have been spotted firing unknown energy weapons in combat"
+strTickerIgnore="Outgunned by alien threat, <XGCountry:NameAdjective/> troops on the defensive"
+
+[LWCE_CouncilRequest_AlienRifle LWCECouncilRequestTemplate]
+strName="Arms Sales: Plasma Rifles"
+strIntro="The <XGCountry:NameAdjective/> government has decided they'd like to replace all of their standard firearms with Plasma Rifles. If we allow them unbridled access to the weapons we have on-hand, XCOM would be helping out a struggling nation. We'd also be getting a substantial donation to the program as well."
+strCompletion="<XGCountry:NameWithArticleUpperCase/> has been able to integrate the plasma rifle technology into their country's armament.\n<XGCountry:NameWithArticleUpperCase/> is now better able to defend itself against the alien threat."
+strTickerSuccess="Military sources: troops in <XGCountry:NameWithArticleLowerCase/> fight with a new, advanced weapon"
+strTickerIgnore="Dump sites filled with stockpiles of useless weapons found in <XGCountry:NameWithArticleLowerCase/>"
+
+[LWCE_CouncilRequest_AlienStasisTank LWCECouncilRequestTemplate]
+strName="Artifact Sales: Alien Stasis Tanks"
+strIntro="A leading researcher from a <XGCountry:NameAdjective/> pharmaceutical company has contacted XCOM about the Stasis Tanks we've covered. They feel they might be modified into a system to stabilize injuries taken in combat. We can expect a fair amount of compensation from the company if we decide to assist them."
+strCompletion="The <XGCountry:NameAdjective/> firm has made a generous contribution to XCOM.\n<XGCountry:NameWithArticleUpperCase/> is now better able to defend itself against the alien threat."
+strTickerSuccess="Reports coming from <XGCountry:NameWithArticleLowerCase/> indicate hostile aliens repelled by unknown forces"
+strTickerIgnore="Unidentified human forces heavily outgunned by hostile aliens in <XGCountry:NameWithArticleLowerCase/>"
+
+[LWCE_CouncilRequest_AlienSurgery LWCECouncilRequestTemplate]
+strName="Artifact Sales: Alien Surgery Units"
+strIntro="A leading researcher from a <XGCountry:NameAdjective/> medical company has contacted XCOM about the Alien Surgery units we've recovered. They feel they might be adapted for human medical care. We can expect a fair amount of compensation from the company if we decide to assist them."
+strCompletion="The <XGCountry:NameAdjective/> firm has made a generous contribution to XCOM.\n<XGCountry:NameWithArticleUpperCase/> is now better able to defend itself against the alien threat."
+strTickerSuccess="Soldiers in <XGCountry:NameWithArticleLowerCase/> seen patrolling the streets with highly sophisticated weaponry"
+strTickerIgnore="Civilians barricade themselves indoors as aliens outgun soldiers of <XGCountry:NameWithArticleLowerCase/>"
+
+[LWCE_CouncilRequest_BerserkerCaptive LWCECouncilRequestTemplate]
+strName="Prisoner Transfer: Muton Berserker"
+strIntro="The government of <XGCountry:NameWithArticleLowerCase/> has requested a live alien to study. We have already interrogated this species, so we can transfer a captive without hurting our research efforts."
+strCompletion="Let's hope the <XGCountry:NameAdjective/> military can keep it contained.\n<XGCountry:NameWithArticleUpperCase/> is now better able to defend itself against the alien threat."
+strTickerSuccess="Massive explosions rock skies over <XGCountry:NameWithArticleLowerCase/> as military employs new weapons"
+strTickerIgnore="UFOs easily evade anti-aircraft fire over skies of <XGCountry:NameWithArticleLowerCase/>"
+
+[LWCE_CouncilRequest_BerserkerCorpse LWCECouncilRequestTemplate]
+strName="Artifact Sales: Muton Berserker Corpses"
+strIntro="Members of the <XGCountry:NameAdjective/> medical community want a chance to study the Berserker corpses we've recovered so far. It's possible they'll uncover something we missed, and they've offered to compensate us in return."
+strCompletion="Reports indicate <XGCountry:NameWithArticleLowerCase/> is on the brink of major medical advancements thanks to our help.\n<XGCountry:NameWithArticleUpperCase/> is now better able to defend itself against the alien threat."
+strTickerSuccess="Members of <XGCountry:NameAdjective/> military reportedly enduring unusually harsh conditions with few health consequences"
+strTickerIgnore="<XGCountry:NameAdjective/> soldiers outmatched on battlefield due to longer deployments"
+
+[LWCE_CouncilRequest_ChryssalidCarcass LWCECouncilRequestTemplate]
+strName="Artifact Sales: Chryssalid Carcasses"
+strIntro="We've received a request from the CEO of a major <XGCountry:NameAdjective/> research firm. They'd like an opportunity to examine a Chryssalid carcass. He's offering extensive compensation if we're willing to provide a few samples for their scientists to study."
+strCompletion="Sounds like that firm is about to take its place in medical history, thanks to us.\n<XGCountry:NameWithArticleUpperCase/> is now better able to defend itself against the alien threat."
+strTickerSuccess="<XGCountry:NameWithArticleUpperCase/> has released preliminary research into the eradication of Alzheimer's disease"
+strTickerIgnore="New statistics indicate <XGCountry:NameAdjective/> population developing Alzheimer's disease at alarming rate"
+
+[LWCE_CouncilRequest_CyberdiscWreck LWCECouncilRequestTemplate]
+strName="Artifact Sales: Cyberdisc Wrecks"
+strIntro="Although we haven't been particularly successful in our own attempts to reverse engineer the Cyberdisc, the <XGCountry:NameAdjective/> government believes their engineers may still find something useful."
+strCompletion="Excellent work, commander. The <XGCountry:NameAdjective/> government would like to express its gratitude for your discretion and efficiency.\n<XGCountry:NameWithArticleUpperCase/> is now better able to defend itself against the alien threat."
+strTickerSuccess="Armed drones now in use by <XGCountry:NameWithArticleLowerCase/> in attempt to thwart alien attacks"
+strTickerIgnore="Inability of <XGCountry:NameWithArticleLowerCase/> to protect citizens causes panic"
+
+[LWCE_CouncilRequest_DroneWreck LWCECouncilRequestTemplate]
+strName="Artifact Sales: Drone Wrecks"
+strIntro="The <XGCountry:NameAdjective/> government has expressed an interest in reverse-engineering alien drone technology for their own uses."
+strCompletion="The <XGCountry:NameAdjective/> military has reported widespread satisfaction with the new technology. \n<XGCountry:NameWithArticleUpperCase/> is now better able to defend itself against the alien threat."
+strTickerSuccess="New photos from embedded reporters reveal use of powerful drones among <XGCountry:NameAdjective/> troops"
+strTickerIgnore="Casualties among <XGCountry:NameAdjective/> troops remain high"
+
+[LWCE_CouncilRequest_Elerium LWCECouncilRequestTemplate]
+strName="Artifact Sales: Elerium"
+strIntro="We've received a request from the CEO of a major <XGCountry:NameAdjective/> research firm. They'd like an opportunity to examine some Elerium. He's offering extensive compensation if we're willing to provide a few samples for their scientists to study."
+strCompletion="Sounds like that firm is about to take its place in scientific history, thanks to us. \n<XGCountry:NameWithArticleUpperCase/> is now better able to defend itself against the alien threat."
+strTickerSuccess="<XGCountry:NameAdjective/> military procurement records indicate new power source supplied by unknown agency"
+strTickerIgnore="<XGCountry:NameAdjective/> military denies difficulty in procuring advanced power technology"
+
+[LWCE_CouncilRequest_EtherealCaptive LWCECouncilRequestTemplate]
+strName="Prisoner Transfer: Ethereal"
+strIntro="The government of <XGCountry:NameWithArticleLowerCase/> has requested a live alien to study. We have already interrogated this species, so we can transfer a captive without hurting our research efforts."
+strCompletion="Let's hope the <XGCountry:NameAdjective/> military can keep it contained.\n<XGCountry:NameWithArticleUpperCase/> is now better able to defend itself against the alien threat."
+strTickerSuccess="Calm returns to the streets of <XGCountry:NameWithArticleLowerCase/> as police implement new non-lethal weapons"
+strTickerIgnore="Rioting in <XGCountry:NameWithArticleLowerCase/> overwhelms local authorities"
+
+[LWCE_CouncilRequest_EtherealCorpse LWCECouncilRequestTemplate]
+strName="Artifact Sales: Ethereal Corpses"
+strIntro="A military representative from <XGCountry:NameWithArticleLowerCase/> is asking for our research into the Ethereals. They're prepared to contribute to the XCOM project if we help them with getting a leg up on the invaders."
+strCompletion="The <XGCountry:NameAdjective/> military believes research into these life forms will help them combat the alien menace. \n<XGCountry:NameWithArticleUpperCase/> is now better able to defend itself against the alien threat."
+strTickerSuccess="<XGCountry:NameAdjective/> military procurement records indicate new contracts with unknown agency"
+strTickerIgnore="<XGCountry:NameAdjective/> military denies difficulty in procuring advanced weapons technology"
+
+[LWCE_CouncilRequest_FloaterCaptive LWCECouncilRequestTemplate]
+strName="Prisoner Transfer: Floater"
+strIntro="The government of <XGCountry:NameWithArticleLowerCase/> has requested a live alien to study. We have already interrogated this species, so we can transfer a captive without hurting our research efforts."
+strCompletion="Let's hope the <XGCountry:NameAdjective/> military can keep it contained.\n<XGCountry:NameWithArticleUpperCase/> is now better able to defend itself against the alien threat."
+strTickerSuccess="<XGCountry:NameAdjective/> military reportedly issues laser based weapons in fight against alien incursion"
+strTickerIgnore="Alien conflict moves closer to capital city in <XGCountry:NameWithArticleLowerCase/> with no end in sight"
+
+[LWCE_CouncilRequest_FloaterCorpse LWCECouncilRequestTemplate]
+strName="Artifact Sales: Floater Wrecks"
+strIntro="Many among the scientific community feel that the Floaters may be the key to understanding how to implement cybernetic enhancements. <XGCountry:NameWithArticleUpperCase/> has offered us substantial assistance if we provide materials for them to study."
+strCompletion="It sounds like the <XGCountry:NameAdjective/> scientists are making some major advancements in cybernetic technology thanks to us.\n<XGCountry:NameWithArticleUpperCase/> is now better able to defend itself against the alien threat."
+strTickerSuccess="<XGCountry:NameWithArticleUpperCase/> touts several new developments in field of cybernetic research"
+strTickerIgnore="Unsuccessful trials of human cybernetic implants in <XGCountry:NameWithArticleLowerCase/> raises questions of plausibility"
+
+[LWCE_CouncilRequest_HeavyFloaterCaptive LWCECouncilRequestTemplate]
+strName="Prisoner Transfer: Heavy Floater"
+strIntro="The government of <XGCountry:NameWithArticleLowerCase/> has requested a live alien to study. We have already interrogated this species, so we can transfer a captive without hurting our research efforts."
+strCompletion="Let's hope the <XGCountry:NameAdjective/> military can keep it contained.\n<XGCountry:NameWithArticleUpperCase/> is now better able to defend itself against the alien threat."
+strTickerSuccess="<XGCountry:NameAdjective/> military procurement records indicate new contracts with unknown agency"
+strTickerIgnore="<XGCountry:NameAdjective/> military denies difficulty in procuring advanced weapons technology"
+
+[LWCE_CouncilRequest_HeavyFloaterCorpse LWCECouncilRequestTemplate]
+strName="Artifact Sales: Heavy Floater Wrecks"
+strIntro="The <XGCountry:NameAdjective/> military R and D sector has become a major player in the field of cybernetic research. They feel that if they were given the chance to reverse engineer a Heavy Floater, it would open up a breadth of new possibilities for them in the world of human prosthetics. They're offering substantial assistance if we provide the materials for their testing."
+strCompletion="Looks like some very lucky people are going to be recovering sooner than they expected thanks to those wrecked Floaters.\n<XGCountry:NameWithArticleUpperCase/> is now better able to defend itself against the alien threat."
+strTickerSuccess="Revolutionary new prosthetics engineered in <XGCountry:NameWithArticleLowerCase/>"
+strTickerIgnore="Many confined to wheelchairs, crutches after brutal alien assaults"
+
+[LWCE_CouncilRequest_InterceptorTransfer LWCECouncilRequestTemplate]
+strName="Air Asset Transfer: <XGCountry:Name/>"
+strIntro="The <XGCountry:NameAdjective/> air force is in desperate need of support in that part of the world. They've indicated they're willing to provide compensation if we can transfer a few of our advanced fighters to help police their skies."
+strCompletion="Good news: the fighters have cleared the skies over <XGCountry:NameWithArticleLowerCase/>. For now.\n<XGCountry:NameWithArticleUpperCase/> is now better able to defend itself against the alien threat."
+strTickerSuccess="Unidentified fighter jets spotted in pursuit of UFO over <XGCountry:NameWithArticleLowerCase/>"
+strTickerIgnore="Thousands seek shelter from aerial assaults in <XGCountry:NameWithArticleLowerCase/>"
+
+[LWCE_CouncilRequest_LaserRifle LWCECouncilRequestTemplate]
+strName="Arms Sales: Laser Rifles"
+strIntro="The <XGCountry:NameAdjective/> government is asking for our support in their development of new small arms, and have specifically requested a look at our research on Laser Rifles. They'd be much obliged for any assistance we can give them."
+strCompletion="We've gotten word that the <XGCountry:NameAdjective/> troops are now deploying with Laser Rifles.\n<XGCountry:NameWithArticleUpperCase/> is now better able to defend itself against the alien threat."
+strTickerSuccess="<XGCountry:NameAdjective/> military reportedly issues laser weapons in fight against alien incursion"
+strTickerIgnore="Alien conflict moves closer to capital city in <XGCountry:NameWithArticleLowerCase/> with no end in sight"
+
+[LWCE_CouncilRequest_MechtoidCore LWCECouncilRequestTemplate]
+strName="Artifact Sales: Mechtoid Cores"
+strIntro="Government agencies in <XGCountry:NameWithArticleLowerCase/> have approached us with a request for access to our supply of Mechtoid Cores. With this technology, they may be able to develop advanced drones or other unmanned vehicles for use in their fight against the invaders. They are offering a substantial contribution to the XCOM project in return for our cooperation."
+strCompletion="It appears the Mechtoid Cores provided just the inspiration they were looking for.\n<XGCountry:NameWithArticleUpperCase/> is now better able to defend itself against the alien threat."
+strTickerSuccess="Witnesses claim to have seen new aerial drones of some kind operating in <XGCountry:NameWithArticleLowerCase/>"
+strTickerIgnore="Heavy casualties in <XGCountry:NameWithArticleLowerCase/> as poorly equipped government forces attempt to engage aliens"
+
+[LWCE_CouncilRequest_Meld LWCECouncilRequestTemplate]
+strName="Artifact Sales: Meld"
+strIntro="The government of <XGCountry:NameWithArticleLowerCase/> is begging for a sample of the Meld substance and have offered to provide some compensation in return."
+strCompletion="Let's hope the <XGCountry:NameAdjective/> troops can use the Meld technology effectively.\n<XGCountry:NameWithArticleUpperCase/> is now better able to defend itself against the alien threat."
+strTickerSuccess="<XGCountry:NameAdjective/> government issues small laser weapons to civilians, citing \"civil defense\""
+strTickerIgnore="<XGCountry:NameAdjective/> civilians continually vulnerable to attack as government fails to develop advanced weaponry"
+
+[LWCE_CouncilRequest_MutonCaptive LWCECouncilRequestTemplate]
+strName="Prisoner Transfer: Muton"
+strIntro="The government of <XGCountry:NameWithArticleLowerCase/> has requested a live alien to study. We have already interrogated this species, so we can transfer a captive without hurting our research efforts."
+strCompletion="Let's hope the <XGCountry:NameAdjective/> military can keep it contained.\n<XGCountry:NameWithArticleUpperCase/> is now better able to defend itself against the alien threat."
+strTickerSuccess="Soldiers in <XGCountry:NameWithArticleLowerCase/> seen patrolling the streets with highly sophisticated weaponry"
+strTickerIgnore="Civilians barricade themselves indoors as aliens outgun soldiers of <XGCountry:NameWithArticleLowerCase/>"
+
+[LWCE_CouncilRequest_MutonCorpse LWCECouncilRequestTemplate]
+strName="Artifact Sales: Muton Corpses"
+strIntro="The CEO of <XGCountry:NamePossessive/> leading genetics research firm feels the Mutons might provide crucial insight into designing new techniques for regenerating tissue. He's willing to give us whatever support he can in return, if we give them access to the Muton corpses we currently have."
+strCompletion="The CEO from <XGCountry:NameWithArticleLowerCase/> is delighted with their findings. They will help us any way that they can.\n<XGCountry:NameWithArticleUpperCase/> is now better able to defend itself against the alien threat."
+strTickerSuccess="Major breakthroughs in anti-aging research developed in <XGCountry:NameAdjective/> labs"
+strTickerIgnore="Fourth quarter lows expected from <XGCountry:NameAdjective/> medical industry this year"
+
+[LWCE_CouncilRequest_MutonEliteCaptive LWCECouncilRequestTemplate]
+strName="Prisoner Transfer: Muton Elite"
+strIntro="The government of <XGCountry:NameWithArticleLowerCase/> has requested a live alien to study. We have already interrogated this species, so we can transfer a captive without hurting our research efforts."
+strCompletion="Let's hope the <XGCountry:NameAdjective/> military can keep it contained.\n<XGCountry:NameWithArticleUpperCase/> is now better able to defend itself against the alien threat."
+strTickerSuccess="New photos from embedded reporters reveal use of mysterious body armor among <XGCountry:NameAdjective/> troops"
+strTickerIgnore="Casualties among <XGCountry:NameAdjective/> troops remain high"
+
+[LWCE_CouncilRequest_MutonEliteCorpses LWCECouncilRequestTemplate]
+strName="Artifact Sales: Muton Elite Corpses"
+strIntro="The CEO of <XGCountry:NamePossessive/> leading genetics research firm feels the Muton Elites might provide crucial insight into designing new techniques for regenerating tissue. He's willing to give us whatever support he can in return, if we give them access to the corpses we currently have."
+strCompletion="The CEO from <XGCountry:NameWithArticleLowerCase/> they are making some amazing discoveries.\n<XGCountry:NameWithArticleUpperCase/> is now better able to defend itself against the alien threat."
+strTickerSuccess="Major breakthroughs in anti-aging research developed in <XGCountry:NameAdjective/> labs"
+strTickerIgnore="Fourth quarter lows expected from <XGCountry:NameAdjective/> medical industry this year"
+
+[LWCE_CouncilRequest_SatelliteTransfer LWCECouncilRequestTemplate]
+strName="Satellite Transfer: <XGCountry:Name/>"
+strIntro="Numerous UFOs have been spotted streaking over the skies of <XGCountry:NameWithArticleLowerCase/> and concern for their citizens' safety is building. Since they don't have satellite technology that can track the aliens like we do, they're offering a substantial amount of \"assistance\" to our efforts if we help police their airspace."
+strCompletion="Excellent news: <XGCountry:NameWithArticleLowerCase/> is very happy with the \"eye in the sky\" our satellites have provided them.\n<XGCountry:NameWithArticleUpperCase/> is now better able to defend itself against the alien threat."
+strTickerSuccess="Civilian panic slows in <XGCountry:NameWithArticleLowerCase/> as new satellite monitoring allows alien UFO tracking."
+strTickerIgnore="Pressure mounts in <XGCountry:NameWithArticleLowerCase/> as their inability to monitor alien threats comes into question."
+
+[LWCE_CouncilRequest_SectoidCaptive LWCECouncilRequestTemplate]
+strName="Prisoner Transfer: Sectoid"
+strIntro="The government of <XGCountry:NameWithArticleLowerCase/> has requested a live alien to study. We have already interrogated this species, so we can transfer a captive without hurting our research efforts."
+strCompletion="Let's hope the <XGCountry:NameAdjective/> military can keep it contained.\n<XGCountry:NameWithArticleUpperCase/> is now better able to defend itself against the alien threat."
+strTickerSuccess="Images of laser weapons fire coming from the ground in <XGCountry:NameWithArticleLowerCase/> flood the internet"
+strTickerIgnore="Unbridled UFO attacks pound <XGCountry:NameWithArticleLowerCase/> with no relief in sight"
+
+[LWCE_CouncilRequest_SectoidCorpse LWCECouncilRequestTemplate]
+strName="Artifact Sales: Sectoid Corpses"
+strIntro="The CEO of a major <XGCountry:NameAdjective/> pharmaceutical company has expressed interest in studying one of the Sectoid corpses we've recovered. They've promised that if we help them, they'll reciprocate in kind."
+strCompletion="The <XGCountry:NameAdjective/> research firm just sent some preliminary data from the Sectoid exchange.\n<XGCountry:NameWithArticleUpperCase/> is now better able to defend itself against the alien threat."
+strTickerSuccess="<XGCountry:NameAdjective/> pharmaceutical company announces breakthrough in new DNA sequencing technology"
+strTickerIgnore="Stock prices continue slow decline in <XGCountry:NameAdjective/> pharmaceutical industry"
+
+[LWCE_CouncilRequest_SectoidCommanderCaptive LWCECouncilRequestTemplate]
+strName="Prisoner Transfer: Sectoid Commander"
+strIntro="The government of <XGCountry:NameWithArticleLowerCase/> has requested a live alien to study. We have already interrogated this species, so we can transfer a captive without hurting our research efforts."
+strCompletion="Let's hope the <XGCountry:NameAdjective/> military can keep it contained.\n<XGCountry:NameWithArticleUpperCase/> is now better able to defend itself against the alien threat."
+strTickerSuccess="<XGCountry:NameAdjective/> military procurement records indicate new contracts with unknown agency"
+strTickerIgnore="<XGCountry:NameAdjective/> military denies difficulty in procuring advanced weapons technology"
+
+[LWCE_CouncilRequest_SectoidCommanderCorpse LWCECouncilRequestTemplate]
+strName="Artifact Sales: Sectoid Commander Corpses"
+strIntro="A representative of the <XGCountry:NameAdjective/> military scientific establishment is promising us a very lucrative return if we allow them access to some Sectoid Commander corpses we've recovered. It's possible they'll uncover better ways to utilize the alien technology that we can appropriate, and we'll be compensated in either case."
+strCompletion="The <XGCountry:NameAdjective/> military believes research into these life forms will help them combat the alien menace.\n<XGCountry:NameWithArticleUpperCase/> is now better able to defend itself against the alien threat."
+strTickerSuccess="<XGCountry:NameAdjective/> military procurement records indicate new contracts with unknown agency"
+strTickerIgnore="<XGCountry:NameAdjective/> military denies difficulty in procuring advanced weapons technology"
+
+[LWCE_CouncilRequest_SectopodWreck LWCECouncilRequestTemplate]
+strName="Artifact Sales: Sectopod Wrecks"
+strIntro="<XGCountry:NameAdjective/> civilians are running scared and the country's trying to do anything they can to secure the streets. Their government feels the Sectopods might be of some use to them. If they can recreate their functionality, for defensive purposes of course, they might be able to quell the anxiety in their streets."
+strCompletion="The Sectopod project was a massive success and the panic in the streets, though not completely gone, has subsided.\n<XGCountry:NameWithArticleUpperCase/> is now better able to defend itself against the alien threat."
+strTickerSuccess="New robotic machines spotted policing <XGCountry:NameAdjective/> streets"
+strTickerIgnore="Panic in the streets of <XGCountry:NameWithArticleLowerCase/>; government at a loss on how to restore order"
+
+[LWCE_CouncilRequest_SeekerWreck LWCECouncilRequestTemplate]
+strName="Artifact Sales: Seeker Wrecks"
+strIntro="We've been contacted by members of the local intelligence branch in <XGCountry:NameWithArticleLowerCase/>, who are hoping to negotiate an exchange for some of our Seeker Wrecks. It would appear they hope to reverse-engineer the Seeker for use in their own covert operations within the country. We can expect a generous donation in exchange for the materials we provide."
+strCompletion="It appears they've wasted little time in integrating the Seeker's components into their own equipment.\n<XGCountry:NameWithArticleUpperCase/> is now better able to defend itself against the alien threat."
+strTickerSuccess="Agents operating inside <XGCountry:NameWithArticleLowerCase/> reportedly utilize new stealth technologies"
+strTickerIgnore="Intelligence failures in <XGCountry:NameWithArticleLowerCase/> blamed on outdated, obsolete equipment"
+
+[LWCE_CouncilRequest_ThinManCaptive LWCECouncilRequestTemplate]
+strName="Prisoner Transfer: Thin Man"
+strIntro="The government of <XGCountry:NameWithArticleLowerCase/> has requested a live alien to study. We have already interrogated this species, so we can transfer a captive without hurting our research efforts."
+strCompletion="Let's hope the <XGCountry:NameAdjective/> military can keep it contained.\n<XGCountry:NameWithArticleUpperCase/> is now better able to defend itself against the alien threat."
+strTickerSuccess="Soldiers in <XGCountry:NameWithArticleLowerCase/> take down hostile aliens in greater numbers than previously recorded"
+strTickerIgnore="Heavy casualties reported in <XGCountry:NameWithArticleLowerCase/> as soldiers fail to stop alien onslaught"
+
+[LWCE_CouncilRequest_ThinManCorpse LWCECouncilRequestTemplate]
+strName="Artifact Sales: Thin Man Corpses"
+strIntro="Members of the <XGCountry:NameAdjective/> medical community want a chance to study the Thin Man corpses we've recovered so far. It's possible they'll uncover something we missed, and they've offered to compensate us in return."
+strCompletion="Reports indicate <XGCountry:NameWithArticleLowerCase/> is on the brink of several major medical advancements because of the materials we've given them. <XGCountry:NameWithArticleUpperCase/> is now better able to defend itself against the alien threat."
+strTickerSuccess="New synthetic antibodies discovered in <XGCountry:NameAdjective/> medical labs promise pain-free living"
+strTickerIgnore="NSAIDS and other anti-inflammatory medications pulled from <XGCountry:NameAdjective/> shelves due to increased bouts of dyspepsia"
+
+[LWCE_CouncilRequest_UFOFlightComputer LWCECouncilRequestTemplate]
+strName="Artifact Sales: Navigation Computers"
+strIntro="The Council has received a request from a prominent <XGCountry:NameAdjective/> industrialist; he's offering us extensive compensation if we allow access to the UFO flight computers we've recovered. If they can integrate the alien guidance and collision avoidance technologies into a terrestrial jet, it may give <XGCountry:NameWithArticleLowerCase/> a leg up in the air."
+strCompletion="I think the <XGCountry:NameAdjective/> skies are going to be a bit safer now, thanks to us.\n<XGCountry:NameWithArticleUpperCase/> is now better able to defend itself against the alien threat."
+strTickerSuccess="Witness claims fighter jets from <XGCountry:NameWithArticleLowerCase/> outperform alien UFOs in air-to-air combat"
+strTickerIgnore="UFOs continue to wreak havoc on ground targets in <XGCountry:NameWithArticleLowerCase/>"
+
+[LWCE_CouncilRequest_UFOFusionCore LWCECouncilRequestTemplate]
+strName="Artifact Sales: UFO Fusion Core"
+strIntro="<XGCountry:NameWithArticleUpperCase/> has been struggling with power shortages after many of their power plants were knocked out by the alien attacks. They've requested access to our research surrounding the alien fusion core. I'm sure they'll be grateful for any assistance we can provide."
+strCompletion="Looks like the <XGCountry:NameAdjective/> people are going to able to turn on the lights tonight, thanks to us.\n<XGCountry:NameWithArticleUpperCase/> is now better able to defend itself against the alien threat."
+strTickerSuccess="<XGCountry:NameAdjective/> power commission able to fix damage to national power grid"
+strTickerIgnore="Still in the dark, millions are without power, heat, in <XGCountry:NameWithArticleLowerCase/>"
+
+[LWCE_CouncilRequest_UFOPowerSource LWCECouncilRequestTemplate]
+strName="Artifact Sales: UFO Power Sources"
+strIntro="<XGCountry:NameWithArticleUpperCase/> has been struggling with power shortages after many of their power plants were knocked out by the alien attacks. They've requested access to our research surrounding the alien power supplies. I'm sure they'll be grateful for any assistance we can provide."
+strCompletion="Looks like the <XGCountry:NameAdjective/> people are going to able to turn on the lights tonight, thanks to us.\n<XGCountry:NameWithArticleUpperCase/> is now better able to defend itself against the alien threat."
+strTickerSuccess="<XGCountry:NameAdjective/> power commission able to fix damage to national power grid"
+strTickerIgnore="Still in the dark, millions are without power, heat, in <XGCountry:NameWithArticleLowerCase/>"
+
+[LWCE_CouncilRequest_WeaponFragment LWCECouncilRequestTemplate]
+strName="Artifact Sales: Weapon Fragments"
+strIntro="<XGCountry:NameAdjective/> engineers have been clamoring to get their hands on some of the alien weapons technology. If they can piece together the fragmented weapons we have, they might just be able to make something to help protect their people."
+strCompletion="Reports of <XGCountry:NameAdjective/> forces having new advanced weapons on the battlefield are starting to crop up.\n<XGCountry:NameWithArticleUpperCase/> is now better able to defend itself against the alien threat."
+strTickerSuccess="Images of <XGCountry:NameAdjective/> soldiers going into battle with advanced alien weaponry posted on Internet"
+strTickerIgnore="<XGCountry:NameAdjective/> troops continually outgunned by invading alien forces"

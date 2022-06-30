@@ -1,6 +1,6 @@
 class LWCE_XGFundingCouncil extends XGFundingCouncil_Mod
     config(LWCEBaseStrategyGame)
-    dependson(LWCETypes);
+    dependson(LWCETypes, LWCECouncilRequestTemplate);
 
 struct LWCE_TRewardSoldier
 {
@@ -8,24 +8,10 @@ struct LWCE_TRewardSoldier
     var int iRank;
 };
 
-struct LWCE_TRequestItemConfig
+struct LWCE_TRequestCooldown
 {
-    var int iItemId;
-    var bool bScaleForDynamicWar;
-    var LWCE_TRange kQuantityRange;
-    var LWCE_TRange kPerMonthScaling;
-};
-
-struct LWCE_TRequestRewardConfig
-{
-    var array<LWCE_TItemQuantity> arrItemRewards;
-    var bool bCashForItems;
-    var LWCE_TRange kCash;
-    var LWCE_TRange kCountryDefense;
-    var LWCE_TRange kEngineers;
-    var LWCE_TRange kPanic;
-    var LWCE_TRange kScientists;
-    var LWCE_TRange kSoldiers;
+    var name RequestName;
+    var int iHoursRemaining;
 };
 
 struct LWCE_TRequestReward
@@ -39,35 +25,9 @@ struct LWCE_TRequestReward
     var int iScientists;
 };
 
-struct LWCE_TFCRequestConfig
-{
-    var int iRequestId;
-    var EFCRequestType eType;
-    var int iHoursToRespond;
-    var int iCooldownInHours;
-
-    var array<LWCE_TRequestItemConfig> arrRequestedItems;
-    var LWCE_TPrereqs kPrereqs;
-
-    // Rewards
-    var array<LWCE_TRequestRewardConfig> arrRewards;
-
-    // Localization
-    var string strName;
-    var string strIntro;
-    var string strCompletion;
-    var string strTickerSuccess;
-    var string strTickerIgnore;
-
-    structdefaultproperties
-    {
-        eType=eFCRType_SellArtifacts
-    }
-};
-
 struct LWCE_TFCRequest
 {
-    var int iRequestId;
+    var name RequestName;
     var EFCRequestType eType;
     var int iHoursToRespond;
 
@@ -90,12 +50,9 @@ struct CheckpointRecord_LWCE_XGFundingCouncil extends CheckpointRecord
     var array<LWCE_TFCRequest> m_arrCECurrentRequests;
     var array<LWCE_TFCRequest> m_arrCEExpiredRequests;
     var array<LWCE_TFCRequest> m_arrCEPendingRequests;
-    var array<LWCE_IntKVP> m_arrCERequestCooldowns;
-    var array<int> m_arrCEPreviousRequests;
+    var array<LWCE_TRequestCooldown> m_arrCERequestCooldowns;
+    var LWCE_TFCRequest m_kLastCompletedSatelliteTransferRequest;
 };
-
-// Possible requests according to configuration
-var config array<LWCE_TFCRequestConfig> arrCfgRequests;
 
 // Substitution thresholds: if a request's rewards include engineers/scientists/soldiers,
 // and the player already has a number of staff meeting or exceeding the corresponding threshold,
@@ -113,49 +70,27 @@ var config int iSubstitutionChance;
 var config LWCE_TRange kTimeBetweenRequests;
 var config int iHoursLostPerPanic;
 
-// Possible requests after processing and mod hooks have run; should not be modified outside of said mod hooks
-var array<LWCE_TFCRequestConfig> m_arrPossibleRequests;
-
 var array<LWCE_TFCRequest> m_arrCECurrentRequests;
 var array<LWCE_TFCRequest> m_arrCEExpiredRequests;
 var array<LWCE_TFCRequest> m_arrCEPendingRequests;
-var array<LWCE_IntKVP> m_arrCERequestCooldowns;
-var array<int> m_arrCEPreviousRequests;
+var array<LWCE_TRequestCooldown> m_arrCERequestCooldowns;
+
+var LWCE_TFCRequest m_kLastCompletedSatelliteTransferRequest;
+
+var private LWCECouncilRequestTemplateManager m_kTemplateMgr;
 
 function Init()
 {
-    local int iRequestId, Index;
-
+    // Need to call the base class init, which expands the council mission map pool
     super.Init();
 
     m_kSatRequestCompleteAdaptor = new (self) class'LWCE_XGFundingCouncil_RequestAdaptor';
 
-    `LWCE_LOG_CLS("Init: arrCfgRequests.Length = " $ arrCfgRequests.Length);
+    // Cache template manager, as we'll be using it quite a lot
+    m_kTemplateMgr = class'LWCECouncilRequestTemplateManager'.static.GetInstance();
 
-    // Replace base game request data with our own
+    // Delete base game request data; we're only using templates
     m_arrTRequests.Length = 0;
-    m_arrPossibleRequests.Length = arrCfgRequests.Length;
-
-    for (Index = 0; Index < arrCfgRequests.Length; Index++)
-    {
-        iRequestId = arrCfgRequests[Index].iRequestId;
-        m_arrPossibleRequests[Index] = arrCfgRequests[Index];
-
-        if (iRequestId < eFCR_MAX)
-        {
-            m_arrPossibleRequests[Index].strName = m_strRequestNames[iRequestId];
-            m_arrPossibleRequests[Index].strIntro = m_strRequestIntro[iRequestId];
-            m_arrPossibleRequests[Index].strCompletion = m_strRequestCompletion[iRequestId];
-            m_arrPossibleRequests[Index].strTickerSuccess = m_strRequestSuccess[iRequestId];
-            m_arrPossibleRequests[Index].strTickerIgnore = m_strRequestIgnore[iRequestId];
-        }
-    }
-
-    `LWCE_LOG_CLS("Finished building possible requests from config: there are " $ m_arrPossibleRequests.Length $ " possible requests");
-
-    `LWCE_MOD_LOADER.OnCouncilRequestsBuilt(m_arrPossibleRequests);
-
-    `LWCE_LOG_CLS("After mod processing, there are now " $ m_arrPossibleRequests.Length $ " possible requests");
 }
 
 function InitNewGame()
@@ -166,7 +101,6 @@ function InitNewGame()
 
     SetupMonthlyRequests();
     m_arrPreviousMissions.AddItem(eFCM_None);
-    m_arrCEPreviousRequests.AddItem(0);
 }
 
 function Update()
@@ -175,11 +109,11 @@ function Update()
 
     for (Index = m_arrCERequestCooldowns.Length - 1; Index >= 0; Index--)
     {
-        if (m_arrCERequestCooldowns[Index].Value > 0)
+        if (m_arrCERequestCooldowns[Index].iHoursRemaining > 0)
         {
-            m_arrCERequestCooldowns[Index].Value--;
+            m_arrCERequestCooldowns[Index].iHoursRemaining--;
 
-            if (m_arrCERequestCooldowns[Index].Value <= 0)
+            if (m_arrCERequestCooldowns[Index].iHoursRemaining <= 0)
             {
                 m_arrCERequestCooldowns.Remove(Index, 1);
             }
@@ -246,7 +180,7 @@ function bool AttemptTurnInRequest(int iRequestIndex)
         kRequest = m_arrCECurrentRequests[iRequestIndex];
     }
 
-    if (kRequest.iRequestId == 0 || kRequest.bIsTransferRequest)
+    if (kRequest.RequestName == '' || kRequest.bIsTransferRequest)
     {
         return false;
     }
@@ -324,12 +258,12 @@ function bool LWCE_CanRequestExpire(LWCE_TFCRequest kRequest)
 
     if (kRequest.bIsTransferRequest)
     {
-        if (kRequest.eType == eFCR_JetTransfer && HANGAR().IsShipInTransitTo(kRequest.eRequestingCountry))
+        if (kRequest.eType == eFCRType_JetTransfer && HANGAR().IsShipInTransitTo(kRequest.eRequestingCountry))
         {
             return false;
         }
 
-        if (kRequest.eType == eFCR_SatCountry && HQ().IsSatelliteInTransitTo(kRequest.eRequestingCountry))
+        if (kRequest.eType == eFCRType_SatLaunch && HQ().IsSatelliteInTransitTo(kRequest.eRequestingCountry))
         {
             return false;
         }
@@ -344,56 +278,52 @@ function EFCRequest ChooseNextRequest(optional EFCRequestType eType = eFCRType_N
     return eFCR_None;
 }
 
-function int LWCE_ChooseNextRequest()
+function name LWCE_ChooseNextRequest()
 {
-    local array<int> arrPossibleRequests, arrBackupRequests;
-    local int iCooldown, iPrevRequestIndex, iRequestId, Index;
+    local array<name> arrPossibleRequests, arrBackupRequests;
+    local array<LWCECouncilRequestTemplate> arrRequestTemplates;
+    local int iCooldown, Index;
+    local name RequestName;
+    local LWCECouncilRequestTemplate kTemplate;
 
-    for (Index = 0; Index < m_arrPossibleRequests.Length; Index++)
+    arrRequestTemplates = m_kTemplateMgr.GetAllRequestTemplates();
+
+    for (Index = 0; Index < arrRequestTemplates.Length; Index++)
     {
-        iRequestId = m_arrPossibleRequests[Index].iRequestId;
-        iPrevRequestIndex = m_arrCEPreviousRequests.Find(iRequestId);
+        kTemplate = arrRequestTemplates[Index];
+        RequestName = kTemplate.DataName;
 
-        if (!LWCE_PassesRequestRequirements(m_arrPossibleRequests[Index]))
+        if (!LWCE_PassesRequestRequirements(kTemplate))
         {
             // Request is invalid (probably due to missing prereqs)
             continue;
         }
 
-        if (iPrevRequestIndex != INDEX_NONE)
-        {
-            `LWCE_UTILS.TryFindValue(m_arrCERequestCooldowns, iRequestId, iCooldown);
+        iCooldown = GetRemainingCooldown(RequestName);
 
-            if (iCooldown <= 0)
-            {
-                // This has been requested before but it's off cooldown
-                arrPossibleRequests.AddItem(iRequestId);
-                continue;
-            }
-            else
-            {
-                // This has been requested within the cooldown period; use it as a last resort
-                arrBackupRequests.AddItem(iRequestId);
-            }
+        if (iCooldown <= 0)
+        {
+            arrPossibleRequests.AddItem(RequestName);
+            continue;
         }
         else
         {
-            // Never been requested before
-            arrPossibleRequests.AddItem(iRequestId);
+            // This has been requested within the cooldown period; use it as a last resort
+            arrBackupRequests.AddItem(RequestName);
         }
     }
 
     // If we have no "plan A" requests available, pick from the "plan B" pool
     if (arrPossibleRequests.Length > 0)
     {
-        iRequestId = arrPossibleRequests[Rand(arrPossibleRequests.Length)];
+        RequestName = arrPossibleRequests[Rand(arrPossibleRequests.Length)];
     }
     else if (arrBackupRequests.Length > 0)
     {
-        iRequestId = arrBackupRequests[Rand(arrBackupRequests.Length)];
+        RequestName = arrBackupRequests[Rand(arrBackupRequests.Length)];
     }
 
-    return iRequestId;
+    return RequestName;
 }
 
 function ClearExpiredRequests()
@@ -401,7 +331,7 @@ function ClearExpiredRequests()
     m_arrCEExpiredRequests.Remove(0, m_arrCEExpiredRequests.Length);
 }
 
-function bool CreateRequestFromConfig(out LWCE_TFCRequest kRequest, const out LWCE_TFCRequestConfig kRequestCfg, ECountry eRequestingCountry)
+function bool CreateRequestFromTemplate(out LWCE_TFCRequest kRequest, const LWCECouncilRequestTemplate kRequestTemplate, ECountry eRequestingCountry)
 {
     local LWCE_TItemQuantity kItemQuantity;
     local LWCE_TRewardSoldier kRewardSoldier;
@@ -418,40 +348,40 @@ function bool CreateRequestFromConfig(out LWCE_TFCRequest kRequest, const out LW
     kTag = new class'XGCountryTag';
     kTag.kCountry = kCountry;
 
-    kRequest.iRequestId = kRequestCfg.iRequestId;
-    kRequest.eType = kRequestCfg.eType;
+    kRequest.RequestName = kRequestTemplate.GetRequestName();
+    kRequest.eType = kRequestTemplate.eType;
     kRequest.eRequestingCountry = eRequestingCountry;
-    kRequest.iHoursToRespond = kRequestCfg.iHoursToRespond;
+    kRequest.iHoursToRespond = kRequestTemplate.iHoursToRespond;
 
     if (kRequest.eType == eFCRType_SatLaunch || kRequest.eType == eFCRType_JetTransfer)
     {
         kRequest.bIsTransferRequest = true;
     }
 
-    kRequest.strName = class'XComLocalizer'.static.ExpandStringByTag(kRequestCfg.strName, kTag);
-    kRequest.strIntro = class'XComLocalizer'.static.ExpandStringByTag(kRequestCfg.strIntro, kTag);
-    kRequest.strCompletion = class'XComLocalizer'.static.ExpandStringByTag(kRequestCfg.strCompletion, kTag);
-    kRequest.strTickerSuccess = class'XComLocalizer'.static.ExpandStringByTag(kRequestCfg.strTickerSuccess, kTag);
-    kRequest.strTickerIgnore = class'XComLocalizer'.static.ExpandStringByTag(kRequestCfg.strTickerIgnore, kTag);
+    kRequest.strName = class'XComLocalizer'.static.ExpandStringByTag(kRequestTemplate.strName, kTag);
+    kRequest.strIntro = class'XComLocalizer'.static.ExpandStringByTag(kRequestTemplate.strIntro, kTag);
+    kRequest.strCompletion = class'XComLocalizer'.static.ExpandStringByTag(kRequestTemplate.strCompletion, kTag);
+    kRequest.strTickerSuccess = class'XComLocalizer'.static.ExpandStringByTag(kRequestTemplate.strTickerSuccess, kTag);
+    kRequest.strTickerIgnore = class'XComLocalizer'.static.ExpandStringByTag(kRequestTemplate.strTickerIgnore, kTag);
 
     // Determine what's being requested
     bIsDynamicWar = IsOptionEnabled(`LW_SECOND_WAVE_ID(DynamicWar));
 
-    for (Index = 0; Index < kRequestCfg.arrRequestedItems.Length; Index++)
+    for (Index = 0; Index < kRequestTemplate.arrRequestedItems.Length; Index++)
     {
-        kItemQuantity.iItemId = kRequestCfg.arrRequestedItems[Index].iItemId;
-        kItemQuantity.iQuantity = DetermineItemQuantityToRequest(kRequestCfg.arrRequestedItems[Index], bIsDynamicWar);
+        kItemQuantity.iItemId = kRequestTemplate.arrRequestedItems[Index].iItemId;
+        kItemQuantity.iQuantity = DetermineItemQuantityToRequest(kRequestTemplate.arrRequestedItems[Index], bIsDynamicWar);
 
         kRequest.arrRequestedItems.AddItem(kItemQuantity);
     }
 
     // Choose the request rewards
-    Index = Rand(kRequestCfg.arrRewards.Length);
-    kRequest.kReward.arrItemRewards = kRequestCfg.arrRewards[Index].arrItemRewards;
+    Index = Rand(kRequestTemplate.arrRewards.Length);
+    kRequest.kReward.arrItemRewards = kRequestTemplate.arrRewards[Index].arrItemRewards;
 
-    iEngineers = `LWCE_UTILS.RandInRange(kRequestCfg.arrRewards[Index].kEngineers);
-    iScientists = `LWCE_UTILS.RandInRange(kRequestCfg.arrRewards[Index].kScientists);
-    iSoldiers = `LWCE_UTILS.RandInRange(kRequestCfg.arrRewards[Index].kSoldiers);
+    iEngineers = `LWCE_UTILS.RandInRange(kRequestTemplate.arrRewards[Index].kEngineers);
+    iScientists = `LWCE_UTILS.RandInRange(kRequestTemplate.arrRewards[Index].kScientists);
+    iSoldiers = `LWCE_UTILS.RandInRange(kRequestTemplate.arrRewards[Index].kSoldiers);
 
     // Reroll rewards per their configured thresholds. Note that this must be after we've assigned the request's items,
     // because those are used when rerolling rewards into cash.
@@ -465,7 +395,7 @@ function bool CreateRequestFromConfig(out LWCE_TFCRequest kRequest, const out LW
         else
         {
             `LWCE_LOG_CLS("Rerolling " $ iEngineers $ " engineers into cash");
-            iBonusCash += fEngineerToCashPercentage * GetRewardEquivalentCashValue(kRequest, kRequestCfg.arrRewards[Index].kEngineers.MinInclusive);
+            iBonusCash += fEngineerToCashPercentage * GetRewardEquivalentCashValue(kRequest, kRequestTemplate.arrRewards[Index].kEngineers.MinInclusive);
         }
 
         iEngineers = 0;
@@ -481,7 +411,7 @@ function bool CreateRequestFromConfig(out LWCE_TFCRequest kRequest, const out LW
         else
         {
             `LWCE_LOG_CLS("Rerolling " $ iScientists $ " scientists into cash");
-            iBonusCash += fScientistToCashPercentage * GetRewardEquivalentCashValue(kRequest, kRequestCfg.arrRewards[Index].kScientists.MinInclusive);
+            iBonusCash += fScientistToCashPercentage * GetRewardEquivalentCashValue(kRequest, kRequestTemplate.arrRewards[Index].kScientists.MinInclusive);
         }
 
         iScientists = 0;
@@ -510,30 +440,28 @@ function bool CreateRequestFromConfig(out LWCE_TFCRequest kRequest, const out LW
         iSoldiers = 0;
     }
 
-    iBonusCash += `LWCE_UTILS.RandInRange(kRequestCfg.arrRewards[Index].kCash);
+    iBonusCash += `LWCE_UTILS.RandInRange(kRequestTemplate.arrRewards[Index].kCash);
 
-    if (kRequestCfg.arrRewards[Index].bCashForItems)
+    if (kRequestTemplate.arrRewards[Index].bCashForItems)
     {
         // Base game cash rewards always use the default value for the iMinQuantity parameter, which is 2
         iCash = GetRewardEquivalentCashValue(kRequest, 2);
     }
 
     kRequest.kReward.iCash = iCash + iBonusCash;
-    kRequest.kReward.iCountryDefense = `LWCE_UTILS.RandInRange(kRequestCfg.arrRewards[Index].kCountryDefense);
+    kRequest.kReward.iCountryDefense = RollCountryDefenseReward(kRequestTemplate.arrRewards[Index].kCountryDefense);
     kRequest.kReward.iEngineers = iEngineers + iBonusEngineers;
     kRequest.kReward.iScientists = iScientists + iBonusScientists;
-    kRequest.kReward.iPanic = `LWCE_UTILS.RandInRange(kRequestCfg.arrRewards[Index].kPanic);
-
-    `LWCE_LOG_CLS("Rolled country defense of " $ kRequest.kReward.iCountryDefense);
+    kRequest.kReward.iPanic = `LWCE_UTILS.RandInRange(kRequestTemplate.arrRewards[Index].kPanic);
 
     // Go through soldiers and roll their class/rank
     iSoldiers += iBonusSoldiers;
 
     for (Index = 0; Index < iSoldiers; Index++)
     {
+        // TODO: move soldier rank data to config
         kRewardSoldier.iRank = 3;
 
-        // TODO: move soldier rank data to config
         if (kCountry.m_kTCountry.iScience > 50 && AI().GetMonth() > 11)
         {
             kRewardSoldier.iRank = 4;
@@ -682,42 +610,42 @@ function bool DetermineNewFCRequest(optional EFCRequest eRequest)
 function bool LWCE_DetermineNewFCRequest()
 {
     local LWCE_TFCRequest kRequest;
-    local LWCE_TFCRequestConfig kRequestCfg;
+    local LWCECouncilRequestTemplate kRequestTemplate;
     local ECountry eRequestingCountry;
-    local int iRequestId;
+    local name RequestName;
 
     SITROOM().SetDisabled(false);
     eRequestingCountry = DetermineFCRequestCountry();
-    iRequestId = LWCE_ChooseNextRequest();
+    RequestName = LWCE_ChooseNextRequest();
 
-    if (iRequestId == 0)
+    if (RequestName == '')
     {
-        `LWCE_LOG_CLS("LWCE_DetermineNewFCRequest: couldn't find request ID to use");
+        `LWCE_LOG_CLS("LWCE_DetermineNewFCRequest: couldn't find request template to use");
         return false;
     }
 
-    if (!GetRequestConfig(iRequestId, kRequestCfg))
+    if (!GetRequestTemplate(RequestName, kRequestTemplate))
     {
-        `LWCE_LOG_CLS("LWCE_DetermineNewFCRequest: couldn't get request config for ID " $ iRequestId);
+        `LWCE_LOG_CLS("LWCE_DetermineNewFCRequest: couldn't get request config for template " $ RequestName);
         return false;
     }
 
-    if (kRequestCfg.eType == eFCRType_SatLaunch && !CanTransferSatellite(eRequestingCountry))
+    if (kRequestTemplate.eType == eFCRType_SatLaunch && !CanTransferSatellite(eRequestingCountry))
     {
         `LWCE_LOG_CLS("LWCE_DetermineNewFCRequest: chose satellite request but can't launch sat to " $ eRequestingCountry);
         return false;
     }
 
-    if (kRequestCfg.arrRewards.Length == 0)
+    if (kRequestTemplate.arrRewards.Length == 0)
     {
-        `LWCE_LOG_CLS("LWCE_DetermineNewFCRequest: request ID " $ iRequestId $ " has no rewards configured. Placing on cooldown with no action");
-        LWCE_SetRequestCooldown(iRequestId);
+        `LWCE_LOG_CLS("LWCE_DetermineNewFCRequest: request template " $ RequestName $ " has no rewards configured. Placing on cooldown with no action");
+        LWCE_SetRequestCooldown(RequestName);
         return false;
     }
 
-    if (!CreateRequestFromConfig(kRequest, kRequestCfg, eRequestingCountry))
+    if (!CreateRequestFromTemplate(kRequest, kRequestTemplate, eRequestingCountry))
     {
-        `LWCE_LOG_CLS("LWCE_DetermineNewFCRequest: couldn't create request from config for ID " $ iRequestId);
+        `LWCE_LOG_CLS("LWCE_DetermineNewFCRequest: couldn't create request from template " $ RequestName);
         return false;
     }
 
@@ -726,14 +654,14 @@ function bool LWCE_DetermineNewFCRequest()
 
     if (HasConflictingRequest(kRequest))
     {
-        `LWCE_LOG_CLS("LWCE_DetermineNewFCRequest: conflicting request exists for ID " $ iRequestId);
-        LWCE_SetRequestCoolDown(iRequestId);
+        `LWCE_LOG_CLS("LWCE_DetermineNewFCRequest: conflicting request exists for template " $ RequestName);
+        LWCE_SetRequestCoolDown(RequestName);
         return false;
     }
 
     LWCE_OnValidRequestAdded(kRequest);
 
-    `LWCE_LOG_CLS("LWCE_DetermineNewFCRequest: added new request with ID " $ kRequest.iRequestId $ " (" $ kRequest.strName $ ")");
+    `LWCE_LOG_CLS("LWCE_DetermineNewFCRequest: added new request using template " $ kRequest.RequestName);
     return true;
 }
 
@@ -755,7 +683,7 @@ simulated function GetCompletedSatRequestData(out TFCRequest kRequestRef)
 
 simulated function LWCE_GetCompletedSatRequestData(out LWCE_TFCRequest kRequestRef)
 {
-    kRequestRef = m_arrCECurrentRequests[m_iLastCompletedSatelliteTransferRequestID];
+    kRequestRef = m_kLastCompletedSatelliteTransferRequest;
 }
 
 function int GetItemQuestPrice(EItemType eItem)
@@ -785,14 +713,14 @@ function EFCRequest GetLastAcceptedRequestType()
     return eFCR_None;
 }
 
-function int LWCE_GetLastAcceptedRequestType()
+function name LWCE_GetLastAcceptedRequestType()
 {
     if (m_arrCECurrentRequests.Length > 0)
     {
-        return m_arrCECurrentRequests[m_arrCECurrentRequests.Length - 1].iRequestId;
+        return m_arrCECurrentRequests[m_arrCECurrentRequests.Length - 1].RequestName;
     }
 
-    return -1;
+    return '';
 }
 
 function int GetNumberOfCorpsesToSell()
@@ -957,7 +885,7 @@ function bool HasConflictingRequest(const out LWCE_TFCRequest kRequest)
 
     for (Index = 0; Index < m_arrCECurrentRequests.Length; Index++)
     {
-        if (kRequest.iRequestId == m_arrCECurrentRequests[Index].iRequestId && kRequest.eRequestingCountry == m_arrCECurrentRequests[Index].eRequestingCountry)
+        if (kRequest.RequestName == m_arrCECurrentRequests[Index].RequestName && kRequest.eRequestingCountry == m_arrCECurrentRequests[Index].eRequestingCountry)
         {
             return true;
         }
@@ -997,13 +925,13 @@ function bool HasRequestOfType(EFCRequest iRequest)
     return false;
 }
 
-function bool LWCE_HasRequestOfType(int iRequestId)
+function bool LWCE_HasRequestOfType(name RequestName)
 {
     local int Index;
 
     for (Index = 0; Index < m_arrCECurrentRequests.Length; Index++)
     {
-        if (m_arrCECurrentRequests[Index].iRequestId == iRequestId)
+        if (m_arrCECurrentRequests[Index].RequestName == RequestName)
         {
             return true;
         }
@@ -1044,59 +972,48 @@ function OnCountryLeft(ECountry eLeft)
     SITROOM().PushCountryWithdrawHeadline(eLeft);
 }
 
-function OnRequestCompleted(int iRequestId)
+function OnRequestCompleted(int iRequestIndex)
 {
-    local int iCountryDefense;
-    local float fDefenseMultiplier;
     local TText kText;
     local XGCountry kCountry;
 
-    kCountry = Country(m_arrCECurrentRequests[iRequestId].eRequestingCountry);
+    kCountry = Country(m_arrCECurrentRequests[iRequestIndex].eRequestingCountry);
 
-    if (m_arrCECurrentRequests[iRequestId].eType == eFCRType_SatLaunch)
+    if (m_arrCECurrentRequests[iRequestIndex].eType == eFCRType_SatLaunch)
     {
-        m_iLastCompletedSatelliteTransferRequestID = iRequestId;
+        m_kLastCompletedSatelliteTransferRequest = m_arrCECurrentRequests[iRequestIndex];
         PRES().UIFundingCouncilRequestComplete(m_kSatRequestCompleteAdaptor);
     }
 
     kText.iState = eUIState_Good;
-    kText.StrValue = m_arrCECurrentRequests[iRequestId].strTickerSuccess;
-    SITROOM().PushFundingCouncilHeadline(m_arrCECurrentRequests[iRequestId].eRequestingCountry, kText);
+    kText.StrValue = m_arrCECurrentRequests[iRequestIndex].strTickerSuccess;
+    SITROOM().PushFundingCouncilHeadline(m_arrCECurrentRequests[iRequestIndex].eRequestingCountry, kText);
     Achieve(AT_HappyToOblige);
 
-    // Add shields to the requesting country, with bonus shields for Quai d'Orsay
-    fDefenseMultiplier = 1.0f;
+    // Add shields to the requesting country
+    kCountry.m_kTCountry.iScience = Clamp(kCountry.m_kTCountry.iScience + m_arrCECurrentRequests[iRequestIndex].kReward.iCountryDefense, 0, 100);
 
-    if (HQ().HasBonus(`LW_HQ_BONUS_ID(QuaidOrsay)) > 0)
-    {
-        fDefenseMultiplier += HQ().HasBonus(`LW_HQ_BONUS_ID(QuaidOrsay)) / 100.0f;
-    }
-
-    iCountryDefense = fDefenseMultiplier * m_arrCECurrentRequests[iRequestId].kReward.iCountryDefense;
-    `LWCE_LOG_CLS("iCountryDefense = " $ iCountryDefense $ ", fDefenseMultiplier = " $ fDefenseMultiplier);
-    kCountry.m_kTCountry.iScience = Clamp(kCountry.m_kTCountry.iScience + iCountryDefense, 0, 100);
-
-    m_arrCECurrentRequests.Remove(iRequestId, 1);
+    m_arrCECurrentRequests.Remove(iRequestIndex, 1);
 
     // New to LWCE: base game doesn't update HUD on request turn-in
     PRES().GetStrategyHUD().ClearResources();
     PRES().GetStrategyHUD().UpdateFunds();
 }
 
-function OnRequestExpired(int iRequest)
+function OnRequestExpired(int iRequestIndex)
 {
     local TText kText;
 
-    if (iRequest != -1)
+    if (iRequestIndex != -1)
     {
-        PRES().Notify(eGA_FCExpiredRequest, m_arrCECurrentRequests[iRequest].eRequestingCountry);
-        m_arrCEExpiredRequests.AddItem(m_arrCECurrentRequests[iRequest]);
+        PRES().Notify(eGA_FCExpiredRequest, m_arrCECurrentRequests[iRequestIndex].eRequestingCountry);
+        m_arrCEExpiredRequests.AddItem(m_arrCECurrentRequests[iRequestIndex]);
     }
 
     kText.iState = eUIState_Bad;
-    kText.StrValue = m_arrCECurrentRequests[iRequest].strTickerIgnore;
-    SITROOM().PushFundingCouncilHeadline(m_arrCECurrentRequests[iRequest].eRequestingCountry, kText);
-    m_arrCECurrentRequests.Remove(iRequest, 1);
+    kText.StrValue = m_arrCECurrentRequests[iRequestIndex].strTickerIgnore;
+    SITROOM().PushFundingCouncilHeadline(m_arrCECurrentRequests[iRequestIndex].eRequestingCountry, kText);
+    m_arrCECurrentRequests.Remove(iRequestIndex, 1);
 }
 
 function OnSatelliteSuccessfullyTransferred(TSatellite kSatellite, optional bool bSitRoomAttention = true, optional bool bTurnInRequest = false)
@@ -1134,7 +1051,7 @@ function OnShipAdded(EShipType eShip, int iContinent)
     {
         if (m_arrCECurrentRequests[Index].bIsTransferRequest && !m_arrCECurrentRequests[Index].bIsTransferComplete)
         {
-            if (eShip == eShip_Interceptor && m_arrCECurrentRequests[Index].eType == eFCR_JetTransfer)
+            if (eShip == eShip_Interceptor && m_arrCECurrentRequests[Index].eType == eFCRType_JetTransfer)
             {
                 if (IsCountryInContinent(m_arrCECurrentRequests[Index].eRequestingCountry, iContinent))
                 {
@@ -1187,7 +1104,7 @@ function LWCE_OnValidRequestAdded(out LWCE_TFCRequest kRequest)
 {
     m_iFCRequestsThisMonth++;
 
-    LWCE_SetRequestCoolDown(kRequest.iRequestId);
+    LWCE_SetRequestCoolDown(kRequest.RequestName);
 
     if (LWCE_CanAcceptRequest(kRequest))
     {
@@ -1207,38 +1124,38 @@ function int PassesRequestRequirements(TFCRequest kRequest)
     return -1;
 }
 
-function bool LWCE_PassesRequestRequirements(const LWCE_TFCRequestConfig kRequestCfg)
+function bool LWCE_PassesRequestRequirements(const LWCECouncilRequestTemplate kRequestTemplate)
 {
     local int Index;
 
     // Don't allow any request that's already active
     for (Index = 0; Index < m_arrCECurrentRequests.Length; Index++)
     {
-        // Base game checks by name, presumably because that codifies both the request type and the country involved.
-        // We add a check by request ID in case two mods add requests with the same name.
-        if (m_arrCECurrentRequests[Index].iRequestId == kRequestCfg.iRequestId && m_arrCECurrentRequests[Index].strName == kRequestCfg.strName)
+        // Base game checks by localized name, presumably because that codifies both the request type and the country involved.
+        // We add a check by request name in case two mods add requests with the same localized name.
+        if (m_arrCECurrentRequests[Index].RequestName == kRequestTemplate.GetRequestName() && m_arrCECurrentRequests[Index].strName == kRequestTemplate.strName)
         {
             return false;
         }
     }
 
-    if (kRequestCfg.iRequestId == eFCR_JetTransfer && HANGAR().m_arrInts.Length > 0)
+    if (kRequestTemplate.eType == eFCRType_JetTransfer && HANGAR().m_arrInts.Length > 0)
     {
         return true;
     }
 
     // Having 0 rewards is allowed for the Jet Transfer request to match LW 1.0 behavior; see ini for details.
-    if (kRequestCfg.arrRewards.Length == 0 && kRequestCfg.iRequestId != eFCR_JetTransfer)
+    if (kRequestTemplate.arrRewards.Length == 0 && kRequestTemplate.eType != eFCRType_JetTransfer)
     {
         return false;
     }
 
-    if (kRequestCfg.arrRequestedItems.Length == 0 && kRequestCfg.eType != eFCRType_SatLaunch)
+    if (kRequestTemplate.arrRequestedItems.Length == 0 && kRequestTemplate.eType != eFCRType_SatLaunch)
     {
         return false;
     }
 
-    return `LWCE_HQ.ArePrereqsFulfilled(kRequestCfg.kPrereqs);
+    return `LWCE_HQ.ArePrereqsFulfilled(kRequestTemplate.kPrereqs);
 }
 
 function SetRequestCoolDown(out EFCRequest kRequest, int amnt)
@@ -1246,23 +1163,23 @@ function SetRequestCoolDown(out EFCRequest kRequest, int amnt)
     `LWCE_LOG_DEPRECATED_CLS(SetRequestCoolDown);
 }
 
-function LWCE_SetRequestCooldown(int iRequestId)
+function LWCE_SetRequestCooldown(name RequestName)
 {
-    local LWCE_TFCRequestConfig kRequestConfig;
-    local int iCooldown;
+    local LWCECouncilRequestTemplate kRequestTemplate;
+    local LWCE_TRequestCooldown kCooldown;
+    local int iCooldown, Index;
 
-    if (iRequestId == eFCR_SatCountry)
-    {
-        // No cooldown on satellite requests since they're per-country
-        return;
-    }
-
-    if (!GetRequestConfig(iRequestId, kRequestConfig))
+    if (!GetRequestTemplate(RequestName, kRequestTemplate))
     {
         return;
     }
 
-    iCooldown = kRequestConfig.iCooldownInHours;
+    if (kRequestTemplate.iCooldownInHours <= 0)
+    {
+        return;
+    }
+
+    iCooldown = kRequestTemplate.iCooldownInHours;
 
     // Check for Quai d'Orsay bonus
     if (HQ().HasBonus(`LW_HQ_BONUS_ID(QuaidOrsay)) > 0)
@@ -1270,7 +1187,18 @@ function LWCE_SetRequestCooldown(int iRequestId)
         iCooldown *= (1.0f - (HQ().HasBonus(`LW_HQ_BONUS_ID(QuaidOrsay)) / 100.0f));
     }
 
-    `LWCE_UTILS.UpsertKeyValuePair(m_arrCERequestCooldowns, iRequestId, iCooldown);
+    Index = m_arrCERequestCooldowns.Find('RequestName', RequestName);
+
+    if (Index != INDEX_NONE)
+    {
+        m_arrCERequestCooldowns[Index].iHoursRemaining = iCooldown;
+    }
+    else
+    {
+        kCooldown.RequestName = RequestName;
+        kCooldown.iHoursRemaining = iCooldown;
+        m_arrCERequestCooldowns.AddItem(kCooldown);
+    }
 }
 
 protected function int DetermineItemQuantityToRequest(LWCE_TRequestItemConfig kRequestItemConfig, bool bIsDynamicWar)
@@ -1305,19 +1233,25 @@ protected function int DetermineItemQuantityToRequest(LWCE_TRequestItemConfig kR
     return iQuantity;
 }
 
-protected function bool GetRequestConfig(int iRequestId, out LWCE_TFCRequestConfig kRequestCfg)
+protected function int GetRemainingCooldown(name RequestName)
 {
     local int Index;
 
-    Index = m_arrPossibleRequests.Find('iRequestId', iRequestId);
+    Index = m_arrCERequestCooldowns.Find('RequestName', RequestName);
 
-    if (Index != INDEX_NONE)
+    if (Index == INDEX_NONE)
     {
-        kRequestCfg = m_arrPossibleRequests[Index];
-        return true;
+        return 0;
     }
 
-    return false;
+    return m_arrCERequestCooldowns[Index].iHoursRemaining;
+}
+
+protected function bool GetRequestTemplate(name RequestName, out LWCECouncilRequestTemplate kRequestTemplate)
+{
+    kRequestTemplate = m_kTemplateMgr.FindCouncilRequestTemplate(RequestName);
+
+    return kRequestTemplate != none;
 }
 
 /// <summary>
@@ -1335,4 +1269,21 @@ protected function int GetRewardEquivalentCashValue(const out LWCE_TFCRequest kR
     }
 
     return iCash;
+}
+
+protected function int RollCountryDefenseReward(LWCE_TRange kRange)
+{
+    local int iCountryDefense;
+    local float fDefenseMultiplier;
+
+    fDefenseMultiplier = 1.0f;
+
+    if (HQ().HasBonus(`LW_HQ_BONUS_ID(QuaidOrsay)) > 0)
+    {
+        fDefenseMultiplier += HQ().HasBonus(`LW_HQ_BONUS_ID(QuaidOrsay)) / 100.0f;
+    }
+
+    iCountryDefense = `LWCE_UTILS.RandInRange(kRange) * fDefenseMultiplier;
+
+    return iCountryDefense;
 }

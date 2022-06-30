@@ -187,20 +187,6 @@ protected function OnFindDLCComplete()
 // would be interested in or can modify in some way. Each of these will cause a matching function in LWCEModBase to be called
 // in each enabled mod.
 
-// #region Council-related events
-
-function OnCouncilRequestsBuilt(out array<LWCE_TFCRequestConfig> arrPossibleRequests)
-{
-    local LWCEStrategyListener kStrategyListener;
-
-    foreach StrategyListeners(kStrategyListener)
-    {
-        kStrategyListener.OnCouncilRequestsBuilt(arrPossibleRequests);
-    }
-}
-
-// #endregion
-
 // #region Foundry-related events
 
 function bool Override_HasFoundryPrereqs(LWCE_TFoundryTech kTech)
