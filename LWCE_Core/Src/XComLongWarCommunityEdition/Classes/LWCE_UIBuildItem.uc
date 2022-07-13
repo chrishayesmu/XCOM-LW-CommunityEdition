@@ -64,12 +64,6 @@ simulated function bool OnMouseEvent(int Cmd, array<string> args)
 
             if (iCat != -1)
             {
-                if (GetMgr().ISCONTROLLED() && iCat != 0 && GetMgr().Game().GetNumMissionsTaken() > 3)
-                {
-                    GetMgr().PlayBadSound();
-                    return true;
-                }
-
                 m_iCurrentSelection = 0;
                 GetMgr().OnTab(iCat);
                 LWCE_RealizeSelected();
@@ -170,12 +164,6 @@ simulated function bool OnUnrealCommand(int Cmd, int Arg)
 
             if (cardData.m_type != 0)
             {
-                if (GetMgr().ISCONTROLLED() && GetMgr().SETUPMGR().IsInState('Base2_Engineering'))
-                {
-                    m_bSetCancelDisabled = true;
-                    XComHeadquartersInput(`HQGAME.PlayerController.PlayerInput).m_bDisableCancel = false;
-                }
-
                 PlaySound(`SoundCue("SoundUI.MenuSelectCue"), true);
                 `HQPRES.UIItemCard(cardData);
             }
@@ -251,7 +239,7 @@ function LWCE_UpdateItemDesc(TObjectSummary kSummary)
         }
     }
 
-    AS_UpdateInfo(ItemName, infoText, Desc, kItem.imagePath);
+    AS_UpdateInfo(ItemName, infoText, Desc, kItem.ImagePath);
 }
 
 simulated function UpdateLayout()

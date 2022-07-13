@@ -1,5 +1,63 @@
 class LWCE_XGCountry extends XGCountry;
 
+function AddPanic(int iPanic, optional bool bSuppressHeadline)
+{
+    local int iPrevPanic;
+
+    iPrevPanic = m_iPanic;
+
+    if (m_iPanic == -1)
+    {
+        return;
+    }
+
+    if (!m_kTCountry.bCouncilMember)
+    {
+        return;
+    }
+
+    if (m_iPanic >= 99 && iPanic > 0)
+    {
+        return;
+    }
+
+    if (IsOptionEnabled(`LW_SECOND_WAVE_ID(DynamicWar)))
+    {
+        // Don't apply dynamic war scaling to the panic which is applied at the start of the game
+        if (STAT_GetStat(1) > 0)
+        {
+            iPanic /= class'XGTacticalGameCore'.default.SW_MARATHON;
+        }
+    }
+
+    if (iPanic > 0)
+    {
+        if (Roll(m_kTCountry.iScience))
+        {
+            iPanic = Max(1, iPanic / 2);
+        }
+    }
+
+    iPanic += EXALT().GetPanicMod(ECountry(m_kTCountry.iEnum), iPanic);
+    m_iPanic = Clamp(m_iPanic + iPanic, 0, 99);
+    GEOSCAPE().ColorCountry(ECountry(GetID()), GetPanicColor());
+
+    if (m_iPanic >= GetPanicWarningThreshhold() && m_iPanic - iPanic < GetPanicWarningThreshhold() && iPanic > 0)
+    {
+        LWCE_XGGeoscape(GEOSCAPE()).LWCE_Alert(`LWCE_ALERT('CountryPanic').AddInt(m_kTCountry.iEnum).Build());
+    }
+
+    if (iPrevPanic != m_iPanic)
+    {
+        if (!bSuppressHeadline)
+        {
+            SITROOM().PushPanicHeadline(ECountry(GetID()), m_iPanic / 20);
+        }
+    }
+
+    CalcFunding();
+}
+
 function LeaveXComProject()
 {
     AI().ClearFromAbductionList(ECountry(GetID()));
@@ -22,11 +80,6 @@ function LeaveXComProject()
     Game().CheckForLoseGame();
     World().m_kFundingCouncil.OnCountryLeft(ECountry(GetID()));
     World().m_iNumCountriesLost += 1;
-
-    if (!WorldInfo.IsConsoleBuild(CONSOLE_Xbox360) && !WorldInfo.IsConsoleBuild(CONSOLE_PS3))
-    {
-        GetRecapSaveData().RecordEvent(RecordCountryLeavesXCom());
-    }
 
     STAT_AddStat(eRecap_CountriesLost, 1);
     SetEntity(Spawn(class'LWCE_XGEntity'), GetStormEntity());

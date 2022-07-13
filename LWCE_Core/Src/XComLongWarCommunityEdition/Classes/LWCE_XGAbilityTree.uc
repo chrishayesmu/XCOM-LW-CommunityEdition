@@ -65,8 +65,9 @@ simulated event GetVolume(XGAbility_Targeted kAbility, out TVolume kVolume)
 
 simulated function bool HasAutopsyTechForChar(int iCharType)
 {
+    local name TechName;
     local LWCE_XGDropshipCargoInfo kCargo;
-    local LWCE_TTech kTech;
+    local LWCETechTemplate kTech;
 
     // Hard-coded character types that don't need to be autopsied
     if (iCharType == eChar_Civilian ||
@@ -94,8 +95,10 @@ simulated function bool HasAutopsyTechForChar(int iCharType)
         return super.HasAutopsyTechForChar(iCharType);
     }
 
-    foreach kCargo.m_arrCETechHistory(kTech)
+    foreach kCargo.m_arrCETechHistory(TechName)
     {
+        kTech = `LWCE_TECH(TechName);
+
         if (kTech.bIsAutopsy && kTech.iSubjectCharacterId == iCharType)
         {
             return true;

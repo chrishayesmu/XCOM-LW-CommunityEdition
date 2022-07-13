@@ -84,7 +84,7 @@ function int GetCapacity()
 
     if (HANGAR().m_kSkyranger != none && HANGAR().m_kSkyranger.m_kMission != none)
     {
-        if (ENGINEERING().IsFoundryTechResearched(`LW_FOUNDRY_ID(SuperSkyranger)))
+        if (`LWCE_ENGINEERING.LWCE_IsFoundryTechResearched('Foundry_SuperSkyranger'))
         {
             if (HANGAR().m_kSkyranger.m_kMission.m_iMissionType == eMission_AlienBase)
             {

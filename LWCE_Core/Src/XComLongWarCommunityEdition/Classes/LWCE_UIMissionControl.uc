@@ -35,7 +35,7 @@ simulated function XGMissionControlUI GetMgr(optional int iStaringView = -1)
 
 simulated function GoToView(int iView)
 {
-    local int iAlertType;
+    local name AlertType;
     local bool bAlertHandled;
     local UIStrategyHUD kStrategyHUD;
 
@@ -73,115 +73,110 @@ simulated function GoToView(int iView)
                 kStrategyHUD.Hide();
             }
 
-            iAlertType = GetMgr().m_kCurrentAlert.iAlertType;
+            AlertType = LWCE_XGMissionControlUI(GetMgr()).m_kCECurrentAlert.AlertType;
             bAlertHandled = true;
 
-            switch (iAlertType)
+            switch (AlertType)
             {
-                case eGA_ItemProjectCompleted:
+                case 'ItemProjectCompleted':
                     m_kActiveAlert = Spawn(class'LWCE_UIMissionControl_EngineeringAlert', self);
                     break;
-                case eGA_ResearchCompleted:
+                case 'ResearchCompleted':
                     m_kActiveAlert = Spawn(class'LWCE_UIMissionControl_ScienceAlert', self);
                     break;
-                case eGA_FoundryProjectCompleted:
+                case 'FoundryProjectCompleted':
                     m_kActiveAlert = Spawn(class'LWCE_UIMissionControl_FoundryAlert', self);
                     break;
-                case eGA_NewFacilityBuilt:
+                case 'NewFacilityBuilt':
                     m_kActiveAlert = Spawn(class'LWCE_UIMissionControl_FacilityBuiltAlert', self);
                     break;
-                case eGA_UFODetected:
+                case 'UFODetected':
                     XComEngine(class'Engine'.static.GetEngine()).SetAlienFXColor(eAlienFX_Yellow);
                     m_kActiveAlert = Spawn(class'LWCE_UIMissionControl_UFORadarContactAlert', self);
                     break;
-                case eGA_AlienBase:
+                case 'AlienBase':
                     XComEngine(class'Engine'.static.GetEngine()).SetAlienFXColor(eAlienFX_Yellow);
                     m_kActiveAlert = Spawn(class'LWCE_UIMissionControl_AlienBaseAlert', self);
                     break;
-                case eGA_CountryPanic:
+                case 'CountryPanic':
                     m_kActiveAlert = Spawn(class'LWCE_UIMissionControl_CountryPanicAlert', self);
                     break;
-                case eGA_Terror:
+                case 'Terror':
                     XComEngine(class'Engine'.static.GetEngine()).SetAlienFXColor(eAlienFX_Yellow);
                     m_kActiveAlert = Spawn(class'LWCE_UIMissionControl_TerrorAlert', self);
                     break;
-                case eGA_SecretPact:
-                case eGA_ExaltRaidFailCountry:
-                case eGA_ExaltRaidFailContinent:
-                case 53: // Unknown, something added by Long War
+                case 'SecretPact':
+                case 'ExaltRaidFailCountry':
+                case 'ExaltRaidFailContinent':
+                case 'AirBaseDefenseFailed':
                     m_kActiveAlert = Spawn(class'LWCE_UIMissionControl_SecretPactAlert', self);
                     break;
-                case eGA_SatelliteDestroyed:
+                case 'SatelliteDestroyed':
                     XComEngine(class'Engine'.static.GetEngine()).SetAlienFXColor(eAlienFX_Yellow);
                     m_kActiveAlert = Spawn(class'LWCE_UIMissionControl_SatelliteDownAlert', self);
                     break;
-                case eGA_DropArrive:
+                case 'DropArrive':
                     m_kActiveAlert = Spawn(class'LWCE_UIMissionControl_DropshipArrivedAlert', self);
                     break;
-                case eGA_UFOLanded:
+                case 'UFOLanded':
                     XComEngine(class'Engine'.static.GetEngine()).SetAlienFXColor(eAlienFX_Yellow);
                     m_kActiveAlert = Spawn(class'LWCE_UIMissionControl_UFOAlert', self);
                     m_kActiveAlert.s_alertName = "UFOLandingAlert";
                     break;
-                case eGA_UFOCrash:
+                case 'UFOCrash':
                     XComEngine(class'Engine'.static.GetEngine()).SetAlienFXColor(eAlienFX_Yellow);
                     m_kActiveAlert = Spawn(class'LWCE_UIMissionControl_UFOAlert', self);
                     m_kActiveAlert.s_alertName = "UFOCrashAlert";
                     break;
-                case eGA_UFOLost:
+                case 'UFOLost':
                     XComEngine(class'Engine'.static.GetEngine()).SetAlienFXColor(eAlienFX_Yellow);
                     m_kActiveAlert = Spawn(class'LWCE_UIMissionControl_AlertBase', self);
                     m_kActiveAlert.s_alertName = "ContactLostAlert";
                     m_kActiveAlert.m_bIsSimpleAlert = true;
                     break;
-                case eGA_Abduction:
+                case 'Abduction':
                     m_kActiveAlert = Spawn(class'LWCE_UIMissionControl_AlertWithMultipleButtons', self);
                     m_kActiveAlert.s_alertName = "AbductionAlert";
                     m_kActiveAlert.m_bIsSimpleAlert = true;
                     XComEngine(class'Engine'.static.GetEngine()).SetAlienFXColor(eAlienFX_Yellow);
                     break;
-                case eGA_PsiTraining:
+                case 'PsiTraining':
                     m_kActiveAlert = Spawn(class'LWCE_UIMissionControl_AlertWithMultipleButtons', self);
                     m_kActiveAlert.s_alertName = "PsiTestingAlert";
                     m_kActiveAlert.m_bIsSimpleAlert = true;
                     break;
-                case eGA_Temple:
+                case 'Temple':
                     XComEngine(class'Engine'.static.GetEngine()).SetAlienFXColor(eAlienFX_Yellow);
                     m_kActiveAlert = Spawn(class'LWCE_UIMissionControl_AlertWithMultipleButtons', self);
                     m_kActiveAlert.s_alertName = "TempleShipAlert";
                     m_kActiveAlert.m_bIsSimpleAlert = true;
                     m_kActiveAlert.m_bShowBackButtonOnMissionControl = true;
                     break;
-                case eGA_FCActivity:
-                case eGA_FCMissionActivity:
+                case 'FCActivity':
+                case 'FCMissionActivity':
                     m_kActiveAlert = Spawn(class'LWCE_UIMissionControl_AlertBase', self);
                     m_kActiveAlert.s_alertName = "FundingCouncilAlert";
                     m_kActiveAlert.m_bIsSimpleAlert = true;
                     break;
-                case eGA_ExaltMissionActivity:
+                case 'ExaltMissionActivity':
                     m_kActiveAlert = Spawn(class'LWCE_UIMissionControl_ExaltSelection', self);
                     m_kActiveAlert.s_alertName = "ExaltSelection";
                     m_kActiveAlert.m_bIsSimpleAlert = true;
                     break;
-                case eGA_ExaltResearchHack:
+                case 'ExaltResearchHack':
                     m_kActiveAlert = Spawn(class'LWCE_UIMissionControl_ExaltResearchHack', self);
                     m_kActiveAlert.s_alertName = "ExaltSelection";
                     m_kActiveAlert.m_bIsSimpleAlert = true;
                     break;
-                case eGA_ExaltAlert:
+                case 'ExaltAlert':
                     m_kActiveAlert = Spawn(class'LWCE_UIMissionControl_ExaltAlert', self);
                     m_kActiveAlert.s_alertName = "ExaltAlert";
                     m_kActiveAlert.m_bIsSimpleAlert = true;
                     break;
-                case eGA_Augmentation:
+                case 'Augmentation':
                     m_kActiveAlert = Spawn(class'LWCE_UIMissionControl_AugmentationCompleteAlert', self);
                     m_kActiveAlert.s_alertName = "AugmentationAlert";
                     m_kActiveAlert.m_bIsSimpleAlert = false;
-                    break;
-                case class'LWCE_XGGeoscape'.const.MOD_ALERT_TYPE:
-                    m_kActiveAlert = Spawn(class'LWCE_UIMissionControl_AlertBase', self);
-                    m_kActiveAlert.s_alertName = "FundingCouncilAlert";
-                    m_kActiveAlert.m_bIsSimpleAlert = true;
                     break;
                 default:
                     bAlertHandled = false;
@@ -245,75 +240,74 @@ simulated function LoadFlashAlertPanel()
         return;
     }
 
-    switch (GetMgr().m_kCurrentAlert.iAlertType)
+    switch (LWCE_XGMissionControlUI(GetMgr()).m_kCECurrentAlert.AlertType)
     {
-        case eGA_UFODetected:
+        case 'UFODetected':
             Invoke("LoadRadarContactAlert");
             return;
-        case eGA_UFOLanded:
+        case 'UFOLanded':
             Invoke("LoadUFOLandedAlert");
             return;
-        case eGA_UFOCrash:
+        case 'UFOCrash':
             Invoke("LoadUFOCrashAlert");
             return;
-        case eGA_UFOLost:
+        case 'UFOLost':
             Invoke("LoadContactLostAlert");
             return;
-        case eGA_DropArrive:
+        case 'DropArrive':
             Invoke("LoadSkyrangerArrivalAlert");
             return;
-        case eGA_AlienBase:
+        case 'AlienBase':
             Invoke("LoadAlienBaseAlert");
             return;
-        case eGA_ResearchCompleted:
+        case 'ResearchCompleted':
             Invoke("LoadScienceAlert");
             return;
-        case eGA_ItemProjectCompleted:
+        case 'ItemProjectCompleted':
             Invoke("LoadEngineeringAlert");
             return;
-        case eGA_FoundryProjectCompleted:
+        case 'FoundryProjectCompleted':
             Invoke("LoadFoundryAlert");
             return;
-        case eGA_NewFacilityBuilt:
+        case 'NewFacilityBuilt':
             Invoke("LoadFacilityBuiltAlert");
             return;
-        case eGA_Terror:
+        case 'Terror':
             Invoke("LoadTerrorAlert");
             return;
-        case eGA_Abduction:
+        case 'Abduction':
             Invoke("LoadAbductionAlert");
             return;
-        case eGA_CountryPanic:
+        case 'CountryPanic':
             Invoke("LoadCountryPanicAlert");
             return;
-        case eGA_PsiTraining:
+        case 'PsiTraining':
             Invoke("LoadPsiTestingAlert");
             return;
-        case eGA_SecretPact:
-        case eGA_ExaltRaidFailCountry:
-        case eGA_ExaltRaidFailContinent:
-        case 53:
+        case 'SecretPact':
+        case 'ExaltRaidFailCountry':
+        case 'ExaltRaidFailContinent':
+        case 'AirBaseDefenseFailed':
             Invoke("LoadSecretPactAlert");
             return;
-        case eGA_SatelliteDestroyed:
+        case 'SatelliteDestroyed':
             Invoke("LoadSatelliteDownAlert");
             return;
-        case eGA_Temple:
+        case 'Temple':
             Invoke("LoadTempleShipAlert");
             return;
-        case eGA_FCActivity:
-        case eGA_FCMissionActivity:
-        case class'LWCE_XGGeoscape'.const.MOD_ALERT_TYPE:
+        case 'FCActivity':
+        case 'FCMissionActivity':
             Invoke("LoadFundingCouncilAlert");
             return;
-        case eGA_ExaltMissionActivity:
-        case eGA_ExaltResearchHack:
+        case 'ExaltMissionActivity':
+        case 'ExaltResearchHack':
             Invoke("LoadExaltSelection");
             return;
-        case eGA_ExaltAlert:
+        case 'ExaltAlert':
             Invoke("LoadExaltAlert");
             return;
-        case eGA_Augmentation:
+        case 'Augmentation':
             Invoke("LoadAugmentationAlert");
             return;
     }

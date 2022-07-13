@@ -290,7 +290,7 @@ simulated state State_HangarShipSummary extends BaseScreenState
 	simulated function OnReceiveFocus(){}
 	simulated function OnLoseFocus(){}}
 simulated state State_HangarShipLoadout extends BaseScreenState{
-    
+
     simulated function Deactivate(){}
     simulated function OnReceiveFocus(){}
     simulated function OnLoseFocus(){}   }
@@ -298,7 +298,7 @@ simulated state State_Gollop extends BaseScreenState{simulated function Activate
 	simulated function Deactivate(){}
 	simulated function OnReceiveFocus(){}
 	simulated function OnLoseFocus(){}}
-simulated state State_FundingCouncilRequest extends BaseScreenState{  
+simulated state State_FundingCouncilRequest extends BaseScreenState{
     simulated function Deactivate(){}
     simulated function OnReceiveFocus(){}
     simulated function OnLoseFocus(){}   }
@@ -351,7 +351,7 @@ simulated state State_MC extends BaseScreenState{simulated function Activate(){}
 	simulated function Deactivate(){}
 	simulated function OnReceiveFocus(){}
 	simulated function OnLoseFocus(){}simulated function OnZoomIn(){}}
-simulated state State_InterceptionEngagement extends BaseScreenState{ 
+simulated state State_InterceptionEngagement extends BaseScreenState{
     simulated function ActivatePrivate(){}
 	simulated function Deactivate(){}
 	simulated function OnReceiveFocus(){}
@@ -415,7 +415,9 @@ simulated state State_Debrief extends BaseScreenState{simulated function Activat
 	simulated function Deactivate(){}
 	simulated function OnReceiveFocus(){}
 	simulated function OnLoseFocus(){}}
-simulated state State_ChooseSquad extends BaseScreenState{simulated function Activate(){}
+simulated state State_ChooseSquad extends BaseScreenState{
+    function DisplayChooseSquadLight(bool bEnable){}
+    simulated function Activate(){}
 	simulated function Deactivate(){}
 	simulated function OnReceiveFocus(){}
 	simulated function OnLoseFocus(){}}
@@ -431,7 +433,3 @@ simulated state State_TellMeMore extends BaseScreenState{simulated function Acti
 	simulated function Deactivate(){}
 	simulated function OnReceiveFocus(){}
 	simulated function OnLoseFocus(){}}
-
-
-
-

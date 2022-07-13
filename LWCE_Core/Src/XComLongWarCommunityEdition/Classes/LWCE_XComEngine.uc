@@ -87,6 +87,7 @@ function LWCE_Init()
 
 private function CreateDataTemplateManagers()
 {
+    local bool bAnyInvalid;
     local int Index;
     local class<LWCEDataTemplateManager> kClass;
     local LWCEDataTemplateManager kTemplateManager;
@@ -108,6 +109,25 @@ private function CreateDataTemplateManagers()
 
         m_arrDataTemplateManagers.AddItem(kTemplateManager);
     }
+
+    bAnyInvalid = true;
+
+    while (bAnyInvalid)
+    {
+        bAnyInvalid = false;
+
+        for (Index = 0; Index < m_arrDataTemplateManagers.Length; Index++)
+        {
+            bAnyInvalid = !m_arrDataTemplateManagers[Index].ValidateAndFilterTemplates() || bAnyInvalid;
+        }
+
+        if (bAnyInvalid)
+        {
+            `LWCE_LOG_CLS("One or more template managers had invalid templates. Validating all template managers again to check for newly-invalidated dependencies.");
+        }
+    }
+
+    `LWCE_LOG_CLS("Finished loading " $ m_arrDataTemplateManagers.Length $ " data template managers");
 }
 
 /// <summary>

@@ -8,7 +8,7 @@ static simulated function LWCE_TWeapon GetCEWeapon(XGWeapon kWeapon)
 
 static simulated function int GetItemId(XGItem kItem)
 {
-    return int(kItem.m_strUIImage);
+    return kItem == none ? 0 : int(kItem.m_strUIImage);
 }
 
 // TODO: replace all instances of XGWeapon.LongRange with this

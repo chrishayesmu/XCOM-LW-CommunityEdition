@@ -1,5 +1,7 @@
 class XGBase extends XGStrategyActor;
 
+const ALIENCONTAINMENT_ANIMMAP = "Anim_AlienContainment";
+
 enum ETileState
 {
     eTileState_None,
@@ -91,4 +93,3 @@ function BeginAlienContainment(EItemType kCaptive){}
 function DoAlienInterrogation(EItemType kCaptive){}
 function InterrogateContainedAlien(EItemType kCaptive){}
 function OnInterrogationCinematicComplete(){}
-

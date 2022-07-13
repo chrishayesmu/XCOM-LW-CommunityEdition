@@ -15,3 +15,10 @@ simulated function bool OnMouseEvent(int Cmd, array<string> args){}
 function OnMenuButtonClick(){}
 simulated function AS_SetHeaderLabels(string abductionSitesLabel, string panicLevelLabel, string difficultyLabel, string rewardLabel, string confirmLabel){}
 simulated function AS_SetData(string countryName, int panicLevel, string Difficulty, string reward){}
+
+defaultproperties
+{
+    m_iOptionSelected=-1
+    s_alertName="AbductionSelection"
+    m_bShowBackButtonOnMissionControl=true
+}

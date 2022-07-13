@@ -1,6 +1,12 @@
 class LWCE_XGResearchUI extends XGResearchUI;
 
-var int m_iCEReportTech;
+struct LWCE_TLabArchivesUI
+{
+    var TMenu mnuArchives;
+    var array<name> arrTechs;
+};
+
+var name m_nmCEReportTech;
 var LWCE_TLabArchivesUI m_kCEArchives;
 
 function Init(int iView)
@@ -9,32 +15,9 @@ function Init(int iView)
 
     kLabs = `LWCE_LABS;
 
-    if (ISCONTROLLED())
+    if (kLabs.m_nmLastResearchedTech != '')
     {
-        m_iCEReportTech = kLabs.m_iCELastResearched;
-
-        if (kLabs.m_iCELastResearched != 0)
-        {
-            if (kLabs.m_iCELastResearched != `LW_TECH_ID(Xenobiology) && kLabs.m_iCELastResearched != `LW_TECH_ID(Xenoneurology))
-            {
-                GoToView(eLabView_ChooseTech);
-            }
-            else
-            {
-                GoToView(eLabView_Report);
-            }
-        }
-        else
-        {
-            GoToView(iView);
-        }
-
-        return;
-    }
-
-    if (kLabs.m_iCELastResearched != 0)
-    {
-        m_iCEReportTech = kLabs.m_iCELastResearched;
+        m_nmCEReportTech = kLabs.m_nmLastResearchedTech;
         GoToView(eLabView_Report);
     }
     else
@@ -43,7 +26,7 @@ function Init(int iView)
     }
 }
 
-function TTableMenuOption LWCE_BuildTechOption(LWCE_TTech kTech, array<int> arrCategories, bool bPriority)
+function TTableMenuOption LWCE_BuildTechOption(LWCETechTemplate kTech, array<int> arrCategories, bool bPriority)
 {
     local TTableMenuOption kOption;
     local int iCategory;
@@ -57,7 +40,7 @@ function TTableMenuOption LWCE_BuildTechOption(LWCE_TTech kTech, array<int> arrC
 
         if (arrCategories[iCategory] == 1)
         {
-            strCategory = kTech.strName;
+            strCategory = kTech.m_strName;
 
             if (bPriority)
             {
@@ -77,42 +60,47 @@ function TTableMenuOption LWCE_BuildTechOption(LWCE_TTech kTech, array<int> arrC
     return kOption;
 }
 
-function TTechSummary LWCE_BuildTechSummary(LWCE_TTech kTech)
+function TTechSummary LWCE_BuildTechSummary(LWCETechTemplate kTech)
 {
+    local LWCE_XGFacility_Labs kLabs;
     local LWCE_XGTechTree kTechTree;
     local TResearchCost kCost;
     local TTechSummary kSummary;
     local XGParamTag kTag;
-    local int I;
+    local int Index;
+    local name CreditName;
 
+    kLabs = `LWCE_LABS;
     kTechTree = `LWCE_TECHTREE;
 
     kSummary.imgItem.strPath = kTech.ImagePath;
-    kSummary.txtTitle.StrValue = "<b>" $ kTech.strName $ "</b>";
+    kSummary.txtTitle.StrValue = "<b>" $ kTech.m_strName $ "</b>";
     kSummary.txtTitle.iState = eUIState_Highlight;
-    kSummary.txtSummary.StrValue = kTech.strSummary;
+    kSummary.txtSummary.StrValue = kTech.m_strSummary;
 
     kTag = XGParamTag(XComEngine(class'Engine'.static.GetEngine()).LocalizeContext.FindTag("XGParam"));
 
-    for (I = 0; I < 10; I++)
+    for (Index = 0; Index < kTech.arrCreditsApplied.Length; Index++)
     {
-        if (LABS().HasResearchCredit(EResearchCredits(I)) && kTechTree.LWCE_CreditAppliesToTech(I, kTech.iTechId))
+        CreditName = kTech.arrCreditsApplied[Index];
+
+        if (kLabs.LWCE_HasResearchCredit(CreditName))
         {
-            kTag.StrValue0 = class'XGLocalizedData'.default.ResearchCreditNames[I];
-            kTag.IntValue0 = kTechTree.GetResearchCredit(EResearchCredits(I)).iBonus;
+            kTag.StrValue0 = `LWCE_UTILS.GetResearchCreditFriendlyName(CreditName);
+            kTag.IntValue0 = kTechTree.LWCE_GetResearchCredit(CreditName).iBonus;
             kSummary.txtSummary.StrValue $= "\n" $ class'XComLocalizer'.static.ExpandString(m_strResearchCreditApplies);
         }
     }
 
-    kSummary.txtProgress = LABS().GetProgressText(LABS().GetProgress(kTech.iTechId));
+    kSummary.txtProgress = kLabs.GetProgressText(kLabs.LWCE_GetProgress(kTech.GetTechName()));
     kSummary.txtProgress.strLabel = m_strProgressLabel;
-    kSummary.txtProgress.StrValue $= " (" $ LABS().GetEstimateString(kTech.iTechId) $ ")";
+    kSummary.txtProgress.StrValue $= " (" $ KLabs.LWCE_GetEstimateString(kTech.GetTechName()) $ ")";
 
     kSummary.txtRequirementsLabel.StrValue = m_strCostLabel;
     kSummary.txtRequirementsLabel.iState = eUIState_Warning;
 
     kCost = class'LWCETypes'.static.ConvertTCostToTResearchCost(kTech.kCost);
-    kSummary.bCanAfford = LABS().GetCostSummary(kSummary.kCost, kCost);
+    kSummary.bCanAfford = kLabs.GetCostSummary(kSummary.kCost, kCost);
 
     return kSummary;
 }
@@ -120,14 +108,14 @@ function TTechSummary LWCE_BuildTechSummary(LWCE_TTech kTech)
 function OnChooseArchive(int iArchive)
 {
     m_bViewingArchives = true;
-    m_iCEReportTech = m_kCEArchives.arrTechs[iArchive];
+    m_nmCEReportTech = m_kCEArchives.arrTechs[iArchive];
     UpdateReport();
 }
 
 function OnLeaveLabs()
 {
     PRES().PopState();
-    `LWCE_LABS.m_iCELastResearched = 0;
+    `LWCE_LABS.m_nmLastResearchedTech = '';
 }
 
 function OnLeaveReport(bool bJumpToChooseTech)
@@ -151,14 +139,6 @@ function OnLeaveReport(bool bJumpToChooseTech)
             GoToView(eLabView_ChooseTech);
         }
 
-        for (iUnlock = 0; iUnlock < kLabs.m_arrUnlockedItems.Length; iUnlock++)
-        {
-            if (kLabs.m_arrUnlockedItems[iUnlock] == 255)
-            {
-                UnlockMecArmor(kLabs.m_arrUnlockedItems[iUnlock]);
-            }
-        }
-
         for (iUnlock = 0; iUnlock < kLabs.m_arrUnlockedGeneMods.Length; iUnlock++)
         {
             UnlockGeneMod(kLabs.m_arrUnlockedGeneMods[iUnlock]);
@@ -166,30 +146,23 @@ function OnLeaveReport(bool bJumpToChooseTech)
 
         kLabs.m_arrUnlockedGeneMods.Remove(0, kLabs.m_arrUnlockedGeneMods.Length);
 
-        for (iUnlock = 0; iUnlock < kLabs.m_arrUnlockedItems.Length; iUnlock++)
+        for (iUnlock = 0; iUnlock < kLabs.m_arrCEUnlockedItems.Length; iUnlock++)
         {
-            switch (kLabs.m_arrUnlockedItems[iUnlock])
-            {
-                case 193:
-                case 194:
-                case 195:
-                default:
-                    UnlockItem(kLabs.m_arrUnlockedItems[iUnlock]);
-            }
+            class'LWCE_XGScreenMgr_Extensions'.static.UnlockItem(kLabs.m_arrCEUnlockedItems[iUnlock]);
         }
 
-        kLabs.m_arrUnlockedItems.Remove(0, kLabs.m_arrUnlockedItems.Length);
+        kLabs.m_arrCEUnlockedItems.Remove(0, kLabs.m_arrCEUnlockedItems.Length);
 
         for (iUnlock = 0; iUnlock < kLabs.m_arrUnlockedFacilities.Length; iUnlock++)
         {
-            UnlockFacility(kLabs.m_arrUnlockedFacilities[iUnlock]);
+            class'LWCE_XGScreenMgr_Extensions'.static.UnlockFacility(kLabs.m_arrUnlockedFacilities[iUnlock]);
         }
 
         kLabs.m_arrUnlockedFacilities.Remove(0, kLabs.m_arrUnlockedFacilities.Length);
 
         for (iUnlock = 0; iUnlock < kLabs.m_arrCEUnlockedFoundryProjects.Length; iUnlock++)
         {
-            LWCE_UnlockFoundryProject(kLabs.m_arrCEUnlockedFoundryProjects[iUnlock]);
+            class'LWCE_XGScreenMgr_Extensions'.static.UnlockFoundryProject(kLabs.m_arrCEUnlockedFoundryProjects[iUnlock]);
         }
 
         kLabs.m_arrCEUnlockedFoundryProjects.Remove(0, kLabs.m_arrCEUnlockedFoundryProjects.Length);
@@ -202,7 +175,7 @@ function OnLeaveReport(bool bJumpToChooseTech)
 
 function bool OnTechTableOption(int iOption)
 {
-    local array<LWCE_TTech> arrTechs;
+    local array<LWCETechTemplate> arrTechs;
 
     if (m_iCurrentView == eLabView_CreditArchives)
     {
@@ -220,7 +193,7 @@ function bool OnTechTableOption(int iOption)
 
     GoToView(eLabView_MainMenu);
 
-    LABS().SetNewProject(arrTechs[iOption].iTechId);
+    `LWCE_LABS.LWCE_SetNewProject(arrTechs[iOption].GetTechName());
     Sound().PlaySFX(SNDLIB().SFX_UI_TechStarted);
 
     UpdateHeader();
@@ -229,25 +202,25 @@ function bool OnTechTableOption(int iOption)
     return true;
 }
 
-function int LWCE_SortTechs(LWCE_TTech kTech1, LWCE_TTech kTech2)
+function int LWCE_SortTechs(LWCETechTemplate kTech1, LWCETechTemplate kTech2)
 {
-    local int iTech1, iTech2;
+    local string strTech1, strTech2;
     local bool bBioTech1, bBioTech2, bPriority1, bPriority2;
-    local XGFacility_Labs kLabs;
+    local LWCE_XGFacility_Labs kLabs;
 
-    kLabs = LABS();
-    iTech1 = kTech1.iTechId;
-    iTech2 = kTech2.iTechId;
-    bPriority1 = kLabs.IsPriorityTech(iTech1);
-    bPriority2 = kLabs.IsPriorityTech(iTech2);
-    bBioTech1 = kLabs.IsAutopsyTech(iTech1) || kLabs.IsInterrogationTech(iTech1);
-    bBioTech2 = kLabs.IsAutopsyTech(iTech2) || kLabs.IsInterrogationTech(iTech2);
+    kLabs = LWCE_XGFacility_Labs(LABS());
+    strTech1 = kTech1.m_strName;
+    strTech2 = kTech2.m_strName;
+    bPriority1 = kLabs.LWCE_IsPriorityTech(kTech1.DataName);
+    bPriority2 = kLabs.LWCE_IsPriorityTech(kTech2.DataName);
+    bBioTech1 = kLabs.LWCE_IsAutopsyTech(kTech1.DataName) || kLabs.LWCE_IsInterrogationTech(kTech1.DataName);
+    bBioTech2 = kLabs.LWCE_IsAutopsyTech(kTech2.DataName) || kLabs.LWCE_IsInterrogationTech(kTech2.DataName);
 
     if (bPriority1)
     {
         if (bPriority2)
         {
-            if (iTech2 < iTech1)
+            if (strTech2 < strTech1)
             {
                 return -1;
             }
@@ -273,7 +246,7 @@ function int LWCE_SortTechs(LWCE_TTech kTech1, LWCE_TTech kTech2)
             {
                 if (bBioTech2)
                 {
-                    if (iTech1 < iTech2)
+                    if (strTech1 < strTech2)
                     {
                         return 0;
                     }
@@ -295,19 +268,19 @@ function int LWCE_SortTechs(LWCE_TTech kTech1, LWCE_TTech kTech2)
                 }
                 else
                 {
-                    if (kTech1.iHours < kTech2.iHours)
+                    if (kTech1.iPointsToComplete < kTech2.iPointsToComplete)
                     {
                         return 0;
                     }
                     else
                     {
-                        if (kTech1.iHours > kTech2.iHours)
+                        if (kTech1.iPointsToComplete > kTech2.iPointsToComplete)
                         {
                             return -1;
                         }
                         else
                         {
-                            if (iTech1 < iTech2)
+                            if (strTech1 < strTech2)
                             {
                                 return 0;
                             }
@@ -323,26 +296,10 @@ function int LWCE_SortTechs(LWCE_TTech kTech1, LWCE_TTech kTech2)
     }
 }
 
-function bool LWCE_UnlockFoundryProject(int iProject)
-{
-    local TItemUnlock kUnlock;
-
-    if (!LWCE_XGStrategy(Game()).LWCE_UnlockFoundryProject(iProject, kUnlock))
-    {
-        return false;
-    }
-    else
-    {
-        PRES().UIItemUnlock(kUnlock);
-    }
-
-    return true;
-}
-
 function UpdateArchives()
 {
     local int Index;
-    local LWCE_TTech kTech;
+    local LWCETechTemplate kTech;
     local LWCE_TLabArchivesUI kUI;
     local TMenuOption kOption;
     local LWCE_XGFacility_Labs kLabs;
@@ -350,27 +307,27 @@ function UpdateArchives()
     kLabs = `LWCE_LABS;
     kUI.mnuArchives.strLabel = m_strLabelArchives;
 
-    for (Index = 0; Index < kLabs.m_arrResearched.Length; Index++)
+    for (Index = 0; Index < kLabs.m_arrCEResearched.Length; Index++)
     {
-        kTech = `LWCE_TECH(kLabs.m_arrResearched[Index]);
+        kTech = `LWCE_TECH(kLabs.m_arrCEResearched[Index]);
 
         // Skip the Sectoid Commander Autopsy until the Sectoid Autopsy research comes up; this is a hack used in
         // the base game to make the autopsies appear next to each other in the list, since their IDs aren't consecutive
-        if (kTech.iTechId == `LW_TECH_ID(SectoidCommanderAutopsy))
+        if (kTech.GetTechName() == 'Tech_AutopsySectoidCommander')
         {
             continue;
         }
 
-        kUI.arrTechs.AddItem(kTech.iTechId);
+        kUI.arrTechs.AddItem(kTech.GetTechName());
 
-        kOption.strText = kTech.strName;
+        kOption.strText = kTech.m_strName;
         kUI.mnuArchives.arrOptions.AddItem(kOption);
 
-        if (kTech.iTechId == `LW_TECH_ID(SectoidAutopsy) && LABS().IsResearched(`LW_TECH_ID(SectoidCommanderAutopsy)))
+        if (kTech.GetTechName() == 'Tech_AutopsySectoid' && kLabs.LWCE_IsResearched('Tech_AutopsySectoidCommander'))
         {
-            kUI.arrTechs.AddItem(`LW_TECH_ID(SectoidCommanderAutopsy));
+            kUI.arrTechs.AddItem('Tech_AutopsySectoidCommander');
 
-            kOption.strText = `LWCE_TECH(`LW_TECH_ID(SectoidCommanderAutopsy)).strName;
+            kOption.strText = `LWCE_TECH('Tech_AutopsySectoidCommander').m_strName;
             kUI.mnuArchives.arrOptions.AddItem(kOption);
         }
     }
@@ -381,13 +338,13 @@ function UpdateArchives()
 function UpdateHeader()
 {
     local LWCE_XGFacility_Labs kLabs;
-    local LWCE_TTech kTech;
+    local LWCETechTemplate kTech;
     local TLabHeader kHeader;
 
     kLabs = `LWCE_LABS;
 
     kHeader.arrResources.AddItem(GetResourceText(eResource_Scientists));
-    kHeader.bDrawTech = kLabs.m_kProject.iTech != 0;
+    kHeader.bDrawTech = kLabs.m_kCEProject.TechName != '';
     kHeader.txtTitle.StrValue = m_strCurrentResearchTitle;
 
     if (kHeader.bDrawTech)
@@ -395,8 +352,8 @@ function UpdateHeader()
         kTech = kLabs.LWCE_GetCurrentTechTemplate();
 
         kHeader.imgTech.strPath = kTech.ImagePath;
-        kHeader.fProgress = float(kTech.iHours - kLabs.m_kProject.iActualHoursLeft) / float(kTech.iHours);
-        kHeader.txtProject.StrValue = kTech.strName;
+        kHeader.fProgress = float(kTech.iPointsToComplete - kLabs.m_kCEProject.iActualHoursLeft) / float(kTech.iPointsToComplete);
+        kHeader.txtProject.StrValue = kTech.m_strName;
         kHeader.txtProject.iState = eUIState_Highlight;
         kHeader.txtETA = kLabs.GetCurrentProgressText();
     }
@@ -438,13 +395,8 @@ function UpdateMainMenu()
         {
             kOption.iState = eUIState_Normal;
 
-            if (kLabs.LWCE_GetCurrentTech().iTechId != 0)
+            if (kLabs.LWCE_GetCurrentTech() != none && kLabs.LWCE_GetCurrentTech().GetTechName() != '')
             {
-                if (ISCONTROLLED() && !kLabs.IsResearched(`LW_TECH_ID(Xenobiology)))
-                {
-                    kOption.iState = eUIState_Disabled;
-                }
-
                 kOption.strText = m_strLabelChangeProject;
                 kOption.strHelp = m_strHelpChangeProject;
             }
@@ -494,9 +446,10 @@ function UpdateMainMenu()
 function UpdateReport()
 {
     local TResearchReport kReport;
-    local LWCE_TTech kTech;
+    local LWCETechTemplate kTech;
+    local array<name> arrNameResults;
     local array<int> arrResults;
-    local int iCredit, iProgressIndex, iResult, iSampleItemid;
+    local int iProgressIndex, iSampleItemid, Index;
     local XGParamTag kTag;
     local XGDateTime kDateTime;
     local LWCE_XGFacility_Labs kLabs;
@@ -509,9 +462,15 @@ function UpdateReport()
     kLabs = `LWCE_LABS;
     kTechTree = `LWCE_TECHTREE;
     kTag = XGParamTag(XComEngine(class'Engine'.static.GetEngine()).LocalizeContext.FindTag("XGParam"));
-    kTech = `LWCE_TECH(m_iCEReportTech);
+    kTech = `LWCE_TECH(m_nmCEReportTech);
 
-    iProgressIndex = kLabs.m_arrCEProgress.Find('iTechId', m_iCEReportTech);
+    if (KTech == none)
+    {
+        return;
+    }
+
+    iProgressIndex = kLabs.m_arrCEProgress.Find('TechName', m_nmCEReportTech);
+
     if (iProgressIndex >= 0 && kLabs.m_arrCEProgress[iProgressIndex].kCompletionTime != none)
     {
         kDateTime = kLabs.m_arrCEProgress[iProgressIndex].kCompletionTime;
@@ -526,7 +485,7 @@ function UpdateReport()
     kReport.txtTitle.iState = eUIState_Warning;
     kReport.txtTopSecret.StrValue = m_strLabelTopSecret;
     kReport.txtTopSecret.iState = eUIState_Bad;
-    kReport.txtCodename.StrValue = m_strLabelCodeName @ kTech.strCodename;
+    kReport.txtCodename.StrValue = m_strLabelCodeName @ kTech.m_strCodename;
     kReport.txtCodename.iState = eUIState_Warning;
     kReport.txtMonthNum.StrValue = string(kDateTime.m_iMonth);
     kReport.txtMonthNum.iState = eUIState_Good;
@@ -544,95 +503,105 @@ function UpdateReport()
     kReport.txtYear.StrValue = string(kDateTime.m_iYear);
     kReport.txtYear.iState = eUIState_Good;
     kReport.txtSubject.strLabel = m_strLabelSubject;
-    kReport.txtSubject.StrValue = kTech.strName;
+    kReport.txtSubject.StrValue = kTech.m_strName;
     kReport.txtSubject.iState = eUIState_Highlight;
     kReport.imgProject.strPath = kTech.ImagePath;
     kReport.txtNotesLabel.StrValue = m_strLabelProjectNotes;
     kReport.txtNotesLabel.iState = eUIState_Highlight;
-    kReport.txtNotes.StrValue = kTech.strReport;
+    kReport.txtNotes.StrValue = kTech.m_strReport;
 
-    if (kTech.strCustom != "")
+    if (kTech.m_strCustom != "")
     {
         kReport.txtResults.Add(1);
-        kReport.txtResults[0].StrValue = kTech.strCustom;
+        kReport.txtResults[0].StrValue = kTech.m_strCustom;
         kReport.txtResults[0].iState = eUIState_Warning;
     }
 
-    arrResults = kTechTree.GetFacilityResults(m_iCEReportTech);
+    arrResults = kTechTree.LWCE_GetFacilityResults(m_nmCEReportTech);
 
     if (arrResults.Length > 0)
     {
-        for (iResult = 0; iResult < arrResults.Length; iResult++)
+        for (Index = 0; Index < arrResults.Length; Index++)
         {
-            kTag.StrValue0 = Facility(arrResults[iResult]).strName;
+            kTag.StrValue0 = Facility(arrResults[Index]).strName;
             kReport.txtResults.Add(1);
             kReport.txtResults[kReport.txtResults.Length - 1].StrValue = class'XComLocalizer'.static.ExpandString(m_strFacilityBuildAvailable);
             kReport.txtResults[kReport.txtResults.Length - 1].iState = eUIState_Warning;
 
-            kLabs.m_arrUnlockedFacilities.AddItem(EFacilityType(arrResults[iResult]));
+            kLabs.m_arrUnlockedFacilities.AddItem(EFacilityType(arrResults[Index]));
         }
     }
 
-    arrResults = kTechTree.GetItemResults(m_iCEReportTech);
+    arrResults = kTechTree.LWCE_GetItemResults(m_nmCEReportTech);
 
     if (arrResults.Length > 0)
     {
-        for (iResult = 0; iResult < arrResults.Length; iResult++)
+        for (Index = 0; Index < arrResults.Length; Index++)
         {
-            if (ITEMTREE().CanBeBuilt(arrResults[iResult]) || ITEMTREE().IsMecArmor(arrResults[iResult]))
+            if (ITEMTREE().CanBeBuilt(arrResults[Index]) || ITEMTREE().IsMecArmor(arrResults[Index]))
             {
-                kTag.StrValue0 = `LWCE_ITEM(arrResults[iResult]).strName;
+                kTag.StrValue0 = `LWCE_ITEM(arrResults[Index]).strName;
                 kReport.txtResults.Add(1);
                 kReport.txtResults[kReport.txtResults.Length - 1].StrValue = class'XComLocalizer'.static.ExpandString(m_strItemBuildAvailable);
                 kReport.txtResults[kReport.txtResults.Length - 1].iState = eUIState_Warning;
-                kLabs.m_arrCEUnlockedItems.AddItem(arrResults[iResult]);
+                kLabs.m_arrCEUnlockedItems.AddItem(arrResults[Index]);
             }
         }
 
         iSampleItemid = arrResults[0];
     }
 
-    arrResults = kTechTree.LWCE_GetGeneResults(m_iCEReportTech);
+    arrResults = kTechTree.LWCE_GetGeneResults(m_nmCEReportTech);
 
-    for (iResult = 0; iResult < arrResults.Length; iResult++)
+    for (Index = 0; Index < arrResults.Length; Index++)
     {
-        kTag.StrValue0 = TECHTREE().GetGeneTech(EGeneModTech(arrResults[iResult])).strName;
+        kTag.StrValue0 = TECHTREE().GetGeneTech(EGeneModTech(arrResults[Index])).strName;
         kReport.txtResults.Add(1);
         kReport.txtResults[kReport.txtResults.Length - 1].StrValue = class'XComLocalizer'.static.ExpandString(m_strGeneModAvailable);
         kReport.txtResults[kReport.txtResults.Length - 1].iState = eUIState_Warning;
-        kLabs.m_arrUnlockedGeneMods.AddItem(EGeneModTech(arrResults[iResult]));
+        kLabs.m_arrUnlockedGeneMods.AddItem(EGeneModTech(arrResults[Index]));
     }
 
-    if (kTech.iTechId == `LW_TECH_ID(Xenogenetics))
+    if (kTech.GetTechName() == 'Tech_Xenogenetics')
     {
-        kTag.StrValue0 = string(40);
         kReport.txtResults.Add(1);
-        kReport.txtResults[kReport.txtResults.Length - 1].StrValue = class'XComLocalizer'.static.ExpandString(m_strBonusMeld);
+        kReport.txtResults[kReport.txtResults.Length - 1].StrValue = m_strBonusMeld;
         kReport.txtResults[kReport.txtResults.Length - 1].iState = eUIState_Warning;
     }
 
-    arrResults = kTechTree.LWCE_GetFoundryResults(m_iCEReportTech);
+    arrNameResults = kTechTree.LWCE_GetFoundryResults(m_nmCEReportTech);
 
-    for (iResult = 0; iResult < arrResults.Length; iResult++)
+    for (Index = 0; Index < arrNameResults.Length; Index++)
     {
-        kTag.StrValue0 = `LWCE_FTECH(arrResults[iResult]).strName;
+        kTag.StrValue0 = `LWCE_FTECH(arrNameResults[Index]).m_strName;
         kReport.txtResults.Add(1);
         kReport.txtResults[kReport.txtResults.Length - 1].StrValue = class'XComLocalizer'.static.ExpandString(m_strFoundryBuildAvailable);
         kReport.txtResults[kReport.txtResults.Length - 1].iState = eUIState_Warning;
-        kLabs.m_arrCEUnlockedFoundryProjects.AddItem(arrResults[iResult]);
+        kLabs.m_arrCEUnlockedFoundryProjects.AddItem(arrNameResults[Index]);
     }
 
-    iCredit = kTechTree.LWCE_GetTech(m_iCEReportTech).iCreditGranted;
+    arrNameResults = kTechTree.LWCE_GetTech(m_nmCEReportTech).arrCreditsGranted;
 
-    if (iCredit != 0)
+    if (arrNameResults.Length > 0)
     {
-        kTag.StrValue0 = class'XGLocalizedData'.default.ResearchCreditNames[iCredit];
+        kTag.StrValue0 = "";
+
+        for (Index = 0; Index < arrNameResults.Length; Index++)
+        {
+            kTag.StrValue0 $= `LWCE_UTILS.GetResearchCreditFriendlyName(arrNameResults[Index]);
+
+            if (Index != arrNameResults.Length - 1)
+            {
+                kTag.StrValue0 $= ", ";
+            }
+        }
+
         kReport.txtResults.Add(1);
         kReport.txtResults[kReport.txtResults.Length - 1].StrValue = class'XComLocalizer'.static.ExpandString(m_strResearchCreditEarned);
         kReport.txtResults[0].iState = eUIState_Good;
     }
 
-    if (kLabs.IsAutopsyTech(m_iCEReportTech))
+    if (kLabs.LWCE_IsAutopsyTech(m_nmCEReportTech))
     {
         kReport.btxtInfo.iButton = 3;
         kReport.btxtInfo.StrValue = m_strLabelTacticalSummary @ TACTICAL().GetTCharacter(kTech.iSubjectCharacterId).strName;
@@ -648,8 +617,8 @@ function UpdateReport()
 function UpdateTechTable()
 {
     local LWCE_XGFacility_Labs kLabs;
-    local array<LWCE_TTech> arrTechs;
-    local LWCE_TTech kTech;
+    local array<LWCETechTemplate> arrTechs;
+    local LWCETechTemplate kTech;
     local TTechTable kTable;
     local TTableMenuOption kOption;
     local TTechSummary kSummary;
@@ -666,7 +635,7 @@ function UpdateTechTable()
 
     foreach arrTechs(kTech)
     {
-        kOption = LWCE_BuildTechOption(kTech, kTable.mnuTechs.arrCategories, kLabs.IsPriorityTech(kTech.iTechId));
+        kOption = LWCE_BuildTechOption(kTech, kTable.mnuTechs.arrCategories, kLabs.LWCE_IsPriorityTech(kTech.GetTechName()));
         kSummary = LWCE_BuildTechSummary(kTech);
 
         if (!kSummary.bCanAfford)
@@ -718,14 +687,14 @@ function UpdateView()
         return;
     }
 
-    if (!ISCONTROLLED() && m_iCurrentView == eLabView_MainMenu)
+    if (m_iCurrentView == eLabView_MainMenu)
     {
         if (Narrative(`XComNarrativeMoment("FirstLabs")))
         {
             return;
         }
 
-        if (!HQ().HasFacility(eFacility_AlienContain) && kLabs.IsResearched(`LW_TECH_ID(Xenoneurology)) && kLabs.m_iCELastResearched != `LW_TECH_ID(Xenoneurology) && !ENGINEERING().IsBuildingFacility(eFacility_AlienContain))
+        if (!HQ().HasFacility(eFacility_AlienContain) && kLabs.LWCE_IsResearched('Tech_Xenoneurology') && kLabs.m_nmLastResearchedTech != 'Tech_Xenoneurology' && !ENGINEERING().IsBuildingFacility(eFacility_AlienContain))
         {
             if (Narrative(`XComNarrativeMoment("UrgeContainment")))
             {
@@ -749,7 +718,7 @@ function UpdateView()
             }
         }
 
-        if (kLabs.IsResearched(`LW_TECH_ID(AlienOperations)) && !STORAGE().EverHadItem(`LW_ITEM_ID(HyperwaveBeacon)))
+        if (kLabs.LWCE_IsResearched('Tech_AlienOperations') && !STORAGE().EverHadItem(`LW_ITEM_ID(HyperwaveBeacon)))
         {
             if (Narrative(`XComNarrativeMoment("AlienBaseDetected_LeadOut_CS")))
             {
@@ -824,7 +793,7 @@ function UpdateView()
         {
             if (!HQ().HasFacility(eFacility_CyberneticsLab) && !HQ().HasFacility(eFacility_GeneticsLab) && !ENGINEERING().IsBuildingFacility(eFacility_CyberneticsLab) && !ENGINEERING().IsBuildingFacility(eFacility_GeneticsLab))
             {
-                if (Narrative(`XComNarrativeMoment("Urge_LabFacility")))
+                if (Narrative(`XComNarrativeMomentEW("Urge_LabFacility")))
                 {
                     HQ().m_bUrgedEWFacility = true;
                     return;
@@ -842,20 +811,20 @@ function UpdateView()
     }
     else if (m_iCurrentView == eLabView_Report && !m_bViewingArchives)
     {
-        if (kLabs.m_iCELastResearched == `LW_TECH_ID(Xenobiology))
+        if (kLabs.m_nmLastResearchedTech == 'Tech_Xenobiology')
         {
             PRES().UIObjectiveDisplay(eObj_CaptureAlien);
         }
-        else if (kLabs.IsInterrogationTech(kLabs.m_iCELastResearched) && OBJECTIVES().m_eObjective == eObj_CaptureAlien)
+        else if (kLabs.LWCE_IsInterrogationTech(kLabs.m_nmLastResearchedTech) && OBJECTIVES().m_eObjective == eObj_CaptureAlien)
         {
             PRES().UIObjectiveDisplay(eObj_CaptureOutsider);
         }
-        else if (kLabs.m_iCELastResearched == `LW_TECH_ID(AlienOperations))
+        else if (kLabs.m_nmLastResearchedTech == 'Tech_AlienOperations')
         {
             PRES().UIObjectiveDisplay(eObj_ObtainShards);
         }
 
-        if (kLabs.m_iCELastResearched == `LW_TECH_ID(AlienOperations))
+        if (kLabs.m_nmLastResearchedTech == 'Tech_AlienOperations')
         {
             Narrative(`XComNarrativeMoment("AlienCodeRevealed_LeadOut_CS"));
         }

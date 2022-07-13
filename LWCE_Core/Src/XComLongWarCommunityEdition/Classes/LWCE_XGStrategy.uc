@@ -1,9 +1,18 @@
 class LWCE_XGStrategy extends XGStrategy;
 
-function NewGame() {
-    `LWCE_LOG_CLS("(LWCE override)");
+struct CheckpointRecord_LWCE_XGStrategy extends CheckpointRecord
+{
+    var array<name> m_arrCEFoundryUnlocks;
+};
 
-    if (class'Engine'.static.GetCurrentWorldInfo().Game.BaseMutator != none) {
+var array<int> m_arrCEItemUnlocks;
+var array<int> m_arrCEFacilityUnlocks;
+var array<name> m_arrCEFoundryUnlocks;
+
+function NewGame()
+{
+    if (class'Engine'.static.GetCurrentWorldInfo().Game.BaseMutator != none)
+    {
         `WORLDINFO.Game.BaseMutator.Mutate("XGStrategy.NewGame", `WORLDINFO.GetALocalPlayerController());
     }
 
@@ -37,16 +46,8 @@ function NewGame() {
     GotoState('Initing');
 }
 
-function OnLoadedGame()
-{
-    `LWCE_LOG_CLS("(LWCE override) - OnLoadedGame");
-    super.OnLoadedGame();
-}
-
 function Init(bool bLoadingFromSave)
 {
-    `LWCE_LOG_CLS("(LWCE override) - bLoadingFromSave = " $ bLoadingFromSave);
-
     if (m_arrSecondWave.Length == 0)
     {
         m_arrSecondWave.Add(36);
@@ -146,11 +147,6 @@ function BeginCombat(XGMission kMission)
     PopulateDropshipTechHistory(LWCE_XGBattleDesc(m_kStrategyTransport.m_kBattleDesc));
     Content = m_kStrategyTransport.m_kBattleDesc.DeterminePawnContent();
 
-    if (ISCONTROLLED() && Game().GetNumMissionsTaken() < 1)
-    {
-        Content.arrAlienPawns.AddItem(class'XGGameData'.static.MapCharacterToPawn(eChar_Sectoid));
-    }
-
     if (Content.arrCivilianPawns.Length > 0)
     {
         m_kStrategyTransport.m_kBattleDesc.m_kCivilianInfo = Content.arrCivilianPawns[0];
@@ -191,38 +187,129 @@ function BeginCombat(XGMission kMission)
     SetTimer(0.10, false, 'DeferredLaunchCommand');
 }
 
-function bool LWCE_UnlockFoundryProject(int iProject, out TItemUnlock kUnlock)
+function bool UnlockFacility(EFacilityType eFacility, out TItemUnlock kUnlock)
 {
-    local LWCE_TFoundryTech kTech;
+    `LWCE_LOG_DEPRECATED_CLS(UnlockFacility);
 
-    if (m_arrFoundryUnlocks.Find(iProject) == INDEX_NONE)
-    {
-        kTech = `LWCE_FTECH(iProject);
+    return false;
+}
 
-        kUnlock.bFoundryProject = true;
-        kUnlock.sndFanfare = SNDLIB().SFX_Unlock_Foundry;
-        kUnlock.iUnlocked = iProject;
-        kUnlock.strName = kTech.strName;
-        kUnlock.strDescription = kTech.strSummary;
-        kUnlock.strTitle = m_strNewFoundryAvailable;
-        kUnlock.strHelp = m_strNewFoundryHelp;
+function bool LWCE_UnlockFacility(int iFacilityId, out LWCE_TItemUnlock kUnlock)
+{
+    local TFacility kFacility;
+    local LWCE_TData kData;
 
-        m_arrFoundryUnlocks.AddItem(iProject);
-
-        return true;
-    }
-    else
+    if (m_arrCEFacilityUnlocks.Find(iFacilityId) != INDEX_NONE || HQ().HasFacility(iFacilityId))
     {
         return false;
     }
+
+    kFacility = Facility(iFacilityId);
+
+    kUnlock.bFacility = true;
+    kUnlock.sndFanfare = SNDLIB().SFX_Unlock_Facility;
+
+    kUnlock.ImagePath = class'UIUtilities'.static.GetStrategyImagePath(kFacility.iImage);
+    kUnlock.strName = kFacility.strName;
+    kUnlock.strDescription = kFacility.strBriefSummary;
+    kUnlock.strTitle = m_strNewFacilityAvailable;
+
+    if (kFacility.iCash != -1)
+    {
+        kUnlock.strHelp = m_strNewFacilityHelp;
+    }
+
+    kData.eType = eDT_Int;
+    kData.iData = iFacilityId;
+    kUnlock.arrUnlockData.AddItem(kData);
+
+    m_arrCEFacilityUnlocks.AddItem(iFacilityId);
+
+    ENGINEERING().m_bCanBuildFacilities = true;
+    ENGINEERING().SetDisabled(false);
+
+    return true;
+}
+
+function bool UnlockFoundryProject(EFoundryTech eProject, out TItemUnlock kUnlock)
+{
+    `LWCE_LOG_DEPRECATED_CLS(UnlockFoundryProject);
+
+    return false;
+}
+
+function bool LWCE_UnlockFoundryProject(name ProjectName, out LWCE_TItemUnlock kUnlock)
+{
+    local LWCE_TData kData;
+    local LWCEFoundryProjectTemplate kTemplate;
+
+    if (m_arrCEFoundryUnlocks.Find(ProjectName) != INDEX_NONE)
+    {
+        return false;
+    }
+
+    kTemplate = `LWCE_FTECH(ProjectName);
+
+    kUnlock.bFoundryProject = true;
+    kUnlock.sndFanfare = SNDLIB().SFX_Unlock_Foundry;
+
+    kUnlock.ImagePath = kTemplate.ImagePath;
+    kUnlock.strName = kTemplate.m_strName;
+    kUnlock.strDescription = kTemplate.m_strSummary;
+    kUnlock.strTitle = m_strNewFoundryAvailable;
+    kUnlock.strHelp = m_strNewFoundryHelp;
+
+    kData.eType = eDT_Name;
+    kData.nmData = ProjectName;
+    kUnlock.arrUnlockData.AddItem(kData);
+
+    m_arrCEFoundryUnlocks.AddItem(ProjectName);
+
+    return true;
+}
+
+function bool UnlockItem(EItemType eItem, out TItemUnlock kUnlock)
+{
+    `LWCE_LOG_DEPRECATED_CLS(UnlockItem);
+
+    return false;
+}
+
+function bool LWCE_UnlockItem(int iItemId, out LWCE_TItemUnlock kUnlock)
+{
+    local LWCE_TItem kItem;
+    local LWCE_TData kData;
+
+    if (m_arrCEItemUnlocks.Find(iItemId) != INDEX_NONE)
+    {
+        return false;
+    }
+
+    kItem = `LWCE_ITEM(iItemId);
+    kUnlock.sndFanfare = SNDLIB().SFX_Unlock_Item;
+
+    kUnlock.ImagePath = kItem.ImagePath;
+    kUnlock.strName = kItem.strName;
+    kUnlock.strDescription = kItem.strBriefSummary;
+    kUnlock.strTitle = m_strNewItemAvailable;
+    kUnlock.strHelp = m_strNewItemHelp;
+
+    kData.eType = eDT_Int;
+    kData.iData = iItemId;
+    kUnlock.arrUnlockData.AddItem(kData);
+
+    m_arrCEItemUnlocks.AddItem(iItemId);
+
+    ENGINEERING().m_bCanBuildItems = true;
+    ENGINEERING().SetDisabled(false);
+
+    return true;
 }
 
 protected function PopulateDropshipTechHistory(LWCE_XGBattleDesc kBattleDesc)
 {
-    local int iTechId;
+    local name TechName;
     local LWCE_XGDropshipCargoInfo kCargo;
-    local LWCE_TFoundryTech kFoundryTech;
-    local LWCE_TTech kTech;
 
     kCargo = LWCE_XGDropshipCargoInfo(kBattleDesc.m_kDropShipCargoInfo);
 
@@ -232,30 +319,14 @@ protected function PopulateDropshipTechHistory(LWCE_XGBattleDesc kBattleDesc)
         return;
     }
 
-    foreach `LWCE_LABS.m_arrResearched(iTechId)
+    foreach `LWCE_LABS.m_arrCEResearched(TechName)
     {
-        kTech = `LWCE_TECH(iTechId);
-
-        // Clear out unneeded content from each tech so we don't use memory unnecessarily during the tac game
-        kTech.strName = "";
-        kTech.strSummary = "";
-        kTech.strReport = "";
-        kTech.strCustom = "";
-        kTech.strCodename = "";
-        kTech.ImagePath = "";
-
-        kCargo.m_arrCETechHistory.AddItem(kTech);
+        kCargo.m_arrCETechHistory.AddItem(TechName);
     }
 
-    foreach `LWCE_ENGINEERING.m_arrCEFoundryHistory(iTechId)
+    foreach `LWCE_ENGINEERING.m_arrCEFoundryHistory(TechName)
     {
-        kFoundryTech = `LWCE_FTECH(iTechId);
-
-        kFoundryTech.strName = "";
-        kFoundryTech.strSummary = "";
-        kFoundryTech.ImagePath = "";
-
-        kCargo.m_arrCEFoundryHistory.AddItem(kFoundryTech);
+        kCargo.m_arrCEFoundryHistory.AddItem(TechName);
     }
 }
 

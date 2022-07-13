@@ -393,9 +393,13 @@ function bool IsTechLocked(out TItem kItem, XGStrategySoldier kSoldier)
 function bool LWCE_IsTechLocked(out LWCE_TItem kItem, XGStrategySoldier kSoldier)
 {
     local bool bNoWeaponsTech;
-    local int iTechReq;
+    local name nmTechReq;
+    local LWCE_XGFacility_Engineering kEngineering;
+    local LWCE_XGFacility_Labs kLabs;
 
     bNoWeaponsTech = false;
+    kEngineering = LWCE_XGFacility_Engineering(ENGINEERING());
+    kLabs = LWCE_XGFacility_Labs(LABS());
 
     if (XComCheatManager(GetALocalPlayerController().CheatManager) != none)
     {
@@ -414,12 +418,12 @@ function bool LWCE_IsTechLocked(out LWCE_TItem kItem, XGStrategySoldier kSoldier
 
     if (kItem.iItemId == `LW_ITEM_ID(AlienGrenade))
     {
-        return !ENGINEERING().IsFoundryTechResearched(`LW_FOUNDRY_ID(AlienGrenades));
+        return !kEngineering.LWCE_IsFoundryTechResearched('Foundry_AlienGrenades');
     }
 
-    foreach kItem.kPrereqs.arrTechReqs(iTechReq)
+    foreach kItem.kPrereqs.arrTechReqs(nmTechReq)
     {
-        if (!LABS().IsResearched(iTechReq))
+        if (!kLabs.LWCE_IsResearched(nmTechReq))
         {
             return true;
         }

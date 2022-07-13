@@ -7,6 +7,10 @@
 class LWCECouncilRequestTemplate extends LWCEDataTemplate
     config(LWCEBaseStrategyGame);
 
+// NOTE: All documentation for templates is assuming the base template is being retrieved from the corresponding template manager,
+// and has not been modified. Some functions return clones of templates which have had changes applied; for example, to factor in
+// country/continent bonuses that reduce research times, costs, etc. The comments below may not apply to such clones.
+
 struct LWCE_TRequestItemConfig
 {
     var int iItemId;

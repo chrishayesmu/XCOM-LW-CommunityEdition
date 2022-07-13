@@ -1,5 +1,9 @@
 class LWCE_UIMissionControl_FoundryAlert extends UIMissionControl_FoundryAlert;
 
+`include(generators.uci)
+
+`LWCE_GENERATOR_ALERTWITHMULTIPLEBUTTONS
+
 simulated function XGMissionControlUI GetMgr(optional int iStaringView = -1)
 {
     if (m_kLocalMgr == none)
@@ -12,9 +16,9 @@ simulated function XGMissionControlUI GetMgr(optional int iStaringView = -1)
 
 simulated function UpdateData()
 {
-    local TMCAlert kAlertData;
+    local LWCE_TMCAlert kAlertData;
 
-    kAlertData = GetMgr().m_kCurrentAlert;
+    kAlertData = LWCE_XGMissionControlUI(GetMgr()).m_kCECurrentAlert;
 
     AS_SetTitle(Caps(kAlertData.txtTitle.StrValue));
     AS_SetSubTitle(class'UIMissionControl_EngineeringAlert'.default.m_strProjectCompleteSubTitle);
@@ -24,6 +28,5 @@ simulated function UpdateData()
 
     AS_SetImage(kAlertData.imgAlert.strPath);
 
-    // Skip the base class's UpdateData or it'll change the image back to something invalid
-    super(UIMissionControl_ProjectCompleteAlert).UpdateData();
+    class'LWCE_UIMissionControl_AlertBase_Extensions'.static.ProjectCompleteAlert_UpdateData(self);
 }

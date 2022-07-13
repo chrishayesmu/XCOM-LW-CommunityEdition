@@ -25,9 +25,9 @@ function LWCE_EquipWeapon(int iItemId)
     m_kTShip.arrWeapons.Remove(0, m_kTShip.arrWeapons.Length);
     m_kTShip.arrWeapons.AddItem(kHangar.LWCE_ItemTypeToShipWeapon(m_eWeapon));
 
-    if (ENGINEERING().IsFoundryTechResearched(27)) // Wingtip Sparrowhawks
+    if (`LWCE_ENGINEERING.LWCE_IsFoundryTechResearched('Foundry_WingtipSparrowhawks'))
     {
-        m_kTShip.arrWeapons.AddItem(kHangar.LWCE_ItemTypeToShipWeapon(/* Stingray Missiles */ 116));
+        m_kTShip.arrWeapons.AddItem(kHangar.LWCE_ItemTypeToShipWeapon(`LW_ITEM_ID(StingrayMissiles)));
     }
 
     if (m_kHangarShip != none)

@@ -1,4 +1,5 @@
-class LWCE_XComHQPresentationLayer extends XComHQPresentationLayer;
+class LWCE_XComHQPresentationLayer extends XComHQPresentationLayer
+    dependson(LWCE_XGNarrative);
 
 `include(generators.uci)
 
@@ -17,14 +18,6 @@ function XGScreenMgr GetMgr(class<Actor> kMgrClass, optional IScreenMgrInterface
     //`LWCE_LOG_CLS("Getting class " $ kMgrClass);
 
     return super.GetMgr(kMgrClass, kInterface, iView, bIgnoreIfDoesNotExist);
-}
-
-function Mod_Notify(TMCNotice kNotice)
-{
-    if (m_kUIMissionControl != none)
-    {
-        LWCE_XGMissionControlUI(m_kUIMissionControl.GetMgr()).Mod_AddNotice(kNotice);
-    }
 }
 
 function bool RemoveMgr(class<Actor> kMgrClass)
@@ -91,6 +84,11 @@ reliable client simulated function UIFundingCouncilRequestComplete(IFCRequestInt
 
 reliable client simulated function UIItemUnlock(TItemUnlock kUnlock)
 {
+    `LWCE_LOG_DEPRECATED_CLS(UIItemUnlock);
+}
+
+reliable client simulated function LWCE_UIItemUnlock(LWCE_TItemUnlock kUnlock)
+{
     local TDialogueBoxData kData;
 
     kData.strTitle = kUnlock.strTitle;
@@ -98,19 +96,7 @@ reliable client simulated function UIItemUnlock(TItemUnlock kUnlock)
     kData.strCancel = "";
     kData.sndIn = kUnlock.sndFanfare;
     kData.eType = eDialog_NormalWithImage;
-
-    if (kUnlock.eItemUnlocked != eItem_NONE)
-    {
-        kData.strImagePath = class'UIUtilities'.static.GetItemImagePath(kUnlock.eItemUnlocked);
-    }
-    else if (kUnlock.bFoundryProject)
-    {
-        kData.strImagePath = `LWCE_FTECH(kUnlock.iUnlocked).ImagePath;
-    }
-    else if (kUnlock.eUnlockImage != 0)
-    {
-        kData.strImagePath = class'UIUtilities'.static.GetStrategyImagePath(kUnlock.eUnlockImage);
-    }
+    kData.strImagePath = kUnlock.ImagePath;
 
     UIRaiseDialog(kData);
 }
@@ -125,8 +111,13 @@ reliable client simulated function UIManufactureFacility(EFacilityType eFacility
 
 reliable client simulated function UIManufactureFoundry(int iTech, optional int iProjectIndex = -1)
 {
+    `LWCE_LOG_DEPRECATED_CLS(UIManufactureFoundry);
+}
+
+reliable client simulated function LWCE_UIManufactureFoundry(name ProjectName, optional int iProjectIndex = -1)
+{
     m_kManufacturing = Spawn(class'LWCE_UIManufacturing', self);
-    m_kManufacturing.InitFoundry(XComPlayerController(Owner), Get3DMovie(), iTech, iProjectIndex);
+    LWCE_UIManufacturing(m_kManufacturing).LWCE_InitFoundry(XComPlayerController(Owner), Get3DMovie(), ProjectName, iProjectIndex);
     PushState('State_Manufacture');
     CAMLookAtNamedLocation(class'UIManufacturing'.default.m_strCameraTag, 1.0);
 }
@@ -310,6 +301,20 @@ simulated state State_HangarHiring
         m_kHangarHiring = Spawn(class'LWCE_UIHiring_Hangar', self);
         m_kHangarHiring.Init(XComPlayerController(Owner), GetHUD(), 4);
         GetHUD().LoadScreen(m_kHangarHiring);
+    }
+}
+
+simulated state State_InterceptionEngagement
+{
+    simulated function ActivatePrivate()
+    {
+        m_kInterceptionEngagement = Spawn(class'LWCE_UIInterceptionEngagement', self);
+
+        Get3DMovie().LoadScreen(m_kInterceptionEngagement);
+        Get3DMovie().ShowDisplay(class'UIInterceptionEngagement'.default.DisplayTag);
+        CAMLookAtNamedLocation(class'UIInterceptionEngagement'.default.m_strCameraTag, 1.0);
+        m_kInterceptionEngagement.Init(XComPlayerController(Owner), Get3DMovie(), m_kXGInterception);
+        `HQGAME.GetGameCore().GetGeoscape().m_bGlobeHidden = true;
     }
 }
 

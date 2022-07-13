@@ -1,0 +1,58 @@
+`define LWCE_GENERATOR_ALERTBASE \
+\
+simulated function ClearMissionControlAlertReference() \
+{ \
+    class'LWCE_UIMissionControl_AlertBase_Extensions'.static.ClearMissionControlAlertReference(self); \
+} \
+\
+simulated function CloseAlert(optional int inputCode = -1) \
+{ \
+    class'LWCE_UIMissionControl_AlertBase_Extensions'.static.CloseAlert(self, inputCode); \
+} \
+\
+simulated function bool OnMouseEvent(int Cmd, array<string> args) \
+{ \
+    return class'LWCE_UIMissionControl_AlertBase_Extensions'.static.OnMouseEvent(self, Cmd, args); \
+} \
+\
+simulated function UpdateButtonText() \
+{ \
+    class'LWCE_UIMissionControl_AlertBase_Extensions'.static.UpdateButtonText(self); \
+} \
+\
+simulated function UpdateSimpleAlertData() \
+{ \
+    class'LWCE_UIMissionControl_AlertBase_Extensions'.static.UpdateSimpleAlertData(self); \
+}
+
+`define LWCE_GENERATOR_ALERTWITHMULTIPLEBUTTONS \
+\
+simulated function ClearMissionControlAlertReference() \
+{ \
+    class'LWCE_UIMissionControl_AlertBase_Extensions'.static.ClearMissionControlAlertReference(self); \
+} \
+\
+simulated function CloseAlert(optional int inputCode = -1) \
+{ \
+    class'LWCE_UIMissionControl_AlertBase_Extensions'.static.CloseAlert(self, inputCode); \
+} \
+\
+simulated function bool OnMouseEvent(int Cmd, array<string> args) \
+{ \
+    return class'LWCE_UIMissionControl_AlertBase_Extensions'.static.AlertWithMultipleButtons_OnMouseEvent(self, Cmd, args); \
+} \
+\
+simulated function bool OnUnrealCommand(int Cmd, int Arg) \
+{ \
+     return class'LWCE_UIMissionControl_AlertBase_Extensions'.static.AlertWithMultipleButtons_OnUnrealCommand(self, Cmd, Arg); \
+} \
+\
+simulated function UpdateButtonText() \
+{ \
+    class'LWCE_UIMissionControl_AlertBase_Extensions'.static.AlertWithMultipleButtons_UpdateButtonText(self); \
+} \
+\
+simulated function UpdateSimpleAlertData() \
+{ \
+    class'LWCE_UIMissionControl_AlertBase_Extensions'.static.UpdateSimpleAlertData(self); \
+}

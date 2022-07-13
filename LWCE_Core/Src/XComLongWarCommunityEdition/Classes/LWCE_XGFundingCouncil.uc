@@ -86,8 +86,7 @@ function Init()
 
     m_kSatRequestCompleteAdaptor = new (self) class'LWCE_XGFundingCouncil_RequestAdaptor';
 
-    // Cache template manager, as we'll be using it quite a lot
-    m_kTemplateMgr = class'LWCECouncilRequestTemplateManager'.static.GetInstance();
+    m_kTemplateMgr = `LWCE_COUNCIL_REQUEST_TEMPLATE_MGR;
 
     // Delete base game request data; we're only using templates
     m_arrTRequests.Length = 0;
@@ -140,7 +139,7 @@ function Update()
     --m_iFirstRequestCountdown;
     --m_iSecondRequestCountdown;
 
-    if (!GEOSCAPE().IsBusy() && GEOSCAPE().GetFinalMission() == none && !ISCONTROLLED())
+    if (!GEOSCAPE().IsBusy() && GEOSCAPE().GetFinalMission() == none)
     {
         if (m_iFirstRequestCountdown <= 0 && GEOSCAPE().GetNumMissionsOfType(eMission_Special) == 0)
         {
@@ -590,15 +589,61 @@ function XGMission_FundingCouncil CreateMission(TFCMission MissionData)
 
     kMission.m_kDesc.m_kAlienSquad = AI().DetermineSpecialMissionSquad(eChar, kMission.m_kTMission.eMission, kMission.m_kTMission.eType == eFCMType_Assault);
 
-    if (ISCONTROLLED())
-    {
-        kMission.m_kDesc.m_bIsTutorial = true;
-    }
-
     m_iLastAddedMissionID = GEOSCAPE().AddMission(kMission);
     kDateTime.Destroy();
 
     return kMission;
+}
+
+function bool DetermineNewFCMission(optional EFCMission eMission)
+{
+    local TFCMission kMission;
+    local ECountry eMCountry;
+
+    if (eMission == eFCM_MeldTutorial)
+    {
+        eMCountry = ECountry(Continent(HQ().GetContinent()).GetRandomCouncilCountry());
+    }
+    else
+    {
+        eMCountry = DetermineFCMissionCountry();
+    }
+
+    if (eMission == eFCM_None)
+    {
+        if (IsProgenyActive())
+        {
+            if ( (m_eNextProgenyMission == eFCM_Progeny_Portent && AI().GetMonth() > 0) || (PSILABS() != none && AI().GetMonth() > 6) )
+            {
+                eMission = m_eNextProgenyMission;
+            }
+        }
+
+        if (eMission == eFCM_None)
+        {
+            if (IsChryssalidHiveValid() && !HasPlayedChryssalidHive())
+            {
+                eMission = eFCM_ChryssalidHive;
+            }
+        }
+
+        if (eMission == eFCM_None)
+        {
+            eMission = ChooseNextMissionByType(GetRegionByCountry(eMCountry), eMCountry);
+        }
+    }
+
+    kMission = BuildMission(eMission, eMCountry);
+    OnValidMissionAdded(kMission);
+    m_arrPreviousMissions.AddItem(kMission.eMission);
+    CreateMission(kMission);
+
+    LWCE_XGGeoscape(GEOSCAPE()).LWCE_Alert(`LWCE_ALERT('FCMissionActivity').AddInt(kMission.ECountry).Build());
+
+    SITROOM().m_bRequiresAttention = true;
+    SITROOM().SetDisabled(false);
+
+    return true;
 }
 
 function bool DetermineNewFCRequest(optional EFCRequest eRequest)
@@ -845,8 +890,6 @@ function LWCE_GrantFCRewards(LWCE_TRequestReward kReward, ECountry eRewardingCou
     kBarracks = LWCE_XGFacility_Barracks(BARRACKS());
     kStorage = LWCE_XGStorage(STORAGE());
 
-    GetRecapSaveData().RecordEvent(RecordReceievedFundingCouncilReward(eRewardingCountry));
-
     if (kReward.iCash > 0)
     {
         AddResource(eResource_Money, kReward.iCash);
@@ -1080,7 +1123,7 @@ function OnShipSuccessfullyTransferred(XGShip_Interceptor kShip, optional bool b
 
             if (kCountry.m_kTCountry.iContinent == kShip.m_iHomeContinent)
             {
-                GEOSCAPE().Alert(GEOSCAPE().MakeAlert(eGA_FCJetTransfer, m_arrCECurrentRequests[iRequest].eRequestingCountry));
+                LWCE_XGGeoscape(GEOSCAPE()).LWCE_Alert(`LWCE_ALERT('FCJetTransfer').AddInt(m_arrCECurrentRequests[iRequest].eRequestingCountry).Build());
                 SITROOM().m_bRequiresAttention = bSitRoomAttention;
                 m_arrCECurrentRequests[iRequest].bIsTransferComplete = true;
 

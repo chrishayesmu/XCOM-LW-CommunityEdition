@@ -1,5 +1,5 @@
 class LWCE_XComHeadquartersCheatManager extends XComHeadquartersCheatManager
-    dependson(LWCETypes);
+    dependson(LWCETypes, LWCE_XGFacility_Engineering);
 
 `include(generators.uci)
 
@@ -29,53 +29,43 @@ exec function GiveAllTech()
  * If techType is supplied and matches an EFoundryTech enum name, that project is completed; otherwise it is assumed
  * to be an integer ID of a Foundry project (either base game or from a mod).
  */
-exec function GiveFoundry(optional string techType)
+exec function GiveFoundry(optional string ProjectName)
 {
-    local string enumName;
-    local int iProjectId;
     local LWCE_XGFacility_Engineering kEngineering;
-    local LWCE_XGTechTree kTechTree;
-    local TFoundryProject kProject;
-    local LWCE_TFoundryTech kTech;
+    local LWCEFoundryProjectTemplate kProject;
+    local LWCEFoundryProjectTemplateManager kTemplateMgr;
+    local array<LWCEFoundryProjectTemplate> arrTemplates;
 
-    enumName = "eFoundry_" $ techType;
-    iProjectId = int(techType);
-    kEngineering = LWCE_XGFacility_Engineering(`HQGAME.GetGameCore().GetHQ().m_kEngineering);
-    kTechTree = LWCE_XGTechTree(kEngineering.TECHTREE());
+    kEngineering = `LWCE_ENGINEERING;
+    kTemplateMgr = `LWCE_FOUNDRY_TEMPLATE_MGR;
+    arrTemplates = kTemplateMgr.GetAllProjectTemplates();
 
-    foreach kTechTree.m_arrCEFoundryTechs(kTech)
+    if (ProjectName != "")
     {
-        if (techType != "")
+        kProject = kTemplateMgr.FindProjectTemplate(name(ProjectName));
+
+        if (kProject != none)
         {
-            if ( kTech.iTechId == iProjectId || (kTech.iTechId <= eFoundry_MAX && GetEnum(enum'EFoundryTech', kTech.iTechId) == name(enumName)) )
-            {
-                if (!kEngineering.IsFoundryTechResearched(kTech.iTechId))
-                {
-                    `LWCE_LOG_CLS("GiveFoundry: Found matching Foundry project " $ kTech.strName $ ", completing it");
-
-                    kEngineering.m_arrCEFoundryHistory.AddItem(kTech.iTechId);
-
-                    kProject.eTech = kTech.iTechId;
-                    kEngineering.m_arrFoundryProjects.AddItem(kProject);
-                    kEngineering.OnFoundryProjectCompleted(kEngineering.m_arrFoundryProjects.Length - 1);
-                }
-                else
-                {
-                    `LWCE_LOG_CLS("GiveFoundry: Found matching Foundry project " $ kTech.strName $ ", but it has already been completed");
-                }
-
-                return;
-            }
+            GetConsole().OutputTextLine("Found foundry template with name " $ ProjectName $ ". Granting foundry project to player.");
+            GiveFoundryTemplate(kProject, kEngineering);
         }
-        else if (kTech.iTechId != 0)
+        else
         {
-            kEngineering.m_arrCEFoundryHistory.AddItem(kTech.iTechId);
-
-            kProject.eTech = kTech.iTechId;
-            kEngineering.m_arrFoundryProjects.AddItem(kProject);
-            kEngineering.OnFoundryProjectCompleted(kEngineering.m_arrFoundryProjects.Length - 1);
+            GetConsole().OutputTextLine("Did not find foundry project with name " $ ProjectName);
         }
+
+        kEngineering.UpdateFoundryProjects();
+        return;
     }
+
+    GetConsole().OutputTextLine("Attempting to grant all unfinished foundry projects (out of " $ arrTemplates.Length $ " total projects)");
+
+    foreach arrTemplates(kProject)
+    {
+        GiveFoundryTemplate(kProject, kEngineering);
+    }
+
+    kEngineering.UpdateFoundryProjects();
 }
 
 exec function GiveItem(string ItemType, optional int Amount = 1)
@@ -150,51 +140,41 @@ exec function GivePerk(string strName)
 /**
  * Completes the specified research tech, or all uncompleted research if no argument is supplied.
  *
- * If techType is supplied and matches an ETechType enum name, that project is completed; otherwise it is assumed
- * to be an integer ID of a research tech (either base game or from a mod).
+ * If TechName is supplied and matches a tech template name, that project is completed.
  */
-exec function GiveTech(optional string techType, optional int forceTechValueTo = 1, optional bool actuallyDoResearch = false)
+exec function GiveTech(optional string TechName, optional int deprecated = 1, optional bool bDoResearch = false)
 {
-    local string enumName;
-    local int iTechId;
     local LWCE_XGFacility_Labs kLabs;
-    local LWCE_XGTechTree kTechTree;
-    local LWCE_TTech kTech;
+    local LWCETechTemplate kTech;
+    local LWCETechTemplateManager kTemplateMgr;
+    local array<LWCETechTemplate> arrTemplates;
 
     kLabs = LWCE_XGFacility_Labs(`HQGAME.GetGameCore().GetHQ().m_kLabs);
-    kTechTree = LWCE_XGTechTree(kLabs.m_kTree);
+    kTemplateMgr = `LWCE_TECH_TEMPLATE_MGR;
+    arrTemplates = kTemplateMgr.GetAllTechTemplates();
 
-    enumName = "eTech_" $ techType;
-    iTechId = int(techType);
-
-    foreach kTechTree.m_arrCETechs(kTech)
+    if (TechName != "")
     {
-        if (techType != "")
-        {
-            if ( kTech.iTechId == iTechId || (kTech.iTechId < eTech_MAX && GetEnum(enum'ETechType', kTech.iTechId) == name(enumName)) )
-            {
-                if (kLabs.IsResearched(kTech.iTechId))
-                {
-                    continue;
-                }
+        kTech = kTemplateMgr.FindTechTemplate(name(TechName));
 
-                if (actuallyDoResearch)
-                {
-                    kLabs.SetNewProject(kTech.iTechId);
-                    kLabs.OnResearchCompleted();
-                }
-                else
-                {
-                    kLabs.m_arrResearched.AddItem(kTech.iTechId);
-                }
-
-                return;
-            }
-        }
-        else if (!kLabs.IsResearched(kTech.iTechId))
+        if (kTech != none)
         {
-            kLabs.m_arrResearched.AddItem(kTech.iTechId);
+            GetConsole().OutputTextLine("Found tech template with name " $ TechName $ ". Granting tech to player.");
+            GiveTechTemplate(kTech, kLabs, bDoResearch);
         }
+        else
+        {
+            GetConsole().OutputTextLine("Did not find technology with name " $ TechName);
+        }
+
+        return;
+    }
+
+    GetConsole().OutputTextLine("Attempting to grant all unfinished research (out of " $ arrTemplates.Length $ " total techs)");
+
+    foreach arrTemplates(kTech)
+    {
+        GiveTechTemplate(kTech, kLabs, bDoResearch);
     }
 }
 
@@ -284,4 +264,38 @@ exec function ShowAlienStats()
     kConsole.OutputTextLine("Alien Research (Bonus Only): " $ kStrategy.STAT_GetStat(2));
     kConsole.OutputTextLine("Alien Resources: " $ kStrategy.STAT_GetStat(19));
     kConsole.OutputTextLine("XCOM Threat Level: " $ kStrategy.STAT_GetStat(21));
+}
+
+protected function GiveFoundryTemplate(LWCEFoundryProjectTemplate kTemplate, LWCE_XGFacility_Engineering kEngineering)
+{
+    local LWCE_TFoundryProject kProject;
+
+    if (!kEngineering.LWCE_IsFoundryTechResearched(kTemplate.GetProjectName()))
+    {
+        kEngineering.m_arrCEFoundryHistory.AddItem(kTemplate.GetProjectName());
+
+        kProject.ProjectName = kTemplate.GetProjectName();
+        kProject.iHoursLeft = 1;
+
+        kEngineering.m_arrCEFoundryProjects.AddItem(kProject);
+        kEngineering.OnFoundryProjectCompleted(kEngineering.m_arrCEFoundryProjects.Length - 1);
+    }
+}
+
+protected function GiveTechTemplate(LWCETechTemplate kTech, LWCE_XGFacility_Labs kLabs, bool bDoResearch)
+{
+    if (kLabs.LWCE_IsResearched(kTech.GetTechName()))
+    {
+        return;
+    }
+
+    if (bDoResearch)
+    {
+        kLabs.LWCE_SetNewProject(kTech.GetTechName());
+        kLabs.OnResearchCompleted();
+    }
+    else
+    {
+        kLabs.m_arrCEResearched.AddItem(kTech.GetTechName());
+    }
 }

@@ -47,19 +47,65 @@ static function LWCE_TItemQuantity GetItemQuantity(out array<LWCE_TItemQuantity>
     return arrItemQuantities[Index];
 }
 
+static function string GetResearchCreditFriendlyName(name CreditName)
+{
+    local int iLocIndex;
+
+    switch (CreditName)
+    {
+        case 'Aerospace':
+            iLocIndex = 4;
+            break;
+        case 'All':
+            iLocIndex = 9;
+            break;
+        case 'AllArmor':
+            iLocIndex = 5;
+            break;
+        case 'AllWeapons':
+            iLocIndex = 3;
+            break;
+        case 'Cybernetics':
+            iLocIndex = 6;
+            break;
+        case 'GaussWeapons':
+            iLocIndex = 7;
+            break;
+        case 'LaserWeapons':
+            iLocIndex = 1;
+            break;
+        case 'PlasmaWeapons':
+            iLocIndex = 2;
+            break;
+        case 'Psionics':
+            iLocIndex = 8;
+            break;
+        default:
+            iLocIndex = -1;
+            break;
+    }
+
+    if (iLocIndex < 0)
+    {
+        return "";
+    }
+
+    return class'XGLocalizedData'.default.ResearchCreditNames[iLocIndex];
+}
+
 /// <summary>
 /// Checks if the given Foundry tech is researched in a way that works for both the tactical and strategy game.
 /// This function assumes the current game is fully set up, and may throw errors if called from the initialization
 /// path of either the tactical or strategy layer.
 /// </summary>
-static function bool IsFoundryTechResearched(int iTechId)
+static function bool IsFoundryTechResearched(name TechName)
 {
     if (`LWCE_IS_TAC_GAME)
     {
-        return `LWCE_TAC_CARGO.HasFoundryTech(iTechId);
+        return `LWCE_TAC_CARGO.HasFoundryProject(TechName);
     }
 
-    return `LWCE_ENGINEERING.IsFoundryTechResearched(iTechId);
+    return `LWCE_ENGINEERING.LWCE_IsFoundryTechResearched(TechName);
 }
 
 /// <summary>

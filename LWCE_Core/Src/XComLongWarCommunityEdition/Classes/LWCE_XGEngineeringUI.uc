@@ -129,7 +129,7 @@ function TTableMenuOption BuildQueueItem(int iQueueSlot)
     local LWCE_XGFacility_Engineering kEngineering;
     local TTableMenuOption kOption;
     local LWCE_TItemProject kProject;
-    local TFoundryProject kFProject;
+    local LWCE_TFoundryProject kFProject;
 
     kEngineering = `LWCE_ENGINEERING;
 
@@ -159,7 +159,7 @@ function TTableMenuOption BuildQueueItem(int iQueueSlot)
     }
     else
     {
-        kFProject = kEngineering.m_arrFoundryProjects[kEngineering.m_arrQueue[iQueueSlot].iIndex];
+        kFProject = kEngineering.m_arrCEFoundryProjects[kEngineering.m_arrQueue[iQueueSlot].iIndex];
 
         kOption.arrStrings.AddItem("");
         kOption.arrStates.AddItem(eUIState_Normal);
@@ -167,10 +167,10 @@ function TTableMenuOption BuildQueueItem(int iQueueSlot)
         kOption.arrStrings.AddItem("---");
         kOption.arrStates.AddItem(eUIState_Normal);
 
-        kOption.arrStrings.AddItem(m_strFoundryPrefix @ `LWCE_FTECH(kFProject.eTech).strName);
+        kOption.arrStrings.AddItem(m_strFoundryPrefix @ `LWCE_FTECH(kFProject.ProjectName).m_strName);
         kOption.arrStates.AddItem(eUIState_Normal);
 
-        kOption.arrStrings.AddItem(kEngineering.GetFoundryETAString(kFProject));
+        kOption.arrStrings.AddItem(kEngineering.LWCE_GetFoundryETAString(kFProject));
 
         if (kFProject.iEngineers > 0)
         {
@@ -260,7 +260,7 @@ function LWCE_TItemCard LWCE_ENGINEERINGUIGetItemCard()
                             break;
                     }
 
-                    if (ENGINEERING().IsFoundryTechResearched(eFoundry_SHIVSuppression))
+                    if (`LWCE_ENGINEERING.LWCE_IsFoundryTechResearched('Foundry_SHIVSuppression'))
                     {
                         kShivAbility.iAbilityID = eAbility_ShotSuppress;
                         kShivAbility.strName = m_strShivSuppressName;
@@ -341,7 +341,7 @@ function OnQueueOption(int iOption)
     }
     else
     {
-        PRES().UIManufactureFoundry(ENGINEERING().m_arrFoundryProjects[iProjectIndex].eTech, iProjectIndex);
+        `LWCE_HQPRES.LWCE_UIManufactureFoundry(`LWCE_ENGINEERING.m_arrCEFoundryProjects[iProjectIndex].ProjectName, iProjectIndex);
     }
 }
 
@@ -599,6 +599,143 @@ function UpdateItemTable()
                 m_kTable.mnuItems.arrOptions.AddItem(kOption);
                 m_kTable.arrSummaries.AddItem(kSummary);
             }
+        }
+    }
+}
+
+function UpdateView()
+{
+    local LWCE_XGFacility_Engineering kEngineering;
+    local LWCE_XGFacility_Labs kLabs;
+
+    kEngineering = LWCE_XGFacility_Engineering(ENGINEERING());
+    kLabs = LWCE_XGFacility_Labs(LABS());
+
+    UpdateHeader();
+    UpdateQueue();
+
+    switch (m_iCurrentView)
+    {
+        case eEngView_MainMenu:
+            UpdateMainMenu();
+            break;
+        case eEngView_Build:
+            UpdateItemTable();
+            break;
+        case eEngView_EditQueue:
+            UpdateEditQueue();
+            break;
+    }
+
+    super(XGScreenMgr).UpdateView();
+
+    if (STORAGE().EverHadItem(`LW_ITEM_ID(SkeletonKey)) && Narrative(`XComNarrativeMoment("AlienCodeRevealed_LeadOut_CE")))
+    {
+        return;
+    }
+
+    if (kEngineering.m_bStartedFoundryProject)
+    {
+        kEngineering.m_bStartedFoundryProject = false;
+        Narrative(`XComNarrativeMoment("FoundryProjectSelected"));
+        return;
+    }
+
+    if (m_iCurrentView == eEngView_MainMenu)
+    {
+        if (Narrative(`XComNarrativeMoment("FirstEngineering")))
+        {
+            return;
+        }
+
+        if (kLabs.LWCE_IsResearched('Tech_AlienOperations') && !STORAGE().EverHadItem(`LW_ITEM_ID(SkeletonKey)))
+        {
+            if (Narrative(`XComNarrativeMoment("UrgeBuildBasePassKey")))
+            {
+                return;
+            }
+        }
+
+        if (STORAGE().EverHadItem(`LW_ITEM_ID(Firestorm)))
+        {
+            if (Narrative(`XComNarrativeMoment("FirestormBuilt_LeadOut_CE")))
+            {
+                return;
+            }
+        }
+
+        if (Game().GetNumMissionsTaken(eMission_TerrorSite) > 0)
+        {
+            if (Narrative(`XComNarrativeMoment("FirstTerrorMission_LeadOut_CE")))
+            {
+                return;
+            }
+        }
+
+        if (BARRACKS().GetNumPsiSoldiers() > 0)
+        {
+            if (Narrative(`XComNarrativeMoment("PsionicsDiscovered_LeadOut_CE")))
+            {
+                return;
+            }
+        }
+
+        if (kEngineering.m_bGivenEngineers)
+        {
+            kEngineering.m_bGivenEngineers = false;
+            kEngineering.ResetRequestCounter();
+
+            if (Narrative(`XComNarrativeMoment("EngineeringHasEngineers")))
+            {
+                return;
+            }
+        }
+
+        if (kEngineering.NeedsEngineers())
+        {
+            if (Narrative(`XComNarrativeMoment("EngineeringNeedEngineers")))
+            {
+                return;
+            }
+        }
+
+        if (STORAGE().GetResource(eResource_Meld) > 150 && !HQ().m_bUrgedEWFacility)
+        {
+            if (!HQ().HasFacility(eFacility_CyberneticsLab) && !HQ().HasFacility(eFacility_GeneticsLab) && !kEngineering.IsBuildingFacility(eFacility_CyberneticsLab) && !kEngineering.IsBuildingFacility(eFacility_GeneticsLab))
+            {
+                if (Narrative(`XComNarrativeMoment("Urge_LabFacility")))
+                {
+                    HQ().m_bUrgedEWFacility = true;
+                    return;
+                }
+            }
+        }
+
+        if (kEngineering.UrgeBuildMEC())
+        {
+            if (Narrative(`XComNarrativeMomentEW("Urge_BuildMEC")))
+            {
+                return;
+            }
+        }
+
+        if (Narrative(kEngineering.GetMusing()))
+        {
+            return;
+        }
+
+        if (!HQ().HasFacility(eFacility_Foundry) && kLabs.LWCE_IsResearched('Tech_ExperimentalWarfare') && AI().GetMonth() >= 2)
+        {
+            if (Narrative(`XComNarrativeMoment("UrgeFoundry")))
+            {
+                return;
+            }
+        }
+
+        if (kLabs.LWCE_IsResearched('Tech_AlienCommandAndControl') && GOLLOP() == none)
+        {
+            Narrative(`XComNarrativeMoment("GollopUnlock"));
+            return;
         }
     }
 }

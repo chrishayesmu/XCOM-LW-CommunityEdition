@@ -1,5 +1,13 @@
 class LWCETypes extends Object;
 
+enum EDataType
+{
+    eDT_Bool,
+    eDT_Int,
+    eDT_Name,
+    eDT_String
+};
+
 /// <summary>A three-dimensional vector of integers.</summary>
 struct LWCE_Vector3Int
 {
@@ -80,6 +88,21 @@ struct LWCE_TClassDefinition
     var array<string> NicknamesMale;   // Nicknames that can be randomly assigned to male soldiers of this class.
 };
 
+/// <summary>
+/// A single piece of data which can be used in situations where the type and/or quantity of data is not known in
+/// advance, such as Geoscape alerts. The ID field can be used to communicate what the data represents, but this is
+/// optional, and generally only needed for mod-to-mod communication.
+/// </summary>
+struct LWCE_TData
+{
+    var name ID;
+    var EDataType eType;
+    var bool bData;
+    var int iData;
+    var name nmData;
+    var string strData;
+};
+
 struct LWCE_TSoldier
 {
     var int iID;
@@ -156,9 +179,9 @@ struct LWCE_TCost
 struct LWCE_TPrereqs
 {
     var array<int> arrFacilityReqs; // A list of facility IDs that must be built. For non-unique facilities, only one needs to be built.
-    var array<int> arrFoundryReqs;  // A list of foundry project IDs that must be complete.
+    var array<name> arrFoundryReqs; // A list of foundry project names that must be complete.
     var array<int> arrItemReqs;     // A list of item IDs. The player must have possessed these at one time, but doesn't necessarily need to still have them now.
-    var array<int> arrTechReqs;     // A list of research tech IDs that must be complete.
+    var array<name> arrTechReqs;    // A list of research tech names that must be complete.
     var array<int> arrUfoReqs;      // A list of UFO types that must be encountered. A UFO type is considered encountered after a successful assault on a crashed or landed UFO.
 
     var int iRequiredSoldierRank;   // If set, XCOM must have at least one soldier of this rank or higher.
@@ -260,45 +283,6 @@ struct LWCE_TItem
 };
 
 /// <summary>
-/// Struct representing a Foundry project, replacing XGStrategyActorNativeBase.TFoundryTech.
-/// </summary>
-struct LWCE_TFoundryTech
-{
-    var int iTechId;            // The integer ID of the project. See README if you don't know how to choose IDs.
-    var string strName;         // The friendly name of the Foundry project.
-    var string strSummary;      // Friendly text describing the project to the player.
-
-    var int iHours;             // The total number of engineer-hours required to complete this project. For example, if your project requires 15
-                                // engineers and should take 48 hours to complete when at 15 engineers, this would be 15 * 48 = 720 hours.
-    var int iEngineers;         // The number of engineers required to make progress at normal speed on this project.
-
-    var array<int> arrCredits;  // A list of research credit IDs that can apply to speed up this project.
-
-    var string ImagePath;       // Path to an image to show in the Foundry UI for this project. Must include the "img:///" prefix.
-                                // Typical Foundry images are 256x128.
-
-    var LWCE_TCost kCost;         // The base cost (unmodified by any continent bonuses or other situational modifiers) to start this project.
-    var LWCE_TPrereqs kPrereqs;   // The prerequisites that must be met before this project will be visible in the Foundry.
-
-    var bool bForceUnavailable; // If true, this project will never be shown in the list of available Foundry projects. This is the recommended
-                                // way to deprecate Foundry projects from a mod, rather than deleting them (which may break existing game saves).
-                                // If the player has already completed the project, it will still be visible in the Foundry.
-
-    structdefaultproperties
-    {
-        iTechId=0
-        strName=""
-        strSummary=""
-        iHours=0
-        iEngineers=0
-        kCost=(iCash=0, iAlloys=0, iElerium=0, iMeld=0, arrItems=())
-        arrCredits=()
-        ImagePath=""
-        bForceUnavailable=false
-    }
-};
-
-/// <summary>
 /// Struct representing a perk, replacing XComPerkManager.TPerk. Note that unlike XCOM 2, the perk's raw data
 /// does not contain anything about how the perk actually works. You must use mod hooks to interact appropriately
 /// with the game based on what your perk should do.
@@ -381,66 +365,6 @@ struct LWCE_TPerkTree
     // The rows of the perk tree. arrPerkRows[0] is available at the first rank up; arrPerkRows[1] at the second; and so on.
     // Do not add empty rows, they will not work properly.
     var array<LWCE_TPerkTreeRow> arrPerkRows;
-};
-
-/// <summary>
-/// Struct representing a research technology, replacing XGStrategyActorNativeBase.TTech.
-/// </summary>
-struct LWCE_TTech
-{
-    var int iTechId;
-    var string strName;     // The research name, as it will be seen when selecting research, browsing the archives, etc.
-    var string strSummary;  // The summary text when selecting a new research in the Labs.
-    var string strReport;   // The full text seen when the research is completed, or when viewing the research in the archives.
-    var string strCustom;   // Extra text which is shown in yellow during the research results. Can be left blank if not needed.
-    var string strCodename; // The codename which is seen during the research report.
-
-    // Whether this is an autopsy or interrogation, and which character ID is the subject.
-    // This has the following effects:
-    //
-    //     1. Autopsies/interrogations can benefit from special research time reductions, such as We Have Ways.
-    //     2. Starting an autopsy/interrogation plays the associated cutscene for the subject character ID.
-    //     3. Autopsies are required to view enemy perks, and to see special enemy names for navigators/leaders.
-    //     4. Autopsied enemy types grant a damage bonus from the Vital Point Targeting perk.
-    //
-    // In Long War 1.0, some enemies (Outsiders, zombies, EXALT) don't have autopsy research, and always count as being
-    // autopsied. With LWCE, this behavior is retained even if a mod adds an autopsy tech for those enemies.
-    // If any mod author wants to add those autopsies and wants this changed, please contact the LWCE team.
-    var bool bIsAutopsy;
-    var bool bIsInterrogation;
-    var int iSubjectCharacterId;
-
-    var int iHours; // How many scientist-hours this research takes. Each scientist completes one scientist-hour per hour, multiplied by research
-                    // bonuses from laboratories and adjacencies. This value will be multiplied by DefaultGameCore.ini's TECH_TIME_BALANCE.
-                    // For example, if this value is 240 (10 * 24), then 1 scientist can complete the research in 10 days, or 10 scientists in 1
-                    // day, or 20 in 0.5 days, etc. This value is also reduced multiplicatively by research credits (see arrCredits below), situational
-                    // modifiers such as We Have Ways for autopsies/interrogations, and others.
-
-
-    var int iCreditGranted; // The research credit ID granted by this tech, if any. See EResearchCredits for values.
-    var array<int> arrCredits;  // A list of research credit IDs that can apply to speed up this research.
-
-    var string ImagePath;
-
-    var LWCE_TCost kCost;
-    var LWCE_TPrereqs kPrereqs;   // The prerequisites that must be met before this research will be visible in the Labs.
-
-    structdefaultproperties
-    {
-        iTechId=0
-        strName=""
-        strSummary=""
-        strReport=""
-        strCustom=""
-        strCodename=""
-        bIsAutopsy=false
-        bIsInterrogation=false
-        iHours=0
-        iCreditGranted=0
-        arrCredits=()
-        ImagePath=""
-        kCost=(iCash=0,iAlloys=0,iElerium=0,iMeld=0,iWeaponFragments=0,arrItems=())
-    }
 };
 
 /// <summary>
@@ -541,6 +465,33 @@ struct TModVersion
 // can skip past them to see some utility functions.
 // ------------------------------------------------------------------------------
 
+struct LWCE_THQEvent
+{
+    var name EventType;
+    var int iHours;
+    var array<LWCE_TData> arrData;
+};
+
+struct LWCE_TMCEvent
+{
+    var name EventType;
+    var TImage imgOption;
+    var TText txtOption;
+    var TText txtDays;
+    var int iPriority;
+    var Color clrOption;
+    var array<LWCE_TData> arrData;
+};
+
+struct LWCE_TMCEventMenu
+{
+    var TButtonText txtFFButton;
+    var array<LWCE_THQEvent> arrEvents;
+    var array<LWCE_TMCEvent> arrOptions;
+    var TText txtEventsLabel;
+    var int iHighlight;
+};
+
 struct LWCE_TItemCard
 {
     var string strName;
@@ -622,29 +573,9 @@ struct LWCE_TItemProject
     }
 };
 
-struct LWCE_TLabArchivesUI
-{
-    var TMenu mnuArchives;
-    var array<int> arrTechs;
-
-    structdefaultproperties
-    {
-        mnuArchives=(strLabel="", arrOptions=(), bTakesNoInput=false)
-        arrTechs=()
-    }
-};
-
-struct LWCE_TResearchProgress
-{
-    var int iTechId;
-    var int iHoursCompleted; // Scientist-hours of this research that have been completed
-    var int iHoursSpent; // Number of clock hours the research has been worked on
-    var XGDateTime kCompletionTime;
-};
-
 struct LWCE_TTechState
 {
-    var int iTechId;
+    var name TechName;
     var ETechState eAvailabilityState;
 };
 

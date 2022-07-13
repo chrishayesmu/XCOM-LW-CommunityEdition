@@ -1,21 +1,51 @@
 class LWCE_XGFacility_Labs extends XGFacility_Labs
-    dependson(XGGameData);
+    dependson(LWCETypes);
+
+struct LWCE_TResearchProgress
+{
+    var name TechName;
+    var int iHoursCompleted; // Scientist-hours of this research that have been completed
+    var int iHoursSpent; // Number of clock hours the research has been worked on
+    var XGDateTime kCompletionTime;
+};
+
+struct LWCE_TResearchProject
+{
+    var name TechName;
+    var int iProgress;
+    var int iActualHoursLeft;
+    var int iEstimate;
+    var string strETA;
+};
 
 struct CheckpointRecord_LWCE_XGFacility_Labs extends CheckpointRecord_XGFacility_Labs
 {
-    var int m_iCELastResearched;
+    var LWCE_TResearchProject m_kCEProject;
+    var array<name> m_arrCEResearched;
+    var name m_nmLastResearchedTech;
     var array<LWCE_TResearchProgress> m_arrCEProgress;
-    var array<int> m_arrCEUnlockedFoundryProjects;
+    var array<name> m_arrEarnedResearchCredits;
+    var array<LWCE_TTechState> m_arrCEMissionResults;
+    var array<name> m_arrCEUnlockedFoundryProjects;
+    var array<int> m_arrCEUnlockedItems;
 };
 
-var int m_iCELastResearched;
+var LWCE_TResearchProject m_kCEProject;
+var array<name> m_arrCEResearched;
+var name m_nmLastResearchedTech;
 var array<LWCE_TResearchProgress> m_arrCEProgress;
+var array<name> m_arrEarnedResearchCredits;
+
 var array<LWCE_TTechState> m_arrCEMissionResults;
-var array<int> m_arrCEUnlockedFoundryProjects;
+var array<name> m_arrCEUnlockedFoundryProjects;
 var array<int> m_arrCEUnlockedItems;
+
+var private LWCETechTemplateManager m_kTechTemplateMgr;
 
 function Init(bool bLoadingFromSave)
 {
+    m_kTechTemplateMgr = `LWCE_TECH_TEMPLATE_MGR;
+
     m_kTree = Spawn(class'LWCE_XGTechTree');
     m_kTree.Init();
 
@@ -60,21 +90,13 @@ function Update()
 
     if (HasProject())
     {
-        iProgressIndex = m_arrCEProgress.Find('iTechId', m_kProject.iTech);
+        iProgressIndex = m_arrCEProgress.Find('TechName', m_kCEProject.TechName);
         iHoursCompleted = GetResearchPerHour();
-        m_kProject.iActualHoursLeft -= iHoursCompleted;
+        m_kCEProject.iActualHoursLeft -= iHoursCompleted;
         m_arrCEProgress[iProgressIndex].iHoursCompleted += iHoursCompleted;
         m_arrCEProgress[iProgressIndex].iHoursSpent += 1;
 
-        if (ISCONTROLLED() && m_kProject.iTech == `LW_TECH_ID(Xenobiology))
-        {
-            if (GEOSCAPE().m_kDateTime.GetDay() > START_DAY + 7)
-            {
-                m_kProject.iActualHoursLeft = 0;
-            }
-        }
-
-        if (m_kProject.iActualHoursLeft <= 0)
+        if (m_kCEProject.iActualHoursLeft <= 0)
         {
             if (GEOSCAPE().IsBusy())
             {
@@ -90,12 +112,70 @@ function Update()
     }
 }
 
+function AddResearchCredit(EResearchCredits eCredit)
+{
+    `LWCE_LOG_DEPRECATED_CLS(AddResearchCredit);
+}
+
+function LWCE_AddResearchCredit(name CreditName)
+{
+    local int Index;
+    local TResearchCredit kCredit;
+    local LWCE_XGTechTree kTechTree;
+    local LWCE_XGFacility_Engineering kEngineering;
+
+    if (m_arrEarnedResearchCredits.Find(CreditName) != INDEX_NONE)
+    {
+        return;
+    }
+
+    kTechTree = LWCE_XGTechTree(TECHTREE());
+    kCredit = kTechTree.LWCE_GetResearchCredit(CreditName);
+    kEngineering = LWCE_XGFacility_Engineering(ENGINEERING());
+
+    m_arrEarnedResearchCredits.AddItem(CreditName);
+
+    // Iterate any current Foundry projects and adjust their remaining time if they benefit
+    for (Index = 0; Index < kEngineering.m_arrCEFoundryProjects.Length; Index++)
+    {
+        if (kTechTree.LWCE_CreditAppliesToFoundryTech(CreditName, kEngineering.m_arrCEFoundryProjects[Index].ProjectName))
+        {
+            kEngineering.m_arrCEFoundryProjects[Index].iHoursLeft *= kCredit.iBonus / 100.0;
+        }
+    }
+}
+
+function AddScientists(int iNumScientists)
+{
+    m_iNumScientists += iNumScientists;
+    m_bGivenScientists = true;
+
+    STAT_AddStat(eRecap_ScientistsCollected, iNumScientists);
+
+    if (m_iNumScientists >= 80)
+    {
+        Achieve(AT_Oppenheimer);
+    }
+
+    if (HasProject())
+    {
+        UpdateProgress();
+    }
+}
+
 function bool CanAffordTech(int iTech)
 {
-    local LWCE_TTech kTech;
+    `LWCE_LOG_DEPRECATED_CLS(CanAffordTech);
+
+    return false;
+}
+
+function bool LWCE_CanAffordTech(name TechName)
+{
+    local LWCETechTemplate kTech;
     local int iItem;
 
-    kTech = `LWCE_TECH(iTech);
+    kTech = `LWCE_TECH(TechName);
 
     if (kTech.kCost.iCash > 0 && kTech.kCost.iCash > GetResource(eResource_Money))
     {
@@ -139,17 +219,24 @@ function bool CanAffordTech(int iTech)
 // "Edison" achievement: In a single game, complete every Research Project.
 function bool CheckForEdison()
 {
-    return `LWCE_TECHTREE.m_arrCETechs.Length == m_arrResearched.Length;
+    local array<name> arrTechNames;
+
+    arrTechNames = m_kTechTemplateMgr.GetTemplateNames();
+
+    return arrTechNames.Length == m_arrCEResearched.Length;
 }
 
 // "All Employees Must Wash Hands..." achievement: In a single game, complete every Autopsy.
 function bool CheckForAllEmployees()
 {
-    local LWCE_TTech kTech;
+    local array<LWCETechTemplate> arrTemplates;
+    local LWCETechTemplate kTech;
 
-    foreach `LWCE_TECHTREE.m_arrCETechs(kTech)
+    arrTemplates = m_kTechTemplateMgr.GetAllTechTemplates();
+
+    foreach arrTemplates(kTech)
     {
-        if (IsAutopsyTech(kTech.iTechId) && !IsResearched(kTech.iTechId))
+        if (kTech.bIsAutopsy && !LWCE_IsResearched(kTech.GetTechName()))
         {
             return false;
         }
@@ -173,8 +260,8 @@ function LWCE_CompilePostMissionReport(array<LWCE_TTechState> arrPreLandTechs, a
     for (Index = 0; Index < arrPreLandTechs.Length; Index++)
     {
         // Techs should always be iterated in the same order
-        `assert(arrPreLandTechs[Index].iTechId == arrPostLandTechs[Index].iTechId);
-        kTechState.iTechId = arrPreLandTechs[Index].iTechId;
+        `assert(arrPreLandTechs[Index].TechName == arrPostLandTechs[Index].TechName);
+        kTechState.TechName = arrPreLandTechs[Index].TechName;
         kTechState.eAvailabilityState = eTechState_Unavailable;
 
         if (arrPreLandTechs[Index].eAvailabilityState != arrPostLandTechs[Index].eAvailabilityState)
@@ -185,7 +272,7 @@ function LWCE_CompilePostMissionReport(array<LWCE_TTechState> arrPreLandTechs, a
                 kTechState.eAvailabilityState = eTechState_Available;
 
                 // Make sure we can do interrogations if relevant (captives may not be converted to corpses at this point)
-                if (IsInterrogationTech(kTechState.iTechId) && !HQ().HasFacility(eFacility_AlienContain))
+                if (LWCE_IsInterrogationTech(kTechState.TechName) && !HQ().HasFacility(eFacility_AlienContain))
                 {
                     kTechState.eAvailabilityState = eTechState_Unavailable;
                 }
@@ -227,20 +314,20 @@ function GetAvailableTechs(out array<TTech> arrTechs)
     `LWCE_LOG_DEPRECATED_CLS(GetAvailableTechs);
 }
 
-function LWCE_GetAvailableTechs(out array<LWCE_TTech> arrTechs)
+function LWCE_GetAvailableTechs(out array<LWCETechTemplate> arrTechs)
 {
-    local LWCE_TTECH kTech;
-    local LWCE_XGTechTree kTechTree;
+    local array<LWCETechTemplate> arrTemplates;
+    local LWCETechTemplate kTech;
 
-    kTechTree = `LWCE_TECHTREE;
+    arrTemplates = m_kTechTemplateMgr.GetAllTechTemplates();
 
     arrTechs.Remove(0, arrTechs.Length);
 
-    foreach kTechTree.m_arrCETechs(kTech)
+    foreach arrTemplates(kTech)
     {
-        if (m_kProject.iTech != kTech.iTechId && LWCE_IsTechAvailable(kTech.iTechId))
+        if (m_kCEProject.TechName != kTech.GetTechName() && LWCE_IsTechAvailable(kTech.GetTechName()))
         {
-            if (IsPriorityTech(kTech.iTechId))
+            if (LWCE_IsPriorityTech(kTech.GetTechName()))
             {
                 arrTechs.InsertItem(0, kTech);
             }
@@ -348,27 +435,58 @@ function bool GetCostSummary(out TCostSummary kCostSummary, out TResearchCost kC
     return bCanAfford;
 }
 
+function float GetCurrentResearchProgressPercentage()
+{
+    local float fPercentage;
+
+    if (HasProject())
+    {
+        fPercentage = float(GetHoursLeftOnProject()) / float(m_kCEProject.iEstimate * 24);
+        return FClamp(1.0 - fPercentage, 0.0, 1.0);
+    }
+    else
+    {
+        return 0.0;
+    }
+}
+
+function TLabeledText GetCurrentProgressText()
+{
+    local TLabeledText txtProgress;
+
+    txtProgress = GetProgressText(EResearchProgress(m_kCEProject.iProgress));
+    txtProgress.StrValue $= " (" $ m_kCEProject.strETA $ ")";
+    return txtProgress;
+}
+
+function TResearchProject GetCurrentProject()
+{
+    local TResearchProject kProject;
+
+    `LWCE_LOG_DEPRECATED_CLS(GetCurrentProject);
+
+    return kProject;
+}
+
+function LWCE_TResearchProject LWCE_GetCurrentProject()
+{
+    return m_kCEProject;
+}
+
 function TTech GetCurrentTech()
 {
     `LWCE_LOG_DEPRECATED_CLS(GetCurrentTech);
     return super.GetCurrentTech();
 }
 
-function LWCE_TTech LWCE_GetCurrentTech()
+function LWCETechTemplate LWCE_GetCurrentTech()
 {
-    local int Index;
-    local LWCE_TTech BlankTech;
-    local LWCE_XGTechTree kTechTree;
-
-    kTechTree = `LWCE_TECHTREE;
-    Index = kTechTree.m_arrCETechs.Find('iTechId', m_kProject.iTech);
-
-    if (Index == INDEX_NONE)
+    if (m_kCEProject.TechName == '')
     {
-        return BlankTech;
+        return none;
     }
 
-    return kTechTree.m_arrCETechs[Index];
+    return m_kTechTemplateMgr.FindTechTemplate(m_kCEProject.TechName);
 }
 
 function TTech GetCurrentTechTemplate()
@@ -377,9 +495,9 @@ function TTech GetCurrentTechTemplate()
     return super.GetCurrentTechTemplate();
 }
 
-function LWCE_TTech LWCE_GetCurrentTechTemplate()
+function LWCETechTemplate LWCE_GetCurrentTechTemplate()
 {
-    return `LWCE_TECHTREE.LWCE_GetTech(m_kProject.iTech, false);
+    return `LWCE_TECHTREE.LWCE_GetTech(m_kCEProject.TechName, false);
 }
 
 function array<int> GetCurrentTechStates()
@@ -395,25 +513,26 @@ function array<int> GetCurrentTechStates()
 function array<LWCE_TTechState> LWCE_GetCurrentTechStates()
 {
     local int Index;
-    local LWCE_TTech kTech;
-    local LWCE_XGTechTree kTree;
+    local array<LWCETechTemplate> arrTemplates;
+    local LWCETechTemplate kTech;
     local array<LWCE_TTechState> arrTechStates;
     local LWCE_TTechState kTechState;
 
-    kTree = `LWCE_TECHTREE;
-    arrTechStates.Add(kTree.m_arrCETechs.Length);
+    arrTemplates = m_kTechTemplateMgr.GetAllTechTemplates();
+    arrTechStates.Add(arrTemplates.Length);
 
-    for (Index = 0; Index < kTree.m_arrCETechs.Length; Index++)
+    for (Index = 0; Index < arrTemplates.Length; Index++)
     {
-        kTech = kTree.m_arrCETechs[Index];
-        kTechState.iTechId = kTech.iTechId;
+        kTech = arrTemplates[Index];
+
+        kTechState.TechName = kTech.GetTechName();
         kTechState.eAvailabilityState = eTechState_Unavailable;
 
-        if (m_kProject.iTech != kTech.iTechId)
+        if (m_kCEProject.TechName != kTech.GetTechName())
         {
-            if (LWCE_IsTechAvailable(kTech.iTechId))
+            if (LWCE_IsTechAvailable(kTech.GetTechName()))
             {
-                if (CanAffordTech(kTech.iTechId))
+                if (LWCE_CanAffordTech(kTech.GetTechName()))
                 {
                     kTechState.eAvailabilityState = eTechState_Affordable;
                 }
@@ -432,10 +551,17 @@ function array<LWCE_TTechState> LWCE_GetCurrentTechStates()
 
 function string GetEstimateString(int iTech)
 {
+    `LWCE_LOG_DEPRECATED_CLS(GetEstimateString);
+
+    return "";
+}
+
+function string LWCE_GetEstimateString(name TechName)
+{
     local int iHours, iDaysLeft;
     local XGParamTag kTag;
 
-    iHours = `LWCE_TECH(iTech).iHours;
+    iHours = `LWCE_TECH(TechName).iPointsToComplete;
 
     if (iHours == 0)
     {
@@ -456,19 +582,63 @@ function string GetEstimateString(int iTech)
     }
 }
 
+function GetEvents(out array<THQEvent> arrEvents)
+{
+    `LWCE_LOG_DEPRECATED_CLS(GetEvents);
+}
+
+function LWCE_GetEvents(out array<LWCE_THQEvent> arrEvents)
+{
+    local int iEvent;
+    local LWCE_TData kData;
+    local LWCE_THQEvent kEvent;
+
+    if (!HasProject())
+    {
+        return;
+    }
+
+    kData.eType = eDT_Name;
+    kData.nmData = m_kCEProject.TechName;
+
+    kEvent.EventType = 'Research';
+    kEvent.iHours = GetHoursLeftOnProject();
+    kEvent.arrData.AddItem(kData);
+
+    for (iEvent = 0; iEvent < arrEvents.Length; iEvent++)
+    {
+        if (arrEvents[iEvent].iHours > kEvent.iHours)
+        {
+            arrEvents.InsertItem(iEvent, kEvent);
+            return;
+        }
+    }
+
+    arrEvents.AddItem(kEvent);
+}
+
+function int GetHoursLeftOnProject()
+{
+    local int iHours;
+
+    iHours = m_kCEProject.iActualHoursLeft / GetResearchPerHour();
+
+    if ((m_kCEProject.iActualHoursLeft % GetResearchPerHour()) > 0)
+    {
+        iHours += 1;
+    }
+
+    return iHours;
+}
+
 function int GetNumAutopsiesPerformed()
 {
-    local int iNumAutopsies, iTechId;
-    local LWCE_TTech kTech;
-    local LWCE_XGTechTree kTechTree;
+    local int iNumAutopsies;
+    local name TechName;
 
-    kTechTree = `LWCE_TECHTREE;
-
-    foreach m_arrResearched(iTechId)
+    foreach m_arrCEResearched(TechName)
     {
-        kTech = kTechTree.LWCE_GetTech(iTechId, false);
-
-        if (kTech.bIsAutopsy)
+        if (m_kTechTemplateMgr.FindTechTemplate(TechName).bIsAutopsy)
         {
             iNumAutopsies++;
         }
@@ -479,44 +649,128 @@ function int GetNumAutopsiesPerformed()
 
 function int GetNumTechsResearched()
 {
-    return m_arrResearched.Length;
+    return m_arrCEResearched.Length;
 }
 
 function EResearchProgress GetProgress(int iTech)
 {
-    local LWCE_TTech kTech;
+    `LWCE_LOG_DEPRECATED_CLS(GetProgress);
 
-    kTech = `LWCE_TECH(iTech);
+    return eResearchProgress_None;
+}
 
-    if (LabHoursToDays(kTech.iHours) <= 5)
+function EResearchProgress LWCE_GetProgress(name TechName)
+{
+    local LWCETechTemplate kTech;
+
+    kTech = `LWCE_TECH(TechName);
+
+    if (LabHoursToDays(kTech.iPointsToComplete) <= 5)
     {
         return eResearchProgress_Fast;
     }
+    else if (LabHoursToDays(kTech.iPointsToComplete) <= 10)
+    {
+        return eResearchProgress_Normal;
+    }
     else
     {
-        if (LabHoursToDays(kTech.iHours) <= 10)
-        {
-            return eResearchProgress_Normal;
-        }
-        else
-        {
-            return eResearchProgress_Slow;
-        }
+        return eResearchProgress_Slow;
     }
 }
 
 function bool HasInterrogatedCaptive()
 {
-    local int iTechId;
-    local LWCE_TTech kTech;
-    local LWCE_XGTechTree kTechTree;
+    local name TechName;
 
-    kTechTree = `LWCE_TECHTREE;
-
-    foreach m_arrResearched(iTechId)
+    foreach m_arrCEResearched(TechName)
     {
-        kTech = kTechTree.LWCE_GetTech(iTechId, false);
+        if (m_kTechTemplateMgr.FindTechTemplate(TechName).bIsInterrogation)
+        {
+            return true;
+        }
+    }
 
+    return false;
+}
+
+function bool HasProject()
+{
+    return m_kCEProject.TechName != '';
+}
+
+function bool HasResearchCredit(EResearchCredits eCredit)
+{
+    `LWCE_LOG_DEPRECATED_CLS(HasResearchCredit);
+    return false;
+}
+
+function bool LWCE_HasResearchCredit(name CreditName)
+{
+    return m_arrEarnedResearchCredits.Find(CreditName) != INDEX_NONE;
+}
+
+function bool HasTechsAvailable()
+{
+    local array<LWCETechTemplate> arrTechs;
+
+    LWCE_GetAvailableTechs(arrTechs);
+    return arrTechs.Length > 0;
+}
+
+function bool IsAutopsyTech(int iTech)
+{
+    `LWCE_LOG_DEPRECATED_CLS(IsAutopsyTech);
+
+    return false;
+}
+
+function bool LWCE_IsAutopsyTech(name TechName)
+{
+    local LWCETechTemplate kTech;
+
+    kTech = m_kTechTemplateMgr.FindTechTemplate(TechName);
+
+    if (kTech == none)
+    {
+        `LWCE_LOG_CLS("WARNING: LWCE_IsAutopsyTech: requested tech name " $ TechName $ " not found");
+        return false;
+    }
+
+    return kTech.bIsAutopsy;
+}
+
+function bool IsInterrogationTech(int iTech)
+{
+    `LWCE_LOG_DEPRECATED_CLS(IsInterrogationTech);
+
+    return false;
+}
+
+function bool LWCE_IsInterrogationTech(name TechName)
+{
+    local LWCETechTemplate kTech;
+
+    kTech = m_kTechTemplateMgr.FindTechTemplate(TechName);
+
+    if (kTech == none)
+    {
+        `LWCE_LOG_CLS("WARNING: LWCE_IsInterrogationTech: requested tech name " $ TechName $ " not found");
+        return false;
+    }
+
+    return kTech.bIsInterrogation;
+}
+
+function bool IsInterrogationTechAvailable()
+{
+    local array<LWCETechTemplate> arrTechs;
+    local LWCETechTemplate kTech;
+
+    LWCE_GetAvailableTechs(arrTechs);
+
+    foreach arrTechs(kTech)
+    {
         if (kTech.bIsInterrogation)
         {
             return true;
@@ -526,45 +780,74 @@ function bool HasInterrogatedCaptive()
     return false;
 }
 
-function bool HasTechsAvailable()
+function bool IsPriorityTech(int iTech)
 {
-    local array<LWCE_TTech> arrTechs;
-
-    LWCE_GetAvailableTechs(arrTechs);
-    return arrTechs.Length > 0;
-}
-
-function bool IsAutopsyTech(int iTech)
-{
-    return `LWCE_TECHTREE.LWCE_GetTech(iTech).bIsAutopsy;
-}
-
-function bool IsInterrogationTech(int iTech)
-{
-    return `LWCE_TECHTREE.LWCE_GetTech(iTech).bIsInterrogation;
-}
-
-function bool IsInterrogationTechAvailable()
-{
-    local array<LWCE_TTech> arrTechs;
-    local LWCE_TTech kTech;
-
-    LWCE_GetAvailableTechs(arrTechs);
-
-    foreach arrTechs(kTech)
-    {
-        if (IsInterrogationTech(kTech.iTechId))
-        {
-            return true;
-        }
-    }
+    `LWCE_LOG_DEPRECATED_CLS(IsPriorityTech);
 
     return false;
 }
 
+function bool LWCE_IsPriorityTech(name TechName)
+{
+    // TODO: move logic into the template or use a delegate from the template for this
+    if (TechName == 'Tech_Xenobiology' && GetNumTechsResearched() > 2)
+    {
+        return true;
+    }
+
+    if (LWCE_IsInterrogationTech(TechName) && !HasInterrogatedCaptive())
+    {
+        return true;
+    }
+
+    if (TechName == 'Tech_AlienPropulsion' && OBJECTIVES().m_eObjective == eObj_ShootDownOverseer)
+    {
+        return true;
+    }
+
+    if (TechName == 'Tech_Xenogenetics' && OBJECTIVES().m_eObjective == eObj_CaptureOutsider)
+    {
+        return true;
+    }
+
+    switch (TechName)
+    {
+        case 'Tech_Xenoneurology':
+        case 'Tech_Xenopsionics':
+        case 'Tech_AlienCommunications':
+        case 'Tech_AlienCommandAndControl':
+        case 'Tech_AlienOperations':
+            return true;
+        default:
+            return false;
+    }
+}
+
 function bool IsResearched(int iTech)
 {
-    return iTech == 0 || m_arrResearched.Find(iTech) != INDEX_NONE;
+    local name TechName;
+
+    // This function is only half-deprecated; some base game code can't quite be reached to
+    // move it to LWCE_IsResearched yet, so we do this for now.
+    if (iTech == 0)
+    {
+        return true;
+    }
+
+    TechName = class'LWCE_XGTechTree'.static.TechNameFromInteger(iTech);
+
+    if (TechName == '')
+    {
+        `LWCE_LOG_DEPRECATED_CLS(IsResearched);
+        return false;
+    }
+
+    return LWCE_IsResearched(TechName);
+}
+
+function bool LWCE_IsResearched(name TechName)
+{
+    return TechName == '' || m_arrCEResearched.Find(TechName) != INDEX_NONE;
 }
 
 function bool IsTechAvailable(ETechType eTech)
@@ -573,29 +856,29 @@ function bool IsTechAvailable(ETechType eTech)
     return super.IsTechAvailable(eTech);
 }
 
-function bool LWCE_IsTechAvailable(int iTech)
+function bool LWCE_IsTechAvailable(name TechName)
 {
-    if (iTech == 0 || iTech == 76)
+    if (TechName == '')
     {
         return false;
     }
 
-    if (IsResearched(iTech))
+    if (LWCE_IsResearched(TechName))
     {
         return false;
     }
 
-    if (!TECHTREE().HasPrereqs(iTech))
+    if (!LWCE_XGTechTree(TECHTREE()).LWCE_HasPrereqs(TechName))
     {
         return false;
     }
 
-    if (IsInterrogationTech(iTech) && !HQ().HasFacility(eFacility_AlienContain))
+    if (LWCE_IsInterrogationTech(TechName) && !HQ().HasFacility(eFacility_AlienContain))
     {
         return false;
     }
 
-    if (IsInterrogationTech(iTech) && !CanAffordTech(iTech))
+    if (LWCE_IsInterrogationTech(TechName) && !LWCE_CanAffordTech(TechName))
     {
         return false;
     }
@@ -605,8 +888,8 @@ function bool LWCE_IsTechAvailable(int iTech)
 
 function bool NeedsScientists()
 {
-    local array<LWCE_TTech> arrTechs;
-    local LWCE_TTech kTech;
+    local array<LWCETechTemplate> arrTechs;
+    local LWCETechTemplate kTech;
     local int iNumFastTechs, iNumNormalTechs, iNumSlowTechs;
     local EResearchProgress eProgress;
 
@@ -620,12 +903,12 @@ function bool NeedsScientists()
     foreach arrTechs(kTech)
     {
         // Autopsies/interrogations don't count, presumably because they could be made instant in Enemy Within
-        if (IsInterrogationTech(kTech.iTechId) || IsAutopsyTech(kTech.iTechId))
+        if (kTech.bIsAutopsy || kTech.bIsInterrogation)
         {
             continue;
         }
 
-        eProgress = GetProgress(kTech.iTechId);
+        eProgress = LWCE_GetProgress(kTech.GetTechName());
 
         if (eProgress == eResearchProgress_Slow)
         {
@@ -654,34 +937,29 @@ function bool NeedsScientists()
 
 function OnResearchCompleted()
 {
-    local int iCorpseId, iProgressIndex, iTech;
+    local name TechName;
+    local int iCorpseId, iProgressIndex, Index;
     local bool bNeverInterrogated;
+    local LWCETechTemplate kCompletedTech;
+    local LWCE_XGGeoscape kGeoscape;
     local LWCE_XGItemTree kItemTree;
-    local TResearchProject kNewProject;
+    local LWCE_TResearchProject kBlankProject;
 
-    kItemTree = `LWCE_ITEMTREE;
+    kGeoscape = LWCE_XGGeoscape(GEOSCAPE());
+    kItemTree = LWCE_XGItemTree(ITEMTREE());
 
     bNeverInterrogated = !HasInterrogatedCaptive();
-    iTech = m_kProject.iTech;
     m_bRequiresAttention = true;
-    m_arrResearched.AddItem(m_kProject.iTech);
+
+    TechName = m_kCEProject.TechName;
+    m_nmLastResearchedTech = TechName;
+    kCompletedTech = `LWCE_TECH(TechName);
+    m_arrCEResearched.AddItem(TechName);
 
     // Record when the research was finished, for the report/archives
-    iProgressIndex = m_arrCEProgress.Find('iTechId', iTech);
+    iProgressIndex = m_arrCEProgress.Find('TechName', TechName);
     m_arrCEProgress[iProgressIndex].kCompletionTime = Spawn(class'LWCE_XGDateTime', self);
     m_arrCEProgress[iProgressIndex].kCompletionTime.CopyDateTime(GEOSCAPE().m_kDateTime);
-
-    m_iCELastResearched = iTech;
-
-    if (!WorldInfo.IsConsoleBuild(CONSOLE_Xbox360) && !WorldInfo.IsConsoleBuild(CONSOLE_PS3))
-    {
-        GetRecapSaveData().RecordEvent(RecordTechResearched(m_kProject));
-    }
-
-    if (ISCONTROLLED() && m_iCELastResearched == `LW_TECH_ID(ExperimentalWarfare))
-    {
-        HANGAR().SetDisabled(false);
-    }
 
     STAT_AddAvgStat(eRecap_AvgTechDaysCount, eRecap_AvgTechDaysSum, int(float(m_arrCEProgress[iProgressIndex].iHoursSpent) / 24.0));
 
@@ -692,40 +970,39 @@ function OnResearchCompleted()
 
     if (ENGINEERING().IsDisabled())
     {
-        ENGINEERING().SetDisabled(true);
         ENGINEERING().m_bRequiresAttention = true;
     }
 
-    AddResearchCredit(EResearchCredits(`LWCE_TECH(iTech).iCreditGranted));
+    for (Index = 0; Index < kCompletedTech.arrCreditsGranted.Length; Index++)
+    {
+        LWCE_AddResearchCredit(kCompletedTech.arrCreditsGranted[Index]);
+    }
+
     m_bNeedsScientists = NeedsScientists();
     Continent(HQ().GetContinent()).m_kMonthly.iTechsResearched += 1;
-    m_kProject = kNewProject;
     STAT_AddStat(eRecap_TechsResearched, 1);
     Achieve(AT_WhatWondersAwait);
+    m_kCEProject = kBlankProject;
 
     if (CheckForEdison())
     {
         Achieve(AT_Edison);
     }
 
-    if (m_iCELastResearched == `LW_TECH_ID(Xenogenetics))
+    // TODO: move narratives into template
+    if (m_nmLastResearchedTech == 'Tech_Xenogenetics')
     {
         // In vanilla EW, completing the meld research gave ~40 bonus meld; none in LW (maybe make configurable?)
-        STORAGE().AddItem(eItem_Meld, 0);
         PRES().UINarrative(`XComNarrativeMomentEW("MeldIntro"), none, ResearchCinematicComplete);
     }
-
-    if (m_iCELastResearched == `LW_TECH_ID(Xenobiology))
+    else if (m_nmLastResearchedTech == 'Tech_Xenobiology')
     {
-        if (!ISCONTROLLED())
-        {
-            PRES().UINarrative(`XComNarrativeMoment("ArcThrower"), none, ResearchCinematicComplete);
-        }
+        PRES().UINarrative(`XComNarrativeMoment("ArcThrower"), none, ResearchCinematicComplete);
     }
-    else if (IsInterrogationTech(m_iCELastResearched))
+    else if (LWCE_IsInterrogationTech(m_nmLastResearchedTech))
     {
         // Give the captive's corpse after interrogations
-        iCorpseId = kItemTree.CharacterToCorpse(`LWCE_TECH(m_iCELastResearched).iSubjectCharacterId);
+        iCorpseId = kItemTree.CharacterToCorpse(kCompletedTech.iSubjectCharacterId);
 
         if (iCorpseId != 0)
         {
@@ -736,20 +1013,20 @@ function OnResearchCompleted()
         {
             STAT_SetStat(eRecap_ObjInterrogateAlien, Game().GetDays());
             XComGameReplicationInfo(class'Engine'.static.GetCurrentWorldInfo().GRI).DoRemoteEvent('ContainmentDoors_Open');
-            PRES().UINarrative(`XComNarrativeMoment("PostInterrogation"), none, ResearchCinematicComplete,, HQ().m_kBase.GetFacility3DLocation(13));
+            PRES().UINarrative(`XComNarrativeMoment("PostInterrogation"), none, ResearchCinematicComplete, , HQ().m_kBase.GetFacility3DLocation(eFacility_AlienContain));
         }
         else
         {
             ResearchCinematicComplete();
         }
     }
-    else if (m_iCELastResearched == `LW_TECH_ID(AlienOperations))
+    else if (m_nmLastResearchedTech == 'Tech_AlienOperations')
     {
         STAT_SetStat(eRecap_ObjResearchOutsiderShards, Game().GetDays());
         SITROOM().OnCodeCracked();
     }
 
-    if (IsAutopsyTech(m_iCELastResearched))
+    if (LWCE_IsAutopsyTech(m_nmLastResearchedTech))
     {
         if (CheckForAllEmployees())
         {
@@ -757,71 +1034,96 @@ function OnResearchCompleted()
         }
     }
 
-    `LWCE_MOD_LOADER.OnResearchCompleted(iTech);
+    `LWCE_MOD_LOADER.OnResearchCompleted(TechName);
 
-    GEOSCAPE().Alert(GEOSCAPE().MakeAlert(eGA_ResearchCompleted, iTech));
+    kGeoscape.LWCE_Alert(`LWCE_ALERT('ResearchCompleted').AddName(TechName).Build());
+}
+
+function string RecordStartedResearchProject(TResearchProject Project)
+{
+    `LWCE_LOG_DEPRECATED_NOREPLACE_CLS(RecordStartedResearchProject);
+
+    return "";
+}
+
+function RemoveScientists(int iNumScientists)
+{
+    m_iNumScientists -= iNumScientists;
+
+    if (HasProject())
+    {
+        UpdateProgress();
+    }
+}
+
+function ResearchCinematicComplete()
+{
+    m_bChooseTechAfterReport = true;
+
+    if (LWCE_IsInterrogationTech(m_nmLastResearchedTech))
+    {
+        `HQGAME.GetGameCore().GetHQ().m_kBase.OnFaciltyStreamed_AlienContainment('None');
+    }
 }
 
 function SetNewProject(int iTech)
 {
+    `LWCE_LOG_DEPRECATED_CLS(SetNewProject);
+}
+
+function LWCE_SetNewProject(name TechName)
+{
     local int iCaptiveItemId;
     local LWCE_TResearchProgress kProgress;
-    local LWCE_TTech kTech;
+    local LWCETechTemplate kTech;
     local TResearchCost kCost;
 
-    if (m_kProject.iTech != 0)
+    if (m_kCEProject.TechName != '')
     {
-        kTech = `LWCE_TECH(m_kProject.iTech);
+        kTech = `LWCE_TECH(m_kCEProject.TechName);
         kCost = class'LWCETypes'.static.ConvertTCostToTResearchCost(kTech.kCost);
 
         // TODO: since mods could potentially discount research dynamically, we should store the actual paid cost like engineering does, and refund that
         // TODO: Xenobiology doesn't refund its corpses for some reason? seems like maybe that should be configurable
-        RefundCost(kCost, m_kProject.iTech == `LW_TECH_ID(Xenobiology));
+        RefundCost(kCost, m_kCEProject.TechName == 'Tech_Xenobiology');
     }
 
-    if (!ISCONTROLLED())
+    if (TechName == 'Tech_AlienCommandAndControl')
     {
-        if (iTech == `LW_TECH_ID(AlienCommandAndControl))
+        Narrative(`XComNarrativeMoment("EtherealDeviceRetrieved_LeadOut_CS"));
+    }
+    else if (TechName == 'Tech_AlienCommunications')
+    {
+        Narrative(`XComNarrativeMoment("HyperwaveBeaconRetrieved_LeadOut_CS"));
+    }
+    else if (TechName != 'Tech_AlienOperations')
+    {
+        if (!LWCE_IsAutopsyTech(TechName) && !LWCE_IsInterrogationTech(TechName) && --m_iTechConfirms > 0)
         {
-            Narrative(`XComNarrativeMoment("EtherealDeviceRetrieved_LeadOut_CS"));
-        }
-        else if (iTech == `LW_TECH_ID(AlienCommunications))
-        {
-            Narrative(`XComNarrativeMoment("HyperwaveBeaconRetrieved_LeadOut_CS"));
-        }
-        else if (iTech != `LW_TECH_ID(AlienOperations))
-        {
-            if (!IsAutopsyTech(iTech) && !IsInterrogationTech(iTech) && --m_iTechConfirms > 0)
-            {
-                Narrative(`XComNarrativeMoment("TechSelected"));
-            }
+            Narrative(`XComNarrativeMoment("TechSelected"));
         }
     }
 
-    if (m_arrCEProgress.Find('iTechId', iTech) == INDEX_NONE)
+    if (m_arrCEProgress.Find('TechName', TechName) == INDEX_NONE)
     {
-        kProgress.iTechId = iTech;
+        kProgress.TechName = TechName;
         kProgress.iHoursCompleted = 0;
         m_arrCEProgress.AddItem(kProgress);
     }
 
-    kTech = `LWCE_TECH(iTech);
+    kTech = `LWCE_TECH(TechName);
     kCost = class'LWCETypes'.static.ConvertTCostToTResearchCost(kTech.kCost);
 
-    m_kProject.iTech = iTech;
-    m_kProject.iEstimate = LabHoursToDays(kTech.iHours);
-    m_kProject.iActualHoursLeft = kTech.iHours < 0 ? 1 : kTech.iHours;
-    m_kProject.iProgress = GetProgress(iTech);
-    m_kProject.strETA = GetEstimateString(iTech);
-
-    if (!WorldInfo.IsConsoleBuild(CONSOLE_Xbox360) && !WorldInfo.IsConsoleBuild(CONSOLE_PS3))
-    {
-        GetRecapSaveData().RecordEvent(RecordStartedResearchProject(m_kProject));
-    }
+    m_kCEProject.TechName = TechName;
+    m_kCEProject.iEstimate = LabHoursToDays(kTech.iPointsToComplete);
+    m_kCEProject.iActualHoursLeft = kTech.iPointsToComplete < 0 ? 1 : kTech.iPointsToComplete;
+    m_kCEProject.iProgress = LWCE_GetProgress(TechName);
+    m_kCEProject.strETA = LWCE_GetEstimateString(TechName);
 
     PayCost(kCost);
 
-    if (IsInterrogationTech(iTech))
+    // TODO move this data into template
+    if (LWCE_IsInterrogationTech(TechName))
     {
         switch (kTech.iSubjectCharacterId)
         {
@@ -863,7 +1165,7 @@ function SetNewProject(int iTech)
             Base().DoAlienInterrogation(EItemType(iCaptiveItemId));
         }
     }
-    else if (IsAutopsyTech(iTech))
+    else if (LWCE_IsAutopsyTech(TechName))
     {
         switch (kTech.iSubjectCharacterId)
         {
@@ -918,10 +1220,53 @@ function SetNewProject(int iTech)
         }
     }
 
-    `LWCE_MOD_LOADER.OnResearchStarted(iTech);
+    `LWCE_MOD_LOADER.OnResearchStarted(TechName);
 
-    if (m_kProject.iActualHoursLeft == 0)
+    if (m_kCEProject.iActualHoursLeft == 0)
     {
         OnResearchCompleted();
     }
+}
+
+function UpdateLabBonus()
+{
+    m_fLabBonus = class'XGTacticalGameCore'.default.LAB_BONUS * HQ().GetNumFacilities(eFacility_ScienceLab);
+
+    if (HQ().HasBonus(`LW_HQ_BONUS_ID(JaiVidwan)) > 0)
+    {
+        m_fAdjLabBonus = ((HQ().HasBonus(`LW_HQ_BONUS_ID(JaiVidwan)) / 100.0f) + class'XGTacticalGameCore'.default.LAB_ADJACENCY_BONUS) * Base().GetAdjacencies(eAdj_Science);
+    }
+    else
+    {
+        m_fAdjLabBonus = class'XGTacticalGameCore'.default.LAB_ADJACENCY_BONUS * Base().GetAdjacencies(eAdj_Science);
+    }
+
+    if (HasProject())
+    {
+        UpdateProgress();
+    }
+}
+
+function UpdateProgress()
+{
+    local int iDaysLeft;
+    local XGParamTag kTag;
+
+    m_kCEProject.iProgress = LWCE_GetProgress(m_kCEProject.techName);
+    iDaysLeft = GetHoursLeftOnProject() / 24;
+
+    if ((GetHoursLeftOnProject() % 24) > 0)
+    {
+        iDaysLeft += 1;
+    }
+
+    if (iDaysLeft < 0)
+    {
+        iDaysLeft = 0;
+    }
+
+    kTag = XGParamTag(XComEngine(class'Engine'.static.GetEngine()).LocalizeContext.FindTag("XGParam"));
+    kTag.IntValue0 = iDaysLeft;
+
+    m_kCEProject.strETA = class'XComLocalizer'.static.ExpandString(iDaysLeft != 1 ? m_strETADays : m_strETADay);
 }

@@ -20,6 +20,23 @@ simulated function XGManufacturingUI GetMgr()
     return XGManufacturingUI(XComHQPresentationLayer(controllerRef.m_Pres).GetMgr(class'LWCE_XGManufacturingUI', self, m_iView));
 }
 
+simulated function InitFoundry(XComPlayerController _controllerRef, UIFxsMovie _manager, int iTech, int iIndex)
+{
+    `LWCE_LOG_DEPRECATED_CLS(InitFoundry);
+}
+
+simulated function LWCE_InitFoundry(XComPlayerController _controllerRef, UIFxsMovie _manager, name ProjectName, int iIndex)
+{
+    local LWCE_XGManufacturingUI kManufacturing;
+
+    Init(_controllerRef, _manager, eManView_Foundry);
+
+    kManufacturing = LWCE_XGManufacturingUI(GetMgr());
+    kManufacturing.m_kCEFoundryProject.ProjectName = ProjectName;
+    kManufacturing.m_kCEFoundryProject.iIndex = iIndex;
+    kManufacturing.DirectInitialize();
+}
+
 simulated function InitItem(XComPlayerController _controllerRef, UIFxsMovie _manager, EItemType iItemId, int iIndex)
 {
     `LWCE_LOG_DEPRECATED_CLS(InitItem);
@@ -29,7 +46,7 @@ simulated function LWCE_InitItem(XComPlayerController _controllerRef, UIFxsMovie
 {
     local LWCE_XGManufacturingUI kManufacturing;
 
-    Init(_controllerRef, _manager, 0);
+    Init(_controllerRef, _manager, eManView_Item);
 
     kManufacturing = LWCE_XGManufacturingUI(GetMgr());
     kManufacturing.m_kCEItemProject.iItemId = iItemId;

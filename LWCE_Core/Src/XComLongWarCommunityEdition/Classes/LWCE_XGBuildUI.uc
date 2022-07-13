@@ -8,11 +8,6 @@ function OnChooseTile()
     }
     else if (m_kCursor.iCursorState == eBCS_BuildFacility)
     {
-        if (ISCONTROLLED() && Game().SETUPMGR().GetStateName() == 'Base3_Engineering')
-        {
-            XComHeadquartersInput(`HQGAME.PlayerController.PlayerInput).m_bDisableCancel = false;
-        }
-
         GoToView(eBuildView_Menu);
         PRES().CAMLookAtHQTile(m_kCursor.X, m_kCursor.Y, 1.0);
     }
@@ -68,7 +63,7 @@ protected function LWCE_ConfirmRemovalDialogue(int X, int Y)
     }
     else if (eFacility == eFacility_AlienContain)
     {
-        if (LABS().IsInterrogationTech(`LWCE_LABS.LWCE_GetCurrentTech().iTechId))
+        if (`LWCE_LABS.LWCE_IsInterrogationTech(`LWCE_LABS.LWCE_GetCurrentTech().GetTechName()))
         {
             kDialogData.strText = m_strCaptiveCantRemoveBody;
             m_bCantRemove = true;

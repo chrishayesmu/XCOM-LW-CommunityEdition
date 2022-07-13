@@ -138,7 +138,7 @@ function bool CanBeSold(int iItemId)
         case `LW_ITEM_ID(BaseAugments):
             return false;
         case `LW_ITEM_ID(AlienGrenade):
-            return !ENGINEERING().IsFoundryTechResearched(`LW_FOUNDRY_ID(AlienGrenades));
+            return !`LWCE_ENGINEERING.LWCE_IsFoundryTechResearched('Foundry_AlienGrenades');
         default:
             return kItem.kCost.iCash >= 0;
     }
@@ -258,7 +258,7 @@ function LWCE_TItem LWCE_GetItem(int iItemId, optional int iTransactionType = eT
 
     if (iItemId == `LW_ITEM_ID(AlienGrenade))
     {
-        kItem.bIsInfinite = ENGINEERING().IsFoundryTechResearched(`LW_FOUNDRY_ID(AlienGrenades));
+        kItem.bIsInfinite = `LWCE_ENGINEERING.LWCE_IsFoundryTechResearched('Foundry_AlienGrenades');
     }
     else if (iItemId == `LW_ITEM_ID(BaseAugments) || iItemId == `LW_ITEM_ID(Minigun))
     {
@@ -365,6 +365,17 @@ function int LWCE_GetItemSalePrice(int iItemId)
     return iManufactureCost;
 }
 
+function TShipWeapon GetShipWeapon(int iWeaponType)
+{
+    if (iWeaponType >= m_arrShipWeapons.Length)
+    {
+        `LWCE_LOG_CLS("ERROR: invalid iWeaponType " $ iWeaponType $ " passed to GetShipWeapon");
+        ScriptTrace();
+    }
+
+    return m_arrShipWeapons[iWeaponType];
+}
+
 function string GetSummary(int iItemId)
 {
     `LWCE_LOG_CLS("LWCE_XGItemTree.GetSummary is deprecated. Use LWCE_TItem.strBriefSummary instead. Stack trace follows.");
@@ -457,4 +468,92 @@ function bool LWCE_ItemIsValid(int iItemId)
 {
     // TODO: add a mod hook to help gracefully deprecate items
     return iItemId != 0 && iItemId != 255;
+}
+
+function UpdateShips()
+{
+    local LWCE_XGFacility_Engineering kEngineering;
+
+    m_iCurrentCategory = Clamp(STAT_GetStat(1) / 30, 0, 32);
+    UpdateShip(2, 2000, 10, 8, 0, 0);
+
+    kEngineering = LWCE_XGFacility_Engineering(ENGINEERING());
+
+    if (kEngineering == none)
+    {
+        return;
+    }
+
+    UpdateShip(1, class'XGTacticalGameCore'.default.ContBalance_Classic[1].iEngineers1, class'XGTacticalGameCore'.default.ContBalance_Classic[1].iScientists1 + ((kEngineering.LWCE_IsFoundryTechResearched('Foundry_EleriumAfterburners')) ? class'XGTacticalGameCore'.default.ContBalance_Classic[1].iEngineers4 : 0), class'XGTacticalGameCore'.default.ContBalance_Classic[1].iEngineers2 + ((kEngineering.LWCE_IsFoundryTechResearched('Foundry_ArmoredFighters')) ? class'XGTacticalGameCore'.default.ContBalance_Classic[1].iScientists3 : 0), class'XGTacticalGameCore'.default.ContBalance_Classic[1].iScientists2, class'XGTacticalGameCore'.default.ContBalance_Classic[1].iEngineers3 + ((kEngineering.LWCE_IsFoundryTechResearched('Foundry_PenetratorWeapons')) ? class'XGTacticalGameCore'.default.ContBalance_Classic[1].iScientists4 : 0));
+    UpdateShip(3, class'XGTacticalGameCore'.default.ContBalance_Classic[3].iEngineers1, class'XGTacticalGameCore'.default.ContBalance_Classic[3].iScientists1 + ((kEngineering.LWCE_IsFoundryTechResearched('Foundry_EleriumAfterburners')) ? class'XGTacticalGameCore'.default.ContBalance_Classic[3].iEngineers4 : 0), class'XGTacticalGameCore'.default.ContBalance_Classic[3].iEngineers2 + ((kEngineering.LWCE_IsFoundryTechResearched('Foundry_ArmoredFighters')) ? class'XGTacticalGameCore'.default.ContBalance_Classic[3].iScientists3 : 0), class'XGTacticalGameCore'.default.ContBalance_Classic[3].iScientists2, class'XGTacticalGameCore'.default.ContBalance_Classic[3].iEngineers3 + ((kEngineering.LWCE_IsFoundryTechResearched('Foundry_PenetratorWeapons')) ? class'XGTacticalGameCore'.default.ContBalance_Classic[3].iScientists4 : 0));
+    UpdateShip(4, class'XGTacticalGameCore'.default.ContBalance_Classic[4].iEngineers1, class'XGTacticalGameCore'.default.ContBalance_Classic[4].iScientists1, class'XGTacticalGameCore'.default.ContBalance_Classic[4].iEngineers2 + (class'XGTacticalGameCore'.default.ContBalance_Classic[4].iScientists3 * m_iCurrentCategory), class'XGTacticalGameCore'.default.ContBalance_Classic[4].iScientists2, class'XGTacticalGameCore'.default.ContBalance_Classic[4].iEngineers3);
+    UpdateShip(5, class'XGTacticalGameCore'.default.ContBalance_Classic[5].iEngineers1, class'XGTacticalGameCore'.default.ContBalance_Classic[5].iScientists1, class'XGTacticalGameCore'.default.ContBalance_Classic[5].iEngineers2 + (class'XGTacticalGameCore'.default.ContBalance_Classic[5].iScientists3 * m_iCurrentCategory), class'XGTacticalGameCore'.default.ContBalance_Classic[5].iScientists2, class'XGTacticalGameCore'.default.ContBalance_Classic[5].iEngineers3);
+    UpdateShip(6, class'XGTacticalGameCore'.default.ContBalance_Classic[6].iEngineers1, class'XGTacticalGameCore'.default.ContBalance_Classic[6].iScientists1, class'XGTacticalGameCore'.default.ContBalance_Classic[6].iEngineers2 + (class'XGTacticalGameCore'.default.ContBalance_Classic[6].iScientists3 * m_iCurrentCategory), class'XGTacticalGameCore'.default.ContBalance_Classic[6].iScientists2, class'XGTacticalGameCore'.default.ContBalance_Classic[6].iEngineers3);
+    UpdateShip(7, class'XGTacticalGameCore'.default.ContBalance_Classic[7].iEngineers1, class'XGTacticalGameCore'.default.ContBalance_Classic[7].iScientists1, class'XGTacticalGameCore'.default.ContBalance_Classic[7].iEngineers2 + (class'XGTacticalGameCore'.default.ContBalance_Classic[7].iScientists3 * m_iCurrentCategory), class'XGTacticalGameCore'.default.ContBalance_Classic[7].iScientists2, class'XGTacticalGameCore'.default.ContBalance_Classic[7].iEngineers3);
+    UpdateShip(8, class'XGTacticalGameCore'.default.ContBalance_Classic[8].iEngineers1, class'XGTacticalGameCore'.default.ContBalance_Classic[8].iScientists1, class'XGTacticalGameCore'.default.ContBalance_Classic[8].iEngineers2 + (class'XGTacticalGameCore'.default.ContBalance_Classic[8].iScientists3 * m_iCurrentCategory), class'XGTacticalGameCore'.default.ContBalance_Classic[8].iScientists2, class'XGTacticalGameCore'.default.ContBalance_Classic[8].iEngineers3);
+    UpdateShip(9, class'XGTacticalGameCore'.default.ContBalance_Classic[9].iEngineers1, class'XGTacticalGameCore'.default.ContBalance_Classic[9].iScientists1, class'XGTacticalGameCore'.default.ContBalance_Classic[9].iEngineers2 + (class'XGTacticalGameCore'.default.ContBalance_Classic[9].iScientists3 * m_iCurrentCategory), class'XGTacticalGameCore'.default.ContBalance_Classic[9].iScientists2, class'XGTacticalGameCore'.default.ContBalance_Classic[9].iEngineers3);
+    UpdateShip(10, class'XGTacticalGameCore'.default.ContBalance_Classic[10].iEngineers1, class'XGTacticalGameCore'.default.ContBalance_Classic[10].iScientists1, class'XGTacticalGameCore'.default.ContBalance_Classic[10].iEngineers2 + (class'XGTacticalGameCore'.default.ContBalance_Classic[10].iScientists3 * m_iCurrentCategory), class'XGTacticalGameCore'.default.ContBalance_Classic[10].iScientists2, class'XGTacticalGameCore'.default.ContBalance_Classic[10].iEngineers3);
+    UpdateShip(11, class'XGTacticalGameCore'.default.ContBalance_Classic[11].iEngineers1, class'XGTacticalGameCore'.default.ContBalance_Classic[11].iScientists1, class'XGTacticalGameCore'.default.ContBalance_Classic[11].iEngineers2 + (class'XGTacticalGameCore'.default.ContBalance_Classic[11].iScientists3 * m_iCurrentCategory), class'XGTacticalGameCore'.default.ContBalance_Classic[11].iScientists2, class'XGTacticalGameCore'.default.ContBalance_Classic[11].iEngineers3);
+    UpdateShip(12, class'XGTacticalGameCore'.default.ContBalance_Classic[12].iEngineers1, class'XGTacticalGameCore'.default.ContBalance_Classic[12].iScientists1, class'XGTacticalGameCore'.default.ContBalance_Classic[12].iEngineers2 + (class'XGTacticalGameCore'.default.ContBalance_Classic[12].iScientists3 * m_iCurrentCategory), class'XGTacticalGameCore'.default.ContBalance_Classic[12].iScientists2, class'XGTacticalGameCore'.default.ContBalance_Classic[12].iEngineers3);
+    UpdateShip(13, class'XGTacticalGameCore'.default.ContBalance_Classic[13].iEngineers1, class'XGTacticalGameCore'.default.ContBalance_Classic[13].iScientists1, class'XGTacticalGameCore'.default.ContBalance_Classic[13].iEngineers2 + (class'XGTacticalGameCore'.default.ContBalance_Classic[13].iScientists3 * m_iCurrentCategory), class'XGTacticalGameCore'.default.ContBalance_Classic[13].iScientists2, class'XGTacticalGameCore'.default.ContBalance_Classic[13].iEngineers3);
+    UpdateShip(14, class'XGTacticalGameCore'.default.ContBalance_Classic[14].iEngineers1, class'XGTacticalGameCore'.default.ContBalance_Classic[14].iScientists1, class'XGTacticalGameCore'.default.ContBalance_Classic[14].iEngineers2 + (class'XGTacticalGameCore'.default.ContBalance_Classic[14].iScientists3 * m_iCurrentCategory), class'XGTacticalGameCore'.default.ContBalance_Classic[14].iScientists2, class'XGTacticalGameCore'.default.ContBalance_Classic[14].iEngineers3);
+
+    if (m_iCurrentCategory > 8)
+    {
+        BuildShip(5, m_strSizeMedium, 80, 9);
+    }
+
+    if (m_iCurrentCategory > 10)
+    {
+        BuildShip(10, m_strSizeSmall, 79, 8, 8);
+    }
+
+    if (m_iCurrentCategory > 12)
+    {
+        BuildShip(6, m_strSizeLarge, 81, 9, 8);
+        BuildShip(13, m_strSizeLarge, 82, 9, 8);
+    }
+
+    if (m_iCurrentCategory > 18)
+    {
+        BuildShip(11, m_strSizeMedium, 80, 8, 8);
+        BuildShip(14, m_strSizeVeryLarge, 84, 9, 9);
+        UpdateShip(5, class'XGTacticalGameCore'.default.ContBalance_Classic[15].iEngineers1, class'XGTacticalGameCore'.default.ContBalance_Classic[15].iScientists1, class'XGTacticalGameCore'.default.ContBalance_Classic[15].iEngineers2 + (class'XGTacticalGameCore'.default.ContBalance_Classic[15].iScientists3 * m_iCurrentCategory), class'XGTacticalGameCore'.default.ContBalance_Classic[15].iScientists2, class'XGTacticalGameCore'.default.ContBalance_Classic[15].iEngineers3);
+    }
+
+    if (kEngineering.LWCE_IsFoundryTechResearched('Foundry_PhoenixCoilguns'))
+    {
+        BuildShipWeapon(1, -1, 100, float(class'XGTacticalGameCore'.default.ContBalance_Classic[28].iEngineers1) / float(100), class'XGTacticalGameCore'.default.ContBalance_Classic[28].iScientists1, class'XGTacticalGameCore'.default.ContBalance_Classic[28].iEngineers2, (class'XGTacticalGameCore'.default.ContBalance_Classic[28].iScientists2 + ((kEngineering.LWCE_IsFoundryTechResearched('Foundry_ImprovedAvionics')) ? class'XGTacticalGameCore'.default.ContBalance_Classic[28].iEngineers3 : 0)) + ((IsOptionEnabled(24)) ? int(class'XGTacticalGameCore'.default.ABDUCTION_REWARD_SCI) : 0));
+    }
+    else
+    {
+        BuildShipWeapon(1, -1, 100, float(class'XGTacticalGameCore'.default.ContBalance_Classic[21].iEngineers1) / float(100), class'XGTacticalGameCore'.default.ContBalance_Classic[21].iScientists1, class'XGTacticalGameCore'.default.ContBalance_Classic[21].iEngineers2, (class'XGTacticalGameCore'.default.ContBalance_Classic[21].iScientists2 + ((kEngineering.LWCE_IsFoundryTechResearched('Foundry_ImprovedAvionics')) ? class'XGTacticalGameCore'.default.ContBalance_Classic[21].iEngineers3 : 0)) + ((IsOptionEnabled(24)) ? int(class'XGTacticalGameCore'.default.ABDUCTION_REWARD_SCI) : 0));
+    }
+
+    BuildShipWeapon(2, 3, 100, float(class'XGTacticalGameCore'.default.ContBalance_Classic[22].iEngineers1) / float(100), class'XGTacticalGameCore'.default.ContBalance_Classic[22].iScientists1, class'XGTacticalGameCore'.default.ContBalance_Classic[22].iEngineers2, (class'XGTacticalGameCore'.default.ContBalance_Classic[22].iScientists2 + ((kEngineering.LWCE_IsFoundryTechResearched('Foundry_ImprovedAvionics')) ? class'XGTacticalGameCore'.default.ContBalance_Classic[22].iEngineers3 : 0)) + ((IsOptionEnabled(24)) ? int(class'XGTacticalGameCore'.default.ABDUCTION_REWARD_SCI) : 0));
+    BuildShipWeapon(3, 3, 100, float(class'XGTacticalGameCore'.default.ContBalance_Classic[23].iEngineers1) / float(100), class'XGTacticalGameCore'.default.ContBalance_Classic[23].iScientists1, class'XGTacticalGameCore'.default.ContBalance_Classic[23].iEngineers2, (class'XGTacticalGameCore'.default.ContBalance_Classic[23].iScientists2 + ((kEngineering.LWCE_IsFoundryTechResearched('Foundry_ImprovedAvionics')) ? class'XGTacticalGameCore'.default.ContBalance_Classic[23].iEngineers3 : 0)) + ((IsOptionEnabled(24)) ? int(class'XGTacticalGameCore'.default.ABDUCTION_REWARD_SCI) : 0));
+
+    if (kEngineering.LWCE_IsFoundryTechResearched('Foundry_Supercapacitors'))
+    {
+        BuildShipWeapon(4, -1, 100, float(class'XGTacticalGameCore'.default.ContBalance_Classic[29].iEngineers1) / float(100), class'XGTacticalGameCore'.default.ContBalance_Classic[29].iScientists1, class'XGTacticalGameCore'.default.ContBalance_Classic[29].iEngineers2, (class'XGTacticalGameCore'.default.ContBalance_Classic[29].iScientists2 + ((kEngineering.LWCE_IsFoundryTechResearched('Foundry_ImprovedAvionics')) ? class'XGTacticalGameCore'.default.ContBalance_Classic[29].iEngineers3 : 0)) + ((IsOptionEnabled(24)) ? int(class'XGTacticalGameCore'.default.ABDUCTION_REWARD_SCI) : 0));
+    }
+    else
+    {
+        BuildShipWeapon(4, -1, 100, float(class'XGTacticalGameCore'.default.ContBalance_Classic[24].iEngineers1) / float(100), class'XGTacticalGameCore'.default.ContBalance_Classic[24].iScientists1, class'XGTacticalGameCore'.default.ContBalance_Classic[24].iEngineers2, (class'XGTacticalGameCore'.default.ContBalance_Classic[24].iScientists2 + ((kEngineering.LWCE_IsFoundryTechResearched('Foundry_ImprovedAvionics')) ? class'XGTacticalGameCore'.default.ContBalance_Classic[24].iEngineers3 : 0)) + ((IsOptionEnabled(24)) ? int(class'XGTacticalGameCore'.default.ABDUCTION_REWARD_SCI) : 0));
+    }
+
+    BuildShipWeapon(5, 10, 100, float(class'XGTacticalGameCore'.default.ContBalance_Classic[25].iEngineers1) / float(100), class'XGTacticalGameCore'.default.ContBalance_Classic[25].iScientists1, class'XGTacticalGameCore'.default.ContBalance_Classic[25].iEngineers2, (class'XGTacticalGameCore'.default.ContBalance_Classic[25].iScientists2 + ((kEngineering.LWCE_IsFoundryTechResearched('Foundry_ImprovedAvionics')) ? class'XGTacticalGameCore'.default.ContBalance_Classic[25].iEngineers3 : 0)) + ((IsOptionEnabled(24)) ? int(class'XGTacticalGameCore'.default.ABDUCTION_REWARD_SCI) : 0));
+    BuildShipWeapon(6, -1, 100, float(class'XGTacticalGameCore'.default.ContBalance_Classic[26].iEngineers1) / float(100), class'XGTacticalGameCore'.default.ContBalance_Classic[26].iScientists1, class'XGTacticalGameCore'.default.ContBalance_Classic[26].iEngineers2, (class'XGTacticalGameCore'.default.ContBalance_Classic[26].iScientists2 + ((kEngineering.LWCE_IsFoundryTechResearched('Foundry_ImprovedAvionics')) ? class'XGTacticalGameCore'.default.ContBalance_Classic[26].iEngineers3 : 0)) + ((IsOptionEnabled(24)) ? int(class'XGTacticalGameCore'.default.ABDUCTION_REWARD_SCI) : 0));
+    BuildShipWeapon(7, 10, 100, float(class'XGTacticalGameCore'.default.ContBalance_Classic[27].iEngineers1) / float(100), class'XGTacticalGameCore'.default.ContBalance_Classic[27].iScientists1, class'XGTacticalGameCore'.default.ContBalance_Classic[27].iEngineers2, (class'XGTacticalGameCore'.default.ContBalance_Classic[27].iScientists2 + ((kEngineering.LWCE_IsFoundryTechResearched('Foundry_ImprovedAvionics')) ? class'XGTacticalGameCore'.default.ContBalance_Classic[27].iEngineers3 : 0)) + ((IsOptionEnabled(24)) ? int(class'XGTacticalGameCore'.default.ABDUCTION_REWARD_SCI) : 0));
+    BuildShipWeapon(8, -1, 101, float(class'XGTacticalGameCore'.default.ContBalance_Classic[30].iEngineers1) / float(100), class'XGTacticalGameCore'.default.ContBalance_Classic[30].iScientists1 + (class'XGTacticalGameCore'.default.ContBalance_Classic[30].iEngineers3 * m_iCurrentCategory), class'XGTacticalGameCore'.default.ContBalance_Classic[30].iEngineers2, class'XGTacticalGameCore'.default.ContBalance_Classic[30].iScientists2 + ((class'XGTacticalGameCore'.default.ContBalance_Classic[30].iScientists3 * m_iCurrentCategory) + ((kEngineering.LWCE_IsFoundryTechResearched('Foundry_UFOCountermeasures')) ? class'XGTacticalGameCore'.default.ContBalance_Classic[30].iEngineers4 : 0)));
+    BuildShipWeapon(9, -1, 101, float(class'XGTacticalGameCore'.default.ContBalance_Classic[31].iEngineers1) / float(100), class'XGTacticalGameCore'.default.ContBalance_Classic[31].iScientists1 + (class'XGTacticalGameCore'.default.ContBalance_Classic[31].iEngineers3 * m_iCurrentCategory), class'XGTacticalGameCore'.default.ContBalance_Classic[31].iEngineers2, class'XGTacticalGameCore'.default.ContBalance_Classic[31].iScientists2 + ((class'XGTacticalGameCore'.default.ContBalance_Classic[31].iScientists3 * m_iCurrentCategory) + ((kEngineering.LWCE_IsFoundryTechResearched('Foundry_UFOCountermeasures')) ? class'XGTacticalGameCore'.default.ContBalance_Classic[31].iEngineers4 : 0)));
+    BuildShipWeapon(10, -1, 101, float(class'XGTacticalGameCore'.default.ContBalance_Classic[32].iEngineers1) / float(100), class'XGTacticalGameCore'.default.ContBalance_Classic[32].iScientists1 + (class'XGTacticalGameCore'.default.ContBalance_Classic[32].iEngineers3 * m_iCurrentCategory), class'XGTacticalGameCore'.default.ContBalance_Classic[32].iEngineers2, class'XGTacticalGameCore'.default.ContBalance_Classic[32].iScientists2 + ((class'XGTacticalGameCore'.default.ContBalance_Classic[32].iScientists3 * m_iCurrentCategory) + ((kEngineering.LWCE_IsFoundryTechResearched('Foundry_UFOCountermeasures')) ? class'XGTacticalGameCore'.default.ContBalance_Classic[32].iEngineers4 : 0)));
+
+    if (kEngineering.LWCE_IsFoundryTechResearched('Foundry_WingtipSparrowhawks'))
+    {
+        BuildShip(1, m_strSizeSmall, 68, 3, 2);
+        BuildShip(3, m_strSizeSmall, 69, 3, 2);
+    }
+
+    UpdateAllShipTemplates();
 }

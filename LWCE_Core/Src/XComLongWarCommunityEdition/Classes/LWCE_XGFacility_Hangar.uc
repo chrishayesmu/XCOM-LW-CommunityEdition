@@ -117,6 +117,38 @@ function AddInterceptor(int iContinent)
     GEOSCAPE().World().m_kFundingCouncil.OnShipAdded(eShip_Interceptor, iContinent);
 }
 
+function AssignRandomCallsign(XGShip_Interceptor kShip)
+{
+    LWCE_XGShip_Interceptor(kShip).SetCallsign(PilotNames[Rand(PilotNames.Length)]);
+}
+
+function DetermineInterceptorStatus(XGShip_Interceptor kInterceptor)
+{
+    kInterceptor.m_iStatus = eShipStatus_Ready;
+
+    if (kInterceptor.GetFuelPct() < 1.0f)
+    {
+        kInterceptor.m_iStatus = eShipStatus_Refuelling;
+        kInterceptor.m_iHoursDown = 1;
+    }
+
+    if (kInterceptor.IsDamaged())
+    {
+        kInterceptor.m_iStatus = eShipStatus_Repairing;
+        kInterceptor.m_iHoursDown = Max(1, int(float(class'XGTacticalGameCore'.default.INTERCEPTOR_REPAIR_HOURS) * (1.0f - kInterceptor.GetHPPct())));
+
+        if (IsOptionEnabled(`LW_SECOND_WAVE_ID(DynamicWar)))
+        {
+            kInterceptor.m_iHoursDown /= class'XGTacticalGameCore'.default.SW_MARATHON;
+        }
+
+        if (LWCE_XGFacility_Engineering(ENGINEERING()).LWCE_IsFoundryTechResearched('Foundry_AdvancedRepair'))
+        {
+            kInterceptor.m_iHoursDown *= 0.670;
+        }
+    }
+}
+
 function EquipWeapon(EItemType eItem, XGShip_Interceptor kShip)
 {
     `LWCE_LOG_DEPRECATED_CLS(EquipWeapon);
@@ -312,21 +344,18 @@ function LandDropship(XGShip_Dropship kSkyranger)
     BARRACKS().LandSoldiers(kSkyranger);
     kSkyranger.CargoInfo.m_kReward = kEmptyReward;
     GEOSCAPE().Resume();
-
-    if (ISCONTROLLED() && Game().GetNumMissionsTaken() == 1)
-    {
-        kLabs.m_arrMissionResults.Remove(0, kLabs.m_arrMissionResults.Length);
-    }
 }
 
 function UnloadArtifacts(XGShip_Dropship kSkyranger)
 {
     local int Index, iItemId, iNumArtifacts;
     local LWCE_XGDropshipCargoInfo kCargo;
+    local LWCE_XGFacility_Engineering kEngineering;
     local LWCE_XGHeadquarters kHQ;
     local LWCE_XGItemTree kItemTree;
 
     kCargo = LWCE_XGDropshipCargoInfo(kSkyranger.CargoInfo);
+    kEngineering = LWCE_XGFacility_Engineering(ENGINEERING());
     kHQ = `LWCE_HQ;
     kItemTree = `LWCE_ITEMTREE;
 
@@ -376,7 +405,7 @@ function UnloadArtifacts(XGShip_Dropship kSkyranger)
             }
             else if (iItemId == `LW_ITEM_ID(Elerium))
             {
-                if (ENGINEERING().IsFoundryTechResearched(`LW_FOUNDRY_ID(AlienNucleonics)))
+                if (kEngineering.LWCE_IsFoundryTechResearched('Foundry_AlienNucleonics'))
                 {
                     iNumArtifacts *= 1.20;
                 }
@@ -385,7 +414,7 @@ function UnloadArtifacts(XGShip_Dropship kSkyranger)
             }
             else if (iItemId == `LW_ITEM_ID(AlienAlloy))
             {
-                if (ENGINEERING().IsFoundryTechResearched(`LW_FOUNDRY_ID(AlienMetallurgy)))
+                if (kEngineering.LWCE_IsFoundryTechResearched('Foundry_AlienMetallurgy'))
                 {
                     iNumArtifacts *= 1.20;
                 }
@@ -396,7 +425,7 @@ function UnloadArtifacts(XGShip_Dropship kSkyranger)
             {
                 if (iItemId == `LW_ITEM_ID(WeaponFragment))
                 {
-                    if (ENGINEERING().IsFoundryTechResearched(`LW_FOUNDRY_ID(ImprovedSalvage)))
+                    if (kEngineering.LWCE_IsFoundryTechResearched('Foundry_ImprovedSalvage'))
                     {
                         iNumArtifacts *= 1.20;
                     }
@@ -408,9 +437,4 @@ function UnloadArtifacts(XGShip_Dropship kSkyranger)
     }
 
     kCargo.m_kArtifactsContainer.Clear();
-}
-
-function AssignRandomCallsign(XGShip_Interceptor kShip)
-{
-    LWCE_XGShip_Interceptor(kShip).SetCallsign(PilotNames[Rand(PilotNames.Length)]);
 }

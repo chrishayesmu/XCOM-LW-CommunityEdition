@@ -18,24 +18,24 @@ function OnClassDefinitionsBuilt(out array<LWCE_TClassDefinition> arrSoldierClas
 /// </summary>
 /// <param name="kTech">The Foundry project which is under consideration.</param>
 /// <param name="iHasPrereqs">Whether the project's prereqs are satisfied. Should be 0 if prereqs are not met, or 1 if they are.</param>
-function Override_HasFoundryPrereqs(LWCE_TFoundryTech kTech, out int iHasPrereqs) {}
+function Override_HasFoundryPrereqs(LWCEFoundryProjectTemplate kTech, out int iHasPrereqs) {}
 
 /// <summary>
 /// Called after any Foundry project has been started and added to the Foundry queue.
 /// </summary>
-function OnFoundryProjectAddedToQueue(TFoundryProject kProject, LWCE_TFoundryTech kFoundryTech) {}
+function OnFoundryProjectAddedToQueue(LWCE_TFoundryProject kProject, LWCEFoundryProjectTemplate kFoundryTech) {}
 
 /// <summary>
 /// Called after any Foundry project has been canceled.
 /// </summary>
-function OnFoundryProjectCanceled(TFoundryProject kProject, LWCE_TFoundryTech kFoundryTech) {}
+function OnFoundryProjectCanceled(LWCE_TFoundryProject kProject, LWCEFoundryProjectTemplate kFoundryTech) {}
 
 /// <summary>
 /// Called after any Foundry project has been completed. In the normal course of the game this shouldn't
 /// be called unless OnFoundryProjectAddedToQueue has been called already for the same project, but if
 /// console commands are used, that may not be the case.
 /// </summary>
-function OnFoundryProjectCompleted(TFoundryProject kProject, LWCE_TFoundryTech kFoundryTech) {}
+function OnFoundryProjectCompleted(LWCE_TFoundryProject kProject, LWCEFoundryProjectTemplate kFoundryTech) {}
 
 /// <summary>
 /// Called after the tech tree has built its list of Foundry techs. Techs can be removed from the list,
@@ -47,9 +47,9 @@ function OnFoundryProjectCompleted(TFoundryProject kProject, LWCE_TFoundryTech k
 /// Note that since this list is always built dynamically, if your mod is uninstalled or modified, anything
 /// you've previously changed in the list will be restored to its original state. If your mod adds Foundry techs
 /// and you want to make sure you're backwards compatible with existing saves, then rather than removing unwanted
-/// Foundry techs in updates, you should hide them using LWCE_TFoundryTech.bForceUnavailable flag.
+/// Foundry techs in updates, you should hide them using LWCEFoundryProjectTemplate.bForceUnavailable flag.
 /// </summary>
-function OnFoundryTechsBuilt(out array<LWCE_TFoundryTech> Techs) {}
+function OnFoundryTechsBuilt(out array<LWCEFoundryProjectTemplate> Techs) {}
 
 /// <summary>
 /// Called as part of XGFacility_Barracks.UpdateFoundryPerksForSoldier. This can occur for a variety of reasons, most
@@ -141,7 +141,7 @@ function OnItemsBuilt(out array<LWCE_TItem> arrItems) {}
 ///     If true, kTech.iHours has already been adjusted to reflect any time spent on this research. Otherwise, kTech.iHours will only
 ///     reflect the base state of the tech, with any relevant bonuses/penalties applied.
 /// </param>
-function Override_GetTech(out LWCE_TTech kTech, bool bIncludesProgress) {}
+function Override_GetTech(out LWCETechTemplate kTech, bool bIncludesProgress) {}
 
 /// <summary>
 /// Called at the end of LWCE_XGTechTree.HasPrereqs to determine if a research tech is available to the player yet or not.
@@ -150,25 +150,19 @@ function Override_GetTech(out LWCE_TTech kTech, bool bIncludesProgress) {}
 /// </summary>
 /// <param name="kTech">The tech which is under consideration.</param>
 /// <param name="iHasPrereqs">Whether the tech's prereqs are satisfied. Should be 0 if prereqs are not met, or 1 if they are.</param>
-function Override_HasPrereqs(LWCE_TTech kTech, out int iHasPrereqs) {}
+function Override_HasPrereqs(LWCETechTemplate kTech, out int iHasPrereqs) {}
 
 /// <summary>
 /// Called after a research is completed. Note that at this point the player has not yet been notified that the research is complete,
 /// so they have not seen the research report, or been informed about what this research has unlocked.
 /// </summary>
-function OnResearchCompleted(int iTech) {}
+function OnResearchCompleted(name TechName) {}
 
 /// <summary>
 /// Called when a research is started, after all costs have been paid (and, if there was another research in progress, after those costs
 /// have been refunded).
 /// </summary>
-function OnResearchStarted(int iTech) {}
-
-/// <summary>
-/// Called after the tech tree has built its list of research techs. See documentation for OnFoundryTechsBuilt; it functions
-/// in largely the same way as OnResearchTechsBuilt.
-/// </summary>
-function OnResearchTechsBuilt(out array<LWCE_TTech> Techs) {}
+function OnResearchStarted(name TechName) {}
 
 /// -----------------------------------------------------
 /// Miscellaneous events
@@ -188,13 +182,3 @@ function bool OnMissionCreated(XGMission kMission) { return true; }
 /// Called whenever a new mission is added to the Geoscape.
 /// </summary>
 function OnMissionAddedToGeoscape(XGMission kMission) {}
-
-/// <summary>
-/// Called to display an alert on the Geoscape. Whenever a mod calls LWCE_XGGeoscape.Mod_Alert, an integer alert ID
-/// is returned. The calling mod is responsible for storing this ID and handling the PopulateAlert event. The fields in
-/// kAlert must be populated by the mod so that the alert can be shown to the player.
-/// </summary>
-/// <param name="iAlertId">The ID of the alert. Generally, mods should not handle alerts they didn't create.</param>
-/// <param name="kGeoAlert">The alert data passed to LWCE_XGGeoscape.Mod_Alert.</param>
-/// <param name="kAlert">A data structure to fill out with the data to display.</param>
-function PopulateAlert(int iAlertId, TGeoscapeAlert kGeoAlert, out TMCAlert kAlert) {}

@@ -29,10 +29,7 @@ function InitNewGame()
     m_arrOTSUpgrades.Add(8);
     LWCE_CreateSoldier(0, 0, HQ().GetHomeCountry());
 
-    if (!ISCONTROLLED())
-    {
-        AddNewSoldiers(class'XGTacticalGameCore'.default.NUM_STARTING_SOLDIERS - 1, false);
-    }
+    AddNewSoldiers(class'XGTacticalGameCore'.default.NUM_STARTING_SOLDIERS - 1, false);
 
     if (HQ().HasBonus(`LW_HQ_BONUS_ID(ForeignLegion)) > 0)
     {
@@ -308,8 +305,11 @@ function XGStrategySoldier CreateSoldier(ESoldierClass iClassId, int iSoldierLev
 
 function XGStrategySoldier LWCE_CreateSoldier(int iClassId, int iSoldierLevel, int iCountry, optional bool bBlueshirt = false)
 {
+    local LWCE_XGFacility_Engineering kEngineering;
     local LWCE_XGStrategySoldier kSoldier;
     local int I;
+
+    kEngineering = LWCE_XGFacility_Engineering(ENGINEERING());
 
     kSoldier = Spawn(class'LWCE_XGStrategySoldier');
     kSoldier.m_kSoldier = m_kCharGen.CreateTSoldier(, iCountry);
@@ -322,12 +322,12 @@ function XGStrategySoldier LWCE_CreateSoldier(int iClassId, int iSoldierLevel, i
 
     if (bBlueshirt)
     {
-        if (ENGINEERING().IsFoundryTechResearched(`LW_FOUNDRY_ID(SecurityTrainingWeapons)))
+        if (kEngineering.LWCE_IsFoundryTechResearched('Foundry_SecurityTrainingWeapons'))
         {
             LOCKERS().EquipLargeItem(kSoldier, `LW_ITEM_ID(LaserRifle), 0);
         }
 
-        if (ENGINEERING().IsFoundryTechResearched(`LW_FOUNDRY_ID(SecurityTrainingArmor)))
+        if (kEngineering.LWCE_IsFoundryTechResearched('Foundry_SecurityTrainingArmor'))
         {
             LOCKERS().EquipArmor(kSoldier, `LW_ITEM_ID(PhalanxArmor));
         }
@@ -340,6 +340,167 @@ function XGStrategySoldier LWCE_CreateSoldier(int iClassId, int iSoldierLevel, i
 
     AddNewSoldier(kSoldier,, bBlueshirt);
     return kSoldier;
+}
+
+function DetermineTimeOut(XGStrategySoldier kSoldier)
+{
+    local LWCE_XGStrategySoldier kCESoldier;
+    local LWCE_XGFacility_Engineering kEngineering;
+    local int iBaseTimeOut, iRandTimeOut;
+
+    kCESoldier = LWCE_XGStrategySoldier(kSoldier);
+    kEngineering = LWCE_XGFacility_Engineering(ENGINEERING());
+
+    kCESoldier.m_iTurnsOut = 0;
+
+    if (kCESoldier.IsATank())
+    {
+        kCESoldier.m_iTurnsOut += 24 + Rand(24);
+    }
+    else
+    {
+        if (kCESoldier.IsAugmented())
+        {
+            if ((kCESoldier.m_bAllIn || kCESoldier.IsInjured()) && kCESoldier.GetCurrentStat(eStat_HP) > 0)
+            {
+                kCESoldier.m_iTurnsOut += 144;
+            }
+            else
+            {
+                kCESoldier.m_iTurnsOut += 120 + Rand(24);
+            }
+        }
+        else
+        {
+            if ((kCESoldier.m_bAllIn || kCESoldier.IsInjured()) && kCESoldier.GetCurrentStat(eStat_HP) > 0)
+            {
+                kCESoldier.m_iTurnsOut += 144;
+            }
+            else
+            {
+                kCESoldier.m_iTurnsOut += 96 + Rand(48);
+            }
+
+            if (HQ().HasBonus(`LW_HQ_BONUS_ID(GiftOfOsiris)) > 0)
+            {
+                kCESoldier.m_iTurnsOut += int((1.0f - (HQ().HasBonus(`LW_HQ_BONUS_ID(GiftOfOsiris)) / 100.0f)) * (class'XGTacticalGameCore'.default.SPECIES_POINT_LIMIT * kCESoldier.MedalCount()));
+            }
+            else
+            {
+                kCESoldier.m_iTurnsOut += class'XGTacticalGameCore'.default.SPECIES_POINT_LIMIT * kCESoldier.MedalCount();
+            }
+
+            for (iBaseTimeOut = 0; iBaseTimeOut < class'XGTacticalGameCore'.default.ItemBalance_Easy.Length; iBaseTimeOut++)
+            {
+                if (kCESoldier.m_kChar.aUpgrades[class'XGTacticalGameCore'.default.ItemBalance_Easy[iBaseTimeOut].eItem] > 0)
+                {
+                    if (HQ().HasBonus(`LW_HQ_BONUS_ID(GiftOfOsiris)) > 0)
+                    {
+                        kCESoldier.m_iTurnsOut += int((1.0f - (HQ().HasBonus(`LW_HQ_BONUS_ID(GiftOfOsiris)) / 100.0f)) * class'XGTacticalGameCore'.default.ItemBalance_Easy[iBaseTimeOut].iEng);
+                    }
+                    else
+                    {
+                        if (HQ().HasBonus(`LW_HQ_BONUS_ID(CallToArms)) > 0)
+                        {
+                            if (class'XGTacticalGameCore'.default.ItemBalance_Easy[iBaseTimeOut].iAlloys > 0)
+                            {
+                                kCESoldier.m_iTurnsOut += int((1.0f - (HQ().HasBonus(`LW_HQ_BONUS_ID(CallToArms)) / 100.0f)) * class'XGTacticalGameCore'.default.ItemBalance_Easy[iBaseTimeOut].iEng);
+                                continue;
+                            }
+                        }
+
+                        kCESoldier.m_iTurnsOut += class'XGTacticalGameCore'.default.ItemBalance_Easy[iBaseTimeOut].iEng;
+                    }
+                }
+            }
+        }
+
+        if (kCESoldier.m_bAllIn)
+        {
+            if (kCESoldier.GetCurrentStat(eStat_HP) > 0)
+            {
+                kCESoldier.m_aStatModifiers[eStat_HP] = Max(kCESoldier.m_aStatModifiers[eStat_HP] - 1, 1 - kCESoldier.GetMaxStat(eStat_HP));
+            }
+        }
+        else
+        {
+            kCESoldier.m_bAllIn = true;
+        }
+    }
+
+    kCESoldier.m_iTurnsOut += kCESoldier.GetMaxStat(eStat_CriticalWoundsReceived) * class'XGTacticalGameCore'.default.CB_AIRANDSPACE_BONUS;
+    kCESoldier.m_iTurnsOut *= float(class'XGTacticalGameCore'.default.RAND_DAYS_INJURED_TANK) / 100.0f;
+
+    if (kCESoldier.m_kChar.aUpgrades[`LW_PERK_ID(StayFrosty)] > 0)
+    {
+        kCESoldier.m_iTurnsOut -= Min(24, kCESoldier.m_iTurnsOut);
+    }
+
+    if (kCESoldier.GetInventory().iArmor == `LW_ITEM_ID(VortexArmor))
+    {
+        kCESoldier.m_iTurnsOut = 0;
+        kCESoldier.m_bAllIn = false;
+    }
+
+    if (kCESoldier.IsInjured() && kCESoldier.GetCurrentStat(eStat_HP) > 0)
+    {
+        if (kCESoldier.IsATank())
+        {
+            iBaseTimeOut = class'XGTacticalGameCore'.default.BASE_DAYS_INJURED_TANK;
+            iRandTimeOut = iBaseTimeOut * (kCESoldier.GetMaxStat(eStat_HP) - kCESoldier.GetCurrentStat(eStat_HP));
+            iRandTimeOut += Max(2 * iBaseTimeOut * ((kCESoldier.GetMaxStat(eStat_HP) / 4) - kCESoldier.GetCurrentStat(eStat_HP)), 0);
+            iRandTimeOut += Rand(Max(iRandTimeOut / 2, 96));
+
+            if (kEngineering.LWCE_IsFoundryTechResearched('Foundry_AdvancedRepair'))
+            {
+                iRandTimeOut *= 0.670;
+            }
+        }
+        else
+        {
+            iBaseTimeOut = class'XGTacticalGameCore'.default.BASE_DAYS_INJURED;
+            iRandTimeOut = class'XGTacticalGameCore'.default.RAND_DAYS_INJURED;
+            iBaseTimeOut -= ((iBaseTimeOut * (iRandTimeOut / 100)) / (STAT_GetStat(1) + (iRandTimeOut % 100)));
+            iRandTimeOut = iBaseTimeOut;
+            iRandTimeOut -= ((iBaseTimeOut * kCESoldier.GetCurrentStat(eStat_HP)) / kCESoldier.GetMaxStat(eStat_HP));
+            iRandTimeOut -= Rand(iBaseTimeOut / kCESoldier.GetMaxStat(eStat_HP));
+
+            if (kCESoldier.IsAugmented())
+            {
+                if (kEngineering.LWCE_IsFoundryTechResearched('Foundry_AdvancedRepair'))
+                {
+                    iRandTimeOut *= 0.80;
+                }
+            }
+
+            if (kCESoldier.m_kChar.aUpgrades[`LW_PERK_ID(AdaptiveBoneMarrow)] > 0)
+            {
+                iRandTimeOut *= (1.0 - class'XGTacticalGameCore'.default.GENEMOD_BONEMARROW_RECOVERY_BONUS);
+            }
+
+            if (kEngineering.LWCE_IsFoundryTechResearched('Foundry_AdvancedSurgery'))
+            {
+                iRandTimeOut *= 0.70;
+            }
+        }
+    }
+
+    kCESoldier.m_iTurnsOut += iRandTimeOut;
+
+    if (IsOptionEnabled(`LW_SECOND_WAVE_ID(DynamicWar)))
+    {
+        if (class'XGTacticalGameCore'.default.SW_MARATHON < 1.0f)
+        {
+            kCESoldier.m_iTurnsOut /= (class'XGTacticalGameCore'.default.SW_MARATHON + 1.0f) / 2.0f;
+        }
+        else
+        {
+            kCESoldier.m_iTurnsOut /= class'XGTacticalGameCore'.default.SW_MARATHON;
+        }
+    }
+
+    kCESoldier.m_iTurnsOut = Max(0, kCESoldier.m_iTurnsOut);
+    STAT_AddStat(eRecap_DaysInInfirmary, kCESoldier.m_iTurnsOut / 24);
 }
 
 function GenerateNewNickname(XGStrategySoldier kNickSoldier)
@@ -944,42 +1105,42 @@ function UpdateFoundryPerksForSoldier(XGStrategySoldier kSoldier)
     if (HQ().HasFacility(eFacility_Foundry))
     {
         // LWCE issue #4: LW 1.0 uses the ID for Phoenix Coilguns (44) in this block, where it means to use Quenchguns (46)
-        kSoldier.m_kChar.aUpgrades[109] = kEngineering.IsFoundryTechResearched(`LW_FOUNDRY_ID(SCOPEUpgrade)) ? 1 : 0;
-        kSoldier.m_kChar.aUpgrades[110] = kEngineering.IsFoundryTechResearched(`LW_FOUNDRY_ID(MagPistols)) ? 1 : 0;
-        kSoldier.m_kChar.aUpgrades[111] = kEngineering.IsFoundryTechResearched(`LW_FOUNDRY_ID(RailPistols)) ? 1 : 0;
+        kSoldier.m_kChar.aUpgrades[109] = kEngineering.LWCE_IsFoundryTechResearched('Foundry_SCOPEUpgrade') ? 1 : 0;
+        kSoldier.m_kChar.aUpgrades[110] = kEngineering.LWCE_IsFoundryTechResearched('Foundry_MagPistols') ? 1 : 0;
+        kSoldier.m_kChar.aUpgrades[111] = kEngineering.LWCE_IsFoundryTechResearched('Foundry_RailPistols') ? 1 : 0;
 
         // aUpgrades[123] is a bitfield of different Foundry upgrades
-        kSoldier.m_kChar.aUpgrades[123] = kEngineering.IsFoundryTechResearched(`LW_FOUNDRY_ID(AmmoConservation)) ? 1 << 1 : 0;
-        kSoldier.m_kChar.aUpgrades[123] = kSoldier.m_kChar.aUpgrades[123] | (kEngineering.IsFoundryTechResearched(`LW_FOUNDRY_ID(EnhancedPlasma))  ? 1 << 2 : 0);
-        kSoldier.m_kChar.aUpgrades[123] = kSoldier.m_kChar.aUpgrades[123] | (kEngineering.IsFoundryTechResearched(`LW_FOUNDRY_ID(AdvancedFlight)) ? 1 << 3 : 0);
-        kSoldier.m_kChar.aUpgrades[123] = kSoldier.m_kChar.aUpgrades[123] | (kEngineering.IsFoundryTechResearched(`LW_FOUNDRY_ID(ReflexPistols)) ? 1 << 4 : 0);
-        kSoldier.m_kChar.aUpgrades[123] = kSoldier.m_kChar.aUpgrades[123] | (kEngineering.IsFoundryTechResearched(`LW_FOUNDRY_ID(Quenchguns)) ? 1 << 5 : 0);
-        kSoldier.m_kChar.aUpgrades[123] = kSoldier.m_kChar.aUpgrades[123] | (kEngineering.IsFoundryTechResearched(`LW_FOUNDRY_ID(ImprovedMedikit))  ? 1 << 6 : 0);
+        kSoldier.m_kChar.aUpgrades[123] = kEngineering.LWCE_IsFoundryTechResearched('Foundry_AmmoConservation') ? 1 << 1 : 0;
+        kSoldier.m_kChar.aUpgrades[123] = kSoldier.m_kChar.aUpgrades[123] | (kEngineering.LWCE_IsFoundryTechResearched('Foundry_EnhancedPlasma')  ? 1 << 2 : 0);
+        kSoldier.m_kChar.aUpgrades[123] = kSoldier.m_kChar.aUpgrades[123] | (kEngineering.LWCE_IsFoundryTechResearched('Foundry_AdvancedFlight') ? 1 << 3 : 0);
+        kSoldier.m_kChar.aUpgrades[123] = kSoldier.m_kChar.aUpgrades[123] | (kEngineering.LWCE_IsFoundryTechResearched('Foundry_ReflexPistols') ? 1 << 4 : 0);
+        kSoldier.m_kChar.aUpgrades[123] = kSoldier.m_kChar.aUpgrades[123] | (kEngineering.LWCE_IsFoundryTechResearched('Foundry_Quenchguns') ? 1 << 5 : 0);
+        kSoldier.m_kChar.aUpgrades[123] = kSoldier.m_kChar.aUpgrades[123] | (kEngineering.LWCE_IsFoundryTechResearched('Foundry_ImprovedMedikit')  ? 1 << 6 : 0);
 
-        kSoldier.m_kChar.aUpgrades[115] = kEngineering.IsFoundryTechResearched(`LW_FOUNDRY_ID(ImprovedArcThrower)) ? 1 : 0;
-        kSoldier.m_kChar.aUpgrades[117] = kEngineering.IsFoundryTechResearched(`LW_FOUNDRY_ID(DroneCapture)) ? 1 : 0;
-        kSoldier.m_kChar.aUpgrades[118] = kEngineering.IsFoundryTechResearched(`LW_FOUNDRY_ID(FieldRepairs)) ? 1 : 0;
-        kSoldier.m_kChar.aUpgrades[120] = kEngineering.IsFoundryTechResearched(`LW_FOUNDRY_ID(JelliedElerium)) ? 1 : 0;
-        kSoldier.m_kChar.aUpgrades[125] = kEngineering.IsFoundryTechResearched(`LW_FOUNDRY_ID(AlienGrenades)) ? 1 : 0;
+        kSoldier.m_kChar.aUpgrades[115] = kEngineering.LWCE_IsFoundryTechResearched('Foundry_ImprovedArcThrower') ? 1 : 0;
+        kSoldier.m_kChar.aUpgrades[117] = kEngineering.LWCE_IsFoundryTechResearched('Foundry_DroneCapture') ? 1 : 0;
+        kSoldier.m_kChar.aUpgrades[118] = kEngineering.LWCE_IsFoundryTechResearched('Foundry_FieldRepairs') ? 1 : 0;
+        kSoldier.m_kChar.aUpgrades[120] = kEngineering.LWCE_IsFoundryTechResearched('Foundry_JelliedElerium') ? 1 : 0;
+        kSoldier.m_kChar.aUpgrades[125] = kEngineering.LWCE_IsFoundryTechResearched('Foundry_AlienGrenades') ? 1 : 0;
 
-        kSoldier.UpdateTacticalRigging(kEngineering.IsFoundryTechResearched(`LW_FOUNDRY_ID(TacticalRigging)));
+        kSoldier.UpdateTacticalRigging(kEngineering.LWCE_IsFoundryTechResearched('Foundry_TacticalRigging'));
 
         if (kSoldier.IsATank())
         {
-            kSoldier.m_kChar.aUpgrades[124] = kEngineering.IsFoundryTechResearched(`LW_FOUNDRY_ID(SentinelDrone)) ? 1 : 0;
-            kSoldier.m_kChar.aUpgrades[139] = kEngineering.IsFoundryTechResearched(`LW_FOUNDRY_ID(SentinelDrone)) ? 1 : 0;
-            kSoldier.m_kChar.aUpgrades[`LW_PERK_ID(Suppression)] = kEngineering.IsFoundryTechResearched(`LW_FOUNDRY_ID(SHIVSuppression)) ? 1 : 0;
+            kSoldier.m_kChar.aUpgrades[124] = kEngineering.LWCE_IsFoundryTechResearched('Foundry_SentinelDrone') ? 1 : 0;
+            kSoldier.m_kChar.aUpgrades[139] = kEngineering.LWCE_IsFoundryTechResearched('Foundry_SentinelDrone') ? 1 : 0;
+            kSoldier.m_kChar.aUpgrades[`LW_PERK_ID(Suppression)] = kEngineering.LWCE_IsFoundryTechResearched('Foundry_SHIVSuppression') ? 1 : 0;
         }
 
         if (kSoldier.IsAugmented())
         {
-            kSoldier.m_kChar.aUpgrades[121] = kEngineering.IsFoundryTechResearched(`LW_FOUNDRY_ID(MECCloseCombat)) ? 1 : 0;
+            kSoldier.m_kChar.aUpgrades[121] = kEngineering.LWCE_IsFoundryTechResearched('Foundry_MECCloseCombat') ? 1 : 0;
         }
 
         if (kSoldier.IsATank() || kSoldier.IsAugmented())
         {
-            kSoldier.m_kChar.aUpgrades[31] = kEngineering.IsFoundryTechResearched(`LW_FOUNDRY_ID(AdvancedServomotors)) ? 1 : 0;
-            kSoldier.m_kChar.aUpgrades[123] = kSoldier.m_kChar.aUpgrades[123] | (kEngineering.IsFoundryTechResearched(`LW_FOUNDRY_ID(ShapedArmor)) ? 1 : 0);
+            kSoldier.m_kChar.aUpgrades[31] = kEngineering.LWCE_IsFoundryTechResearched('Foundry_AdvancedServomotors') ? 1 : 0;
+            kSoldier.m_kChar.aUpgrades[123] = kSoldier.m_kChar.aUpgrades[123] | (kEngineering.LWCE_IsFoundryTechResearched('Foundry_ShapedArmor') ? 1 : 0);
         }
     }
     else

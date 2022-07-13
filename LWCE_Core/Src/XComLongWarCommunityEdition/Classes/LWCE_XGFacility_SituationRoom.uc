@@ -2,5 +2,9 @@ class LWCE_XGFacility_SituationRoom extends XGFacility_SituationRoom;
 
 function bool IsCodeActive()
 {
-    return LABS().IsResearched(`LW_TECH_ID(AlienOperations)) && !`LWCE_LABS.LWCE_IsTechAvailable(`LW_TECH_ID(AlienCommunications));
+    local LWCE_XGFacility_Labs kLabs;
+
+    kLabs = LWCE_XGFacility_Labs(LABS());
+
+    return kLabs.LWCE_IsResearched('Tech_AlienOperations') && !kLabs.LWCE_IsTechAvailable('Tech_AlienCommunications');
 }

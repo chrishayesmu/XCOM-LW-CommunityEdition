@@ -1,4 +1,5 @@
-class LWCE_XGDebriefUI extends XGDebriefUI;
+class LWCE_XGDebriefUI extends XGDebriefUI
+    dependson(LWCE_XGFacility_Labs);
 
 struct LWCE_TSoldierDebriefItem
 {
@@ -183,14 +184,7 @@ function LWCE_BuildSoldierPromotion(XGStrategySoldier kSoldier, out TSoldierProm
             classAssigned = true;
         }
 
-        if (ISCONTROLLED() && BARRACKS().m_iHighestRank == 0)
-        {
-            kCESoldier.LWCE_LevelUp(eSC_HeavyWeapons);
-        }
-        else
-        {
-            kCESoldier.LWCE_LevelUp();
-        }
+        kCESoldier.LWCE_LevelUp();
 
         gotNickname = kCESoldier.GetName(eNameType_Nick) != strNickName;
 
@@ -233,7 +227,7 @@ function BuildSoldierUI()
 
     if (ITEMTREE().CanFacilityBeBuilt(eFacility_OTS))
     {
-        UnlockFacility(eFacility_OTS);
+        class'LWCE_XGScreenMgr_Extensions'.static.UnlockFacility(eFacility_OTS);
     }
 
     RefreshSoldierUIPerks();
@@ -297,7 +291,7 @@ function int GetUnlockItem(out TTech kTech)
     return 0;
 }
 
-function int LWCE_GetUnlockItem(out LWCE_TTech kTech)
+function int LWCE_GetUnlockItem(out LWCETechTemplate kTech)
 {
     local int I, iItemId;
     local LWCE_XGHeadquarters kHQ;
@@ -326,15 +320,16 @@ function int LWCE_GetUnlockItem(out LWCE_TTech kTech)
             }
         }
     }
-    else if (kTech.iTechId == `LW_TECH_ID(AdvancedBodyArmor))
+    else if (kTech.GetTechName() == 'Tech_AdvancedBodyArmor')
     {
-        return kTech.iTechId;
+        // No idea why this uses the tech ID
+        return `LW_TECH_ID(AdvancedBodyArmor);
     }
-    else if (kTech.iTechId == `LW_TECH_ID(Xenobiology))
+    else if (kTech.GetTechName() == 'Tech_Xenobiology')
     {
         return eItem_SectoidCorpse;
     }
-    else if (LABS().IsInterrogationTech(kTech.iTechId))
+    else if (kTech.bIsInterrogation)
     {
         // TODO: not sure how correct this is, since nothing ever seems to clear out this array
         return kHQ.m_arrCELastCaptives[0];
@@ -370,17 +365,7 @@ function OnExit()
     XComGameReplicationInfo(class'Engine'.static.GetCurrentWorldInfo().GRI).DoRemoteEvent('SituationRoom_FundingCouncil_Off');
     class'SeqEvent_HQUnits'.static.PlayRoomSequence("Barracks");
 
-    if (ISCONTROLLED())
-    {
-        if (!SETUPMGR().IsInState('Base4_MissionControl'))
-        {
-            XComGameReplicationInfo(class'Engine'.static.GetCurrentWorldInfo().GRI).GetAutosaveMgr().DoAutosave(Game().m_bIronMan);
-        }
-    }
-    else
-    {
-        XComGameReplicationInfo(class'Engine'.static.GetCurrentWorldInfo().GRI).GetAutosaveMgr().DoAutosave(Game().m_bIronMan);
-    }
+    XComGameReplicationInfo(class'Engine'.static.GetCurrentWorldInfo().GRI).GetAutosaveMgr().DoAutosave(Game().m_bIronMan);
 
     if (IsViewValid(eDebriefView_Council))
     {
@@ -622,14 +607,16 @@ function UpdateScienceDebrief()
     local TScienceDebriefItem kDebriefItem;
     local TDebriefLootItem kLootItem;
     local LWCE_TItem kItem;
-    local LWCE_TTech kTech;
+    local LWCETechTemplate kTech;
     local TScienceProject kProjectUI;
-    local TResearchProject kCurrentProject;
+    local LWCE_TResearchProject kCurrentProject;
     local int iTech, iItem, eitm;
+    local LWCE_XGFacility_Engineering kEngineering;
     local LWCE_XGFacility_Labs kLabs;
     local LWCE_XGHeadQuarters kHQ;
 
-    kLabs = `LWCE_LABS;
+    kEngineering = LWCE_XGFacility_Engineering(ENGINEERING());
+    kLabs = LWCE_XGFacility_Labs(LABS());
     kHQ = `LWCE_HQ;
 
     PRES().CAMLookAtNamedLocation("Cargo", 0.0);
@@ -648,7 +635,7 @@ function UpdateScienceDebrief()
     {
         if (kLabs.m_arrCEMissionResults[iTech].eAvailabilityState == eTechState_Available)
         {
-            kTech = `LWCE_TECH(kLabs.m_arrCEMissionResults[iTech].iTechId);
+            kTech = `LWCE_TECH(kLabs.m_arrCEMissionResults[iTech].TechName);
             iItem = LWCE_GetUnlockItem(kTech);
 
             // Not sure how this bit works or how necessary it is
@@ -663,11 +650,11 @@ function UpdateScienceDebrief()
 
             kDebriefItem.txtTitle.StrValue = m_strNewResourceProject;
             kDebriefItem.txtTitle.iState = eUIState_Good;
-            kDebriefItem.txtTech.StrValue = kTech.strName;
+            kDebriefItem.txtTech.StrValue = kTech.m_strName;
             kDebriefItem.txtTech.iState = eUIState_Highlight;
             kDebrief.arrItems.AddItem(kDebriefItem);
 
-            if (kLabs.IsInterrogationTech(kLabs.m_arrCEMissionResults[iTech].iTechId))
+            if (kLabs.LWCE_IsInterrogationTech(kLabs.m_arrCEMissionResults[iTech].TechName))
             {
                 kLabs.m_bNewCaptive = true;
             }
@@ -675,17 +662,17 @@ function UpdateScienceDebrief()
     }
 
     kProjectUI.txtTitle.StrValue = m_strLabelCurrentResearch;
-    kCurrentProject = kLabs.GetCurrentProject();
+    kCurrentProject = kLabs.LWCE_GetCurrentProject();
 
-    if (kCurrentProject.iTech == 0)
+    if (kCurrentProject.TechName == '')
     {
         kProjectUI.txtProject.StrValue = m_strLabelNone;
         kProjectUI.txtProject.iState = eUIState_Bad;
     }
     else
     {
-        kTech = `LWCE_TECH(kCurrentProject.iTech);
-        kProjectUI.txtProject.StrValue = kTech.strName;
+        kTech = `LWCE_TECH(kCurrentProject.TechName);
+        kProjectUI.txtProject.StrValue = kTech.m_strName;
         kProjectUI.txtProject.iState = eUIState_Highlight;
         kProjectUI.txtProgress = kLabs.GetCurrentProgressText();
     }
@@ -743,7 +730,7 @@ function UpdateScienceDebrief()
 
             if (kHQ.m_kCELastCargoArtifacts.m_arrEntries[iItem].iItemId == `LW_ITEM_ID(Elerium))
             {
-                if (ENGINEERING().IsFoundryTechResearched(`LW_FOUNDRY_ID(AlienNucleonics)))
+                if (kEngineering.LWCE_IsFoundryTechResearched('Foundry_AlienNucleonics'))
                 {
                     kHQ.m_kCELastCargoArtifacts.m_arrEntries[iItem].iQuantity *= 1.20;
                 }
@@ -751,7 +738,7 @@ function UpdateScienceDebrief()
 
             if (kHQ.m_kCELastCargoArtifacts.m_arrEntries[iItem].iItemId == `LW_ITEM_ID(AlienAlloy))
             {
-                if (ENGINEERING().IsFoundryTechResearched(`LW_FOUNDRY_ID(AlienMetallurgy)))
+                if (kEngineering.LWCE_IsFoundryTechResearched('Foundry_AlienMetallurgy'))
                 {
                     kHQ.m_kCELastCargoArtifacts.m_arrEntries[iItem].iQuantity *= 1.20;
                 }
@@ -759,7 +746,7 @@ function UpdateScienceDebrief()
 
             if (kHQ.m_kCELastCargoArtifacts.m_arrEntries[iItem].iItemId == `LW_ITEM_ID(WeaponFragment))
             {
-                if (ENGINEERING().IsFoundryTechResearched(`LW_FOUNDRY_ID(ImprovedSalvage)))
+                if (kEngineering.LWCE_IsFoundryTechResearched('Foundry_ImprovedSalvage'))
                 {
                     kHQ.m_kCELastCargoArtifacts.m_arrEntries[iItem].iQuantity *= 1.20;
                 }
@@ -917,7 +904,7 @@ function UpdateView()
             LABS().m_bCaptiveDied = false;
         }
     }
-    else if (m_iCurrentView == eDebriefView_Soldiers && !ISCONTROLLED())
+    else if (m_iCurrentView == eDebriefView_Soldiers)
     {
         if (BARRACKS().m_eLastResult != eLastResult_None && BARRACKS().m_eLastResultSpeaker == eSpeaker_Skyranger)
         {

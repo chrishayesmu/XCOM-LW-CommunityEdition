@@ -272,7 +272,6 @@ function string GetHighlightedPromoPerkName()
     return `LWCE_PERKS_STRAT.GetPerkName(kPerkChoice.iPerkId);
 }
 
-
 function TItemCard GetItemCardFromOption(TInventoryOption kItemOp)
 {
     local TItemCard kItemCard;
@@ -285,8 +284,10 @@ function TItemCard GetItemCardFromOption(TInventoryOption kItemOp)
 function LWCE_TItemCard LWCE_GetItemCardFromOption(TInventoryOption kItemOp)
 {
     local LWCE_TItemCard kItemCard;
+    local LWCE_XGFacility_Engineering kEngineering;
     local int iMedalIndex, iItemId;
 
+    kEngineering = LWCE_XGFacility_Engineering(ENGINEERING());
     iItemId = kItemOp.iItem;
 
     if (`GAMECORE.ItemIsAccessory(iItemId))
@@ -303,39 +304,39 @@ function LWCE_TItemCard LWCE_GetItemCardFromOption(TInventoryOption kItemOp)
             iMedalIndex = iMedalIndex | 65536;
         }
 
-        if (`GAMECORE.WeaponHasProperty(iItemId, eWP_Pistol) && ENGINEERING().IsFoundryTechResearched(`LW_FOUNDRY_ID(ReflexPistols)))
+        if (`GAMECORE.WeaponHasProperty(iItemId, eWP_Pistol) && kEngineering.LWCE_IsFoundryTechResearched('Foundry_ReflexPistols'))
         {
             iMedalIndex = iMedalIndex | 256;
         }
 
-        if (iItemId == `LW_ITEM_ID(APGrenade) && ENGINEERING().IsFoundryTechResearched(`LW_FOUNDRY_ID(AlienGrenades)))
+        if (iItemId == `LW_ITEM_ID(APGrenade) && kEngineering.LWCE_IsFoundryTechResearched('Foundry_AlienGrenades'))
         {
             iMedalIndex = iMedalIndex | 512;
         }
 
-        if (iItemId == `LW_ITEM_ID(KineticStrikeModule) && ENGINEERING().IsFoundryTechResearched(`LW_FOUNDRY_ID(MecCloseCombat)))
+        if (iItemId == `LW_ITEM_ID(KineticStrikeModule) && kEngineering.LWCE_IsFoundryTechResearched('Foundry_MecCloseCombat'))
         {
             iMedalIndex = iMedalIndex | 1024;
         }
 
-        if (iItemId == `LW_ITEM_ID(GrenadeLauncher) && ENGINEERING().IsFoundryTechResearched(`LW_FOUNDRY_ID(AlienGrenades)))
+        if (iItemId == `LW_ITEM_ID(GrenadeLauncher) && kEngineering.LWCE_IsFoundryTechResearched('Foundry_AlienGrenades'))
         {
             iMedalIndex = iMedalIndex | 256;
         }
 
-        if (iItemId == `LW_ITEM_ID(Flamethrower) && ENGINEERING().IsFoundryTechResearched(`LW_FOUNDRY_ID(JelliedElerium)))
+        if (iItemId == `LW_ITEM_ID(Flamethrower) && kEngineering.LWCE_IsFoundryTechResearched('Foundry_JelliedElerium'))
         {
             iMedalIndex = iMedalIndex | 768;
         }
 
-        if (ENGINEERING().IsFoundryTechResearched(`LW_FOUNDRY_ID(EnhancedPlasma)))
+        if (kEngineering.LWCE_IsFoundryTechResearched('Foundry_EnhancedPlasma'))
         {
             iMedalIndex = iMedalIndex | 131072;
         }
 
         kItemCard = class'LWCE_XGItemCards'.static.BuildWeaponCard(iMedalIndex);
 
-        if (`GAMECORE.WeaponHasProperty(iItemId, eWP_Pistol) && ENGINEERING().IsFoundryTechResearched(`LW_FOUNDRY_ID(MagPistols)))
+        if (`GAMECORE.WeaponHasProperty(iItemId, eWP_Pistol) && kEngineering.LWCE_IsFoundryTechResearched('Foundry_MagPistols'))
         {
             kItemCard.iBaseCritChance += 10;
         }
@@ -847,6 +848,24 @@ function UpdateAbilities()
     m_kAbilities.tblAbilities = kMenu;
 }
 
+function UpdateDoll()
+{
+    if (m_kSoldier != none)
+    {
+        m_kDoll.iFlag = m_kSoldier.GetCountry();
+        m_kDoll.imgFlag.strPath = class'UIScreen'.static.GetFlagPath(m_kDoll.iFlag);
+
+        if (m_kSoldier.IsATank())
+        {
+            m_kDoll.imgSoldier.strPath = `LWCE_ITEM(m_kSoldier.m_kChar.kInventory.iArmor).ImagePath;
+        }
+        else
+        {
+            m_kDoll.imgSoldier.iImage = eImage_Soldier;
+        }
+    }
+}
+
 function UpdateView()
 {
     local LWCE_XGStrategySoldier kSoldier;
@@ -909,7 +928,7 @@ function UpdateView()
         {
             Narrative(`XComNarrativeMoment("FirstAssault"));
         }
-        else if (kSoldier.LWCE_GetClass() == eSC_HeavyWeapons && !ISCONTROLLED())
+        else if (kSoldier.LWCE_GetClass() == eSC_HeavyWeapons)
         {
             Narrative(`XComNarrativeMoment("FirstHeavy"));
         }
@@ -919,7 +938,6 @@ function UpdateView()
         }
     }
 }
-
 
 /// <summary>
 /// Returns the current column in the order [0, 1, 2], as opposed to the way the base game does it, [2, 1, 0] (and sometimes 3).

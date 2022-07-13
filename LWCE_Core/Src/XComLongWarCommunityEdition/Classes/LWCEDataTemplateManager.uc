@@ -38,7 +38,7 @@ var protected array<TemplateCacheEntry> m_arrTemplates;
 function InitTemplates()
 {
     local int ClassIndex, SectionIndex;
-    local string strError, strTemplateName;
+    local string strTemplateName;
     local array<string> arrParts, arrSectionNames;
     local class<LWCEDataTemplate> kTemplateClass;
     local LWCEDataTemplate kTemplate;
@@ -71,7 +71,6 @@ function InitTemplates()
 
         for (SectionIndex = 0; SectionIndex < arrSectionNames.Length; SectionIndex++)
         {
-            strError = "";
             arrParts = SplitString(arrSectionNames[SectionIndex], " ", /* bCullEmpty */ true);
 
             if (arrParts.Length != 2)
@@ -82,14 +81,8 @@ function InitTemplates()
 
             strTemplateName = arrParts[0];
 
+            // Create template without validation for now; validate them after all template managers are loaded
             kTemplate = InstantiateTemplate(kTemplateClass, strTemplateName);
-
-            // TODO: wait and validate after all template managers are done, for cross-template validations
-            if (!kTemplate.ValidateTemplate(strError))
-            {
-                `LWCE_LOG_CLS("WARNING: Template " $ strTemplateName $ " failed validation and won't be loaded. Error message: " $ strError);
-                continue;
-            }
 
             kCacheEntry.kTemplate = kTemplate;
             kCacheEntry.TemplateName = kTemplate.DataName;
@@ -119,6 +112,40 @@ function array<name> GetTemplateNames()
     }
 
     return arrNames;
+}
+
+function bool HasTemplateByName(name TemplateName)
+{
+    return m_arrTemplates.Find('TemplateName', TemplateName) != INDEX_NONE;
+}
+
+/// <summary>
+/// After templates have been loaded, this function will validate them individually and remove any which
+/// are invalid. This should not be called until after all template managers are inited, so that cross-references
+/// between templates can be validated as well.
+/// </summary>
+/// <returns>True if all templates were valid; false if any were invalid and had to be removed.</returns>
+function bool ValidateAndFilterTemplates()
+{
+    local bool bAllValid;
+    local int Index;
+    local string strError;
+
+    bAllValid = true;
+
+    for (Index = 0; Index < m_arrTemplates.Length; Index++)
+    {
+        if (!m_arrTemplates[Index].kTemplate.ValidateTemplate(strError))
+        {
+            `LWCE_LOG_CLS("Template " $ m_arrTemplates[Index].TemplateName $ " failed validation: " $ strError);
+            bAllValid = false;
+
+            m_arrTemplates.Remove(Index, 1);
+            Index--;
+        }
+    }
+
+    return bAllValid;
 }
 
 /// <summary>

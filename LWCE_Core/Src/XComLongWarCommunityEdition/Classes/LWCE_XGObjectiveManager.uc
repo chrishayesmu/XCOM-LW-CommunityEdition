@@ -2,6 +2,7 @@ class LWCE_XGObjectiveManager extends XGObjectiveManager;
 
 function TSubObjective BuildSubObjective(ESubObjective eSubObj)
 {
+    local name SubName;
     local int iSubId;
     local TSubObjective kSub;
 
@@ -24,22 +25,22 @@ function TSubObjective BuildSubObjective(ESubObjective eSubObj)
             iSubId = 19; // Facility ID
             break;
         case eSubObj_BuildArcThrower:
-            iSubId = 13; // Research ID
+            SubName = 'Tech_Xenogenetics';
             break;
         case eSubObj_ResearchShard:
-            iSubId = 3; // Research ID
+            SubName = 'Tech_AlienOperations';
             break;
         case eSubObj_ResearchHyperwaveBeacon:
-            iSubId = 7; // Research ID
+            SubName = 'Tech_AlienCommunications';
             break;
         case eSubObj_ResearchFirestorm:
-            iSubId = 5; // Research ID
+            SubName = 'Tech_AlienPropulsion';
             break;
         case eSubObj_ResearchPsionics:
-            iSubId = 4; // Research ID
+            SubName = 'Tech_Xenopsionics';
             break;
         case eSubObj_ResearchPsiLink:
-            iSubId = 8; // Research ID
+            SubName = 'Tech_AlienCommandAndControl';
             break;
         case eSubObj_CaptureOutsider:
             iSubId = 183; // Item ID
@@ -77,11 +78,11 @@ function TSubObjective BuildSubObjective(ESubObjective eSubObj)
         case eSubObj_ResearchFirestorm:
         case eSubObj_ResearchPsionics:
         case eSubObj_ResearchPsiLink:
-            if (`LWCE_LABS.IsResearched(iSubId))
+            if (`LWCE_LABS.LWCE_IsResearched(SubName))
             {
                 kSub.eStatus = eObjStatus_Complete;
             }
-            else if (`LWCE_LABS.LWCE_GetCurrentTech().iTechId == iSubId)
+            else if (`LWCE_LABS.LWCE_GetCurrentTech() != none && `LWCE_LABS.LWCE_GetCurrentTech().GetTechName() == SubName)
             {
                 kSub.eStatus = eObjStatus_InProgress;
             }
@@ -102,7 +103,7 @@ function TSubObjective BuildSubObjective(ESubObjective eSubObj)
 
             break;
         case eSubObj_ResearchArcThrower:
-            if (`LWCE_LABS.IsResearched(`LW_TECH_ID(Xenoneurology)))
+            if (`LWCE_LABS.LWCE_IsResearched('Tech_Xenoneurology'))
             {
                 if (STORAGE().m_arrItemArchives[eItem_ArcThrower] > 0)
                 {
@@ -113,7 +114,7 @@ function TSubObjective BuildSubObjective(ESubObjective eSubObj)
                     kSub.eStatus = eObjStatus_InProgress;
                 }
             }
-            else if (`LWCE_LABS.LWCE_GetCurrentTech().iTechId == `LW_TECH_ID(Xenoneurology))
+            else if (`LWCE_LABS.LWCE_GetCurrentTech() != none && `LWCE_LABS.LWCE_GetCurrentTech().GetTechName() == 'Tech_Xenoneurology')
             {
                 kSub.eStatus = eObjStatus_InProgress;
             }
@@ -131,7 +132,7 @@ function TSubObjective BuildSubObjective(ESubObjective eSubObj)
             {
                 kSub.eStatus = eObjStatus_Complete;
             }
-            else if (`LWCE_LABS.IsInterrogationTech(`LWCE_LABS.LWCE_GetCurrentTech().iTechId))
+            else if (`LWCE_LABS.LWCE_GetCurrentTech() != none && `LWCE_LABS.LWCE_IsInterrogationTech(`LWCE_LABS.LWCE_GetCurrentTech().GetTechName()))
             {
                 kSub.eStatus = eObjStatus_InProgress;
             }
@@ -185,7 +186,7 @@ function TSubObjective BuildSubObjective(ESubObjective eSubObj)
             {
                 kSub.eStatus = eObjStatus_Complete;
             }
-            else if (`LWCE_LABS.LWCE_GetCurrentTech().iTechId == `LW_TECH_ID(MindAndMachine))
+            else if (`LWCE_LABS.LWCE_GetCurrentTech() != none && `LWCE_LABS.LWCE_GetCurrentTech().GetTechName() == 'Tech_MindAndMachine')
             {
                 kSub.eStatus = eObjStatus_InProgress;
             }

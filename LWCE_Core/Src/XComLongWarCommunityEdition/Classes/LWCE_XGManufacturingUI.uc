@@ -1,13 +1,17 @@
 class LWCE_XGManufacturingUI extends XGManufacturingUI;
 
 var LWCE_TItemProject m_kCEItemProject;
+var LWCE_TFoundryProject m_kCEFoundryProject;
 
 function DirectInitialize()
 {
+    local LWCE_XGFacility_Engineering kEngineering;
     local bool bInstaBuild;
     local int iMaxEngineers, iView;
-    local LWCE_TFoundryTech kFTech;
+    local LWCEFoundryProjectTemplate kFoundryTech;
     local LWCE_TItem kItem;
+
+    kEngineering = LWCE_XGFacility_Engineering(ENGINEERING());
 
     PlayOpenSound();
 
@@ -54,23 +58,23 @@ function DirectInitialize()
 
         iView = eManView_Item;
     }
-    else if (iView == eManView_Foundry || m_kFoundProject.eTech != 0)
+    else if (iView == eManView_Foundry || m_kCEFoundryProject.ProjectName != '')
     {
-        if (m_kFoundProject.iIndex != -1)
+        if (m_kCEFoundryProject.iIndex != -1)
         {
-            m_kFoundProject = ENGINEERING().GetFoundryProject(m_kFoundProject.iIndex);
+            m_kCEFoundryProject = kEngineering.LWCE_GetFoundryProject(m_kCEFoundryProject.iIndex);
             m_bCanCancel = true;
             ReleaseFoundryFunds();
             m_bCanRush = false;
         }
         else
         {
-            kFTech = `LWCE_FTECH(m_kFoundProject.eTech);
-            m_kFoundProject.iHoursLeft = kFTech.iHours;
-            m_kFoundProject.iMaxEngineers = kFTech.iEngineers;
-            m_kFoundProject.iEngineers = m_kFoundProject.iMaxEngineers;
-            m_iAddedEngineers = m_kFoundProject.iEngineers;
-            m_kFoundProject.bNotify = true;
+            kFoundryTech = `LWCE_FTECH(m_kCEFoundryProject.ProjectName);
+            m_kCEFoundryProject.iHoursLeft = kFoundryTech.iPointsToComplete;
+            m_kCEFoundryProject.iMaxEngineers = kFoundryTech.iEngineers;
+            m_kCEFoundryProject.iEngineers = m_kCEFoundryProject.iMaxEngineers;
+            m_iAddedEngineers = m_kCEFoundryProject.iEngineers;
+            m_kCEFoundryProject.bNotify = true;
         }
 
         iView = eManView_Foundry;
@@ -79,7 +83,7 @@ function DirectInitialize()
     {
         if (m_kFProject.iIndex != -1)
         {
-            m_kFProject = ENGINEERING().GetFacilityProject(m_kFProject.X, m_kFProject.Y);
+            m_kFProject = kEngineering.GetFacilityProject(m_kFProject.X, m_kFProject.Y);
             m_bCanCancel = true;
             m_bCanRush = false;
             ReleaseFacilityFunds();
@@ -121,10 +125,44 @@ function bool IsNewProject()
         case eManView_Facility:
             return m_kFProject.iIndex == -1;
         case eManView_Foundry:
-            return m_kFoundProject.iIndex == -1;
+            return m_kCEFoundryProject.iIndex == -1;
         default:
             return false;
     }
+}
+
+function OnCancelOrder()
+{
+    switch (m_iCurrentView)
+    {
+        case eManView_Item:
+            if (!IsNewProject())
+            {
+                RestoreItemFunds();
+                ENGINEERING().CancelItemProject(m_kCEItemProject.iIndex);
+            }
+
+            break;
+        case eManView_Facility:
+            if (!IsNewProject())
+            {
+                RestoreFacilityFunds();
+                ENGINEERING().CancelFacilityProject(m_kFProject.X, m_kFProject.Y);
+            }
+
+            break;
+        case eManView_Foundry:
+            if (!IsNewProject())
+            {
+                RestoreFoundryFunds();
+                ENGINEERING().CancelFoundryProject(m_kCEFoundryProject.iIndex);
+            }
+
+            break;
+    }
+
+    Sound().PlaySFX(SNDLIB().SFX_UI_ItemDeleted);
+    OnExitScreen();
 }
 
 function OnIncrease()
@@ -177,6 +215,10 @@ function OnDecrease()
 
 function OnSubmitOrder()
 {
+    local LWCE_XGFacility_Engineering kEngineering;
+
+    kEngineering = LWCE_XGFacility_Engineering(ENGINEERING());
+
     if (m_bCanAfford)
     {
         switch (m_iCurrentView)
@@ -188,11 +230,11 @@ function OnSubmitOrder()
                 }
                 else if (IsNewProject())
                 {
-                    `LWCE_ENGINEERING.LWCE_AddItemProject(m_kCEItemProject);
+                    kEngineering.LWCE_AddItemProject(m_kCEItemProject);
                 }
                 else
                 {
-                    `LWCE_ENGINEERING.LWCE_ModifyItemProject(m_kCEItemProject);
+                    kEngineering.LWCE_ModifyItemProject(m_kCEItemProject);
                 }
 
                 Sound().PlaySFX(SNDLIB().SFX_UI_ItemStarted);
@@ -201,12 +243,12 @@ function OnSubmitOrder()
             case eManView_Facility:
                 if (IsNewProject())
                 {
-                    ENGINEERING().AddFacilityProject(m_kFProject);
-                    ENGINEERING().m_bFacilityBuilt = true;
+                    kEngineering.AddFacilityProject(m_kFProject);
+                    kEngineering.m_bFacilityBuilt = true;
                 }
                 else
                 {
-                    ENGINEERING().ModifyFacilityProject(m_kFProject);
+                    kEngineering.ModifyFacilityProject(m_kFProject);
                 }
 
                 Sound().PlaySFX(SNDLIB().SFX_UI_FacilityStarted);
@@ -215,11 +257,11 @@ function OnSubmitOrder()
             case eManView_Foundry:
                 if (IsNewProject())
                 {
-                    ENGINEERING().AddFoundryProject(m_kFoundProject);
+                    kEngineering.LWCE_AddFoundryProject(m_kCEFoundryProject);
                 }
                 else
                 {
-                    ENGINEERING().ModifyFoundryProject(m_kFoundProject);
+                    kEngineering.LWCE_ModifyFoundryProject(m_kCEFoundryProject);
                 }
 
                 Sound().PlaySFX(SNDLIB().SFX_UI_ItemStarted);
@@ -246,7 +288,7 @@ function OnToggleNotify()
             m_kFProject.bNotify = !m_kFProject.bNotify;
             break;
         case eManView_Foundry:
-            m_kFoundProject.bNotify = !m_kFoundProject.bNotify;
+            m_kCEFoundryProject.bNotify = !m_kCEFoundryProject.bNotify;
             break;
     }
 
@@ -286,9 +328,9 @@ function OnToggleRush()
 
                 break;
             case eManView_Foundry:
-                m_kFoundProject.bRush = !m_kFoundProject.bRush;
+                m_kCEFoundryProject.bRush = !m_kCEFoundryProject.bRush;
 
-                if (m_kFoundProject.bRush)
+                if (m_kCEFoundryProject.bRush)
                 {
                     PlaySmallOpenSound();
                 }
@@ -308,6 +350,22 @@ function OnToggleRush()
     }
 }
 
+function ReleaseFoundryFunds()
+{
+    local LWCE_XGFacility_Engineering kEngineering;
+
+    kEngineering = LWCE_XGFacility_Engineering(ENGINEERING());
+
+    if (m_kCEFoundryProject.kOriginalCost.iCash != 0)
+    {
+        kEngineering.RefundCost(m_kCEFoundryProject.kOriginalCost);
+    }
+    else
+    {
+        kEngineering.RefundCost(kEngineering.LWCE_GetFoundryProjectCost(m_kCEFoundryProject.ProjectName, m_kCEFoundryProject.bRush));
+    }
+}
+
 function ReleaseItemFunds()
 {
     if (m_kCEItemProject.kOriginalCost.iCash != 0)
@@ -317,6 +375,14 @@ function ReleaseItemFunds()
     else
     {
         ENGINEERING().RefundCost(`LWCE_ENGINEERING.LWCE_GetItemProjectCost(m_kCEItemProject.iItemId, m_kCEItemProject.iQuantityLeft, m_kCEItemProject.bRush));
+    }
+}
+
+function RestoreFoundryFunds()
+{
+    if (m_kCEFoundryProject.iIndex != -1)
+    {
+        ENGINEERING().RestoreFoundryFunds(m_kCEFoundryProject.iIndex);
     }
 }
 
@@ -331,25 +397,31 @@ function RestoreItemFunds()
 function UpdateManufactureFoundry()
 {
     local TManWidget kWidget;
-    local LWCE_TFoundryTech kTech;
+    local LWCEFoundryProjectTemplate kTech;
+    local LWCE_XGFacility_Engineering kEngineering;
     local XGParamTag kTag;
 
-    kTech = `LWCE_FTECH(m_kFoundProject.eTech);
+    kEngineering = LWCE_XGFacility_Engineering(ENGINEERING());
+
+    kTech = `LWCE_FTECH(m_kCEFoundryProject.ProjectName);
     kTag = XGParamTag(XComEngine(class'Engine'.static.GetEngine()).LocalizeContext.FindTag("XGParam"));
 
-    kWidget.txtTitle.StrValue = kTech.strName;
-    kWidget.txtTitle.iState = eUIState_Warning;
-    kWidget.imgItem.strPath = kTech.ImagePath;
+    if (kTech != none)
+    {
+        kWidget.txtTitle.StrValue = kTech.m_strName;
+        kWidget.txtTitle.iState = eUIState_Warning;
+        kWidget.imgItem.strPath = kTech.ImagePath;
+    }
 
     kWidget.txtItemInfoButton.iButton = eButton_Back;
     kWidget.txtItemInfoButton.StrValue = m_strLabelProjectInfo;
 
-    kTag.IntValue0 = ENGINEERING().GetFoundryCounter(m_kFoundProject);
+    kTag.IntValue0 = kEngineering.LWCE_GetFoundryCounter(m_kCEFoundryProject);
     kWidget.txtProjDuration.strLabel = m_strLabelTimeToComplete;
     kWidget.txtProjDuration.StrValue = class'XComLocalizer'.static.ExpandStringByTag(m_strETADays, kTag);
     kWidget.txtProjDuration.iState = eUIState_Warning;
 
-    kWidget.txtEngineers.StrValue = string(m_kFoundProject.iMaxEngineers);
+    kWidget.txtEngineers.StrValue = string(m_kCEFoundryProject.iMaxEngineers);
     kWidget.txtEngineersLabel.StrValue = m_strLabelEngineersAssigned;
     kWidget.txtEngHelp.iButton = eButton_RBumper;
     kWidget.txtEngHelp.StrValue = m_strHelpAdjust;
@@ -357,7 +429,7 @@ function UpdateManufactureFoundry()
     kWidget.txtResourcesLabel.StrValue = m_strLabelProjectCost;
     kWidget.txtResourcesLabel.iState = eUIState_Warning;
 
-    m_bCanAfford = ENGINEERING().GetFoundryCostSummary(kWidget.kCost, m_kFoundProject.eTech, m_kFoundProject.Brush);
+    m_bCanAfford = kEngineering.LWCE_GetFoundryCostSummary(kWidget.kCost, m_kCEFoundryProject.ProjectName, m_kCEFoundryProject.bRush);
 
     if (!m_bCanAfford)
     {
@@ -372,7 +444,7 @@ function UpdateManufactureFoundry()
         kWidget.txtNotifyButton.iButton = eButton_Y;
         kWidget.txtNotifyButton.StrValue = m_strLabelRushBuild;
 
-        if (m_kFoundProject.Brush)
+        if (m_kCEFoundryProject.Brush)
         {
             kWidget.txtNotifyButton.StrValue @= m_strLabelYES;
             kWidget.txtNotifyButton.iState = eUIState_Warning;
@@ -384,7 +456,7 @@ function UpdateManufactureFoundry()
         }
     }
 
-    if (IsNewProject() && ENGINEERING().GetNumEngineersAvailable() < m_kFoundProject.iMaxEngineers)
+    if (IsNewProject() && kEngineering.GetNumEngineersAvailable() < m_kCEFoundryProject.iMaxEngineers)
     {
         kWidget.txtEngineers.iState = eUIState_Bad;
         kWidget.txtEngineersLabel.iState = eUIState_Bad;
@@ -401,7 +473,7 @@ function UpdateManufactureFoundry()
     kWidget.txtNotesLabel.StrValue = m_strLabelNotes;
     kWidget.txtNotesLabel.iState = eUIState_Normal;
 
-    if (m_kFoundProject.iEngineers == 0)
+    if (m_kCEFoundryProject.iEngineers == 0)
     {
         kWidget.txtNotes.StrValue @= m_strNoteFoundryStalled;
         kWidget.txtNotes.iState = eUIState_Normal;

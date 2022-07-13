@@ -1,14 +1,30 @@
 class LWCE_XGFacility_Engineering extends XGFacility_Engineering
-    dependson(LWCETypes);
+    dependson(LWCETypes, LWCE_XGMissionControlUI);
+
+struct LWCE_TFoundryProject
+{
+    var name ProjectName;
+    var int iEngineers;
+    var int iMaxEngineers;
+    var int iHoursLeft;
+    var int iIndex;
+    var bool bRush;
+    var bool bNotify;
+    var bool bAdjusted;
+    var TProjectCost kRebate;
+    var TProjectCost kOriginalCost;
+};
 
 struct CheckpointRecord_LWCE_XGFacility_Engineering extends CheckpointRecord_XGFacility_Engineering
 {
+    var array<LWCE_TFoundryProject> m_arrCEFoundryProjects;
     var array<LWCE_TItemProject> m_arrCEItemProjects;
-    var array<int> m_arrCEFoundryHistory;
+    var array<name> m_arrCEFoundryHistory;
 };
 
+var array<LWCE_TFoundryProject> m_arrCEFoundryProjects;
 var array<LWCE_TItemProject> m_arrCEItemProjects;
-var array<int> m_arrCEFoundryHistory;
+var array<name> m_arrCEFoundryHistory;
 
 function Init(bool bLoadingFromSave)
 {
@@ -31,37 +47,36 @@ function InitNewGame()
     m_kStorage.Init();
     GrantInitialStores();
 
-    m_arrCEFoundryHistory.AddItem(0);
-
+    // TODO: move everything here to macros, or even better, make starting bonuses template-based
     if (HQ().HasBonus(`LW_HQ_BONUS_ID(Resourceful)) > 0)
     {
-        m_arrCEFoundryHistory.AddItem(HQ().HasBonus(`LW_HQ_BONUS_ID(Resourceful))); // Alien Metallurgy
-        m_arrCEFoundryHistory.AddItem(39); // Improved Salvage
+        m_arrCEFoundryHistory.AddItem('Foundry_AlienMetallurgy');
+        m_arrCEFoundryHistory.AddItem('Foundry_ImprovedSalvage');
     }
 
     if (HQ().HasBonus(`LW_HQ_BONUS_ID(JaiJawan)) > 0)
     {
-        m_arrCEFoundryHistory.AddItem(HQ().HasBonus(`LW_HQ_BONUS_ID(JaiJawan))); // Elerium Afterburners
+        m_arrCEFoundryHistory.AddItem('Foundry_EleriumAfterburners');
     }
 
     if (HQ().HasBonus(`LW_HQ_BONUS_ID(SukhoiCompany)) > 0)
     {
-        m_arrCEFoundryHistory.AddItem(HQ().HasBonus(`LW_HQ_BONUS_ID(SukhoiCompany))); // Improved Avionics
+        m_arrCEFoundryHistory.AddItem('Foundry_ImprovedAvionics');
     }
 
     if (HQ().HasBonus(`LW_HQ_BONUS_ID(JungleScoutsOld)) > 0)
     {
-        m_arrCEFoundryHistory.AddItem(HQ().HasBonus(`LW_HQ_BONUS_ID(JungleScoutsOld))); // Tactical Rigging
+        m_arrCEFoundryHistory.AddItem('Foundry_TacticalRigging');
     }
 
     if (HQ().HasBonus(`LW_HQ_BONUS_ID(TheirFinestHour)) > 0)
     {
-        m_arrCEFoundryHistory.AddItem(HQ().HasBonus(`LW_HQ_BONUS_ID(TheirFinestHour))); // Penetrator Weapons
+        m_arrCEFoundryHistory.AddItem('Foundry_PenetratorWeapons');
     }
 
     if (HQ().HasBonus(`LW_HQ_BONUS_ID(ForTheSakeOfGlory)) > 0)
     {
-        m_arrCEFoundryHistory.AddItem(HQ().HasBonus(`LW_HQ_BONUS_ID(ForTheSakeOfGlory))); // Advanced Repair
+        m_arrCEFoundryHistory.AddItem('Foundry_AdvancedRepair');
     }
 
     m_bRequiresAttention = true;
@@ -71,26 +86,104 @@ function InitNewGame()
     m_iEleriumHalfLife = int(class'XGTacticalGameCore'.default.SW_ELERIUM_HALFLIFE);
 }
 
+// #region Functions related to facilities
+
+function OnFacilityCompleted(int iProject)
+{
+    if (m_arrFacilityProjects[iProject].bNotify)
+    {
+        m_arrOldRebates.AddItem(m_arrFacilityProjects[iProject].kRebate);
+        LWCE_XGGeoscape(GEOSCAPE()).LWCE_Alert(`LWCE_ALERT('NewFacilityBuilt').AddInt(m_arrFacilityProjects[iProject].eFacility).AddInt(m_arrOldRebates.Length - 1).Build());
+    }
+    else
+    {
+        PRES().Notify(eGA_NewFacilityBuilt, m_arrFacilityProjects[iProject].eFacility);
+
+        if (HasRebate())
+        {
+            PRES().Notify(eGA_WorkshopRebate, m_arrFacilityProjects[iProject].kRebate.iCash, m_arrFacilityProjects[iProject].kRebate.iAlloys, m_arrFacilityProjects[iProject].kRebate.iElerium);
+        }
+    }
+
+    Base().PerformAction(eBCS_BuildFacility, m_arrFacilityProjects[iProject].X, m_arrFacilityProjects[iProject].Y, m_arrFacilityProjects[iProject].eFacility);
+
+    switch (m_arrFacilityProjects[iProject].eFacility)
+    {
+        case eFacility_ScienceLab:
+            STAT_AddStat(eRecap_LabsBuilt, 1);
+            Achieve(AT_Theory);
+            LABS().UpdateLabBonus();
+            break;
+        case eFacility_PsiLabs:
+        case eFacility_GeneticsLab:
+            LABS().UpdateLabBonus();
+            break;
+        case eFacility_Workshop:
+            STAT_AddStat(eRecap_WorkshopsBuilt, 1);
+            Achieve(AT_AndPractice);
+            break;
+        case eFacility_DeusEx:
+            STAT_SetStat(eRecap_ObjBuildGollop, Game().GetDays());
+            Achieve(AT_OnTheShoulders);
+            break;
+        case eFacility_HyperwaveRadar:
+            STAT_SetStat(eRecap_ObjBuildHyperwave, Game().GetDays());
+            Achieve(AT_SeeAllKnowAll);
+            break;
+    }
+
+    if (m_arrFacilityProjects[iProject].Y >= 4)
+    {
+        Achieve(AT_DrumsInTheDeep);
+    }
+
+    Achieve(AT_UpAndRunning);
+    STAT_AddStat(eRecap_FacilitiesBuilt, 1);
+}
+
+function string RecordFacilityBuilt(EFacilityType FacilityValue)
+{
+    `LWCE_LOG_DEPRECATED_NOREPLACE_CLS(RecordFacilityBuilt);
+
+    return "";
+}
+
+// #endregion
+
 // #region Functions related to the Foundry
 
 function AddFoundryProject(out TFoundryProject kProject)
 {
-    kProject.iIndex = m_arrFoundryProjects.Length;
-    kProject.kOriginalCost = GetFoundryProjectCost(kProject.eTech, kProject.Brush);
-    m_arrFoundryProjects.AddItem(kProject);
+    `LWCE_LOG_DEPRECATED_CLS(AddFoundryProject);
+}
 
-    if (!WorldInfo.IsConsoleBuild(CONSOLE_Xbox360) && !WorldInfo.IsConsoleBuild(CONSOLE_PS3))
-    {
-        GetRecapSaveData().RecordEvent(RecordStartedFoundryProject(kProject));
-    }
+function LWCE_AddFoundryProject(out LWCE_TFoundryProject kProject)
+{
+    kProject.iIndex = m_arrCEFoundryProjects.Length;
+    kProject.kOriginalCost = LWCE_GetFoundryProjectCost(kProject.ProjectName, kProject.bRush);
+    m_arrCEFoundryProjects.AddItem(kProject);
 
     PayCost(kProject.kOriginalCost);
-    AddFoundryProjectToQueue(kProject);
+    LWCE_AddFoundryProjectToQueue(kProject);
     PRES().GetMgr(class'LWCE_XGFoundryUI').UpdateView();
     m_bStartedFoundryProject = true;
 
     // Notify mods of this project
-    `LWCE_MOD_LOADER.OnFoundryProjectAddedToQueue(kProject, `LWCE_FTECH(kProject.eTech));
+    `LWCE_MOD_LOADER.OnFoundryProjectAddedToQueue(kProject, `LWCE_FTECH(kProject.ProjectName));
+}
+
+function AddFoundryProjectToQueue(out TFoundryProject kProject)
+{
+    `LWCE_LOG_DEPRECATED_CLS(AddFoundryProjectToQueue);
+}
+
+function LWCE_AddFoundryProjectToQueue(out LWCE_TFoundryProject kProject)
+{
+    local TEngQueueItem kQueueItem;
+
+    kQueueItem.bFoundry = true;
+    kQueueItem.iIndex = kProject.iIndex;
+    m_arrQueue.AddItem(kQueueItem);
 }
 
 function bool CanAddFoundryProject()
@@ -100,9 +193,9 @@ function bool CanAddFoundryProject()
 
 function CancelFoundryProject(int iIndex)
 {
-    local TFoundryProject kProject;
+    local LWCE_TFoundryProject kProject;
 
-    kProject = GetFoundryProject(iIndex);
+    kProject = LWCE_GetFoundryProject(iIndex);
 
     if (kProject.kOriginalCost.iCash != 0 || kProject.kOriginalCost.iElerium != 0 || kProject.kOriginalCost.iAlloys != 0)
     {
@@ -110,28 +203,147 @@ function CancelFoundryProject(int iIndex)
     }
     else
     {
-        RefundCost(GetFoundryProjectCost(kProject.eTech, kProject.Brush));
+        RefundCost(LWCE_GetFoundryProjectCost(kProject.ProjectName, kProject.bRush));
     }
 
     RemoveFoundryProject(kProject.iIndex);
 
     // Notify mods that a project is canceled
-    `LWCE_MOD_LOADER.OnFoundryProjectCanceled(kProject, `LWCE_FTECH(kProject.eTech));
+    `LWCE_MOD_LOADER.OnFoundryProjectCanceled(kProject, `LWCE_FTECH(kProject.ProjectName));
+}
+
+function ChangeFoundryIndex(int iOldIndex, int iNewIndex)
+{
+    local int iQueue;
+
+    for (iQueue = 0; iQueue < m_arrQueue.Length; iQueue++)
+    {
+        if (m_arrQueue[iQueue].bFoundry && m_arrQueue[iQueue].iIndex == iOldIndex)
+        {
+            m_arrQueue[iQueue].iIndex = iNewIndex;
+            break;
+        }
+    }
+
+    m_arrCEFoundryProjects[iNewIndex].iIndex = iNewIndex;
+}
+
+function int GetFoundryCounter(out TFoundryProject kProject)
+{
+    `LWCE_LOG_DEPRECATED_CLS(GetFoundryCounter);
+
+    return -1;
+}
+
+function int LWCE_GetFoundryCounter(out LWCE_TFoundryProject kProject)
+{
+    local int iDays, iWork;
+
+    iWork = GetWorkPerHour(kProject.iEngineers, kProject.bRush);
+
+    if (iWork == 0)
+    {
+        return 999;
+    }
+
+    iDays = kProject.iHoursLeft / (24 * iWork);
+
+    if ((kProject.iHoursLeft % (24 * iWork)) > 0)
+    {
+        iDays += 1;
+    }
+
+    return iDays;
+}
+
+function bool GetFoundryCostSummary(out TCostSummary kCostSummary, int iFoundryTech, bool Brush, optional bool bShowEng)
+{
+    `LWCE_LOG_DEPRECATED_CLS(GetFoundryCostSummary);
+
+    return false;
+}
+
+function bool LWCE_GetFoundryCostSummary(out TCostSummary kCostSummary, name ProjectName, bool Brush, optional bool bShowEng)
+{
+    return GetCostSummary(kCostSummary, LWCE_GetFoundryProjectCost(ProjectName, Brush), !bShowEng);
+}
+
+function string GetFoundryETAString(TFoundryProject kProject)
+{
+    `LWCE_LOG_DEPRECATED_CLS(GetFoundryETAString);
+
+    return "";
+}
+
+function string LWCE_GetFoundryETAString(LWCE_TFoundryProject kProject)
+{
+    local int iHours, iDays;
+    local XGParamTag kTag;
+
+    kTag = XGParamTag(XComEngine(class'Engine'.static.GetEngine()).LocalizeContext.FindTag("XGParam"));
+    iHours = kProject.iHoursLeft / (GetWorkPerHour(kProject.iEngineers, kProject.bRush));
+
+    if (iHours < 24)
+    {
+        kTag.IntValue0 = iHours;
+        return class'XComLocalizer'.static.ExpandString(m_strETAHour);
+    }
+    else
+    {
+        iDays = iHours / 24;
+
+        if ((iHours % 24) > 0)
+        {
+            iDays += 1;
+        }
+
+        kTag.IntValue0 = iDays;
+        return class'XComLocalizer'.static.ExpandString(m_strETADay);
+    }
+}
+
+function TFoundryProject GetFoundryProject(int iIndex)
+{
+    local TFoundryProject kProject;
+
+    `LWCE_LOG_DEPRECATED_CLS(GetFoundryProject);
+
+    return kProject;
+}
+
+function LWCE_TFoundryProject LWCE_GetFoundryProject(int iIndex)
+{
+    return m_arrCEFoundryProjects[iIndex];
 }
 
 function TProjectCost GetFoundryProjectCost(int iTech, bool bRushFoundry)
 {
     local TProjectCost kCost;
-    local LWCE_TFoundryTech kTech;
 
-    kTech = `LWCE_FTECH(iTech);
+    `LWCE_LOG_DEPRECATED_CLS(GetFoundryProjectCost);
 
-    kCost = class'LWCETypes'.static.ConvertTCostToProjectCost(kTech.kCost);
+    return kCost;
+}
+
+function TProjectCost LWCE_GetFoundryProjectCost(name ProjectName, bool bRushFoundry)
+{
+    local TProjectCost kCost;
+    local LWCEFoundryProjectTemplate kTemplate;
+
+    kTemplate = `LWCE_FTECH(ProjectName);
+
+    if (kTemplate == none)
+    {
+        return kCost;
+    }
+
+    kCost = class'LWCETypes'.static.ConvertTCostToProjectCost(kTemplate.kCost);
     kCost.iStaffTypeReq = eStaff_Engineer;
-    kCost.iStaffNumReq = kTech.iEngineers;
+    kCost.iStaffNumReq = kTemplate.iEngineers;
 
     if (bRushFoundry)
     {
+        // TODO move to config and/or template
         kCost.iCash *= 1.50;
         kCost.iElerium *= 1.50;
         kCost.iAlloys *= 1.50;
@@ -142,13 +354,63 @@ function TProjectCost GetFoundryProjectCost(int iTech, bool bRushFoundry)
     return kCost;
 }
 
-function bool LWCE_IsFoundryTechInQueue(int iTechId)
+function XComNarrativeMoment GetMusing()
+{
+    local LWCE_XGFacility_Labs kLabs;
+
+    kLabs = LWCE_XGFacility_Labs(LABS());
+
+    if (m_arrMusingTracker[0] == 0 && AI().GetMonth() >= 1)
+    {
+        m_arrMusingTracker[0] = 1;
+        return `XComNarrativeMoment("EngineeringMusingI");
+    }
+    else if (m_arrMusingTracker[2] == 0 && kLabs.HasInterrogatedCaptive())
+    {
+        m_arrMusingTracker[2] = 1;
+        return `XComNarrativeMoment("EngineeringMusingIII");
+    }
+    else if (m_arrMusingTracker[3] == 0 && STORAGE().EverHadItem(`LW_ITEM_ID(FloaterCorpse)))
+    {
+        m_arrMusingTracker[3] = 1;
+        return `XComNarrativeMomentEW("EngineeringMusingIV");
+    }
+    else if (m_arrMusingTracker[4] == 0 && STORAGE().EverHadItem(`LW_ITEM_ID(EtherealDevice)))
+    {
+        m_arrMusingTracker[4] = 1;
+        return `XComNarrativeMoment("EngineeringMusingV");
+    }
+    else if (m_arrMusingTracker[5] == 0 && BARRACKS().GetNumPsiSoldiers() > 0)
+    {
+        m_arrMusingTracker[5] = 1;
+        return `XComNarrativeMoment("EngineeringMusingVI");
+    }
+    else if (m_arrMusingTracker[6] == 0 && BARRACKS().m_iHighestMecRank >= 3)
+    {
+        m_arrMusingTracker[6] = 1;
+        return `XComNarrativeMomentEW("EngineeringMusingVII");
+    }
+    else if (m_arrMusingTracker[7] == 0 && kLabs.LWCE_IsResearched('Tech_AlienBiocybernetics') && BARRACKS().m_iHighestMecRank == -1)
+    {
+        m_arrMusingTracker[7] = 1;
+        return `XComNarrativeMomentEW("EngineeringMusingVIII");
+    }
+    else if (m_arrMusingTracker[8] == 0 && kLabs.LWCE_IsResearched('Tech_AlienBiocybernetics') && BARRACKS().m_iHighestMecRank == -1 && STORAGE().GetResource(eResource_Meld) > 200)
+    {
+        m_arrMusingTracker[8] = 1;
+        return `XComNarrativeMomentEW("EngineeringMusingIX");
+    }
+
+    return none;
+}
+
+function bool LWCE_IsFoundryTechInQueue(name ProjectName)
 {
     local int iProject;
 
-    for (iProject = 0; iProject < m_arrFoundryProjects.Length; iProject++)
+    for (iProject = 0; iProject < m_arrCEFoundryProjects.Length; iProject++)
     {
-        if (m_arrFoundryProjects[iProject].eTech == iTechId)
+        if (m_arrCEFoundryProjects[iProject].ProjectName == ProjectName)
         {
             return true;
         }
@@ -159,36 +421,52 @@ function bool LWCE_IsFoundryTechInQueue(int iTechId)
 
 function bool IsFoundryTechResearched(int iTech)
 {
-    return iTech == 0 || m_arrCEFoundryHistory.Find(iTech) != INDEX_NONE;
+    `LWCE_LOG_DEPRECATED_CLS(IsFoundryTechResearched);
+
+    return false;
 }
 
-function OnFoundryProjectCompleted(int iProject)
+function bool LWCE_IsFoundryTechResearched(name ProjectName)
 {
-    local int iFoundryTechId;
+    return ProjectName == '' || m_arrCEFoundryHistory.Find(ProjectName) != INDEX_NONE;
+}
 
-    iFoundryTechId = m_arrFoundryProjects[iProject].eTech;
+function ModifyFoundryProject(TFoundryProject kProject)
+{
+    `LWCE_LOG_DEPRECATED_CLS(ModifyFoundryProject);
+}
 
-    if (m_arrFoundryProjects[iProject].bNotify)
+function LWCE_ModifyFoundryProject(LWCE_TFoundryProject kProject)
+{
+    m_arrCEFoundryProjects[kProject.iIndex].iEngineers = kProject.iEngineers;
+    m_arrCEFoundryProjects[kProject.iIndex].bAdjusted = kProject.bAdjusted;
+    PayCost(LWCE_GetFoundryProjectCost(kProject.ProjectName, kProject.bRush));
+}
+
+function OnFoundryProjectCompleted(int iProjectIndex)
+{
+    local LWCE_XGGeoscape kGeoscape;
+    local name ProjectName;
+
+    kGeoscape = LWCE_XGGeoscape(GEOSCAPE());
+    ProjectName = m_arrCEFoundryProjects[iProjectIndex].ProjectName;
+
+    if (m_arrCEFoundryProjects[iProjectIndex].bNotify)
     {
-        m_arrOldRebates.AddItem(m_arrFoundryProjects[iProject].kRebate);
+        m_arrOldRebates.AddItem(m_arrCEFoundryProjects[iProjectIndex].kRebate);
 
         // UE Explorer failed to decompile this line. I've put it together as best I could based on the bytecode and the alert handling code in
         // XGMissionControlUI.UpdateAlert. The decompilation failure seems to have messed up much of the remainder of the function as well, which
         // I have also worked to restore.
-        GEOSCAPE().Alert(GEOSCAPE().MakeAlert(eGA_FoundryProjectCompleted, m_arrFoundryProjects[iProject].eTech, m_arrOldRebates.Length - 1));
+        kGeoscape.LWCE_Alert(`LWCE_ALERT('FoundryProjectCompleted').AddName(m_arrCEFoundryProjects[iProjectIndex].ProjectName).AddInt(m_arrOldRebates.Length - 1).Build());
     }
 
-    if (iFoundryTechId == `LW_FOUNDRY_ID(AlienGrenades))
+    if (ProjectName == 'Foundry_AlienGrenades')
     {
         BARRACKS().UpdateGrenades(`LW_ITEM_ID(AlienGrenade));
     }
 
-    m_arrCEFoundryHistory.AddItem(iFoundryTechId);
-
-    if (!WorldInfo.IsConsoleBuild(CONSOLE_Xbox360) && !WorldInfo.IsConsoleBuild(CONSOLE_PS3))
-    {
-        GetRecapSaveData().RecordEvent(RecordFoundryProjectCompleted(m_arrFoundryProjects[iProject]));
-    }
+    m_arrCEFoundryHistory.AddItem(ProjectName);
 
     STAT_AddStat(eRecap_FoundryTechs, 1);
 
@@ -198,7 +476,7 @@ function OnFoundryProjectCompleted(int iProject)
     }
 
     // Notify mods that a project is complete
-    `LWCE_MOD_LOADER.OnFoundryProjectCompleted(m_arrFoundryProjects[iProject], `LWCE_FTECH(m_arrFoundryProjects[iProject].eTech));
+    `LWCE_MOD_LOADER.OnFoundryProjectCompleted(m_arrCEFoundryProjects[iProjectIndex], `LWCE_FTECH(m_arrCEFoundryProjects[iProjectIndex].ProjectName));
 
     // Do this afterwards because it can also contain a mod hook and this order makes the most sense from a modder's perspective
     BARRACKS().UpdateFoundryPerks();
@@ -206,67 +484,97 @@ function OnFoundryProjectCompleted(int iProject)
 
 function string RecordCanceledFoundryProject(TFoundryProject Project)
 {
-    local LWCE_TFoundryTech kTech;
-    local string OutputString;
+    `LWCE_LOG_DEPRECATED_NOREPLACE_CLS(RecordCanceledFoundryProject);
 
-    kTech = `LWCE_FTECH(Project.eTech);
-    OutputString = GEOSCAPE().m_kDateTime.GetDateString() @ GEOSCAPE().m_kDateTime.GetTimeString() @ ": Canceled foundry project " $ kTech.strName $ "\n";
-    return OutputString;
+    return "";
 }
 
 function string RecordFoundryProjectCompleted(TFoundryProject FinishedProject)
 {
-    local LWCE_TFoundryTech kTech;
-    local string OutputString;
+    `LWCE_LOG_DEPRECATED_NOREPLACE_CLS(RecordFoundryProjectCompleted);
 
-    kTech = `LWCE_FTECH(FinishedProject.eTech);
-    OutputString = GEOSCAPE().m_kDateTime.GetDateString() @ GEOSCAPE().m_kDateTime.GetTimeString() @ ": Finished foundry project for " $ kTech.strName $ "\n";
-    return OutputString;
+    return "";
 }
 
 function string RecordStartedFoundryProject(TFoundryProject Project)
 {
-    local LWCE_TFoundryTech kTech;
-    local string OutputString;
+    `LWCE_LOG_DEPRECATED_NOREPLACE_CLS(RecordStartedFoundryProject);
 
-    kTech = `LWCE_FTECH(Project.eTech);
-    OutputString = GEOSCAPE().m_kDateTime.GetDateString() @ GEOSCAPE().m_kDateTime.GetTimeString() @ ": Started foundry project " $ kTech.strName $ "\n";
-    return OutputString;
+    return "";
+}
+
+function RemoveFoundryProject(int iIndex)
+{
+    local int iProject;
+
+    RemoveFoundryProjectFromQueue(iIndex);
+    m_arrCEFoundryProjects.Remove(iIndex, 1);
+
+    for (iProject = 0; iProject < m_arrCEFoundryProjects.Length; iProject++)
+    {
+        ChangeFoundryIndex(m_arrCEFoundryProjects[iProject].iIndex, iProject);
+    }
+}
+
+function RestoreFoundryFunds(int iIndex)
+{
+    local TProjectCost kOrigCost;
+
+    if (m_arrCEFoundryProjects[iIndex].kOriginalCost.iCash != 0 || m_arrCEFoundryProjects[iIndex].kOriginalCost.iElerium != 0 || m_arrCEFoundryProjects[iIndex].kOriginalCost.iAlloys != 0)
+    {
+        kOrigCost = m_arrCEFoundryProjects[iIndex].kOriginalCost;
+    }
+    else
+    {
+        kOrigCost = LWCE_GetFoundryProjectCost(m_arrCEFoundryProjects[iIndex].ProjectName, m_arrCEFoundryProjects[iIndex].Brush);
+    }
+
+    PayCost(kOrigCost);
 }
 
 function UpdateFoundryProjects()
 {
+    local bool bGeneratedAlert;
     local int iProject, iWorkDone;
 
-    for (iProject = 0; iProject < m_arrFoundryProjects.Length; iProject++)
+    for (iProject = 0; iProject < m_arrCEFoundryProjects.Length; iProject++)
     {
-        iWorkDone = GetWorkPerHour(m_arrFoundryProjects[iProject].iEngineers, m_arrFoundryProjects[iProject].Brush);
+        iWorkDone = GetWorkPerHour(m_arrCEFoundryProjects[iProject].iEngineers, m_arrCEFoundryProjects[iProject].bRush);
 
-        if (m_arrFoundryProjects[iProject].iHoursLeft <= iWorkDone)
+        if (m_arrCEFoundryProjects[iProject].iHoursLeft <= iWorkDone)
         {
-            if (GEOSCAPE().IsBusy())
+            // LWCE: base game returns if the geoscape is busy, presumably to stop multiple alerts from stacking up at once.
+            // We modify the logic to only do so for projects which will generate alerts. This generally doesn't matter, but
+            // it will behave better in modded scenarios where multiple Foundry projects are completed manually via code.
+            if ( (GEOSCAPE().IsBusy() || bGeneratedAlert) && m_arrCEFoundryProjects[iProject].bNotify)
             {
                 return;
             }
 
-            m_arrFoundryProjects[iProject].iHoursLeft = 0;
+            m_arrCEFoundryProjects[iProject].iHoursLeft = 0;
             OnFoundryProjectCompleted(iProject);
             ITEMTREE().UpdateShips();
 
-            if (m_arrFoundryProjects[iProject].eTech == 27) // Wingtip Sparrowhawks
+            // TODO: put this in the template somehow
+            if (m_arrCEFoundryProjects[iProject].ProjectName == 'Foundry_WingtipSparrowhawks')
             {
                 for (iWorkDone = 0; iWorkDone < HANGAR().m_arrInts.Length; iWorkDone++)
                 {
-                    HANGAR().m_arrInts[iWorkDone].EquipWeapon(255);
+                    LWCE_XGShip_Interceptor(HANGAR().m_arrInts[iWorkDone]).LWCE_EquipWeapon(255);
                 }
             }
 
+            if (m_arrCEFoundryProjects[iProject].bNotify)
+            {
+                bGeneratedAlert = true;
+            }
+
             RemoveFoundryProject(iProject);
-            return;
+            iProject--;
         }
         else
         {
-            m_arrFoundryProjects[iProject].iHoursLeft -= iWorkDone;
+            m_arrCEFoundryProjects[iProject].iHoursLeft -= iWorkDone;
         }
     }
 }
@@ -282,11 +590,6 @@ function AddItemProject(out TItemProject kProject)
 
 function LWCE_AddItemProject(out LWCE_TItemProject kProject)
 {
-    if (!WorldInfo.IsConsoleBuild(CONSOLE_Xbox360) && !WorldInfo.IsConsoleBuild(CONSOLE_PS3))
-    {
-        GetRecapSaveData().RecordEvent(LWCE_RecordStartedItemConstruction(kProject));
-    }
-
     kProject.iIndex = m_arrCEItemProjects.Length;
     kProject.kOriginalCost = LWCE_GetItemProjectCost(kProject.iItemId, kProject.iQuantityLeft, kProject.bRush);
     m_arrCEItemProjects.AddItem(kProject);
@@ -503,6 +806,118 @@ function string LWCE_GetETAString(LWCE_TItemProject kProject)
     return class'XComLocalizer'.static.ExpandString(m_strETADay);
 }
 
+function GetEvents(out array<THQEvent> arrEvents)
+{
+    `LWCE_LOG_DEPRECATED_CLS(GetEvents);
+}
+
+function LWCE_GetEvents(out array<LWCE_THQEvent> arrEvents)
+{
+    LWCE_GetItemEvents(arrEvents);
+    LWCE_GetFacilityEvents(arrEvents);
+    LWCE_GetFoundryEvents(arrEvents);
+}
+
+function GetFacilityEvents(out array<THQEvent> arrEvents)
+{
+    `LWCE_LOG_DEPRECATED_CLS(GetFacilityEvents);
+}
+
+function LWCE_GetFacilityEvents(out array<LWCE_THQEvent> arrEvents)
+{
+    local int iFacilityProject, iEvent;
+    local LWCE_TData kData;
+    local LWCE_THQEvent kBlankEvent, kEvent;
+    local bool bAdded;
+
+    for (iFacilityProject = 0; iFacilityProject < m_arrFacilityProjects.Length; iFacilityProject++)
+    {
+        kEvent = kBlankEvent;
+        kEvent.EventType = 'Facility';
+        kEvent.iHours = m_arrFacilityProjects[iFacilityProject].iHoursLeft;
+
+        if (m_arrFacilityProjects[iFacilityProject].bRush)
+        {
+            kEvent.iHours *= 0.50;
+        }
+
+        kData.eType = eDT_Int;
+        kData.iData = m_arrFacilityProjects[iFacilityProject].eFacility;
+        kEvent.arrData.AddItem(kData);
+
+        bAdded = false;
+
+        for (iEvent = 0; iEvent < arrEvents.Length; iEvent++)
+        {
+            if (arrEvents[iEvent].iHours > kEvent.iHours)
+            {
+                arrEvents.InsertItem(iEvent, kEvent);
+                bAdded = true;
+                break;
+            }
+        }
+
+        if (!bAdded)
+        {
+            arrEvents.AddItem(kEvent);
+        }
+    }
+}
+
+function GetFoundryEvents(out array<THQEvent> arrEvents)
+{
+    `LWCE_LOG_DEPRECATED_CLS(GetFoundryEvents);
+}
+
+function LWCE_GetFoundryEvents(out array<LWCE_THQEvent> arrEvents)
+{
+    local int iFoundryProject, iEvent;
+    local LWCE_TData kData;
+    local LWCE_THQEvent kBlankEvent, kEvent;
+    local bool bAdded;
+    local int iWorkDone;
+
+    for (iFoundryProject = 0; iFoundryProject < m_arrCEFoundryProjects.Length; iFoundryProject++)
+    {
+        if (!m_arrCEFoundryProjects[iFoundryProject].bNotify)
+        {
+            continue;
+        }
+
+        iWorkDone = GetWorkPerHour(m_arrCEFoundryProjects[iFoundryProject].iEngineers, m_arrCEFoundryProjects[iFoundryProject].bRush);
+
+        kEvent = kBlankEvent;
+        kEvent.EventType = 'Foundry';
+        kEvent.iHours = m_arrCEFoundryProjects[iFoundryProject].iHoursLeft / iWorkDone;
+
+        if ((m_arrCEFoundryProjects[iFoundryProject].iHoursLeft % iWorkDone) > 0)
+        {
+            kEvent.iHours += 1;
+        }
+
+        kData.eType = eDT_Name;
+        kData.nmData = m_arrCEFoundryProjects[iFoundryProject].ProjectName;
+        kEvent.arrData.AddItem(kData);
+
+        bAdded = false;
+
+        for (iEvent = 0; iEvent < arrEvents.Length; iEvent++)
+        {
+            if (arrEvents[iEvent].iHours > kEvent.iHours)
+            {
+                arrEvents.InsertItem(iEvent, kEvent);
+                bAdded = true;
+                break;
+            }
+        }
+
+        if (!bAdded)
+        {
+            arrEvents.AddItem(kEvent);
+        }
+    }
+}
+
 function bool GetItemCostSummary(out TCostSummary kCostSummary, EItemType eItem, optional int iQuantity = 1, optional bool Brush, optional bool bShowEng, optional int iProjectIndex = -1)
 {
     `LWCE_LOG_DEPRECATED_CLS(GetItemCostSummary);
@@ -530,6 +945,56 @@ function bool LWCE_GetItemCostSummary(out TCostSummary kCostSummary, int iItemId
 
     bCanAfford = GetCostSummary(kCostSummary, kCost, !bShowEng);
     return bCanAfford;
+}
+
+function GetItemEvents(out array<THQEvent> arrEvents)
+{
+    `LWCE_LOG_DEPRECATED_CLS(GetItemEvents);
+}
+
+function LWCE_GetItemEvents(out array<LWCE_THQEvent> arrEvents)
+{
+    local int iItemProject, iEvent;
+    local LWCE_TData kData;
+    local LWCE_THQEvent kBlankEvent, kEvent;
+    local bool bAdded;
+
+    for (iItemProject = 0; iItemProject < m_arrCEItemProjects.Length; iItemProject++)
+    {
+        if (m_arrCEItemProjects[iItemProject].iEngineers == 0 || !m_arrCEItemProjects[iItemProject].bNotify)
+        {
+            continue;
+        }
+
+        kEvent = kBlankEvent;
+        kEvent.EventType = 'ItemProject';
+        kEvent.iHours = LWCE_GetItemProjectHoursRemaining(m_arrCEItemProjects[iItemProject]);
+
+        kData.eType = eDT_Int;
+        kData.iData = m_arrCEItemProjects[iItemProject].iItemId;
+        kEvent.arrData.AddItem(kData);
+
+        kData.eType = eDT_Int;
+        kData.iData = m_arrCEItemProjects[iItemProject].iQuantity;
+        kEvent.arrData.AddItem(kData);
+
+        bAdded = false;
+
+        for (iEvent = 0; iEvent < arrEvents.Length; iEvent++)
+        {
+            if (arrEvents[iEvent].iHours > kEvent.iHours)
+            {
+                arrEvents.InsertItem(iEvent, kEvent);
+                bAdded = true;
+                break;
+            }
+        }
+
+        if (!bAdded)
+        {
+            arrEvents.AddItem(kEvent);
+        }
+    }
 }
 
 function TItemProject GetItemProject(int iIndex)
@@ -573,50 +1038,6 @@ function int LWCE_GetItemProjectHoursRemaining(LWCE_TItemProject kProject)
     }
 
     return iHours;
-}
-
-function bool IsCorpseItem(int iItem)
-{
-    `LWCE_LOG_CLS("XGFacility_Engineering.IsCorpseItem is deprecated in LWCE. Use LWCE_XGItemTree.LWCE_IsCorpse instead. Stack trace follows.");
-    ScriptTrace();
-
-    return false;
-}
-
-function GetItemEvents(out array<THQEvent> arrEvents)
-{
-    local int iItemProject, iEvent;
-    local THQEvent kEvent;
-    local bool bAdded;
-
-    for (iItemProject = 0; iItemProject < m_arrCEItemProjects.Length; iItemProject++)
-    {
-        if (m_arrCEItemProjects[iItemProject].iEngineers == 0)
-        {
-            continue;
-        }
-
-        kEvent.EEvent = eHQEvent_ItemProject;
-        kEvent.iData = m_arrCEItemProjects[iItemProject].iItemId;
-        kEvent.iData2 = m_arrCEItemProjects[iItemProject].iQuantity;
-        kEvent.iHours = LWCE_GetItemProjectHoursRemaining(m_arrCEItemProjects[iItemProject]);
-        bAdded = false;
-
-        for (iEvent = 0; iEvent < arrEvents.Length; iEvent++)
-        {
-            if (arrEvents[iEvent].iHours > kEvent.iHours)
-            {
-                arrEvents.InsertItem(iEvent, kEvent);
-                bAdded = true;
-                break;
-            }
-        }
-
-        if (!bAdded)
-        {
-            arrEvents.AddItem(kEvent);
-        }
-    }
 }
 
 function TProjectCost GetItemProjectCost(EItemType eItem, int iQuantity, optional bool bRush)
@@ -741,6 +1162,14 @@ function bool LWCE_IsBuildingItem(int iItemId)
     return false;
 }
 
+function bool IsCorpseItem(int iItem)
+{
+    `LWCE_LOG_CLS("XGFacility_Engineering.IsCorpseItem is deprecated in LWCE. Use LWCE_XGItemTree.LWCE_IsCorpse instead. Stack trace follows.");
+    ScriptTrace();
+
+    return false;
+}
+
 function bool IsPriorityItem(EItemType eItem)
 {
     `LWCE_LOG_DEPRECATED_CLS(IsPriorityItem);
@@ -835,10 +1264,10 @@ function OnItemCompleted(int iItemProject, int iQuantity, optional bool bInstant
 
     switch (m_arrCEItemProjects[iItemProject].iItemId)
     {
-        case `LW_ITEM_ID(PlasmaCarbine): // Plasma Carbine
-        case `LW_ITEM_ID(PlasmaRifle): // Plasma Rifle
-        case `LW_ITEM_ID(PlasmaNovagun): // Plasma Novagun
-        case `LW_ITEM_ID(PlasmaSniperRifle): // Plasma Sniper Rifle
+        case `LW_ITEM_ID(PlasmaCarbine):
+        case `LW_ITEM_ID(PlasmaRifle):
+        case `LW_ITEM_ID(PlasmaNovagun):
+        case `LW_ITEM_ID(PlasmaSniperRifle):
             if (STAT_GetStat(eRecap_FirstAlienWeapon) == 0)
             {
                 STAT_SetStat(eRecap_FirstAlienWeapon, Game().GetDays());
@@ -947,25 +1376,24 @@ function OnItemCompleted(int iItemProject, int iQuantity, optional bool bInstant
             break;
     }
 
-    if (!WorldInfo.IsConsoleBuild(CONSOLE_Xbox360) && !WorldInfo.IsConsoleBuild(CONSOLE_PS3))
-    {
-        GetRecapSaveData().RecordEvent(LWCE_RecordItemsBuilt(m_arrCEItemProjects[iItemProject].iItemId, iQuantity));
-    }
-
     STAT_AddStat(eRecap_ItemsBuilt, iQuantity);
     Achieve(AT_CombatReady);
 }
 
 function OnItemProjectCompleted(int iProject, optional bool bInstant)
 {
+    local LWCE_TGeoscapeAlert kAlert;
+
     if (bInstant)
     {
         OnItemCompleted(iProject, m_arrCEItemProjects[iProject].iQuantity, true);
     }
-    else if (m_arrCEItemProjects[iProject].bNotify && !ISCONTROLLED())
+    else if (m_arrCEItemProjects[iProject].bNotify)
     {
         m_arrOldRebates.AddItem(m_arrCEItemProjects[iProject].kRebate);
-        GEOSCAPE().Alert(GEOSCAPE().MakeAlert(eGA_ItemProjectCompleted, m_arrCEItemProjects[iProject].iItemId, m_arrCEItemProjects[iProject].iQuantity, m_arrOldRebates.Length - 1));
+
+        kAlert = `LWCE_ALERT('ItemProjectCompleted').AddInt(m_arrCEItemProjects[iProject].iItemId).AddInt(m_arrCEItemProjects[iProject].iQuantity).AddInt(m_arrOldRebates.Length - 1).Build();
+        LWCE_XGGeoscape(GEOSCAPE()).LWCE_Alert(kAlert);
     }
 
     `LWCE_MOD_LOADER.OnItemCompleted(m_arrCEItemProjects[iProject], m_arrCEItemProjects[iProject].iQuantity, bInstant);
@@ -973,36 +1401,23 @@ function OnItemProjectCompleted(int iProject, optional bool bInstant)
 
 function string RecordCanceledItemConstruction(TItemProject Project)
 {
-    `LWCE_LOG_DEPRECATED_CLS(RecordCanceledItemConstruction);
+    `LWCE_LOG_DEPRECATED_NOREPLACE_CLS(RecordCanceledItemConstruction);
+
     return "";
-}
-
-function string LWCE_RecordCanceledItemConstruction(LWCE_TItemProject Project)
-{
-    local string OutputString;
-
-    OutputString = GEOSCAPE().m_kDateTime.GetDateString() @ GEOSCAPE().m_kDateTime.GetTimeString() @ ": Canceled construction of " $ `LWCE_ITEM(Project.iItemId).strName $ " x" $ string(Project.iQuantity) $ "\n";
-    return OutputString;
 }
 
 function string RecordItemsBuilt(EItemType ItemType, int ItemQuantity)
 {
-    `LWCE_LOG_DEPRECATED_CLS(RecordItemsBuilt);
+    `LWCE_LOG_DEPRECATED_NOREPLACE_CLS(RecordItemsBuilt);
+
     return "";
-}
-
-function string LWCE_RecordItemsBuilt(int iItemId, int ItemQuantity)
-{
-    local string OutputString;
-
-    OutputString = GEOSCAPE().m_kDateTime.GetDateString() @ GEOSCAPE().m_kDateTime.GetTimeString() @ ": Built " $ string(ItemQuantity) $ " items of type " $ `LWCE_ITEM(iItemId).strName $ "\n";
-    return OutputString;
 }
 
 function RemoveItemProject(int iIndex)
 {
     local int iProject;
 
+    `LWCE_LOG_CLS("Removing item project at index " $ iIndex);
     RemoveItemProjectFromQueue(iIndex);
     m_arrCEItemProjects.Remove(iIndex, 1);
 
@@ -1025,30 +1440,14 @@ function RestoreItemFunds(int iIndex)
         kOrigCost = LWCE_GetItemProjectCost(m_arrCEItemProjects[iIndex].iItemId, m_arrCEItemProjects[iIndex].iQuantityLeft, m_arrCEItemProjects[iIndex].bRush);
     }
 
-    if (!WorldInfo.IsConsoleBuild(CONSOLE_Xbox360) && !WorldInfo.IsConsoleBuild(CONSOLE_PS3))
-    {
-        GetRecapSaveData().RecordEvent(LWCE_RecordCanceledItemConstruction(m_arrCEItemProjects[iIndex]));
-    }
-
     PayCost(kOrigCost);
 }
 
 function string RecordStartedItemConstruction(TItemProject Project)
 {
-    `LWCE_LOG_DEPRECATED_CLS(RecordStartedItemConstruction);
+    `LWCE_LOG_DEPRECATED_NOREPLACE_CLS(RecordStartedItemConstruction);
+
     return "";
-}
-
-function string LWCE_RecordStartedItemConstruction(LWCE_TItemProject Project)
-{
-    local string OutputString;
-
-    if (Project.iHoursLeft > 0)
-    {
-        OutputString = GEOSCAPE().m_kDateTime.GetDateString() @ GEOSCAPE().m_kDateTime.GetTimeString() @ ": Started construction of " $ `LWCE_ITEM(Project.iItemId).strName $ " x" $ string(Project.iQuantity) $ "\n";
-    }
-
-    return OutputString;
 }
 
 function UpdateItemProject()
@@ -1111,6 +1510,14 @@ function UpdateItemProject()
     SpillAvailableEngineers();
 }
 
+// #endregion
+
+// #region Miscellaneous functions
+
+function OnAlloyProjectCompleted(int iProject)
+{
+    `LWCE_LOG_DEPRECATED_NOREPLACE_CLS(OnAlloyProjectCompleted);
+}
 
 function bool UrgeBuildMEC()
 {

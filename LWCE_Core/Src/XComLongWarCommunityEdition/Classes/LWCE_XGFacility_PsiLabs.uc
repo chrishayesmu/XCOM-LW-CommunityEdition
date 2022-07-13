@@ -1,4 +1,5 @@
-class LWCE_XGFacility_PsiLabs extends XGFacility_PsiLabs;
+class LWCE_XGFacility_PsiLabs extends XGFacility_PsiLabs
+    dependson(LWCETypes);
 
 struct LWCE_TPsiTrainee
 {
@@ -45,7 +46,7 @@ function Update()
     {
         m_bAnnouncedResults = true;
         BARRACKS().ReorderRanks();
-        GEOSCAPE().Alert(GEOSCAPE().MakeAlert(eGA_PsiTraining));
+        LWCE_XGGeoscape(GEOSCAPE()).LWCE_Alert(`LWCE_ALERT('PsiTraining').Build());
     }
 
     foreach BARRACKS().m_arrSoldiers(kSoldier)
@@ -152,11 +153,6 @@ function DetermineGift(int iTrainee)
             }
         }
 
-        if (!WorldInfo.IsConsoleBuild(CONSOLE_Xbox360) && !WorldInfo.IsConsoleBuild(CONSOLE_PS3))
-        {
-            GetRecapSaveData().RecordEvent(RecordSoldierHasGift(m_arrCETraining[iTrainee].kSoldier));
-        }
-
         STAT_AddStat(18, 1);
     }
     else
@@ -170,8 +166,13 @@ function DetermineGift(int iTrainee)
 
 function GetEvents(out array<THQEvent> arrEvents)
 {
+    `LWCE_LOG_DEPRECATED_CLS(GetEvents);
+}
+
+function LWCE_GetEvents(out array<LWCE_THQEvent> arrEvents)
+{
     local int iTrainTime, iEvent;
-    local THQEvent kEvent;
+    local LWCE_THQEvent kEvent;
     local bool bAdded;
     local array<int> arrEventTimes;
     local LWCE_TPsiTrainee kTrainee;
@@ -186,9 +187,9 @@ function GetEvents(out array<THQEvent> arrEvents)
 
     for (iTrainTime = 0; iTrainTime < arrEventTimes.Length; iTrainTime++)
     {
-        kEvent.EEvent = eHQEvent_PsiTraining;
-        kEvent.iData = 0;
+        kEvent.EventType = 'PsiTraining';
         kEvent.iHours = arrEventTimes[iTrainTime];
+
         bAdded = false;
 
         for (iEvent = 0; iEvent < arrEvents.Length; iEvent++)

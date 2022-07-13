@@ -235,6 +235,188 @@ function AddNewTerrors(int iNumTerrors, int StartOfMonthResources)
     }
 }
 
+function XGAlienObjective AIAddNewObjective(EAlienObjective eObjective, int iStartDate, Vector2D v2Target, int iCountry, optional int iCity = -1, optional EShipType eUFO = eShip_None)
+{
+    local XGAlienObjective kObjective;
+
+    kObjective = Spawn(class'LWCE_XGAlienObjective');
+    kObjective.Init(m_arrTObjectives[eObjective], iStartDate, v2Target, iCountry, iCity, eUFO);
+    m_arrObjectives.AddItem(kObjective);
+
+    return kObjective;
+}
+
+function ApplyMissionPanic(XGMission kMission, bool bXComSuccess, optional bool bExpired, optional bool bDontApplyToContinent)
+{
+    local XGCountry kCountry;
+    local XGContinent kContinent;
+    local TContinentResult kResultContinent;
+    local TCountryResult kResultCountry;
+    local int iCountryPanic, iContPanic;
+
+    switch (Game().GetDifficulty())
+    {
+        case 0:
+            iCountryPanic = class'XGTacticalGameCore'.default.PANIC_ABDUCTION_COUNTRY_EASY;
+            iContPanic = class'XGTacticalGameCore'.default.PANIC_ABDUCTION_CONTINENT_EASY;
+            break;
+        case 1:
+            iCountryPanic = class'XGTacticalGameCore'.default.PANIC_ABDUCTION_COUNTRY_NORMAL;
+            iContPanic = class'XGTacticalGameCore'.default.PANIC_ABDUCTION_CONTINENT_NORMAL;
+            break;
+        case 2:
+            iCountryPanic = class'XGTacticalGameCore'.default.PANIC_ABDUCTION_COUNTRY_HARD;
+            iContPanic = class'XGTacticalGameCore'.default.PANIC_ABDUCTION_CONTINENT_HARD;
+            break;
+        case 3:
+            iCountryPanic = class'XGTacticalGameCore'.default.PANIC_ABDUCTION_COUNTRY_CLASSIC;
+            iContPanic = class'XGTacticalGameCore'.default.PANIC_ABDUCTION_CONTINENT_CLASSIC;
+            break;
+    }
+
+    if (kMission.GetCountry() != -1)
+    {
+        kCountry = Country(kMission.GetCountry());
+    }
+
+    kContinent = kMission.GetContinent();
+
+    switch (kMission.m_iMissionType)
+    {
+        case eMission_Abduction:
+            kContinent.m_kMonthly.iAbductions += 1;
+            kResultContinent.eContinentAffected = EContinent(kContinent.GetID());
+            kResultCountry.eCountryAffected = ECountry(kCountry.GetID());
+
+            if (bXComSuccess)
+            {
+                kResultContinent.iPanicChange = class'XGTacticalGameCore'.default.PANIC_ABDUCTION_THWARTED_CONTINENT;
+                kResultCountry.iPanicChange = Max(-kCountry.m_iPanic, class'XGTacticalGameCore'.default.PANIC_ABDUCTION_THWARTED_COUNTRY);
+                kContinent.m_kMonthly.iAbductionsThwarted += 1;
+            }
+            else
+            {
+                kResultContinent.iPanicChange = iContPanic;
+                kResultCountry.iPanicChange = iCountryPanic;
+                kContinent.RecordCountryNotHelped(ECountry(kMission.GetCountry()));
+            }
+
+            if (kResultContinent.iPanicChange != 0 && !bDontApplyToContinent)
+            {
+                kContinent.AddPanic(kResultContinent.iPanicChange);
+                HQ().m_kLastResult.arrContinentResults.AddItem(kResultContinent);
+            }
+
+            if (kResultCountry.iPanicChange != 0)
+            {
+                HQ().m_kLastResult.arrCountryResults.AddItem(kResultCountry);
+                kCountry.AddPanic(kResultCountry.iPanicChange);
+            }
+
+            break;
+        case eMission_TerrorSite:
+            kContinent.m_kMonthly.iTerror += 1;
+            kResultContinent.eContinentAffected = EContinent(kContinent.GetID());
+            kResultCountry.eCountryAffected = ECountry(kCountry.GetID());
+
+            if (kCountry.m_bSecretPact) // Country is not part of XCOM
+            {
+                if (!bXComSuccess)
+                {
+                    kResultContinent.iPanicChange = class'XGTacticalGameCore'.default.PANIC_TERROR_CONTINENT;
+                }
+                else
+                {
+                    kResultContinent.iPanicChange = class'XGTacticalGameCore'.default.UFO_LIMIT * (HQ().m_kLastResult.iCiviliansTotal - HQ().m_kLastResult.iCiviliansSaved);
+                }
+            }
+            else
+            {
+                if (bXComSuccess)
+                {
+                    kResultCountry.bLeftXCom = CalcTerrorMissionPanicResult(kResultCountry.iPanicChange, kResultContinent.iPanicChange);
+                    kResultCountry.iPanicChange = Max(-kCountry.m_iPanic, kResultCountry.iPanicChange);
+
+                    if (!kResultCountry.bLeftXCom)
+                    {
+                        kContinent.m_kMonthly.iTerrorThwarted += 1;
+                    }
+                }
+                else if (!kResultCountry.bLeftXCom)
+                {
+                    kResultContinent.iPanicChange = class'XGTacticalGameCore'.default.PANIC_TERROR_CONTINENT;
+                    kResultCountry.iPanicChange = class'XGTacticalGameCore'.default.PANIC_TERROR_COUNTRY;
+                    kResultCountry.bLeftXCom = true;
+                    kContinent.RecordCountryNotHelped(ECountry(kMission.GetCountry()));
+                }
+
+                if (kResultCountry.iPanicChange != 0)
+                {
+                    HQ().m_kLastResult.arrCountryResults.AddItem(kResultCountry);
+
+                    if (!kResultCountry.bLeftXCom)
+                    {
+                        kCountry.AddPanic(kResultCountry.iPanicChange);
+                    }
+                }
+
+                if (kResultCountry.bLeftXCom)
+                {
+                    kCountry.LeaveXComProject();
+                    LWCE_XGGeoscape(GEOSCAPE()).LWCE_Alert(`LWCE_ALERT('SecretPact').AddInt(kMission.GetCountry()).Build());
+                }
+            }
+
+            if (kResultContinent.iPanicChange != 0)
+            {
+                kContinent.AddPanic(kResultContinent.iPanicChange);
+                HQ().m_kLastResult.arrContinentResults.AddItem(kResultContinent);
+            }
+
+            break;
+        case eMission_AlienBase:
+            if (bXComSuccess)
+            {
+                RestoreCountryToXCom(kCountry.GetID());
+                kCountry.m_iPanic = 98;
+                kCountry.AddPanic(class'XGTacticalGameCore'.default.PANIC_ALIENBASE_CONQUERED_CLASSIC_AND_IMPOSSIBLE);
+
+                if (HQ().HasBonus(`LW_HQ_BONUS_ID(IndependenceDay)) > 0)
+                {
+                    kCountry.AddPanic(-1 * HQ().HasBonus(`LW_HQ_BONUS_ID(IndependenceDay)));
+                }
+
+                Continent(kCountry.GetContinent()).AddPanic(class'XGTacticalGameCore'.default.PANIC_ALIENBASE_CONQUERED);
+            }
+
+            break;
+        case eMission_ExaltRaid:
+            if (Game().GetDifficulty() == 2 || Game().GetDifficulty() == 3)
+            {
+                HQ().m_kLastResult.iWorldPanicChange = class'XGTacticalGameCore'.default.PANIC_EXALT_RAIDED_CLASSIC_AND_IMPOSSIBLE;
+            }
+            else
+            {
+                HQ().m_kLastResult.iWorldPanicChange = class'XGTacticalGameCore'.default.PANIC_EXALT_RAIDED;
+            }
+
+            World().AddPanic(HQ().m_kLastResult.iWorldPanicChange);
+            break;
+        case 4:
+            if (kMission.m_kDesc.m_strMapName == "EWI_HQAssault_MP (Airbase Defense)")
+            {
+                if (!bXComSuccess || bExpired)
+                {
+                    STAT_SetStat(103, kContinent.GetID()); // Hacked way to pass the continent ID to ChooseUFOMissionType
+                    iCountryPanic = ChooseUFOMissionType(0);
+                    LWCE_XGGeoscape(GEOSCAPE()).LWCE_Alert(`LWCE_ALERT('AirBaseDefenseFailed').AddInt(kContinent.GetID()).Build());
+                }
+            }
+
+            break;
+    }
+}
+
 /**
  * Calculates the change in panic after a terror mission for both the country and continent.
  * Returns true if the country should leave the XCOM Project after this mission, false if not.
@@ -300,6 +482,12 @@ function bool CalcTerrorMissionPanicResult(out int iCountryPanicChange, out int 
     }
 
     return false;
+}
+
+function CostTest()
+{
+    `LWCE_LOG_CLS("ERROR: LWCE-incompatible function CostTest was called. This needs to be replaced with RestoreCountryToXCom. Stack trace follows.");
+    ScriptTrace();
 }
 
 function XGMission CreateTempleMission()
@@ -487,11 +675,6 @@ function XGMission CreateFirstMission()
     local TFCMission kMeldData;
     local ECountry MeldCountry;
 
-    if (ISCONTROLLED())
-    {
-        return CreateFirstMission_Controlled();
-    }
-
     if (`HQGAME.GetGameCore().m_bMeldTutorial)
     {
         MeldCountry = ECountry(Continent(HQ().GetContinent()).GetRandomCouncilCountry());
@@ -663,7 +846,8 @@ function LaunchBlitz(array<ECityType> arrTargetCities, optional bool bFirstBlitz
     local array<EMissionRewardType> arrRewards;
     local EMissionRewardType eReward;
     local EMissionDifficulty eDiff;
-    local TGeoscapeAlert kAlert;
+    local LWCE_TGeoscapeAlert kAlert;
+    local LWCE_TData kData;
     local bool bMissionAdded;
     local int I, iIndex;
 
@@ -704,47 +888,135 @@ function LaunchBlitz(array<ECityType> arrTargetCities, optional bool bFirstBlitz
         DetermineAbductionReward(kMission.m_kReward, eDiff, eReward);
         kMission.m_iDetectedBy = 0;
 
-        if (ISCONTROLLED() && Game().GetNumMissionsTaken() == 1)
-        {
-            kMission.m_bScripted = true;
-            kMission.m_kDesc.m_bScripted = true;
-            kMission.m_kDesc.m_bIsTutorial = true;
-            kMission.m_kDesc.m_bAllowedMissionAbort = false;
-
-            if (kMission.m_iContinent == 0)
-            {
-                kMission.m_kReward.iEngineers = 0;
-                kMission.m_kReward.iScientists = int(class'XGTacticalGameCore'.default.ABDUCTION_REWARD_SCI);
-                kMission.m_kReward.iCredits = 0;
-                kMission.m_kDesc.m_strMapName = "URB_PierA_Rescue Tutorial 2 (Abduction) Pier";
-                kMission.m_kDesc.m_strMapCommand = class'XComMapManager'.static.GetMapCommandLine(kMission.m_kDesc.m_strMapName, true, true, kMission.m_kDesc);
-            }
-            else
-            {
-                kMission.m_kReward.iEngineers = 0;
-                kMission.m_kReward.iScientists = 0;
-                kMission.m_kReward.iCredits = int(class'XGTacticalGameCore'.default.ABDUCTION_REWARD_CASH);
-                kMission.m_kDesc.m_strMapName = "URB_PierA_Rescue Tutorial 2 (Abduction) Pier Asia";
-                kMission.m_kDesc.m_strMapCommand = class'XComMapManager'.static.GetMapCommandLine(kMission.m_kDesc.m_strMapName, true, true, kMission.m_kDesc);
-            }
-
-            kMission.m_kDesc.m_iMissionType = eMission_Special;
-        }
-
         GEOSCAPE().AddMission(kMission);
 
         if (kMission.m_iID >= 0)
         {
             bMissionAdded = true;
-            kAlert.arrData.AddItem(kMission.m_iID);
+
+            kData.eType = eDT_Int;
+            kData.iData = kMission.m_iID;
+
+            kAlert.arrData.AddItem(kData);
         }
     }
 
-    kAlert.eType = eGA_Abduction;
+    kAlert.AlertType = 'Abduction';
 
     if (bMissionAdded)
     {
-        GEOSCAPE().Alert(kAlert);
+        LWCE_XGGeoscape(GEOSCAPE()).LWCE_Alert(kAlert);
+    }
+}
+
+function OnSatelliteDestroyed(int iCountry)
+{
+    local XGContinent kContinent;
+    local XGCountry kCountry;
+    local XGShip_UFO kUFO;
+
+    HQ().RemoveSatellite(iCountry);
+    LWCE_XGGeoscape(GEOSCAPE()).LWCE_Alert(`LWCE_ALERT('SatelliteDestroyed').AddInt(iCountry).Build());
+
+    kCountry = Country(iCountry);
+    kContinent = Continent(kCountry.GetContinent());
+    kContinent.AddPanic(class'XGTacticalGameCore'.default.PANIC_SAT_DESTROYED_CONTINENT);
+    kCountry.AddPanic(class'XGTacticalGameCore'.default.PANIC_SAT_DESTROYED_COUNTRY);
+
+    kContinent.m_kMonthly.iSatellitesLost += 1;
+    m_kResistance.arrCountries[iCountry] = 0;
+    m_kResistance.arrNoResistance[iCountry] = 0;
+
+    STAT_AddStat(eRecap_SatellitesLost, 1);
+
+    // Clear detection status of all UFOs, then redo it based on current satellites
+    foreach m_arrUFOs(kUFO)
+    {
+        kUFO.m_iDetectedBy = -1;
+        kUFO.SetDetection(GEOSCAPE().DetectUFO(kUFO));
+    }
+}
+
+function OnUFODestroyed(XGShip_UFO kUFO)
+{
+    local bool bHasAlienMetallurgy;
+
+    bHasAlienMetallurgy = LWCE_XGFacility_Engineering(ENGINEERING()).LWCE_IsFoundryTechResearched('Foundry_AlienMetallurgy');
+    m_iTerrorCounter = kUFO.m_kTShip.eType;
+
+    // Give cash/alloys based on what UFO type was shot down
+    // (Foundry tech 25 is Alien Metallurgy)
+    switch (m_iTerrorCounter)
+    {
+        case eShip_UFOSmallScout: // Scout
+        case 10:                  // Fighter
+            AddResource(eResource_Money, 100);
+            AddResource(eResource_Alloys, 1 + Rand(ITEMTREE().Alloys(class'XGTacticalGameCore'.default.UFOAlloys[0]) / (bHasAlienMetallurgy ? 3 : 5)));
+            break;
+        case eShip_UFOLargeScout: // Destroyer
+        case 11:                  // Raider
+            AddResource(eResource_Money, 200);
+            AddResource(eResource_Alloys, 1 + Rand(ITEMTREE().Alloys(class'XGTacticalGameCore'.default.UFOAlloys[1]) / (bHasAlienMetallurgy ? 3 : 5)));
+            break;
+        case eShip_UFOAbductor: // Abductor
+        case 12:                // Harvester
+            AddResource(eResource_Money, 300);
+            AddResource(eResource_Alloys, 1 + Rand(ITEMTREE().Alloys(class'XGTacticalGameCore'.default.UFOAlloys[2]) / (bHasAlienMetallurgy ? 3 : 5)));
+            break;
+        case eShip_UFOSupply: // Transport
+        case 13:              // Terror Ship
+            AddResource(eResource_Money, 500);
+            AddResource(eResource_Alloys, 1 + Rand(ITEMTREE().Alloys(class'XGTacticalGameCore'.default.UFOAlloys[3]) / (bHasAlienMetallurgy ? 3 : 5)));
+            break;
+        case eShip_UFOBattle: // Battleship
+        case 14:              // Assault Carrier
+            AddResource(eResource_Money, 750);
+            AddResource(eResource_Alloys, 1 + Rand(ITEMTREE().Alloys(class'XGTacticalGameCore'.default.UFOAlloys[4]) / (bHasAlienMetallurgy ? 3 : 5)));
+            break;
+        case eShip_UFOEthereal: // Overseer
+            AddResource(eResource_Money, 500);
+            AddResource(eResource_Alloys, 1 + Rand(ITEMTREE().Alloys(class'XGTacticalGameCore'.default.UFOAlloys[5]) / (bHasAlienMetallurgy ? 3 : 5)));
+            break;
+    }
+
+    STAT_AddStat(eRecap_UFOsShotDown, 1);
+    Country(kUFO.GetCountry()).AddPanic(class'XGTacticalGameCore'.default.PANIC_UFO_SHOOTDOWN);
+    Continent(kUFO.GetContinent()).RecordCountryHelped(ECountry(kUFO.GetCountry()));
+    kUFO.m_kObjective.NotifyOfCrash(kUFO);
+    STAT_AddProfileStat(eProfile_UFOsShotDown, 1);
+
+    if (STAT_GetProfileStat(eProfile_UFOsShotDown) >= 40)
+    {
+        Achieve(AT_ShootingStars);
+    }
+
+    SITROOM().PushNarrativeHeadline(eTickerNarrative_UFOShotDown);
+    m_arrUFOsShotDown[kUFO.m_kTShip.eType] += 1;
+    RemoveUFO(kUFO);
+}
+
+function OnUFOShotDown(XGShip_Interceptor kJet, XGShip_UFO kUFO)
+{
+    kUFO.m_kObjective.NotifyOfCrash(kUFO);
+    DetermineCrashLoot(kUFO, EShipWeapon(LWCE_XGFacility_Hangar(HANGAR()).LWCE_ItemTypeToShipWeapon(kJet.GetWeapon())));
+    AIAddNewMission(eMission_Crash, kUFO);
+    STAT_AddStat(eRecap_UFOsShotDown, 1);
+    STAT_AddProfileStat(eProfile_UFOsShotDown, 1);
+
+    if (STAT_GetProfileStat(eProfile_UFOsShotDown) >= 40)
+    {
+        Achieve(AT_ShootingStars);
+    }
+
+    Country(kUFO.GetCountry()).AddPanic(class'XGTacticalGameCore'.default.PANIC_UFO_SHOOTDOWN);
+    Continent(kUFO.GetContinent()).RecordCountryHelped(ECountry(kUFO.GetCountry()));
+    Achieve(AT_TablesTurned);
+    SITROOM().PushNarrativeHeadline(eTickerNarrative_UFOShotDown);
+    m_arrUFOsShotDown[kUFO.m_kTShip.eType] += 1;
+
+    if (CheckForHunterKiller())
+    {
+        Achieve(AT_HunterKiller);
     }
 }
 
@@ -808,6 +1080,51 @@ function bool PickMissionPlan(int Month, int Resources, int Threat, out LWCE_AIM
 
     `LWCE_LOG("Selected mission plan at index " $ Index);
     return true;
+}
+
+/// <summary>
+/// Returns a country to the XCOM Project, as after a successful alien base assault.
+/// </summary>
+function RestoreCountryToXCom(int iCountryId)
+{
+    local XGCountry kCountry;
+
+    kCountry = Country(iCountryId);
+    kCountry.m_bSecretPact = false;
+
+    World().m_iNumCountriesLost -= 1;
+    STAT_AddStat(eRecap_CountriesLost, -1);
+
+    if (kCountry.HasSatelliteCoverage())
+    {
+        Continent(kCountry.GetContinent()).SetSatelliteCoverage(iCountryId, true);
+    }
+
+    kCountry.BeginPaying();
+
+    if (kCountry.GetEntity() != none)
+    {
+        kCountry.HideEntity(true);
+        kCountry.GetEntity().Destroy();
+    }
+
+    LWCE_XGGeoscape(GEOSCAPE()).LWCE_Alert(`LWCE_ALERT('CountryRejoinedXCom').AddInt(1).Build());
+
+    // Reduce alien bonus research by 15
+    STAT_AddStat(2, -15);
+}
+
+function SignPact(XGShip_UFO kUFO, int iCountry)
+{
+    local XGCountry kCountry;
+
+    kCountry = Country(iCountry);
+
+    if (!kCountry.m_bSecretPact)
+    {
+        kCountry.SignPact();
+        LWCE_XGGeoscape(GEOSCAPE()).LWCE_Alert(`LWCE_ALERT('SecretPact').AddInt(iCountry).Build());
+    }
 }
 
 protected function int DetermineCrashedUFOMissionTimer(XGShip_UFO kUFO)

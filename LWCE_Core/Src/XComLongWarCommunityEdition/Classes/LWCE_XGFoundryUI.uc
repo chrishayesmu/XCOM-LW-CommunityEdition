@@ -1,36 +1,46 @@
 class LWCE_XGFoundryUI extends XGFoundryUI
     dependson(LWCETypes);
 
-var array<LWCE_TFoundryTech> m_arrCETechs;
+var array<LWCEFoundryProjectTemplate> m_arrCEAvailableTechs;
 
-function TObjectSummary LWCE_BuildSummary(LWCE_TFoundryTech kFoundryTech)
+function TObjectSummary LWCE_BuildSummary(LWCEFoundryProjectTemplate kFoundryTech)
 {
+    local LWCE_XGFacility_Engineering kEngineering;
+    local LWCE_XGFacility_Labs kLabs;
+    local LWCE_XGTechTree kTechTree;
     local TObjectSummary kSummary;
     local XGParamTag kTag;
-    local int I;
+    local int Index;
+    local name CreditName;
+
+    kEngineering = LWCE_XGFacility_Engineering(ENGINEERING());
+    kLabs = LWCE_XGFacility_Labs(LABS());
+    kTechTree = LWCE_XGTechTree(TECHTREE());
 
     kSummary.imgObject.iImage = 0;
     kSummary.imgObject.strPath = kFoundryTech.ImagePath;
-    kSummary.txtSummary.StrValue = kFoundryTech.strSummary;
+    kSummary.txtSummary.StrValue = kFoundryTech.m_strSummary;
     kSummary.txtRequirementsLabel.StrValue = m_strLabelProjectCost;
 
-    if (ENGINEERING().IsFoundryTechResearched(kFoundryTech.iTechId))
+    if (kEngineering.LWCE_IsFoundryTechResearched(kFoundryTech.GetProjectName()))
     {
         kSummary.txtRequirementsLabel.StrValue = m_strLabelProjectCompleted;
         kSummary.txtRequirementsLabel.iState = eUIState_Good;
     }
     else
     {
-        kSummary.bCanAfford = ENGINEERING().GetFoundryCostSummary(kSummary.kCost, kFoundryTech.iTechId, false, false);
+        kSummary.bCanAfford = kEngineering.LWCE_GetFoundryCostSummary(kSummary.kCost, kFoundryTech.GetProjectName(), false, false);
         kTag = XGParamTag(XComEngine(class'Engine'.static.GetEngine()).LocalizeContext.FindTag("XGParam"));
 
-        for (I = 0; I < 10; I++)
+        for (Index = 0; Index < kFoundryTech.arrCreditsApplied.Length; Index++)
         {
-            if (LABS().HasResearchCredit(EResearchCredits(I)) && LWCE_XGTechTree(TECHTREE()).LWCE_CreditAppliesToFoundryTech(I, kFoundryTech.iTechId))
+            CreditName = kFoundryTech.arrCreditsApplied[Index];
+
+            if (kLabs.LWCE_HasResearchCredit(CreditName))
             {
-                kTag.StrValue0 = class'XGLocalizedData'.default.ResearchCreditNames[I];
-                kTag.IntValue0 = TECHTREE().GetResearchCredit(EResearchCredits(I)).iBonus;
-                kSummary.txtSummary.StrValue $= ("\n" $ class'XComLocalizer'.static.ExpandString(m_strResearchCreditApplies));
+                kTag.StrValue0 = `LWCE_UTILS.GetResearchCreditFriendlyName(CreditName);
+                kTag.IntValue0 = kTechTree.LWCE_GetResearchCredit(CreditName).iBonus;
+                kSummary.txtSummary.StrValue $= "\n" $ class'XComLocalizer'.static.ExpandString(m_strResearchCreditApplies);
             }
         }
     }
@@ -38,31 +48,34 @@ function TObjectSummary LWCE_BuildSummary(LWCE_TFoundryTech kFoundryTech)
     return kSummary;
 }
 
-function TTableMenuOption LWCE_BuildTableItem(LWCE_TFoundryTech kFoundryTech)
+function TTableMenuOption LWCE_BuildTableItem(LWCEFoundryProjectTemplate kFoundryTech)
 {
     local TTableMenuOption kOption;
 
-    kOption.arrStrings[0] = kFoundryTech.strName;
+    kOption.arrStrings[0] = kFoundryTech.m_strName;
     kOption.arrStates[0] = eUIState_Normal;
     return kOption;
 }
 
 function UpdateTableMenu()
 {
-    local array<LWCE_TFoundryTech> arrCompletedTech;
+    local array<LWCEFoundryProjectTemplate> arrCompletedTech;
+    local LWCEFoundryProjectTemplate kTemplate;
     local TFoundryTable kTable;
     local TTableMenu kTableMenu;
     local TTableMenuOption kOption;
     local TObjectSummary kSummary;
     local int iMenuItem;
 
-    kTableMenu.arrCategories.AddItem(2);
-    m_arrCETechs = LWCE_XGTechTree(TECHTREE()).LWCE_GetAvailableFoundryTechs();
+    m_arrCEAvailableTechs = LWCE_XGTechTree(TECHTREE()).LWCE_GetAvailableFoundryTechs();
 
-    for (iMenuItem = 0; iMenuItem < m_arrCETechs.Length; iMenuItem++)
+    kTableMenu.arrCategories.AddItem(2);
+
+    for (iMenuItem = 0; iMenuItem < m_arrCEAvailableTechs.Length; iMenuItem++)
     {
-        kOption = LWCE_BuildTableItem(m_arrCETechs[iMenuItem]);
-        kSummary = LWCE_BuildSummary(m_arrCETechs[iMenuItem]);
+        kTemplate = m_arrCEAvailableTechs[iMenuItem];
+        kOption = LWCE_BuildTableItem(kTemplate);
+        kSummary = LWCE_BuildSummary(kTemplate);
 
         if (!kSummary.bCanAfford)
         {
@@ -102,9 +115,9 @@ function PerformTableTransaction(int iTableOption)
         return;
     }
 
-    if (iTableOption < m_arrCETechs.Length)
+    if (iTableOption < m_arrCEAvailableTechs.Length)
     {
-        PRES().UIManufactureFoundry(m_arrCETechs[iTableOption].iTechId, -1);
+        `LWCE_HQPRES.LWCE_UIManufactureFoundry(m_arrCEAvailableTechs[iTableOption].GetProjectName(), -1);
         UpdateView();
     }
 }

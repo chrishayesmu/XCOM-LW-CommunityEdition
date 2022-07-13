@@ -1,5 +1,9 @@
 class LWCE_UIMissionControl_CountryPanicAlert extends UIMissionControl_CountryPanicAlert;
 
+`include(generators.uci)
+
+`LWCE_GENERATOR_ALERTBASE
+
 simulated function XGMissionControlUI GetMgr(optional int iStaringView = -1)
 {
     if (m_kLocalMgr == none)
@@ -8,4 +12,17 @@ simulated function XGMissionControlUI GetMgr(optional int iStaringView = -1)
     }
 
     return m_kLocalMgr;
+}
+
+simulated function OnInit()
+{
+    local LWCE_TMCAlert kAlertData;
+
+    kAlertData = LWCE_XGMissionControlUI(GetMgr()).m_kCECurrentAlert;
+
+    super(UIMissionControl_AlertBase).OnInit();
+
+    AS_SetCountryImageLabel(class'UIUtilities'.static.GetCountryLabel(kAlertData.imgAlert.iImage));
+    AS_SetPanicLevel(Caps(kAlertData.arrText[1].StrValue), kAlertData.iNumber);
+    XComEngine(class'Engine'.static.GetEngine()).SetAlienFXColor(eAlienFX_Red);
 }

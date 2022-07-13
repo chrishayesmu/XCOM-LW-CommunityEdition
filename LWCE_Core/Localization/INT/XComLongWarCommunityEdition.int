@@ -597,3 +597,654 @@ strIntro="<XGCountry:NameAdjective/> engineers have been clamoring to get their 
 strCompletion="Reports of <XGCountry:NameAdjective/> forces having new advanced weapons on the battlefield are starting to crop up.\n<XGCountry:NameWithArticleUpperCase/> is now better able to defend itself against the alien threat."
 strTickerSuccess="Images of <XGCountry:NameAdjective/> soldiers going into battle with advanced alien weaponry posted on Internet"
 strTickerIgnore="<XGCountry:NameAdjective/> troops continually outgunned by invading alien forces"
+
+
+[Foundry_AdvancedFlight LWCEFoundryProjectTemplate]
+strName="Advanced Flight"
+strSummary="We believe that we can improve the small system flight capabilities of our flying armor and the Hover SHIV designs, considerably increasing their maximum flight time in combat."
+
+[Foundry_AdvancedRepair LWCEFoundryProjectTemplate]
+strName="Advanced Repair"
+strSummary="As our understanding of alien materials grows, we believe that we can develop processes that would reduce the repair times of our fighter craft, MECs, SHIV units and damaged soldier gear by about one-third."
+
+[Foundry_AdvancedServomotors LWCEFoundryProjectTemplate]
+strName="Advanced Servomotors"
+strSummary="After a thorough examination, we've been able to replicate the articulated joints of the Mechtoid. We have some designs for gear that will improve mobility for our soldiers and mechanized units, although they may require we understand some other technologies first."
+
+[Foundry_AdvancedSurgery LWCEFoundryProjectTemplate]
+strName="Advanced Surgery"
+strSummary="We think we can adapt some of the aliens' biological research systems into designs that will aid the rapid healing of our personnel."
+
+[Foundry_AircraftBoosters LWCEFoundryProjectTemplate]
+strName="Aircraft Boosters"
+strSummary="Our initial investigation into alien materials have given us some ideas to build some one-time 'boosters' for our combat aircraft."
+
+[Foundry_AlienGrenades LWCEFoundryProjectTemplate]
+strName="Alien Grenades"
+strSummary="We've had a look at an intact alien grenade you recovered, and with a small investment of resources and time we believe that we can upgrade some of our current HE grenades to this new, deadlier version. We should also be able to apply some alloy shards to our current stock of AP grenades, rendering them even more lethal than alien grenades, and to another batch of HE grenades, increasing their area of effect by 40%."
+
+[Foundry_AlienMetallurgy LWCEFoundryProjectTemplate]
+strName="Alien Metallurgy"
+strSummary="Now that we have some understanding of these wonderous alien materials, we believe we can use Meld to develop techniques to extract an additional 20 percent more alien alloys from what our salvage teams bring back from ground missions and UFO debris fields."
+
+[Foundry_AlienNucleonics LWCEFoundryProjectTemplate]
+strName="Alien Nucleonics"
+strSummary="Based on our studies of the alien power systems, we believe we can use meld to increase the efficiency by which we extract elerium from alien power sources and wrecks by 20 percent. Unfortunately, this will be a very resource-intensive project that threatens to deplete our stores of other artifacts."
+
+[Foundry_AmmoConservation LWCEFoundryProjectTemplate]
+strName="Ammo Conservation"
+strSummary="Muton armor contains servomotors that function as automatic weapon loaders, allowing their weapons to carry more ammunition without requiring the soldier to pause for a full reload. We could apply some of the same techniques to our own weapons."
+
+[Foundry_ArmoredFighters LWCEFoundryProjectTemplate]
+strName="Armored Fighters"
+strSummary="We have learned techniques to convert alien alloys into thin, malleable sheets that we can apply to all of our fighter aircraft without reducing their performance. These should give our aircraft significantly more durability in combat."
+
+[Foundry_DroneCapture LWCEFoundryProjectTemplate]
+strName="Drone Capture"
+strSummary="We're confident that our Arc Throwers could be upgraded to allow the capture of enemy drones, giving us control of the flying units for the remainder of the combat mission. However, we have not been able to take control of their repair function, which will be disabled."
+
+[Foundry_EleriumAfterburners LWCEFoundryProjectTemplate]
+strName="Elerium Afterburners"
+strSummary="By directly injecting an Elerium particle stream into the exhaust of our aircraft engines, we can give short bursts of speed that will increase our engagement times with alien craft."
+
+[Foundry_EnhancedBallistics LWCEFoundryProjectTemplate]
+strName="Enhanced Ballistics"
+strSummary="We believe we can upgrade our ballistic small arms through combining alien materials with our own technologies."
+
+[Foundry_EnhancedLasers LWCEFoundryProjectTemplate]
+strName="Enhanced Lasers"
+strSummary="Now that we can produce high output laser weapons, we believe we can develop improvements to those weapons."
+
+[Foundry_EnhancedPlasma LWCEFoundryProjectTemplate]
+strName="Enhanced Plasma"
+strSummary="Now that we understand the challenges of controlling plasma weaponry, we should be able to develop enhancements through investigating various plasma confinement ideas. We expect to be able to make all our plasma, reflex and particle weapons do more damage to enemies, and build optional weapon addons that enhance the weapons' damage capabilities even further."
+
+[Foundry_FieldRepairs LWCEFoundryProjectTemplate]
+strName="Field Repairs"
+strSummary="After studying one of the small alien drone units, we believe that we could upgrade our Arc Throwers with the drone's 'robotic repair' ability, allowing our soldiers to repair mechanized units in combat."
+
+[Foundry_ImprovedArcThrower LWCEFoundryProjectTemplate]
+strName="Improved Arc Thrower"
+strSummary="By increasing the power of our Arc Throwers, we should increase the successful stun rate in combat."
+
+[Foundry_ImprovedAvionics LWCEFoundryProjectTemplate]
+strName="Improved Avionics"
+strSummary="Based on our analysis of UFO behavior, we think we've identified some signatures that our aircraft can track when in weapons range. We believe we can improve all our aircraft weapons' accuracy."
+
+[Foundry_ImprovedMedikit LWCEFoundryProjectTemplate]
+strName="Improved Medikit"
+strSummary="The flexible physiology of the Thin Men has given us new ideas for improving our Medikits and Restorative Mist units. We now believe we can increase the amount of healing delivered in a single charge by three for medikits and two for restorative mist units."
+
+[Foundry_ImprovedSalvage LWCEFoundryProjectTemplate]
+strName="Improved Salvage"
+strSummary="As the demand for more and more alien materials grows, our engineers are proposing more precise techniques of using meld to repair battlefield debris and turn it into salvageable items. We believe we can increase the number of weapon fragments recovered after combat by 20 percent."
+
+[Foundry_JelliedElerium LWCEFoundryProjectTemplate]
+strName="Jellied Elerium"
+strSummary="Using Elerium in tactical situations is quite risky; in the absence of a full sized craft's regulator and fuel management systems, adding it to our flamethrowers would be too dangerous. With some additional investment, though, we could devise a formula to increase flamethrower effectiveness in inducing panic without risking our soldiers, and design an addon item that would increase damage."
+
+[Foundry_MagPistols LWCEFoundryProjectTemplate]
+strName="Mag Pistols"
+strSummary="One of our earliest developments in the Foundry, the Magnetic Ordnance Reduction System greatly reduces the recoil of our entire range of sidearms. Utilizing the latest in composite materials, this upgrade will significantly improve the odds of our soldiers scoring a critical hit on their targets."
+
+[Foundry_MECCloseCombat LWCEFoundryProjectTemplate]
+strName="MEC Close Combat"
+strSummary="Our advancements in heavy armor technology have enabled us to install better actuators and support structures in the Kinetic Strike Module. This should increase its force output significantly and allow multiple strikes in some cases."
+
+[Foundry_MechanizedUnitDefenses LWCEFoundryProjectTemplate]
+strName="Mechanized Unit Defenses"
+strSummary="Our engineers have proposed some new systems that should increase mechanized unit survivability in increasingly dangerous battlefields."
+
+[Foundry_MECWarfareSystems LWCEFoundryProjectTemplate]
+strName="MEC Warfare Systems"
+strSummary="Our engineering teams are proposing a number of exciting concepts to expand our MEC capabilities beyond that of a simple exoskeleton."
+
+[Foundry_NewCombatSystems LWCEFoundryProjectTemplate]
+strName="New Combat Systems"
+strSummary="Some of our troops are asking for specialized equipment to combat the alien threat. We believe we can produce some new accessories to increase their effectiveness on the battlefield."
+
+[Foundry_PenetratorWeapons LWCEFoundryProjectTemplate]
+strName="Penetrator Weapons"
+strSummary="We've noticed that some alien combat robot units bear similarities in design to alien UFOs. We've identified some weaknesses in the designs that we believe we can exploit by upgrading our interceptor weapon systems to penetrate alien armor."
+
+[Foundry_PhoenixCoilguns LWCEFoundryProjectTemplate]
+strName="Phoenix Coilguns"
+strSummary="We believe we can significantly upgrade our Phoenix Cannon into advanced coilgun designs, significantly increasing its damage output and more than tripling its armor-piercing capabilities."
+
+[Foundry_PsiWarfareSystems LWCEFoundryProjectTemplate]
+strName="Psi Warfare Systems"
+strSummary="Our breakthroughs in human psionics can extend beyond the realm of the mind alone. With your go-ahead, we can begin development of several specialized pieces of gear that can enhance our psi troopers battlefield capabilities."
+
+[Foundry_Quenchguns LWCEFoundryProjectTemplate]
+strName="Quenchguns"
+strSummary="By adding superconductors and increasing the magnetic field strength in our gauss weaponry, we believe we can double the armor-piercing capabilities of our existing arsenal."
+
+[Foundry_RailPistols LWCEFoundryProjectTemplate]
+strName="Rail Pistols"
+strSummary="We've started testing an experimental cryogenic treatment for the barrels of our existing sidearm designs. This process will greatly reduce heat distortions caused by repeated firing, which should increase the aim of all soldiers using a pistol."
+
+[Foundry_ReflexPistols LWCEFoundryProjectTemplate]
+strName="Reflex Pistols"
+strSummary="Having learned a great deal from the alien weapons recovered from the field, we think it should be possible to implement improvements across our entire range of side arms. At the very least, we can expect an increase in the maximum damage output of all of our pistols."
+
+[Foundry_SCOPEUpgrade LWCEFoundryProjectTemplate]
+strName="SCOPE Upgrade"
+strSummary="Our Laser Sights and the portable targeting module called 'SCOPE' could be upgraded to highlight sensitive points on the enemy targets. We believe that the chance of critical shots would increase accordingly."
+
+[Foundry_SecurityTrainingArmor LWCEFoundryProjectTemplate]
+strName="Security Training: Armor"
+strSummary="For a small investment, we can train XCOM HQ's security detail to employ our Phalanx armor suits, improving our personnel's survivability in case of an attack. During a battle, they will automatically equip any unused suits of Phalanx armor in our inventory."
+
+[Foundry_SecurityTrainingWeapons LWCEFoundryProjectTemplate]
+strName="Security Training: Weapons"
+strSummary="With a minimum of funding, we can train XCOM HQ's security detail on our new laser rifles, improving our ability to defend ourselves in case the worst occurs. During a battle, they will automatically equip any spare laser rifles in our inventory."
+
+[Foundry_SentinelDrone LWCEFoundryProjectTemplate]
+strName="Sentinel Drone"
+strSummary="With an investment of resources, we will be able to adapt some alien technology into a defensive module for the SHIV. We've been able to add a self-repair capability and use its spare AI cycles to improve the SHIV's situational firing heuristics."
+
+[Foundry_ShapedArmor LWCEFoundryProjectTemplate]
+strName="Shaped Armor"
+strSummary="The invaders' mechanized cybersuits are of course somewhat more advanced than our own; by examining the interfaces between the armored shells and the cores, we could improve our overall armor design. This has the potential to increase tactical survivability for all of our mechanized forces."
+
+[Foundry_SHIVSuppression LWCEFoundryProjectTemplate]
+strName="SHIV Suppression"
+strSummary="With a fairly extensive hardware and software upgrade, our SHIV units would be capable of suppressive fire, letting them pin enemy targets down under a hail of bullets."
+
+[Foundry_StealthSatellites LWCEFoundryProjectTemplate]
+strName="Stealth Satellites"
+strSummary="By studying the communication signatures of the UFO nav computers we've recovered, we could update our satellite network to mimic the alien communications. This would make the satellites much harder to detect if the aliens were to go looking for them."
+
+[Foundry_Supercapacitors LWCEFoundryProjectTemplate]
+strName="Supercapacitors"
+strSummary="By increasing our ability to burst energy through our laser weapon optics, we can make these weapons far more dangerous to our alien foe. This will upgrade all of our aircraft laser cannon by increasing their firing rate and armor piercing capabilities, and will also allow us to construct a weapon addon for our personal laser weapons that will increase their chances of scoring a critical hit."
+
+[Foundry_SuperSkyranger LWCEFoundryProjectTemplate]
+strName="Super Skyranger"
+strSummary="While our unique Skyranger craft is incredibly versatile, it is hampered by its limited range if loaded with more than a small squad. Using some alien alloys, we believe we can mount some external drop tanks to enable the craft to reach targets all over the world while carrying additional soldiers. Unfortunately, we will need to schedule mid-air refueling with allied governments, so we can only carry extra soldiers on preplanned strikes on immobile enemy bases, and not on time-sensitive responses to recent enemy activity or other targets of opportunity."
+
+[Foundry_TacticalRigging LWCEFoundryProjectTemplate]
+strName="Tactical Rigging"
+strSummary="Increasing need for tactical flexibility has driven us to develop tactical rigs that apply to all of XCOM's individual soldier protection systems. These will enable soldiers to bring an additional item into battle."
+
+[Foundry_UFOCountermeasures LWCEFoundryProjectTemplate]
+strName="UFO Countermeasures"
+strSummary="Now that we have a handle on alien weapon systems and computers, we believe we can develop some countermeasures that will make our aircraft significantly harder to hit by alien UFO weaponry."
+
+[Foundry_UFOScanners LWCEFoundryProjectTemplate]
+strName="UFO Scanners"
+strSummary="Our ongoing studies of the alien UFO types has led us to develop some ideas on how we can give our pilots precise information on alien UFO classes that our research team has already performed analyses on. With your approval, we can install air combat scanners on all our current and future combat aircraft that will tell precisely how much damage a UFO has sustained."
+
+[Foundry_UFOTracking LWCEFoundryProjectTemplate]
+strName="UFO Tracking"
+strSummary="We've studied the enemy UFOs to the point that we believe we can improve our jets' ability to detect and track them at long ranges. Going forward with this project will double our interceptors' chances of detecting alien craft on the same continent absent satellite coverage over a given country."
+
+[Foundry_WingtipSparrowhawks LWCEFoundryProjectTemplate]
+strName="Wingtip Sparrowhawks"
+strSummary="Because of the fuel needed to attain the high speeds and altitudes necessary to engage the alien UFOs, we have been unable to mount multiple weapons systems on our interceptors. We believe that by employing alien alloys and meld to construct some lightweight weapon hard points, we should be able to mount pods of Sparrowhawk missiles, which are similar to our Stingrays but with smaller warheads, on our fighters. These can be employed in addition to whatever swappable weapon you choose to mount. This requires significant and costly modifications to all our airframes."
+
+[Tech_AdvancedAerospaceConcepts LWCETechTemplate]
+strName="Advanced Aerospace Concepts"
+strSummary="\"Our growing understanding of the aliens' fantastic new materials has given us several ideas on ways to improve our capabilities in the skies. Our intelligence indicates the aliens are continually improving their UFOs, so research in this direction should enable us to develop systems that will allow us to keep up.\""
+strCodeName="Skyhook"
+strReport="While this line of research didn't immediately lend itself to a new line of alien-technology-derived products, it has bridged the gap between our theoretical understandings of UFO technology and our present systems of aircraft engineering. We believe that specialized engineering teams may be able to develop several projects that can improve our aircraft combat capabilities. We gained a greater understanding, in particular, of the armored alien UFOs, such as the fighter and destroyer. Even though they do not do as much overall damage as other weapons, we should be sure to employ armor-piercing weaponry, like the Stingray Missile, against them."
+
+[Tech_AdvancedBeamLasers LWCETechTemplate]
+strName="Advanced Beam Lasers"
+strSummary="\"We believe we should be able to develop some more specialized beam weaponry for some of the troops. Our early experiments with oversized coolant coils and double lensing have shown the potential to greatly increase their firepower.\""
+strCodeName="Lightwire"
+strReport="After a number of failed experiments, we've finally succeeded in focusing an energy beam through a narrow-field lens while still maintaining adequate energy efficiency. The result are extremely capable weapons that have a much greater chance of inflicting critical damage on targets. We believe these weapons are now ready for deployment in the field, once Dr. Shen and his team complete the fabrication process. \n\nDuring our testing, we've also developed another prototype operating under the same principle, but relying on a modified prism to scatter the beam rather than focus it. We envision this weapon filling the same tactical role as a traditional shotgun, but without the ammunition constraints... and with greater damage output. However, as with our other laser-based weaponry, heat dissipation issues continue to plague these designs. \n\nWhile developing these systems for our troops, we also blueprinted a variation suitable for mounting to our Interceptors. Attaching this weapon to one of the ship's hardpoints should provide a significant boost in firepower to our pilots when engaging the alien craft."
+
+[Tech_AdvancedBodyArmor LWCETechTemplate]
+strName="Advanced Body Armor"
+strSummary="\"Now that we have established the foundations of building improved armor for our troops, we believe can develop even better protection and add a climbing grapple that we've been prototyping to one type of armor.\""
+strCodeName="Thorax"
+strReport="Now that our armorers have some experience crafting with alien materials, we have improved our techniques significantly and have developed two distinct suits of combat armor, one built around protection and the other around mobility."
+
+[Tech_AdvancedGaussWeapons LWCETechTemplate]
+strName="Advanced Gauss Weapons"
+strSummary="\"Now that we have perfected some basic weaponry employing electromagnetic coils and rails, we believe we can move forward with several advanced designs.\""
+strCodeName="Tunguska"
+strReport="Our further refinements of gauss weapon technologies have opened up an array of designs of specialized magnetic weaponry and other devices."
+
+[Tech_AdvancedPlasmaWeapons LWCETechTemplate]
+strName="Advanced Plasma Weapons"
+strSummary="\"An amazing piece of technology - this rifle maintains a seemingly normal form factor while housing a fully functional plasma generator inside. Even the most modern of our current power generation facilities on Earth are less efficient than this small device.\""
+strCodeName="Kestral"
+strCustom="We may now use alien plasma rifle cores to build our own plasma small arms."
+strReport="It took an extensive effort by the research team to reduce the considerable mass of the larger alien plasma rifle. By replacing the outer frame components with composite materials, we've managed to substantially reduce the weight, without compromising the weapon's power output or accuracy. These reductions did coincide with the added heft of a larger power supply, but we still managed to net an overall reduction of several kilograms. The substantial increases in firing rate and overall damage output versus our other prototype variants also required some additional modifications to the integrated Elerium power cell. \n\nThe end result of this work is a highly advanced, mobile plasma discharge weapon that improves on nearly all aspects of the conventional X-9 rifle. I believe the engineering team is now on standby to begin production of this weapon at your discretion. Alien rifles recovered from the field will be necessary to construct our own with the techniques we've developed."
+
+[Tech_AdvancedPowerArmor LWCETechTemplate]
+strName="Advanced Power Armor"
+strSummary="\"We've observed some of the alien combatants wearing a form of superheavy armor that still allows for full mobility in combat. This has been puzzling, to say the least, but with our new understanding of the alien energy sources and their materials, we could develop powered armor of our own, as well as further enhance our MECs' capabilities.\""
+strCodeName="Golem"
+strReport="Among the heaviest of our body armor prototypes, the \"Titan\" armor makes use of the complex alien power management systems to provide a continual powered assist to the operator of this suit as they move through the battlefield. With the element in short supply, we've tried to find the most efficient means to utilize it in our development programs.\n\nIn this case, the Elerium power cell is used to fuel an integrated cooling system designed to minimize fatigue by regulating the operator's body temperature. This system gives the Titan Armor the added benefit of increased resistance to environmental hazards, particularly fire and acid damage."
+
+[Tech_AdvancedPulseLasers LWCETechTemplate]
+strName="Advanced Pulse Lasers"
+strSummary="\"The alien weaponry appears to use a series of crystalline lenses to increase the power output of their weapons. While we can't recreate their materials, we can adapt their techniques to increase the range and power of our own laser weapons to create some specialized combat systems.\""
+strCodeName="Archon"
+strReport="With these advanced pulse weapons, we have now pushed combat laser technology almost as far as it can theoretically go, and we have developed weapons that almost match the alien plasma weapons in capabilities."
+
+[Tech_AlienBiocybernetics LWCETechTemplate]
+strName="Alien Biocybernetics"
+strSummary="\"Thanks to our research in seemingly diverse areas of alien computers and genetics, we've come to establish much greater control over how the Meld substance works. Pursuing a complete understanding of alien biocybernetics may provide us the with the capability to combine humans and machines in extremely powerful ways.\""
+strCodeName="Shiva"
+strReport="Dr. Shen's suppositions about the capabilities of the Meld substance that would allow us to combine humans and machines have borne out. We now believe we can build the sort of mobile battlesuits imagined only in science fiction, and use the Meld to modify the wearer to allow him or her to interface directly with the complex control and power systems such suits entail. We'll need to build new facilities and seek volunteers from the troops who are willing to undergo the surgeries necessary to make the suits work. We also believe this will open up several new research pathways."
+
+[Tech_AlienCommandAndControl LWCETechTemplate]
+strName="Alien Command and Control"
+strSummary="\"The device we recovered from the Ethereal craft may be the final piece of the puzzle... the key to their psionic connection... and to the ultimate source of their power. With a better understanding of this technology, I believe we'll be on the brink of finding the source of this invasion.\""
+strCodeName="Skylight"
+strReport="Having learned a great deal about the Hyperwave Beacon and its associated \"inter-dimensional\" signaling capabilities, we believe this newly recovered device confirms our suspicions about this technology and takes it a step further. The \"Psi-Link,\" as it is now being called, appears to provide a direct link to the psionic \"network\" used by the aliens for field communications. Although we are treading into an area of highly theoretical science, we believe there is a strong indication that the aliens function under a collective consciousness, a form of social organization akin to a \"hive mind\" as seen in various species of insects found on Earth. It wasn't until our first interaction with the Ethereal species of alien that we were able to understand the scope of the psionic abilities we had previously been exposed to. \n\nAlthough we've only scratched the surface in terms of developing Psionic abilities within a human subject, we've now theorized that it may be possible to join the aliens' consciousness ... to tap into their \"hive mind,\"  by successfully activating this device. \n\nHowever, in order to ensure the safety of XCOM's headquarters, we'll need to construct a chamber that minimizes the potential risks to the rest of the facility during the activation process. As it so happens, two of our brightest young minds, a team of brothers, have already conceived of just such a facility appropriate to this task. If we manage to locate a soldier with an aptitude for psionics, and find a means to develop these abilities further, I believe it will only be a matter of time before we succeed in activating the device and finding the source of this invasion."
+
+[Tech_AlienCommunications LWCETechTemplate]
+strName="Alien Communications"
+strSummary="\"The beacon that we recovered from the alien base appears to send and receive transmissions using a spectrum of energy unlike anything found on Earth. I can only imagine what we'll find after further study.\""
+strCodeName="Tachyon"
+strReport="Although we've studied a number of unusual pieces of alien technology up to this point, the equipment recovered from the alien base on Earth is among the most cryptic. When we first encountered this device, it appeared that the Sectoid Commander was somehow interacting with it through a non-physical link...using some type of mental telepathy or another equally mysterious form of communication. \n\nHaving now studied the device further, we believe this is undoubtedly the case. Our testing has revealed a pattern of signals being transmitted at a wavelength never before associated with any form of communications or electronic transmissions. Although we should not be surprised at this point by the advanced nature of the alien technology, this particular discovery is a bit...unsettling. \n\nAs far-fetched as it may seem, several members of the research team have theorized that this device may be capable of transmitting and receiving signals beyond our own dimension. The implications of this possibility affect all areas of known science, and perhaps most alarmingly, indicate that the Sectoid Commander may have been receiving signals or...orders...from a higher authority.\n\nWhile continuing to analyze the transmission we've detected, we have also moved forward in our attempts to interface the device with our own satellite communications network. If my suspicions are correct, this beacon may provide us with a means of detecting previously unknown contacts."
+
+[Tech_AlienComputers LWCETechTemplate]
+strName="Alien Computers"
+strSummary="\"Computer hardware we have recovered from a crashed UFO offers the opportunity to advance our understanding of alien machinery and information systems, both large and small.\""
+strCodeName="Lighthouse"
+strReport="We've had the opportunity to study these devices in a limited fashion. As we discovered, they do contain some form of encrypted alien data. However, they're also completely reliant on an internal power supply, which, when depleted, renders the device inaccessible. The only means we've found to gather information from this equipment is by routing its internal power system through a crudely assembled interface that bypasses any built-in shutdown sequences. \n\nHowever, the alien data itself presented an even greater obstacle, as we're dealing with a programming language that is unlike anything found in our own systems. Fortunately, the research team is quite capable, and we quickly assembled a small group of our best analysts for the task. We've already begun to establish patterns in the alien encryption algorithm, revealing small bits of information that can be integrated into our research. We've also achieved a far greater understanding of how alien materials are incorporated into their hardware."
+
+[Tech_AlienMaterials LWCETechTemplate]
+strName="Alien Materials"
+strSummary="\"The aliens appear to be using materials that are lighter and stronger than anything we've ever seen. A cursory examination has already given us ideas for ways to improve the soldiers' current body armor, but more research is required.\""
+strCodeName="Looking Glass"
+strReport="Our understanding of the alien materials is limited at best, and we could spend years deciphering the complex manufacturing processes required to produce and manipulate these substances. However, we have managed to crudely adapt some of the observed techniques into our own research. Our first development, a multi-walled carbon nanotube weave, was modeled after an unusual pattern mirrored in several of the alien materials. This new configuration has proven to possess a greater tensile strength than any material previously recorded in known science. Adapting this fiber into an armor reinforcing vest will surely afford our soldiers increased protection on the battlefield."
+
+[Tech_AlienOperations LWCETechTemplate]
+strName="Alien Operations"
+strSummary="\"This shard is all that is left of the Outsider alien after it was stunned. Based on our interrogation of the alien captive, we know that the Outsiders are the key to finding their base. We should begin research on this item immediately.\""
+strCodeName="Novato"
+strReport="Analysis of the alien shard has revealed that it is indeed organic in nature, although not \"alive\" per se,  somehow it continues to resonate within a specific range of the electromagnetic spectrum. Despite several attempts at disabling the alien known as the \"Outsider,\" each was met with the same result - the target \"dematerializing\" within an instant. With no explanation for this phenomenon, the research team was left with little to study in terms of the Outsider itself. However, having now analyzed this shard, it seems that may not be the case.\n\n In an effort to reduce any potential interference from known terrestrial signals, we placed the shard into the \"harmonic dampening chamber,\"a device conceived of by Dr. Shen. With outside noise brought to a minimum, it took little effort to detect a very distinct signal...the source of our shard's \"hum.\" \n\nWhile we have a number of theories, both the Research and Engineering teams seem to be in agreement... the shard itself is acting as some form of communications relay. Although purely speculative, we've also considered the possibility that the Outsider itself is merely an extension of the shard and its function. Dr. Shen believes with sufficient time, he may be able to develop a device or \"key\" that mimics the shard itself, giving us a means to locate the source of the signal."
+
+[Tech_AlienPowerSystems LWCETechTemplate]
+strName="Alien Power Systems"
+strSummary="\"With the element known as \"Elerium\" housed within, this compact device is somehow responsible for generating the enormous amounts of power consumed by the alien vessels. We can use this technology to increase the capabilities not just of our fighter craft, but of MECs.\""
+strCodeName="Waterfall"
+strReport="The power supply systems recovered from the alien craft are perhaps the most important piece of technology we've retrieved so far. Although we could spend years researching the intricacies of this equipment, the urgency of our development process means we've had to rely on theoretical analysis more than I would prefer. Despite the risks involved in attempting to reverse engineer this technology, we made a number of small steps towards a fully adapted power cell. Our most important discovery so far, the element we've been referring to as \"Elerium,\" is the vital component that provides nearly limitless energy to the alien power cells. \n\nAlthough there is still much to learn, we believe it should be possible for the Engineering team to begin assembling a makeshift power cell based on our initial findings, which may prove useful in the development of an advanced fighter craft, as well as to power a more advanced MEC. However, we'll certainly want to do further analysis of the Elerium element that fuels the alien power systems."
+
+[Tech_AlienPropulsion LWCETechTemplate]
+strName="Alien Propulsion"
+strSummary="\"After extensive study of the alien gravity wave drive, as well as their power and navigational systems, we believe it should be possible to incorporate aspects of their design into a craft of our own.\""
+strCodeName="Skylance"
+strReport="After an exhaustive reverse-engineering effort by the research team, we now believe it should be possible to mirror the functionality exhibited by the alien's advanced flight and navigational computers. These systems provide the pilot with a depth of information well-beyond our current avionics package, and will certainly bring us closer to matching the alien ships in combat.\n\nPerhaps more importantly, we've successfully integrated our first prototype of the \"gravity wave\" drive we modeled after the alien propulsion systems. With this mechanism in place, we can expect a massive increase in the Firestorm's maximum thrust output when compared to our traditional pulse-engine equipped Interceptors. \n\nAssuming Dr. Shen and his team are able to successfully complete the fabrication process, our ship should be every bit as fast and deadly as the aliens' own craft."
+
+[Tech_AlienWeaponry LWCETechTemplate]
+strName="Alien Weaponry"
+strSummary="\"These fragments are all that remain of the powerful alien weaponry we've encountered so far. Further study could lead to advances in our own weapons development programs.\""
+strCodeName="Sagaris"
+strReport="Although the alien weapon fragments provide a limited glimpse into the systems utilized in their equipment, we've seen enough to confirm my worst suspicions about their technology... that it is vastly superior to our own. However, I have been encouraged by the rapid developments the research team has made in studying the damaged circuitry and electronics we recovered. Our initial efforts have already yielded a successful outcome. The new integrated sighting module created for our weaponry was heavily influenced by the aliens' own targeting system."
+
+[Tech_AntigravSystems LWCETechTemplate]
+strName="Antigrav Systems"
+strSummary="\"With our unique access to the aliens super-efficient power systems, we believe it should be possible to fabricate a suit of armor that permits sustained flight on the battlefield.\""
+strCodeName="Icarus"
+strReport="As it turns out, our initial optimism about the design of flight-capable suits was entirely justified. Having successfully developed a miniaturized version of the alien propulsion modules recovered from the field, we've now successfully integrated this device into a suit of heavy armor. Although we've exceeded the weight of the original Floater specimen these propulsion units were adapted from, we believe our adjustments to the system have actually improved their overall efficiency. As a result of our efforts, this suit is capable of providing limited flight capabilities to the wearer."
+
+[Tech_AutopsyBerserker LWCETechTemplate]
+strName="Berserker Autopsy"
+strSummary="\"The body of this creature still remains warm to the touch several hours after being terminated. A chemical analysis of the alien's tissue will likely provide insights into this strange phenomenon. Its brain also appears to have an almost modular structure, able to rapidly section off disrupted brain structures.\""
+strCodeName="Anaconda"
+strReport="Although similar to the previously catalogued Muton species, this particular specimen is... different. Our troops have taken to calling this beast the \"Berserker,\" based on its uncharacteristically aggressive tactics in the field. Despite sharing the same physiological structure of the other Mutons, for reasons yet unknown to us, the Berserker seems to be consumed by blood lust, charging into combat with little regard for its own safety. Current theories as to the cause of this behavior have led us to begin investigating possible genetic manipulation of the subject's endocrine glands, or, in this case, the equivalent glands that appear to secrete androgenic hormones. If the aliens enlarged or modified the action of these glands, it could explain the Berserker's outbursts. Specifics on this creature's abilities in combat should be available when using the Unit Analysis View on another specimen of the same type in the field."
+
+[Tech_AutopsyChryssalid LWCETechTemplate]
+strName="Chryssalid Autopsy"
+strSummary="\"A cursory examination of this creature reveals that it is similar in form to several insect species found on Earth. The multilayered structure of the specimen's exoskeleton appears to harbor some form of fluid that enables rapid growth and healing.\""
+strCodeName="Ridley"
+strReport="Even after years of research and study, until now I had never encountered something that is quite as beautiful, yet equally as deadly, as this species. Unlike the other aliens we've encountered thus far, it is arthropodal in nature, plated in a sleek, black exoskeleton. The \"Chryssalids,\" as we're calling them, based on their reproductive habits, measure over three meters long from nose to tail, and stand almost two meters high when perched on their hind legs. Their attack is not only extremely deadly, but also necessary for their reproduction, as the intended victim is not immediately killed, but instead turned into what can only be described as a mindless shell, akin to a zombie, which serves as host to its offspring. When a human is bitten, an embryo is injected into the host and immediately begins to gestate. Once gestation is complete, which remarkably lasts only minutes, a newborn Chryssalid will emerge, destroying its host in the process. \n\nWe can only theorize as to why the aliens would utilize what appears to be a savage, unpredictable creature... in any case, this is certainly not a creature to be trifled with, and our troops would do well to exercise extreme caution when engaging this species. Targeting another example in the field through the Unit Analysis View may provide additional information as to its combat capabilities.\n\nOne final note, which may be of particular interest in regards to our own genetic enhancement work - we have finally managed to isolate the Chryssalid exoskeleton's regenerative capabilities. It is my hope that we can use this discovery to enhance our soldiers' own healing."
+
+[Tech_AutopsyCyberdisc LWCETechTemplate]
+strName="Cyberdisc Autopsy"
+strSummary="\"On the surface this object appears to be purely robotic in nature, but we still suspect there may be an organic component lurking within. It appears to have a number of redundant systems that give it extraordinary survivability in combat.\""
+strCodeName="Enigma"
+strReport= "So far, we've been unable to ascertain whether this is strictly a mechanical creation or a living organism. Based on our findings, it has an alternative biochemical system based on the silicon atom. Like carbon, silicon can create molecules that are sufficiently large to carry biological information, and since silicon has several chemical properties similar to carbon, it is possible this could be a new and completely alien life form, with respect to the specimens we've already encountered. Its internal mechanisms seem to operate like organs, giving it the ability to circulate plasma through its core systems, much in the same way blood flows through our bodies. These mechanisms enable the construct to distribute vital functions throughout its body. After further study, it may be possible to use these designs in our genetic modification program to reduce our soldiers' dependence on vital organs such as the heart. Our Unit Analysis View available in the field should provide additional specifics regarding this species' various combat abilities."
+
+[Tech_AutopsyDrone LWCETechTemplate]
+strName="Drone Autopsy"
+strSummary="\"This small robot appears to fill some sort of support role. We might be able to interface with its circuitry... and possibly subvert it in the field.\""
+strCodeName="Arachnid"
+strReport="The \"drones\" we've disassembled seem to have a singular purpose: to repair the alien technology, including its robotic counterparts. Although they act as robotic medics, and lack strong offensive weaponry, we did discover a large explosive charge is located deep within the sub-structure it draws on as a power source. With this and several of the alien devices, I continue to be amazed by what their creators have been able to accomplish. Dr. Shen believes it may be possible to \"hack\" these drones, allowing us to utilize them for our own purposes. Further details as to this specimen's complete combat capabilities may be available in the field if targeted in the Unit Analysis View."
+
+[Tech_AutopsyEthereal LWCETechTemplate]
+strName="Ethereal Autopsy"
+strSummary="\"This alien appears physically weak, even frail... but appearances can be deceiving. It is a remarkably hardy specimen, with a brain chemistry and structure utterly unknown to our science.\""
+strCodeName="Aether"
+strReport="This specimen appears to be at the top of the alien hierarchy, and for good reason. As we've noted in the field, its physical form is not suited for combat by any means. Their bodies actually appear to be quite frail, with evidence of atrophy and muscular degeneration having occurred over an extended period of time. This is not surprising, as initial radiocarbon dating indicates this particular creature could be... several thousand years old. Unlike the other specimens we've examined, there is little to indicate that it was genetically enhanced, at least not with the same ambition as the others. \n\nStrangely enough, we have uncovered similarities between the \"Ethereal\" brain and that of the Sectoid Commander. Both show the same enhanced synaptic connections, confirming our suspicion that this is the likely source of their power. These Ethereals appear to have an incredible pool of psionic energy at their disposal...more than anything we've previously encountered, which helps to explain why the other species are subordinate to them. The Unit Analysis View should provide additional information about this creature's combat capabilities in the field."
+
+[Tech_AutopsyFloater LWCETechTemplate]
+strName="Floater Autopsy"
+strSummary="\"A torturous mass of flesh and machinery, the mere existence of this creature implies a cruelty that is difficult to comprehend.\""
+strCodeName="Crimson Cape"
+strReport="As frightening and vicious as this species is on the battlefield, it is hard not to feel some sympathy for them on the dissection table. The specimen has been subjected to extensive biomedical modifications, some of which were undoubtedly quite painful and intrusive. The combination of living tissue and mechanical components gives the creature the look of a cruel, half-finished experiment. Most of the subject's internal organs have been replaced with a mechanical life support system that mimics their original functionality. \n\nA rather conventional propulsion system has been grafted onto the subject's torso, although the power cells supplying the necessary thrust are extremely advanced by our own standards. I have removed a number of neural implants from the subject that appear to aid in the evasion of incoming projectile fire. The engineering team has already suggested several ways in which this technology might benefit our soldiers. You may find additional information about the combat capabilities of this species by targeting one in the field using the Unit Analysis View."
+
+[Tech_AutopsyHeavyFloater LWCETechTemplate]
+strName="Heavy Floater Autopsy"
+strSummary="\"This horrifying machine-flesh hybrid suggests the invaders are willing to stop at little, or nothing, to achieve their goals. Assessing its battle damage may give us some insight into repair techniques on our aircraft, however.\""
+strCodeName="Montezuma"
+strReport="Another variation on a previously identified specimen, this is the \"Heavy Floater.\" A cursory examination reveals substantial improvements to the armor and weapons systems available to the creature. Much of the exposed tissue, the Floater's most obvious vulnerability, has either been shielded or removed entirely. With these modifications in mind, it would appear the aliens chose to move towards a greater reliance on mechanical and cybernetic upgrades rather than continue developing the specimen's organic form. However, we have still uncovered a number of redundant organic systems within the Heavy Floater's torso that were clearly duplicated to enhance its survivability. If we were to follow a similar genetic modification path within our own soldiers, we may be able to prevent many of the life-threatening injuries that our troops face in combat. We may also be able to gain further insight into this creature's unique abilities in combat if another specimen is targeted in the field in the Unit Analysis View."
+
+[Tech_AutopsyMechtoid LWCETechTemplate]
+strName="Mechtoid Autopsy"
+strSummary="\"This robotic cybersuit is designed for a Sectoid pilot. It appears that the suit's cybernetics interfere somehow with the Sectoids' innate mental powers. We should consider this if we decide to apply this type of technology to our own soldiers.\""
+strCodeName="Goliath"
+strReport="As it appears that the Sectoid creature within this mechanized armor is of the same biological makeup we had seen previously, most of our efforts were spent disassembling and analyzing the inner workings of the armor itself - in close collaboration with Dr. Shen's team, of course. As our soldiers quickly discovered in the field, this suit is equipped with two substantially larger and more powerful plasma weapons when compared with the standard Sectoid equipment. The armor itself provides a great deal of protection to the operator, while also maintaining an impressive degree of mobility. The suit is capable of climbing over rough terrain and seems to have no trouble even with staircases and other obstacles, as it is also maneuverable enough to operate confidently in enclosed spaces. \n\nOne of the more interesting discoveries we made while examining this subject is that the suit's armor plating appears to interfere to some degree with the Sectoid pilot's unique mental capabilities. I can assume that this was an unintended consequence of the additional armor plating - the aliens sacrificed what would appear to be an extremely powerful ability as a tradeoff for an increase in sheer combat power. However, it should be noted that the aliens seem to have offset this potential disadvantage by implementing a new technology. A small module located within the armor's core appears to serve as a sort of "amplifier" for these telepathic abilities. When targeted by an allied unit, rather than linking the two, the amplifier seems to take this power and use it to form a sort of shield around the suit. Our troops should be wary of this capability, as the suit is already quite formidable without the additional shielding in place. It does have one weakness: its large size renders reaction fire against it more accurate."
+
+[Tech_AutopsyMuton LWCETechTemplate]
+strName="Muton Autopsy"
+strSummary="\"Weighing in at over 275 kilograms, the majority of which is simply muscle and bone, this creature appears well suited for the rigors of front-line combat. The specimen's natural ability to manage adrenaline levels could prove useful if we can study it further.\""
+strCodeName="Nero"
+strReport="Standing well over two meters tall, the ratio of this subject's lean muscle to the rest of its body mass is staggering. Its bones are highly durable yet very light in weight, and it seems to lack extramuscular fatty tissue of any kind. There is no part of this subject that has not been genetically engineered for combat. These \"Mutons\" (a moniker given by the troops) have clearly been bred and modified from birth, with every enhancement contributing to its function as a sort of \"organic tank.\" As such, the Mutons are capable of withstanding otherworldly amounts of damage and seem to have an incredible tolerance for pain. \n\nDuring the autopsy, we also noted a variety of ritualistic markings and unusual tattoos, which imply some sort of past tribal structure among the Muton species. It may be this tribal nature that has led to the Muton's use of a \"Warcry\" in battle, which seems to cause a surge in adrenaline within both the subject and even nearby allies. With this in mind, it is certainly possible that we could replicate this ability through our own genetic modification program. We've also noticed a number of distinct similarities between the genetic structure of the Muton and Floater specimens. Although I can only guess as to the alien's intentions, it certainly appears that the Floaters may have at one time been Mutons themselves. If the aliens have been experimenting with the Muton physiology, perhaps the Floaters are a byproduct of their less successful attempts at genetic manipulation. \n\nWe may be able to gain further insight into this creature's combat capabilities by targeting another example in the field in the Unit Analysis View."
+
+[Tech_AutopsyMutonElite LWCETechTemplate]
+strName="Muton Elite Autopsy"
+strSummary="\"As if its heightened muscle density, hardened skin, and redundant organs weren't enough, this alien appears to have neural implants that facilitate command and control functions. Given the circumstances, this specimen would appear ideal for guard duty.\""
+strCodeName="Imperial"
+strReport="As if the standard Muton hadn't given our troops enough trouble, the aliens apparently kept several of these \"Elites\" in waiting for the later stages of their invasion. Although they seem to have the distinct honor of serving as guards within the alien hierarchy, our autopsy of this specimen reveals little in the way of distinguishing anatomical traits versus the typical Muton. Aside from various improvements to their armor, the primary difference appears to be a slightly enhanced intelligence which makes them more effective combatants. The details surrounding this creature's specific combat capabilities should be available during future encounters by targeting one in the Unit Analysis View."
+
+[Tech_AutopsySectoid LWCETechTemplate]
+strName="Sectoid Autopsy"
+strSummary="\"Our initial scans of the small humanoid aliens recovered so far have revealed something quite remarkable. We're detecting components of non-biological matter embedded within their internal structure. Could these be implants of some kind?\""
+strCodeName="Roswell"
+strReport="We've found no discernible genetic variance between any of the small humanoid aliens that have been examined thus far. They are perfect genetic copies, each and every one of them. The subject's brain is quite sizable with respect to its body, and appears to have been augmented even further with cybernetic implants of some kind. Considering the...fragile nature of this creature's physical form, it is safe to assume that these implants were intended to somehow improve the combat effectiveness of the species. Dr. Shen and the engineering team have already developed several theories as to how we might be able to adapt these implants for our own use. Additional tactical information may be available in the field when viewing hostile targets in the Unit Analysis View.\n\nDr. Vahlen's Personal Note: Cloning, genetic manipulation, biomedical implants... the implications of this technology and the alien's motives are not reassuring."
+
+[Tech_AutopsySectoidCommander LWCETechTemplate]
+strName="Sectoid Commander Autopsy"
+strSummary="\"The enlarged central nervous system and supplementary neural implants found in this Sectoid variant suggests capabilities unlike anything we've previously encountered. Further study may reveal ways in which we can use these capabilities to enhance our soldiers' protection against their attacks.\""
+strCodeName="Rosetta"
+strReport="After an extensive analysis of this specimen's brain tissue, we've discovered some unusual activity in the synaptic connections that may be the source of the... abilities our troops encountered in the field. Although somewhat similar in physical appearance to the Sectoid we previously identified, this \"Commander\" variant has an easily differentiated internal composition. We've theorized that these \"enhanced electrical synapses,\" capable of transmitting nerve impulses at nearly three times the normal rate, are the product of careful genetic manipulation. If our theory holds true, that means the aliens are capable of modifying even the most complex tissue at a genetic level. In regards to our own genetic research, I am hopeful that we can use the Sectoid Commander's enhanced synaptic connections to improve the capabilities of our own soldiers, perhaps in a way that would redirect the psionic powers utilized by the aliens back unto themselves."
+
+[Tech_AutopsySectopod LWCETechTemplate]
+strName="Sectopod Autopsy"
+strSummary="\"The engineering advancements found in this machine are remarkable - the joint articulation, weapons systems and targeting capabilities in particular are well beyond current military developments on Earth. The practical applications are staggering.\""
+strCodeName="Halcyon"
+strReport="Although this robot is neither alive nor sentient, it is strangely self-aware of its surroundings. We're still uncovering the functional details for this \"species,\" but from what we've seen so far, this machine is a masterpiece of technology. Based on our initial testing, we've discovered an extremely intricate program that's implanted in their macro-processors. This combat control program, combined with the Sectopods imposing ten meter frame, makes for an extremely dangerous weapon. Powered by the same energy source that fuels the alien craft, these machines wield unparalleled destructive power. Perhaps the biggest mystery is the secret of how they're being controlled. Additional information regarding this specimen's tactical abilities may be available in the field if another of these machines is targeted in the Unit Analysis View. Note that its large size renders reaction fire against it more accurate."
+
+[Tech_AutopsySeeker LWCETechTemplate]
+strName="Seeker Autopsy"
+strSummary="\"This is one of the invaders' most intricately engineered battlefield devices. The combination of concealment systems, artificial intelligence, and articulation on the appendages makes for a technological treasure trove. In particular, we've uncovered some sensory devices that we believe allow the robots to keep from colliding while they are stealthed.\""
+strCodeName="Lovecraft"
+strReport="Although each of the autopsies we've conducted on the various alien species could be considered unusual, this latest specimen continues to push the boundaries of how we might define that characteristic. It's been referred to as a "Seeker" by our soldiers in the field due to its propensity for tracking and engaging with single targets - and its actual means of attack is quite shocking. Once it has located a target, the Seeker physically seizes the victim, and remains attached until it is either removed by force or the target expires.\n\n As one might imagine, this is an extraordinarily disturbing situation for both the victim and anyone witnessing the attack. The challenge in stopping the Seeker comes from its inherent agility and nimbleness, making it extremely difficult to intercept before it manages to reach its intended target. We believe the micro-motors employed in its design are responsible for this notable degree of mobility. The Seeker has also been observed deploying a type of defensive smoke screen, making it even more troublesome to engage during the limited window of opportunity when it is immobile. \n\n It is my hope that we can adapt these various concealment techniques into a form that allows our soldiers greater stealth capabilities in combat, which should reduce casualties. It may also be possible to use what we've learned to develop weapons systems and equipment that mirror some of these techniques. Our Unit Analysis View available in the field should provide additional specifics regarding this species' various combat abilities."
+
+[Tech_AutopsyThinMan LWCETechTemplate]
+strName="Thin Man Autopsy"
+strSummary="\"These aliens were clearly intended to be used as infiltrators, moving among us and observing without raising an alarm. Their incredible range of motion is of particular interest to our own genetic research program.\""
+strCodeName="Viperus"
+strReport="The subject's external appearance is that of a Caucasian male. I would guess its age to be approximately 35 years old, although it's quite likely this is an artificial effect intentionally affixed by the aliens. The specimen is roughly two meters in height, and weighs just over 80 kilograms. Despite its outward appearance, upon dissection, the creature's unique organ and bone structure is revealed to be distinctly alien in nature. The subject's bones are segmented, rather like the vertebrae of a serpent. This segmented structure appears to give the creature a spectacular range of motion in combat. It is possible, through our own genetic modification program, that we may be able to replicate the unique connective tissues that allow for this remarkable flexibility. If successful, our soldiers could see drastic improvements in their own physical mobility and resilience. \n\nA large portion of the specimen's thoracic cavity is devoted to enormous glands capable of producing a toxin that is then expelled via ducts with considerable force. After a thorough chemical analysis of the subject's venom, we've theorized that it could be used as a powerful disinfectant to treat our soldier's injuries in the field. Dr. Shen is working to develop a means to integrate this substance into our existing Medikits for future deployment. Targeting another example of this specimen in the field using the Unit Analysis View may reveal further details about its distinctive combat abilities."
+
+[Tech_BeamLasers LWCETechTemplate]
+strName="Beam Lasers"
+strSummary="\"Our research into alien weapon fragments led to the idea of portable laser weaponry. Our early prototypes have been encouraging, but we continue to struggle with issues related to heat dispersion.\""
+strCodeName="Sunray"
+strReport="We've finally found a workable solution to the heat dissipation issues we've struggled with when attempting to create a laser weapon for our troops. Although these variants still operate near the limit of what would ordinarily be considered \"safe\" operating temperatures, we believe they are stable enough at this point to begin fabrication in engineering."
+
+[Tech_CompactPlasmaWeapons LWCETechTemplate]
+strName="Compact Plasma Weapons"
+strSummary="\"Our understanding of plasma-based weaponry comes entirely from the alien materials recovered so far. The intact plasma-generating weapon recovered from the field has provided some incredible insights, and it's quite possible we could create a version suited for our own soldiers' use.\""
+strCodeName="Jacamar"
+strCustom="We may now use alien plasma pistol cores to build our own plasma small arms."
+strReport="Our research into the alien's plasma based weaponry is among the most advanced and dangerous work we've undertaken so far. The most difficult question surrounding the use of plasma... how to maintain an adequate power supply in the field, was solved by the Elerium-based power cells recovered from the aliens. The heat sinks developed using their materials have also proven to be the answer to proper heat dissipation along the weapon's barrel. With this knowledge in hand, we should now be able to use any plasma pistols we've captured from the invaders to manufacture variants of our own design."
+
+[Tech_Elerium LWCETechTemplate]
+strName="Elerium"
+strSummary="\"Our initial observations of this this element indicate that it is used by the aliens to generate anti-matter energy when bombarded with certain particles- providing them with a nearly inexhaustible source of power generation.\""
+strCodeName="E-299"
+strCustom="Manufacturing this element is beyond our capabilities. We will only be able to use whatever we recover from alien craft and alien bases."
+strReport="Having fully analyzed the strange material recovered from the alien craft, it's clear this element is unlike anything found on Earth. The unusual atomic structure of this substance responds to direct bombardment from accelerated particles, resulting in an astonishing release of energy. Although the potential applications for this element are nearly unlimited, for now, our efforts are primarily focused on power generation and propulsion schemes. However, as this material does not occur naturally in our own solar system, we must carefully manage our available supply. \n\nDr. Vahlen's Personal Note: To think, this single element has the potential to change the entire economic structure of Earth's energy industry. If we were to discover the source of this material, our reliance on fossil fuels could disappear within a decade."
+
+[Tech_EMPWeapons LWCETechTemplate]
+strName="Electromagnetic Pulse Weapons"
+strSummary="\"We've conceived of several weapons capable of disabling electronic systems without destroying them... if we were to equip our Interceptors with this technology, while also shielding them from the overall effect, this could greatly improve our odds of recovering the alien technology intact.\""
+strCodeName="Ion"
+strReport="In developing an electromagnetic weapon capable of emitting a focused pulse that will penetrate the alien's advanced shielding, we've also had to find a means to protect our own ship's sensitive electronic circuitry. The functionality of the weapon itself had already been well-established by previous testing conducted by Earth's various terrestrial military forces, leaving us with little to determine outside of the energy requirements and effective range. \n\nAlthough the additional shielding required to protect our systems will necessitate a reconfiguration of our ship's hardpoints for the weapon's mount, I expect the engineering team will have no trouble fitting the device into position. If our pilots can successfully deploy the pulse against the alien craft, we should be able to bring down a UFO with minimal damage to the artifacts and equipment carried inside."
+
+[Tech_ExperimentalWarfare LWCETechTemplate]
+strName="Experimental Warfare"
+strSummary="\"Although our understanding of the alien technology is still limited, what we've seen so far is enough to revolutionize combat as we know it. If we are to level the playing field, we must adapt the alien technology for our own use.\""
+strCodeName="Skunk Works"
+strReport="As we continued our research into the alien weapons fragments and the other materials recovered from the field, we've come to realize how the aliens managed to make these substances work in conjunction with one another. While reducing the size of these components is often a challenge in itself, we've passed a number of interesting conceptual designs on to the engineering team. Dr. Shen seems confident that given the appropriate resources, he can bring many of these concepts to life."
+
+[Tech_FusionWeapons LWCETechTemplate]
+strName="Fusion Weapons"
+strSummary="\"We've recovered a number of interesting materials from the wreckage of the battleship-class UFO. If we can gain a better understanding of the alien fusion core, I believe further research on this path may lead us to the development of an immensely powerful air-to-air weapon. We should also be able to prototype a new projectile launcher with a uniquely powerful explosive shell.\""
+strCodeName="Godfinger"
+strReport="These weapons are among the most powerful we've recovered from the aliens, and we've already seen evidence of its devastating effect against our own aircraft. Unfortunately, it was clearly designed for a much larger craft with a greater payload capacity than anything we have currently available. In order to adapt the mechanism for use on our own ships, we've had to redesign the integrated power and cooling systems to a much smaller form factor. \n\nIf we do manage to successfully deploy this weapon, I have no doubt we'll finally level the playing field with the aliens in terms of air superiority. \n\n And as for our troops, while I was skeptical as to the merits of assembling another weapon based on our traditional methods, namely, large rockets carrying heavy payloads of explosives, we have made some interesting discoveries during our testing. Our prototype, the cleverly named \"blaster launcher,\" has been surprisingly effective in penetrating the alien's seemingly unassailable armor plating. \n\nWe've also improved on the integrated targeting module by implementing several of the design improvements observed in the alien weapons. As a result, these rockets are capable of guiding themselves, even when fired from an obstructed line of sight. I believe there is still room for us to hone this weapon's capabilities further, but it should be safe to begin manufacturing the current design as you see fit."
+
+[Tech_GaussWeapons LWCETechTemplate]
+strName="Gauss Weapons"
+strSummary="\"The density of the alien alloys we've been studying has precluded their use as ammunition; all of our experiments have resulted in the destruction of the weapon itself during firing tests, as the alloys tear the barrel apart. However, we've devised a way to break the alloys into micro-shards, and using the magnetic containment field derived from the alien plasma weapons should allow for their safe discharge.\""
+strCodeName="Avocet"
+strReport="The alien alloys have proven to be extremely difficult to forge and manipulate for use in our theoretical designs. Machining the alloy was an arduous process, leaving us with limited options as to what it could be used for. Although we considered the alien alloy's density a benefit, one that made it ideal for use as an advanced form of projectile ammunition, the material proved to be so dense that it ate directly into the weapon's barrel...making it useless after a single firing. \n\nAfter a number of failed attempts, we finally managed to develop a magnetic "barrel" that propels the alloys without doing significant damage to the weapon, which has so far survived several hundred test firings during our experiments. With the \"alloy cannon,\" as we've been calling it, now operational, we've had ample time to study the effects of its design. Although similar to a traditional shotgun configuration, because of its specialized ammunition, the alloy cannon is substantially more powerful, and deadly. \n\nTesting on targets made up of a modified ballistic gel proved pointless, as the targets were completely penetrated by the alloy munitions, despite an average thickness of roughly two meters. Needless to say, this weapon will have a similar effect on any hostile targets our troops might encounter."
+
+[Tech_HeavyCombatExoskeletons LWCETechTemplate]
+strName="Heavy Combat Exoskeletons"
+strSummary="\"We can further develop our combat exoskeletons with a premium on survivability against sustained enemy fire, although mobility will be limited.\""
+strCodeName="Abrams"
+strReport="The MEC-4 and MEC-5 can sustain an incredible amount of damage on the battlefield and continue to function."
+
+[Tech_HeavyPlasmaWeapons LWCETechTemplate]
+strName="Heavy Plasma Weapons"
+strSummary="\"Despite a number of impressive advances, I am still in awe of the alien's mastery of plasma-based weapons. This particular configuration seems to contain an even more complex magnetic plasma containment chamber, allowing for nearly continuous projection of plasma blasts. The heat dispersal systems will permit MEC-scale energy projection weapons as well.\""
+strCodeName="Kingfisher"
+strCustom="We may now use alien heavy plasma cores to build our own heavy plasma weapons."
+strReport="We've struggled to maintain a test environment that minimizes the safety risks involved in these experiments, but at the same time does not limit our... imagination, when it comes to new developments. With those logistical issues handled efficiently enough by the engineering team, we proceeded in our initial prototyping. \n\nAlthough we spent a great deal of time studying the alien's own heavy plasma rifle, there were still a number of questions surrounding its enhanced functionality. Maintaining an acceptable level of energy efficiency, while also increasing the weapon's output, was not an easy task. The primary constraint of increasing the output was the added weight involved by the inclusion of a larger power cell. While this issue may not have affected some of the brutish soldiers employed by the aliens, there are limits to what our soldiers can realistically carry. However, by redesigning the power management system to reduce waste energy generated during the firing process, we've managed to strike a balance between all of these concerns. I should mention however that heat buildup continues to be a concern, and our troops will have to be aware of this when firing the weapon in rapid succession. \n\nHaving successfully test fired our prototype, as well as a modified version of the alien's own variant, we believe it should now be possible to both manufacture these weapons by adapting any we manage to recover from the field.\n\nThe constraints that ordinary soldiers face are... reduced... when considering our MEC Troopers, for whom we can manufacture a full-sized particle beam weapon."
+
+[Tech_ImprovedBodyArmor LWCETechTemplate]
+strName="Improved Body Armor"
+strSummary="\"We've continued our experiments on the alien alloys, and one of the proposed applications is a lighter, stronger form of body armor. Our early tests are very encouraging.\""
+strCodeName="Linebacker"
+strReport="We've succeeded in creating a design for an advanced suit of body armor based on the alien alloys recovered from the field. These are the same materials used extensively by the aliens in the hull plating and internal structure of their craft. As we've already seen, the UFOs are capable of sustaining heavy impacts with only minor structural damage, which inspired our research into personal armor plating of the same design.\n\nHowever, the downside to this exotic material is that we currently have no means of replicating it on Earth. With a limited pool of resources available for future projects, we'll need to manage our use of these alloys carefully. The engineering team is awaiting orders to begin the fabrication process. Once completed, we can see how these armors fare on the battlefield. Also, we believe can adapt these techniques to field an advanced SHIV design, but it will require significant staff time to complete."
+
+[Tech_ImprovedCombatExoskeletons LWCETechTemplate]
+strName="Improved Combat Exoskeletons"
+strSummary="\"Our ever-improving understanding of alien materials should allow us to develop some new MEC suits for our soldiers.\""
+strCodeName="Harrier"
+strReport="We have developed two new models of MEC suit, the MEC-2 and MEC-3, which differ in their capability to move and sustain damage."
+
+[Tech_InterrogateBerserker LWCETechTemplate]
+strName="Interrogate Berserker"
+strSummary="\"It's going to take our most powerful sedatives to keep this captive under control... but I feel it's worth the risk, as we may glean valuable intel from a successful interrogation.\""
+strCodeName="Rubicon"
+strReport="This captive was even more violent and aggressive than we expected, exceeding the previous limits established by the Floater and Muton species. Despite heavy sedation, it was virtually impossible to control the subject, leaving us with little recourse other than to increase the vigor of our tactics. After probing several regions of the captive's brain, we managed to find the appropriate stimulus to calm the beast, after which we put the captive through a number of controlled physical tests. \n\nBy observing the subject's movements while burdened by the massive suit of armor it is outfitted with, we've gained enormous insight into how the invaders approach the difficult design questions associated with creating a heavy armor suit. Striking a balance between effective armor coverage and maneuverability in the field is no easy task, but this data should prove invaluable to our own efforts."
+
+[Tech_InterrogateEthereal LWCETechTemplate]
+strName="Interrogate Ethereal"
+strSummary="\"We know this captive is harboring an incredible pool of psionic energy, a fact that is not lost on our staff, who are quite concerned about working in close proximity to the creature. In any case, we have no choice but to conduct a thorough interrogation of the subject if we hope to gain anything of value from it.\""
+strCodeName="Rosetta"
+strReport="This creature, clearly a member of the alien leadership caste responsible for this invasion, presented us with an extremely risky and difficult interrogation prospect. Despite our previous experience in safeguarding the facility from the potential effects of the...abilities... exhibited by the psionic alien species, this captive's power exceeded the previously established limits of our testing. \n\nMuch of the information we were able to discern from this creature was cryptic at best, as it made every effort to resist even our most invasive procedures during the interrogation. However, the experimental imaging equipment we had been using to monitor the alien's brain activity did reveal a very unusual pattern of neural activity that we believe is closely tied to the creature's \"power.\" This information should prove useful in reducing the time required for our research in variety of fields."
+
+[Tech_InterrogateFloater LWCETechTemplate]
+strName="Interrogate Floater"
+strSummary="\"Although this captive seems to be feeble of mind... clouded by rage... we might nonetheless be able to derive some benefit from a full interrogation.\""
+strCodeName="Goalpost"
+strReport="As far as we can tell, the specimen known as the Floater is barely sentient, at least in any discernible fashion that would imply intelligence. Perhaps this was an intentional move on the part of the aliens, but in any case, the floater was extremely aggressive throughout the interrogation process. The most interesting aspect of its bizarre physique is the propulsion module integrated into the remaining portion of its upper torso. During controlled flight testing within the labs, we were able to observe how the Floater is capable of controlling and modulating the flow of power into the propulsion system itself. This was a significant discovery, one that will surely benefit our ongoing research into the alien technology as we attempt to adapt these concepts for our own purposes."
+
+[Tech_InterrogateHeavyFloater LWCETechTemplate]
+strName="Interrogate Heavy Floater"
+strSummary="\"The nature of this specimen's cybernetic implants precludes us from most attempts at interaction, but a thorough analysis of its movements and reactions to stimuli could provide crucial information about the alien's implementation of these systems.\""
+strCodeName="Dreadnaught"
+strReport="Similar in overall appearance to the Floater specimen we've previously encountered, this captive has been enhanced further with an even more complex network of cybernetic implants. There is also a significant reduction in exposed living tissue, including the cranial region, which slowed the progression of our interrogation process. Despite these initial setbacks, we were able to gauge the captive's response to various stimuli, while also conducting a battery of tests upon the weapon systems integrated into its body. We have learned much toward our understanding of how the aliens' weapons work."
+
+[Tech_InterrogateMuton LWCETechTemplate]
+strName="Interrogate Muton"
+strSummary="\"This captive is very aggressive, clearly having been intended to serve in a front-line combat role. With the appropriate drug therapy and... encouragement... we may be able to coax some useful intel on the alien weaponry and their tactics.\""
+strCodeName="Tempest"
+strReport="On first impressions, the captive Muton would appear to be among the least intelligent of any of the alien species we've encountered. Hulking and brutish in form, we were surprised to discover a great deal of knowledge had been ingrained in this subject's memory. We realized during the interrogation process that it was only logical for the aliens to provide the Muton with a complete understanding of their weaponry and tactics, as this beast represents their most formidable front-line combatant. \n\nAlthough the Muton was quite resistant to our techniques, despite heavy sedation, we've learned a great deal from the captive about the alien weaponry. The research team will begin analyzing this data for possible use in a new breed of weapons of our own design."
+
+[Tech_InterrogateMutonElite LWCETechTemplate]
+strName="Interrogate Muton Elite"
+strSummary="\"I'm amazed we were able to capture one of the master aliens' bodyguards alive... It probably has a broad understanding of the invaders' weapon systems and tactics.\""
+strCodeName="Gomorrah"
+strReport="Although similar in general appearance to the Muton species our troops have battled in the field, this particular captive is different. We've seen evidence of an inherent intellectual capacity not found in the other variants, and we believe this \"Elite\" Muton serves a more defined role within the invasion force. \n\nThe captive's sheer physical power and increased savvy made its interrogation both dangerous and exhilarating. After establishing an enhanced security protocol to deal with the risks involved, we began the interrogation process using our previously established techniques. As it turns out, this captive had the distinct honor of serving as a guard within the alien force, and had a complete understanding of the various weapon systems available to the invaders. With this knowledge in hand, I believe this information will greatly reduce the time we spend researching and developing these advanced new weapons."
+
+[Tech_InterrogateSectoid LWCETechTemplate]
+strName="Interrogate Sectoid"
+strSummary="\"We've taken one of the smaller aliens captive - hopefully we can develop a thorough interrogation process to overcome any language barriers we might encounter.\""
+strCodeName="Roanoke"
+strReport="Our interrogation of the small alien captive was a learning experience for all parties involved. Although traditionally an interrogation would imply a discussion of sorts, perhaps under coercion, that possibility was out of the question given these unique circumstances. We were instead forced to undertake a more aggressive approach, namely, through a series of invasive cranial probes inserted into the subject's prefrontal cortex. \n\nBy interpreting the captive's responses to various stimuli, we were able to discern a great deal of information... more so than I had originally anticipated. Although it seemed to have little understanding of the various modifications it had been subjected to at some point in the past, we did garner some information relating to the aliens miniaturized implants and power cells used in their weaponry. We've already begun analyzing this data for possible incorporation into future advanced weapons prototypes."
+
+[Tech_InterrogateSectoidCommander LWCETechTemplate]
+strName="Interrogate Sectoid Commander"
+strSummary="\"This captive is clearly a rare and dangerous specimen. We've already seen evidence of its unique mental abilities in the field.... We should tread carefully, but we certainly cannot pass up the insights it might be able to provide during interrogation.\""
+strCodeName="Voynich"
+strReport="This specimen has a uniquely defined cellular structure within its brain, augmented by a series of advanced cybernetic implants that must have been ingrained shortly after its \"birth.\" Due to the unusual abilities exhibited by this captive in the field, we've had to be particularly cautious during the interrogation process. Evidence of a telekinetic power unlike anything previously recorded in known science has left some members of the research team unwilling to approach the subject. \n\nWe were met with limited success in retrieving new information directly from the captive, but we've also had time to further analyze the modules implanted in the subject's body, which will likely lead to a number of unexpected advances."
+
+[Tech_InterrogateThinMan LWCETechTemplate]
+strName="Interrogate Thin Man"
+strSummary="\"It seems unlikely that this particular species will break under interrogation as quickly as the other captives, as we believe it was specifically intended to serve as an infiltrator. Still, perhaps if we use more aggressive techniques, we can...coax...it into revealing additional information about how the aliens arrived here.\""
+strCodeName="Masquerade"
+strReport="Capturing one of the invaders' infiltration specialists has proven both illuminating and disturbing. Although at first glance they closely resemble the human form, and are trained to communicate in a variety of terrestrial languages, this specimen is far from human. We had assumed its role as an infiltration unit would preclude us from gaining anything of value during our interrogation. However, as it turns out, the captive was surprisingly...pliable once we began the procedure. \n\nAside from its primary role as a reconnaissance and infiltration specialist, the Thin Man also proved to be quite familiar with the alien's energy management systems. The information gained from this interrogation is of crucial importance."
+
+[Tech_MindAndMachine LWCETechTemplate]
+strName="Mind and Machine"
+strSummary="\"Analysis of the Psionic alien's implants indicates that we might be able to integrate these components into an armor kit... although this would be of no use to a soldier without psionic potential, it could greatly improve the abilities of those who do show promise in this area.\""
+strCodeName="Witchwood"
+strReport="We've reached a point in our research of the aliens' Psionic abilities and their associated cybernetic implants that we're confident enough to begin preliminary tests of this technology on human subjects. Although the system we have in mind will require the use of a lightweight armor suit with reduced defensive capabilities, this \"Psi-armor\" should more than compensate by providing a significant boost to our soldiers psionic abilities.\n\nIt is our hope that bolstering these abilities within our soldiers will provide new insights, as we seek to discover the source of the aliens' collective consciousness. We still don't fully understand the link between the visible psionic abilities we've seen exhibited by the aliens, and their use of psionics as a means of communication. I believe it's very likely we'll find a way to activate the Ethereal device if we can successfully fabricate this armor."
+
+[Tech_MobileCombatExoskeletons LWCETechTemplate]
+strName="Mobile Combat Exoskeletons"
+strSummary="\"Our studies of mechanized warfare have taken us along two paths, mobility and survivability. Pursing this path, we believe can develop fast, capable combat suits that specialize in scouting, flanking and quick reaction on the battlefield.\""
+strCodeName="Vigilant"
+strReport="The MEC-6 and MEC-7 suits we can now build are fast, agile combat exoskeletons that should serve as scouts, flankers and assault units."
+
+[Tech_MobilePowerArmor LWCETechTemplate]
+strName="Mobile Power Armor"
+strSummary="\"Although the weight of our armors have been substantially reduced, their defensive capabilities are still intact.\""
+strCodeName="Rictus"
+strReport="We now have some ideas on how to incorporate the element known as elerium into our basic armor designs, providing bursts of powered assist to our soldiers when necessary. The protective qualities of this armor have been maintained through the use of a multilayered composite lining within the suit.\n\nThe integration of a pneumatic grapple unit provides our troops with the ability to scale objects for a tactical height advantage when needed. Some designs also incorporate micro-servomotors utilized to augment the reflexes of anyone wearing the suit, improving the odds that the operator will avoid incoming enemy fire, while also increasing the available movement range."
+
+[Tech_PlasmaWeapons LWCETechTemplate]
+strName="Plasma Weapons"
+strSummary="\"This carbine-style weapon is capable of generating a direct, superheated charge of plasma - an intriguing and dangerous prospect. Further research could allow for this technology to work in our favor.\""
+strCodeName="Corvid"
+strCustom="We may now use alien plasma carbine cores to build our own plasma small arms."
+strReport="Although we continue to gain a better understanding of the alien plasma weapons we've recovered with each passing day, adapting the technology is but one aspect of the process involved in designing these weapons. We must also ensure that the armaments we develop are suitable to the firing positions our troops are accustomed to... if the weapon doesn't conform to human ergonomic standards, our troops certainly won't be able to fire it effectively. As a result of our efforts to reduce the weapon's weight, we've noted a substantial improvement in the overall accuracy of this rifle. However, we have learned we simply cannot reproduce the basic plasma core in these weapons, so for every plasma weapon we produce, we will have to dismantle a captured weapon of similar capability."
+
+[Tech_PrecisionPlasmaWeapons LWCETechTemplate]
+strName="Precision Plasma Weapons"
+strSummary="\"Our continued research into the alien's plasma weaponry has finally uncovered a fault in the design - the plasma bolt itself begins to dissipate at extreme range. We have several theories as to how this issue might be overcome, and if successful, the result would be a sniper rifle of unparalleled power.\""
+strCodeName="Osprey"
+strReport="Perhaps it was inevitable that we eventually be called upon to develop a weapon of this kind, just as we did with the advent of laser based weapons. By concentrating our efforts on a single, focused discharge of plasma, and ignoring some of the previous design constraints regarding size, weight, and rate of fire, we've developed an extremely lethal long range weapon. Our snipers will undoubtedly be pleased with this weapon's ability to devastate hostile targets from previously unheard of distances. \n\nIn any case, this weapon is now ready for fabrication in engineering."
+
+[Tech_PulseLasers LWCETechTemplate]
+strName="Pulse Lasers"
+strSummary="\"Our studies of alien power systems have enabled us to develop ideas for a second generation of 'pulse' laser weaponry that should be able to do significantly greater damage to alien targets than our existing beam weapons.\""
+strCodeName="Penumbra"
+strReport="By studying the methods used by the aliens to manage energy consumption and heat dissipation in their weapons, we've advanced our existing laser-based weaponry designs well beyond what we had previously envisioned. Remarkably, we now have a working pulse laser prototype that is capable of inflicting massive damage. Although we've had to reduce the size of the focusing lenses in the process, and thus lost some of the accuracy our beam lasers possessed, the increase in firepower is a worthwhile tradeoff."
+
+[Tech_StealthSystems LWCETechTemplate]
+strName="Stealth Systems"
+strSummary="\"Based on our continued study of the hyperwave \"phasing\" phenomena we've witnessed in the labs, we believe it should be possible to develop an armor kit mirroring these unusual properties. If successful, anyone wearing this suit would be extremely difficult to detect.\""
+strCodeName="Nightshade"
+strReport="An advanced prototype based on our earlier Kestrel armor design, this variation makes use of our latest developments in the field of optical camouflage. By studying the unusual phasing behavior exhibited by the Hyperwave beacon, we've come to understand how this device is capable of existing outside of our visible plane. With this \"phasing\" behavior in mind, we've implemented several experimental metamaterials into the weave and structure of this suit's outermost layers. As a result, the \"Shadow\" armor provides near-invisibility to the wearer, allowing for enhanced evasion and infiltration capabilities in the field, but it cannot sustain much damage."
+
+[Tech_UFOAnalysis_Abductor LWCETechTemplate]
+strName="UFO Analysis: Abductor"
+strSummary="\"The aliens appear to use this large vessel for their research on humanity in general and XCOM in particular.\""
+strCodeName="Frogger"
+strReport="Durability: High\nArmor: Heavy\n\nThe Abductors appear to be much better protected than other ships of this size. Perhaps the aliens particularly value the abduction and research missions they are used for."
+strCustom="Based on our analysis, we have improved pilot training and our weapon systems to better target weak points on the Abductor class of alien craft. Our hits on this UFO will do additional damage going forward. We will also recover 20% more alloys and elerium from salvaging these craft."
+
+[Tech_UFOAnalysis_AssaultCarrier LWCETechTemplate]
+strName="UFO Analysis: Assault Carrier"
+strSummary="\"This beast, built on a battleship hull, forgoes some direct combat power in favor of a huge troop capacity.\""
+strCodeName="Fullback"
+strReport="Durability: Highest\nArmor: Heavy\n\nThe assault carrier, while built on a battleship hull, lacks some of its sister's firepower and may be easier to shoot down. Nevertheless, we expect to see the aliens use this craft only against high-value targets, so it should be taken seriously whenever it is detected."
+strCustom="Based on our analysis, we have improved pilot training and our weapon systems to better target weak points on the Assault Carrier class of alien craft. Our hits on this UFO will do additional damage going forward. We will also recover 20% more alloys and elerium from salvaging these craft."
+
+[Tech_UFOAnalysis_Battleship LWCETechTemplate]
+strName="UFO Analysis: Battleship"
+strSummary="\"A truly terrifying ship, this alien dreadnought has unmatched combat power.\""
+strCodeName="Fortress"
+strReport="Durability: Highest\nArmor: Very Heavy\n\nAn unbelievably dangerous piece of hardware, these UFOs never appear to land but are used in bombing, anti-satellite and air superiority roles."
+strCustom="Based on our analysis, we have improved pilot training and our weapon systems to better target weak points on the Battleship class of alien craft. Our hits on this UFO will do additional damage going forward. We will also recover 20% more alloys and elerium from salvaging these craft."
+
+[Tech_UFOAnalysis_Destroyer LWCETechTemplate]
+strName="UFO Analysis: Destroyer"
+strSummary="\"The relatively small size of this UFO class belies its combat power.\""
+strCodeName="Fencer"
+strReport="Durability: Moderate\nArmor: Moderate\n\nThe deadly Destroyer present a much greater threat to our aircraft than its sister class of ships. Armor-piercing weapons are required to defeat this craft. It appears to primarily be used for air raids and anti-satellite operations, although we may see it conduct reconnaissance missions as well. Our analysts note the presence of unused hardpoints on some images of this craft, so we should look out for upgraded versions with even more killing power."
+strCustom="Based on our analysis, we have improved pilot training and our weapon systems to better target weak points on the Destroyer class of alien craft. Our hits on this UFO will do additional damage going forward. We will also recover 20% more alloys and elerium from salvaging these craft."
+
+[Tech_UFOAnalysis_Fighter LWCETechTemplate]
+strName="UFO Analysis: Fighter"
+strSummary="\"This small but tough UFO appears to be built with air-to-air combat in mind.\""
+strCodeName="Flitter"
+strReport="Durability: Low\nArmor: Light \n\nThe alien Fighter, while similar in outward appearance to the scout, is much better protected. Armor-piercing weapons like our Stingray missiles will be helpful in bringing these craft down. This class of craft is used primarily for air raids and anti-satellite operations."
+strCustom="Based on our analysis, we have improved pilot training and our weapon systems to better target weak points on the Fighter class of alien craft. Our hits on this UFO will do additional damage going forward. We will also recover 20% more alloys and elerium from salvaging these craft."
+
+[Tech_UFOAnalysis_Harvester LWCETechTemplate]
+strName="UFO Analysis: Harvester"
+strSummary="\"While similar in design to the abductor, the harvester class of UFO contains an array of resource-extraction equipment.\""
+strCodeName="Farmer"
+strReport="Durability: High\nArmor: Moderate\n\nThe Harvester class of UFO seems to have one role -- to recover important biological materials and minerals from Earth in support of other alien operations. We should try to interdict alien harvest operations whenever possible to slow the alien advance. These craft may be vulnerable to a concentrated attack."
+strCustom="Based on our analysis, we have improved pilot training and our weapon systems to better target weak points on the Harvester class of alien craft. Our hits on this UFO will do additional damage going forward. We will also recover 20% more alloys and elerium from salvaging these craft."
+
+[Tech_UFOAnalysis_Overseer LWCETechTemplate]
+strName="UFO Analysis: Overseer"
+strSummary="\"This appears to be some kind of command and control ship for the aliens.\""
+strCodeName="Fulcrum"
+strReport="Durability: High\nArmor: Very Heavy\n\nThis class of ship appears to be used as a airborne command center for the ethereal race of alien. Only our strongest weapons will be able to penetrate its armor."
+strCustom="Based on our analysis, we have improved pilot training and our weapon systems to better target weak points on the Overseer class of alien craft. Our hits on this UFO will do additional damage going forward. We will also recover 20% more alloys and elerium from salvaging these craft."
+
+[Tech_UFOAnalysis_Raider LWCETechTemplate]
+strName="UFO Analysis: Raider"
+strSummary="\"The aliens appear to use this UFO for resource-gathering, scouting and research operations.\""
+strCodeName="Fisher"
+strReport="Durability: Moderate\nArmor: Very Light\n\nThe Raider class of UFO seems to be a multirole craft that thus suffers in combat power. The aliens appear to use it for reconnaissance, research and resource-gathering operations."
+strCustom="Based on our analysis, we have improved pilot training and our weapon systems to better target weak points on the Raider class of alien craft. Our hits on this UFO will do additional damage going forward. We will also recover 20% more alloys and elerium from salvaging these craft."
+
+[Tech_UFOAnalysis_Scout LWCETechTemplate]
+strName="UFO Analysis: Scout"
+strSummary="\"Now that our salvage teams have been over a generally intact UFO of this class, we are able to conduct a detailed analysis of the craft's capabilities and missions, and we may be able to identify some weak points.\""
+strCodeName="Foxhound"
+strReport="Durability: Low\nArmor: None\n\nThe speedy Scout-class UFO is fortunately within Earth's native capabilities to shoot down ... on occasion. It appears to be used for general reconnaissance, resource-gathering and research."
+strCustom="Based on our analysis, we have improved pilot training and our weapon systems to better target weak points on the Scout class of alien craft. Our hits on this UFO will do additional damage going forward. We will also recover 20% more alloys and elerium from salvaging these craft."
+
+[Tech_UFOAnalysis_TerrorShip LWCETechTemplate]
+strName="UFO Analysis: Terror Ship"
+strSummary="\"The alien terror ship is a variant on the transport design, with the capability to fast-drop troops into a combat area.\""
+strCodeName="Fathom"
+strReport="Durability: Very High\nArmor: Heavy\n\nThe rarely encountered Terror Ship appears suited for rapid deployment of alien shock troops. They appear to presage alien terror missions, but they may be used for alien research on XCOM as well."
+strCustom="Based on our analysis, we have improved pilot training and our weapon systems to better target weak points on the Terror Ship class of alien craft. Our hits on this UFO will do additional damage going forward. We will also recover 20% more alloys and elerium from salvaging these craft."
+
+[Tech_UFOAnalysis_Transport LWCETechTemplate]
+strName="UFO Analysis: Transport"
+strSummary="\"This UFO is used to transport both troops and war materiel.\""
+strCodeName="Flanker"
+strReport="Durability: Very High\nArmor: Heavy\n\nThis ponderously slow craft will be a tough nut to crack. It appears to be primarily used in alien terrestrial resource-gathering but could also be used in support of other major alien operations."
+strCustom="Based on our analysis, we have improved pilot training and our weapon systems to better target weak points on the Transport class of alien craft. Our hits on this UFO will do additional damage going forward. We will also recover 20% more alloys and elerium from salvaging these craft."
+
+[Tech_VehicularPlasmaWeapons LWCETechTemplate]
+strName="Vehicular Plasma Weapons"
+strSummary="\"With additional insulation to protect their computers, it should be possible to equip our Interceptors and SHIVs with plasma weapons. By integrating a larger version of the containment housing developed for our other plasma weaponry, the end result would be extremely effective vehicle-based plasma cannon.\""
+strCodeName="Snapdragon"
+strReport="As we've continually strived to \"even the odds\" for our pilots facing the alien craft in combat, one of our most important developments was the reverse engineering of their plasma-based weaponry. Having successfully created a variant for our troops on the ground, the most difficult part of our work was already done. Increasing the size and firepower of these weapons for an application suitable to our Interceptors and SHIVs was a relatively straightforward process. Once we confirmed that the units themselves could handle the stress associated with firing these weapons, it was simply a matter of scaling up the device and creating an appropriate mount. \n\nWe believe these plasma cannon are now ready for general fabrication in engineering, and I'm confident our pilots will appreciate the additional firepower it provides."
+
+[Tech_Xenobiology LWCETechTemplate]
+strName="Xenobiology"
+strSummary="\"It is crucial that we gain a thorough understanding of the alien physiology in order to develop weapons and tactics better suited to combating them.\""
+strCodeName="Mobius"
+strReport="We've managed to successfully map the alien specimen's entire genome, although I wasn't entirely sure it would be possible using our existing DNA sequencing techniques. However, our success has led to the startling realization that this creature's genetic structure is quite similar to our own. This discovery has piqued the interests of the research team, as it only raises more questions as to the origin of this species...\n\nHaving examined several of the alien corpses, we've also observed a trend - key components of the alien's genetic structure are mirrored perfectly across each of the specimens. Although it is presumptive at this point to draw conclusions as to how this is possible, I believe it is only logical to assume this alien is the product of aggressive genetic engineering, well beyond anything conceived of on Earth. If the aliens are truly capable of this sort of manipulation at a cellular level, I fear we may have only scratched the surface of their technological advantages over us.\n\n In any case, further research is imperative...and while we've obviously made a number of discoveries working with the alien corpses, I feel we may need to acquire a living specimen if we truly hope to find the answers to these questions."
+
+[Tech_Xenogenetics LWCETechTemplate]
+strName="Xenogenetics"
+strSummary="\"A deeper analysis of the aliens' genetic code has revealed that their cells are rife with the substance we call Meld. We believe we may be able to use it on our own soldiers. The invaders appear to have deployed canisters of this strange substance in human-populated areas, perhaps as an experiment, and we have also been able to extract some from alien tissues. It might also be a weapon of some kind. Further analysis could shed light on its potential dangers and applications.\""
+strCodeName="Purity"
+strReport="We now have achieved a much greater understanding of the aliens' enhanced genetic structure. We believe it is largely due to the amazing Meld substance, which appears capable of rewriting the genome to a precision design in a way similar to how we install computer software. In early testing, we were able to devise several methods that allow for direct manipulation of the Meld substance and its physiochemical properties. While searching our records for any references to a material with similar properties, I uncovered a number of redacted data stores created in the 1960s, but much of that information appears to have been lost. In any case, the advances we've made should allow for a wide range of applications in the fields of genetic modification, although we will need to build a dedicated facility to enable these potential research pathways. It is probable that the invaders are more familiar with Meld than we are, and may already be fielding combat elements that take full advantage of its capabilities."
+
+[Tech_Xenoneurology LWCETechTemplate]
+strName="Xenoneurology"
+strSummary="\"With our recent insights into the alien biological makeup, we now wish to study the aliens' nervous systems. If successful, we believe it should be possible to create a device capable of incapacitating an alien subject without killing it. If our troops could capture an alien alive, perhaps we could interrogate it.\""
+strCodeName="Spark"
+strReport="After examining several alien brains, I believe we have found a weakness in their nervous system. We have built a prototype new weapon, the Arc Thrower, and we believe this device is ready for final production in Engineering. The mechanism functions on the basic premise of neurological disruption, emitting a focused electromagnetic pulse capable of confusing and incapacitating targets within a limited range. \n\nAs this is our first venture into the field of non-lethal weapons based on the alien physiology, it's safe to assume there may be unexpected results in the field. It's very likely that some aliens will resist the disabling effects of the weapon, in which case it might be more effective to weaken the enemy first. \n\nThe Arc Thrower is also constrained by our current power supply technology, which limits its effectiveness to one shot per deployment. Any captives retrieved from the field will have to be housed in an Alien Containment facility; I strongly advise we build that facility before attempting to capture live specimens. We will also need to autopsy members of that species before we can properly interrogate them."
+
+[Tech_Xenopsionics LWCETechTemplate]
+strName="Xenopsionics"
+strSummary="\"Our studies of the Sectoid's abilities to manipulate reality by thought alone has yielded a surprising result: Humans, with the proper training and technological aids, should be able to do the same. Pursuing this project may open an entirely new world of human experience.\""
+strCodeName="Backfire"
+strReport="A thousand rumors and charlatans over the centuries, and yet, in a matter of weeks, we have proven it is true: Humans, with suitable training and technological assistance, can manipulate reality by thought alone. We are still arguing whether to call this new branch of human experience psionics or noetics, but one thing is certain: With a suitable investment of resources, we can begin training some of our talented soldiers in specialized techniques to assist them on the battlefield."

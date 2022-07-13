@@ -11,6 +11,7 @@
  **************************************************************************************/
 
 `include(generators_abilities.uci)
+`include(generators_alerts.uci)
 `include(generators_aibehavior.uci)
 `include(generators_cheatmgr.uci)
 `include(generators_uisoldierlist.uci)

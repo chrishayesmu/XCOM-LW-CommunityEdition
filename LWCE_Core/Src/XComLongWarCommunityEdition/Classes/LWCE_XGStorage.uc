@@ -173,7 +173,7 @@ function AutoEquip(XGStrategySoldier kSoldier)
             TACTICAL().TInventorySmallItemsSetItem(kRookieLoadout, 1, `LW_ITEM_ID(LaserSight));
             break;
         case 1:
-            if (ENGINEERING().IsFoundryTechResearched(`LW_FOUNDRY_ID(AlienGrenades)))
+            if (`LWCE_ENGINEERING.LWCE_IsFoundryTechResearched('Foundry_AlienGrenades'))
             {
                 TACTICAL().TInventorySmallItemsSetItem(kRookieLoadout, 1, `LW_ITEM_ID(AlienGrenade));
             }

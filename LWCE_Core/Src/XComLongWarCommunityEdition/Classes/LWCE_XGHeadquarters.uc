@@ -1,5 +1,5 @@
 class LWCE_XGHeadquarters extends XGHeadQuarters
-    dependson(XGGameData);
+    dependson(LWCETypes);
 
 struct CheckpointRecord_LWCE_XGHeadquarters extends XGHeadQuarters.CheckpointRecord
 {
@@ -117,10 +117,12 @@ function AddOutpost(int iContinent)
 
 function AddSatelliteNode(int iCountry, int iType, optional bool bInstant)
 {
+    local LWCE_XGFacility_Labs kLabs;
     local TSatellite kSatellite;
     local XGCountry kCountry;
     local TSatNode kNode;
 
+    kLabs = LWCE_XGFacility_Labs(LABS());
     kNode = World().GetSatelliteNode(iCountry);
     kSatellite.iType = iType;
     kSatellite.v2Loc = kNode.v2Coords;
@@ -156,11 +158,6 @@ function AddSatelliteNode(int iCountry, int iType, optional bool bInstant)
         World().m_kFundingCouncil.OnSatelliteTransferExecuted(m_arrSatellites[m_arrSatellites.Length - 1]);
     }
 
-    if (!WorldInfo.IsConsoleBuild(CONSOLE_Xbox360) && !WorldInfo.IsConsoleBuild(CONSOLE_PS3))
-    {
-        GetRecapSaveData().RecordEvent(RecordSatelliteLaunch(kCountry));
-    }
-
     STAT_AddStat(eRecap_SatellitesLaunched, 1);
 
     if (STAT_GetStat(eRecap_SecondSatellite) == 0 && m_arrSatellites.Length == 2)
@@ -176,9 +173,9 @@ function AddSatelliteNode(int iCountry, int iType, optional bool bInstant)
     // complete the research right away
     if (Continent(kCountry.GetContinent()).HasBonus() && Continent(kCountry.GetContinent()).m_eBonus == eCB_WeHaveWays)
     {
-        if (LABS().IsInterrogationTech(LABS().m_kProject.iTech) || LABS().IsAutopsyTech(LABS().m_kProject.iTech))
+        if (kLabs.LWCE_IsInterrogationTech(kLabs.m_kCEProject.TechName) || kLabs.LWCE_IsAutopsyTech(kLabs.m_kCEProject.TechName))
         {
-            LABS().m_kProject.iActualHoursLeft = 0;
+            kLabs.m_kCEProject.iActualHoursLeft = 0;
         }
     }
 }
@@ -219,6 +216,7 @@ function AddFacility(int iFacility)
 
 function bool ArePrereqsFulfilled(LWCE_TPrereqs kPrereqs)
 {
+    local name PrereqName;
     local int iPrereqId;
     local LWCE_XGFacility_Barracks kBarracks;
     local LWCE_XGFacility_Engineering kEngineering;
@@ -240,9 +238,9 @@ function bool ArePrereqsFulfilled(LWCE_TPrereqs kPrereqs)
         }
     }
 
-    foreach kPrereqs.arrFoundryReqs(iPrereqId)
+    foreach kPrereqs.arrFoundryReqs(PrereqName)
     {
-        if (!kEngineering.IsFoundryTechResearched(iPrereqId))
+        if (!kEngineering.LWCE_IsFoundryTechResearched(PrereqName))
         {
             return false;
         }
@@ -256,9 +254,9 @@ function bool ArePrereqsFulfilled(LWCE_TPrereqs kPrereqs)
         }
     }
 
-    foreach kPrereqs.arrTechReqs(iPrereqId)
+    foreach kPrereqs.arrTechReqs(PrereqName)
     {
-        if (!kLabs.IsResearched(iPrereqId))
+        if (!kLabs.LWCE_IsResearched(PrereqName))
         {
             return false;
         }
@@ -336,8 +334,14 @@ function CreateFacilities()
 
 function GetEvents(out array<THQEvent> arrEvents)
 {
+    `LWCE_LOG_DEPRECATED_CLS(GetEvents);
+}
+
+function LWCE_GetEvents(out array<LWCE_THQEvent> arrEvents)
+{
     local LWCE_XGFundingCouncil kFundingCouncil;
-    local THQEvent kEvent;
+    local LWCE_TData kData;
+    local LWCE_THQEvent kBlankEvent, kEvent;
     local int Index, iEvent;
     local bool bAdded;
 
@@ -345,10 +349,18 @@ function GetEvents(out array<THQEvent> arrEvents)
 
     for (Index = 0; Index < m_arrHiringOrders.Length; Index++)
     {
-        kEvent.EEvent = 5;
-        kEvent.iData = m_arrHiringOrders[Index].iStaffType;
-        kEvent.iData2 = m_arrHiringOrders[Index].iNumStaff;
+        kEvent =  kBlankEvent;
+        kEvent.EventType = 'Hiring';
         kEvent.iHours = m_arrHiringOrders[Index].iHours;
+
+        kData.eType = eDT_Int;
+        kData.iData = m_arrHiringOrders[Index].iStaffType;
+        kEvent.arrData.AddItem(kData);
+
+        kData.eType = eDT_Int;
+        kData.iData = m_arrHiringOrders[Index].iNumStaff;
+        kEvent.arrData.AddItem(kData);
+
         bAdded = false;
 
         for (iEvent = 0; iEvent < arrEvents.Length; iEvent++)
@@ -367,13 +379,20 @@ function GetEvents(out array<THQEvent> arrEvents)
         }
     }
 
-
     for (Index = 0; Index < m_akInterceptorOrders.Length; Index++)
     {
-        kEvent.EEvent = eHQEvent_InterceptorOrdering;
-        kEvent.iData = m_akInterceptorOrders[Index].iDestinationContinent;
-        kEvent.iData2 = m_akInterceptorOrders[Index].iNumInterceptors;
+        kEvent =  kBlankEvent;
+        kEvent.EventType = 'InterceptorOrdering';
         kEvent.iHours = m_akInterceptorOrders[Index].iHours;
+
+        kData.eType = eDT_Int;
+        kData.iData = m_akInterceptorOrders[Index].iDestinationContinent;
+        kEvent.arrData.AddItem(kData);
+
+        kData.eType = eDT_Int;
+        kData.iData = m_akInterceptorOrders[Index].iNumInterceptors;
+        kEvent.arrData.AddItem(kData);
+
         bAdded = false;
 
         for (iEvent = 0; iEvent < arrEvents.Length; iEvent++)
@@ -394,10 +413,18 @@ function GetEvents(out array<THQEvent> arrEvents)
 
     for (Index = 0; Index < m_arrShipTransfers.Length; Index++)
     {
-        kEvent.EEvent = eHQEvent_ShipTransfers;
-        kEvent.iData = m_arrShipTransfers[Index].iDestination;
-        kEvent.iData2 = m_arrShipTransfers[Index].iNumShips;
+        kEvent =  kBlankEvent;
+        kEvent.EventType = 'ShipTransfers';
         kEvent.iHours = m_arrShipTransfers[Index].iHours;
+
+        kData.eType = eDT_Int;
+        kData.iData = m_arrShipTransfers[Index].iDestination;
+        kEvent.arrData.AddItem(kData);
+
+        kData.eType = eDT_Int;
+        kData.iData = m_arrShipTransfers[Index].iNumShips;
+        kEvent.arrData.AddItem(kData);
+
         bAdded = false;
 
         for (iEvent = 0; iEvent < arrEvents.Length; iEvent++)
@@ -418,9 +445,14 @@ function GetEvents(out array<THQEvent> arrEvents)
 
     for (Index = 0; Index < kFundingCouncil.m_arrCECurrentRequests.Length; Index++)
     {
-        kEvent.EEvent = eHQEvent_FCRequest;
-        kEvent.iData = Country(kFundingCouncil.m_arrCECurrentRequests[Index].eRequestingCountry).GetContinent();
+        kEvent =  kBlankEvent;
+        kEvent.EventType = 'FCRequest';
         kEvent.iHours = kFundingCouncil.m_arrCECurrentRequests[Index].iHoursToRespond;
+
+        kData.eType = eDT_Int;
+        kData.iData = Country(kFundingCouncil.m_arrCECurrentRequests[Index].eRequestingCountry).GetContinent();
+        kEvent.arrData.AddItem(kData);
+
         bAdded = false;
 
         for (iEvent = 0; iEvent < arrEvents.Length; iEvent++)
@@ -443,9 +475,14 @@ function GetEvents(out array<THQEvent> arrEvents)
     {
         if (m_arrSatellites[Index].iTravelTime > 0)
         {
-            kEvent.EEvent = eHQEvent_SatOperational;
-            kEvent.iData = m_arrSatellites[Index].iCountry;
+        kEvent =  kBlankEvent;
+            kEvent.EventType = 'SatOperational';
             kEvent.iHours = m_arrSatellites[Index].iTravelTime;
+
+            kData.eType = eDT_Int;
+            kData.iData = m_arrSatellites[Index].iCountry;
+            kEvent.arrData.AddItem(kData);
+
             bAdded = false;
 
             for (iEvent = 0; iEvent < arrEvents.Length; iEvent++)
@@ -473,11 +510,6 @@ function OrderInterceptors(int iContinent, int iQuantity)
 
     iCost = `LWCE_ITEM(`LW_ITEM_ID(Interceptor)).kCost.iCash;
 
-    if (!WorldInfo.IsConsoleBuild(CONSOLE_Xbox360) && !WorldInfo.IsConsoleBuild(CONSOLE_PS3))
-    {
-        GetRecapSaveData().RecordEvent(RecordPurchasingInterceptor(iQuantity));
-    }
-
     // LWCE issue #1: normally when you order interceptors, the strategy HUD (particularly the player's current money)
     // doesn't update until you back out to the main HQ screen. This fix simply updates the HUD immediately.
     AddResource(eResource_Money, -iCost * iQuantity);
@@ -495,11 +527,6 @@ function OrderStaff(int iType, int iQuantity)
 {
     local TStaffOrder kOrder;
     local int I;
-
-    if (!WorldInfo.IsConsoleBuild(CONSOLE_Xbox360) && !WorldInfo.IsConsoleBuild(CONSOLE_PS3))
-    {
-        GetRecapSaveData().RecordEvent(RecordHiredAdditionalSoldiers(iQuantity));
-    }
 
     // LWCE issue #14: update resource HUD after ordering soldiers
     AddResource(eResource_Money, -STAFF(iType).iCash * iQuantity);

@@ -2,15 +2,13 @@ class LWCE_XGTechTree extends XGTechTree
     dependson(LWCETypes)
     config(LWCEBaseStrategyGame);
 
-var config array<LWCE_TFoundryTech> arrBaseGameFoundryProjects;
-var config array<LWCE_TTech> arrBaseGameTechs;
-
-var privatewrite array<LWCE_TFoundryTech> m_arrCEFoundryTechs;
-var privatewrite array<LWCE_TTech> m_arrCETechs;
+var private LWCEFoundryProjectTemplateManager m_kFoundryTemplateMgr;
+var private LWCETechTemplateManager m_kTechTemplateMgr;
 
 function Init()
 {
-    `LWCE_LOG_CLS("Override successful");
+    m_kFoundryTemplateMgr = `LWCE_FOUNDRY_TEMPLATE_MGR;
+    m_kTechTemplateMgr = `LWCE_TECH_TEMPLATE_MGR;
 
     BuildTechs();
     BuildFoundryTechs();
@@ -24,66 +22,31 @@ function Init()
 
 function BuildFoundryTechs()
 {
-    local LWCE_TFoundryTech BaseTech;
-
-    foreach arrBaseGameFoundryProjects(BaseTech)
-    {
-        BaseTech.strName = class'XGLocalizedData'.default.FoundryTechNames[BaseTech.iTechId];
-        BaseTech.strSummary = class'XGLocalizedData'.default.FoundryTechSummary[BaseTech.iTechId];
-
-        m_arrCEFoundryTechs.AddItem(BaseTech);
-   }
-
     // Clear out the base game tech list to help identify instances where it's being used
     m_arrFoundryTechs.Remove(0, m_arrFoundryTechs.Length);
-
-    `LWCE_LOG_CLS("m_arrCEFoundryTechs length from base game: " $ m_arrCEFoundryTechs.Length);
-
-    // Now provide a chance for mods to change the project list
-    `LWCE_MOD_LOADER.OnFoundryTechsBuilt(m_arrCEFoundryTechs);
-
-    `LWCE_LOG_CLS("m_arrCEFoundryTechs length after mod processing: " $ m_arrCEFoundryTechs.Length);
 }
 
 function BuildTechs()
 {
-    local int Index;
-    local LWCE_TTech BaseTech;
-
-    foreach arrBaseGameTechs(BaseTech)
-    {
-        BaseTech.strName     = class'XGLocalizedData'.default.TechTypeNames[BaseTech.iTechId];
-        BaseTech.strCodename = class'XGLocalizedData'.default.TechTypeCodeName[BaseTech.iTechId];
-        BaseTech.strCustom   = class'XGLocalizedData'.default.TechTypeResults[BaseTech.iTechId];
-        BaseTech.strReport   = class'XComLocalizer'.static.ExpandString(class'XGLocalizedData'.default.TechTypeReport[BaseTech.iTechId]);
-        BaseTech.strSummary  = class'XGLocalizedData'.default.TechTypeSummary[BaseTech.iTechId];
-
-        m_arrCETechs.AddItem(BaseTech);
-    }
-
     // Clear out the base game tech list to help identify instances where it's being used
     m_arrTechs.Remove(0, m_arrTechs.Length);
-
-    `LWCE_LOG_CLS("m_arrCETechs length from base game: " $ m_arrCETechs.Length);
-
-    // Now provide a chance for mods to change the research list
-    `LWCE_MOD_LOADER.OnResearchTechsBuilt(m_arrCETechs);
-
-    `LWCE_LOG_CLS("m_arrCETechs length after mod processing: " $ m_arrCETechs.Length);
-
-    for (Index = 0; Index < m_arrCETechs.Length; Index++)
-    {
-        m_arrCETechs[Index].iHours *= class'XGTacticalGameCore'.default.TECH_TIME_BALANCE;
-    }
 }
 
+/// <summary>
+/// Performs a check for the Skunkworks achievement, which is earned by completing all Foundry projects.
+/// </summary>
 function bool CheckForSkunkworks()
 {
-    local int iTech;
+    local array<name> arrFoundryTemplateNames;
+    local LWCE_XGFacility_Engineering kEngineering;
+    local int Index;
 
-    for (iTech = 1; iTech < 25; iTech++)
+    arrFoundryTemplateNames = m_kFoundryTemplateMgr.GetTemplateNames();
+    kEngineering = LWCE_XGFacility_Engineering(ENGINEERING());
+
+    for (Index = 0; Index < arrFoundryTemplateNames.Length; Index++)
     {
-        if (!ENGINEERING().IsFoundryTechResearched(iTech))
+        if (!kEngineering.LWCE_IsFoundryTechResearched(arrFoundryTemplateNames[Index]))
         {
             return false;
         }
@@ -92,71 +55,92 @@ function bool CheckForSkunkworks()
     return true;
 }
 
-function bool LWCE_CreditAppliesToFoundryTech(int iCredit, int iTechId)
+function bool LWCE_CreditAppliesToFoundryTech(name CreditName, name FoundryTechName)
 {
-    local LWCE_TFoundryTech kTech;
+    local LWCEFoundryProjectTemplate kTemplate;
 
-    kTech = LWCE_GetFoundryTech(iTechId);
+    kTemplate = LWCE_GetFoundryTech(FoundryTechName);
 
-    return kTech.arrCredits.Find(iCredit) != INDEX_NONE;
+    if (kTemplate != none)
+    {
+        return kTemplate.BenefitsFromCredit(CreditName);
+    }
+
+    return false;
 }
 
-function bool LWCE_CreditAppliesToTech(int iCredit, int iTech)
+function bool LWCE_CreditAppliesToTech(name CreditName, name TechName)
 {
-    local LWCE_TTech kTech;
+    local LWCETechTemplate kTemplate;
 
-    kTech = LWCE_GetTech(iTech);
+    kTemplate = LWCE_GetTech(TechName);
 
-    return kTech.arrCredits.Find(iCredit) != INDEX_NONE;
+    if (kTemplate != none)
+    {
+        return kTemplate.BenefitsFromCredit(CreditName);
+    }
+
+    return false;
 }
 
-function array<LWCE_TFoundryTech> LWCE_GetAvailableFoundryTechs()
+function array<LWCEFoundryProjectTemplate> LWCE_GetAvailableFoundryTechs()
 {
-    local array<LWCE_TFoundryTech> arrTechs;
-    local LWCE_TFoundryTech kTech;
+    local name ProjectName;
+    local array<LWCEFoundryProjectTemplate> arrAvailableTechs, arrTemplates;
+    local LWCEFoundryProjectTemplate kTemplate;
     local LWCE_XGfacility_Engineering kEngineering;
 
     kEngineering = `LWCE_ENGINEERING;
+    arrTemplates = m_kFoundryTemplateMgr.GetAllProjectTemplates();
 
-    foreach m_arrCEFoundryTechs(kTech)
+    foreach arrTemplates(kTemplate)
     {
-        if (kTech.bForceUnavailable)
+        ProjectName = kTemplate.GetProjectName();
+
+        if (kTemplate.bForceUnavailable)
         {
             continue;
         }
 
-        if (kTech.iTechId != 0 && !kEngineering.IsFoundryTechResearched(kTech.iTechId) && HasFoundryPrereqs(kTech.iTechId))
+        if (ProjectName != '' && !kEngineering.LWCE_IsFoundryTechResearched(ProjectName) && LWCE_HasFoundryPrereqs(ProjectName))
         {
-            if (!kEngineering.LWCE_IsFoundryTechInQueue(kTech.iTechId))
+            if (!kEngineering.LWCE_IsFoundryTechInQueue(ProjectName))
             {
-                arrTechs.AddItem(kTech);
+                arrAvailableTechs.AddItem(kTemplate);
             }
         }
     }
 
-    return arrTechs;
+    return arrAvailableTechs;
 }
 
-function array<LWCE_TFoundryTech> LWCE_GetCompletedFoundryTechs()
+function array<LWCEFoundryProjectTemplate> LWCE_GetCompletedFoundryTechs()
 {
-    local array<LWCE_TFoundryTech> arrTechs;
-    local LWCE_TFoundryTech kTech;
+    local array<LWCEFoundryProjectTemplate> arrCompletedTechs, arrTemplates;
+    local LWCEFoundryProjectTemplate kTemplate;
+    local LWCE_XGfacility_Engineering kEngineering;
 
-    foreach m_arrCEFoundryTechs(kTech)
+    kEngineering = `LWCE_ENGINEERING;
+    arrTemplates = m_kFoundryTemplateMgr.GetAllProjectTemplates();
+
+    foreach arrTemplates(kTemplate)
     {
-        if (kTech.iTechId != 0 && ENGINEERING().IsFoundryTechResearched(kTech.iTechId))
+        if (kTemplate.GetProjectName() != '' && kEngineering.LWCE_IsFoundryTechResearched(kTemplate.GetProjectName()))
         {
-            arrTechs.AddItem(kTech);
+            arrCompletedTechs.AddItem(kTemplate);
         }
     }
 
-    return arrTechs;
+    return arrCompletedTechs;
 }
 
-function int LWCE_GetCreditAdjustedTechHours(int iTech, int iHours, bool bFoundry)
+// TODO: split this into two functions
+function int LWCE_GetCreditAdjustedTechHours(name TechName, int iHours, bool bFoundry)
 {
-    local EResearchCredits eCredit;
-    local int iCredit;
+    local LWCETechTemplate kTemplate;
+    local LWCE_XGFacility_Labs kLabs;
+    local name CreditName;
+    local int Index;
     local float fBonus;
 
     if (iHours == 0)
@@ -164,27 +148,35 @@ function int LWCE_GetCreditAdjustedTechHours(int iTech, int iHours, bool bFoundr
         return 0;
     }
 
-    for (iCredit = 1; iCredit < 10; iCredit++)
-    {
-        eCredit = EResearchCredits(iCredit);
+    kLabs = LWCE_XGFacility_Labs(LABS());
+    kTemplate = m_kTechTemplateMgr.FindTechTemplate(TechName);
 
-        if (!LABS().HasResearchCredit(eCredit))
+    if (kTemplate == none)
+    {
+        return -1;
+    }
+
+    for (Index = 0; Index < kTemplate.arrCreditsApplied.Length; Index++)
+    {
+        CreditName = kTemplate.arrCreditsApplied[Index];
+
+        if (!kLabs.LWCE_HasResearchCredit(CreditName))
         {
             continue;
         }
 
-        if ( (bFoundry && LWCE_CreditAppliesToFoundryTech(iCredit, iTech)) || LWCE_CreditAppliesToTech(eCredit, iTech))
+        if ( (bFoundry && LWCE_CreditAppliesToFoundryTech(CreditName, TechName)) || LWCE_CreditAppliesToTech(CreditName, TechName))
         {
-            fBonus = float(GetResearchCredit(eCredit).iBonus) / 100.0;
+            fBonus = float(LWCE_GetResearchCredit(CreditName).iBonus) / 100.0f;
 
             if (HQ().HasBonus(`LW_HQ_BONUS_ID(Expertise)) > 0)
             {
-                fBonus += (float(HQ().HasBonus(`LW_HQ_BONUS_ID(Expertise))) / float(100));
+                fBonus += (float(HQ().HasBonus(`LW_HQ_BONUS_ID(Expertise))) / 100.0f);
             }
 
-            fBonus *= float(iHours);
+            fBonus *= iHours;
 
-            if (fBonus < float(24))
+            if (fBonus < 24.0f)
             {
                 fBonus = 24.0;
             }
@@ -201,12 +193,57 @@ function int LWCE_GetCreditAdjustedTechHours(int iTech, int iHours, bool bFoundr
     return iHours;
 }
 
-function array<int> LWCE_GetGeneResults(int iTechId)
+function array<int> GetFacilityResults(int iTech)
+{
+    local array<int> arrFacilities;
+    arrFacilities.Add(0);
+
+    `LWCE_LOG_DEPRECATED_CLS(GetFacilityResults);
+
+    return arrFacilities;
+}
+
+function array<int> LWCE_GetFacilityResults(name TechName)
+{
+    local array<int> arrResults;
+
+    // TODO: these shouldn't be hardcoded, but facilities aren't converted to LWCE yet
+    switch (TechName)
+    {
+        case 'Tech_AlienCommandAndControl':
+            arrResults.AddItem(eFacility_DeusEx);
+            break;
+        case 'Tech_AlienCommunications':
+            arrResults.AddItem(eFacility_HyperwaveRadar);
+            break;
+        case 'Tech_AlienComputers':
+            arrResults.AddItem(eFacility_LargeRadar);
+            break;
+        case 'Tech_AlienPowerSystems':
+            arrResults.AddItem(eFacility_EleriumGenerator);
+            break;
+        case 'Tech_Xenobiology':
+            arrResults.AddItem(eFacility_AlienContain);
+            break;
+        case 'Tech_Xenogenetics':
+            arrResults.AddItem(eFacility_GeneticsLab);
+            break;
+        case 'Tech_Xenopsionics':
+            arrResults.AddItem(eFacility_PsiLabs);
+            break;
+    }
+
+    return arrResults;
+}
+
+function array<int> LWCE_GetGeneResults(name TechName)
 {
     local array<int> arrResults;
     local int iGeneMod;
 
-    if (iTechId == 0 || iTechId == 76)
+    arrResults.Length = 0;
+
+    if (TechName == '')
     {
         return arrResults;
     }
@@ -218,32 +255,43 @@ function array<int> LWCE_GetGeneResults(int iTechId)
 
     for (iGeneMod = 0; iGeneMod < 11; iGeneMod++)
     {
+        /*
         // TODO: rewrite the TGeneModTech struct to not use ETechType
-        if (GetGeneTech(EGeneModTech(iGeneMod)).eTechReq == iTechId)
+        if (GetGeneTech(EGeneModTech(iGeneMod)).eTechReq == TechName)
         {
             arrResults.AddItem(iGeneMod);
         }
+         */
     }
 
     return arrResults;
 }
 
-function array<int> LWCE_GetFoundryResults(int iCompletedTechId)
+function array<name> LWCE_GetFoundryResults(name CompletedTechName)
 {
-    local array<int> arrResults;
-    local int iItemReq, iTechReq;
-    local LWCE_TFoundryTech kTech;
+    local array<LWCEFoundryProjectTemplate> arrTemplates;
+    local array<name> arrResults;
+    local bool bIsValid;
+    local int iItemReq;
+    local name nmTechReq;
+    local LWCEFoundryProjectTemplate kTemplate;
+    local LWCE_XGFacility_Labs kLabs;
 
-    if (iCompletedTechId == 0 || iCompletedTechId == eTech_MAX || !HQ().HasFacility(eFacility_Foundry))
+    if (CompletedTechName == '' || !HQ().HasFacility(eFacility_Foundry))
     {
         return arrResults;
     }
 
+    kLabs = LWCE_XGFacility_Labs(LABS());
+    arrTemplates = m_kFoundryTemplateMgr.GetAllProjectTemplates();
+
     // Iterate all Foundry techs to find ones that will be available if iCompletedTechId is done
-    foreach m_arrCEFoundryTechs(kTech)
+    foreach arrTemplates(kTemplate)
     {
+        bIsValid = true;
+
         // We only want newly-available techs, so anything that doesn't rely on the new research is out
-        if (kTech.kPrereqs.arrTechReqs.Find(iCompletedTechId) == INDEX_NONE)
+        if (kTemplate.kPrereqs.arrTechReqs.Find(CompletedTechName) == INDEX_NONE)
         {
             continue;
         }
@@ -252,70 +300,79 @@ function array<int> LWCE_GetFoundryResults(int iCompletedTechId)
         // but it will throw off any modded projects using other prereq fields
 
         // Validate item requirements
-        foreach kTech.kPrereqs.arrItemReqs(iItemReq)
+        foreach kTemplate.kPrereqs.arrItemReqs(iItemReq)
         {
             if (!STORAGE().EverHadItem(iItemReq))
             {
-                continue;
+                bIsValid = false;
+                break;
             }
         }
 
         // If there are other research requirements, check them
-        foreach kTech.kPrereqs.arrTechReqs(iTechReq)
+        foreach kTemplate.kPrereqs.arrTechReqs(nmTechReq)
         {
-            if (iTechReq != iCompletedTechId && !LABS().IsResearched(iTechReq))
+            if (nmTechReq != CompletedTechName && !kLabs.LWCE_IsResearched(nmTechReq))
             {
-                continue;
+                bIsValid = false;
+                break;
             }
         }
 
-        arrResults.AddItem(kTech.iTechId);
+        if (bIsValid)
+        {
+            arrResults.AddItem(kTemplate.GetProjectName());
+        }
     }
 
     return arrResults;
 }
 
-function LWCE_TFoundryTech LWCE_GetFoundryTech(int iFoundryTechType, optional bool bRushResearch)
+function LWCEFoundryProjectTemplate LWCE_GetFoundryTech(name ProjectName, optional bool bRushResearch)
 {
-    local LWCE_TFoundryTech BlankTech, kTech;
+    local LWCEFoundryProjectTemplate kTemplate;
 
-    foreach m_arrCEFoundryTechs(kTech)
+    kTemplate = m_kFoundryTemplateMgr.FindProjectTemplate(ProjectName);
+
+    if (kTemplate == none)
     {
-        if (kTech.iTechId == iFoundryTechType)
-        {
-            break;
-        }
+        return none;
     }
 
-    if (kTech.iTechId != iFoundryTechType)
-    {
-        kTech = BlankTech;
-        kTech.iTechId = 0;
-        return kTech;
-    }
+    kTemplate = kTemplate.Clone();
 
     if (bRushResearch)
     {
-        kTech.iEngineers *= 1.50;
-        kTech.kCost.iCash *= 1.50;
-        kTech.kCost.iAlloys *= 1.50;
-        kTech.kCost.iElerium *= 1.50;
+        kTemplate.iEngineers *= 1.50;
+        kTemplate.kCost.iCash *= 1.50;
+        kTemplate.kCost.iAlloys *= 1.50;
+        kTemplate.kCost.iElerium *= 1.50;
     }
 
     // TODO: may want to add a hook for mods to modify the cost/continent bonus
     if (HQ().HasBonus(`LW_HQ_BONUS_ID(NewWarfare)) > 0)
     {
-        kTech.kCost.iCash *= (float(1) - (float(HQ().HasBonus(`LW_HQ_BONUS_ID(NewWarfare))) / float(100)));
-        kTech.kCost.iAlloys *= (float(1) - (float(HQ().HasBonus(`LW_HQ_BONUS_ID(NewWarfare))) / float(100)));
-        kTech.kCost.iElerium *= (float(1) - (float(HQ().HasBonus(`LW_HQ_BONUS_ID(NewWarfare))) / float(100)));
+        kTemplate.kCost.iCash *= (1.0f - (float(HQ().HasBonus(`LW_HQ_BONUS_ID(NewWarfare))) / 100.0f));
+        kTemplate.kCost.iAlloys *= (1.0f - (float(HQ().HasBonus(`LW_HQ_BONUS_ID(NewWarfare))) / 100.0f));
+        kTemplate.kCost.iElerium *= (1.0f - (float(HQ().HasBonus(`LW_HQ_BONUS_ID(NewWarfare))) / 100.0f));
     }
 
-    kTech.iHours = LWCE_GetCreditAdjustedTechHours(iFoundryTechType, kTech.iHours, true);
+    kTemplate.iPointsToComplete = LWCE_GetCreditAdjustedTechHours(ProjectName, kTemplate.iPointsToComplete, true);
 
-    return kTech;
+    return kTemplate;
 }
 
 function array<int> GetItemResults(int iTech)
+{
+    local array<int> arrResults;
+
+    `LWCE_LOG_DEPRECATED_CLS(GetItemResults);
+
+    arrResults.Add(0);
+    return arrResults;
+}
+
+function array<int> LWCE_GetItemResults(name TechName)
 {
     local array<int> arrResults;
     local LWCE_XGItemTree kItemTree;
@@ -323,14 +380,14 @@ function array<int> GetItemResults(int iTech)
 
     kItemTree = `LWCE_ITEMTREE;
 
-    if (iTech == 0)
+    if (TechName == '')
     {
         return arrResults;
     }
 
     foreach kItemTree.m_arrCEItems(kItem)
     {
-        if (kItem.kPrereqs.arrTechReqs.Find(iTech) != INDEX_NONE)
+        if (kItem.kPrereqs.arrTechReqs.Find(TechName) != INDEX_NONE)
         {
             arrResults.AddItem(kItem.iItemId);
         }
@@ -339,28 +396,79 @@ function array<int> GetItemResults(int iTech)
     return arrResults;
 }
 
+function TResearchCredit GetResearchCredit(EResearchCredits eCredit)
+{
+    local TResearchCredit kCredit;
+
+    `LWCE_LOG_DEPRECATED_CLS(GetResearchCredit);
+
+    return kCredit;
+}
+
+function TResearchCredit LWCE_GetResearchCredit(name CreditName)
+{
+    local EResearchCredits eCredit;
+
+    // TODO: make credits truly configurable
+
+    switch (CreditName)
+    {
+        case 'Aerospace':
+            eCredit = eResearchCredit_Armor_I;
+            break;
+        case 'All':
+            eCredit = eResearchCredit_AllTech;
+            break;
+        case 'AllArmor':
+            eCredit = eResearchCredit_AllArmor;
+            break;
+        case 'AllWeapons':
+            eCredit = eResearchCredit_AllWeapons;
+            break;
+        case 'Cybernetics':
+            eCredit = eResearchCredit_UFOTech;
+            break;
+        case 'GaussWeapons':
+            eCredit = eResearchCredit_Flight;
+            break;
+        case 'LaserWeapons':
+            eCredit = eResearchCredit_Weapons_I;
+            break;
+        case 'PlasmaWeapons':
+            eCredit = eResearchCredit_PlasmaWeapons;
+            break;
+        case 'Psionics':
+            eCredit = eResearchCredit_Psionics;
+            break;
+    }
+
+    return m_arrResearchCredits[int(eCredit)];
+}
+
 function ETechType GetResultingTech(EItemType eItem)
 {
     `LWCE_LOG_DEPRECATED_CLS(GetResultingTech);
     return 0;
 }
 
-function int LWCE_GetResultingTech(int iItemId)
+function name LWCE_GetResultingTech(int iItemId)
 {
+    local array<LWCETechTemplate> arrTemplates;
     local LWCE_XGFacility_Labs kLabs;
-    local int iTech;
+    local int Index;
 
     kLabs = `LWCE_LABS;
+    arrTemplates = m_kTechTemplateMgr.GetAllTechTemplates();
 
-    for (iTech = 0; iTech < m_arrCETechs.Length; iTech++)
+    for (Index = 0; Index < arrTemplates.Length; Index++)
     {
-        if (m_arrCETechs[iTech].kPrereqs.arrItemReqs.Find(iItemId) != INDEX_NONE && !kLabs.IsResearched(m_arrCETechs[iTech].iTechId))
+        if (arrTemplates[Index].kPrereqs.arrItemReqs.Find(iItemId) != INDEX_NONE && !kLabs.LWCE_IsResearched(arrTemplates[Index].GetTechName()))
         {
-            return m_arrCETechs[iTech].iTechId;
+            return arrTemplates[Index].GetTechName();
         }
     }
 
-    return 0;
+    return '';
 }
 
 function TTech GetTech(int iTechType, optional bool bAdjustHours = true)
@@ -372,41 +480,35 @@ function TTech GetTech(int iTechType, optional bool bAdjustHours = true)
     return kTech;
 }
 
-function LWCE_TTech LWCE_GetTech(int iTechType, optional bool bAdjustHours = true)
+function LWCETechTemplate LWCE_GetTech(name TechName, optional bool bAdjustHours = true)
 {
     local int iProgressIndex;
-    local LWCE_TTech kTech, BlankTech;
+    local LWCETechTemplate kTech;
     local LWCE_XGFacility_Labs kLabs;
 
     kLabs = `LWCE_LABS;
+    kTech = m_kTechTemplateMgr.FindTechTemplate(TechName);
 
-    foreach m_arrCETechs(kTech)
+    if (kTech == none)
     {
-        if (kTech.iTechId == iTechType)
-        {
-            break;
-        }
+        return none;
     }
 
-    if (kTech.iTechId != iTechType)
-    {
-        return BlankTech;
-    }
-
-    kTech.iHours = GetCreditAdjustedTechHours(iTechType, kTech.iHours, false);
+    kTech = kTech.Clone();
+    kTech.iPointsToComplete = LWCE_GetCreditAdjustedTechHours(TechName, kTech.iPointsToComplete, false);
 
     if ( (kTech.bIsAutopsy || kTech.bIsInterrogation) && HQ().HasBonus(`LW_HQ_BONUS_ID(WeHaveWays)) > 0)
     {
-        kTech.iHours *= (float(1) - (float(HQ().HasBonus(`LW_HQ_BONUS_ID(WeHaveWays))) / float(100)));
+        kTech.iPointsToComplete *= (1.0f - (float(HQ().HasBonus(`LW_HQ_BONUS_ID(WeHaveWays))) / 100.0f));
     }
 
     if (bAdjustHours)
     {
-        iProgressIndex = kLabs.m_arrCEProgress.Find('iTechId', iTechType);
+        iProgressIndex = kLabs.m_arrCEProgress.Find('TechName', TechName);
 
         if (iProgressIndex != INDEX_NONE)
         {
-            kTech.iHours -= kLabs.m_arrCEProgress[iProgressIndex].iHoursCompleted;
+            kTech.iPointsToComplete -= kLabs.m_arrCEProgress[iProgressIndex].iHoursCompleted;
         }
     }
 
@@ -416,11 +518,18 @@ function LWCE_TTech LWCE_GetTech(int iTechType, optional bool bAdjustHours = tru
     return kTech;
 }
 
-function bool HasFoundryPrereqs(int iFoundryTech)
+function bool HasFoundryPrereqs(int ProjectName)
 {
-    local LWCE_TFoundryTech kTech;
+    `LWCE_LOG_DEPRECATED_CLS(HasFoundryPrereqs);
 
-    kTech = LWCE_GetFoundryTech(iFoundryTech);
+    return false;
+}
+
+function bool LWCE_HasFoundryPrereqs(name ProjectName)
+{
+    local LWCEFoundryProjectTemplate kTech;
+
+    kTech = LWCE_GetFoundryTech(ProjectName);
 
     if (!`LWCE_HQ.ArePrereqsFulfilled(kTech.kPrereqs))
     {
@@ -438,9 +547,16 @@ function bool HasFoundryPrereqs(int iFoundryTech)
 
 function bool HasPrereqs(int iTech)
 {
-    local LWCE_TTech kTech;
+    `LWCE_LOG_DEPRECATED_CLS(HasPrereqs);
 
-    kTech = LWCE_GetTech(iTech);
+    return false;
+}
+
+function bool LWCE_HasPrereqs(name TechName)
+{
+    local LWCETechTemplate kTech;
+
+    kTech = LWCE_GetTech(TechName);
 
     if (!`LWCE_HQ.ArePrereqsFulfilled(kTech.kPrereqs))
     {
@@ -456,15 +572,180 @@ function bool HasPrereqs(int iTech)
     return true;
 }
 
+/// <summary>
+/// Maps from a base game tech ID to its LWCE template name. This is only intended for backwards
+/// compatibility with certain parts of the game that are difficult to modify directly. Mods should
+/// never invoke this function.
+/// </summary>
+static function name TechNameFromInteger(int iTechId)
+{
+    switch (iTechId)
+    {
+        case `LW_TECH_ID(AdvancedAerospaceConcepts):
+            return 'Tech_AdvancedAerospaceConcepts';
+        case `LW_TECH_ID(AdvancedBeamLasers):
+            return 'Tech_AdvancedBeamLasers';
+        case `LW_TECH_ID(AdvancedBodyArmor):
+            return 'Tech_AdvancedBodyArmor';
+        case `LW_TECH_ID(AdvancedGaussWeapons):
+            return 'Tech_AdvancedGaussWeapons';
+        case `LW_TECH_ID(AdvancedPlasmaWeapons):
+            return 'Tech_AdvancedPlasmaWeapons';
+        case `LW_TECH_ID(AdvancedPowerArmor):
+            return 'Tech_AdvancedPowerArmor';
+        case `LW_TECH_ID(AdvancedPulseLasers):
+            return 'Tech_AdvancedPulseLasers';
+        case `LW_TECH_ID(AlienBiocybernetics):
+            return 'Tech_AlienBiocybernetics';
+        case `LW_TECH_ID(AlienCommandAndControl):
+            return 'Tech_AlienCommandAndControl';
+        case `LW_TECH_ID(AlienCommunications):
+            return 'Tech_AlienCommunications';
+        case `LW_TECH_ID(AlienComputers):
+            return 'Tech_AlienComputers';
+        case `LW_TECH_ID(AlienMaterials):
+            return 'Tech_AlienMaterials';
+        case `LW_TECH_ID(AlienOperations):
+            return 'Tech_AlienOperations';
+        case `LW_TECH_ID(AlienPowerSystems):
+            return 'Tech_AlienPowerSystems';
+        case `LW_TECH_ID(AlienPropulsion):
+            return 'Tech_AlienPropulsion';
+        case `LW_TECH_ID(AlienWeaponry):
+            return 'Tech_AlienWeaponry';
+        case `LW_TECH_ID(AntigravSystems):
+            return 'Tech_AntigravSystems';
+        case `LW_TECH_ID(BeamLasers):
+            return 'Tech_BeamLasers';
+        case `LW_TECH_ID(BerserkerAutopsy):
+            return 'Tech_AutopsyBerserker';
+        case `LW_TECH_ID(ChryssalidAutopsy):
+            return 'Tech_AutopsyChryssalid';
+        case `LW_TECH_ID(CompactPlasmaWeapons):
+            return 'Tech_CompactPlasmaWeapons';
+        case `LW_TECH_ID(CyberdiscAutopsy):
+            return 'Tech_AutopsyCyberdisc';
+        case `LW_TECH_ID(DroneAutopsy):
+            return 'Tech_AutopsyDrone';
+        case `LW_TECH_ID(ElectromagneticPulseWeapons):
+            return 'Tech_ElectromagneticPulseWeapons';
+        case `LW_TECH_ID(Elerium):
+            return 'Tech_Elerium';
+        case `LW_TECH_ID(EtherealAutopsy):
+            return 'Tech_AutopsyEthereal';
+        case `LW_TECH_ID(ExperimentalWarfare):
+            return 'Tech_ExperimentalWarfare';
+        case `LW_TECH_ID(FloaterAutopsy):
+            return 'Tech_AutopsyFloater';
+        case `LW_TECH_ID(FusionWeapons):
+            return 'Tech_FusionWeapons';
+        case `LW_TECH_ID(GaussWeapons):
+            return 'Tech_GaussWeapons';
+        case `LW_TECH_ID(HeavyCombatExoskeletons):
+            return 'Tech_HeavyCombatExoskeletons';
+        case `LW_TECH_ID(HeavyFloaterAutopsy):
+            return 'Tech_AutopsyHeavyFloater';
+        case `LW_TECH_ID(HeavyPlasmaWeapons):
+            return 'Tech_HeavyPlasmaWeapons';
+        case `LW_TECH_ID(ImprovedBodyArmor):
+            return 'Tech_ImprovedBodyArmor';
+        case `LW_TECH_ID(ImprovedCombatExoskeletons):
+            return 'Tech_ImprovedCombatExoskeletons';
+        case `LW_TECH_ID(InterrogateBerserker):
+            return 'Tech_InterrogateBerserker';
+        case `LW_TECH_ID(InterrogateEthereal):
+            return 'Tech_InterrogateEthereal';
+        case `LW_TECH_ID(InterrogateFloater):
+            return 'Tech_InterrogateFloater';
+        case `LW_TECH_ID(InterrogateHeavyFloater):
+            return 'Tech_InterrogateHeavyFloater';
+        case `LW_TECH_ID(InterrogateMuton):
+            return 'Tech_InterrogateMuton';
+        case `LW_TECH_ID(InterrogateMutonElite):
+            return 'Tech_InterrogateMutonElite';
+        case `LW_TECH_ID(InterrogateSectoid):
+            return 'Tech_InterrogateSectoid';
+        case `LW_TECH_ID(InterrogateSectoidCommander):
+            return 'Tech_InterrogateSectoidCommander';
+        case `LW_TECH_ID(InterrogateThinMan):
+            return 'Tech_InterrogateThinMan';
+        case `LW_TECH_ID(MechtoidAutopsy):
+            return 'Tech_AutopsyMechtoid';
+        case `LW_TECH_ID(MindAndMachine):
+            return 'Tech_MindAndMachine';
+        case `LW_TECH_ID(MobileCombatExoskeletons):
+            return 'Tech_MobileCombatExoskeletons';
+        case `LW_TECH_ID(MobilePowerArmor):
+            return 'Tech_MobilePowerArmor';
+        case `LW_TECH_ID(MutonAutopsy):
+            return 'Tech_AutopsyMuton';
+        case `LW_TECH_ID(MutonEliteAutopsy):
+            return 'Tech_AutopsyMutonElite';
+        case `LW_TECH_ID(PlasmaWeapons):
+            return 'Tech_PlasmaWeapons';
+        case `LW_TECH_ID(PrecisionPlasmaWeapons):
+            return 'Tech_PrecisionPlasmaWeapons';
+        case `LW_TECH_ID(PulseLasers):
+            return 'Tech_PulseLasers';
+        case `LW_TECH_ID(SectoidAutopsy):
+            return 'Tech_AutopsySectoid';
+        case `LW_TECH_ID(SectoidCommanderAutopsy):
+            return 'Tech_AutopsySectoidCommander';
+        case `LW_TECH_ID(SectopodAutopsy):
+            return 'Tech_AutopsySectopod';
+        case `LW_TECH_ID(SeekerAutopsy):
+            return 'Tech_AutopsySeeker';
+        case `LW_TECH_ID(StealthSystems):
+            return 'Tech_StealthSystems';
+        case `LW_TECH_ID(ThinManAutopsy):
+            return 'Tech_AutopsyThinMan';
+        case `LW_TECH_ID(UFOAnalysisAbductor):
+            return 'Tech_UFOAnalysis_Abductor';
+        case `LW_TECH_ID(UFOAnalysisAssaultCarrier):
+            return 'Tech_UFOAnalysis_AssaultCarrier';
+        case `LW_TECH_ID(UFOAnalysisBattleship):
+            return 'Tech_UFOAnalysis_Battleship';
+        case `LW_TECH_ID(UFOAnalysisDestroyer):
+            return 'Tech_UFOAnalysis_Destroyer';
+        case `LW_TECH_ID(UFOAnalysisFighter):
+            return 'Tech_UFOAnalysis_Fighter';
+        case `LW_TECH_ID(UFOAnalysisHarvester):
+            return 'Tech_UFOAnalysis_Harvester';
+        case `LW_TECH_ID(UFOAnalysisOverseer):
+            return 'Tech_UFOAnalysis_Overseer';
+        case `LW_TECH_ID(UFOAnalysisRaider):
+            return 'Tech_UFOAnalysis_Raider';
+        case `LW_TECH_ID(UFOAnalysisScout):
+            return 'Tech_UFOAnalysis_Scout';
+        case `LW_TECH_ID(UFOAnalysisTerrorShip):
+            return 'Tech_UFOAnalysis_TerrorShip';
+        case `LW_TECH_ID(UFOAnalysisTransport):
+            return 'Tech_UFOAnalysis_Transport';
+        case `LW_TECH_ID(VehicularPlasmaWeapons):
+            return 'Tech_VehicularPlasmaWeapons';
+        case `LW_TECH_ID(Xenobiology):
+            return 'Tech_Xenobiology';
+        case `LW_TECH_ID(Xenogenetics):
+            return 'Tech_Xenogenetics';
+        case `LW_TECH_ID(Xenoneurology):
+            return 'Tech_Xenoneurology';
+        case `LW_TECH_ID(Xenopsionics):
+            return 'Tech_Xenopsionics';
+        default:
+            `LWCE_LOG_CLS("ERROR: TechNameFromInteger is only intended for base game techs. Tech ID " $ iTechId $ " is not valid!");
+            return '';
+    }
+}
+
 protected function ScaleForDynamicWar()
 {
-    local int Index;
-
     if (!IsOptionEnabled(`LW_SECOND_WAVE_ID(DynamicWar)))
     {
         return;
     }
 
+// TODO: need post-template creation hooks to do this now
+/*
     for (Index = 0; Index < m_arrCETechs.Length; Index++)
     {
         m_arrCETechs[Index].kCost = ScaleCost(m_arrCETechs[Index].kCost);
@@ -474,6 +755,7 @@ protected function ScaleForDynamicWar()
     {
         m_arrCETechs[Index].kCost = ScaleCost(m_arrCEFoundryTechs[Index].kCost);
     }
+ */
 }
 
 protected function LWCE_TCost ScaleCost(LWCE_TCost kCost)

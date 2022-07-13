@@ -1,5 +1,22 @@
 class LWCE_XGMissionControlUI extends XGMissionControlUI
-    implements(LWCE_IFCRequestInterface);
+    implements(LWCE_IFCRequestInterface)
+    dependson(LWCE_XGGeoscape);
+
+struct LWCE_TMCAlert
+{
+    var name AlertType;
+    var TText txtTitle;
+    var array<TText> arrText;
+    var array<TLabeledText> arrLabeledText;
+    var TMenu mnuReplies;
+    var TImage imgAlert;
+    var TImage imgAlert2;
+    var TImage imgAlert3;
+    var int iNumber;
+};
+
+var LWCE_TMCEventMenu m_kCEEvents;
+var LWCE_TMCAlert m_kCECurrentAlert;
 
 function AddNotice(EGeoscapeAlert eNotice, optional int iData1, optional int iData2, optional int iData3)
 {
@@ -30,48 +47,35 @@ function AddNotice(EGeoscapeAlert eNotice, optional int iData1, optional int iDa
             return;
     }
 
-    Mod_AddNotice(kNotice);
-}
-
-function Mod_AddNotice(TMCNotice kNotice)
-{
     if (m_arrNotices.Length == 0)
     {
         m_arrNotices.AddItem(kNotice);
         UpdateView();
     }
-    else
+    else if (m_arrNotices.Length <= 3)
     {
-        if (m_arrNotices.Length <= 3)
-        {
-            m_arrNotices.InsertItem(0, kNotice);
-            UpdateView();
-        }
+        m_arrNotices.InsertItem(0, kNotice);
+        UpdateView();
     }
 }
 
 function BuildEventOptions()
 {
     local int iEvent, iDays;
-    local LWCE_TFoundryTech kFoundryTech;
-    local LWCE_TTech kTech;
-    local TMCEvent kOption;
+    local LWCEFoundryProjectTemplate kFoundryTech;
+    local LWCETechTemplate kTech;
+    local LWCE_TMCEvent kOption;
     local XGParamTag kTag;
 
     kTag = XGParamTag(XComEngine(class'Engine'.static.GetEngine()).LocalizeContext.FindTag("XGParam"));
 
-    for (iEvent = 0; iEvent < m_kEvents.arrEvents.Length; iEvent++)
+    for (iEvent = 0; iEvent < m_kCEEvents.arrEvents.Length; iEvent++)
     {
-        iDays = m_kEvents.arrEvents[iEvent].iHours / 24;
+        iDays = m_kCEEvents.arrEvents[iEvent].iHours / 24;
 
-        if ((m_kEvents.arrEvents[iEvent].iHours % 24) > 0)
+        if ((m_kCEEvents.arrEvents[iEvent].iHours % 24) > 0)
         {
             iDays += 1;
-        }
-
-        if (ISCONTROLLED() && m_kEvents.arrEvents[iEvent].EEvent == 0 && m_kEvents.arrEvents[iEvent].iData == 1)
-        {
-            iDays = (START_DAY + 7) - GEOSCAPE().m_kDateTime.GetDay();
         }
 
         if (iDays < 0)
@@ -79,178 +83,141 @@ function BuildEventOptions()
             iDays = 0;
         }
 
-        switch (m_kEvents.arrEvents[iEvent].EEvent)
+        switch (m_kCEEvents.arrEvents[iEvent].EventType)
         {
-            case eHQEvent_Research:
-                kTech = `LWCE_TECH(m_kEvents.arrEvents[iEvent].iData);
+            case 'Research':
+                kTech = `LWCE_TECH(m_kCEEvents.arrEvents[iEvent].arrData[0].nmData);
 
-                kOption.iEventType = eHQEvent_Research;
+                kOption.EventType = 'Research';
                 kOption.iPriority = 5;
                 kOption.imgOption.iImage = eImage_OldResearch;
-                kOption.txtOption.StrValue = kTech.strName;
+                kOption.txtOption.StrValue = kTech.m_strName;
                 kOption.txtDays.StrValue = string(iDays);
                 kOption.clrOption = MakeColor(0, 200, 0, byte(175 / 3));
                 break;
-            case eHQEvent_ItemProject:
-                kOption.iEventType = eHQEvent_ItemProject;
+            case 'ItemProject':
+                kOption.EventType = 'ItemProject';
                 kOption.iPriority = 2;
                 kOption.imgOption.iImage = eImage_OldManufacture;
-                kOption.txtOption.StrValue = `LWCE_ITEM(m_kEvents.arrEvents[iEvent].iData).strName;
+                kOption.txtOption.StrValue = `LWCE_ITEM(m_kCEEvents.arrEvents[iEvent].arrData[0].iData).strName;
 
-                if (m_kEvents.arrEvents[iEvent].iData2 > 1)
+                if (m_kCEEvents.arrEvents[iEvent].arrData[1].iData > 1)
                 {
-                    kOption.txtOption.StrValue @= "(" $ string(m_kEvents.arrEvents[iEvent].iData2) $ ")";
+                    kOption.txtOption.StrValue @= "(" $ m_kCEEvents.arrEvents[iEvent].arrData[1].iData $ ")";
                 }
 
                 kOption.txtDays.StrValue = string(iDays);
                 kOption.clrOption = MakeColor(200, 100, 0, byte(175 / 3));
                 break;
-            case eHQEvent_Facility:
-                kOption.iEventType = eHQEvent_Facility;
+            case 'Facility':
+                kOption.EventType = 'Facility';
                 kOption.iPriority = 3;
                 kOption.imgOption.iImage = eImage_OldManufacture;
-                kOption.txtOption.StrValue = Facility(m_kEvents.arrEvents[iEvent].iData).strName;
+                kOption.txtOption.StrValue = Facility(m_kCEEvents.arrEvents[iEvent].arrData[0].iData).strName;
                 kOption.txtDays.StrValue = string(iDays);
                 kOption.clrOption = MakeColor(100, 100, 100, byte(175 / 3));
                 break;
-            case eHQEvent_Foundry:
-                kFoundryTech = `LWCE_FTECH(m_kEvents.arrEvents[iEvent].iData);
+            case 'Foundry':
+                kFoundryTech = `LWCE_FTECH(m_kCEEvents.arrEvents[iEvent].arrData[0].nmData);
 
-                kOption.iEventType = eHQEvent_Foundry;
+                kOption.EventType = 'Foundry';
                 kOption.iPriority = 2;
-                kOption.imgOption.iImage = 106;
-                kOption.txtOption.StrValue = kFoundryTech.strName;
+                kOption.imgOption.iImage = eImage_FacilityFoundry;
+                kOption.txtOption.StrValue = kFoundryTech.m_strName;
                 kOption.txtDays.StrValue = string(iDays);
                 kOption.clrOption = MakeColor(200, 200, 0, byte(175 / 3));
                 break;
-            case eHQEvent_Hiring:
-                kOption.iEventType = eHQEvent_Hiring;
+            case 'Hiring':
+                kOption.EventType = 'Hiring';
                 kOption.iPriority = 2;
                 kOption.imgOption.iImage = eImage_OldSoldier;
                 kOption.txtOption.StrValue = m_strNewSoldierEvent;
 
-                if (m_kEvents.arrEvents[iEvent].iData2 > 1)
+                if (m_kCEEvents.arrEvents[iEvent].arrData[1].iData > 1)
                 {
-                    kOption.txtOption.StrValue @= "(" $ string(m_kEvents.arrEvents[iEvent].iData2) $ ")";
+                    kOption.txtOption.StrValue @= "(" $ m_kCEEvents.arrEvents[iEvent].arrData[1].iData $ ")";
                 }
 
                 kOption.txtDays.StrValue = string(iDays);
                 kOption.clrOption = MakeColor(0, 0, 200, byte(175 / 3));
                 break;
-            case eHQEvent_InterceptorOrdering:
-                kTag.StrValue0 = Continent(m_kEvents.arrEvents[iEvent].iData).GetName();
-                kOption.iEventType = eHQEvent_InterceptorOrdering;
+            case 'InterceptorOrdering':
+                kTag.StrValue0 = Continent(m_kCEEvents.arrEvents[iEvent].arrData[0].iData).GetName();
+                kOption.EventType = 'InterceptorOrdering';
                 kOption.iPriority = 2;
                 kOption.imgOption.iImage = eImage_OldInterception;
                 kOption.txtOption.StrValue = class'XComLocalizer'.static.ExpandString(m_strLabelNewInterceptors);
 
-                if (m_kEvents.arrEvents[iEvent].iData2 > 1)
+                if (m_kCEEvents.arrEvents[iEvent].arrData[1].iData > 1)
                 {
-                    kOption.txtOption.StrValue @= "(" $ string(m_kEvents.arrEvents[iEvent].iData2) $ ")";
+                    kOption.txtOption.StrValue @= "(" $ m_kCEEvents.arrEvents[iEvent].arrData[1].iData $ ")";
                 }
 
                 kOption.txtDays.StrValue = string(iDays);
                 kOption.clrOption = MakeColor(0, 0, 200, byte(175 / 3));
                 break;
-            case eHQEvent_SatOperational:
-                kTag.StrValue0 = Country(m_kEvents.arrEvents[iEvent].iData).GetName();
-                kOption.iEventType = eHQEvent_SatOperational;
+            case 'SatOperational':
+                kTag.StrValue0 = Country(m_kCEEvents.arrEvents[iEvent].arrData[0].iData).GetName();
+                kOption.EventType = 'SatOperational';
                 kOption.iPriority = 2;
                 kOption.txtOption.StrValue = class'XComLocalizer'.static.ExpandString(m_strLabelSatOperational);
                 kOption.txtDays.StrValue = string(iDays);
                 kOption.clrOption = MakeColor(0, 0, 200, byte(175 / 3));
                 break;
-            case eHQEvent_ShipTransfers:
-                kTag.StrValue0 = Continent(m_kEvents.arrEvents[iEvent].iData).GetName();
-                kOption.iEventType = eHQEvent_ShipTransfers;
+            case 'ShipTransfers':
+                kTag.StrValue0 = Continent(m_kCEEvents.arrEvents[iEvent].arrData[0].iData).GetName();
+                kOption.EventType = 'ShipTransfers';
                 kOption.iPriority = 2;
                 kOption.imgOption.iImage = eImage_OldInterception;
                 kOption.txtOption.StrValue = class'XComLocalizer'.static.ExpandString(m_strLabelShipTransfer);
                 kOption.txtDays.StrValue = string(iDays);
                 kOption.clrOption = MakeColor(0, 0, 200, byte(175 / 3));
                 break;
-            case eHQEvent_FCRequest:
-                kTag.StrValue0 = Continent(m_kEvents.arrEvents[iEvent].iData).GetName();
-                kOption.iAdditionalData = m_kEvents.arrEvents[iEvent].iData;
-                kOption.iEventType = eHQEvent_FCRequest;
+            case 'FCRequest':
+                kTag.StrValue0 = Continent(m_kCEEvents.arrEvents[iEvent].arrData[0].iData).GetName();
+                kOption.arrData = m_kCEEvents.arrEvents[iEvent].arrData;
+                kOption.EventType = 'FCRequest';
                 kOption.iPriority = 2;
                 kOption.imgOption.iImage = eImage_OldInterception;
                 kOption.txtOption.StrValue = class'XComLocalizer'.static.ExpandString(m_strLabelFCRequest);
                 kOption.txtDays.StrValue = string(iDays);
                 kOption.clrOption = MakeColor(0, 0, 200, byte(175 / 3));
                 break;
-            case eHQEvent_PsiTraining:
-                kOption.iEventType = eHQEvent_PsiTraining;
+            case 'PsiTraining':
+                kOption.EventType = 'PsiTraining';
                 kOption.iPriority = 2;
                 kOption.imgOption.iImage = eImage_OldSoldier;
                 kOption.txtOption.StrValue = m_strLabelPsiTesting;
                 kOption.txtDays.StrValue = string(iDays);
                 kOption.clrOption = MakeColor(200, 0, 200, byte(175 / 3));
-
-                // I guess the PsiTraining event is also used for AI events? This code seems correct from the bytecode anyway
-                if (XComHeadquartersCheatManager(GetALocalPlayerController().CheatManager) != none)
-                {
-                    if (XComHeadquartersCheatManager(GetALocalPlayerController().CheatManager).bDebugAIEvents)
-                    {
-                        if (m_kEvents.arrEvents[iEvent].iData != 0)
-                        {
-                            kOption.imgOption.iImage = 0;
-                            switch (m_kEvents.arrEvents[iEvent].iData)
-                            {
-                                case 3:
-                                    kOption.txtOption.StrValue = "UFO Crash in" @ Country(m_kEvents.arrEvents[iEvent].iData2).GetName();
-                                    break;
-                                case 12:
-                                    kOption.txtOption.StrValue = "OVERSEER in" @ Country(m_kEvents.arrEvents[iEvent].iData2).GetName();
-                                    break;
-                                case 7:
-                                    kOption.txtOption.StrValue = "Hunting Satellite in" @ Country(m_kEvents.arrEvents[iEvent].iData2).GetName();
-                                    break;
-                                case 4:
-                                    kOption.txtOption.StrValue = "UFO Landing in" @ Country(m_kEvents.arrEvents[iEvent].iData2).GetName();
-                                    break;
-                                case 2:
-                                    kOption.txtOption.StrValue = "Abduction in" @ Country(m_kEvents.arrEvents[iEvent].iData2).GetName();
-                                    break;
-                                case 9:
-                                    kOption.txtOption.StrValue = "Terror in" @ Country(m_kEvents.arrEvents[iEvent].iData2).GetName();
-                                    break;
-                                case 11:
-                                    kOption.txtOption.StrValue = "Funding Council Mission";
-                                    break;
-                            }
-                        }
-                    }
-                }
-
                 break;
-            case eHQEvent_GeneModification:
-                kOption.iEventType = eHQEvent_GeneModification;
+            case 'GeneModification':
+                kOption.EventType = 'GeneModification';
                 kOption.iPriority = 2;
                 kOption.imgOption.iImage = eImage_OldSoldier;
                 kOption.txtOption.StrValue = m_strLabelGeneModification;
                 kOption.txtDays.StrValue = string(iDays);
                 kOption.clrOption = MakeColor(200, 0, 200, byte(175 / 3));
                 break;
-            case eHQEvent_CyberneticModification:
-                kOption.iEventType = eHQEvent_CyberneticModification;
+            case 'CyberneticModification':
+                kOption.EventType = 'CyberneticModification';
                 kOption.iPriority = 2;
                 kOption.imgOption.iImage = eImage_OldSoldier;
                 kOption.txtOption.StrValue = m_strLabelCyberneticModification;
                 kOption.txtDays.StrValue = string(iDays);
                 kOption.clrOption = MakeColor(200, 0, 200, byte(175 / 3));
                 break;
-            case eHQEvent_MecRepair:
-                kTag.StrValue0 = Item(m_kEvents.arrEvents[iEvent].iData).strName;
-                kOption.iEventType = eHQEvent_MecRepair;
+            case 'MecRepair':
+                kTag.StrValue0 = Item(m_kCEEvents.arrEvents[iEvent].arrData[0].iData).strName;
+                kOption.EventType = 'MecRepair';
                 kOption.iPriority = 2;
                 kOption.imgOption.iImage = eImage_OldManufacture;
                 kOption.txtOption.StrValue = class'XComLocalizer'.static.ExpandString(m_strLabelMecRepair);
                 kOption.txtDays.StrValue = string(iDays);
                 kOption.clrOption = MakeColor(200, 0, 200, byte(175 / 3));
                 break;
-            case eHQEvent_EndOfMonth:
-                kOption.iEventType = eHQEvent_EndOfMonth;
+            case 'EndOfMonth':
+                kOption.EventType = 'EndOfMonth';
                 kOption.iPriority = 4;
                 kOption.imgOption.iImage = eImage_OldFunding;
                 kOption.txtOption.StrValue = m_strLabelCouncilReport;
@@ -258,8 +225,8 @@ function BuildEventOptions()
                 kOption.txtDays.StrValue = string(iDays);
                 kOption.clrOption = MakeColor(0, 0, 200, byte(175 / 3));
                 break;
-            case eHQEvent_CovertOperative:
-                kOption.iEventType = eHQEvent_CovertOperative;
+            case 'CovertOperative':
+                kOption.EventType = 'CovertOperative';
                 kOption.iPriority = 2;
                 kOption.imgOption.iImage = eImage_OldSoldier;
                 kOption.txtOption.StrValue = m_strLabelCovertOperative;
@@ -268,10 +235,58 @@ function BuildEventOptions()
                 break;
         }
 
-        m_kEvents.arrOptions.AddItem(kOption);
+        m_kCEEvents.arrOptions.AddItem(kOption);
     }
 
-    m_kEvents.iHighlight = -1;
+    m_kCEEvents.iHighlight = -1;
+}
+
+function bool CheckForInterrupt()
+{
+    local LWCE_TGeoscapeAlert kAlert;
+
+    kAlert = LWCE_XGGeoscape(GEOSCAPE()).LWCE_GetTopAlert();
+
+    switch (kAlert.AlertType)
+    {
+        case 'UFODetected':
+        case 'Abduction':
+        case 'Terror':
+        case 'FCMission':
+        case 'UFOCrash':
+        case 'UFOLanded':
+        case 'DropArrive':
+        case 'AlienBase':
+        case 'Temple':
+        case 'PsiTraining':
+        case 'PayDay':
+        case 'ExaltMissionActivity':
+        case 'ExaltAlert':
+        case 'ExaltResearchHack':
+        case 'Augmentation':
+            return true;
+    }
+
+    if (m_iEvent == -1)
+    {
+        return true;
+    }
+
+    switch (m_kCEEvents.arrEvents[m_iEvent].EventType)
+    {
+        case 'EndOfMonth':
+            return kAlert.AlertType == 'PayDay';
+        case 'ItemProject':
+            return kAlert.AlertType == 'ItemProjectCompleted' && kAlert.arrData[0].iData == m_kCEEvents.arrEvents[m_iEvent].arrData[0].iData;
+        case 'Facility':
+            return kAlert.AlertType == 'NewFacilityBuilt' && kAlert.arrData[0].iData == m_kCEEvents.arrEvents[m_iEvent].arrData[0].iData;
+        case 'Foundry':
+            return kAlert.AlertType == 'FoundryProjectCompleted' && kAlert.arrData[0].iData == m_kCEEvents.arrEvents[m_iEvent].arrData[0].iData;
+        case 'Research':
+            return kAlert.AlertType == 'ResearchCompleted' && kAlert.arrData[0].iData == m_kCEEvents.arrEvents[m_iEvent].arrData[0].iData;
+    }
+
+    return false;
 }
 
 simulated function GetRequestData(out TFCRequest kRequestRef)
@@ -284,18 +299,563 @@ simulated function LWCE_GetRequestData(out LWCE_TFCRequest kRequestRef)
     kRequestRef = LWCE_XGFundingCouncil(World().m_kFundingCouncil).m_arrCEPendingRequests[0];
 }
 
+function OnAbductionInput(int iOption)
+{
+    GoToView(eMCView_MainMenu);
+    GEOSCAPE().ShowRealEarth();
+    GEOSCAPE().Resume();
+
+    if (iOption != -1)
+    {
+        PRES().UIChooseSquad(m_kAbductInfo.arrAbductions[iOption]);
+    }
+    else
+    {
+        PRES().CAMLookAtEarth(HQ().GetCoords());
+        LWCE_XGGeoscape(GEOSCAPE()).LWCE_PreloadSquadIntoSkyranger('Abduction', true);
+    }
+
+    m_kAbductInfo.iSelected = -1;
+}
+
+function OnAlertInput(int iOption)
+{
+    local LWCE_TGeoscapeAlert kAlert;
+    local XGShip_Dropship kSkyranger;
+    local XGMission kMission;
+    local int iIndex;
+    local bool bCanceledAction;
+
+    if (iOption != -1 && m_kCECurrentAlert.mnuReplies.arrOptions[iOption].iState == eUIState_Disabled)
+    {
+        PlayBadSound();
+        return;
+    }
+
+    PlaySmallCloseSound();
+    kAlert = LWCE_XGGeoscape(GEOSCAPE()).LWCE_GetTopAlert();
+    GEOSCAPE().ClearTopAlert();
+
+    switch (m_kCECurrentAlert.AlertType)
+    {
+        case 'SecretPact':
+            if (Game().CheckForLoseGame() <= 0)
+            {
+                GEOSCAPE().Pause();
+            }
+            else
+            {
+                HQ().CheckForOperatingLoss(GetUIScreen());
+            }
+
+            break;
+        case 'SatelliteDestroyed':
+            HQ().CheckForOperatingLoss(GetUIScreen());
+            break;
+        case 'UFODetected':
+            if (iOption == 0 && m_iCurrentView != eMCView_ChooseShip)
+            {
+                if (m_kCECurrentAlert.mnuReplies.arrOptions[0].iState == eUIState_Disabled)
+                {
+                    PlayBadSound();
+                    return;
+                }
+                else
+                {
+                    PlayOpenSound();
+                }
+
+                GoToView(eMCView_ChooseShip);
+                PRES().UIIntercept(AI().GetUFO(kAlert.arrData[0].iData));
+
+                return;
+            }
+
+            break;
+        case 'Terror':
+        case 'FCMission':
+        case 'UFOCrash':
+        case 'UFOLanded':
+            if (iOption == 0)
+            {
+                if (HANGAR().m_kSkyranger.IsFlying())
+                {
+                    PlayBadSound();
+                }
+                else
+                {
+                    GoToView(eMCView_MainMenu);
+                    PRES().UIChooseSquad(GEOSCAPE().GetMission(kAlert.arrData[0].iData));
+                }
+            }
+            else
+            {
+                bCanceledAction = true;
+            }
+
+            break;
+        case 'Temple':
+            if (iOption == 0)
+            {
+                if (HANGAR().m_kSkyranger.IsFlying())
+                {
+                    PlayBadSound();
+                }
+                else
+                {
+                    GoToView(eMCView_MainMenu);
+                    PRES().UIChooseSquad(GEOSCAPE().GetMission(kAlert.arrData[0].iData));
+                }
+            }
+            else
+            {
+                bCanceledAction = true;
+            }
+
+            break;
+        case 'AlienBase':
+            if (iOption == 0)
+            {
+                if (HANGAR().m_kSkyranger.IsFlying())
+                {
+                    PlayBadSound();
+                }
+                else
+                {
+                    if (STORAGE().GetNumItemsAvailable(`LW_ITEM_ID(SkeletonKey)) == 0)
+                    {
+                        PlayBadSound();
+                    }
+                    else
+                    {
+                        GoToView(eMCView_MainMenu);
+                        PRES().UIChooseSquad(GEOSCAPE().GetMission(kAlert.arrData[0].iData));
+                    }
+                }
+            }
+            else
+            {
+                bCanceledAction = true;
+            }
+
+            break;
+        case 'Abduction':
+            if (iOption == 0 && !HANGAR().m_kSkyranger.IsFlying())
+            {
+                GoToView(eMCView_Abduction);
+                return;
+            }
+            else
+            {
+                bCanceledAction = true;
+            }
+
+            break;
+        case 'ResearchCompleted':
+            if (iOption == 0)
+            {
+                LABS().m_bChooseTechAfterReport = true;
+                JumpToFacility(LABS());
+                return;
+            }
+
+            break;
+        case 'NewFacilityBuilt':
+        case 'ItemProjectCompleted':
+        case 'FoundryProjectCompleted':
+            if (iOption == 0)
+            {
+                JumpToFacility(ENGINEERING());
+                return;
+            }
+            else
+            {
+                GoToView(eMCView_MainMenu);
+            }
+
+            break;
+        case 'PsiTraining':
+            if (iOption == 0 || PSILABS().m_bSubjectZeroCinematic)
+            {
+                JumpToFacility(BARRACKS());
+                return;
+            }
+            else
+            {
+                GoToView(eMCView_MainMenu);
+            }
+
+            break;
+        case 'Augmentation':
+            if (iOption == 0)
+            {
+                JumpToFacility(ENGINEERING(), eEngView_Build, 'State_BuildItem');
+                return;
+            }
+            else
+            {
+                GoToView(eMCView_MainMenu);
+            }
+
+            break;
+        case 'NewSoldiers':
+            if (iOption == 0)
+            {
+                JumpToFacility(BARRACKS());
+                return;
+            }
+            else
+            {
+                GoToView(eMCView_MainMenu);
+            }
+
+            break;
+        case 'NewScientists':
+            if (iOption == 0)
+            {
+                JumpToFacility(LABS());
+                return;
+            }
+
+            break;
+        case 'NewEngineers':
+            if (iOption == 0)
+            {
+                JumpToFacility(ENGINEERING());
+                return;
+            }
+
+            break;
+        case 'FCActivity':
+            if (iOption == 0)
+            {
+                World().m_kFundingCouncil.AcceptPendingRequest();
+                GoToView(eMCView_MainMenu);
+                return;
+            }
+            else
+            {
+                bCanceledAction = true;
+            }
+
+            break;
+        case 'FCMissionActivity':
+            if (iOption == 0)
+            {
+                PRES().bShouldUpdateSituationRoomMenu = false;
+                SITROOM().m_bDisplayMissionDetails = true;
+                JumpToFacility(SITROOM(), eSitView_Mission);
+            }
+            else
+            {
+                bCanceledAction = true;
+            }
+
+            return;
+        case 'ExaltMissionActivity':
+        case 'ExaltResearchHack':
+            if (iOption == 0)
+            {
+                m_eCountryFromExaltSelection = -1;
+                JumpToFacility(SITROOM(), eSitView_Exalt);
+
+                return;
+            }
+            else if (iOption == 1)
+            {
+                m_eCountryFromExaltSelection = -1;
+                GEOSCAPE().ShowRealEarth();
+            }
+            else
+            {
+                GEOSCAPE().ShowRealEarth();
+                bCanceledAction = true;
+            }
+
+            break;
+        case 'FCJetTransfer':
+        case 'FCSatCountry':
+            if (iOption == 0)
+            {
+                JumpToFacility(SITROOM());
+            }
+            else
+            {
+                GoToView(eMCView_MainMenu);
+            }
+
+            break;
+        case 'FCExpiredRequest':
+            if (iOption == 0)
+            {
+                JumpToFacility(SITROOM());
+                return;
+            }
+            else if (iOption == 1)
+            {
+                World().m_kFundingCouncil.ClearExpiredRequests();
+            }
+
+            break;
+        case 'ModalNotify':
+            JumpToFacility(SITROOM());
+            return;
+        case 'DropArrive':
+            kSkyranger = HANGAR().m_kSkyranger;
+
+            if (iOption == 0)
+            {
+                PRES().ShouldPause(false);
+                PlaySound(`SoundCue("SoundUI.MenuSelectCue"), true);
+                GetALocalPlayerController().ClientSetCameraFade(true, MakeColor(0, 0, 0), vect2d(0.0, 1.0), 0.20);
+                `HQPRES.SetTimer(0.210, false, 'PostFadeForBeginCombat');
+
+                if (`HQPRES.IsInState('State_SimCombat'))
+                {
+                    `HQPRES.PrintStateStack();
+                }
+                else
+                {
+                    `HQPRES.m_kNarrativeUIMgr.ShutDown();
+                    `HQPRES.GetUIComm().Hide();
+                    `HQPRES.ClearAllUIScreens();
+                }
+            }
+            else
+            {
+                PRES().ShouldPause(true);
+                PlaySound(`SoundCue("SoundUI.MenuCancelCue"), true);
+                GEOSCAPE().SkyrangerReturnToBase(kSkyranger, true);
+                GEOSCAPE().Resume();
+            }
+
+            break;
+        case 'ExaltAlert':
+            if (iOption == 0)
+            {
+                if (HANGAR().m_kSkyranger.IsFlying())
+                {
+                    PlayBadSound();
+                }
+                else
+                {
+                    GoToView(eMCView_MainMenu);
+
+                    for (iIndex = 0; iIndex < GEOSCAPE().m_arrMissions.Length; iIndex++)
+                    {
+                        kMission = GEOSCAPE().m_arrMissions[iIndex];
+
+                        if (kMission.IsA('XGMission_CovertOpsExtraction') || kMission.IsA('XGMission_CaptureAndHold'))
+                        {
+                            SITROOM().SetInfiltratorMission(kMission);
+                            break;
+                        }
+                    }
+
+                    PRES().bShouldUpdateSituationRoomMenu = false;
+                    SITROOM().m_bDisplayInfiltratorMissionDetails = true;
+                    JumpToFacility(SITROOM(), eSitView_CovertOpsExtractionMission);
+                    PRES().UIInfiltratorMission();
+                }
+            }
+            else
+            {
+                PRES().CAMLookAtEarth(HQ().GetCoords());
+            }
+
+            break;
+        default:
+            if (!GEOSCAPE().HasAlerts())
+            {
+                PRES().CAMLookAtEarth(HQ().GetCoords());
+            }
+
+            break;
+    }
+
+    if (bCanceledAction)
+    {
+        LWCE_XGGeoscape(GEOSCAPE()).LWCE_PreloadSquadIntoSkyranger(m_kCECurrentAlert.AlertType, true);
+    }
+
+    if (GEOSCAPE().HasAlerts())
+    {
+        UpdateView();
+    }
+    else
+    {
+        GoToView(eMCView_MainMenu);
+    }
+}
+
+function OnChooseEvent()
+{
+    if (m_kCEEvents.iHighlight == -1)
+    {
+        PlayBadSound();
+        return;
+    }
+
+    m_iEvent = m_kCEEvents.iHighlight;
+    GEOSCAPE().FastForward();
+}
+
+function OnMissionInput()
+{
+    local LWCE_XGGeoscape kGeoscape;
+    local XGMission kMission;
+
+    kGeoscape = LWCE_XGGeoscape(GEOSCAPE());
+
+    if (!CanActivateMission())
+    {
+        PlayBadSound();
+        return;
+    }
+
+    if (m_kMenu.iHighlight == m_kMenu.arrMissions.Length - 1 && kGeoscape.GetFinalMission() == none)
+    {
+        if (!kGeoscape.IsScanning())
+        {
+            OnScan();
+        }
+        else
+        {
+            OnCancelScan();
+        }
+
+        return;
+    }
+
+    m_iEvent = -1;
+
+    if (m_kMenu.iHighlight < m_arrMenuUFOs.Length)
+    {
+        ShowUFOInterceptAlert(m_arrMenuUFOs[m_kMenu.iHighlight]);
+    }
+    else if (m_kMenu.iHighlight < m_arrMenuMissions.Length)
+    {
+        kMission = kGeoscape.m_arrMissions[m_arrMenuMissions[m_kMenu.iHighlight]];
+
+        if (kMission.m_iMissionType == eMission_Special)
+        {
+            PRES().bShouldUpdateSituationRoomMenu = false;
+        }
+
+        switch (kMission.m_iMissionType)
+        {
+            case eMission_Abduction:
+                kGeoscape.LWCE_PreloadSquadIntoSkyranger('Abduction', false);
+                GoToView(eMCView_Abduction);
+                m_intMissionType = kMission.m_iMissionType;
+                break;
+            default:
+                kGeoscape.MissionAlert(m_arrMenuMissions[m_kMenu.iHighlight]);
+                m_intMissionType = kMission.m_iMissionType;
+                break;
+        }
+    }
+}
+
+function ProcessAlert()
+{
+    if (m_iCurrentView != eMCView_Alert)
+    {
+        if (CheckForInterrupt())
+        {
+            GoToView(eMCView_Alert);
+        }
+        else
+        {
+            NotifyTopAlert();
+        }
+    }
+
+    if (LWCE_XGGeoscape(GEOSCAPE()).LWCE_GetTopAlert().AlertType == 'DropArrive')
+    {
+        UpdateCamera();
+    }
+}
+
+function ShowUFOInterceptAlert(int iUFOindex)
+{
+    local LWCE_XGGeoscape kGeoscape;
+
+    kGeoscape = LWCE_XGGeoscape(GEOSCAPE());
+
+    kGeoscape.LWCE_Alert(`LWCE_ALERT('UFODetected').AddInt(iUFOindex).Build());
+    GoToView(eMCView_ChooseShip);
+    kGeoscape.ClearTopAlert(true);
+    PRES().UIIntercept(AI().GetUFO(iUFOindex));
+}
+
 event Tick(float fDeltaT)
 {
-    super.Tick(fDeltaT);
+    local LWCE_XGGeoscape kGeoscape;
+
+    if (Owner == none || HQ().m_kActiveFacility != HQ().m_kMC || Game().m_bGameOver)
+    {
+        return;
+    }
+
+    kGeoscape = LWCE_XGGeoscape(GEOSCAPE());
+
+    UpdateClock();
+
+    if (BARRACKS().m_kVolunteer != none)
+    {
+        if (kGeoscape.LWCE_GetTopAlert().AlertType == 'Temple')
+        {
+            ProcessAlert();
+            UpdateCamera();
+            return;
+        }
+    }
+
+    if ( (m_iCurrentView == eMCView_Abduction || m_iCurrentView == eMCView_Alert) && kGeoscape.HasAlerts() )
+    {
+        if (!kGeoscape.IsPaused())
+        {
+            UpdateView();
+        }
+    }
+
+    if (m_iCurrentView != eMCView_Abduction && m_iCurrentView != eMCView_ChooseShip)
+    {
+        if ( kGeoscape.HasAlerts() && (!kGeoscape.IsBusy() || kGeoscape.LWCE_GetTopAlert().AlertType == 'DropArrive') )
+        {
+            ProcessAlert();
+            return;
+        }
+        else if (World().m_kFundingCouncil.HasPendingRequest() && !kGeoscape.IsBusy())
+        {
+            ProcessFCRequest();
+        }
+        else if (m_iCurrentView != eMCView_MainMenu)
+        {
+            GoToView(eMCView_MainMenu);
+        }
+        else
+        {
+            UpdateNotices(fDeltaT);
+
+            if (kGeoscape.m_kDateTime.GetDay() != m_iLastUpdateDay)
+            {
+                UpdateView();
+            }
+        }
+    }
+
+    UpdateCamera();
 }
 
 function UpdateAlert()
 {
-    local LWCE_TFoundryTech kFoundryTech;
+    local LWCEFoundryProjectTemplate kFoundryTech;
     local LWCE_TItem kItem;
-    local LWCE_TTech kTech;
-    local TGeoscapeAlert kGeoAlert;
-    local TMCAlert kAlert;
+    local LWCETechTemplate kTech;
+    local LWCE_TGeoscapeAlert kGeoAlert;
+    local LWCE_TMCAlert kAlert;
     local TLabeledText txtLabel;
     local TText txtTemp;
     local XGShip_UFO kUFO;
@@ -312,14 +872,16 @@ function UpdateAlert()
         return;
     }
 
-    kGeoAlert = GEOSCAPE().GetTopAlert();
+    kGeoAlert = LWCE_XGGeoscape(GEOSCAPE()).LWCE_GetTopAlert();
     kTag = XGParamTag(XComEngine(class'Engine'.static.GetEngine()).LocalizeContext.FindTag("XGParam"));
     kCountryTag = new class'XGCountryTag';
 
-    switch (kGeoAlert.eType)
+    `LWCE_LOG_CLS("New alert with type " $ kGeoAlert.AlertType);
+
+    switch (kGeoAlert.AlertType)
     {
-        case eGA_UFODetected:
-            kUFO = AI().GetUFO(kGeoAlert.arrData[0]);
+        case 'UFODetected':
+            kUFO = AI().GetUFO(kGeoAlert.arrData[0].iData);
 
             if (kUFO.GetType() == eShip_UFOEthereal && !HQ().m_kMC.m_bDetectedOverseer)
             {
@@ -394,11 +956,11 @@ function UpdateAlert()
             PRES().CAMLookAtEarth(kUFO.GetCoords());
 
             break;
-        case eGA_UFOLanded:
+        case 'UFOLanded':
             Sound().PlaySFX(SNDLIB().SFX_Alert_UFOLanded);
 
-            kUFO = XGMission_UFOLanded(GEOSCAPE().GetMission(kGeoAlert.arrData[0])).kUFO;
-            kMission = XGMission_UFOLanded(GEOSCAPE().GetMission(kGeoAlert.arrData[0]));
+            kUFO = XGMission_UFOLanded(GEOSCAPE().GetMission(kGeoAlert.arrData[0].iData)).kUFO;
+            kMission = XGMission_UFOLanded(GEOSCAPE().GetMission(kGeoAlert.arrData[0].iData));
 
             if (kMission.m_kDesc.m_strMapName == "EWI_HQAssault_MP (Airbase Defense)")
             {
@@ -507,8 +1069,8 @@ function UpdateAlert()
             kAlert.mnuReplies.arrOptions.AddItem(kReply);
 
             break;
-        case eGA_UFOCrash:
-            kMission = XGMission_UFOCrash(GEOSCAPE().GetMission(kGeoAlert.arrData[0]));
+        case 'UFOCrash':
+            kMission = XGMission_UFOCrash(GEOSCAPE().GetMission(kGeoAlert.arrData[0].iData));
             kAlert.txtTitle.StrValue = m_strLabelUFOCrashSite;
             kAlert.txtTitle.iState = eUIState_Warning;
             kAlert.imgAlert.iImage = eImage_OldUFO;
@@ -565,20 +1127,15 @@ function UpdateAlert()
             kReply.strText = m_strLabelIgnore;
             kReply.iState = eUIState_Normal;
 
-            if (ISCONTROLLED())
-            {
-                kReply.iState = eUIState_Disabled;
-            }
-
             kAlert.mnuReplies.arrOptions.AddItem(kReply);
 
             PRES().CAMLookAtEarth(kMission.GetCoords());
 
             break;
-        case eGA_UFOLost:
+        case 'UFOLost':
             Sound().PlaySFX(SNDLIB().SFX_Alert_UFOLost);
 
-            kAlert.txtTitle.StrValue = (m_strLabelContactLost @ m_strLabelUFOPrefix) $ string(kGeoAlert.arrData[0]);
+            kAlert.txtTitle.StrValue = (m_strLabelContactLost @ m_strLabelUFOPrefix) $ kGeoAlert.arrData[0].iData;
             kAlert.txtTitle.iState = eUIState_Warning;
 
             txtTemp.StrValue = m_strLabelLostContactRequestOrder;
@@ -589,15 +1146,15 @@ function UpdateAlert()
             kAlert.mnuReplies.arrOptions.AddItem(kReply);
 
             break;
-        case eGA_SatelliteDestroyed:
+        case 'SatelliteDestroyed':
             Sound().PlaySFX(SNDLIB().SFX_Alert_SatelliteLost);
 
-            kContinent = Continent(Country(kGeoAlert.arrData[0]).GetContinent());
+            kContinent = Continent(Country(kGeoAlert.arrData[0].iData).GetContinent());
 
             kAlert.txtTitle.StrValue = m_strLabelStatCountryDestroyed;
             kAlert.txtTitle.iState = eUIState_Warning;
 
-            kTag.StrValue0 = Country(kGeoAlert.arrData[0]).GetNameWithArticle();
+            kTag.StrValue0 = Country(kGeoAlert.arrData[0].iData).GetNameWithArticle();
             kTag.StrValue1 = kContinent.GetName();
             txtTemp.StrValue = class'XComLocalizer'.static.ExpandString(m_strLabelLostSatFundingSuspending);
             txtTemp.iState = eUIState_Highlight;
@@ -619,10 +1176,10 @@ function UpdateAlert()
             kReply.strText = m_strLabelOk;
             kAlert.mnuReplies.arrOptions.AddItem(kReply);
 
-            PRES().CAMLookAtEarth(Country(kGeoAlert.arrData[0]).GetCoords());
+            PRES().CAMLookAtEarth(Country(kGeoAlert.arrData[0].iData).GetCoords());
 
             break;
-        case eGA_FCMissionActivity:
+        case 'FCMissionActivity':
             Sound().PlaySFX(SNDLIB().SFX_Alert_FundingCouncil);
 
             kAlert.txtTitle.StrValue = m_strLabelIncFCCom;
@@ -634,7 +1191,7 @@ function UpdateAlert()
             txtTemp.iState = eUIState_Highlight;
             kAlert.arrText.AddItem(txtTemp);
 
-            PRES().Speak(m_strSpeakIncTransmission, 6);
+            PRES().Speak(m_strSpeakIncTransmission, TTSSPEAKER_Ursula);
 
             kReply.strText = m_strLabelGoSituationRoom;
             kAlert.mnuReplies.arrOptions.AddItem(kReply);
@@ -643,26 +1200,26 @@ function UpdateAlert()
             kAlert.mnuReplies.arrOptions.AddItem(kReply);
 
             break;
-        case eGA_ExaltMissionActivity:
-            kMission = GEOSCAPE().GetMission(kGeoAlert.arrData[0]);
-            kCountryTag.kCountry = Country(kGeoAlert.arrData[0]);
+        case 'ExaltMissionActivity':
+            kMission = GEOSCAPE().GetMission(kGeoAlert.arrData[0].iData);
+            kCountryTag.kCountry = Country(kGeoAlert.arrData[0].iData);
 
             kAlert.txtTitle.StrValue = m_strLabelExaltActivityTitle;
             kAlert.txtTitle.iState = eUIState_Warning;
 
-            txtTemp.StrValue = m_strLabelExaltActivitySubtitles[kGeoAlert.arrData[1]];
+            txtTemp.StrValue = m_strLabelExaltActivitySubtitles[kGeoAlert.arrData[1].iData];
             txtTemp.iState = eUIState_Highlight;
             kAlert.arrText.AddItem(txtTemp);
 
-            txtTemp.StrValue = Country(kGeoAlert.arrData[0]).GetNameWithArticle();
+            txtTemp.StrValue = Country(kGeoAlert.arrData[0].iData).GetNameWithArticle();
             kAlert.arrText.AddItem(txtTemp);
 
-            m_eCountryFromExaltSelection = kGeoAlert.arrData[0];
-            txtTemp.StrValue = m_arrExaltReasons[kGeoAlert.arrData[1]];
+            m_eCountryFromExaltSelection = kGeoAlert.arrData[0].iData;
+            txtTemp.StrValue = m_arrExaltReasons[kGeoAlert.arrData[1].iData];
 
-            if (kGeoAlert.arrData[1] == 1)
+            if (kGeoAlert.arrData[1].iData == 1)
             {
-                kTag.StrValue0 = class'UIUtilities'.static.GetHTMLColoredText(ConvertCashToString(kGeoAlert.arrData[2]), 6);
+                kTag.StrValue0 = class'UIUtilities'.static.GetHTMLColoredText(ConvertCashToString(kGeoAlert.arrData[2].iData), eUIState_Cash);
                 txtTemp.StrValue = class'XComLocalizer'.static.ExpandStringByTag(txtTemp.StrValue, kCountryTag) $ "\n\n";
             }
 
@@ -670,13 +1227,13 @@ function UpdateAlert()
             txtTemp.iState = eUIState_Highlight;
             kAlert.arrText.AddItem(txtTemp);
 
-            txtTemp.StrValue = string(Country(kGeoAlert.arrData[0]).GetPanicBlocks());
+            txtTemp.StrValue = string(Country(kGeoAlert.arrData[0].iData).GetPanicBlocks());
             kAlert.arrText.AddItem(txtTemp);
 
-            txtTemp.StrValue = string(kGeoAlert.arrData[1]);
+            txtTemp.StrValue = string(kGeoAlert.arrData[1].iData);
             kAlert.arrText.AddItem(txtTemp);
 
-            kAlert.imgAlert.iImage = kGeoAlert.arrData[1];
+            kAlert.imgAlert.iImage = kGeoAlert.arrData[1].iData;
 
             kReply.strText = m_strLabelExaltSelSitRoom;
             kReply.iState = eUIState_Normal;
@@ -688,26 +1245,26 @@ function UpdateAlert()
 
             GEOSCAPE().ShowHoloEarth();
             GEOSCAPE().Pause();
-            PRES().CAMLookAtEarth(Country(kGeoAlert.arrData[0]).GetCoords());
+            PRES().CAMLookAtEarth(Country(kGeoAlert.arrData[0].iData).GetCoords());
             GEOSCAPE().PulseCountry(ECountry(kMission.GetCountry()), MakeColor(192, 0, 0, 255), MakeColor(255, 128, 0, 255), 0.750);
 
             break;
-        case eGA_ExaltResearchHack:
-            kMission = GEOSCAPE().GetMission(kGeoAlert.arrData[0]);
-            kCountryTag.kCountry = Country(kGeoAlert.arrData[0]);
+        case 'ExaltResearchHack':
+            kMission = GEOSCAPE().GetMission(kGeoAlert.arrData[0].iData);
+            kCountryTag.kCountry = Country(kGeoAlert.arrData[0].iData);
 
             kAlert.txtTitle.StrValue = m_strLabelExaltActivityTitle;
             kAlert.txtTitle.iState = eUIState_Warning;
-            kAlert.imgAlert.iImage = kGeoAlert.arrData[1];
+            kAlert.imgAlert.iImage = kGeoAlert.arrData[1].iData;
 
-            txtTemp.StrValue = m_strLabelExaltActivitySubtitles[kGeoAlert.arrData[1]];
+            txtTemp.StrValue = m_strLabelExaltActivitySubtitles[kGeoAlert.arrData[1].iData];
             txtTemp.iState = eUIState_Highlight;
             kAlert.arrText.AddItem(txtTemp);
 
-            txtTemp.StrValue = m_arrExaltReasons[kGeoAlert.arrData[1]];
-            kTag.IntValue0 = kGeoAlert.arrData[2] + kGeoAlert.arrData[3];
-            kTag.IntValue1 = kGeoAlert.arrData[3];
-            kTag.IntValue2 = kGeoAlert.arrData[2] / 24;
+            txtTemp.StrValue = m_arrExaltReasons[kGeoAlert.arrData[1].iData];
+            kTag.IntValue0 = kGeoAlert.arrData[2].iData + kGeoAlert.arrData[3].iData;
+            kTag.IntValue1 = kGeoAlert.arrData[3].iData;
+            kTag.IntValue2 = kGeoAlert.arrData[2].iData / 24;
             txtTemp.StrValue = class'XComLocalizer'.static.ExpandStringByTag(txtTemp.StrValue, kCountryTag);
             kAlert.arrText.AddItem(txtTemp);
 
@@ -720,30 +1277,30 @@ function UpdateAlert()
 
             txtLabel.strLabel = m_strLabelResearchHackTimeLost;
 
-            if ((kGeoAlert.arrData[2] + kGeoAlert.arrData[3]) < 24)
+            if ((kGeoAlert.arrData[2].iData + kGeoAlert.arrData[3].iData) < 24)
             {
-                txtLabel.StrValue = string(kGeoAlert.arrData[2] + kGeoAlert.arrData[3]);
+                txtLabel.StrValue = string(kGeoAlert.arrData[2].iData + kGeoAlert.arrData[3].iData);
 
                 if (GetLanguage() == "KOR" || GetLanguage() == "JPN")
                 {
-                    txtLabel.StrValue $= class'UIUtilities'.static.GetHoursString(kGeoAlert.arrData[2] + kGeoAlert.arrData[3]);
+                    txtLabel.StrValue $= class'UIUtilities'.static.GetHoursString(kGeoAlert.arrData[2].iData + kGeoAlert.arrData[3].iData);
                 }
                 else
                 {
-                    txtLabel.StrValue @= class'UIUtilities'.static.GetHoursString(kGeoAlert.arrData[2] + kGeoAlert.arrData[3]);
+                    txtLabel.StrValue @= class'UIUtilities'.static.GetHoursString(kGeoAlert.arrData[2].iData + kGeoAlert.arrData[3].iData);
                 }
             }
             else
             {
-                txtLabel.StrValue = string((kGeoAlert.arrData[2] + kGeoAlert.arrData[3]) / 24);
+                txtLabel.StrValue = string((kGeoAlert.arrData[2].iData + kGeoAlert.arrData[3].iData) / 24);
 
                 if ((GetLanguage() == "KOR") || GetLanguage() == "JPN")
                 {
-                    txtLabel.StrValue $= class'UIUtilities'.static.GetDaysString(kGeoAlert.arrData[2] + (kGeoAlert.arrData[3] / 24));
+                    txtLabel.StrValue $= class'UIUtilities'.static.GetDaysString(kGeoAlert.arrData[2].iData + (kGeoAlert.arrData[3].iData / 24));
                 }
                 else
                 {
-                    txtLabel.StrValue @= class'UIUtilities'.static.GetDaysString((kGeoAlert.arrData[2] + kGeoAlert.arrData[3]) / 24);
+                    txtLabel.StrValue @= class'UIUtilities'.static.GetDaysString((kGeoAlert.arrData[2].iData + kGeoAlert.arrData[3].iData) / 24);
                 }
             }
 
@@ -755,30 +1312,30 @@ function UpdateAlert()
 
             txtLabel.strLabel = m_strLabelResearchHackTotalTimeLost;
 
-            if (kGeoAlert.arrData[2] < 24)
+            if (kGeoAlert.arrData[2].iData < 24)
             {
-                txtLabel.StrValue = string(kGeoAlert.arrData[2]);
+                txtLabel.StrValue = string(kGeoAlert.arrData[2].iData);
 
                 if ((GetLanguage() == "KOR") || GetLanguage() == "JPN")
                 {
-                    txtLabel.StrValue $= class'UIUtilities'.static.GetHoursString(kGeoAlert.arrData[2] + kGeoAlert.arrData[3]);
+                    txtLabel.StrValue $= class'UIUtilities'.static.GetHoursString(kGeoAlert.arrData[2].iData + kGeoAlert.arrData[3].iData);
                 }
                 else
                 {
-                    txtLabel.StrValue @= class'UIUtilities'.static.GetHoursString(kGeoAlert.arrData[2] + kGeoAlert.arrData[3]);
+                    txtLabel.StrValue @= class'UIUtilities'.static.GetHoursString(kGeoAlert.arrData[2].iData + kGeoAlert.arrData[3].iData);
                 }
             }
             else
             {
-                txtLabel.StrValue = string(kGeoAlert.arrData[2] / 24);
+                txtLabel.StrValue = string(kGeoAlert.arrData[2].iData / 24);
 
                 if ((GetLanguage() == "KOR") || GetLanguage() == "JPN")
                 {
-                    txtLabel.StrValue $= class'UIUtilities'.static.GetDaysString(kGeoAlert.arrData[2] + (kGeoAlert.arrData[3] / 24));
+                    txtLabel.StrValue $= class'UIUtilities'.static.GetDaysString(kGeoAlert.arrData[2].iData + (kGeoAlert.arrData[3].iData / 24));
                 }
                 else
                 {
-                    txtLabel.StrValue @= class'UIUtilities'.static.GetDaysString((kGeoAlert.arrData[2] + kGeoAlert.arrData[3]) / 24);
+                    txtLabel.StrValue @= class'UIUtilities'.static.GetDaysString((kGeoAlert.arrData[2].iData + kGeoAlert.arrData[3].iData) / 24);
                 }
             }
 
@@ -794,12 +1351,12 @@ function UpdateAlert()
 
             GEOSCAPE().ShowHoloEarth();
             GEOSCAPE().Pause();
-            PRES().CAMLookAtEarth(Country(kGeoAlert.arrData[0]).GetCoords());
+            PRES().CAMLookAtEarth(Country(kGeoAlert.arrData[0].iData).GetCoords());
             GEOSCAPE().PulseCountry(ECountry(kMission.GetCountry()), MakeColor(192, 0, 0, 255), MakeColor(255, 128, 0, 255), 0.750);
 
             break;
-        case eGA_ExaltAlert:
-            kMission = GEOSCAPE().GetMission(kGeoAlert.arrData[0]);
+        case 'ExaltAlert':
+            kMission = GEOSCAPE().GetMission(kGeoAlert.arrData[0].iData);
             kAlert.txtTitle.StrValue = m_strLabelExaltAlertTitle;
 
             txtTemp.StrValue = m_strLabelExaltAlertBody;
@@ -812,7 +1369,7 @@ function UpdateAlert()
             kAlert.mnuReplies.arrOptions.AddItem(kReply);
 
             break;
-        case eGA_FCActivity:
+        case 'FCActivity':
             Sound().PlaySFX(SNDLIB().SFX_Alert_FundingCouncil);
 
             kAlert.txtTitle.StrValue = m_strLabelIncFCCom;
@@ -829,7 +1386,7 @@ function UpdateAlert()
             kAlert.mnuReplies.arrOptions.AddItem(kReply);
 
             break;
-        case eGA_FCJetTransfer:
+        case 'FCJetTransfer':
             Sound().PlaySFX(SNDLIB().SFX_Alert_FundingCouncil);
 
             kAlert.txtTitle.StrValue = m_strLabelIncFCCom;
@@ -837,7 +1394,7 @@ function UpdateAlert()
             kAlert.imgAlert.iImage = eImage_OldFunding;
             kAlert.imgAlert2.iImage = eImage_XComBadge;
 
-            kTag.StrValue0 = Country(kGeoAlert.arrData[0]).GetName();
+            kTag.StrValue0 = Country(kGeoAlert.arrData[0].iData).GetName();
             txtTemp.StrValue = class'XComLocalizer'.static.ExpandString(m_strLabelFCFinishedJetTransfer);
             txtTemp.iState = eUIState_Highlight;
             kAlert.arrText.AddItem(txtTemp);
@@ -851,7 +1408,7 @@ function UpdateAlert()
             kAlert.mnuReplies.arrOptions.AddItem(kReply);
 
             break;
-        case eGA_FCSatCountry:
+        case 'FCSatCountry':
             Sound().PlaySFX(SNDLIB().SFX_Alert_FundingCouncil);
 
             kAlert.txtTitle.StrValue = m_strLabelIncFCCom;
@@ -859,7 +1416,7 @@ function UpdateAlert()
             kAlert.imgAlert.iImage = eImage_OldFunding;
             kAlert.imgAlert2.iImage = eImage_XComBadge;
 
-            kTag.StrValue0 = Country(kGeoAlert.arrData[0]).GetName();
+            kTag.StrValue0 = Country(kGeoAlert.arrData[0].iData).GetName();
             txtTemp.StrValue = class'XComLocalizer'.static.ExpandString(m_strLabelFCFinishedSatCountry);
             txtTemp.iState = eUIState_Highlight;
             kAlert.arrText.AddItem(txtTemp);
@@ -873,13 +1430,13 @@ function UpdateAlert()
             kAlert.mnuReplies.arrOptions.AddItem(kReply);
 
             break;
-        case eGA_FCExpiredRequest:
+        case 'FCExpiredRequest':
             kAlert.txtTitle.StrValue = m_strLabelIncFCCom;
             kAlert.txtTitle.iState = eUIState_Warning;
             kAlert.imgAlert.iImage = eImage_OldFunding;
             kAlert.imgAlert2.iImage = eImage_XComBadge;
 
-            kTag.StrValue0 = Country(kGeoAlert.arrData[0]).GetName();
+            kTag.StrValue0 = Country(kGeoAlert.arrData[0].iData).GetName();
             txtTemp.StrValue = class'XComLocalizer'.static.ExpandString(m_strLabelFCRequestExpired);
             txtTemp.iState = eUIState_Highlight;
             kAlert.arrText.AddItem(txtTemp);
@@ -893,7 +1450,7 @@ function UpdateAlert()
             kAlert.mnuReplies.arrOptions.AddItem(kReply);
 
             break;
-        case eGA_ModalNotify:
+        case 'ModalNotify':
             Sound().PlaySFX(SNDLIB().SFX_Alert_UrgentMessage);
 
             kAlert.txtTitle.StrValue = m_strLabelPriorityAlert;
@@ -914,7 +1471,7 @@ function UpdateAlert()
             kAlert.mnuReplies.arrOptions.AddItem(kReply);
 
             break;
-        case eGA_DropArrive:
+        case 'DropArrive':
             Sound().PlaySFX(SNDLIB().SFX_Alert_DropArrive);
             kAlert.txtTitle.StrValue = m_strLabelVisualContact;
             kAlert.txtTitle.iState = eUIState_Warning;
@@ -930,18 +1487,13 @@ function UpdateAlert()
             kReply.strText = m_strLabelBeginAssault;
             kAlert.mnuReplies.arrOptions.AddItem(kReply);
 
-            if (ISCONTROLLED())
-            {
-                kReply.iState = eUIState_Disabled;
-            }
-
             kReply.strText = m_strLabelReturnToBase;
             kAlert.mnuReplies.arrOptions.AddItem(kReply);
 
             PRES().CAMLookAtEarth(kSkyranger.m_kMission.GetCoords());
 
             break;
-        case eGA_Abduction:
+        case 'Abduction':
             Sound().PlaySFX(SNDLIB().SFX_Alert_Abduction);
 
             kAlert.txtTitle.StrValue = m_strLabelAbductionsReported;
@@ -958,21 +1510,15 @@ function UpdateAlert()
 
             kReply.strText = m_strLabelIgnore;
             kReply.iState = eUIState_Normal;
-
-            if (ISCONTROLLED())
-            {
-                kReply.iState = eUIState_Disabled;
-            }
-
             kAlert.mnuReplies.arrOptions.AddItem(kReply);
 
             m_bNarrFilteringAbduction = true;
 
             break;
-        case eGA_Terror:
+        case 'Terror':
             Sound().PlaySFX(SNDLIB().SFX_Alert_Terror);
 
-            kMission = GEOSCAPE().GetMission(kGeoAlert.arrData[0]);
+            kMission = GEOSCAPE().GetMission(kGeoAlert.arrData[0].iData);
 
             txtLabel.strLabel = m_strLabelTerrorCity;
             txtLabel.StrValue = kMission.GetCity().GetName();
@@ -1002,10 +1548,10 @@ function UpdateAlert()
             PRES().CAMLookAtEarth(kMission.GetCoords());
 
             break;
-        case eGA_FCMission:
+        case 'FCMission':
             Sound().PlaySFX(SNDLIB().SFX_Alert_FundingCouncil);
 
-            kMission = GEOSCAPE().GetMission(kGeoAlert.arrData[0]);
+            kMission = GEOSCAPE().GetMission(kGeoAlert.arrData[0].iData);
 
             kAlert.txtTitle.StrValue = m_strLabelFCMission @ XGMission_FundingCouncil(kMission).m_kTMission.strName;
             kAlert.txtTitle.iState = eUIState_Warning;
@@ -1024,18 +1570,18 @@ function UpdateAlert()
             PRES().CAMLookAtEarth(kMission.GetCoords());
 
             break;
-        case eGA_SecretPact:
+        case 'SecretPact':
             Sound().PlaySFX(SNDLIB().SFX_Alert_UrgentMessage);
 
-            kAlert.imgAlert.iImage = kGeoAlert.arrData[0];
+            kAlert.imgAlert.iImage = kGeoAlert.arrData[0].iData;
             kAlert.iNumber = World().m_iNumCountriesLost;
 
-            txtLabel.strLabel = Country(kGeoAlert.arrData[0]).GetName();
+            txtLabel.strLabel = Country(kGeoAlert.arrData[0].iData).GetName();
             txtLabel.StrValue = m_strLabelCountrySignedPactLabel;
             kAlert.arrLabeledText.AddItem(txtLabel);
 
-            kTag.StrValue0 = Country(kGeoAlert.arrData[0]).GetName();
-            kTag.StrValue1 = Continent(Country(kGeoAlert.arrData[0]).GetContinent()).GetName();
+            kTag.StrValue0 = Country(kGeoAlert.arrData[0].iData).GetName();
+            kTag.StrValue1 = Continent(Country(kGeoAlert.arrData[0].iData).GetContinent()).GetName();
             txtTemp.StrValue = class'XComLocalizer'.static.ExpandString(m_strLabelCountryCountLeave);
             kAlert.arrText.AddItem(txtTemp);
 
@@ -1046,11 +1592,11 @@ function UpdateAlert()
             kAlert.mnuReplies.arrOptions.AddItem(kReply);
 
             break;
-        case eGA_CountryPanic:
+        case 'CountryPanic':
             Sound().PlaySFX(SNDLIB().SFX_Alert_PanicRising);
 
-            kAlert.imgAlert.iImage = kGeoAlert.arrData[0];
-            kTag.StrValue0 = Country(kGeoAlert.arrData[0]).GetName();
+            kAlert.imgAlert.iImage = kGeoAlert.arrData[0].iData;
+            kTag.StrValue0 = Country(kGeoAlert.arrData[0].iData).GetName();
             kAlert.txtTitle.StrValue = class'XComLocalizer'.static.ExpandString(m_strLabelPanicCountry);
             kAlert.txtTitle.iState = eUIState_Bad;
 
@@ -1058,20 +1604,20 @@ function UpdateAlert()
             txtTemp.iState = eUIState_Bad;
             kAlert.arrText.AddItem(txtTemp);
 
-            kAlert.iNumber = Country(kGeoAlert.arrData[0]).GetPanicBlocks();
+            kAlert.iNumber = Country(kGeoAlert.arrData[0].iData).GetPanicBlocks();
             txtTemp.StrValue = m_strLabelPanicLevel;
             kAlert.arrText.AddItem(txtTemp);
 
             kReply.strText = m_strLabelOk;
             kAlert.mnuReplies.arrOptions.AddItem(kReply);
 
-            PRES().CAMLookAtEarth(Country(kGeoAlert.arrData[0]).GetCoords());
+            PRES().CAMLookAtEarth(Country(kGeoAlert.arrData[0].iData).GetCoords());
 
             break;
-        case eGA_AlienBase:
+        case 'AlienBase':
             Sound().PlaySFX(SNDLIB().SFX_Alert_UrgentMessage);
 
-            kMission = GEOSCAPE().GetMission(kGeoAlert.arrData[0]);
+            kMission = GEOSCAPE().GetMission(kGeoAlert.arrData[0].iData);
 
             kAlert.txtTitle.StrValue = m_strLabelAssaultAlienBase;
             kAlert.txtTitle.iState = eUIState_Bad;
@@ -1102,10 +1648,10 @@ function UpdateAlert()
             PRES().CAMLookAtEarth(kMission.GetCoords());
 
             break;
-        case eGA_Temple:
+        case 'Temple':
             Sound().PlaySFX(SNDLIB().SFX_Alert_UrgentMessage);
 
-            kMission = GEOSCAPE().GetMission(kGeoAlert.arrData[0]);
+            kMission = GEOSCAPE().GetMission(kGeoAlert.arrData[0].iData);
 
             kAlert.txtTitle.StrValue = m_strLabelAssaultTempleShip;
             kAlert.txtTitle.iState = eUIState_Bad;
@@ -1127,7 +1673,7 @@ function UpdateAlert()
             PRES().CAMLookAtEarth(kMission.GetCoords());
 
             break;
-        case eGA_PayDay:
+        case 'PayDay':
             Sound().PlaySFX(SNDLIB().SFX_Alert_FundingCouncil);
             GEOSCAPE().ClearTopAlert();
 
@@ -1144,16 +1690,16 @@ function UpdateAlert()
             PRES().UIWorldReport();
 
             break;
-        case eGA_ResearchCompleted:
+        case 'ResearchCompleted':
             Sound().PlaySFX(SNDLIB().SFX_Alert_ResearchComplete);
 
-            kTech = `LWCE_TECH(kGeoAlert.arrData[0]);
+            kTech = `LWCE_TECH(kGeoAlert.arrData[0].nmData);
 
-            kAlert.txtTitle.StrValue = kTech.strName;
+            kAlert.txtTitle.StrValue = kTech.m_strName;
             kAlert.txtTitle.iState = eUIState_Good;
             kAlert.imgAlert.strPath = kTech.ImagePath;
 
-            kTag.StrValue0 = kTech.strName;
+            kTag.StrValue0 = kTech.m_strName;
             txtTemp.StrValue = class'XComLocalizer'.static.ExpandString(m_strLabelTechResearchComplete);
             txtTemp.iState = eUIState_Highlight;
             kAlert.arrText.AddItem(txtTemp);
@@ -1162,22 +1708,14 @@ function UpdateAlert()
             kAlert.mnuReplies.arrOptions.AddItem(kReply);
 
             kReply.strText = m_strLabelCarryOn;
-
-            if (ISCONTROLLED())
-            {
-                kReply.iState = eUIState_Disabled;
-            }
-            else
-            {
-                kReply.iState = eUIState_Normal;
-            }
+            kReply.iState = eUIState_Normal;
 
             kAlert.mnuReplies.arrOptions.AddItem(kReply);
 
             break;
-        case eGA_ItemProjectCompleted:
+        case 'ItemProjectCompleted':
             Sound().PlaySFX(SNDLIB().SFX_Alert_ItemProjectComplete);
-            kItem = `LWCE_ITEM(kGeoAlert.arrData[0]);
+            kItem = `LWCE_ITEM(kGeoAlert.arrData[0].iData);
 
             kAlert.txtTitle.StrValue = kItem.strName;
             kAlert.txtTitle.iState = eUIState_Good;
@@ -1190,22 +1728,22 @@ function UpdateAlert()
 
             if (ENGINEERING().HasRebate())
             {
-                if (ENGINEERING().m_arrOldRebates[kGeoAlert.arrData[2]].iAlloys > 0 || ENGINEERING().m_arrOldRebates[kGeoAlert.arrData[2]].iElerium > 0)
+                if (ENGINEERING().m_arrOldRebates[kGeoAlert.arrData[2].iData].iAlloys > 0 || ENGINEERING().m_arrOldRebates[kGeoAlert.arrData[2].iData].iElerium > 0)
                 {
                     txtTemp.StrValue = m_strLabelWorkshopRebate;
                     txtTemp.iState = eUIState_Warning;
                     kAlert.arrText.AddItem(txtTemp);
 
-                    if (ENGINEERING().m_arrOldRebates[kGeoAlert.arrData[2]].iAlloys > 0)
+                    if (ENGINEERING().m_arrOldRebates[kGeoAlert.arrData[2].iData].iAlloys > 0)
                     {
-                        txtTemp.StrValue = string(ENGINEERING().m_arrOldRebates[kGeoAlert.arrData[2]].iAlloys) @ (GetResourceLabel(eResource_Alloys));
+                        txtTemp.StrValue = string(ENGINEERING().m_arrOldRebates[kGeoAlert.arrData[2].iData].iAlloys) @ (GetResourceLabel(eResource_Alloys));
                         txtTemp.iState = eUIState_Alloys;
                         kAlert.arrText.AddItem(txtTemp);
                     }
 
-                    if (ENGINEERING().m_arrOldRebates[kGeoAlert.arrData[2]].iElerium > 0)
+                    if (ENGINEERING().m_arrOldRebates[kGeoAlert.arrData[2].iData].iElerium > 0)
                     {
-                        txtTemp.StrValue = string(ENGINEERING().m_arrOldRebates[kGeoAlert.arrData[2]].iElerium) @ (GetResourceLabel(eResource_Elerium));
+                        txtTemp.StrValue = string(ENGINEERING().m_arrOldRebates[kGeoAlert.arrData[2].iData].iElerium) @ (GetResourceLabel(eResource_Elerium));
                         txtTemp.iState = eUIState_Elerium;
                         kAlert.arrText.AddItem(txtTemp);
                     }
@@ -1219,24 +1757,24 @@ function UpdateAlert()
             kAlert.mnuReplies.arrOptions.AddItem(kReply);
 
             break;
-        case eGA_NewFacilityBuilt:
+        case 'NewFacilityBuilt':
             Sound().PlaySFX(SNDLIB().SFX_Alert_FacilityComplete);
-            FacilityNarrative(EFacilityType(kGeoAlert.arrData[0]));
+            FacilityNarrative(EFacilityType(kGeoAlert.arrData[0].iData));
 
-            if (kGeoAlert.arrData[0] != eFacility_AccessLift)
+            if (kGeoAlert.arrData[0].iData != eFacility_AccessLift)
             {
-                if (HQ().m_arrFacilityBinks[kGeoAlert.arrData[0]] == 0)
+                if (HQ().m_arrFacilityBinks[kGeoAlert.arrData[0].iData] == 0)
                 {
-                    HQ().m_arrFacilityBinks[kGeoAlert.arrData[0]] = 1;
-                    PRES().PlayCinematic(eCinematic_FacilityReward, kGeoAlert.arrData[0]);
+                    HQ().m_arrFacilityBinks[kGeoAlert.arrData[0].iData] = 1;
+                    PRES().PlayCinematic(eCinematic_FacilityReward, kGeoAlert.arrData[0].iData);
                 }
             }
 
-            kAlert.txtTitle.StrValue = Facility(kGeoAlert.arrData[0]).strName;
+            kAlert.txtTitle.StrValue = Facility(kGeoAlert.arrData[0].iData).strName;
             kAlert.txtTitle.iState = eUIState_Good;
-            kAlert.imgAlert.iImage = Facility(kGeoAlert.arrData[0]).iImage;
+            kAlert.imgAlert.iImage = Facility(kGeoAlert.arrData[0].iData).iImage;
 
-            kTag.StrValue0 = Facility(kGeoAlert.arrData[0]).strName;
+            kTag.StrValue0 = Facility(kGeoAlert.arrData[0].iData).strName;
             txtTemp.StrValue = class'XComLocalizer'.static.ExpandString(m_strLabelConstructItemFacilityComplete);
             txtTemp.iState = eUIState_Highlight;
             kAlert.arrText.AddItem(txtTemp);
@@ -1248,13 +1786,13 @@ function UpdateAlert()
             kAlert.mnuReplies.arrOptions.AddItem(kReply);
 
             break;
-        case eGA_Augmentation:
+        case 'Augmentation':
             Sound().PlaySFX(SNDLIB().SFX_Alert_FacilityComplete);
 
             kAlert.txtTitle.StrValue = m_strLabelAugmentTitle;
             kAlert.txtTitle.iState = eUIState_Normal;
 
-            kSoldier = BARRACKS().GetSoldierByID(kGeoAlert.arrData[0]);
+            kSoldier = BARRACKS().GetSoldierByID(kGeoAlert.arrData[0].iData);
             kTag.StrValue0 = kSoldier.GetName(eNameType_RankFull);
             txtTemp.StrValue = class'XComLocalizer'.static.ExpandString(m_strLabelAugmentBody);
             txtTemp.iState = eUIState_Normal;
@@ -1267,16 +1805,16 @@ function UpdateAlert()
             kAlert.mnuReplies.arrOptions.AddItem(kReply);
 
             break;
-        case eGA_FoundryProjectCompleted:
+        case 'FoundryProjectCompleted':
             Sound().PlaySFX(SNDLIB().SFX_Alert_FoundryProjectComplete);
 
-            kFoundryTech = `LWCE_FTECH(kGeoAlert.arrData[0]);
+            kFoundryTech = `LWCE_FTECH(kGeoAlert.arrData[0].nmData);
 
-            kAlert.txtTitle.StrValue = kFoundryTech.strName;
+            kAlert.txtTitle.StrValue = kFoundryTech.m_strName;
             kAlert.txtTitle.iState = eUIState_Good;
             kAlert.imgAlert.strPath = kFoundryTech.ImagePath;
 
-            kTag.StrValue0 = kFoundryTech.strName;
+            kTag.StrValue0 = kFoundryTech.m_strName;
             txtTemp.StrValue = class'XComLocalizer'.static.ExpandString(m_strLabelFoundryItemComplete);
             txtTemp.iState = eUIState_Highlight;
             kAlert.arrText.AddItem(txtTemp);
@@ -1287,7 +1825,7 @@ function UpdateAlert()
             kAlert.mnuReplies.arrOptions.AddItem(kReply);
 
             break;
-        case eGA_PsiTraining:
+        case 'PsiTraining':
             Sound().PlaySFX(SNDLIB().SFX_Alert_PsiTrainingComplete);
 
             kAlert.txtTitle.StrValue = m_strLabelMessageFromPsiLabs;
@@ -1309,14 +1847,14 @@ function UpdateAlert()
             }
 
             break;
-        case eGA_NewSoldiers:
+        case 'NewSoldiers':
             Sound().PlaySFX(SNDLIB().SFX_Notify_SoldiersArrived);
             kAlert.txtTitle.StrValue = m_strLabelMessageFormBarracks;
             kAlert.txtTitle.iState = eUIState_Good;
             kAlert.imgAlert.iImage = eImage_OldSoldier;
             kAlert.imgAlert2.iImage = eImage_Soldier;
 
-            kTag.IntValue0 = kGeoAlert.arrData[0];
+            kTag.IntValue0 = kGeoAlert.arrData[0].iData;
             txtTemp.StrValue = class'XComLocalizer'.static.ExpandString(m_strLabelNumRookiesArrived);
             txtTemp.iState = eUIState_Highlight;
             kAlert.arrText.AddItem(txtTemp);
@@ -1328,7 +1866,7 @@ function UpdateAlert()
             kAlert.mnuReplies.arrOptions.AddItem(kReply);
 
             break;
-        case eGA_NewEngineers:
+        case 'NewEngineers':
             Sound().PlaySFX(SNDLIB().SFX_Notify_SoldiersArrived);
 
             kAlert.txtTitle.StrValue = m_strLabelMessageFromEngineering;
@@ -1336,7 +1874,7 @@ function UpdateAlert()
             kAlert.imgAlert.iImage = eImage_OldManufacture;
             kAlert.imgAlert2.iImage = eImage_Engineer;
 
-            kTag.IntValue0 = kGeoAlert.arrData[0];
+            kTag.IntValue0 = kGeoAlert.arrData[0].iData;
             txtTemp.StrValue = class'XComLocalizer'.static.ExpandString(m_strLabelNumEngineersArrived);
             txtTemp.iState = eUIState_Highlight;
             kAlert.arrText.AddItem(txtTemp);
@@ -1348,7 +1886,7 @@ function UpdateAlert()
             kAlert.mnuReplies.arrOptions.AddItem(kReply);
 
             break;
-        case eGA_NewScientists:
+        case 'NewScientists':
             Sound().PlaySFX(SNDLIB().SFX_Notify_SoldiersArrived);
 
             kAlert.txtTitle.StrValue = m_strLabelMessageFromLabs;
@@ -1356,7 +1894,7 @@ function UpdateAlert()
             kAlert.imgAlert.iImage = eImage_OldResearch;
             kAlert.imgAlert2.iImage = eImage_Scientist;
 
-            kTag.IntValue0 = kGeoAlert.arrData[0];
+            kTag.IntValue0 = kGeoAlert.arrData[0].iData;
             txtTemp.StrValue = class'XComLocalizer'.static.ExpandString(m_strLabelNumScientistsArrived);
             txtTemp.iState = eUIState_Highlight;
             kAlert.arrText.AddItem(txtTemp);
@@ -1368,17 +1906,17 @@ function UpdateAlert()
             kAlert.mnuReplies.arrOptions.AddItem(kReply);
 
             break;
-        case eGA_ExaltRaidFailCountry:
+        case 'ExaltRaidFailCountry':
             Sound().PlaySFX(SNDLIB().SFX_Alert_UrgentMessage);
 
-            kAlert.imgAlert.iImage = kGeoAlert.arrData[0];
+            kAlert.imgAlert.iImage = kGeoAlert.arrData[0].iData;
             kAlert.iNumber = World().m_iNumCountriesLost;
 
-            txtLabel.strLabel = Country(kGeoAlert.arrData[0]).GetName();
+            txtLabel.strLabel = Country(kGeoAlert.arrData[0].iData).GetName();
             txtLabel.StrValue = m_strLabelExaltRaidCountryFailSubtitle;
             kAlert.arrLabeledText.AddItem(txtLabel);
 
-            kTag.StrValue0 = Country(kGeoAlert.arrData[0]).GetName();
+            kTag.StrValue0 = Country(kGeoAlert.arrData[0].iData).GetName();
             txtTemp.StrValue = class'XComLocalizer'.static.ExpandString(m_strLabelExaltRaidCountryFailLeft);
             kAlert.arrText.AddItem(txtTemp);
 
@@ -1389,24 +1927,24 @@ function UpdateAlert()
             kAlert.mnuReplies.arrOptions.AddItem(kReply);
 
             break;
-        case eGA_ExaltRaidFailContinent:
+        case 'ExaltRaidFailContinent':
             Sound().PlaySFX(SNDLIB().SFX_Alert_UrgentMessage);
 
-            kAlert.imgAlert.iImage = kGeoAlert.arrData[0];
+            kAlert.imgAlert.iImage = kGeoAlert.arrData[0].iData;
 
             txtLabel.strLabel = m_strLabelExaltRaidContinentFailTitle;
             txtLabel.StrValue = "";
             kAlert.arrLabeledText.AddItem(txtLabel);
 
-            kTag.StrValue0 = Country(kGeoAlert.arrData[0]).GetName();
+            kTag.StrValue0 = Country(kGeoAlert.arrData[0].iData).GetName();
             txtTemp.StrValue = class'XComLocalizer'.static.ExpandString(m_strLabelExaltRaidContinentFailDesc);
             kAlert.arrText.AddItem(txtTemp);
 
             txtTemp.StrValue = "";
             kAlert.arrText.AddItem(txtTemp);
 
-            kTag.StrValue0 = string(kGeoAlert.arrData[1]);
-            kTag.StrValue1 = Continent(Country(kGeoAlert.arrData[0]).GetContinent()).GetName();
+            kTag.StrValue0 = string(kGeoAlert.arrData[1].iData);
+            kTag.StrValue1 = Continent(Country(kGeoAlert.arrData[0].iData).GetContinent()).GetName();
             txtTemp.StrValue = class'XComLocalizer'.static.ExpandString(m_strLabelExaltRaidContinentFailPanic);
             kAlert.arrText.AddItem(txtTemp);
 
@@ -1414,25 +1952,22 @@ function UpdateAlert()
             kAlert.mnuReplies.arrOptions.AddItem(kReply);
 
             break;
-        case 53: // Air base defense lost
+        case 'AirBaseDefenseFailed':
             Sound().PlaySFX(SNDLIB().SFX_Alert_UrgentMessage);
 
-            kAlert.imgAlert.iImage = Continent(kGeoAlert.arrData[0]).GetRandomCouncilCountry();
+            kAlert.imgAlert.iImage = Continent(kGeoAlert.arrData[0].iData).GetRandomCouncilCountry();
 
             txtLabel.strLabel = "";
             txtLabel.StrValue = "";
             kAlert.arrLabeledText.AddItem(txtLabel);
 
-            kTag.StrValue0 = Continent(kGeoAlert.arrData[0]).GetName();
+            kTag.StrValue0 = Continent(kGeoAlert.arrData[0].iData).GetName();
             txtTemp.StrValue = class'XComLocalizer'.static.ExpandString(m_strLabelExaltRaidContinentFailSubtitle);
             kAlert.arrText.AddItem(txtTemp);
 
             kReply.strText = m_strLabelOk;
             kAlert.mnuReplies.arrOptions.AddItem(kReply);
 
-            break;
-        case class'LWCE_XGGeoscape'.const.MOD_ALERT_TYPE:
-            HandleModAlert(kGeoAlert, kAlert);
             break;
         default:
             // For unrecognized alerts, just get rid of them
@@ -1446,8 +1981,62 @@ function UpdateAlert()
             break;
     }
 
-    m_kCurrentAlert = kAlert;
-    m_kCurrentAlert.iAlertType = kGeoAlert.eType;
+    m_kCECurrentAlert = kAlert;
+    m_kCECurrentAlert.AlertType = kGeoAlert.AlertType;
+}
+
+function UpdateEvents()
+{
+    m_kCEEvents.arrEvents.Remove(0, m_kCEEvents.arrEvents.Length);
+    m_kCEEvents.arrOptions.Remove(0, m_kCEEvents.arrOptions.Length);
+
+    LWCE_XGFacility_Labs(LABS()).LWCE_GetEvents(m_kCEEvents.arrEvents);
+    LWCE_XGFacility_Engineering(ENGINEERING()).LWCE_GetEvents(m_kCEEvents.arrEvents);
+    LWCE_XGGeoscape(GEOSCAPE()).LWCE_GetEvents(m_kCEEvents.arrEvents);
+    LWCE_XGHeadquarters(HQ()).LWCE_GetEvents(m_kCEEvents.arrEvents);
+    LWCE_XGExaltSimulation(EXALT()).LWCE_GetEvents(m_kCEEvents.arrEvents);
+
+    if (PSILABS() != none)
+    {
+        LWCE_XGFacility_PsiLabs(PSILABS()).LWCE_GetEvents(m_kCEEvents.arrEvents);
+    }
+
+    if (GENELABS() != none)
+    {
+        LWCE_XGFacility_GeneLabs(GENELABS()).LWCE_GetEvents(m_kCEEvents.arrEvents);
+    }
+
+    if (CYBERNETICSLAB() != none)
+    {
+        LWCE_XGFacility_CyberneticsLab(CYBERNETICSLAB()).LWCE_GetEvents(m_kCEEvents.arrEvents);
+    }
+
+    // Base game has a debug flag for AI events here, but this work has been skipped for now. If anyone
+    // ends up wanting to use that, we can add it back in.
+
+    /**
+     * We're supposed to sort here, but for some reason every attempt to do so fails and the game logs this:
+     *
+     *     ScriptWarning: Dynamic array Sort: Failed to find comparison function 'LWCE_SortEvents' in object 'LWCE_XGMissionControlUI_0'
+     *
+     *  Instead we've just made sure that events are always inserted in order so sorting is unnecessary.
+     */
+    // m_kCEEvents.arrEvents.Sort(LWCE_SortEvents);
+
+
+    BuildEventOptions();
+
+    if (m_kCEEvents.arrEvents.Length > 0)
+    {
+        m_kCEEvents.txtEventsLabel.StrValue = m_strLabelUpcomingEvents;
+    }
+    else
+    {
+        m_kCEEvents.txtEventsLabel.StrValue = "";
+    }
+
+    m_kCEEvents.txtEventsLabel.iState = eUIState_Highlight;
+    m_iLastUpdateDay = GEOSCAPE().m_kDateTime.GetDay();
 }
 
 function UpdateRequest()
@@ -1456,20 +2045,199 @@ function UpdateRequest()
     `LWCE_LOG_DEPRECATED_NOREPLACE_CLS(UpdateRequest);
 }
 
-protected function HandleModAlert(TGeoscapeAlert kGeoAlert, out TMCAlert kAlert)
+function UpdateView()
 {
+    local XGShip_UFO kUFO;
+    local XGMission kMission;
     local LWCE_XGGeoscape kGeoscape;
-    local LWCE_TModAlert kModAlert;
+    local LWCE_TGeoscapeAlert kGeoAlert;
 
-    kGeoscape = `LWCE_GEOSCAPE;
+    kGeoscape = LWCE_XGGeoscape(GEOSCAPE());
 
-    if (kGeoscape.arrModAlerts.Length == 0)
+    UpdateHeader();
+
+    if (m_iCurrentView == eMCView_MainMenu)
     {
-        return;
+        UpdateButtonHelp();
+        UpdateMissions();
+        UpdateEvents();
+        UpdateScan();
+        UpdateMissionCounter();
+        UpdateSelectionHighlight();
+    }
+    else if (m_iCurrentView == eMCView_Alert)
+    {
+        UpdateAlert();
+    }
+    else if (m_iCurrentView == eMCView_Abduction)
+    {
+        UpdateAbduction();
+    }
+    else if (m_iCurrentView == eMCView_ChooseShip)
+    {
+        kGeoscape.Pause();
+        UpdateAlert();
     }
 
-    kModAlert = kGeoscape.arrModAlerts[0];
-    kGeoscape.arrModAlerts.Remove(0, 1);
+    super(XGScreenMgr).UpdateView();
 
-    `LWCE_MOD_LOADER.PopulateAlert(kModAlert.iAlertId, kGeoAlert, kAlert);
+    if (m_iCurrentView == eMCView_Abduction)
+    {
+        if (m_bNarrFilteringAbduction)
+        {
+            Narrative(`XComNarrativeMoment("MCAbduction"));
+            m_bNarrFilteringAbduction = false;
+        }
+    }
+    else
+    {
+        if (m_iCurrentView == eMCView_Alert)
+        {
+            kGeoAlert = kGeoscape.LWCE_GetTopAlert();
+
+            if (m_kCECurrentAlert.AlertType == 'UFOCrash')
+            {
+                kMission = XGMission_UFOCrash(kGeoscape.GetMission(kGeoAlert.arrData[0].iData));
+
+                if (XGMission_UFOCrash(kMission).m_iUFOType == /* Transport */ eShip_UFOSupply)
+                {
+                    if (Narrative(`XComNarrativeMoment("FirstUFOShotDown_LeadOut_CS")))
+                    {
+                        return;
+                    }
+                }
+
+                if (XGMission_UFOCrash(kMission).m_iUFOType == /* Battleship */ eShip_UFOBattle)
+                {
+                    if (Narrative(`XComNarrativeMoment("FirstUFOShotDown_LeadOut_CEN")))
+                    {
+                        return;
+                    }
+                }
+            }
+            else
+            {
+                if (m_kCECurrentAlert.AlertType == 'UFODetected')
+                {
+                    Narrative(`XComNarrativeMoment("RoboHQ_UFODetected"));
+                    kUFO = AI().GetUFO(kGeoAlert.arrData[0].iData);
+
+                    if (kUFO.m_kObjective.GetType() == eObjective_Hunt)
+                    {
+                        Narrative(`XComNarrativeMoment("MCSatelliteHunterDetected"));
+                        return;
+                    }
+
+                    switch (kUFO.GetType())
+                    {
+                        case eShip_UFOLargeScout:
+                            Narrative(`XComNarrativeMoment("MCLargeScout"));
+                            break;
+                        case eShip_UFOAbductor:
+                            Narrative(`XComNarrativeMoment("MCAbductor"));
+                            break;
+                        case eShip_UFOSupply:
+                            Narrative(`XComNarrativeMoment("MCSupply"));
+                            break;
+                        case eShip_UFOBattle:
+                            Narrative(`XComNarrativeMoment("MCBattleship"));
+                            break;
+                        case eShip_UFOEthereal:
+                            if (!HQ().m_kMC.m_bDetectedOverseer)
+                            {
+                                PRES().UINarrative(`XComNarrativeMoment("MCOverseer"), none, PostOverseerMatinee,, HQ().m_kBase.GetFacility3DLocation(eFacility_HyperwaveRadar));
+                                Narrative(`XComNarrativeMoment("HyperwaveBeaconActivated_LeadOut_CE"));
+                                Narrative(`XComNarrativeMoment("HyperwaveBeaconActivated_LeadOut_CS"));
+                                HQ().m_kMC.m_bDetectedOverseer = true;
+                            }
+
+                            break;
+                        default:
+                            break;
+                    }
+                }
+
+                if (m_kCECurrentAlert.AlertType == 'PsiTraining')
+                {
+                    if (PSILABS().m_bSubjectZeroCinematic)
+                    {
+                        PRES().UINarrative(`XComNarrativeMoment("PsiLabsGift"));
+                    }
+                }
+                else if (m_kCECurrentAlert.AlertType == 'AlienBase')
+                {
+                    if (STORAGE().GetNumItemsAvailable(eItem_Skeleton_Key) == 0 && !ENGINEERING().IsBuildingItem(eItem_Skeleton_Key))
+                    {
+                        Narrative(`XComNarrativeMoment("BuildBasePassKeyReminder"));
+                    }
+                }
+                else if (m_kCECurrentAlert.AlertType == 'ItemProjectCompleted')
+                {
+                    if (kGeoAlert.arrData[0].iData == eItem_Satellite)
+                    {
+                        Narrative(`XComNarrativeMoment("MCSatellitesReady"));
+                    }
+                }
+                else if (m_kCECurrentAlert.AlertType == 'NewFacilityBuilt')
+                {
+                }
+                else if (m_kCECurrentAlert.AlertType == 'SatelliteDestroyed')
+                {
+                    Narrative(`XComNarrativeMoment("RoboHQ_SatelliteLost"));
+                    Narrative(`XComNarrativeMoment("MCSatelliteShotDown"));
+                }
+                else if (m_kCECurrentAlert.AlertType == 'FCActivity')
+                {
+                    Narrative(`XComNarrativeMoment("RoboHQ_IncomingTransmission"));
+                    Narrative(`XComNarrativeMoment("FC_RGenericRequestIntro"));
+                }
+                else if (m_kCECurrentAlert.AlertType == 'FCMissionActivity')
+                {
+                    Narrative(`XComNarrativeMoment("RoboHQ_IncomingTransmission"));
+                    Narrative(`XComNarrativeMoment("FC_RMissionLeadIn"));
+                }
+                else if (m_kCECurrentAlert.AlertType == 'UFOLost')
+                {
+                    Narrative(`XComNarrativeMoment("RoboHQ_ContactLost"));
+                }
+                else if (m_kCECurrentAlert.AlertType == 'UFOLanded')
+                {
+                    Narrative(`XComNarrativeMoment("RoboHQ_ContactDetected"));
+                }
+                else if (m_kCECurrentAlert.AlertType == 'DropArrive')
+                {
+                    Narrative(`XComNarrativeMoment("SkyrangerArrives"));
+                }
+            }
+        }
+        else if (m_iCurrentView == eMCView_MainMenu)
+        {
+            if (!HANGAR().m_kSkyranger.IsFlying())
+            {
+                if (HANGAR().HasNoJets() && HQ().m_kMC.m_iNoJetsCounter <= 0)
+                {
+                    Narrative(`XComNarrativeMoment("UrgeInterceptors"));
+                    HQ().m_kMC.m_iNoJetsCounter = 4;
+                }
+            }
+
+            if (HANGAR().m_iJetsLost >= 2 && HANGAR().m_eBestWeaponEquipped == `LW_ITEM_ID(AvalancheMissiles))
+            {
+                Narrative(`XComNarrativeMoment("EngineeringBetterJet"));
+            }
+
+            if (GEOSCAPE().m_bUFOIgnored)
+            {
+                Narrative(`XComNarrativeMoment("MCUFOIgnored"));
+                GEOSCAPE().m_bUFOIgnored = false;
+            }
+        }
+    }
+
+    ChooseMusic();
+}
+
+function int LWCE_SortEvents(LWCE_THQEvent e1, LWCE_THQEvent e2)
+{
+    return e1.iHours < e2.iHours ? 0 : -1;
 }

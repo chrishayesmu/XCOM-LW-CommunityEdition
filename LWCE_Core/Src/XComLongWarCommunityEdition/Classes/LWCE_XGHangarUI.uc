@@ -18,7 +18,7 @@ function XGHangarUI.TTableItemSummary LWCE_BuildItemSummary(LWCE_TItem kItem)
 
     kSummary.txtTitle.StrValue = kItem.strName;
     kSummary.txtSummary.StrValue = kItem.strBriefSummary;
-    kSummary.imgOption.strPath = kItem.imagePath;
+    kSummary.imgOption.strPath = kItem.ImagePath;
 
     return kSummary;
 }

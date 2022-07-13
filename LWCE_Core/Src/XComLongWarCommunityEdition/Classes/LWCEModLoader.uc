@@ -189,7 +189,7 @@ protected function OnFindDLCComplete()
 
 // #region Foundry-related events
 
-function bool Override_HasFoundryPrereqs(LWCE_TFoundryTech kTech)
+function bool Override_HasFoundryPrereqs(LWCEFoundryProjectTemplate kTech)
 {
     local int iHasPrereqs;
     local LWCEStrategyListener kStrategyListener;
@@ -204,7 +204,7 @@ function bool Override_HasFoundryPrereqs(LWCE_TFoundryTech kTech)
     return iHasPrereqs != 0;
 }
 
-function OnFoundryProjectAddedToQueue(TFoundryProject kProject, LWCE_TFoundryTech kFoundryTech)
+function OnFoundryProjectAddedToQueue(LWCE_TFoundryProject kProject, LWCEFoundryProjectTemplate kFoundryTech)
 {
     local LWCEStrategyListener kStrategyListener;
 
@@ -214,7 +214,7 @@ function OnFoundryProjectAddedToQueue(TFoundryProject kProject, LWCE_TFoundryTec
     }
 }
 
-function OnFoundryProjectCanceled(TFoundryProject kProject, LWCE_TFoundryTech kFoundryTech)
+function OnFoundryProjectCanceled(LWCE_TFoundryProject kProject, LWCEFoundryProjectTemplate kFoundryTech)
 {
     local LWCEStrategyListener kStrategyListener;
 
@@ -224,23 +224,13 @@ function OnFoundryProjectCanceled(TFoundryProject kProject, LWCE_TFoundryTech kF
     }
 }
 
-function OnFoundryProjectCompleted(TFoundryProject kProject, LWCE_TFoundryTech kFoundryTech)
+function OnFoundryProjectCompleted(LWCE_TFoundryProject kProject, LWCEFoundryProjectTemplate kFoundryTech)
 {
     local LWCEStrategyListener kStrategyListener;
 
     foreach StrategyListeners(kStrategyListener)
     {
         kStrategyListener.OnFoundryProjectCompleted(kProject, kFoundryTech);
-    }
-}
-
-function OnFoundryTechsBuilt(out array<LWCE_TFoundryTech> arrTechs)
-{
-    local LWCEStrategyListener kStrategyListener;
-
-    foreach StrategyListeners(kStrategyListener)
-    {
-        kStrategyListener.OnFoundryTechsBuilt(arrTechs);
     }
 }
 
@@ -371,7 +361,7 @@ function OnPerkTreesBuilt(out array<LWCE_TPerkTree> arrSoldierPerkTrees, out arr
 
 // #region Research-related events
 
-function Override_GetTech(out LWCE_TTech kTech, bool bIncludesProgress)
+function Override_GetTech(out LWCETechTemplate kTech, bool bIncludesProgress)
 {
     local LWCEStrategyListener kStrategyListener;
 
@@ -381,7 +371,7 @@ function Override_GetTech(out LWCE_TTech kTech, bool bIncludesProgress)
     }
 }
 
-function bool Override_HasPrereqs(LWCE_TTech kTech)
+function bool Override_HasPrereqs(LWCETechTemplate kTech)
 {
     local int iHasPrereqs;
     local LWCEStrategyListener kStrategyListener;
@@ -396,33 +386,23 @@ function bool Override_HasPrereqs(LWCE_TTech kTech)
     return iHasPrereqs != 0;
 }
 
-function OnResearchCompleted(int iTech)
+function OnResearchCompleted(name TechName)
 {
     local LWCEStrategyListener kStrategyListener;
 
     foreach StrategyListeners(kStrategyListener)
     {
-        kStrategyListener.OnResearchCompleted(iTech);
+        kStrategyListener.OnResearchCompleted(TechName);
     }
 }
 
-function OnResearchStarted(int iTech)
+function OnResearchStarted(name TechName)
 {
     local LWCEStrategyListener kStrategyListener;
 
     foreach StrategyListeners(kStrategyListener)
     {
-        kStrategyListener.OnResearchStarted(iTech);
-    }
-}
-
-function OnResearchTechsBuilt(out array<LWCE_TTech> Techs)
-{
-    local LWCEStrategyListener kStrategyListener;
-
-    foreach StrategyListeners(kStrategyListener)
-    {
-        kStrategyListener.OnResearchTechsBuilt(Techs);
+        kStrategyListener.OnResearchStarted(TechName);
     }
 }
 
@@ -453,16 +433,6 @@ function OnMissionAddedToGeoscape(XGMission kMission)
     foreach StrategyListeners(kStrategyListener)
     {
         kStrategyListener.OnMissionAddedToGeoscape(kMission);
-    }
-}
-
-function PopulateAlert(int iAlertId, TGeoscapeAlert kGeoAlert, out TMCAlert kAlert)
-{
-    local LWCEStrategyListener kStrategyListener;
-
-    foreach StrategyListeners(kStrategyListener)
-    {
-        kStrategyListener.PopulateAlert(iAlertId, kGeoAlert, kAlert);
     }
 }
 

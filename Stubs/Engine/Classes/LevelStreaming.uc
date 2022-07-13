@@ -1,7 +1,7 @@
 /**
  * LevelStreaming
  *
- * Abstract base class of container object encapsulating data required for streaming and providing 
+ * Abstract base class of container object encapsulating data required for streaming and providing
  * interface for when a level should be streamed in and out of memory.
  *
  * Copyright 1998-2011 Epic Games, Inc. All Rights Reserved.
@@ -21,7 +21,7 @@ var transient const	level							LoadedLevel;
 var() const			vector							Offset;
 
 /** Current/ old offset required for changing the offset at runtime, e.g. in the Editor.									*/
-var const			vector							OldOffset;	
+var const			vector							OldOffset;
 
 /** Whether the level is currently visible/ associated with the world														*/
 var const transient bool							bIsVisible;
@@ -80,14 +80,15 @@ var() const editconst LevelGridVolume EditorGridVolume;
 /** Row, column and depth of this streaming level in a streaming grid network */
 var() const editconst int GridPosition[ 3 ];
 
+//delegate LevelVisibleDelegate(name LevelPackageName);
 
 cpptext
 {
 	/**
-	 * Returns whether this level should be present in memory which in turn tells the 
-	 * streaming code to stream it in. Please note that a change in value from FALSE 
-	 * to TRUE only tells the streaming code that it needs to START streaming it in 
-	 * so the code needs to return TRUE an appropriate amount of time before it is 
+	 * Returns whether this level should be present in memory which in turn tells the
+	 * streaming code to stream it in. Please note that a change in value from FALSE
+	 * to TRUE only tells the streaming code that it needs to START streaming it in
+	 * so the code needs to return TRUE an appropriate amount of time before it is
 	 * needed.
 	 *
 	 * @param ViewLocation	Location of the viewer
@@ -98,12 +99,12 @@ cpptext
 	/**
 	 * Returns whether this level should be visible/ associated with the world if it is
 	 * loaded.
-	 * 
+	 *
 	 * @param ViewLocation	Location of the viewer
 	 * @return TRUE if the level should be visible, FALSE otherwise
 	 */
 	virtual UBOOL ShouldBeVisible( const FVector& ViewLocation );
-	
+
 	/** Get a bounding box around the streaming volumes associated with this LevelStreaming object */
 	FBox GetStreamingVolumeBounds();
 

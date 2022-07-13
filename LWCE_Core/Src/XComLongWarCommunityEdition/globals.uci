@@ -10,6 +10,11 @@
 // Convenience class of static functions
 `define LWCE_UTILS class'LWCEUtils'.static
 
+// Retrieve a template manager by class
+`define LWCE_COUNCIL_REQUEST_TEMPLATE_MGR (class'LWCECouncilRequestTemplateManager'.static.GetInstance())
+`define LWCE_FOUNDRY_TEMPLATE_MGR (class'LWCEFoundryProjectTemplateManager'.static.GetInstance())
+`define LWCE_TECH_TEMPLATE_MGR (class'LWCETechTemplateManager'.static.GetInstance())
+
 // Dynamic loading of objects that are referenced by the base game; since we aren't in the same UPK, we can't reference them the same way
 `define SoundCue(nm) (SoundCue(DynamicLoadObject(`nm, class'SoundCue')))
 `define XComNarrativeMoment(nm) (XComNarrativeMoment(DynamicLoadObject("NarrativeMoment." $ `nm, class'XComNarrativeMoment')))
@@ -50,8 +55,9 @@
 `define LWCE_STRATCFG(nm) (class'LWCE_XGStrategyConfig'.default.`nm)
 
 `define LWCE_ABILITYTREE (LWCE_XGAbilityTree(`LWCE_GAMECORE.m_kAbilities))
+`define LWCE_ALERT(nm) (class'LWCEAlertBuilder'.static.NewAlert(`nm))
 `define LWCE_BARRACKS (LWCE_XGFacility_Barracks(`HQGAME.GetGameCore().GetHQ().GetBarracks()))
-`define LWCE_FTECH(techId, bRushResearch) (`LWCE_TECHTREE.LWCE_GetFoundryTech(`techId, `bRushResearch))
+`define LWCE_FTECH(techName, bRushResearch) (`LWCE_TECHTREE.LWCE_GetFoundryTech(`techName, `bRushResearch))
 `define LWCE_ENGINEERING (LWCE_XGFacility_Engineering(`HQGAME.GetGameCore().GetHQ().GetEngineering()))
 `define LWCE_GAMECORE (LWCE_XGTacticalGameCore(`GAMECORE))
 `define LWCE_GEOSCAPE (LWCE_XGGeoscape(`HQGAME.GetGameCore().GetGeoscape()))

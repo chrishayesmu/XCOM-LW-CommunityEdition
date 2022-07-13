@@ -37,14 +37,18 @@ function BuildItemList()
 
 function BuildItemProperties()
 {
-    local int Index, iItemId, iTechId;
+    local name TechName;
+    local int Index, iItemId;
+    local LWCE_XGFacility_Labs kLabs;
+
+    kLabs = LWCE_XGFacility_Labs(LABS());
 
     for (Index = 0; Index < m_arrCEItems.Length; Index++)
     {
         iItemId = m_arrCEItems[Index].iItemId;
-        iTechId = `LWCE_TECHTREE.LWCE_GetResultingTech(iItemId);
+        TechName = `LWCE_TECHTREE.LWCE_GetResultingTech(iItemId);
 
-        if (iTechId != 0 && !LABS().IsResearched(iTechId))
+        if (TechName != '' && !kLabs.LWCE_IsResearched(TechName))
         {
             m_arrItemList[Index].txtResearchStatus.StrValue = m_strNotResearched;
             m_arrItemList[Index].txtResearchStatus.iState = eUIState_Warning;
@@ -68,11 +72,6 @@ function OnCompleteTransaction()
     {
         PlayBadSound();
         return;
-    }
-
-    if (!WorldInfo.IsConsoleBuild(CONSOLE_Xbox360) && !WorldInfo.IsConsoleBuild(CONSOLE_PS3))
-    {
-        GetRecapSaveData().RecordEvent(RecordGreyMarketSale());
     }
 
     AddResource(eResource_Money, m_iTotal);

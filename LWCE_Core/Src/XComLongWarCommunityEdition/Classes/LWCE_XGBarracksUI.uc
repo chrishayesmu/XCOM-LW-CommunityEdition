@@ -152,11 +152,8 @@ function UpdateView()
     {
         if (BARRACKS().m_iMoreSoldiersCounter <= 0)
         {
-            if (!ISCONTROLLED())
-            {
-                Narrative(`XComNarrativeMoment("BarracksNeedSoldiers"));
-                BARRACKS().m_iMoreSoldiersCounter = 4;
-            }
+            Narrative(`XComNarrativeMoment("BarracksNeedSoldiers"));
+            BARRACKS().m_iMoreSoldiersCounter = 4;
         }
     }
 
