@@ -1,10 +1,6 @@
 class LWCETechTemplate extends LWCEDataTemplate
     config(LWCEBaseStrategyGame);
 
-// NOTE: All documentation for templates is assuming the base template is being retrieved from the corresponding template manager,
-// and has not been modified. Some functions return clones of templates which have had changes applied; for example, to factor in
-// country/continent bonuses that reduce research times, costs, etc. The comments below may not apply to such clones.
-
 // Whether this is an autopsy or interrogation, and which character ID is the subject.
 // This has the following effects:
 //
@@ -31,27 +27,21 @@ var config array<name> arrCreditsApplied; // A list of research credit IDs that 
 var config array<name> arrCreditsGranted; // The research credit ID granted by this tech, if any. See EResearchCredits for values.
 
 var config string ImagePath;
+var config string TechBegunNarrative;
+var config string TechCompleteNarrative;
 
 var config LWCE_TCost kCost;
 var config LWCE_TPrereqs kPrereqs;   // The prerequisites that must be met before this research will be visible in the Labs.
 
-var protected localized string strName;     // The research name, as it will be seen when selecting research, browsing the archives, etc.
-var protected localized string strSummary;  // The summary text when selecting a new research in the Labs.
-var protected localized string strReport;   // The full text seen when the research is completed, or when viewing the research in the archives.
-var protected localized string strCustom;   // Extra text which is shown in yellow during the research results. Can be left blank if not needed.
-var protected localized string strCodename; // The codename which is seen during the research report.
+var delegate<IsPriority> IsPriorityFn;      // If this function returns true, this tech is marked as a priority in the Labs.
 
-var string m_strName;
-var string m_strSummary;
-var string m_strReport;
-var string m_strCustom;
-var string m_strCodename;
+var const localized string strName;     // The research name, as it will be seen when selecting research, browsing the archives, etc.
+var const localized string strSummary;  // The summary text when selecting a new research in the Labs.
+var const localized string strReport;   // The full text seen when the research is completed, or when viewing the research in the archives.
+var const localized string strCustom;   // Extra text which is shown in yellow during the research results. Can be left blank if not needed.
+var const localized string strCodename; // The codename which is seen during the research report.
 
-function bool ArePrerequisitesFulfilled()
-{
-    // TODO
-    return true;
-}
+delegate bool IsPriority();
 
 function bool BenefitsFromCredit(name CreditName)
 {
@@ -59,57 +49,67 @@ function bool BenefitsFromCredit(name CreditName)
 }
 
 /// <summary>
-/// Creates a duplicate of this template, which can be modified without worrying about changing the original template object.
-/// Note that the clone will NOT have the same object name, so be careful if using SaveConfig to persist values.
+/// Determines the cost to begin this research, based on the current campaign.
+/// Should not be called outside of a campaign's strategy layer.
 /// </summary>
-function LWCETechTemplate Clone()
+function LWCE_TCost GetCost()
 {
-    local LWCETechTemplate kClone;
+    local LWCE_TCost kAdjustedCost;
 
-    kClone = LWCETechTemplate(InstantiateClone());
+    kAdjustedCost = kCost;
 
-    kClone.bIsAutopsy = bIsAutopsy;
-    kClone.bIsInterrogation = bIsInterrogation;
-    kClone.iSubjectCharacterId = iSubjectCharacterId;
+    if (`LWCE_HQ.IsOptionEnabled(`LW_SECOND_WAVE_ID(DynamicWar)))
+    {
+        `LWCE_UTILS.ScaleCostForDynamicWar(kAdjustedCost);
+    }
 
-    kClone.iPointsToComplete = iPointsToComplete;
+    // TODO: add a way for mods to reduce cost
 
-    kClone.arrCreditsApplied = CopyNameArray(arrCreditsApplied);
-    kClone.arrCreditsGranted = CopyNameArray(arrCreditsGranted);
+    return kAdjustedCost;
+}
 
-    kClone.ImagePath = ImagePath;
+/// <summary>
+/// Calculates how many points of research are needed to complete this tech, based on the current campaign.
+/// Should not be called outside of a campaign's strategy layer.
+/// </summary>
+/// <param name="bIncludeTimeSpent">If true, any time already invested in researching the tech will be deducted
+/// from the result. If false, such time is not included.</param>
+function int GetPointsToComplete(optional bool bIncludeTimeSpent = true)
+{
+    local LWCE_XGFacility_Labs kLabs;
+    local LWCE_XGHeadquarters kHQ;
+    local LWCE_XGTechTree kTechTree;
+    local int iPoints, iProgressIndex;
 
-    kClone.kCost = kCost;
-    kClone.kPrereqs = kPrereqs;
+    kHQ = `LWCE_HQ;
+    kLabs = LWCE_XGFacility_Labs(kHQ.m_kLabs);
+    kTechTree = LWCE_XGTechTree(kLabs.m_kTree);
 
-    kClone.PopulateLocalization(self);
+    iPoints = kTechTree.LWCE_GetCreditAdjustedTechHours(GetTechName(), iPointsToComplete, /* bFoundry */ false);
 
-    return kClone;
+    if ( (bIsAutopsy || bIsInterrogation) && kHQ.HasBonus(`LW_HQ_BONUS_ID(WeHaveWays)) > 0)
+    {
+        iPoints *= (1.0f - (float(kHQ.HasBonus(`LW_HQ_BONUS_ID(WeHaveWays))) / 100.0f));
+    }
+
+    if (bIncludeTimeSpent)
+    {
+        iProgressIndex = kLabs.m_arrCEProgress.Find('TechName', GetTechName());
+
+        if (iProgressIndex != INDEX_NONE)
+        {
+            iPoints -= kLabs.m_arrCEProgress[iProgressIndex].iHoursCompleted;
+        }
+    }
+
+    // TODO: incorporate a new form of mod hook
+
+    return iPoints;
 }
 
 function name GetTechName()
 {
     return DataName;
-}
-
-function PopulateLocalization(optional LWCETechTemplate kSource)
-{
-    if (kSource != none)
-    {
-        m_strName = kSource.m_strName;
-        m_strSummary = kSource.m_strSummary;
-        m_strReport = kSource.m_strReport;
-        m_strCustom = kSource.m_strCustom;
-        m_strCodename = kSource.m_strCodename;
-    }
-    else
-    {
-        m_strName = strName;
-        m_strSummary = strSummary;
-        m_strReport = strReport;
-        m_strCustom = strCustom;
-        m_strCodename = strCodename;
-    }
 }
 
 function bool ValidateTemplate(out string strError)
@@ -121,5 +121,5 @@ function bool ValidateTemplate(out string strError)
         return false;
     }
 
-    return ValidatePrereqs(kPrereqs, strError);
+    return ValidatePrereqs(kPrereqs, strError) && super.ValidateTemplate(strError);
 }

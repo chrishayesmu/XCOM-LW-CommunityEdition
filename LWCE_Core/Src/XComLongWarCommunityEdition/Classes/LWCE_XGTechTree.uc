@@ -16,8 +16,6 @@ function Init()
     BuildObjectives();
     BuildResearchCredits();
     BuildGeneTechs();
-
-    ScaleForDynamicWar();
 }
 
 function BuildFoundryTechs()
@@ -59,7 +57,7 @@ function bool LWCE_CreditAppliesToFoundryTech(name CreditName, name FoundryTechN
 {
     local LWCEFoundryProjectTemplate kTemplate;
 
-    kTemplate = LWCE_GetFoundryTech(FoundryTechName);
+    kTemplate = `LWCE_FTECH(FoundryTechName);
 
     if (kTemplate != none)
     {
@@ -73,7 +71,7 @@ function bool LWCE_CreditAppliesToTech(name CreditName, name TechName)
 {
     local LWCETechTemplate kTemplate;
 
-    kTemplate = LWCE_GetTech(TechName);
+    kTemplate = m_kTechTemplateMgr.FindTechTemplate(TechName);
 
     if (kTemplate != none)
     {
@@ -328,38 +326,14 @@ function array<name> LWCE_GetFoundryResults(name CompletedTechName)
     return arrResults;
 }
 
-function LWCEFoundryProjectTemplate LWCE_GetFoundryTech(name ProjectName, optional bool bRushResearch)
+function TFoundryTech GetFoundryTech(int iFoundryTechType, optional bool bRushResearch)
 {
-    local LWCEFoundryProjectTemplate kTemplate;
+    local TFoundryTech kTech;
 
-    kTemplate = m_kFoundryTemplateMgr.FindProjectTemplate(ProjectName);
+    `LWCE_LOG_CLS("ERROR: LWCE-incompatible function GetFoundryTech was called. This needs to be replaced with the macro LWCE_FTECH. Stack trace follows.");
+    ScriptTrace();
 
-    if (kTemplate == none)
-    {
-        return none;
-    }
-
-    kTemplate = kTemplate.Clone();
-
-    if (bRushResearch)
-    {
-        kTemplate.iEngineers *= 1.50;
-        kTemplate.kCost.iCash *= 1.50;
-        kTemplate.kCost.iAlloys *= 1.50;
-        kTemplate.kCost.iElerium *= 1.50;
-    }
-
-    // TODO: may want to add a hook for mods to modify the cost/continent bonus
-    if (HQ().HasBonus(`LW_HQ_BONUS_ID(NewWarfare)) > 0)
-    {
-        kTemplate.kCost.iCash *= (1.0f - (float(HQ().HasBonus(`LW_HQ_BONUS_ID(NewWarfare))) / 100.0f));
-        kTemplate.kCost.iAlloys *= (1.0f - (float(HQ().HasBonus(`LW_HQ_BONUS_ID(NewWarfare))) / 100.0f));
-        kTemplate.kCost.iElerium *= (1.0f - (float(HQ().HasBonus(`LW_HQ_BONUS_ID(NewWarfare))) / 100.0f));
-    }
-
-    kTemplate.iPointsToComplete = LWCE_GetCreditAdjustedTechHours(ProjectName, kTemplate.iPointsToComplete, true);
-
-    return kTemplate;
+    return kTech;
 }
 
 function array<int> GetItemResults(int iTech)
@@ -475,45 +449,8 @@ function TTech GetTech(int iTechType, optional bool bAdjustHours = true)
 {
     local TTech kTech;
 
-    `LWCE_LOG_DEPRECATED_CLS(GetTech);
-
-    return kTech;
-}
-
-function LWCETechTemplate LWCE_GetTech(name TechName, optional bool bAdjustHours = true)
-{
-    local int iProgressIndex;
-    local LWCETechTemplate kTech;
-    local LWCE_XGFacility_Labs kLabs;
-
-    kLabs = `LWCE_LABS;
-    kTech = m_kTechTemplateMgr.FindTechTemplate(TechName);
-
-    if (kTech == none)
-    {
-        return none;
-    }
-
-    kTech = kTech.Clone();
-    kTech.iPointsToComplete = LWCE_GetCreditAdjustedTechHours(TechName, kTech.iPointsToComplete, false);
-
-    if ( (kTech.bIsAutopsy || kTech.bIsInterrogation) && HQ().HasBonus(`LW_HQ_BONUS_ID(WeHaveWays)) > 0)
-    {
-        kTech.iPointsToComplete *= (1.0f - (float(HQ().HasBonus(`LW_HQ_BONUS_ID(WeHaveWays))) / 100.0f));
-    }
-
-    if (bAdjustHours)
-    {
-        iProgressIndex = kLabs.m_arrCEProgress.Find('TechName', TechName);
-
-        if (iProgressIndex != INDEX_NONE)
-        {
-            kTech.iPointsToComplete -= kLabs.m_arrCEProgress[iProgressIndex].iHoursCompleted;
-        }
-    }
-
-    // Mod hook to modify project cost/time
-    `LWCE_MOD_LOADER.Override_GetTech(kTech, bAdjustHours);
+    `LWCE_LOG_CLS("ERROR: LWCE-incompatible function GetTech was called. This needs to be replaced with the macro LWCE_TECH. Stack trace follows.");
+    ScriptTrace();
 
     return kTech;
 }
@@ -529,7 +466,7 @@ function bool LWCE_HasFoundryPrereqs(name ProjectName)
 {
     local LWCEFoundryProjectTemplate kTech;
 
-    kTech = LWCE_GetFoundryTech(ProjectName);
+    kTech = `LWCE_FTECH(ProjectName);
 
     if (!`LWCE_HQ.ArePrereqsFulfilled(kTech.kPrereqs))
     {
@@ -556,7 +493,7 @@ function bool LWCE_HasPrereqs(name TechName)
 {
     local LWCETechTemplate kTech;
 
-    kTech = LWCE_GetTech(TechName);
+    kTech = m_kTechTemplateMgr.FindTechTemplate(TechName);
 
     if (!`LWCE_HQ.ArePrereqsFulfilled(kTech.kPrereqs))
     {
@@ -735,48 +672,4 @@ static function name TechNameFromInteger(int iTechId)
             `LWCE_LOG_CLS("ERROR: TechNameFromInteger is only intended for base game techs. Tech ID " $ iTechId $ " is not valid!");
             return '';
     }
-}
-
-protected function ScaleForDynamicWar()
-{
-    if (!IsOptionEnabled(`LW_SECOND_WAVE_ID(DynamicWar)))
-    {
-        return;
-    }
-
-// TODO: need post-template creation hooks to do this now
-/*
-    for (Index = 0; Index < m_arrCETechs.Length; Index++)
-    {
-        m_arrCETechs[Index].kCost = ScaleCost(m_arrCETechs[Index].kCost);
-    }
-
-    for (Index = 0; Index < m_arrCEFoundryTechs.Length; Index++)
-    {
-        m_arrCETechs[Index].kCost = ScaleCost(m_arrCEFoundryTechs[Index].kCost);
-    }
- */
-}
-
-protected function LWCE_TCost ScaleCost(LWCE_TCost kCost)
-{
-    local int Index;
-
-    // Weapon fragments and items are adjusted for Dynamic War, but notably, alloys, elerium and meld are not
-    if (kCost.iWeaponFragments > 0)
-    {
-        kCost.iWeaponFragments = ScaleDynamicWarAmount(kCost.iWeaponFragments);
-    }
-
-    for (Index = 0; Index < kCost.arrItems.Length; Index++)
-    {
-        kCost.arrItems[Index].iQuantity = ScaleDynamicWarAmount(kCost.arrItems[Index].iQuantity);
-    }
-
-    return kCost;
-}
-
-protected function int ScaleDynamicWarAmount(int iInput)
-{
-    return Max(1, int(float(iInput) * class'XGTacticalGameCore'.default.SW_MARATHON));
 }

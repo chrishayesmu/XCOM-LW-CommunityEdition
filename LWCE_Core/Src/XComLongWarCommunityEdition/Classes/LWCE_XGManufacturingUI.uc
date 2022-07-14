@@ -408,7 +408,7 @@ function UpdateManufactureFoundry()
 
     if (kTech != none)
     {
-        kWidget.txtTitle.StrValue = kTech.m_strName;
+        kWidget.txtTitle.StrValue = kTech.strName;
         kWidget.txtTitle.iState = eUIState_Warning;
         kWidget.imgItem.strPath = kTech.ImagePath;
     }

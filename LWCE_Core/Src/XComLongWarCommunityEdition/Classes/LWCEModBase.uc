@@ -2,8 +2,6 @@ class LWCEModBase extends Object
     abstract
     dependson(LWCETypes);
 
-
-
 /******************************************************
  * SECTION: Variables owned by the mod
  *
@@ -19,13 +17,11 @@ var Class<LWCETacticalListener> TacticalListenerClass; // A class to instantiate
 
 // END SECTION
 
-
-
 /// <summary>
 /// Called when the mod is loaded by LWCE. This is a chance to do any initialization, or just
 /// to log that the mod loaded successfully.
 ///
-/// TBD: this currently fires every time the mod loader inits, including at the main menu and each tactical/strategy transition.
+/// TODO: this currently fires every time the mod loader inits, including at the main menu and each tactical/strategy transition.
 /// Need to figure out if we want that behavior, or maybe we should split those into separate events.
 /// </summary>
 function OnModLoaded();

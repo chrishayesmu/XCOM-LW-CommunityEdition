@@ -30,23 +30,6 @@ function array<LWCETechTemplate> GetAllTechTemplates()
     return arrTemplates;
 }
 
-function InitTemplates()
-{
-    local LWCETechTemplate kTemplate;
-    local int Index;
-
-    super.InitTemplates();
-
-    // Adjust research time based on config
-    for (Index = 0; Index < m_arrTemplates.Length; Index++)
-    {
-        kTemplate = LWCETechTemplate(m_arrTemplates[Index].kTemplate);
-        kTemplate.iPointsToComplete *= class'XGTacticalGameCore'.default.TECH_TIME_BALANCE;
-
-        kTemplate.PopulateLocalization();
-    }
-}
-
 defaultproperties
 {
     ManagedTemplateClass=class'LWCETechTemplate'

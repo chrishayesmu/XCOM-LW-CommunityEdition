@@ -91,7 +91,7 @@ function BuildEventOptions()
                 kOption.EventType = 'Research';
                 kOption.iPriority = 5;
                 kOption.imgOption.iImage = eImage_OldResearch;
-                kOption.txtOption.StrValue = kTech.m_strName;
+                kOption.txtOption.StrValue = kTech.strName;
                 kOption.txtDays.StrValue = string(iDays);
                 kOption.clrOption = MakeColor(0, 200, 0, byte(175 / 3));
                 break;
@@ -123,7 +123,7 @@ function BuildEventOptions()
                 kOption.EventType = 'Foundry';
                 kOption.iPriority = 2;
                 kOption.imgOption.iImage = eImage_FacilityFoundry;
-                kOption.txtOption.StrValue = kFoundryTech.m_strName;
+                kOption.txtOption.StrValue = kFoundryTech.strName;
                 kOption.txtDays.StrValue = string(iDays);
                 kOption.clrOption = MakeColor(200, 200, 0, byte(175 / 3));
                 break;
@@ -1695,11 +1695,11 @@ function UpdateAlert()
 
             kTech = `LWCE_TECH(kGeoAlert.arrData[0].nmData);
 
-            kAlert.txtTitle.StrValue = kTech.m_strName;
+            kAlert.txtTitle.StrValue = kTech.strName;
             kAlert.txtTitle.iState = eUIState_Good;
             kAlert.imgAlert.strPath = kTech.ImagePath;
 
-            kTag.StrValue0 = kTech.m_strName;
+            kTag.StrValue0 = kTech.strName;
             txtTemp.StrValue = class'XComLocalizer'.static.ExpandString(m_strLabelTechResearchComplete);
             txtTemp.iState = eUIState_Highlight;
             kAlert.arrText.AddItem(txtTemp);
@@ -1810,11 +1810,11 @@ function UpdateAlert()
 
             kFoundryTech = `LWCE_FTECH(kGeoAlert.arrData[0].nmData);
 
-            kAlert.txtTitle.StrValue = kFoundryTech.m_strName;
+            kAlert.txtTitle.StrValue = kFoundryTech.strName;
             kAlert.txtTitle.iState = eUIState_Good;
             kAlert.imgAlert.strPath = kFoundryTech.ImagePath;
 
-            kTag.StrValue0 = kFoundryTech.m_strName;
+            kTag.StrValue0 = kFoundryTech.strName;
             txtTemp.StrValue = class'XComLocalizer'.static.ExpandString(m_strLabelFoundryItemComplete);
             txtTemp.iState = eUIState_Highlight;
             kAlert.arrText.AddItem(txtTemp);

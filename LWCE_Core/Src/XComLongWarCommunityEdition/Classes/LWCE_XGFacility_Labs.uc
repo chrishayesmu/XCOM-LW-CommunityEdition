@@ -172,41 +172,43 @@ function bool CanAffordTech(int iTech)
 
 function bool LWCE_CanAffordTech(name TechName)
 {
+    local LWCE_TCost kCost;
     local LWCETechTemplate kTech;
     local int iItem;
 
     kTech = `LWCE_TECH(TechName);
+    kCost = kTech.GetCost();
 
-    if (kTech.kCost.iCash > 0 && kTech.kCost.iCash > GetResource(eResource_Money))
+    if (kCost.iCash > 0 && kCost.iCash > GetResource(eResource_Money))
     {
         return false;
     }
 
-    if (kTech.kCost.iAlloys > 0 && kTech.kCost.iAlloys > GetResource(eResource_Alloys))
+    if (kCost.iAlloys > 0 && kCost.iAlloys > GetResource(eResource_Alloys))
     {
         return false;
     }
 
-    if (kTech.kCost.iElerium > 0 && kTech.kCost.iElerium > GetResource(eResource_Elerium))
+    if (kCost.iElerium > 0 && kCost.iElerium > GetResource(eResource_Elerium))
     {
         return false;
     }
 
-    if (kTech.kCost.iMeld > 0 && kTech.kCost.iMeld > GetResource(eResource_Meld))
+    if (kCost.iMeld > 0 && kCost.iMeld > GetResource(eResource_Meld))
     {
         return false;
     }
 
-    if (kTech.kCost.iWeaponFragments > 0 && kTech.kCost.iWeaponFragments > STORAGE().GetNumItemsAvailable(eItem_WeaponFragment))
+    if (kCost.iWeaponFragments > 0 && kCost.iWeaponFragments > STORAGE().GetNumItemsAvailable(eItem_WeaponFragment))
     {
         return false;
     }
 
-    if (kTech.kCost.arrItems.Length > 0)
+    if (kCost.arrItems.Length > 0)
     {
-        for (iItem = 0; iItem < kTech.kCost.arrItems.Length; iItem++)
+        for (iItem = 0; iItem < kCost.arrItems.Length; iItem++)
         {
-            if (kTech.kCost.arrItems[iItem].iQuantity > STORAGE().GetNumItemsAvailable(kTech.kCost.arrItems[iItem].iItemId))
+            if (kCost.arrItems[iItem].iQuantity > STORAGE().GetNumItemsAvailable(kCost.arrItems[iItem].iItemId))
             {
                 return false;
             }
@@ -491,13 +493,8 @@ function LWCETechTemplate LWCE_GetCurrentTech()
 
 function TTech GetCurrentTechTemplate()
 {
-    `LWCE_LOG_DEPRECATED_CLS(GetCurrentTechTemplate);
+    `LWCE_LOG_DEPRECATED_NOREPLACE_CLS(GetCurrentTechTemplate);
     return super.GetCurrentTechTemplate();
-}
-
-function LWCETechTemplate LWCE_GetCurrentTechTemplate()
-{
-    return `LWCE_TECHTREE.LWCE_GetTech(m_kCEProject.TechName, false);
 }
 
 function array<int> GetCurrentTechStates()
@@ -561,7 +558,7 @@ function string LWCE_GetEstimateString(name TechName)
     local int iHours, iDaysLeft;
     local XGParamTag kTag;
 
-    iHours = `LWCE_TECH(TechName).iPointsToComplete;
+    iHours = `LWCE_TECH(TechName).GetPointsToComplete();
 
     if (iHours == 0)
     {
@@ -662,14 +659,16 @@ function EResearchProgress GetProgress(int iTech)
 function EResearchProgress LWCE_GetProgress(name TechName)
 {
     local LWCETechTemplate kTech;
+    local int iDaysRemaining;
 
     kTech = `LWCE_TECH(TechName);
+    iDaysRemaining = LabHoursToDays(kTech.GetPointsToComplete());
 
-    if (LabHoursToDays(kTech.iPointsToComplete) <= 5)
+    if (iDaysRemaining <= 5)
     {
         return eResearchProgress_Fast;
     }
-    else if (LabHoursToDays(kTech.iPointsToComplete) <= 10)
+    else if (iDaysRemaining <= 10)
     {
         return eResearchProgress_Normal;
     }
@@ -789,38 +788,16 @@ function bool IsPriorityTech(int iTech)
 
 function bool LWCE_IsPriorityTech(name TechName)
 {
-    // TODO: move logic into the template or use a delegate from the template for this
-    if (TechName == 'Tech_Xenobiology' && GetNumTechsResearched() > 2)
+    local LWCETechTemplate kTemplate;
+
+    kTemplate = m_kTechTemplateMgr.FindTechTemplate(TechName);
+
+    if (kTemplate.IsPriorityFn != none)
     {
-        return true;
+        return kTemplate.IsPriorityFn();
     }
 
-    if (LWCE_IsInterrogationTech(TechName) && !HasInterrogatedCaptive())
-    {
-        return true;
-    }
-
-    if (TechName == 'Tech_AlienPropulsion' && OBJECTIVES().m_eObjective == eObj_ShootDownOverseer)
-    {
-        return true;
-    }
-
-    if (TechName == 'Tech_Xenogenetics' && OBJECTIVES().m_eObjective == eObj_CaptureOutsider)
-    {
-        return true;
-    }
-
-    switch (TechName)
-    {
-        case 'Tech_Xenoneurology':
-        case 'Tech_Xenopsionics':
-        case 'Tech_AlienCommunications':
-        case 'Tech_AlienCommandAndControl':
-        case 'Tech_AlienOperations':
-            return true;
-        default:
-            return false;
-    }
+    return false;
 }
 
 function bool IsResearched(int iTech)
@@ -940,6 +917,7 @@ function OnResearchCompleted()
     local name TechName;
     local int iCorpseId, iProgressIndex, Index;
     local bool bNeverInterrogated;
+    local XComNarrativeMoment kNarrative;
     local LWCETechTemplate kCompletedTech;
     local LWCE_XGGeoscape kGeoscape;
     local LWCE_XGItemTree kItemTree;
@@ -989,17 +967,19 @@ function OnResearchCompleted()
         Achieve(AT_Edison);
     }
 
-    // TODO: move narratives into template
-    if (m_nmLastResearchedTech == 'Tech_Xenogenetics')
+    if (kCompletedTech.TechCompleteNarrative != "")
     {
-        // In vanilla EW, completing the meld research gave ~40 bonus meld; none in LW (maybe make configurable?)
-        PRES().UINarrative(`XComNarrativeMomentEW("MeldIntro"), none, ResearchCinematicComplete);
+        `LWCE_LOG_CLS("Attempting to load tech post-completion narrative " $ kCompletedTech.TechCompleteNarrative);
+
+        kNarrative = XComNarrativeMoment(DynamicLoadObject(kCompletedTech.TechCompleteNarrative, class'XComNarrativeMoment'));
+
+        if (kNarrative != none)
+        {
+            PRES().UINarrative(kNarrative, none, ResearchCinematicComplete);
+        }
     }
-    else if (m_nmLastResearchedTech == 'Tech_Xenobiology')
-    {
-        PRES().UINarrative(`XComNarrativeMoment("ArcThrower"), none, ResearchCinematicComplete);
-    }
-    else if (LWCE_IsInterrogationTech(m_nmLastResearchedTech))
+
+    if (LWCE_IsInterrogationTech(m_nmLastResearchedTech))
     {
         // Give the captive's corpse after interrogations
         iCorpseId = kItemTree.CharacterToCorpse(kCompletedTech.iSubjectCharacterId);
@@ -1074,6 +1054,7 @@ function SetNewProject(int iTech)
 function LWCE_SetNewProject(name TechName)
 {
     local int iCaptiveItemId;
+    local XComNarrativeMoment kNarrative;
     local LWCE_TResearchProgress kProgress;
     local LWCETechTemplate kTech;
     local TResearchCost kCost;
@@ -1081,27 +1062,11 @@ function LWCE_SetNewProject(name TechName)
     if (m_kCEProject.TechName != '')
     {
         kTech = `LWCE_TECH(m_kCEProject.TechName);
-        kCost = class'LWCETypes'.static.ConvertTCostToTResearchCost(kTech.kCost);
+        kCost = class'LWCETypes'.static.ConvertTCostToTResearchCost(kTech.GetCost());
 
         // TODO: since mods could potentially discount research dynamically, we should store the actual paid cost like engineering does, and refund that
         // TODO: Xenobiology doesn't refund its corpses for some reason? seems like maybe that should be configurable
         RefundCost(kCost, m_kCEProject.TechName == 'Tech_Xenobiology');
-    }
-
-    if (TechName == 'Tech_AlienCommandAndControl')
-    {
-        Narrative(`XComNarrativeMoment("EtherealDeviceRetrieved_LeadOut_CS"));
-    }
-    else if (TechName == 'Tech_AlienCommunications')
-    {
-        Narrative(`XComNarrativeMoment("HyperwaveBeaconRetrieved_LeadOut_CS"));
-    }
-    else if (TechName != 'Tech_AlienOperations')
-    {
-        if (!LWCE_IsAutopsyTech(TechName) && !LWCE_IsInterrogationTech(TechName) && --m_iTechConfirms > 0)
-        {
-            Narrative(`XComNarrativeMoment("TechSelected"));
-        }
     }
 
     if (m_arrCEProgress.Find('TechName', TechName) == INDEX_NONE)
@@ -1112,19 +1077,36 @@ function LWCE_SetNewProject(name TechName)
     }
 
     kTech = `LWCE_TECH(TechName);
-    kCost = class'LWCETypes'.static.ConvertTCostToTResearchCost(kTech.kCost);
+    kCost = class'LWCETypes'.static.ConvertTCostToTResearchCost(kTech.GetCost());
+
+    if (kTech.TechBegunNarrative != "")
+    {
+        `LWCE_LOG_CLS("Attempting to load tech on-begin narrative " $ kTech.TechBegunNarrative);
+
+        kNarrative = XComNarrativeMoment(DynamicLoadObject(kTech.TechBegunNarrative, class'XComNarrativeMoment'));
+
+        if (kNarrative != none)
+        {
+            Narrative(kNarrative);
+        }
+    }
+    else if (!LWCE_IsInterrogationTech(TechName) && m_iTechConfirms-- > 0)
+    {
+        // Default narrative; don't play for interrogations, they have special handling below
+        Narrative(`XComNarrativeMoment("TechSelected"));
+    }
 
     m_kCEProject.TechName = TechName;
-    m_kCEProject.iEstimate = LabHoursToDays(kTech.iPointsToComplete);
-    m_kCEProject.iActualHoursLeft = kTech.iPointsToComplete < 0 ? 1 : kTech.iPointsToComplete;
+    m_kCEProject.iEstimate = LabHoursToDays(kTech.GetPointsToComplete());
+    m_kCEProject.iActualHoursLeft = Max(0, kTech.GetPointsToComplete());
     m_kCEProject.iProgress = LWCE_GetProgress(TechName);
     m_kCEProject.strETA = LWCE_GetEstimateString(TechName);
 
     PayCost(kCost);
 
-    // TODO move this data into template
     if (LWCE_IsInterrogationTech(TechName))
     {
+        // TODO move this data into template
         switch (kTech.iSubjectCharacterId)
         {
             case eChar_Sectoid:
@@ -1161,62 +1143,8 @@ function LWCE_SetNewProject(name TechName)
 
         if (iCaptiveItemId > 0 && iCaptiveItemId <= 255)
         {
-            // TODO: Captives from mods currently will not trigger the alien containment cutscenes
+            // Captives from mods currently will not trigger the alien containment cutscenes
             Base().DoAlienInterrogation(EItemType(iCaptiveItemId));
-        }
-    }
-    else if (LWCE_IsAutopsyTech(TechName))
-    {
-        switch (kTech.iSubjectCharacterId)
-        {
-            case eChar_Sectoid:
-                Narrative(`XComNarrativeMoment("LabsAutopsySectoid"));
-                break;
-            case eChar_Floater:
-                Narrative(`XComNarrativeMoment("LabsAutopsyFloater"));
-                break;
-            case eChar_Muton:
-                Narrative(`XComNarrativeMoment("LabsAutopsyMuton"));
-                break;
-            case eChar_ThinMan:
-                Narrative(`XComNarrativeMoment("LabsAutopsyThinman"));
-                break;
-            case eChar_Cyberdisc:
-                Narrative(`XComNarrativeMoment("LabsAutopsyCyberdisc"));
-                break;
-            case eChar_Chryssalid:
-                Narrative(`XComNarrativeMoment("LabsAutopsyCryssalid"));
-                break;
-            case eChar_MutonBerserker:
-                Narrative(`XComNarrativeMoment("LabsAutopsyBerserker"));
-                break;
-            case eChar_FloaterHeavy:
-                Narrative(`XComNarrativeMoment("LabsAutopsyHeavyFloater"));
-                break;
-            case eChar_SectoidCommander:
-                Narrative(`XComNarrativeMoment("LabsAutopsySectoidCommander"));
-                break;
-            case eChar_Sectopod:
-                Narrative(`XComNarrativeMoment("LabsAutopsySectopod"));
-                break;
-            case eChar_Ethereal:
-                Narrative(`XComNarrativeMoment("LabsAutopsyEthereal"));
-                break;
-            case eChar_MutonElite:
-                Narrative(`XComNarrativeMoment("LabsAutopsyEliteMuton"));
-                break;
-            case eChar_Drone:
-                Narrative(`XComNarrativeMoment("LabsAutopsyDrone"));
-                break;
-            case eChar_Mechtoid:
-                Narrative(`XComNarrativeMomentEW("LabsAutopsyMechtoid"));
-                break;
-            case eChar_Seeker:
-                Narrative(`XComNarrativeMomentEW("LabsAutopsySeeker"));
-                break;
-            default:
-                `LWCE_LOG_CLS("Unknown or unset iSubjectCharacterId " $ kTech.iSubjectCharacterId $ ". Not triggering any narrative moment.");
-                break;
         }
     }
 

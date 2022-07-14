@@ -254,8 +254,8 @@ function bool LWCE_UnlockFoundryProject(name ProjectName, out LWCE_TItemUnlock k
     kUnlock.sndFanfare = SNDLIB().SFX_Unlock_Foundry;
 
     kUnlock.ImagePath = kTemplate.ImagePath;
-    kUnlock.strName = kTemplate.m_strName;
-    kUnlock.strDescription = kTemplate.m_strSummary;
+    kUnlock.strName = kTemplate.strName;
+    kUnlock.strDescription = kTemplate.strSummary;
     kUnlock.strTitle = m_strNewFoundryAvailable;
     kUnlock.strHelp = m_strNewFoundryHelp;
 

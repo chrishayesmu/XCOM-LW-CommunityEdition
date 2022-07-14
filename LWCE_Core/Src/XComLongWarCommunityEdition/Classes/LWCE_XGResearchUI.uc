@@ -40,7 +40,7 @@ function TTableMenuOption LWCE_BuildTechOption(LWCETechTemplate kTech, array<int
 
         if (arrCategories[iCategory] == 1)
         {
-            strCategory = kTech.m_strName;
+            strCategory = kTech.strName;
 
             if (bPriority)
             {
@@ -74,9 +74,9 @@ function TTechSummary LWCE_BuildTechSummary(LWCETechTemplate kTech)
     kTechTree = `LWCE_TECHTREE;
 
     kSummary.imgItem.strPath = kTech.ImagePath;
-    kSummary.txtTitle.StrValue = "<b>" $ kTech.m_strName $ "</b>";
+    kSummary.txtTitle.StrValue = "<b>" $ kTech.strName $ "</b>";
     kSummary.txtTitle.iState = eUIState_Highlight;
-    kSummary.txtSummary.StrValue = kTech.m_strSummary;
+    kSummary.txtSummary.StrValue = kTech.strSummary;
 
     kTag = XGParamTag(XComEngine(class'Engine'.static.GetEngine()).LocalizeContext.FindTag("XGParam"));
 
@@ -99,7 +99,7 @@ function TTechSummary LWCE_BuildTechSummary(LWCETechTemplate kTech)
     kSummary.txtRequirementsLabel.StrValue = m_strCostLabel;
     kSummary.txtRequirementsLabel.iState = eUIState_Warning;
 
-    kCost = class'LWCETypes'.static.ConvertTCostToTResearchCost(kTech.kCost);
+    kCost = class'LWCETypes'.static.ConvertTCostToTResearchCost(kTech.GetCost());
     kSummary.bCanAfford = kLabs.GetCostSummary(kSummary.kCost, kCost);
 
     return kSummary;
@@ -204,13 +204,16 @@ function bool OnTechTableOption(int iOption)
 
 function int LWCE_SortTechs(LWCETechTemplate kTech1, LWCETechTemplate kTech2)
 {
+    local int iPoints1, iPoints2;
     local string strTech1, strTech2;
     local bool bBioTech1, bBioTech2, bPriority1, bPriority2;
     local LWCE_XGFacility_Labs kLabs;
 
     kLabs = LWCE_XGFacility_Labs(LABS());
-    strTech1 = kTech1.m_strName;
-    strTech2 = kTech2.m_strName;
+    iPoints1 = kTech1.GetPointsToComplete();
+    iPoints2 = kTech2.GetPointsToComplete();
+    strTech1 = kTech1.strName;
+    strTech2 = kTech2.strName;
     bPriority1 = kLabs.LWCE_IsPriorityTech(kTech1.DataName);
     bPriority2 = kLabs.LWCE_IsPriorityTech(kTech2.DataName);
     bBioTech1 = kLabs.LWCE_IsAutopsyTech(kTech1.DataName) || kLabs.LWCE_IsInterrogationTech(kTech1.DataName);
@@ -268,13 +271,13 @@ function int LWCE_SortTechs(LWCETechTemplate kTech1, LWCETechTemplate kTech2)
                 }
                 else
                 {
-                    if (kTech1.iPointsToComplete < kTech2.iPointsToComplete)
+                    if (iPoints1 < iPoints2)
                     {
                         return 0;
                     }
                     else
                     {
-                        if (kTech1.iPointsToComplete > kTech2.iPointsToComplete)
+                        if (iPoints1 > iPoints2)
                         {
                             return -1;
                         }
@@ -311,25 +314,10 @@ function UpdateArchives()
     {
         kTech = `LWCE_TECH(kLabs.m_arrCEResearched[Index]);
 
-        // Skip the Sectoid Commander Autopsy until the Sectoid Autopsy research comes up; this is a hack used in
-        // the base game to make the autopsies appear next to each other in the list, since their IDs aren't consecutive
-        if (kTech.GetTechName() == 'Tech_AutopsySectoidCommander')
-        {
-            continue;
-        }
-
         kUI.arrTechs.AddItem(kTech.GetTechName());
 
-        kOption.strText = kTech.m_strName;
+        kOption.strText = kTech.strName;
         kUI.mnuArchives.arrOptions.AddItem(kOption);
-
-        if (kTech.GetTechName() == 'Tech_AutopsySectoid' && kLabs.LWCE_IsResearched('Tech_AutopsySectoidCommander'))
-        {
-            kUI.arrTechs.AddItem('Tech_AutopsySectoidCommander');
-
-            kOption.strText = `LWCE_TECH('Tech_AutopsySectoidCommander').m_strName;
-            kUI.mnuArchives.arrOptions.AddItem(kOption);
-        }
     }
 
     m_kCEArchives = kUI;
@@ -337,6 +325,7 @@ function UpdateArchives()
 
 function UpdateHeader()
 {
+    local int iBasePointsToComplete;
     local LWCE_XGFacility_Labs kLabs;
     local LWCETechTemplate kTech;
     local TLabHeader kHeader;
@@ -349,11 +338,13 @@ function UpdateHeader()
 
     if (kHeader.bDrawTech)
     {
-        kTech = kLabs.LWCE_GetCurrentTechTemplate();
+        kTech = kLabs.LWCE_GetCurrentTech();
+
+        iBasePointsToComplete = kTech.GetPointsToComplete(/* bIncludeTimeSpent */ false);
 
         kHeader.imgTech.strPath = kTech.ImagePath;
-        kHeader.fProgress = float(kTech.iPointsToComplete - kLabs.m_kCEProject.iActualHoursLeft) / float(kTech.iPointsToComplete);
-        kHeader.txtProject.StrValue = kTech.m_strName;
+        kHeader.fProgress = float(iBasePointsToComplete - kLabs.m_kCEProject.iActualHoursLeft) / float(iBasePointsToComplete);
+        kHeader.txtProject.StrValue = kTech.strName;
         kHeader.txtProject.iState = eUIState_Highlight;
         kHeader.txtETA = kLabs.GetCurrentProgressText();
     }
@@ -485,7 +476,7 @@ function UpdateReport()
     kReport.txtTitle.iState = eUIState_Warning;
     kReport.txtTopSecret.StrValue = m_strLabelTopSecret;
     kReport.txtTopSecret.iState = eUIState_Bad;
-    kReport.txtCodename.StrValue = m_strLabelCodeName @ kTech.m_strCodename;
+    kReport.txtCodename.StrValue = m_strLabelCodeName @ kTech.strCodename;
     kReport.txtCodename.iState = eUIState_Warning;
     kReport.txtMonthNum.StrValue = string(kDateTime.m_iMonth);
     kReport.txtMonthNum.iState = eUIState_Good;
@@ -503,17 +494,17 @@ function UpdateReport()
     kReport.txtYear.StrValue = string(kDateTime.m_iYear);
     kReport.txtYear.iState = eUIState_Good;
     kReport.txtSubject.strLabel = m_strLabelSubject;
-    kReport.txtSubject.StrValue = kTech.m_strName;
+    kReport.txtSubject.StrValue = kTech.strName;
     kReport.txtSubject.iState = eUIState_Highlight;
     kReport.imgProject.strPath = kTech.ImagePath;
     kReport.txtNotesLabel.StrValue = m_strLabelProjectNotes;
     kReport.txtNotesLabel.iState = eUIState_Highlight;
-    kReport.txtNotes.StrValue = kTech.m_strReport;
+    kReport.txtNotes.StrValue = kTech.strReport;
 
-    if (kTech.m_strCustom != "")
+    if (kTech.strCustom != "")
     {
         kReport.txtResults.Add(1);
-        kReport.txtResults[0].StrValue = kTech.m_strCustom;
+        kReport.txtResults[0].StrValue = kTech.strCustom;
         kReport.txtResults[0].iState = eUIState_Warning;
     }
 
@@ -573,14 +564,14 @@ function UpdateReport()
 
     for (Index = 0; Index < arrNameResults.Length; Index++)
     {
-        kTag.StrValue0 = `LWCE_FTECH(arrNameResults[Index]).m_strName;
+        kTag.StrValue0 = `LWCE_FTECH(arrNameResults[Index]).strName;
         kReport.txtResults.Add(1);
         kReport.txtResults[kReport.txtResults.Length - 1].StrValue = class'XComLocalizer'.static.ExpandString(m_strFoundryBuildAvailable);
         kReport.txtResults[kReport.txtResults.Length - 1].iState = eUIState_Warning;
         kLabs.m_arrCEUnlockedFoundryProjects.AddItem(arrNameResults[Index]);
     }
 
-    arrNameResults = kTechTree.LWCE_GetTech(m_nmCEReportTech).arrCreditsGranted;
+    arrNameResults = `LWCE_TECH(m_nmCEReportTech).arrCreditsGranted;
 
     if (arrNameResults.Length > 0)
     {

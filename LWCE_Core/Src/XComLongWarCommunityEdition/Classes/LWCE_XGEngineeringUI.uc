@@ -167,7 +167,7 @@ function TTableMenuOption BuildQueueItem(int iQueueSlot)
         kOption.arrStrings.AddItem("---");
         kOption.arrStates.AddItem(eUIState_Normal);
 
-        kOption.arrStrings.AddItem(m_strFoundryPrefix @ `LWCE_FTECH(kFProject.ProjectName).m_strName);
+        kOption.arrStrings.AddItem(m_strFoundryPrefix @ `LWCE_FTECH(kFProject.ProjectName).strName);
         kOption.arrStates.AddItem(eUIState_Normal);
 
         kOption.arrStrings.AddItem(kEngineering.LWCE_GetFoundryETAString(kFProject));
@@ -703,7 +703,7 @@ function UpdateView()
         {
             if (!HQ().HasFacility(eFacility_CyberneticsLab) && !HQ().HasFacility(eFacility_GeneticsLab) && !kEngineering.IsBuildingFacility(eFacility_CyberneticsLab) && !kEngineering.IsBuildingFacility(eFacility_GeneticsLab))
             {
-                if (Narrative(`XComNarrativeMoment("Urge_LabFacility")))
+                if (Narrative(`XComNarrativeMomentEW("Urge_LabFacility")))
                 {
                     HQ().m_bUrgedEWFacility = true;
                     return;

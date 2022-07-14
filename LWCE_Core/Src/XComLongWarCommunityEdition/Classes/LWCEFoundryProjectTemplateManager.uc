@@ -30,20 +30,6 @@ function array<LWCEFoundryProjectTemplate> GetAllProjectTemplates()
     return arrTemplates;
 }
 
-function InitTemplates()
-{
-    local LWCEFoundryProjectTemplate kTemplate;
-    local int Index;
-
-    super.InitTemplates();
-
-    for (Index = 0; Index < m_arrTemplates.Length; Index++)
-    {
-        kTemplate = LWCEFoundryProjectTemplate(m_arrTemplates[Index].kTemplate);
-        kTemplate.PopulateLocalization();
-    }
-}
-
 defaultproperties
 {
     ManagedTemplateClass=class'LWCEFoundryProjectTemplate'

@@ -25,8 +25,9 @@ struct TemplateCacheEntry
 var config array<string> arrManagedTemplateClasses;
 
 // What type of templates are handled by this manager. Classes configured in arrManagedTemplateClasses must be subclasses of this
-// (or must be ManagedTemplateClass itself).
-var protected class<LWCEDataTemplate> ManagedTemplateClass;
+// (or must be ManagedTemplateClass itself). Any dynamically-created templates (from LWCEDataSet.CreateTemplates) which are subclasses
+// of ManagedTemplateClass will also be added to this manager, even if their class is not present in arrManagedTemplateClasses.
+var class<LWCEDataTemplate> ManagedTemplateClass;
 
 // Cache of all templates which are loaded by this manager. DO NOT EXPOSE OUTSIDE THIS CLASS AND ITS SUBCLASSES.
 // Any invalid modification of this cache will break a lot of things.
@@ -97,6 +98,43 @@ function InitTemplates()
 }
 
 /// <summary>
+/// Adds a new template to the cache. Child classes should expose a type-appropriate
+/// version of this function, which delegates to this. This function is public for use by other
+/// classes in LWCE's data template framework, but mods should always prefer using the appropriately
+/// typed subclass methods.
+/// </summary>
+function bool AddDataTemplate(LWCEDataTemplate kTemplate, bool ReplaceDuplicate = false)
+{
+    local int Index;
+    local TemplateCacheEntry kCacheEntry;
+
+    if (!ClassIsChildOf(kTemplate.Class, ManagedTemplateClass))
+    {
+        return false;
+    }
+
+    Index = m_arrTemplates.Find('TemplateName', kTemplate.Name);
+
+    if (Index != INDEX_NONE && !ReplaceDuplicate)
+    {
+        return false;
+    }
+
+    if (Index != INDEX_NONE)
+    {
+        m_arrTemplates[Index].kTemplate = kTemplate;
+        return true;
+    }
+
+    kCacheEntry.kTemplate = kTemplate;
+    kCacheEntry.TemplateName = kTemplate.DataName;
+
+    m_arrTemplates.AddItem(kCacheEntry);
+
+    return true;
+}
+
+/// <summary>
 /// Retrieves the names of all of the templates which are cached in this template manager.
 /// </summary>
 function array<name> GetTemplateNames()
@@ -146,36 +184,6 @@ function bool ValidateAndFilterTemplates()
     }
 
     return bAllValid;
-}
-
-/// <summary>
-/// Adds a new template to the cache. Child classes should expose a type-appropriate
-/// version of this function, which delegates to this.
-/// </summary>
-protected function bool AddDataTemplate(LWCEDataTemplate kTemplate, bool ReplaceDuplicate = false)
-{
-    local int Index;
-    local TemplateCacheEntry kCacheEntry;
-
-    Index = m_arrTemplates.Find('TemplateName', kTemplate.Name);
-
-    if (Index != INDEX_NONE && !ReplaceDuplicate)
-    {
-        return false;
-    }
-
-    if (Index != INDEX_NONE)
-    {
-        m_arrTemplates[Index].kTemplate = kTemplate;
-        return true;
-    }
-
-    kCacheEntry.kTemplate = kTemplate;
-    kCacheEntry.TemplateName = kTemplate.DataName;
-
-    m_arrTemplates.AddItem(kCacheEntry);
-
-    return true;
 }
 
 /// <summary>

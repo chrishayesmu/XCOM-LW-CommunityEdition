@@ -139,6 +139,25 @@ static function int RandInRange(LWCE_TRange kRange)
     return kRange.MinInclusive + Rand(kRange.MaxInclusive - kRange.MinInclusive + 1);
 }
 
+/// <summary>
+/// Scales the given cost to be appropriated for Dynamic War. Scaling does not apply to cash, alloy,
+/// elerium, or meld costs.
+/// </summary>
+static function ScaleCostForDynamicWar(out LWCE_TCost kCost)
+{
+    local int Index;
+
+    if (kCost.iWeaponFragments > 0)
+    {
+        kCost.iWeaponFragments = Max(1, int(kCost.iWeaponFragments * class'XGTacticalGameCore'.default.SW_MARATHON));
+    }
+
+    for (Index = 0; Index < kCost.arrItems.Length; Index++)
+    {
+        kCost.arrItems[Index].iQuantity = Max(1, int(kCost.arrItems[Index].iQuantity * class'XGTacticalGameCore'.default.SW_MARATHON));
+    }
+}
+
 static function SetItemQuantity(out array<LWCE_TItemQuantity> arrItemQuantities, int iItemId, int iQuantity)
 {
     local int Index;

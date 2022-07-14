@@ -57,7 +57,7 @@
 `define LWCE_ABILITYTREE (LWCE_XGAbilityTree(`LWCE_GAMECORE.m_kAbilities))
 `define LWCE_ALERT(nm) (class'LWCEAlertBuilder'.static.NewAlert(`nm))
 `define LWCE_BARRACKS (LWCE_XGFacility_Barracks(`HQGAME.GetGameCore().GetHQ().GetBarracks()))
-`define LWCE_FTECH(techName, bRushResearch) (`LWCE_TECHTREE.LWCE_GetFoundryTech(`techName, `bRushResearch))
+`define LWCE_FTECH(techName) (`LWCE_FOUNDRY_TEMPLATE_MGR.FindProjectTemplate(`techName))
 `define LWCE_ENGINEERING (LWCE_XGFacility_Engineering(`HQGAME.GetGameCore().GetHQ().GetEngineering()))
 `define LWCE_GAMECORE (LWCE_XGTacticalGameCore(`GAMECORE))
 `define LWCE_GEOSCAPE (LWCE_XGGeoscape(`HQGAME.GetGameCore().GetGeoscape()))
@@ -70,7 +70,7 @@
 `define LWCE_PERKS_STRAT (LWCE_XComPerkManager(`LWCE_BARRACKS.m_kPerkManager))
 `define LWCE_PSILABS (LWCE_XGFacility_PsiLabs(`LWCE_BARRACKS.m_kPsiLabs))
 `define LWCE_STORAGE (LWCE_XGStorage(`HQGAME.GetGameCore().GetHQ().m_kEngineering.GetStorage()))
-`define LWCE_TECH(techId) (`LWCE_TECHTREE.LWCE_GetTech(`techId))
+`define LWCE_TECH(techId) (`LWCE_TECH_TEMPLATE_MGR.FindTechTemplate(`techId))
 `define LWCE_TECHTREE (LWCE_XGTechTree(`HQGAME.GetGameCore().GetHQ().GetLabs().m_kTree))
 
 // ---------------------------

@@ -1,10 +1,6 @@
 class LWCEFoundryProjectTemplate extends LWCEDataTemplate
     config(LWCEBaseStrategyGame);
 
-// NOTE: All documentation for templates is assuming the base template is being retrieved from the corresponding template manager,
-// and has not been modified. Some functions return clones of templates which have had changes applied; for example, to factor in
-// country/continent bonuses that reduce research times, costs, etc. The comments below may not apply to such clones.
-
 // The total number of engineer-hours required to complete this project. For example, if your project requires 15
 // engineers and should take 48 hours to complete when at 15 engineers, this would be 15 * 48 = 720 hours.
 var config int iPointsToComplete;
@@ -30,11 +26,8 @@ var config LWCE_TPrereqs kPrereqs;
 // If the player has already completed the project, it will still be visible in the Foundry.
 var config bool bForceUnavailable;
 
-var protected localized string strName;         // The friendly name of the Foundry project.
-var protected localized string strSummary;      // Friendly text describing the project to the player.
-
-var string m_strName;
-var string m_strSummary;
+var const localized string strName;         // The friendly name of the Foundry project.
+var const localized string strSummary;      // Friendly text describing the project to the player.
 
 function bool BenefitsFromCredit(name CreditName)
 {
@@ -42,49 +35,46 @@ function bool BenefitsFromCredit(name CreditName)
 }
 
 /// <summary>
-/// Creates a duplicate of this template, which can be modified without worrying about changing the original template object.
-/// Note that the clone will NOT have the same object name, so be careful if using SaveConfig to persist values.
+/// Determines the cost to begin this research, based on the current campaign.
+/// Should not be called outside of a campaign's strategy layer.
 /// </summary>
-function LWCEFoundryProjectTemplate Clone()
+function LWCE_TCost GetCost(bool bRush)
 {
-    local LWCEFoundryProjectTemplate kClone;
+    local LWCE_TCost kAdjustedCost;
+    local float fNewWarfareBonus;
 
-    kClone = LWCEFoundryProjectTemplate(InstantiateClone());
+    kAdjustedCost = kCost;
 
-    kClone.iPointsToComplete = iPointsToComplete;
-    kClone.iEngineers = iEngineers;
+    if (`LWCE_HQ.IsOptionEnabled(`LW_SECOND_WAVE_ID(DynamicWar)))
+    {
+        `LWCE_UTILS.ScaleCostForDynamicWar(kAdjustedCost);
+    }
 
-    kClone.arrCreditsApplied = CopyNameArray(arrCreditsApplied);
+    if (bRush)
+    {
+        kAdjustedCost.iCash *= 1.5;
+        kAdjustedCost.iAlloys *= 1.5;
+        kAdjustedCost.iElerium *= 1.5;
+        kAdjustedCost.iMeld += 16;
+    }
 
-    kClone.ImagePath = ImagePath;
+    fNewWarfareBonus = `LWCE_HQ.HasBonus(`LW_HQ_BONUS_ID(NewWarfare)) / 100.0f;
 
-    kClone.kCost = kCost;
-    kClone.kPrereqs = kPrereqs;
+    if (fNewWarfareBonus > 0)
+    {
+        kAdjustedCost.iCash *= (1.0f - fNewWarfareBonus);
+        kAdjustedCost.iAlloys *= (1.0f - fNewWarfareBonus);
+        kAdjustedCost.iElerium *= (1.0f - fNewWarfareBonus);
+    }
 
-    kClone.bForceUnavailable = bForceUnavailable;
+    // TODO: add a way for mods to reduce cost
 
-    kClone.PopulateLocalization(self);
-
-    return kClone;
+    return kAdjustedCost;
 }
 
 function name GetProjectName()
 {
     return DataName;
-}
-
-function PopulateLocalization(optional LWCEFoundryProjectTemplate kSource)
-{
-    if (kSource != none)
-    {
-        m_strName = kSource.m_strName;
-        m_strSummary = kSource.m_strSummary;
-    }
-    else
-    {
-        m_strName = strName;
-        m_strSummary = strSummary;
-    }
 }
 
 function bool ValidateTemplate(out string strError)

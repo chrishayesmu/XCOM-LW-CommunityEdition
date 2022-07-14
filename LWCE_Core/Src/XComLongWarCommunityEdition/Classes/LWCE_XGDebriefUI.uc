@@ -295,6 +295,7 @@ function int LWCE_GetUnlockItem(out LWCETechTemplate kTech)
 {
     local int I, iItemId;
     local LWCE_XGHeadquarters kHQ;
+    local LWCE_TCost kCost;
 
     kHQ = `LWCE_HQ;
 
@@ -308,11 +309,13 @@ function int LWCE_GetUnlockItem(out LWCETechTemplate kTech)
         }
     }
 
-    if (kTech.kCost.arrItems.Length > 0)
+    kCost = kTech.GetCost();
+
+    if (kCost.arrItems.Length > 0)
     {
-        for (I = 0; I < kTech.kCost.arrItems.Length; I++)
+        for (I = 0; I < kCost.arrItems.Length; I++)
         {
-            iItemId = kTech.kCost.arrItems[I].iItemId;
+            iItemId = kCost.arrItems[I].iItemId;
 
             if (kHQ.m_kCELastCargoArtifacts.HasNonzeroEntry(iItemId))
             {
@@ -650,7 +653,7 @@ function UpdateScienceDebrief()
 
             kDebriefItem.txtTitle.StrValue = m_strNewResourceProject;
             kDebriefItem.txtTitle.iState = eUIState_Good;
-            kDebriefItem.txtTech.StrValue = kTech.m_strName;
+            kDebriefItem.txtTech.StrValue = kTech.strName;
             kDebriefItem.txtTech.iState = eUIState_Highlight;
             kDebrief.arrItems.AddItem(kDebriefItem);
 
@@ -672,7 +675,7 @@ function UpdateScienceDebrief()
     else
     {
         kTech = `LWCE_TECH(kCurrentProject.TechName);
-        kProjectUI.txtProject.StrValue = kTech.m_strName;
+        kProjectUI.txtProject.StrValue = kTech.strName;
         kProjectUI.txtProject.iState = eUIState_Highlight;
         kProjectUI.txtProgress = kLabs.GetCurrentProgressText();
     }

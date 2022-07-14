@@ -337,19 +337,9 @@ function TProjectCost LWCE_GetFoundryProjectCost(name ProjectName, bool bRushFou
         return kCost;
     }
 
-    kCost = class'LWCETypes'.static.ConvertTCostToProjectCost(kTemplate.kCost);
+    kCost = class'LWCETypes'.static.ConvertTCostToProjectCost(kTemplate.GetCost(bRushFoundry));
     kCost.iStaffTypeReq = eStaff_Engineer;
     kCost.iStaffNumReq = kTemplate.iEngineers;
-
-    if (bRushFoundry)
-    {
-        // TODO move to config and/or template
-        kCost.iCash *= 1.50;
-        kCost.iElerium *= 1.50;
-        kCost.iAlloys *= 1.50;
-        kCost.arrItems.AddItem(eItem_Meld);
-        kCost.arrItemQuantities.AddItem(16);
-    }
 
     return kCost;
 }

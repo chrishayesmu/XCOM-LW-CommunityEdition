@@ -21,7 +21,7 @@ function SetTemplateName(name NewName)
 /// Checks that this template is valid. Exactly what that means will depend on the subclass, but invalid
 /// templates will not be cached by template managers, nor used in gameplay.
 /// </summary>
-/// <param ref="strError">A string to populate with the validation error, if any.</param>
+/// <param name="strError">A string to populate with the validation error, if any.</param>
 /// <returns>True if the template is valid, false otherwise.</returns>
 function bool ValidateTemplate(out string strError)
 {

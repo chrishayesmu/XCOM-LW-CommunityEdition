@@ -178,7 +178,7 @@ function UpdateHireDisplay()
     m_kHiring.txtTitle.StrValue = m_strLabelHireInterceptors;
 
     m_kHiring.txtFacilityCap.strLabel = m_strLabelHangarCap;
-    m_kHiring.txtFacilityCap.StrValue = string(iNumInterceptorsWanted) $ "/" $ string(m_iMaxCapacity);
+    m_kHiring.txtFacilityCap.StrValue = iNumInterceptorsWanted $ "/" $ m_iMaxCapacity;
     m_kHiring.txtFacilityCap.iState = iNumInterceptorsWanted > m_iMaxCapacity ? eUIState_Bad : eUIState_Normal;
 
     m_kHiring.txtMaintenance.strLabel = m_strLabelHireMonthlyCost;

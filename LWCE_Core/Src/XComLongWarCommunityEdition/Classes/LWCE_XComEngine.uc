@@ -1,8 +1,10 @@
 class LWCE_XComEngine extends XComEngine
     config(LWCEEngine);
 
+var config array<string> arrDataSets;
 var config array<string> arrDataTemplateManagers;
 
+var private array< class<LWCEDataSet> > m_arrDataSets;
 var private array<LWCEDataTemplateManager> m_arrDataTemplateManagers;
 var private bool m_bInitialized;
 
@@ -83,11 +85,43 @@ function LWCE_Init()
 
     `LWCE_LOG_CLS("Initializing data template managers...");
     CreateDataTemplateManagers();
+
+    `LWCE_LOG_CLS("Initializing datasets...");
+    LoadDataSetClasses();
+
+    `LWCE_LOG_CLS("Calling CreateTemplates on all datasets...");
+    CreateDataSetTemplates();
+
+    `LWCE_LOG_CLS("Calling OnPostTemplatesCreated on all datasets...");
+    OnPostTemplatesCreated();
+
+    `LWCE_LOG_CLS("Validating data template managers...");
+    ValidateDataTemplateManagers();
+}
+
+private function AssignTemplateToManager(LWCEDataTemplate kTemplate)
+{
+    local bool bAdded;
+    local int Index;
+
+    for (Index = 0; Index < m_arrDataTemplateManagers.Length; Index++)
+    {
+        if (ClassIsChildOf(kTemplate.Class, m_arrDataTemplateManagers[Index].ManagedTemplateClass))
+        {
+            m_arrDataTemplateManagers[Index].AddDataTemplate(kTemplate);
+            bAdded = true;
+            break;
+        }
+    }
+
+    if (!bAdded)
+    {
+        `LWCE_LOG_CLS("ERROR: could not locate an appropriate template manager for template " $ kTemplate.DataName $ " of class " $ kTemplate.Class.Name $ ". This template will not be usable.");
+    }
 }
 
 private function CreateDataTemplateManagers()
 {
-    local bool bAnyInvalid;
     local int Index;
     local class<LWCEDataTemplateManager> kClass;
     local LWCEDataTemplateManager kTemplateManager;
@@ -110,24 +144,25 @@ private function CreateDataTemplateManagers()
         m_arrDataTemplateManagers.AddItem(kTemplateManager);
     }
 
-    bAnyInvalid = true;
+    `LWCE_LOG_CLS("Finished loading " $ m_arrDataTemplateManagers.Length $ " data template managers");
+}
 
-    while (bAnyInvalid)
+private function CreateDataSetTemplates()
+{
+    local array<LWCEDataTemplate> arrTemplates;
+    local int iDataSet, iTemplate;
+
+    for (iDataSet = 0; iDataSet < m_arrDataSets.Length; iDataSet++)
     {
-        bAnyInvalid = false;
+        arrTemplates = m_arrDataSets[iDataSet].static.CreateTemplates();
 
-        for (Index = 0; Index < m_arrDataTemplateManagers.Length; Index++)
-        {
-            bAnyInvalid = !m_arrDataTemplateManagers[Index].ValidateAndFilterTemplates() || bAnyInvalid;
-        }
+        `LWCE_LOG_CLS("DataSet class " $ m_arrDataSets[iDataSet].Name $ " generated " $ arrTemplates.Length $ " templates");
 
-        if (bAnyInvalid)
+        for (iTemplate = 0; iTemplate < arrTemplates.Length; iTemplate++)
         {
-            `LWCE_LOG_CLS("One or more template managers had invalid templates. Validating all template managers again to check for newly-invalidated dependencies.");
+            AssignTemplateToManager(arrTemplates[iTemplate]);
         }
     }
-
-    `LWCE_LOG_CLS("Finished loading " $ m_arrDataTemplateManagers.Length $ " data template managers");
 }
 
 /// <summary>
@@ -153,6 +188,28 @@ private function InstallMods()
     kDLCManager.RefreshDLC();
 }
 
+/// <summary>
+/// Loads all of the classes configured in arrDataSets without any further processing.
+/// </summary>
+private function LoadDataSetClasses()
+{
+    local class<LWCEDataSet> kDataSet;
+    local int Index;
+
+    for (Index = 0; Index < arrDataSets.Length; Index++)
+    {
+        kDataSet = class<LWCEDataSet>(DynamicLoadObject(arrDataSets[Index], class'Class'));
+
+        if (kDataSet == none)
+        {
+            `LWCE_LOG_CLS("ERROR: could not load configured LWCEDataSet class " $ arrDataSets[Index]);
+            continue;
+        }
+
+        m_arrDataSets.AddItem(kDataSet);
+    }
+}
+
 private function OnFindDLCComplete()
 {
     local int Index;
@@ -171,6 +228,39 @@ private function OnFindDLCComplete()
     // Extremely important to clear this delegate; otherwise when we change maps, garbage collection will fail due to
     // lingering references to old map objects, because DLCEnum is owned by the engine
     kDLCEnum.ClearFindDLCDelegate(OnFindDLCComplete);
+}
+
+private function OnPostTemplatesCreated()
+{
+    local int Index;
+
+    for (Index = 0; Index < m_arrDataSets.Length; Index++)
+    {
+        m_arrDataSets[Index].static.OnPostTemplatesCreated();
+    }
+}
+
+private function ValidateDataTemplateManagers()
+{
+    local bool bAnyInvalid;
+    local int Index;
+
+    bAnyInvalid = true;
+
+    while (bAnyInvalid)
+    {
+        bAnyInvalid = false;
+
+        for (Index = 0; Index < m_arrDataTemplateManagers.Length; Index++)
+        {
+            bAnyInvalid = !m_arrDataTemplateManagers[Index].ValidateAndFilterTemplates() || bAnyInvalid;
+        }
+
+        if (bAnyInvalid)
+        {
+            `LWCE_LOG_CLS("One or more template managers had invalid templates. Validating all template managers again to check for newly-invalidated dependencies.");
+        }
+    }
 }
 
 defaultproperties

@@ -19,7 +19,7 @@ function TObjectSummary LWCE_BuildSummary(LWCEFoundryProjectTemplate kFoundryTec
 
     kSummary.imgObject.iImage = 0;
     kSummary.imgObject.strPath = kFoundryTech.ImagePath;
-    kSummary.txtSummary.StrValue = kFoundryTech.m_strSummary;
+    kSummary.txtSummary.StrValue = kFoundryTech.strSummary;
     kSummary.txtRequirementsLabel.StrValue = m_strLabelProjectCost;
 
     if (kEngineering.LWCE_IsFoundryTechResearched(kFoundryTech.GetProjectName()))
@@ -52,7 +52,7 @@ function TTableMenuOption LWCE_BuildTableItem(LWCEFoundryProjectTemplate kFoundr
 {
     local TTableMenuOption kOption;
 
-    kOption.arrStrings[0] = kFoundryTech.m_strName;
+    kOption.arrStrings[0] = kFoundryTech.strName;
     kOption.arrStates[0] = eUIState_Normal;
     return kOption;
 }
