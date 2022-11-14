@@ -1,16 +1,34 @@
-`define LWCE_GENERATOR_XGAIBEHAVIOR \
-\
-simulated function XGUnit GetClosestCivilian() \
-{ \
-    return class'LWCE_XGAIBehavior_Extensions'.static.GetClosestCivilian(self); \
-} \
-\
-simulated function InitTargets() \
-{ \
-    class'LWCE_XGAIBehavior_Extensions'.static.InitTargets(self); \
-} \
-\
-function XGUnit SelectCivilianTarget() \
-{ \
-    return class'LWCE_XGAIBehavior_Extensions'.static.SelectCivilianTarget(self); \
+function bool CanHitAoETarget(out aoe_target kTarget)
+{
+    return class'LWCE_XGAIBehavior_Extensions'.static.CanHitAoETarget(self, kTarget);
+}
+
+simulated function XGUnit GetClosestCivilian()
+{
+    return class'LWCE_XGAIBehavior_Extensions'.static.GetClosestCivilian(self);
+}
+
+simulated function float GetGrenadeThrowRange()
+{
+    return class'LWCE_XGAIBehavior_Extensions'.static.GetGrenadeThrowRange(self);
+}
+
+function int GetWeaponRangeModAtLocation(Vector vLocation, XGUnit kEnemy)
+{
+    return class'LWCE_XGAIBehavior_Extensions'.static.GetWeaponRangeModAtLocation(self, vLocation, kEnemy);
+}
+
+function InitMimicBeaconToHunt()
+{
+    class'LWCE_XGAIBehavior_Extensions'.static.InitMimicBeaconToHunt(self);
+}
+
+simulated function InitTargets()
+{
+    class'LWCE_XGAIBehavior_Extensions'.static.InitTargets(self);
+}
+
+function XGUnit SelectCivilianTarget()
+{
+    return class'LWCE_XGAIBehavior_Extensions'.static.SelectCivilianTarget(self);
 }

@@ -8,7 +8,7 @@ simulated function BuildMenu()
     local XComOnlineEventMgr OnlineEventMgr;
     local bool bIsValidSave;
 
-    OnlineEventMgr = XComOnlineEventMgr(GameEngine(class'Engine'.static.GetEngine()).OnlineEventManager);
+    OnlineEventMgr = `ONLINEEVENTMGR;
     AS_Clear();
     AS_AddListItem(0, m_sEmptySlot, " ", " ", false, "");
 

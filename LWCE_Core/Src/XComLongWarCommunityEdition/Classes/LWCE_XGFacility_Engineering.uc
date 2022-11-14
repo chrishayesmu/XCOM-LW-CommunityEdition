@@ -11,8 +11,8 @@ struct LWCE_TFoundryProject
     var bool bRush;
     var bool bNotify;
     var bool bAdjusted;
-    var TProjectCost kRebate;
-    var TProjectCost kOriginalCost;
+    var LWCE_TProjectCost kRebate;
+    var LWCE_TProjectCost kOriginalCost;
 };
 
 struct CheckpointRecord_LWCE_XGFacility_Engineering extends CheckpointRecord_XGFacility_Engineering
@@ -20,11 +20,15 @@ struct CheckpointRecord_LWCE_XGFacility_Engineering extends CheckpointRecord_XGF
     var array<LWCE_TFoundryProject> m_arrCEFoundryProjects;
     var array<LWCE_TItemProject> m_arrCEItemProjects;
     var array<name> m_arrCEFoundryHistory;
+    var array<LWCE_TProjectCost> m_arrCEOldRebates;
 };
 
 var array<LWCE_TFoundryProject> m_arrCEFoundryProjects;
 var array<LWCE_TItemProject> m_arrCEItemProjects;
 var array<name> m_arrCEFoundryHistory;
+var array<LWCE_TProjectCost> m_arrCEOldRebates;
+
+var private LWCEItemTemplateManager m_kItemTemplateMgr;
 
 function Init(bool bLoadingFromSave)
 {
@@ -32,6 +36,8 @@ function Init(bool bLoadingFromSave)
 
     m_kItems = Spawn(class'LWCE_XGItemTree');
     m_kItems.Init();
+
+    m_kItemTemplateMgr = `LWCE_ITEM_TEMPLATE_MGR;
 
     if (m_arrMusingTracker.Length == 0)
     {
@@ -87,6 +93,202 @@ function InitNewGame()
 }
 
 // #region Functions related to facilities
+
+function AddFacilityProject(out TFacilityProject kProject)
+{
+    local bool bInstaBuild, bFreeBuild;
+
+    bInstaBuild = false;
+    bFreeBuild = false;
+
+    if (XComCheatManager(GetALocalPlayerController().CheatManager) != none)
+    {
+        bInstaBuild = XComCheatManager(GetALocalPlayerController().CheatManager).m_bStrategyAllFacilitiesInstaBuild;
+        bFreeBuild = XComCheatManager(GetALocalPlayerController().CheatManager).m_bStrategyAllFacilitiesFree;
+    }
+
+    // TODO: currently broken; fix when moving facilities to LWCE
+    kProject.iIndex = m_arrFacilityProjects.Length;
+    kProject.kOriginalCost = GetFacilityProjectCost(kProject.eFacility, kProject.X, kProject.Y, kProject.Brush);
+    m_arrFacilityProjects.AddItem(kProject);
+
+    if (!bFreeBuild)
+    {
+        PayCost(kProject.kOriginalCost);
+    }
+
+    Base().PerformAction(eBCS_BeginConstruction, kProject.X, kProject.Y, kProject.eFacility);
+
+    if (bInstaBuild)
+    {
+        UpdateFacilityProjects();
+    }
+}
+
+function bool GetFacilityCostSummary(out TCostSummary kCostSummary, EFacilityType eFacility, int X, int Y, bool Brush)
+{
+    local LWCE_TProjectCost kCost;
+    local TText txtCost;
+    local XGParamTag kTag;
+    local bool bCanAfford, bFreeBuild;
+    local int iPower;
+
+    kTag = XGParamTag(XComEngine(class'Engine'.static.GetEngine()).LocalizeContext.FindTag("XGParam"));
+    bFreeBuild = false;
+
+    if (XComCheatManager(GetALocalPlayerController().CheatManager) != none)
+    {
+        bFreeBuild = XComCheatManager(GetALocalPlayerController().CheatManager).m_bStrategyAllFacilitiesFree;
+    }
+
+    kCost = LWCE_GetFacilityProjectCost(eFacility, X, Y, bRush);
+    iPower = Facility(eFacility).iPower;
+    bCanAfford = true;
+
+    if (iPower < 0 && !bFreeBuild)
+    {
+        kTag.IntValue0 = -iPower;
+        kTag.StrValue0 = m_strCostPower;
+        txtCost.StrValue = class'XComLocalizer'.static.ExpandString(m_strCostLabel);
+        txtCost.iState = eUIState_Warning;
+
+        if (-iPower > GetResource(eResource_Power) && !bFreeBuild)
+        {
+            bCanAfford = false;
+            txtCost.iState = eUIState_Bad;
+            kCostSummary.strHelp = m_strErrInsufficientPower;
+        }
+
+        kCostSummary.arrRequirements.AddItem(txtCost);
+    }
+
+    if (kCost.iStaffTypeReq != eStaff_None && !bFreeBuild)
+    {
+        txtCost.StrValue = m_strLabelRequires;
+        txtCost.iState = eUIState_Warning;
+
+        if (kCost.iStaffTypeReq == eStaff_Soldier)
+        {
+            kTag.IntValue0 = kCost.iStaffNumReq;
+            txtCost.StrValue = class'XComLocalizer'.static.ExpandString(m_strCostSoldier);
+
+            if (BARRACKS().m_iHighestRank < kCost.iStaffNumReq)
+            {
+                bCanAfford = false;
+                txtCost.iState = eUIState_Bad;
+                kCostSummary.strHelp = m_strErrInsufficientExperience;
+            }
+        }
+        else if (kCost.iStaffTypeReq == eStaff_Scientist)
+        {
+            kTag.IntValue0 = kCost.iStaffNumReq;
+            kTag.StrValue0 = m_strCostScientists;
+            txtCost.StrValue = class'XComLocalizer'.static.ExpandString(m_strCostLabel);
+
+            if (GetResource(eResource_Scientists) < kCost.iStaffNumReq)
+            {
+                bCanAfford = false;
+                txtCost.iState = eUIState_Bad;
+                kCostSummary.strHelp = m_strErrInsufficientScientists;
+            }
+        }
+        else if (kCost.iStaffTypeReq == eStaff_Engineer)
+        {
+            kTag.IntValue0 = kCost.iStaffNumReq;
+            kTag.StrValue0 = m_strCostEngineers;
+            txtCost.StrValue = class'XComLocalizer'.static.ExpandString(m_strCostLabel);
+
+            if (m_iNumEngineers < kCost.iStaffNumReq)
+            {
+                bCanAfford = false;
+                txtCost.iState = eUIState_Bad;
+                kCostSummary.strHelp = m_strErrInsufficientEngineers;
+            }
+        }
+
+        kCostSummary.arrRequirements.AddItem(txtCost);
+    }
+
+    return LWCE_GetCostSummary(kCostSummary, kCost, true) && bCanAfford;
+}
+
+function TProjectCost GetFacilityProjectCost(EFacilityType eFacility, int X, int Y, bool bRushFacility)
+{
+    local TProjectCost kCost;
+
+    `LWCE_LOG_DEPRECATED_CLS(GetFacilityProjectCost);
+
+    return kCost;
+}
+
+function LWCE_TProjectCost LWCE_GetFacilityProjectCost(EFacilityType eFacility, int X, int Y, bool bRushFacility)
+{
+    local LWCE_TProjectCost kProjectCost;
+    local LWCE_TItemQuantity kItemQuantity;
+    local TFacility kFacility;
+
+    kFacility = Facility(eFacility);
+    kProjectCost.kCost.iCash = kFacility.iCash;
+    kProjectCost.kCost.iElerium = kFacility.iElerium;
+    kProjectCost.kCost.iAlloys = kFacility.iAlloys;
+
+    if (eFacility == eFacility_EleriumGenerator)
+    {
+        kItemQuantity.ItemName = 'Item_UFOPowerSource';
+        kItemQuantity.iQuantity = ItemAmount(2);
+        kProjectCost.kCost.arrItems.AddItem(kItemQuantity);
+    }
+    else if (eFacility == eFacility_LargeRadar)
+    {
+        kItemQuantity.ItemName = 'Item_UFOFlightComputer';
+        kItemQuantity.iQuantity = ItemAmount(2);
+        kProjectCost.kCost.arrItems.AddItem(kItemQuantity);
+    }
+    else if (kFacility.iItemReq == eItem_HyperwaveBeacon)
+    {
+        kItemQuantity.ItemName = 'Item_HyperwaveBeacon';
+        kItemQuantity.iQuantity = 1;
+        kProjectCost.kCost.arrItems.AddItem(kItemQuantity);
+    }
+    else if (kFacility.iItemReq == eItem_PsiLink)
+    {
+        kItemQuantity.ItemName = 'Item_EtherealDevice';
+        kItemQuantity.iQuantity = 1;
+        kProjectCost.kCost.arrItems.AddItem(kItemQuantity);
+    }
+    else if (kFacility.iItemReq != 0)
+    {
+        kItemQuantity.ItemName = class'LWCE_XGItemTree'.static.ItemNameFromBaseID(kFacility.iItemReq);
+        kItemQuantity.iQuantity = ItemAmount(1);
+        kProjectCost.kCost.arrItems.AddItem(kItemQuantity);
+    }
+
+    if (eFacility == eFacility_Workshop)
+    {
+        kProjectCost.iStaffTypeReq = eStaff_Engineer;
+        kProjectCost.iStaffNumReq = ITEMTREE().GetEngineersRequiredForNextWorkshop();
+    }
+    else if (eFacility == eFacility_ScienceLab)
+    {
+        kProjectCost.iStaffTypeReq = eStaff_Scientist;
+        kProjectCost.iStaffNumReq = ITEMTREE().GetScientistsRequiredForNextLab();
+    }
+    else if (eFacility == eFacility_SmallRadar || eFacility == eFacility_LargeRadar)
+    {
+        kProjectCost.iStaffTypeReq = eStaff_Engineer;
+        kProjectCost.iStaffNumReq = ITEMTREE().GetEngineersRequiredForNextUplink(eFacility);
+    }
+
+    if (bRushFacility)
+    {
+        kProjectCost.kCost.iCash *= 1.50;
+        kProjectCost.kCost.iElerium *= 1.50;
+        kProjectCost.kCost.iAlloys *= 1.50;
+        kProjectCost.kCost.iMeld += 20;
+    }
+
+    return kProjectCost;
+}
 
 function OnFacilityCompleted(int iProject)
 {
@@ -163,7 +365,7 @@ function LWCE_AddFoundryProject(out LWCE_TFoundryProject kProject)
     kProject.kOriginalCost = LWCE_GetFoundryProjectCost(kProject.ProjectName, kProject.bRush);
     m_arrCEFoundryProjects.AddItem(kProject);
 
-    PayCost(kProject.kOriginalCost);
+    LWCE_PayCost(kProject.kOriginalCost);
     LWCE_AddFoundryProjectToQueue(kProject);
     PRES().GetMgr(class'LWCE_XGFoundryUI').UpdateView();
     m_bStartedFoundryProject = true;
@@ -197,13 +399,13 @@ function CancelFoundryProject(int iIndex)
 
     kProject = LWCE_GetFoundryProject(iIndex);
 
-    if (kProject.kOriginalCost.iCash != 0 || kProject.kOriginalCost.iElerium != 0 || kProject.kOriginalCost.iAlloys != 0)
+    if (IsCostPopulated(kProject.kOriginalCost))
     {
-        RefundCost(kProject.kOriginalCost);
+        LWCE_RefundCost(kProject.kOriginalCost);
     }
     else
     {
-        RefundCost(LWCE_GetFoundryProjectCost(kProject.ProjectName, kProject.bRush));
+        LWCE_RefundCost(LWCE_GetFoundryProjectCost(kProject.ProjectName, kProject.bRush));
     }
 
     RemoveFoundryProject(kProject.iIndex);
@@ -265,7 +467,7 @@ function bool GetFoundryCostSummary(out TCostSummary kCostSummary, int iFoundryT
 
 function bool LWCE_GetFoundryCostSummary(out TCostSummary kCostSummary, name ProjectName, bool Brush, optional bool bShowEng)
 {
-    return GetCostSummary(kCostSummary, LWCE_GetFoundryProjectCost(ProjectName, Brush), !bShowEng);
+    return LWCE_GetCostSummary(kCostSummary, LWCE_GetFoundryProjectCost(ProjectName, Brush), !bShowEng);
 }
 
 function string GetFoundryETAString(TFoundryProject kProject)
@@ -325,30 +527,32 @@ function TProjectCost GetFoundryProjectCost(int iTech, bool bRushFoundry)
     return kCost;
 }
 
-function TProjectCost LWCE_GetFoundryProjectCost(name ProjectName, bool bRushFoundry)
+function LWCE_TProjectCost LWCE_GetFoundryProjectCost(name ProjectName, bool bRushFoundry)
 {
-    local TProjectCost kCost;
+    local LWCE_TProjectCost kProjectCost;
     local LWCEFoundryProjectTemplate kTemplate;
 
     kTemplate = `LWCE_FTECH(ProjectName);
 
     if (kTemplate == none)
     {
-        return kCost;
+        return kProjectCost;
     }
 
-    kCost = class'LWCETypes'.static.ConvertTCostToProjectCost(kTemplate.GetCost(bRushFoundry));
-    kCost.iStaffTypeReq = eStaff_Engineer;
-    kCost.iStaffNumReq = kTemplate.iEngineers;
+    kProjectCost.kCost = kTemplate.GetCost(bRushFoundry);
+    kProjectCost.iStaffTypeReq = eStaff_Engineer;
+    kProjectCost.iStaffNumReq = kTemplate.iEngineers;
 
-    return kCost;
+    return kProjectCost;
 }
 
 function XComNarrativeMoment GetMusing()
 {
     local LWCE_XGFacility_Labs kLabs;
+    local LWCE_XGStorage kStorage;
 
     kLabs = LWCE_XGFacility_Labs(LABS());
+    kStorage = LWCE_XGStorage(STORAGE());
 
     if (m_arrMusingTracker[0] == 0 && AI().GetMonth() >= 1)
     {
@@ -360,12 +564,12 @@ function XComNarrativeMoment GetMusing()
         m_arrMusingTracker[2] = 1;
         return `XComNarrativeMoment("EngineeringMusingIII");
     }
-    else if (m_arrMusingTracker[3] == 0 && STORAGE().EverHadItem(`LW_ITEM_ID(FloaterCorpse)))
+    else if (m_arrMusingTracker[3] == 0 && kStorage.LWCE_EverHadItem('Item_FloaterCorpse'))
     {
         m_arrMusingTracker[3] = 1;
         return `XComNarrativeMomentEW("EngineeringMusingIV");
     }
-    else if (m_arrMusingTracker[4] == 0 && STORAGE().EverHadItem(`LW_ITEM_ID(EtherealDevice)))
+    else if (m_arrMusingTracker[4] == 0 && kStorage.LWCE_EverHadItem('Item_EtherealDevice'))
     {
         m_arrMusingTracker[4] = 1;
         return `XComNarrativeMoment("EngineeringMusingV");
@@ -385,7 +589,7 @@ function XComNarrativeMoment GetMusing()
         m_arrMusingTracker[7] = 1;
         return `XComNarrativeMomentEW("EngineeringMusingVIII");
     }
-    else if (m_arrMusingTracker[8] == 0 && kLabs.LWCE_IsResearched('Tech_AlienBiocybernetics') && BARRACKS().m_iHighestMecRank == -1 && STORAGE().GetResource(eResource_Meld) > 200)
+    else if (m_arrMusingTracker[8] == 0 && kLabs.LWCE_IsResearched('Tech_AlienBiocybernetics') && BARRACKS().m_iHighestMecRank == -1 && GetResource(eResource_Meld) > 200)
     {
         m_arrMusingTracker[8] = 1;
         return `XComNarrativeMomentEW("EngineeringMusingIX");
@@ -430,7 +634,7 @@ function LWCE_ModifyFoundryProject(LWCE_TFoundryProject kProject)
 {
     m_arrCEFoundryProjects[kProject.iIndex].iEngineers = kProject.iEngineers;
     m_arrCEFoundryProjects[kProject.iIndex].bAdjusted = kProject.bAdjusted;
-    PayCost(LWCE_GetFoundryProjectCost(kProject.ProjectName, kProject.bRush));
+    LWCE_PayCost(LWCE_GetFoundryProjectCost(kProject.ProjectName, kProject.bRush));
 }
 
 function OnFoundryProjectCompleted(int iProjectIndex)
@@ -443,17 +647,17 @@ function OnFoundryProjectCompleted(int iProjectIndex)
 
     if (m_arrCEFoundryProjects[iProjectIndex].bNotify)
     {
-        m_arrOldRebates.AddItem(m_arrCEFoundryProjects[iProjectIndex].kRebate);
+        m_arrCEOldRebates.AddItem(m_arrCEFoundryProjects[iProjectIndex].kRebate);
 
         // UE Explorer failed to decompile this line. I've put it together as best I could based on the bytecode and the alert handling code in
         // XGMissionControlUI.UpdateAlert. The decompilation failure seems to have messed up much of the remainder of the function as well, which
         // I have also worked to restore.
-        kGeoscape.LWCE_Alert(`LWCE_ALERT('FoundryProjectCompleted').AddName(m_arrCEFoundryProjects[iProjectIndex].ProjectName).AddInt(m_arrOldRebates.Length - 1).Build());
+        kGeoscape.LWCE_Alert(`LWCE_ALERT('FoundryProjectCompleted').AddName(m_arrCEFoundryProjects[iProjectIndex].ProjectName).AddInt(m_arrCEOldRebates.Length - 1).Build());
     }
 
     if (ProjectName == 'Foundry_AlienGrenades')
     {
-        BARRACKS().UpdateGrenades(`LW_ITEM_ID(AlienGrenade));
+        LWCE_XGFacility_Barracks(BARRACKS()).LWCE_UpdateGrenades('Item_HEGrenade', 'Item_AlienGrenade');
     }
 
     m_arrCEFoundryHistory.AddItem(ProjectName);
@@ -508,9 +712,9 @@ function RemoveFoundryProject(int iIndex)
 
 function RestoreFoundryFunds(int iIndex)
 {
-    local TProjectCost kOrigCost;
+    local LWCE_TProjectCost kOrigCost;
 
-    if (m_arrCEFoundryProjects[iIndex].kOriginalCost.iCash != 0 || m_arrCEFoundryProjects[iIndex].kOriginalCost.iElerium != 0 || m_arrCEFoundryProjects[iIndex].kOriginalCost.iAlloys != 0)
+    if (IsCostPopulated(m_arrCEFoundryProjects[iIndex].kOriginalCost))
     {
         kOrigCost = m_arrCEFoundryProjects[iIndex].kOriginalCost;
     }
@@ -519,7 +723,7 @@ function RestoreFoundryFunds(int iIndex)
         kOrigCost = LWCE_GetFoundryProjectCost(m_arrCEFoundryProjects[iIndex].ProjectName, m_arrCEFoundryProjects[iIndex].Brush);
     }
 
-    PayCost(kOrigCost);
+    LWCE_PayCost(kOrigCost);
 }
 
 function UpdateFoundryProjects()
@@ -550,7 +754,7 @@ function UpdateFoundryProjects()
             {
                 for (iWorkDone = 0; iWorkDone < HANGAR().m_arrInts.Length; iWorkDone++)
                 {
-                    LWCE_XGShip_Interceptor(HANGAR().m_arrInts[iWorkDone]).LWCE_EquipWeapon(255);
+                    LWCE_XGShip_Interceptor(HANGAR().m_arrInts[iWorkDone]).LWCE_EquipWeapon('Item_WingtipSparrowhawks');
                 }
             }
 
@@ -581,9 +785,9 @@ function AddItemProject(out TItemProject kProject)
 function LWCE_AddItemProject(out LWCE_TItemProject kProject)
 {
     kProject.iIndex = m_arrCEItemProjects.Length;
-    kProject.kOriginalCost = LWCE_GetItemProjectCost(kProject.iItemId, kProject.iQuantityLeft, kProject.bRush);
+    kProject.kOriginalCost = LWCE_GetItemProjectCost(kProject.ItemName, kProject.iQuantityLeft, kProject.bRush);
     m_arrCEItemProjects.AddItem(kProject);
-    PayCost(kProject.kOriginalCost);
+    LWCE_PayCost(kProject.kOriginalCost);
     LWCE_AddItemProjectToQueue(kProject);
 
     if (kProject.iHoursLeft <= 0)
@@ -614,13 +818,13 @@ function CancelItemProject(int iIndex)
 
     kProject = LWCE_GetItemProject(iIndex);
 
-    if (kProject.kOriginalCost.iCash != 0 || kProject.kOriginalCost.iElerium != 0 || kProject.kOriginalCost.iAlloys != 0)
+    if (IsCostPopulated(kProject.kOriginalCost))
     {
-        RefundCost(kProject.kOriginalCost);
+        LWCE_RefundCost(kProject.kOriginalCost);
     }
     else
     {
-        RefundCost(LWCE_GetItemProjectCost(kProject.iItemId, kProject.iQuantityLeft, kProject.bRush));
+        LWCE_RefundCost(LWCE_GetItemProjectCost(kProject.ItemName, kProject.iQuantityLeft, kProject.bRush));
     }
 
     RemoveItemProject(iIndex);
@@ -645,13 +849,22 @@ function ChangeItemIndex(int iOldIndex, int iNewIndex)
 
 function bool GetCostSummary(out TCostSummary kCostSummary, TProjectCost kCost, optional bool bOmitStaff)
 {
+    `LWCE_LOG_DEPRECATED_CLS(GetCostSummary);
+
+    return false;
+}
+
+function bool LWCE_GetCostSummary(out TCostSummary kCostSummary, LWCE_TProjectCost kProjectCost, optional bool bOmitStaff)
+{
     local TText txtCost;
+    local XGParamTag kTag;
+    local LWCE_XGStorage kStorage;
     local bool bCanAfford;
     local int iItem, iBarracks;
     local bool bFreeBuild;
-    local XGParamTag kTag;
 
     kTag = XGParamTag(XComEngine(class'Engine'.static.GetEngine()).LocalizeContext.FindTag("XGParam"));
+    kStorage = LWCE_XGStorage(STORAGE());
 
     if (XComCheatManager(GetALocalPlayerController().CheatManager) != none)
     {
@@ -660,12 +873,12 @@ function bool GetCostSummary(out TCostSummary kCostSummary, TProjectCost kCost, 
 
     bCanAfford = true;
 
-    if (kCost.iCash > 0 && !bFreeBuild)
+    if (kProjectCost.kCost.iCash > 0 && !bFreeBuild)
     {
-        txtCost.StrValue = class'XGScreenMgr'.static.ConvertCashToString(kCost.iCash);
+        txtCost.StrValue = class'XGScreenMgr'.static.ConvertCashToString(kProjectCost.kCost.iCash);
         txtCost.iState = eUIState_Cash;
 
-        if (kCost.iCash > GetResource(eResource_Money) && !bFreeBuild)
+        if (kProjectCost.kCost.iCash > GetResource(eResource_Money) && !bFreeBuild)
         {
             bCanAfford = false;
             txtCost.iState = eUIState_Bad;
@@ -675,12 +888,12 @@ function bool GetCostSummary(out TCostSummary kCostSummary, TProjectCost kCost, 
         kCostSummary.arrRequirements.AddItem(txtCost);
     }
 
-    if (kCost.iElerium > 0 && !bFreeBuild)
+    if (kProjectCost.kCost.iElerium > 0 && !bFreeBuild)
     {
-        txtCost.StrValue = (string(kCost.iElerium) $ "x") @ m_strCostElerium;
+        txtCost.StrValue = kProjectCost.kCost.iElerium $ "x" @ m_strCostElerium;
         txtCost.iState = eUIState_Elerium;
 
-        if (kCost.iElerium > GetResource(eResource_Elerium) && !bFreeBuild)
+        if (kProjectCost.kCost.iElerium > GetResource(eResource_Elerium) && !bFreeBuild)
         {
             bCanAfford = false;
             txtCost.iState = eUIState_Bad;
@@ -690,12 +903,12 @@ function bool GetCostSummary(out TCostSummary kCostSummary, TProjectCost kCost, 
         kCostSummary.arrRequirements.AddItem(txtCost);
     }
 
-    if (kCost.iAlloys > 0 && !bFreeBuild)
+    if (kProjectCost.kCost.iAlloys > 0 && !bFreeBuild)
     {
-        txtCost.StrValue = (string(kCost.iAlloys) $ "x") @ m_strCostAlloys;
+        txtCost.StrValue = kProjectCost.kCost.iAlloys $ "x" @ m_strCostAlloys;
         txtCost.iState = eUIState_Alloys;
 
-        if (kCost.iAlloys > GetResource(eResource_Alloys) && !bFreeBuild)
+        if (kProjectCost.kCost.iAlloys > GetResource(eResource_Alloys) && !bFreeBuild)
         {
             bCanAfford = false;
             txtCost.iState = eUIState_Bad;
@@ -705,14 +918,14 @@ function bool GetCostSummary(out TCostSummary kCostSummary, TProjectCost kCost, 
         kCostSummary.arrRequirements.AddItem(txtCost);
     }
 
-    if (kCost.arrItems.Length > 0 && !bFreeBuild)
+    if (kProjectCost.kCost.arrItems.Length > 0 && !bFreeBuild)
     {
-        for (iItem = 0; iItem < kCost.arrItems.Length; iItem++)
+        for (iItem = 0; iItem < kProjectCost.kCost.arrItems.Length; iItem++)
         {
-            txtCost.StrValue = (string(kCost.arrItemQuantities[iItem]) $ "x") @ `LWCE_ITEM(kCost.arrItems[iItem]).strName;
+            txtCost.StrValue = kProjectCost.kCost.arrItems[iItem].iQuantity $ "x" @ `LWCE_ITEM(kProjectCost.kCost.arrItems[iItem].ItemName).strName;
             txtCost.iState = eUIState_Normal;
 
-            if (kCost.arrItemQuantities[iItem] > STORAGE().GetNumItemsAvailable(kCost.arrItems[iItem]) && !bFreeBuild)
+            if (kProjectCost.kCost.arrItems[iItem].iQuantity > kStorage.LWCE_GetNumItemsAvailable(kProjectCost.kCost.arrItems[iItem].ItemName) && !bFreeBuild)
             {
                 bCanAfford = false;
                 txtCost.iState = eUIState_Bad;
@@ -723,14 +936,14 @@ function bool GetCostSummary(out TCostSummary kCostSummary, TProjectCost kCost, 
         }
     }
 
-    if (!bOmitStaff && kCost.iStaffNumReq > 0 && !bFreeBuild)
+    if (!bOmitStaff && kProjectCost.iStaffNumReq > 0 && !bFreeBuild)
     {
-        kTag.IntValue0 = kCost.iStaffNumReq;
+        kTag.IntValue0 = kProjectCost.iStaffNumReq;
         kTag.StrValue0 = m_strCostEngineers;
         txtCost.StrValue = class'XComLocalizer'.static.ExpandString(m_strCostLabel);
         txtCost.iState = eUIState_Normal;
 
-        if (GetNumEngineersAvailable() < kCost.iStaffNumReq)
+        if (GetNumEngineersAvailable() < kProjectCost.iStaffNumReq)
         {
             bCanAfford = false;
             txtCost.iState = eUIState_Bad;
@@ -740,10 +953,10 @@ function bool GetCostSummary(out TCostSummary kCostSummary, TProjectCost kCost, 
         kCostSummary.arrRequirements.AddItem(txtCost);
     }
 
-    if (kCost.iBarracksReq > 0)
+    if (kProjectCost.iBarracksReq > 0)
     {
-        iBarracks = BARRACKS().GetNumSoldiers() + HQ().GetStaffOnOrder(eStaff_Soldier) + GetNumShivsOrdered() + kCost.iBarracksReq;
-        kTag.IntValue0 = kCost.iBarracksReq;
+        iBarracks = BARRACKS().GetNumSoldiers() + HQ().GetStaffOnOrder(eStaff_Soldier) + GetNumShivsOrdered() + kProjectCost.iBarracksReq;
+        kTag.IntValue0 = kProjectCost.iBarracksReq;
         txtCost.StrValue = class'XComLocalizer'.static.ExpandString(m_strCostBarracks);
         txtCost.iState = eUIState_Normal;
 
@@ -914,26 +1127,26 @@ function bool GetItemCostSummary(out TCostSummary kCostSummary, EItemType eItem,
     return false;
 }
 
-function bool LWCE_GetItemCostSummary(out TCostSummary kCostSummary, int iItemId, optional int iQuantity = 1, optional bool bRush, optional bool bShowEng, optional int iProjectIndex = -1)
+function bool LWCE_GetItemCostSummary(out TCostSummary kCostSummary, name ItemName, optional int iQuantity = 1, optional bool bRush, optional bool bShowEng, optional int iProjectIndex = -1)
 {
     local bool bCanAfford;
-    local TProjectCost kCost;
+    local LWCE_TProjectCost kCost;
 
     if (iProjectIndex >= m_arrCEItemProjects.Length)
     {
         return false;
     }
 
-    if (iProjectIndex != -1 && m_arrCEItemProjects[iProjectIndex].kOriginalCost.iCash != 0)
+    if (iProjectIndex != -1 && IsCostPopulated(m_arrCEItemProjects[iProjectIndex].kOriginalCost))
     {
         kCost = m_arrCEItemProjects[iProjectIndex].kOriginalCost;
     }
     else
     {
-        kCost = LWCE_GetItemProjectCost(iItemId, iQuantity, bRush);
+        kCost = LWCE_GetItemProjectCost(ItemName, iQuantity, bRush);
     }
 
-    bCanAfford = GetCostSummary(kCostSummary, kCost, !bShowEng);
+    bCanAfford = LWCE_GetCostSummary(kCostSummary, kCost, !bShowEng);
     return bCanAfford;
 }
 
@@ -960,8 +1173,8 @@ function LWCE_GetItemEvents(out array<LWCE_THQEvent> arrEvents)
         kEvent.EventType = 'ItemProject';
         kEvent.iHours = LWCE_GetItemProjectHoursRemaining(m_arrCEItemProjects[iItemProject]);
 
-        kData.eType = eDT_Int;
-        kData.iData = m_arrCEItemProjects[iItemProject].iItemId;
+        kData.eType = eDT_Name;
+        kData.nmData = m_arrCEItemProjects[iItemProject].ItemName;
         kEvent.arrData.AddItem(kData);
 
         kData.eType = eDT_Int;
@@ -1036,55 +1249,50 @@ function TProjectCost GetItemProjectCost(EItemType eItem, int iQuantity, optiona
     return super.GetItemProjectCost(eItem, iQuantity, bRush);
 }
 
-function TProjectCost LWCE_GetItemProjectCost(int iItemId, int iQuantity, optional bool bRush)
+function LWCE_TProjectCost LWCE_GetItemProjectCost(name ItemName, int iQuantity, optional bool bRush)
 {
-    local LWCE_TItem kItem;
-    local LWCE_TCost kCECost;
-    local TProjectCost kCost;
-    local int iItemQuant;
+    local LWCEItemTemplate kItem;
+    local LWCE_TProjectCost kProjectCost;
+    local int Index;
 
-    kItem = `LWCE_ITEM(iItemId);
-    kCECost = kItem.kCost;
+    `LWCE_LOG_CLS("GetITemProjectCost: ItemName = " $ ItemName);
+    kItem = `LWCE_ITEM(ItemName);
 
-    // Do this while it's still an LWCE_TCost, for simplicity
-    if (bRush)
+    kProjectCost.kCost = kItem.kCost;
+    kProjectCost.iStaffTypeReq = eStaff_Engineer;
+    kProjectCost.iStaffNumReq = kItem.iEngineers;
+
+    for (Index = 0; Index < kProjectCost.kCost.arrItems.Length; Index++)
     {
-        kCECost.iMeld += 2 + (kCECost.iCash / 40);
+        kProjectCost.kCost.arrItems[Index].iQuantity *= iQuantity;
     }
 
-    kCost = class'LWCETypes'.static.ConvertTCostToProjectCost(kCECost);
-    kCost.iStaffTypeReq = eStaff_Engineer;
-    kCost.iStaffNumReq = kItem.iMaxEngineers;
-
-    for (iItemQuant = 0; iItemQuant < kCost.arrItemQuantities.Length; iItemQuant++)
-    {
-        kCost.arrItemQuantities[iItemQuant] *= float(iQuantity);
-    }
-
-    kCost.iCash = kCost.iCash * iQuantity;
-    kCost.iElerium = kCost.iElerium * iQuantity;
-    kCost.iAlloys = kCost.iAlloys * iQuantity;
+    kProjectCost.kCost.iCash *= iQuantity;
+    kProjectCost.kCost.iElerium *= iQuantity;
+    kProjectCost.kCost.iAlloys *= iQuantity;
 
     if (bRush)
     {
-        kCost.iCash    *= 1.5;
-        kCost.iElerium *= 1.5;
-        kCost.iAlloys  *= 1.5;
+        kProjectCost.kCost.iMeld    += 2 + (kProjectCost.kCost.iCash / 40);
+        kProjectCost.kCost.iCash    *= 1.5;
+        kProjectCost.kCost.iElerium *= 1.5;
+        kProjectCost.kCost.iAlloys  *= 1.5;
     }
 
-    switch (iItemId)
+    // TODO move to template
+    switch (ItemName)
     {
-        case eItem_SHIV:
-        case eItem_SHIV_Alloy:
-        case eItem_SHIV_Hover:
-            kCost.iBarracksReq = iQuantity;
+        case 'Item_SHIV':
+        case 'Item_SHIVAlloy':
+        case 'Item_SHIVHover':
+            kProjectCost.iBarracksReq = iQuantity;
             break;
         default:
-            kCost.iBarracksReq = 0;
+            kProjectCost.iBarracksReq = 0;
             break;
     }
 
-    return kCost;
+    return kProjectCost;
 }
 
 function array<TItem> GetItemsByCategory(int iCategory, int iTransactionType)
@@ -1097,36 +1305,42 @@ function array<TItem> GetItemsByCategory(int iCategory, int iTransactionType)
     return arrItems;
 }
 
-function array<LWCE_TItem> LWCE_GetItemsByCategory(int iCategory, int iTransactionType)
+function array<LWCEItemTemplate> LWCE_GetItemsByCategory(name nmCategory, int iTransactionType)
 {
+    `LWCE_LOG_CLS("LWCE_GetItemsByCategory: nmCategory = " $ nmCategory $ ", iTransactionType = " $ iTransactionType);
+
     if (iTransactionType == eTransaction_Build)
     {
-        return `LWCE_ITEMTREE.LWCE_GetBuildItems(iCategory);
+        return LWCE_XGItemTree(ITEMTREE()).LWCE_GetBuildItems(nmCategory);
     }
     else
     {
-        return `LWCE_STORAGE.LWCE_GetItemsInCategory(iCategory, iTransactionType);
+        return LWCE_XGStorage(STORAGE()).LWCE_GetItemsInCategory(nmCategory, iTransactionType);
     }
 }
 
 function GrantInitialStores()
 {
-    m_kStorage.AddItem(`LW_ITEM_ID(Interceptor), 4);   // Interceptor
-    m_kStorage.AddItem(`LW_ITEM_ID(Skyranger), 1);   // Skyranger
+    local LWCE_XGStorage kStorage;
+
+    kStorage = LWCE_XGStorage(STORAGE());
+
+    kStorage.LWCE_AddItem('Item_Interceptor', 4);
+    kStorage.LWCE_AddItem('Item_Skyranger');
 
     if (HQ().HasBonus(`LW_HQ_BONUS_ID(AncientArtifact)) > 0)
     {
-        m_kStorage.AddItem(HQ().HasBonus(`LW_HQ_BONUS_ID(AncientArtifact)), 1);
+        kStorage.LWCE_AddItem('Item_IlluminatorGunsight');
     }
 
     if (HQ().HasBonus(`LW_HQ_BONUS_ID(JaiJawan)) > 0)
     {
-        m_kStorage.AddItem(`LW_ITEM_ID(Interceptor), 2);
+        kStorage.LWCE_AddItem('Item_Interceptor', 2);
     }
 
     if (HQ().HasBonus(`LW_HQ_BONUS_ID(GhostInTheMachine)) > 0)
     {
-        m_kStorage.AddItem(`LW_ITEM_ID(SHIV), 2);
+        kStorage.LWCE_AddItem('Item_SHIV', 2);
     }
 }
 
@@ -1137,13 +1351,13 @@ function bool IsBuildingItem(EItemType eItem)
     return false;
 }
 
-function bool LWCE_IsBuildingItem(int iItemId)
+function bool LWCE_IsBuildingItem(name ItemName)
 {
     local int iProject;
 
     for (iProject = 0; iProject < m_arrCEItemProjects.Length; iProject++)
     {
-        if (m_arrCEItemProjects[iProject].iItemId == iItemId)
+        if (m_arrCEItemProjects[iProject].ItemName == ItemName)
         {
             return true;
         }
@@ -1162,37 +1376,8 @@ function bool IsCorpseItem(int iItem)
 
 function bool IsPriorityItem(EItemType eItem)
 {
-    `LWCE_LOG_DEPRECATED_CLS(IsPriorityItem);
-    return false;
-}
-
-function bool LWCE_IsPriorityItem(int iItemId)
-{
-    // TODO add mod hook
-
-    switch (iItemId)
-    {
-        case `LW_ITEM_ID(SkeletonKey):
-            return true;
-        case `LW_ITEM_ID(ArcThrower):
-            if (STORAGE().EverHadItem(`LW_ITEM_ID(OutsiderShard)))
-            {
-                return false;
-            }
-            else if (STORAGE().GetNumItemsAvailable(`LW_ITEM_ID(ArcThrower)) <= 0)
-            {
-                return true;
-            }
-
-            break;
-        case `LW_ITEM_ID(Firestorm):
-            if (!STORAGE().EverHadItem(`LW_ITEM_ID(Firestorm)) && OBJECTIVES().m_eObjective == eObj_ShootDownOverseer)
-            {
-                return true;
-            }
-
-            break;
-    }
+    `LWCE_LOG_CLS("ERROR: LWCE-incompatible function IsPriorityItem was called. This needs to be replaced with LWCEItemTemplate.IsPriority. Stack trace follows.");
+    ScriptTrace();
 
     return false;
 }
@@ -1210,94 +1395,121 @@ function LWCE_ModifyItemProject(LWCE_TItemProject kProject)
     m_arrCEItemProjects[kProject.iIndex].bAdjusted = kProject.bAdjusted;
     m_arrCEItemProjects[kProject.iIndex].bRush = kProject.bRush;
 
-    PayCost(LWCE_GetItemProjectCost(m_arrCEItemProjects[kProject.iIndex].iItemId, m_arrCEItemProjects[kProject.iIndex].iQuantityLeft, m_arrCEItemProjects[kProject.iIndex].bRush));
+    LWCE_PayCost(LWCE_GetItemProjectCost(m_arrCEItemProjects[kProject.iIndex].ItemName, m_arrCEItemProjects[kProject.iIndex].iQuantityLeft, m_arrCEItemProjects[kProject.iIndex].bRush));
 }
 
 function OnItemCompleted(int iItemProject, int iQuantity, optional bool bInstant)
 {
-    local TProjectCost kRebate, kOrigCost;
+    local LWCEItemTemplate kItem;
+    local LWCE_TProjectCost kRebate, kOrigCost;
+    local XcomNarrativeMoment kNarrativeMoment;
+    local array<LWCE_TData> arrData;
 
-    kOrigCost = LWCE_GetItemProjectCost(m_arrCEItemProjects[iItemProject].iItemId, 1);
+    kOrigCost = LWCE_GetItemProjectCost(m_arrCEItemProjects[iItemProject].ItemName, 1);
 
-    if (!bInstant && HasRebate() && CalcWorkshopRebate(kOrigCost, kRebate))
+    if (!bInstant && HasRebate() && LWCE_CalcWorkshopRebate(kOrigCost, kRebate))
     {
-        m_arrCEItemProjects[iItemProject].kRebate.iCash += kRebate.iCash * iQuantity;
-        m_arrCEItemProjects[iItemProject].kRebate.iAlloys += kRebate.iAlloys * iQuantity;
-        m_arrCEItemProjects[iItemProject].kRebate.iElerium += kRebate.iElerium * iQuantity;
+        m_arrCEItemProjects[iItemProject].kRebate.kCost.iAlloys += kRebate.kCost.iAlloys * iQuantity;
+        m_arrCEItemProjects[iItemProject].kRebate.kCost.iElerium += kRebate.kCost.iElerium * iQuantity;
 
-        // Seems like LW rerouted the cash rebates (which aren't used in LW) to add Meld instead,
-        // but ultimately didn't end up doing Meld rebates after all
-        AddResource(eResource_Meld, kRebate.iCash * iQuantity, true);
-        AddResource(eResource_Alloys, kRebate.iAlloys * iQuantity, true);
-        AddResource(eResource_Elerium, kRebate.iElerium * iQuantity, true);
+        AddResource(eResource_Alloys, kRebate.kCost.iAlloys * iQuantity, true);
+        AddResource(eResource_Elerium, kRebate.kCost.iElerium * iQuantity, true);
     }
 
     if (!bInstant)
     {
-        PRES().Notify(eGA_NewItemBuilt, m_arrCEItemProjects[iItemProject].iItemId, iQuantity);
+        arrData.Add(2);
+
+        arrData[0].eType = eDT_Name;
+        arrData[0].nmData = m_arrCEItemProjects[iItemProject].ItemName;
+
+        arrData[1].eType = eDT_Int;
+        arrData[1].iData = iQuantity;
+
+        LWCE_XComHQPresentationLayer(PRES()).LWCE_Notify('NewItemBuilt', arrData);
     }
 
-    STORAGE().AddItem(m_arrCEItemProjects[iItemProject].iItemId, iQuantity);
+    LWCE_XGStorage(STORAGE()).LWCE_AddItem(m_arrCEItemProjects[iItemProject].ItemName, iQuantity);
 
-    if (m_arrCEItemProjects[iItemProject].iItemId == `LW_ITEM_ID(Firestorm))
+    kItem = `LWCE_ITEM(m_arrCEItemProjects[iItemProject].ItemName);
+
+    if (kItem.ItemBuiltNarrative != "")
+    {
+        kNarrativeMoment = XComNarrativeMoment(DynamicLoadObject(kItem.ItemBuiltNarrative, class'XComNarrativeMoment'));
+
+        if (kNarrativeMoment != none)
+        {
+            if (kItem.eItemBuiltNarrativeFacility != eFacility_None)
+            {
+                PRES().UINarrative(kNarrativeMoment,,,, HQ().m_kBase.GetFacility3DLocation(kItem.eItemBuiltNarrativeFacility));
+            }
+            else
+            {
+                PRES().UINarrative(kNarrativeMoment);
+            }
+        }
+    }
+
+    // TODO move all this to templates
+    if (m_arrCEItemProjects[iItemProject].ItemName == 'Item_Firestorm')
     {
         HANGAR().PlayFirestormBuiltCinematic();
     }
-    else if (m_arrCEItemProjects[iItemProject].iItemId == `LW_ITEM_ID(LaserRifle))
+    else if (m_arrCEItemProjects[iItemProject].ItemName == 'Item_LaserRifle')
     {
         PRES().UINarrative(`XComNarrativeMoment("EngineeringLaser"));
     }
-    else if (m_arrCEItemProjects[iItemProject].iItemId == `LW_ITEM_ID(PlasmaRifle))
+    else if (m_arrCEItemProjects[iItemProject].ItemName == 'Item_PlasmaRifle')
     {
         PRES().UINarrative(`XComNarrativeMoment("EngineeringPlasma"));
     }
 
-    switch (m_arrCEItemProjects[iItemProject].iItemId)
+    switch (m_arrCEItemProjects[iItemProject].ItemName)
     {
-        case `LW_ITEM_ID(PlasmaCarbine):
-        case `LW_ITEM_ID(PlasmaRifle):
-        case `LW_ITEM_ID(PlasmaNovagun):
-        case `LW_ITEM_ID(PlasmaSniperRifle):
+        case 'Item_PlasmaCarbine':
+        case 'Item_PlasmaRifle':
+        case 'Item_PlasmaNovagun':
+        case 'Item_PlasmaSniperRifle':
             if (STAT_GetStat(eRecap_FirstAlienWeapon) == 0)
             {
                 STAT_SetStat(eRecap_FirstAlienWeapon, Game().GetDays());
             }
 
             break;
-        case `LW_ITEM_ID(BlasterLauncher):
+        case 'Item_BlasterLauncher':
             if (STAT_GetStat(eRecap_FirstBlaster) == 0)
             {
                 STAT_SetStat(eRecap_FirstBlaster, Game().GetDays());
             }
 
             break;
-        case `LW_ITEM_ID(CarapaceArmor):
+        case 'Item_CarapaceArmor':
             if (STAT_GetStat(eRecap_FirstCarapace) == 0)
             {
                 STAT_SetStat(eRecap_FirstCarapace, Game().GetDays());
             }
 
             break;
-        case `LW_ITEM_ID(CorsairArmor):
+        case 'Item_CorsairArmor':
             if (STAT_GetStat(eRecap_FirstSkeleton) == 0)
             {
                 STAT_SetStat(eRecap_FirstSkeleton, Game().GetDays());
             }
 
             break;
-        case `LW_ITEM_ID(SHIV):
+        case 'Item_SHIV':
             PRES().UINarrative(`XComNarrativeMoment("EngineeringSHIVI"),,,, HQ().m_kBase.GetFacility3DLocation(eFacility_Foundry));
             Achieve(AT_IsEveryoneOk);
             break;
-        case `LW_ITEM_ID(AlloySHIV):
+        case 'Item_SHIVAlloy':
             PRES().UINarrative(`XComNarrativeMoment("EngineeringSHIVII"),,,, HQ().m_kBase.GetFacility3DLocation(eFacility_Foundry));
             Achieve(AT_IsEveryoneOk);
             break;
-        case `LW_ITEM_ID(HoverSHIV):
+        case 'Item_SHIVHover':
             PRES().UINarrative(`XComNarrativeMoment("EngineeringSHIVIII"),,,, HQ().m_kBase.GetFacility3DLocation(eFacility_Foundry));
             Achieve(AT_IsEveryoneOk);
             break;
-        case `LW_ITEM_ID(Firestorm):
+        case 'Item_Firestorm':
             Achieve(AT_RideTheLightning);
 
             if (STAT_GetStat(eRecap_FirstFirestorm) == 0)
@@ -1306,7 +1518,7 @@ function OnItemCompleted(int iItemProject, int iQuantity, optional bool bInstant
             }
 
             break;
-        case `LW_ITEM_ID(TitanArmor):
+        case 'Item_TitanArmor':
             Achieve(AT_ManNoMore);
 
             if (STAT_GetStat(eRecap_FirstTitan) == 0)
@@ -1315,10 +1527,10 @@ function OnItemCompleted(int iItemProject, int iQuantity, optional bool bInstant
             }
 
             break;
-        case `LW_ITEM_ID(ArchangelArmor):
+        case 'Item_ArchangelArmor':
             Achieve(AT_ManNoMore);
             break;
-        case `LW_ITEM_ID(VortexArmor):
+        case 'Item_VortexArmor':
             Achieve(AT_ManNoMore);
 
             if (STAT_GetStat(eRecap_FirstPsiArmor) == 0)
@@ -1327,7 +1539,7 @@ function OnItemCompleted(int iItemProject, int iQuantity, optional bool bInstant
             }
 
             break;
-        case `LW_ITEM_ID(ShadowArmor):
+        case 'Item_ShadowArmor':
             Achieve(AT_ManNoMore);
 
             if (STAT_GetStat(eRecap_FirstGhost) == 0)
@@ -1336,28 +1548,28 @@ function OnItemCompleted(int iItemProject, int iQuantity, optional bool bInstant
             }
 
             break;
-        case `LW_ITEM_ID(LaserCannon):
+        case 'Item_LaserCannon':
             if (STAT_GetStat(eRecap_FirstIntLaser) == 0)
             {
                 STAT_SetStat(eRecap_FirstIntLaser, Game().GetDays());
             }
 
             break;
-        case `LW_ITEM_ID(PlasmaCannon):
+        case 'Item_PlasmaCannon':
             if (STAT_GetStat(eRecap_FirstIntPlasma) == 0)
             {
                 STAT_SetStat(eRecap_FirstIntPlasma, Game().GetDays());
             }
 
             break;
-        case `LW_ITEM_ID(EMPCannon):
+        case 'Item_EMPCannon':
             if (STAT_GetStat(eRecap_FirstIntEMP) == 0)
             {
                 STAT_SetStat(eRecap_FirstIntEMP, Game().GetDays());
             }
 
             break;
-        case `LW_ITEM_ID(FusionLance):
+        case 'Item_FusionLance':
             if (STAT_GetStat(eRecap_FirstIntFusion) == 0)
             {
                 STAT_SetStat(eRecap_FirstIntFusion, Game().GetDays());
@@ -1380,9 +1592,9 @@ function OnItemProjectCompleted(int iProject, optional bool bInstant)
     }
     else if (m_arrCEItemProjects[iProject].bNotify)
     {
-        m_arrOldRebates.AddItem(m_arrCEItemProjects[iProject].kRebate);
+        m_arrCEOldRebates.AddItem(m_arrCEItemProjects[iProject].kRebate);
 
-        kAlert = `LWCE_ALERT('ItemProjectCompleted').AddInt(m_arrCEItemProjects[iProject].iItemId).AddInt(m_arrCEItemProjects[iProject].iQuantity).AddInt(m_arrOldRebates.Length - 1).Build();
+        kAlert = `LWCE_ALERT('ItemProjectCompleted').AddName(m_arrCEItemProjects[iProject].ItemName).AddInt(m_arrCEItemProjects[iProject].iQuantity).AddInt(m_arrCEOldRebates.Length - 1).Build();
         LWCE_XGGeoscape(GEOSCAPE()).LWCE_Alert(kAlert);
     }
 
@@ -1419,18 +1631,18 @@ function RemoveItemProject(int iIndex)
 
 function RestoreItemFunds(int iIndex)
 {
-    local TProjectCost kOrigCost;
+    local LWCE_TProjectCost kOrigCost;
 
-    if (m_arrCEItemProjects[iIndex].kOriginalCost.iCash != 0 || m_arrCEItemProjects[iIndex].kOriginalCost.iElerium != 0 || m_arrCEItemProjects[iIndex].kOriginalCost.iAlloys != 0)
+    if (IsCostPopulated(m_arrCEItemProjects[iIndex].kOriginalCost))
     {
         kOrigCost = m_arrCEItemProjects[iIndex].kOriginalCost;
     }
     else
     {
-        kOrigCost = LWCE_GetItemProjectCost(m_arrCEItemProjects[iIndex].iItemId, m_arrCEItemProjects[iIndex].iQuantityLeft, m_arrCEItemProjects[iIndex].bRush);
+        kOrigCost = LWCE_GetItemProjectCost(m_arrCEItemProjects[iIndex].ItemName, m_arrCEItemProjects[iIndex].iQuantityLeft, m_arrCEItemProjects[iIndex].bRush);
     }
 
-    PayCost(kOrigCost);
+    LWCE_PayCost(kOrigCost);
 }
 
 function string RecordStartedItemConstruction(TItemProject Project)
@@ -1468,7 +1680,7 @@ function UpdateItemProject()
             }
 
             iEngHours -= m_arrCEItemProjects[iProject].iHoursLeft;
-            iUnitHours = `LWCE_ITEM(m_arrCEItemProjects[iProject].iItemId).iHours;
+            iUnitHours = `LWCE_ITEM(m_arrCEItemProjects[iProject].ItemName).iPointsToComplete;
             iItemsProduced = m_arrCEItemProjects[iProject].iQuantityLeft;
             iItemsProduced += (iEngHours / iUnitHours);
             m_arrCEItemProjects[iProject].iHoursLeft = iUnitHours - (iEngHours % iUnitHours);
@@ -1488,7 +1700,7 @@ function UpdateItemProject()
             }
             else
             {
-                m_arrCEItemProjects[iProject].iMaxEngineers -= (iItemsProduced * `LWCE_ITEM(m_arrCEItemProjects[iProject].iItemId).iMaxEngineers);
+                m_arrCEItemProjects[iProject].iMaxEngineers -= (iItemsProduced * `LWCE_ITEM(m_arrCEItemProjects[iProject].ItemName).iEngineers);
             }
         }
         else
@@ -1504,15 +1716,92 @@ function UpdateItemProject()
 
 // #region Miscellaneous functions
 
+function bool CalcWorkshopRebate(TProjectCost kCost, out TProjectCost kRebate, optional bool bIsFacility)
+{
+    `LWCE_LOG_DEPRECATED_CLS(CalcWorkshopRebate);
+
+    return false;
+}
+
+function bool LWCE_CalcWorkshopRebate(LWCE_TProjectCost kProjectCost, out LWCE_TProjectCost kRebate, optional bool bIsFacility)
+{
+    local float fBase, fExp, fRebatePercent;
+    local int iAdjs;
+
+    if (!HasRebate())
+    {
+        return false;
+    }
+
+    iAdjs = 2 * HQ().GetNumFacilities(eFacility_Workshop) + Base().GetAdjacencies(eAdj_Engineering);
+    fExp = iAdjs / 2.0f;
+    fBase = 1.0f - FMin(99.0f, 2.0f * class'XGTacticalGameCore'.default.WORKSHOP_REBATE_PCT) / 100.0f;
+    fRebatePercent = 0.5f - 0.5f * (fBase ** fExp); // asymptotically approaches 50% rebate
+
+    // TODO: add some way for other resources to be made rebateable
+    kRebate.kCost.iAlloys = fRebatePercent * kProjectCost.kCost.iAlloys;
+    kRebate.kCost.iElerium = fRebatePercent * kProjectCost.kCost.iElerium;
+
+    return true;
+}
+
 function OnAlloyProjectCompleted(int iProject)
 {
     `LWCE_LOG_DEPRECATED_NOREPLACE_CLS(OnAlloyProjectCompleted);
 }
 
+function PayCost(TProjectCost kCost)
+{
+    `LWCE_LOG_DEPRECATED_CLS(PayCost);
+}
+
+function LWCE_PayCost(LWCE_TProjectCost kProjectCost)
+{
+    local LWCE_XGStorage kStorage;
+    local int iItem;
+
+    kStorage = LWCE_XGStorage(STORAGE());
+
+    AddResource(eResource_Money, -kProjectCost.kCost.iCash);
+    AddResource(eResource_Elerium, -kProjectCost.kCost.iElerium);
+    AddResource(eResource_Alloys, -kProjectCost.kCost.iAlloys);
+    AddResource(eResource_Meld, -kProjectCost.kCost.iMeld);
+
+    kStorage.LWCE_RemoveItem('Item_WeaponFragment', kProjectCost.kCost.iWeaponFragments);
+
+    for (iItem = 0; iItem < kProjectCost.kCost.arrItems.Length; iItem++)
+    {
+        kStorage.LWCE_RemoveItem(kProjectCost.kCost.arrItems[iItem].ItemName, kProjectCost.kCost.arrItems[iItem].iQuantity);
+    }
+}
+
+function RefundCost(TProjectCost kCost)
+{
+    `LWCE_LOG_DEPRECATED_CLS(RefundCost);
+}
+
+function LWCE_RefundCost(LWCE_TProjectCost kProjectCost)
+{
+    local LWCE_XGStorage kStorage;
+    local int iItem;
+
+    kStorage = LWCE_XGStorage(STORAGE());
+
+    AddResource(eResource_Money, kProjectCost.kCost.iCash, true);
+    AddResource(eResource_Elerium, kProjectCost.kCost.iElerium, true);
+    AddResource(eResource_Alloys, kProjectCost.kCost.iAlloys, true);
+    AddResource(eResource_Meld, kProjectCost.kCost.iMeld, true);
+
+    for (iItem = 0; iItem < kProjectCost.kCost.arrItems.Length; iItem++)
+    {
+        kStorage.LWCE_AddItem(kProjectCost.kCost.arrItems[iItem].ItemName, kProjectCost.kCost.arrItems[iItem].iQuantity);
+    }
+}
+
 function bool UrgeBuildMEC()
 {
     local LWCE_XGStorage kStorage;
-    local array<LWCE_TItem> arrMecSuits;
+    local array<LWCEItemTemplate> arrMecSuits;
     local XGStrategySoldier kSoldier;
     local int NumMecs;
 
@@ -1522,7 +1811,7 @@ function bool UrgeBuildMEC()
     }
 
     kStorage = `LWCE_STORAGE;
-    arrMecSuits = kStorage.LWCE_GetItemsInCategory(eItemCat_Armor, eTransaction_None, eSC_Mec);
+    arrMecSuits = kStorage.LWCE_GetItemsInCategory('Armor', eTransaction_None, eSC_Mec);
 
     foreach BARRACKS().m_arrSoldiers(kSoldier)
     {
@@ -1541,6 +1830,21 @@ function bool UrgeBuildMEC()
     }
 
     return m_bUrgeBuildMEC;
+}
+
+protected function bool IsCostPopulated(LWCE_TProjectCost kProjectCost)
+{
+    if (kProjectCost.kCost.iCash != 0 || kProjectCost.kCost.iElerium != 0 || kProjectCost.kCost.iAlloys != 0 || kProjectCost.kCost.iMeld != 0 || kProjectCost.kCost.iWeaponFragments != 0)
+    {
+        return true;
+    }
+
+    if (kProjectCost.kCost.arrItems.Length > 0)
+    {
+        return true;
+    }
+
+    return false;
 }
 
 // #endregion

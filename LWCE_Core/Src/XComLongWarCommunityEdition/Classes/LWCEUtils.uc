@@ -1,18 +1,18 @@
 class LWCEUtils extends Object
     dependson(LWCETypes);
 
-static function AdjustItemQuantity(out array<LWCE_TItemQuantity> arrItemQuantities, int iItemId, int iQuantity, optional bool bDeleteIfAllRemoved = true)
+static function AdjustItemQuantity(out array<LWCE_TItemQuantity> arrItemQuantities, name ItemName, int iQuantity, optional bool bDeleteIfAllRemoved = true)
 {
     local int Index;
     local LWCE_TItemQuantity kItemQuantity;
 
-    Index = arrItemQuantities.Find('iItemId', iItemId);
+    Index = arrItemQuantities.Find('ItemName', ItemName);
 
     if (Index == INDEX_NONE)
     {
         if (iQuantity > 0)
         {
-            kItemQuantity.iItemId = iItemId;
+            kItemQuantity.ItemName = ItemName;
             kItemQuantity.iQuantity = iQuantity;
 
             Index = arrItemQuantities.Length;
@@ -30,15 +30,15 @@ static function AdjustItemQuantity(out array<LWCE_TItemQuantity> arrItemQuantiti
     }
 }
 
-static function LWCE_TItemQuantity GetItemQuantity(out array<LWCE_TItemQuantity> arrItemQuantities, int iItemId, optional out int Index)
+static function LWCE_TItemQuantity GetItemQuantity(out array<LWCE_TItemQuantity> arrItemQuantities, name ItemName, optional out int Index)
 {
     local LWCE_TItemQuantity kItemQuantity;
 
-    Index = arrItemQuantities.Find('iItemId', iItemId);
+    Index = arrItemQuantities.Find('ItemName', ItemName);
 
     if (Index == INDEX_NONE)
     {
-        kItemQuantity.iItemId = iItemId;
+        kItemQuantity.ItemName = ItemName;
         kItemQuantity.iQuantity = 0;
 
         return kItemQuantity;
@@ -91,6 +91,43 @@ static function string GetResearchCreditFriendlyName(name CreditName)
     }
 
     return class'XGLocalizedData'.default.ResearchCreditNames[iLocIndex];
+}
+
+/// <summary>
+/// Retrieves a character stat by enum. All stats are returned as floats, but the integer stats can be
+/// safely cast to integers without loss of data. Note that since this uses ECharacterStat, not all stats
+/// can be retrieved by this method. Additionally, not all values in ECharacterStat have corresponding entries
+/// in LWCE_TCharacterStats, and the ones that don't will return 0.
+/// </summary>
+static function float GetCharacterStat(ECharacterStat eStat, const LWCE_TCharacterStats kStats)
+{
+    switch (eStat)
+    {
+        case eStat_Offense:
+            return kStats.iAim;
+        case eStat_CriticalShot:
+            return kStats.iCriticalChance;
+        case eStat_Damage:
+            return kStats.iDamage;
+        case eStat_DamageReduction:
+            return kStats.fDamageReduction;
+        case eStat_Defense:
+            return kStats.iDefense;
+        case eStat_FlightFuel:
+            return kStats.iFlightFuel;
+        case eStat_HP:
+            return kStats.iHP;
+        case eStat_Mobility:
+            return kStats.iMobility;
+        case eStat_ShieldHP:
+            return kStats.iShieldHP;
+        case eStat_SightRadius:
+            return kStats.iSightRadius;
+        case eStat_Will:
+            return kStats.iWill;
+        default:
+            return 0;
+    }
 }
 
 /// <summary>
@@ -158,18 +195,18 @@ static function ScaleCostForDynamicWar(out LWCE_TCost kCost)
     }
 }
 
-static function SetItemQuantity(out array<LWCE_TItemQuantity> arrItemQuantities, int iItemId, int iQuantity)
+static function SetItemQuantity(out array<LWCE_TItemQuantity> arrItemQuantities, name ItemName, int iQuantity)
 {
     local int Index;
     local LWCE_TItemQuantity kItemQuantity;
 
-    Index = arrItemQuantities.Find('iItemId', iItemId);
+    Index = arrItemQuantities.Find('ItemName', ItemName);
 
     if (Index == INDEX_NONE)
     {
         if (iQuantity > 0)
         {
-            kItemQuantity.iItemId = iItemId;
+            kItemQuantity.ItemName = ItemName;
             kItemQuantity.iQuantity = iQuantity;
 
             arrItemQuantities.AddItem(kItemQuantity);
@@ -179,16 +216,6 @@ static function SetItemQuantity(out array<LWCE_TItemQuantity> arrItemQuantities,
     {
         arrItemQuantities[Index].iQuantity = iQuantity;
     }
-}
-
-static function int SortItemsById(LWCE_TItem kItem1, LWCE_TItem kItem2)
-{
-    if (kItem1.iItemId <= kItem2.iItemId)
-    {
-        return 0;
-    }
-
-    return -1;
 }
 
 // #region Helper functions related to key-value pairs

@@ -6,6 +6,74 @@ var bool bDisplayMovementGrid;
 
 `LWCE_GENERATOR_XCOMCHEATMANAGER
 
+exec function ForceResetLightingEnvironments()
+{
+    local LWCE_XComHumanPawn kPawn;
+
+    foreach AllActors(class'LWCE_XComHumanPawn', kPawn)
+    {
+        `LWCE_LOG_CLS("Resetting pawn " $ kPawn $ ", environment " $ kPawn.LightEnvironment);
+        kPawn.LightEnvironment.ResetEnvironment();
+    }
+}
+
+exec function DumpVoicePacks(int iGender, bool bIsMec) // TODO delete
+{
+    local array<ECharacterVoice> PossibleVoices;
+    local array<int> Languages;
+    local int LanguageIndex, VoiceIndex;
+
+    Languages.AddItem(0);
+    Languages.AddItem(1);
+    Languages.AddItem(2);
+    Languages.AddItem(3);
+    Languages.AddItem(4);
+    Languages.AddItem(5);
+    Languages.AddItem(6);
+    Languages.AddItem(7);
+    Languages.AddItem(8);
+    Languages.AddItem(9);
+    Languages.AddItem(10);
+    Languages.AddItem(11);
+    Languages.AddItem(12);
+    Languages.AddItem(13);
+    Languages.AddItem(14);
+    Languages.AddItem(16);
+    Languages.AddItem(17);
+    Languages.AddItem(18);
+    Languages.AddItem(19);
+    Languages.AddItem(20);
+    Languages.AddItem(21);
+    Languages.AddItem(22);
+    Languages.AddItem(23);
+    Languages.AddItem(24);
+    Languages.AddItem(25);
+    Languages.AddItem(26);
+    Languages.AddItem(27);
+    Languages.AddItem(28);
+    Languages.AddItem(29);
+
+
+    for (LanguageIndex = 0; LanguageIndex < Languages.Length; LanguageIndex++)
+    {
+        PossibleVoices.Length = 0;
+        `CONTENTMGR.GetPossibleVoices(EGender(iGender), Languages[LanguageIndex], bIsMec, PossibleVoices);
+
+        `LWCE_LOG_CLS("----------- " $ PossibleVoices.Length $ " voices for iGender = " $ iGender $ ", bIsMec = " $ bIsMec $ ", iLanguageIdx = " $ Languages[LanguageIndex] $ ", language name = " $ class'LWCE_XGCharacterGenerator'.static.LanguageNameByBaseID(Languages[LanguageIndex]) $ " ------------");
+        for (VoiceIndex = 0; VoiceIndex < PossibleVoices.Length; VoiceIndex++)
+        {
+            `CONTENTMGR.RequestContentArchetype(eContent_Voice, PossibleVoices[VoiceIndex], Languages[LanguageIndex], self, OnVoiceLoaded, /* bAsync */ false);
+        }
+    }
+
+
+}
+
+function OnVoiceLoaded(Object Archetype, int ContentId, int SubID)
+{
+    `LWCE_LOG_CLS("Voice ID " $ ContentID $ " with language index " $ SubID $ " maps to voice " $ Archetype $ ". Pathname: " $ PathName(Archetype));
+}
+
 exec function DebugShotAgainstTarget(optional int iAbilityId = eAbility_ShotStandard)
 {
     local int Index;
@@ -217,10 +285,9 @@ exec function ReloadAmmo()
 
 reliable server function ServerGivePerk(string strName)
 {
-    local int iPerkId, Index;
-    local TInventory kInventory;
-    local TLoadout Loadout;
-    local XGTacticalGameCore kGameCore;
+    local int iPerkId;
+    local LWCE_TInventory kInventory;
+    local LWCE_TLoadout Loadout;
     local LWCE_XComPerkManager kPerksMgr;
     local LWCE_XGUnit kUnit;
 
@@ -237,7 +304,6 @@ reliable server function ServerGivePerk(string strName)
         return;
     }
 
-    kGameCore = `GAMECORE;
     iPerkId = class'LWCE_XComCheatManager_Extensions'.static.FindPerkByString(strName, kPerksMgr);
 
     if (iPerkId <= 0)
@@ -274,22 +340,16 @@ reliable server function ServerGivePerk(string strName)
     if (kPerksMgr.LWCE_GetPerk(iPerkId).bIsPsionic)
     {
         kUnit.GetPawn().CHEAT_InitPawnPerkContent(kUnit.GetCharacter().m_kChar);
-        kInventory = kUnit.GetCharacter().m_kChar.kInventory;
+        kInventory = kUnit.m_kCEChar.kInventory;
 
-        if (kGameCore.TInventoryCustomItemsFind(kInventory, `LW_ITEM_ID(PsiAmp)) == INDEX_NONE)
+        if (!class'LWCEInventoryUtils'.static.HasItemOfName(kInventory, 'Item_PsiAmp'))
         {
-            kGameCore.TInventoryCustomItemsAddItem(kInventory, `LW_ITEM_ID(PsiAmp));
+            class'LWCEInventoryUtils'.static.AddCustomItem(kInventory, 'Item_PsiAmp');
         }
 
-        for (Index = 0; Index < kInventory.iNumCustomItems; Index++)
-        {
-            if (kInventory.arrCustomItems[Index] == `LW_ITEM_ID(PsiAmp))
-            {
-                Loadout.Items[14] = `LW_ITEM_ID(PsiAmp);
-            }
-        }
+        Loadout.Items[eSlot_PsiSource] = 'Item_PsiAmp';
 
-        class'LWCE_XGLoadoutMgr'.static.ApplyLoadout(kUnit, Loadout, false);
+        class'LWCE_XGLoadoutMgr'.static.LWCE_ApplyLoadout(kUnit, Loadout, false);
     }
 
     // TODO: this used to be able to remove perks; need a new console command for that

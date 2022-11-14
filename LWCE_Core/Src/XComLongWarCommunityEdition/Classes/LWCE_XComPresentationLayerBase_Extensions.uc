@@ -9,7 +9,7 @@ static simulated function State_PCKeybindings_Activate(const XComPresentationLay
 
 static simulated function State_SaveScreen_Activate(const XComPresentationLayerBase kSelf)
 {
-    if (XComOnlineEventMgr(GameEngine(class'Engine'.static.GetEngine()).OnlineEventManager).HasValidLoginAndStorage())
+    if (`ONLINEEVENTMGR.HasValidLoginAndStorage())
     {
         kSelf.m_kSaveUI = kSelf.Spawn(class'LWCE_UISaveGame', kSelf);
         kSelf.m_kSaveUI.Init(XComPlayerController(kSelf.Owner), kSelf.GetHUD());
@@ -24,7 +24,7 @@ static simulated function State_SaveScreen_Activate(const XComPresentationLayerB
 
 static simulated function State_LoadScreen_Activate(const XComPresentationLayerBase kSelf)
 {
-    if (XComOnlineEventMgr(GameEngine(class'Engine'.static.GetEngine()).OnlineEventManager).HasValidLoginAndStorage())
+    if (`ONLINEEVENTMGR.HasValidLoginAndStorage())
     {
         kSelf.m_kLoadUI = kSelf.Spawn(class'LWCE_UILoadGame', kSelf);
         kSelf.m_kLoadUI.Init(XComPlayerController(kSelf.Owner), kSelf.GetHUD());

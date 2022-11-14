@@ -1,0 +1,1 @@
+class LWCE_XGMission_ReturnToBase extends XGMission_ReturnToBase;

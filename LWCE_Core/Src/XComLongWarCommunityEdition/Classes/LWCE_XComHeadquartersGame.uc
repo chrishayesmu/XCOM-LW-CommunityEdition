@@ -61,7 +61,7 @@ function StartMatch()
     InitEarth();
 
     PlayerController.ClientSetOnlineStatus();
-    OnlineEventMgr = XComOnlineEventMgr(GameEngine(class'Engine'.static.GetEngine()).OnlineEventManager);
+    OnlineEventMgr = `ONLINEEVENTMGR;
     bStandardLoad = OnlineEventMgr.bPerformingStandardLoad;
     bTransferLoad = OnlineEventMgr.bPerformingTransferLoad;
 

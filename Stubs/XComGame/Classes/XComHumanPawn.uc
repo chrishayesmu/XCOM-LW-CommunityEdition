@@ -45,7 +45,7 @@ var XComBodyContent BodyContent;
 var XComHairContent HairContent;
 var XComCharacterVoice Voice;
 var XComLinearColorPaletteEntry BaseArmorTint;
-var const array<AnimSet> RequiredAnimSets;
+var array<AnimSet> RequiredAnimSets;
 var int m_arrMedals[EMedalType];
 var export editinline array<export editinline SkeletalMeshComponent> MedalMeshComps;
 var EItemType PrimaryWeapon;
@@ -134,11 +134,11 @@ simulated function AttachAuxMesh(SkeletalMesh SkelMesh, out SkeletalMeshComponen
 simulated function DetachAuxMesh(out SkeletalMeshComponent SkelMeshComp){}
 simulated function OnVoiceLoaded(Object VoiceArchetype){}
 simulated function SetAppearance(const out TAppearance kAppearance, optional bool bRequestContent=true){}
-function Init(const out TCharacter inCharacter, const out TInventory Inv, const out TAppearance Appearance);
-simulated function SetRace(ECharacterRace Race);
-simulated function SetInventory(const out TCharacter inCharacter, const out TInventory Inv, const out TAppearance Appearance);
-simulated function RotateInPlace(int Dir);
-simulated function RequestKitPostArmor();
+function Init(const out TCharacter inCharacter, const out TInventory Inv, const out TAppearance Appearance){}
+simulated function SetRace(ECharacterRace Race){}
+simulated function SetInventory(const out TCharacter inCharacter, const out TInventory Inv, const out TAppearance Appearance){}
+simulated function RotateInPlace(int Dir){}
+simulated function RequestKitPostArmor(){}
 reliable client simulated function UnitSpeak(ECharacterSpeech Event){}
 simulated function bool HasSoldierHead(name kSoldierHeadName){}
 simulated event OutsideWorldBounds();
@@ -147,7 +147,7 @@ simulated function SetMedals(int Medals[EMedalType]){}
 simulated function bool IsPawnReadyForViewing(){}
 simulated function ReadyForViewing(){}
 simulated function InitLeftHandIK(){}
-function OnArmorLoaded(Object ArmorArchetype, int ContentId, int SubID);
+function OnArmorLoaded(Object ArmorArchetype, int ContentId, int SubID){}
 simulated function bool AreHelmetsAllowed(){}
 simulated function bool IsUnitFullyComposed(optional bool bBoostTextures=true){}
 
@@ -186,7 +186,8 @@ state CharacterCustomization extends InHQ
 
 state CovertOpsCustomization extends InHQ
 {
-    simulated function OnArmorKitLoaded(Object KitArchetype);
+    ignores OnArmorKitLoaded;
+
     simulated event BeginState(name PreviousStateName){}
     simulated function OnVoiceLoaded(Object VoiceArchetype){}
     function SkeletalMesh GetBodyMesh(XComHumanPawn PawnArchetype){}
@@ -198,8 +199,8 @@ state CovertOpsCustomization extends InHQ
 
 state GeneLabXRay extends InHQ
 {
-    simulated function OnArmorKitLoaded(Object KitArchetype);
-    simulated function OnHeadLoaded(Object HeadArchetype){}
+    ignores OnArmorKitLoaded, OnHeadLoaded;
+
     simulated event BeginState(name PreviousStateName){}
     simulated function SetXRayModTech(EGeneModTech eTech){}
     function OnArmorLoaded(Object ArmorArchetype, int ContentId, int SubID){}
@@ -212,7 +213,8 @@ state GeneLabXRay extends InHQ
 
 state OffDuty extends InHQ
 {
-    simulated function OnArmorKitLoaded(Object KitArchetype);
+    ignores OnArmorKitLoaded;
+
     simulated event BeginState(name PreviousStateName){}
     simulated event EndState(name NextStateName){}
     function SkeletalMesh GetBodyMesh(XComHumanPawn PawnArchetype){}
@@ -223,7 +225,7 @@ state OffDuty extends InHQ
 }
 state MedalCeremony extends InHQ
 {
-	simulated function AddKitRequests();
+    ignores AddKitRequests;
 
     simulated function PawnContentFullyLoaded(){}
     simulated function SetInventory(const out TCharacter inCharacter, const out TInventory Inv, const out TAppearance Appearance){}
@@ -233,3 +235,57 @@ state MedalCeremony extends InHQ
     simulated function bool AreHelmetsAllowed(){}
 }
 
+defaultproperties
+{
+    AllowHelmets=true
+
+    RequiredAnimSets(0)=AnimSet'CHH_SoldierMale_ANIMSET.Anims.AS_Utility'
+    RequiredAnimSets(1)=AnimSet'CHH_CaucMale.Anims.AS_CaucMale'
+    FemHQMesh="CHH_SoldierBaseFem_ANIMSET.Meshes.SM_SoldierBaseFem"
+    MaleHQMesh="CHH_SoldierBaseMale_ANIMSET.Meshes.SM_SoldierBaseMale"
+    FemHQMesh_GM="GeneModTrooper_MOD.Meshes.SM_GeneModTrooperFem"
+    MaleHQMesh_GM="GeneModTrooper_MOD.Meshes.SM_GeneModTrooperMale"
+
+    m_iRequestKit=-1
+
+    begin object name=MyLightEnvironment
+        bCastShadows=true
+        BoundsMethod=EDynamicLightEnvironmentBoundsMethod.DLEB_ManualOverride
+        OverriddenBounds=(BoxExtent=(X=75.0,Y=75.0,Z=75.0),SphereRadius=75.0)
+    end object
+
+    LightEnvironment=MyLightEnvironment
+
+    begin object name=Head class=SkeletalMeshComponent
+        ReplacementPrimitive=none
+        bAcceptsDynamicDecals=true
+        CollideActors=true
+        BlockZeroExtent=true
+    end object
+
+    m_kHeadMeshComponent=Head
+
+    begin object name=SkeletalMeshComponent
+        ReplacementPrimitive=none
+        LightEnvironment=MyLightEnvironment
+    end object
+
+    Mesh=SkeletalMeshComponent
+
+    Components(0)=none
+    Components(1)=none
+    Components(2)=MyLightEnvironment
+    Components(3)=SkeletalMeshComponent
+    Components(4)=UnitCollisionCylinder
+    Components(5)=RangeIndicatorMeshComponent
+    Components(6)=MindMergeFX_Send0
+    Components(7)=MindMergeFX_Receive0
+    Components(8)=PsiPanicFX_Receive0
+    Components(9)=MindFrayFX_Receive0
+    Components(10)=MindControlFX_Send0
+    Components(11)=MindControlFX_Receive0
+    Components(12)=PsiInspiredFX_Receive0
+    Components(13)=DisablingShot_Receive0
+    Components(14)=StunShot_Receive0
+    Components(15)=Head
+}

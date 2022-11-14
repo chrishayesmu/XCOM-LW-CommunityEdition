@@ -1,67 +1,52 @@
 class LWCE_XGChooseSquadUI extends XGChooseSquadUI;
 
+struct LWCE_TSoldierLoadout
+{
+    var TText txtName;
+    var TText txtNickname;
+    var TText txtClass;
+    var int ClassType;
+    var array<name> arrLargeItems;
+    var array<name> arrSmallItems;
+    var TImage imgFlag;
+    var int iUIStatus;
+    var int iDropshipIndex;
+    var bool bPromotable;
+    var bool bIsPsiSoldier;
+    var bool bHasGeneMod;
+};
+
+var array<LWCE_TSoldierLoadout> m_arrCESoldiers;
+
 function TSoldierLoadout BuildLoadout(XGStrategySoldier kSoldier, int iDropshipIndex)
 {
-    local LWCE_XGStrategySoldier kCESoldier;
     local TSoldierLoadout kLoadout;
+
+    `LWCE_LOG_DEPRECATED_CLS(BuildLoadout);
+
+    return kLoadout;
+}
+
+function LWCE_TSoldierLoadout LWCE_BuildLoadout(XGStrategySoldier kSoldier, int iDropshipIndex)
+{
+    local LWCE_XGStrategySoldier kCESoldier;
+    local LWCE_TSoldierLoadout kLoadout;
 
     kCESoldier = LWCE_XGStrategySoldier(kSoldier);
 
-    kLoadout.txtName.StrValue = kSoldier.GetName(7);
-    kLoadout.imgFlag.strPath = class'UIScreen'.static.GetFlagPath(kSoldier.m_kSoldier.iCountry);
-    kLoadout.txtNickname.StrValue = kSoldier.GetNickname();
+    kLoadout.txtName.StrValue = kCESoldier.GetName(7);
+    kLoadout.imgFlag.strPath = class'UIScreen'.static.GetFlagPath(kCESoldier.m_kSoldier.iCountry);
+    kLoadout.txtNickname.StrValue = kCESoldier.GetNickname();
     kLoadout.txtNickname.iState = eUIState_Nickname;
     kLoadout.ClassType = kCESoldier.m_kCEChar.iClassId;
-    kLoadout.txtClass.StrValue = kSoldier.GetClassName();
+    kLoadout.txtClass.StrValue = kCESoldier.GetClassName();
 
-    if (kSoldier.IsAugmented())
-    {
-        if (kSoldier.m_kChar.kInventory.arrLargeItems[1] != 0)
-        {
-            kLoadout.item1 = kSoldier.m_kChar.kInventory.arrLargeItems[1];
-        }
-
-        if (kSoldier.m_kChar.kInventory.arrLargeItems[2] != 0)
-        {
-            kLoadout.item2 = kSoldier.m_kChar.kInventory.arrLargeItems[2];
-        }
-
-        if (kSoldier.m_kChar.kInventory.arrLargeItems[3] != 0)
-        {
-            kLoadout.item1 = (kSoldier.m_kChar.kInventory.arrLargeItems[3] << 8) | kLoadout.item1;
-        }
-
-        if (kSoldier.m_kChar.kInventory.arrSmallItems[0] != 0)
-        {
-            kLoadout.item2 = (kSoldier.m_kChar.kInventory.arrSmallItems[0] << 8) | kLoadout.item2;
-        }
-    }
-    else
-    {
-        if (kSoldier.m_kChar.kInventory.arrSmallItems[0] != 0)
-        {
-            kLoadout.item1 = kSoldier.m_kChar.kInventory.arrSmallItems[0];
-        }
-
-        if (kSoldier.m_kChar.kInventory.arrSmallItems[1] != 0)
-        {
-            kLoadout.item2 = kSoldier.m_kChar.kInventory.arrSmallItems[1];
-        }
-
-        if (kSoldier.m_kChar.kInventory.arrSmallItems[2] != 0)
-        {
-            kLoadout.item1 = (kSoldier.m_kChar.kInventory.arrSmallItems[2] << 8) | kLoadout.item1;
-        }
-
-        if (kSoldier.m_kChar.kInventory.arrSmallItems[3] != 0)
-        {
-            kLoadout.item2 = (kSoldier.m_kChar.kInventory.arrSmallItems[3] << 8) | kLoadout.item2;
-        }
-    }
+    kLoadout.arrLargeItems = kCESoldier.m_kCEChar.kInventory.arrLargeItems;
+    kLoadout.arrSmallItems = kCESoldier.m_kCEChar.kInventory.arrSmallItems;
 
     kLoadout.iDropshipIndex = iDropshipIndex;
-    kLoadout.bPromotable = kSoldier.HasAvailablePerksToAssign();
-    kLoadout.bIsPsiSoldier = kSoldier.m_kChar.bHasPsiGift;
+    kLoadout.bPromotable = kCESoldier.HasAvailablePerksToAssign();
+    kLoadout.bIsPsiSoldier = kCESoldier.m_kCEChar.bHasPsiGift;
     kLoadout.bHasGeneMod = class'LWCE_XComPerkManager'.static.LWCE_HasAnyGeneMod(kCESoldier.m_kCEChar);
 
     if (kLoadout.bPromotable)
@@ -74,4 +59,34 @@ function TSoldierLoadout BuildLoadout(XGStrategySoldier kSoldier, int iDropshipI
     }
 
     return kLoadout;
+}
+
+function UpdateSquad()
+{
+    local int iSoldier;
+    local array<LWCE_TSoldierLoadout> arrLoadouts;
+    local LWCE_XGShip_Dropship kSkyranger;
+
+    kSkyranger = LWCE_XGShip_Dropship(m_kMission.GetAssignedSkyranger());
+    PRES().UILoadAnimation(true);
+    PRES().SubscribeToUIUpdate(CheckSoldiersLoaded);
+
+    for (iSoldier = 0; iSoldier < kSkyranger.m_arrSoldiers.Length; iSoldier++)
+    {
+        if (kSkyranger.m_arrSoldiers[iSoldier] != none)
+        {
+            arrLoadouts.AddItem(LWCE_BuildLoadout(kSkyranger.m_arrSoldiers[iSoldier], iSoldier));
+        }
+    }
+
+    m_arrCESoldiers = arrLoadouts;
+
+    if (m_arrCESoldiers.Length == 0)
+    {
+        m_iHighlightedSoldier = -1;
+    }
+    else if (m_iHighlightedSoldier >= m_arrCESoldiers.Length || m_iHighlightedSoldier < 0)
+    {
+        m_iHighlightedSoldier = 0;
+    }
 }

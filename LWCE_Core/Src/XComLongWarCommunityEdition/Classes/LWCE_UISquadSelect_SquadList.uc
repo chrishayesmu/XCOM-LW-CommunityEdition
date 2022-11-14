@@ -1,4 +1,5 @@
-class LWCE_UISquadSelect_SquadList extends UISquadSelect_SquadList;
+class LWCE_UISquadSelect_SquadList extends UISquadSelect_SquadList
+    dependson(LWCE_XGChooseSquadUI);
 
 var const localized string m_strPromotionAvailable;
 
@@ -6,7 +7,7 @@ simulated function UpdateData()
 {
     local UISquadList_UnitBox kOption;
     local int iSoldier, iOption, iDropShipIdx;
-    local TSoldierLoadout kLoadout;
+    local LWCE_TSoldierLoadout kLoadout;
 
     for (iOption = 0;iOption < m_arrUIOptions.Length; iOption++)
     {
@@ -33,9 +34,9 @@ simulated function UpdateData()
         }
     }
 
-    for (iSoldier = 0; iSoldier < UISquadSelect(screen).GetMgr().m_arrSoldiers.Length; iSoldier++)
+    for (iSoldier = 0; iSoldier < LWCE_XGChooseSquadUI(UISquadSelect(screen).GetMgr()).m_arrCESoldiers.Length; iSoldier++)
     {
-        kLoadout = UISquadSelect(screen).GetMgr().m_arrSoldiers[iSoldier];
+        kLoadout = LWCE_XGChooseSquadUI(UISquadSelect(screen).GetMgr()).m_arrCESoldiers[iSoldier];
         m_arrUIOptions[m_arrFillOrderIndex[kLoadout.iDropshipIndex]] = LWCE_CreateSoldierOption(kLoadout);
     }
 
@@ -61,9 +62,9 @@ simulated function UpdateData()
     UpdateDisplay();
 }
 
-protected simulated function UISquadList_UnitBox LWCE_CreateSoldierOption(TSoldierLoadout kLoadout)
+protected simulated function UISquadList_UnitBox LWCE_CreateSoldierOption(LWCE_TSoldierLoadout kLoadout)
 {
-    local int iItemId;
+    local int Index;
     local LWCE_XGFacility_Barracks kBarracks;
     local UISquadList_UnitBox kOption;
 
@@ -76,28 +77,24 @@ protected simulated function UISquadList_UnitBox LWCE_CreateSoldierOption(TSoldi
     kOption.classDesc = kLoadout.txtClass.StrValue;
     kOption.classLabel = kBarracks.GetClassIcon(kLoadout.ClassType, kLoadout.bHasGeneMod, kLoadout.bIsPsiSoldier);
 
-    if ((kLoadout.item1 & 255) > 0)
+    for (Index = 0; Index < kLoadout.arrLargeItems.Length; Index++)
     {
-        iItemId = kLoadout.item1 & 255;
-        kOption.item1 = `LWCE_ITEM(iItemId).ImagePath;
+        if (kOption.item1 != "")
+        {
+            kOption.item1 $= "\n";
+        }
+
+        kOption.item1 $= `LWCE_ITEM(kLoadout.arrLargeItems[Index]).ImagePath;
     }
 
-    if ((kLoadout.item2 & 255) > 0)
+    for (Index = 0; Index < kLoadout.arrSmallItems.Length; Index++)
     {
-        iItemId = kLoadout.item2 & 255;
-        kOption.item1 = kOption.item1 $ "\n" $ `LWCE_ITEM(iItemId).ImagePath;
-    }
+        if (kOption.item1 != "")
+        {
+            kOption.item1 $= "\n";
+        }
 
-    if ((kLoadout.item1 >> 8) > 0)
-    {
-        iItemId = (kLoadout.item1 >> 8) & 255;
-        kOption.item1 = kOption.item1 $ "\n" $ `LWCE_ITEM(iItemId).ImagePath;
-    }
-
-    if ((kLoadout.item2 >> 8) > 0)
-    {
-        iItemId = (kLoadout.item2 >> 8) & 255;
-        kOption.item1 = kOption.item1 $ "\n" $ `LWCE_ITEM(iItemId).ImagePath;
+        kOption.item1 $= `LWCE_ITEM(kLoadout.arrSmallItems[Index]).ImagePath;
     }
 
     kOption.bPromote = kLoadout.bPromotable;

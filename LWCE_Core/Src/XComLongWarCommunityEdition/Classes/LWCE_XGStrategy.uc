@@ -5,7 +5,7 @@ struct CheckpointRecord_LWCE_XGStrategy extends CheckpointRecord
     var array<name> m_arrCEFoundryUnlocks;
 };
 
-var array<int> m_arrCEItemUnlocks;
+var array<name> m_arrCEItemUnlocks;
 var array<int> m_arrCEFacilityUnlocks;
 var array<name> m_arrCEFoundryUnlocks;
 
@@ -88,7 +88,7 @@ function BeginCombat(XGMission kMission)
         // created. This is because an ABA can be on the Geoscape for an arbitrarily long time, and the original squad might be very
         // outdated by the time the player finally launches.
         kMission.m_kDesc.m_kAlienSquad = AI().DetermineAlienBaseSquad();
-        STORAGE().RemoveItem(eItem_Skeleton_Key);
+        LWCE_XGStorage(STORAGE()).LWCE_RemoveItem('Item_SkeletonKey');
     }
 
     kMission.m_strTip = GetTip(eTip_Tactical);
@@ -152,8 +152,8 @@ function BeginCombat(XGMission kMission)
         m_kStrategyTransport.m_kBattleDesc.m_kCivilianInfo = Content.arrCivilianPawns[0];
     }
 
-    XComOnlineEventMgr(GameEngine(class'Engine'.static.GetEngine()).OnlineEventManager).SaveToStoredStrategy();
-    XComOnlineEventMgr(GameEngine(class'Engine'.static.GetEngine()).OnlineEventManager).SaveTransport();
+    `ONLINEEVENTMGR.SaveToStoredStrategy();
+    `ONLINEEVENTMGR.SaveTransport();
     `CONTENTMGR.GetContentForMap(m_kStrategyTransport.m_kBattleDesc.m_strMapName, Content);
     `CONTENTMGR.RequestContent(Content, m_kStrategyTransport.m_kBattleDesc.m_iMissionType != eMission_Final);
 
@@ -185,6 +185,28 @@ function BeginCombat(XGMission kMission)
     }
 
     SetTimer(0.10, false, 'DeferredLaunchCommand');
+}
+
+function int GetAct()
+{
+    if (LWCE_XGStorage(STORAGE()).LWCE_EverHadItem('Item_HyperwaveBeacon'))
+    {
+        return 3;
+    }
+    else if (LABS().HasInterrogatedCaptive())
+    {
+        return 2;
+    }
+    else
+    {
+        return 1;
+    }
+}
+
+function PostLoadSaveGame()
+{
+    // The original version of this has some unnecessary debug code using deprecated functions;
+    // we just replace it with nothing
 }
 
 function bool UnlockFacility(EFacilityType eFacility, out TItemUnlock kUnlock)
@@ -275,17 +297,17 @@ function bool UnlockItem(EItemType eItem, out TItemUnlock kUnlock)
     return false;
 }
 
-function bool LWCE_UnlockItem(int iItemId, out LWCE_TItemUnlock kUnlock)
+function bool LWCE_UnlockItem(name ItemName, out LWCE_TItemUnlock kUnlock)
 {
-    local LWCE_TItem kItem;
+    local LWCEItemTemplate kItem;
     local LWCE_TData kData;
 
-    if (m_arrCEItemUnlocks.Find(iItemId) != INDEX_NONE)
+    if (m_arrCEItemUnlocks.Find(ItemName) != INDEX_NONE)
     {
         return false;
     }
 
-    kItem = `LWCE_ITEM(iItemId);
+    kItem = `LWCE_ITEM(ItemName);
     kUnlock.sndFanfare = SNDLIB().SFX_Unlock_Item;
 
     kUnlock.ImagePath = kItem.ImagePath;
@@ -294,11 +316,11 @@ function bool LWCE_UnlockItem(int iItemId, out LWCE_TItemUnlock kUnlock)
     kUnlock.strTitle = m_strNewItemAvailable;
     kUnlock.strHelp = m_strNewItemHelp;
 
-    kData.eType = eDT_Int;
-    kData.iData = iItemId;
+    kData.eType = eDT_Name;
+    kData.nmData = ItemName;
     kUnlock.arrUnlockData.AddItem(kData);
 
-    m_arrCEItemUnlocks.AddItem(iItemId);
+    m_arrCEItemUnlocks.AddItem(ItemName);
 
     ENGINEERING().m_bCanBuildItems = true;
     ENGINEERING().SetDisabled(false);

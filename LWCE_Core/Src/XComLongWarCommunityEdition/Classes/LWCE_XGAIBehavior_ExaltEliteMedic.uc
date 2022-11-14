@@ -1,5 +1,3 @@
 class LWCE_XGAIBehavior_ExaltEliteMedic extends XGAIBehavior_ExaltEliteMedic;
 
-`include(generators.uci)
-
-`LWCE_GENERATOR_XGAIBEHAVIOR
+`include(generators_aibehavior.uci)

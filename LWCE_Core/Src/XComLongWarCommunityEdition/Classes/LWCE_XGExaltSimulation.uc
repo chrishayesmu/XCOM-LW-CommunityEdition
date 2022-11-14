@@ -1,6 +1,11 @@
 class LWCE_XGExaltSimulation extends XGExaltSimulation
     dependson(LWCE_XGFacility_Labs, LWCE_XGMissionControlUI);
 
+function int GetCollectedClueCount()
+{
+    return LWCE_XGStorage(STORAGE()).LWCE_GetNumItemsAvailable('Item_EXALTIntelligence');
+}
+
 function GetEvents(out array<THQEvent> arrEvents)
 {
     `LWCE_LOG_DEPRECATED_CLS(GetEvents);
@@ -193,7 +198,7 @@ function PostCombat(XGMission kMission, bool bSuccess)
         if (bSuccess)
         {
             EndSimulation();
-            XComOnlineEventMgr(GameEngine(class'Engine'.static.GetEngine()).OnlineEventManager).UnlockAchievement(AT_ApotheosisDenied);
+            `ONLINEEVENTMGR.UnlockAchievement(AT_ApotheosisDenied);
         }
         else
         {

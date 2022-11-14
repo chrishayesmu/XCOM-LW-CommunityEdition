@@ -1,33 +1,41 @@
 class LWCE_XGEngineeringUI extends XGEngineeringUI
     dependson(LWCETypes);
 
+struct LWCE_TEngItemTable
+{
+    var TTableMenu mnuItems;
+    var array<LWCE_TObjectSummary> arrSummaries;
+    var array<name> arrTabs;
+    var array<TText> arrTabText;
+    var int m_iCurrentTab;
+};
+
+var LWCE_TEngItemTable m_kCETable;
+
 function TTableMenuOption BuildItem(TItem kItem)
 {
     `LWCE_LOG_DEPRECATED_CLS(BuildItem);
     return super.BuildItem(kItem);
 }
 
-function TTableMenuOption LWCE_BuildItem(LWCE_TItem kItem)
+function TTableMenuOption LWCE_BuildItem(LWCEItemTemplate kItem)
 {
-    local LWCE_XGFacility_Engineering kEngineering;
     local TTableMenuOption kOption;
     local int iCategory, iNumItems, iState;
     local string strCategory;
 
-    kEngineering = `LWCE_ENGINEERING;
-
-    for (iCategory = 0; iCategory < m_kTable.mnuItems.arrCategories.Length; iCategory++)
+    for (iCategory = 0; iCategory < m_kCETable.mnuItems.arrCategories.Length; iCategory++)
     {
         iState = eUIState_Normal;
         strCategory = "";
 
-        switch (m_kTable.mnuItems.arrCategories[iCategory])
+        switch (m_kCETable.mnuItems.arrCategories[iCategory])
         {
             case 2:
                 strCategory = kItem.strName;
                 iState = eUIState_Normal;
 
-                if (kEngineering.LWCE_IsPriorityItem(kItem.iItemId))
+                if (kItem.IsPriority())
                 {
                     strCategory @= "-" @ m_strPriority;
                     iState = eUIState_Good;
@@ -35,7 +43,8 @@ function TTableMenuOption LWCE_BuildItem(LWCE_TItem kItem)
 
                 break;
             case 4:
-                iNumItems = STORAGE().GetNumItemsAvailable(kItem.iItemId);
+                iNumItems = LWCE_XGStorage(STORAGE()).LWCE_GetNumItemsAvailable(kItem.GetItemName());
+
                 if (iNumItems > 0)
                 {
                     strCategory = string(iNumItems);
@@ -112,15 +121,16 @@ function TObjectSummary BuildSummary(TItem kItem)
     return kSummary;
 }
 
-function TObjectSummary LWCE_BuildSummary(LWCE_TItem kItem)
+function LWCE_TObjectSummary LWCE_BuildSummary(LWCEItemTemplate kItem)
 {
-    local TObjectSummary kSummary;
+    local LWCE_TObjectSummary kSummary;
 
     kSummary.imgObject.strPath = kItem.ImagePath;
     kSummary.txtSummary.StrValue = kItem.strBriefSummary;
     kSummary.txtRequirementsLabel.StrValue = m_strBuildCost;
-    kSummary.ItemType = kItem.iItemId;
-    kSummary.bCanAfford = `LWCE_ENGINEERING.LWCE_GetItemCostSummary(kSummary.kCost, kItem.iItemId, 1,, false);
+    kSummary.ItemType = kItem.GetItemName();
+    kSummary.bCanAfford = `LWCE_ENGINEERING.LWCE_GetItemCostSummary(kSummary.kCost, kItem.GetItemName(), 1,, false);
+
     return kSummary;
 }
 
@@ -143,7 +153,7 @@ function TTableMenuOption BuildQueueItem(int iQueueSlot)
         kOption.arrStrings.AddItem(string(kProject.iQuantity - kProject.iQuantityLeft) $ "/" $ string(kProject.iQuantity));
         kOption.arrStates.AddItem(eUIState_Normal);
 
-        kOption.arrStrings.AddItem(`LWCE_ITEM(kProject.iItemId).strName @ "(" $ string(kProject.iQuantity) $ ")");
+        kOption.arrStrings.AddItem(`LWCE_ITEM(kProject.ItemName).strName @ "(" $ string(kProject.iQuantity) $ ")");
         kOption.arrStates.AddItem(eUIState_Normal);
 
         kOption.arrStrings.AddItem(kEngineering.LWCE_GetETAString(kProject));
@@ -196,66 +206,58 @@ function TItemCard ENGINEERINGUIGetItemCard()
 
 function LWCE_TItemCard LWCE_ENGINEERINGUIGetItemCard()
 {
-    local int iItemId;
-    local LWCE_TItem kItem;
+    local name ItemName;
+    local LWCEItemTemplate kItem;
     local LWCE_TItemCard kItemCard;
     local TShivAbility kShivAbility;
 
     if (m_iCurrentView == eEngView_Build)
     {
-        if (m_kTable.arrTabText[m_kTable.m_iCurrentTab].StrValue == m_strCatWeapons || m_kTable.arrTabText[m_kTable.m_iCurrentTab].StrValue == m_strCatArmor)
+        if (m_kCETable.arrTabText[m_kCETable.m_iCurrentTab].StrValue == m_strCatWeapons || m_kCETable.arrTabText[m_kCETable.m_iCurrentTab].StrValue == m_strCatArmor)
         {
-            iItemId = m_kTable.arrSummaries[m_iCurrentSelection].ItemType;
-
-            if (`GAMECORE.ItemIsAccessory(iItemId))
-            {
-                kItemCard = class'LWCE_XGItemCards'.static.BuildEquippableItemCard(iItemId);
-                kItemCard.iCharges = LWCE_ENGINEERINGUIGetItemCharges(iItemId);
-                return kItemCard;
-            }
-            else
-            {
-                return class'LWCE_XGItemCards'.static.BuildItemCard(iItemId);
-            }
+            ItemName = m_kCETable.arrSummaries[m_iCurrentSelection].ItemType;
+            return class'LWCE_XGItemCards'.static.BuildItemCard(ItemName);
         }
-        else if (m_kTable.arrTabText[m_kTable.m_iCurrentTab].StrValue == m_strCatVehicles)
+        else if (m_kCETable.arrTabText[m_kCETable.m_iCurrentTab].StrValue == m_strCatVehicles)
         {
-            iItemId = m_kTable.arrSummaries[m_iCurrentSelection].ItemType;
-            kItem = `LWCE_ITEM(iItemId);
-            kItemCard.iItemId = iItemId;
+            ItemName = m_kCETable.arrSummaries[m_iCurrentSelection].ItemType;
+            kItem = `LWCE_ITEM(ItemName);
+            kItemCard.ItemName = ItemName;
 
-            switch (iItemId)
+            switch (ItemName)
             {
-                case eItem_IntConsumable_Dodge:
-                case eItem_IntConsumable_Boost:
-                case eItem_IntConsumable_Hit:
+                case 'Item_DefenseMatrix':
+                case 'Item_UFOTracking':
+                case 'Item_UplinkTargeting':
                     kItemCard.iCardType = eItemCard_InterceptorConsumable;
-                    kItemCard.strFlavorText = m_kTable.arrSummaries[m_iCurrentSelection].txtSummary.StrValue;
+                    kItemCard.strFlavorText = m_kCETable.arrSummaries[m_iCurrentSelection].txtSummary.StrValue;
                     kItemCard.strName = kItem.strName;
                     break;
-                case eItem_Satellite:
+                case 'Item_Satellite':
                     kItemCard.iCardType = eItemCard_Satellite;
-                    kItemCard.strFlavorText = m_kTable.arrSummaries[m_iCurrentSelection].txtSummary.StrValue;
+                    kItemCard.strFlavorText = m_kCETable.arrSummaries[m_iCurrentSelection].txtSummary.StrValue;
                     kItemCard.strName = kItem.strName;
                     break;
-                case eItem_SHIV:
-                case eItem_SHIV_Alloy:
-                case eItem_SHIV_Hover:
+                case 'Item_SHIV':
+                case 'Item_SHIVAlloy':
+                case 'Item_SHIVHover':
                     kItemCard.iCardType = eItemCard_SHIV;
                     kItemCard.strShivWeapon = class'XLocalizedData'.default.m_aItemNames[STORAGE().GetShivWeapon()];
 
-                    switch (iItemId)
+                    switch (ItemName)
                     {
-                        case eItem_SHIV_Alloy:
+                        case 'Item_SHIVAlloy':
                             kShivAbility.iAbilityID = eAbility_TakeCover;
                             kShivAbility.strName = m_strShivCoverName;
                             kShivAbility.strDesc = m_strShivCoverDesc;
+
                             kItemCard.arrAbilitiesShiv.AddItem(kShivAbility);
                             break;
-                        case eItem_SHIV_Hover:
+                        case 'Item_SHIVHover':
                             kShivAbility.iAbilityID = eAbility_Fly;
                             kShivAbility.strName = m_strShivFlyName;
                             kShivAbility.strDesc = m_strShivFlyDesc;
+
                             kItemCard.arrAbilitiesShiv.AddItem(kShivAbility);
                             break;
                     }
@@ -265,33 +267,25 @@ function LWCE_TItemCard LWCE_ENGINEERINGUIGetItemCard()
                         kShivAbility.iAbilityID = eAbility_ShotSuppress;
                         kShivAbility.strName = m_strShivSuppressName;
                         kShivAbility.strDesc = m_strShivSuppressDesc;
+
                         kItemCard.arrAbilitiesShiv.AddItem(kShivAbility);
                     }
 
                     kItemCard.strFlavorText = class'XComLocalizer'.static.ExpandString(kItem.strTacticalText);
                     kItemCard.strName = kItem.strName;
                     break;
-                // FIXME: possible bug - EItemType 116 is Stingray Missiles and should probably be here
-                case eItem_PhoenixCannon:
-                case eItem_AvalancheMissiles:
-                case eItem_LaserCannon:
-                case eItem_PlasmaCannon:
-                case eItem_EMPCannon:
-                case eItem_FusionCannon:
-                    kItemCard = class'LWCE_XGHangarUI'.static.LWCE_BuildShipWeaponCard(iItemId);
+                case 'Item_AvalancheMissiles':
+                case 'Item_EMPCannon':
+                case 'Item_FusionCannon':
+                case 'Item_LaserCannon':
+                case 'Item_PhoenixCannon':
+                case 'Item_PlasmaCannon':
+                case 'Item_StingrayMissiles':
+                    kItemCard = class'LWCE_XGHangarUI'.static.LWCE_BuildShipWeaponCard(ItemName);
                     break;
                 default:
-                    iItemId = m_kTable.arrSummaries[m_iCurrentSelection].ItemType;
-
-                    if (`GAMECORE.ItemIsAccessory(iItemId))
-                    {
-                        kItemCard = class'LWCE_XGItemCards'.static.BuildEquippableItemCard(iItemId);
-                        kItemCard.iCharges = LWCE_ENGINEERINGUIGetItemCharges(iItemId);
-                    }
-                    else
-                    {
-                        return class'LWCE_XGItemCards'.static.BuildItemCard(iItemId);
-                    }
+                    ItemName = m_kCETable.arrSummaries[m_iCurrentSelection].ItemType;
+                    return class'LWCE_XGItemCards'.static.BuildItemCard(ItemName);
             }
         }
     }
@@ -301,28 +295,65 @@ function LWCE_TItemCard LWCE_ENGINEERINGUIGetItemCard()
 
 function int ENGINEERINGUIGetItemCharges(EItemType eItem, optional bool bForce1_for_NonGrenades = false, optional bool bForItemCardDisplay = false)
 {
-    `LWCE_LOG_DEPRECATED_CLS(ENGINEERINGUIGetItemCharges);
-    return 0;
-}
+    `LWCE_LOG_CLS("ERROR: LWCE-incompatible function ENGINEERINGUIGetItemCharges was called. This needs to be replaced with LWCEEquipmentTemplate.GetCharges. Stack trace follows.");
+    ScriptTrace();
 
-function int LWCE_ENGINEERINGUIGetItemCharges(int iItemId)
-{
-    return `LWCE_ITEM(iItemId).iBaseCharges;
+    return 0;
 }
 
 function OnItemTableOption(int iOption)
 {
-    local array<LWCE_TItem> arrItems;
+    local array<LWCEItemTemplate> arrItems;
 
-    arrItems = `LWCE_ENGINEERING.LWCE_GetItemsByCategory(m_kTable.arrTabs[m_kTable.m_iCurrentTab], GetCurrentTransactionType());
+    arrItems = `LWCE_ENGINEERING.LWCE_GetItemsByCategory(m_kCETable.arrTabs[m_kCETable.m_iCurrentTab], GetCurrentTransactionType());
     arrItems.Sort(LWCE_SortItems);
 
     if (m_iCurrentView == eEngView_Build)
     {
         m_bManufacturing = true;
-        `LWCE_HQPRES.LWCE_UIManufactureItem(arrItems[iOption].iItemId);
+        `LWCE_HQPRES.LWCE_UIManufactureItem(arrItems[iOption].GetItemName());
         m_bItemBuilt = true;
     }
+}
+
+function OnNextTab()
+{
+    local int iTab, iNextTab;
+
+    for (iTab = m_kCETable.m_iCurrentTab + 1; iTab < m_kCETable.m_iCurrentTab + 1 + m_kCETable.arrTabs.Length; iTab++)
+    {
+        iNextTab = iTab % m_kCETable.arrTabs.Length;
+
+        if (m_kCETable.arrTabText[iNextTab].iState != eUIState_Disabled)
+        {
+            `LWCE_LOG_CLS("OnNextTab: iTab = " $ iTab $ ", iNextTab = " $ iNextTab);
+            m_kCETable.m_iCurrentTab = iNextTab;
+            break;
+        }
+    }
+
+    UpdateView();
+    PlaySmallOpenSound();
+}
+
+function OnPreviousTab()
+{
+    local int iTab, iNextTab;
+
+    for (iTab = m_kCETable.m_iCurrentTab - 1 + m_kCETable.arrTabs.Length; iTab >= m_kCETable.m_iCurrentTab; iTab--)
+    {
+        iNextTab = iTab % m_kCETable.arrTabs.Length;
+
+        if (m_kCETable.arrTabText[iNextTab].iState != eUIState_Disabled)
+        {
+            `LWCE_LOG_CLS("OnPreviousTab: iTab = " $ iTab $ ", iNextTab = " $ iNextTab);
+            m_kCETable.m_iCurrentTab = iNextTab;
+            break;
+        }
+    }
+
+    UpdateView();
+    PlaySmallOpenSound();
 }
 
 function OnQueueOption(int iOption)
@@ -337,12 +368,25 @@ function OnQueueOption(int iOption)
 
     if (ENGINEERING().m_arrQueue[iOption].bItem)
     {
-        `LWCE_HQPRES.LWCE_UIManufactureItem(`LWCE_ENGINEERING.m_arrCEItemProjects[iProjectIndex].iItemId, iProjectIndex);
+        `LWCE_HQPRES.LWCE_UIManufactureItem(`LWCE_ENGINEERING.m_arrCEItemProjects[iProjectIndex].ItemName, iProjectIndex);
     }
     else
     {
         `LWCE_HQPRES.LWCE_UIManufactureFoundry(`LWCE_ENGINEERING.m_arrCEFoundryProjects[iProjectIndex].ProjectName, iProjectIndex);
     }
+}
+
+function OnTab(int iTab)
+{
+    `LWCE_LOG_CLS("OnTab: " $ iTab);
+
+    if (m_kCETable.arrTabText[iTab].iState != eUIState_Disabled)
+    {
+        m_kCETable.m_iCurrentTab = iTab;
+    }
+
+    UpdateView();
+    PlaySmallOpenSound();
 }
 
 function int SortItems(TItem kItem1, TItem kItem2)
@@ -351,171 +395,37 @@ function int SortItems(TItem kItem1, TItem kItem2)
     return 0;
 }
 
-function int LWCE_SortItems(LWCE_TItem kItem1, LWCE_TItem kItem2)
+function int LWCE_SortItems(LWCEItemTemplate kItem1, LWCEItemTemplate kItem2)
 {
-    local LWCE_XGFacility_Engineering kEngineering;
+    // Default LW 1.0 sorts by many different criteria depending on category, none of which are very transparent to the player.
+    // We just sort priority items at the top, then sort by name.
 
-    kEngineering = `LWCE_ENGINEERING;
-
-    if (kEngineering.LWCE_IsPriorityItem(kItem1.iItemId))
+    if (kItem1.IsPriority())
     {
         return 0;
     }
 
-    if (kEngineering.LWCE_IsPriorityItem(kItem2.iItemId))
+    if (kItem2.IsPriority())
     {
         return -1;
     }
 
-    if (kItem1.iCategory == eItemCat_Weapons)
+    if (kItem1.strName <= kItem2.strName)
     {
-        if (ITEMTREE().IsLargeWeapon(kItem1.iItemId))
-        {
-            if (!ITEMTREE().IsLargeWeapon(kItem2.iItemId))
-            {
-                return 0;
-            }
-            else
-            {
-                if (kItem1.strName < kItem2.strName)
-                {
-                    return 0;
-                }
-                else
-                {
-                    return -1;
-                }
-            }
-        }
-
-        if (ITEMTREE().IsLargeWeapon(kItem2.iItemId))
-        {
-            return -1;
-        }
-
-        if (ITEMTREE().IsSmallWeapon(kItem1.iItemId))
-        {
-            if (!ITEMTREE().IsSmallWeapon(kItem2.iItemId))
-            {
-                return 0;
-            }
-            else
-            {
-                if (kItem1.strName < kItem2.strName)
-                {
-                    return 0;
-                }
-                else
-                {
-                    return -1;
-                }
-            }
-        }
-
-        if (ITEMTREE().IsSmallWeapon(kItem2.iItemId))
-        {
-            return -1;
-        }
-
-        if (kItem1.strName < kItem2.strName)
-        {
-            return 0;
-        }
-        else
-        {
-            return -1;
-        }
+        return 0;
     }
-
-    if (kItem1.iCategory == eItemCat_Armor)
+    else
     {
-        if (kItem1.strName < kItem2.strName)
-        {
-            return 0;
-        }
-        else
-        {
-            return -1;
-        }
+        return -1;
     }
-
-    if (kItem1.iCategory == eItemCat_Vehicles)
-    {
-        // Firestorm is always at the top of the list
-        if (kItem1.iItemId == `LW_ITEM_ID(Firestorm))
-        {
-            return 0;
-        }
-
-        if (kItem2.iItemId == `LW_ITEM_ID(Firestorm))
-        {
-            return -1;
-        }
-
-        if (IsVehicle(kItem1.iItemId))
-        {
-            if (!IsVehicle(kItem2.iItemId))
-            {
-                return 0;
-            }
-            else
-            {
-                if (kItem1.strName < kItem2.strName)
-                {
-                    return 0;
-                }
-                else
-                {
-                    return -1;
-                }
-            }
-        }
-
-        if (IsVehicle(kItem2.iItemId))
-        {
-            return -1;
-        }
-
-        if (IsVehicleWeapon(kItem1.iItemId))
-        {
-            if (!IsVehicleWeapon(kItem2.iItemId))
-            {
-                return 0;
-            }
-            else
-            {
-                if (kItem1.strName < kItem2.strName)
-                {
-                    return 0;
-                }
-                else
-                {
-                    return -1;
-                }
-            }
-        }
-
-        if (IsVehicleWeapon(kItem2.iItemId))
-        {
-            return -1;
-        }
-
-        if (kItem1.strName < kItem2.strName)
-        {
-            return 0;
-        }
-        else
-        {
-            return -1;
-        }
-    }
-
-    return 0;
 }
 
 function UpdateHeader()
 {
+    local LWCE_XGStorage kStorage;
     local TEngHeader kHeader;
+
+    kStorage = LWCE_XGStorage(STORAGE());
 
     switch (m_iCurrentView)
     {
@@ -523,9 +433,9 @@ function UpdateHeader()
             kHeader.txtTitle.StrValue = m_strHeaderEngineering;
             break;
         case eEngView_Build:
-            if (m_kTable.arrTabText.Length > 0)
+            if (m_kCETable.arrTabText.Length > 0)
             {
-                kHeader.txtTitle.StrValue = m_strHeaderBuildItems @ m_kTable.arrTabText[m_kTable.m_iCurrentTab].StrValue;
+                kHeader.txtTitle.StrValue = m_strHeaderBuildItems @ m_kCETable.arrTabText[m_kCETable.m_iCurrentTab].StrValue;
             }
 
             break;
@@ -534,12 +444,12 @@ function UpdateHeader()
     kHeader.txtEngineers = GetResourceText(eResource_Engineers);
     kHeader.txtCash = GetResourceText(eResource_Money);
 
-    if (STORAGE().EverHadItem(`LW_ITEM_ID(Elerium)))
+    if (kStorage.LWCE_EverHadItem('Item_Elerium'))
     {
         kHeader.txtElerium = GetResourceText(eResource_Elerium);
     }
 
-    if (STORAGE().EverHadItem(`LW_ITEM_ID(AlienAlloy)))
+    if (kStorage.LWCE_EverHadItem('Item_AlienAlloy'))
     {
         kHeader.txtAlloys = GetResourceText(eResource_Alloys);
     }
@@ -551,39 +461,39 @@ function UpdateItemTable()
 {
     local int iTab, iItem;
     local LWCE_XGFacility_Engineering kEngineering;
-    local array<LWCE_TItem> arrItems;
+    local array<LWCEItemTemplate> arrItems;
     local TTableMenuOption kOption;
-    local TObjectSummary kSummary;
+    local LWCE_TObjectSummary kSummary;
 
     kEngineering = `LWCE_ENGINEERING;
 
     UpdateTabs();
-    m_kTable.arrSummaries.Remove(0, m_kTable.arrSummaries.Length);
+    m_kCETable.arrSummaries.Remove(0, m_kCETable.arrSummaries.Length);
 
-    for (iTab = 0; iTab < m_kTable.arrTabs.Length; iTab++)
+    for (iTab = 0; iTab < m_kCETable.arrTabs.Length; iTab++)
     {
-        arrItems = kEngineering.LWCE_GetItemsByCategory(m_kTable.arrTabs[iTab], GetCurrentTransactionType());
+        arrItems = kEngineering.LWCE_GetItemsByCategory(m_kCETable.arrTabs[iTab], GetCurrentTransactionType());
         arrItems.Sort(LWCE_SortItems);
 
         if (arrItems.Length == 0)
         {
-            m_kTable.arrTabText[iTab].iState = eUIState_Disabled;
+            m_kCETable.arrTabText[iTab].iState = eUIState_Disabled;
         }
         else
         {
-            m_kTable.arrTabText[iTab].iState = eUIState_Normal;
+            m_kCETable.arrTabText[iTab].iState = eUIState_Normal;
         }
 
-        if (m_kTable.m_iCurrentTab == iTab && m_kTable.arrTabText[m_kTable.m_iCurrentTab].iState == eUIState_Disabled)
+        // If the active tab is disabled due to lack of entries, move to the next one
+        if (m_kCETable.m_iCurrentTab == iTab && m_kCETable.arrTabText[m_kCETable.m_iCurrentTab].iState == eUIState_Disabled)
         {
-            // Not sure what this is, probably byproduct of bytecode manipulation
-            ++ m_kTable.m_iCurrentTab % m_kTable.arrTabs.Length;
+            m_kCETable.m_iCurrentTab = (m_kCETable.m_iCurrentTab + 1) % m_kCETable.arrTabs.Length;
         }
 
-        if (iTab == m_kTable.m_iCurrentTab)
+        if (iTab == m_kCETable.m_iCurrentTab)
         {
-            m_kHeader.txtTitle.StrValue = m_strHeaderBuildItems @ m_kTable.arrTabText[iTab].StrValue;
-            m_kTable.arrTabText[iTab].iState = eUIState_Highlight;
+            m_kHeader.txtTitle.StrValue = m_strHeaderBuildItems @ m_kCETable.arrTabText[iTab].StrValue;
+            m_kCETable.arrTabText[iTab].iState = eUIState_Highlight;
 
             for (iItem = 0; iItem < arrItems.Length; iItem++)
             {
@@ -596,20 +506,69 @@ function UpdateItemTable()
                     kOption.iState = eUIState_Disabled;
                 }
 
-                m_kTable.mnuItems.arrOptions.AddItem(kOption);
-                m_kTable.arrSummaries.AddItem(kSummary);
+                m_kCETable.mnuItems.arrOptions.AddItem(kOption);
+                m_kCETable.arrSummaries.AddItem(kSummary);
             }
         }
     }
+}
+
+function UpdateTabs()
+{
+    local int iTab;
+    local TTableMenu kMenu;
+
+    m_kCETable.arrTabs.Remove(0, m_kCETable.arrTabs.Length);
+
+    if (m_iCurrentView == eEngView_Build)
+    {
+        m_kCETable.arrTabs.AddItem('Weapon');
+        m_kCETable.arrTabs.AddItem('Armor');
+        m_kCETable.arrTabs.AddItem('Vehicle');
+
+        kMenu.arrCategories.AddItem(2);
+        kMenu.arrCategories.AddItem(4);
+    }
+
+    kMenu.kHeader.arrStrings = GetHeaderStrings(kMenu.arrCategories);
+    kMenu.kHeader.arrStates = GetHeaderStates(kMenu.arrCategories);
+    m_kCETable.arrTabText.Remove(0, m_kCETable.arrTabText.Length);
+    m_kCETable.arrTabText.Add(m_kCETable.arrTabs.Length);
+
+    for (iTab = 0; iTab < m_kCETable.arrTabs.Length; iTab++)
+    {
+        switch (m_kCETable.arrTabs[iTab])
+        {
+            case 'All':
+                m_kCETable.arrTabText[iTab].StrValue = m_strCatAll;
+                break;
+            case 'Weapon':
+                m_kCETable.arrTabText[iTab].StrValue = m_strCatWeapons;
+                break;
+            case 'Armor':
+                m_kCETable.arrTabText[iTab].StrValue = m_strCatArmor;
+                break;
+            case 'Vehicle':
+                m_kCETable.arrTabText[iTab].StrValue = m_strCatVehicles;
+                break;
+            case 'AlienArtifact':
+                m_kCETable.arrTabText[iTab].StrValue = m_strCatAlien;
+                break;
+        }
+    }
+
+    m_kCETable.mnuItems = kMenu;
 }
 
 function UpdateView()
 {
     local LWCE_XGFacility_Engineering kEngineering;
     local LWCE_XGFacility_Labs kLabs;
+    local LWCE_XGStorage kStorage;
 
     kEngineering = LWCE_XGFacility_Engineering(ENGINEERING());
     kLabs = LWCE_XGFacility_Labs(LABS());
+    kStorage = LWCE_XGStorage(STORAGE());
 
     UpdateHeader();
     UpdateQueue();
@@ -629,7 +588,7 @@ function UpdateView()
 
     super(XGScreenMgr).UpdateView();
 
-    if (STORAGE().EverHadItem(`LW_ITEM_ID(SkeletonKey)) && Narrative(`XComNarrativeMoment("AlienCodeRevealed_LeadOut_CE")))
+    if (kStorage.LWCE_EverHadItem('Item_SkeletonKey') && Narrative(`XComNarrativeMoment("AlienCodeRevealed_LeadOut_CE")))
     {
         return;
     }
@@ -648,7 +607,7 @@ function UpdateView()
             return;
         }
 
-        if (kLabs.LWCE_IsResearched('Tech_AlienOperations') && !STORAGE().EverHadItem(`LW_ITEM_ID(SkeletonKey)))
+        if (kLabs.LWCE_IsResearched('Tech_AlienOperations') && !kStorage.LWCE_EverHadItem('Item_SkeletonKey'))
         {
             if (Narrative(`XComNarrativeMoment("UrgeBuildBasePassKey")))
             {
@@ -656,7 +615,7 @@ function UpdateView()
             }
         }
 
-        if (STORAGE().EverHadItem(`LW_ITEM_ID(Firestorm)))
+        if (kStorage.LWCE_EverHadItem('Item_Firestorm'))
         {
             if (Narrative(`XComNarrativeMoment("FirestormBuilt_LeadOut_CE")))
             {
@@ -699,7 +658,7 @@ function UpdateView()
             }
         }
 
-        if (STORAGE().GetResource(eResource_Meld) > 150 && !HQ().m_bUrgedEWFacility)
+        if (kStorage.GetResource(eResource_Meld) > 150 && !HQ().m_bUrgedEWFacility)
         {
             if (!HQ().HasFacility(eFacility_CyberneticsLab) && !HQ().HasFacility(eFacility_GeneticsLab) && !kEngineering.IsBuildingFacility(eFacility_CyberneticsLab) && !kEngineering.IsBuildingFacility(eFacility_GeneticsLab))
             {

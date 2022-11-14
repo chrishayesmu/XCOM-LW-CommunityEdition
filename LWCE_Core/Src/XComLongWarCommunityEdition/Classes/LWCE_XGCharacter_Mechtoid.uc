@@ -1,4 +1,8 @@
-class LWCE_XGCharacter_Mechtoid extends XGCharacter_Mechtoid;
+class LWCE_XGCharacter_Mechtoid extends XGCharacter_Mechtoid implements(LWCE_XGCharacter);
+
+`include(generators_xgcharacter_fields.uci)
+
+`include(generators_xgcharacter_functions.uci)
 
 defaultproperties
 {

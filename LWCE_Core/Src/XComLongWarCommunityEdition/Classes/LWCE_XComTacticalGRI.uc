@@ -3,7 +3,7 @@ class LWCE_XComTacticalGRI extends XComTacticalGRI;
 simulated function StartMatch()
 {
     super(GameReplicationInfo).StartMatch();
-    m_CharacterGen = Spawn(class'XGCharacterGenerator');
+    m_CharacterGen = Spawn(class'LWCE_XGCharacterGenerator');
     mSimpleShapeManager = Spawn(class'SimpleShapeManager');
     m_kTraceMgr = Spawn(class'XComTraceManager');
 

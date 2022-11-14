@@ -36,7 +36,7 @@ exec function FixedView()
 	bFixedView = !bFixedView;
 }
 
-	
+
 simulated function bool CalcCamera( float fDeltaTime, out vector out_CamLoc, out rotator out_CamRot, out float out_FOV )
 {
 	local float Radius, Height;
@@ -61,7 +61,7 @@ simulated function bool CalcCamera( float fDeltaTime, out vector out_CamLoc, out
 
 
 /**
- * Updates the player's eye height using BaseEyeHeight and (head) Bob settings; called every tick 
+ * Updates the player's eye height using BaseEyeHeight and (head) Bob settings; called every tick
  */
 event TickSpecial( float DeltaTime )
 {
@@ -154,7 +154,8 @@ simulated function Vector GetPawnViewLocation()
 	return Location + EyeHeight * vect(0,0,1) + WalkBob;
 }
 
-
+// SimplePawn class doesn't actually exist in XCOM
+/*
 defaultproperties
 {
 	Components.Remove(Sprite)
@@ -202,4 +203,4 @@ defaultproperties
 
 	bScriptTickSpecial=true
 }
-
+*/

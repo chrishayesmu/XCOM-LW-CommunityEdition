@@ -1,18 +1,27 @@
 class LWCE_XGWeapon_Extensions extends Object
     abstract;
 
-static simulated function LWCE_TWeapon GetCEWeapon(XGWeapon kWeapon)
+static simulated function LWCEWeaponTemplate GetCEWeapon(XGWeapon kWeapon)
 {
-    return `LWCE_GAMECORE.LWCE_GetTWeapon(GetItemId(kWeapon));
+    if (LWCE_XGWeapon(kWeapon) != none)
+    {
+        return LWCE_XGWeapon(kWeapon).m_kTemplate;
+    }
+
+    return `LWCE_WEAPON(GetItemName(kWeapon));
 }
 
-static simulated function int GetItemId(XGItem kItem)
+static simulated function name GetItemName(XGItem kItem)
 {
-    return kItem == none ? 0 : int(kItem.m_strUIImage);
+    if (LWCE_XGWeapon(kItem) != none)
+    {
+        return LWCE_XGWeapon(kItem).m_TemplateName;
+    }
+
+    return kItem == none ? '' : name(kItem.m_strUIImage);
 }
 
-// TODO: replace all instances of XGWeapon.LongRange with this
 static simulated function float LongRange(XGWeapon kWeapon)
 {
-    return float(64 * GetCEWeapon(kWeapon).iRange);
+    return `METERSTOUNITS(GetCEWeapon(kWeapon).iRange);
 }

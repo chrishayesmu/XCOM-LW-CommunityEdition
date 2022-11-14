@@ -25,7 +25,7 @@ simulated function UpdateData()
     AS_SetCountry(Caps(kAlertData.arrLabeledText[0].strLabel), kAlertData.arrLabeledText[0].StrValue);
     UpdateButtonText();
 
-    if (`HQGAME.GetGameCore().GetHQ().m_kEngineering.GetStorage().GetNumItemsAvailable(`LW_ITEM_ID(SkeletonKey)) == 0)
+    if (`LWCE_STORAGE.LWCE_GetNumItemsAvailable('Item_SkeletonKey') == 0)
     {
         AS_ShowSkeletonKeyNotification(m_strSkeletonKeyRequired);
     }

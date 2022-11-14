@@ -6,6 +6,7 @@ class LWCE_XComPresentationLayer extends XComPresentationLayer;
 
 simulated function UIUnitGermanMode(XGUnit TargetUnit)
 {
+    `LWCE_LOG_CLS("UIUnitGermanMode");
     m_kGermanMode = Spawn(class'LWCE_UIUnitGermanMode', self);
     m_kGermanMode.Init(XComPlayerController(Owner), GetHUD(), TargetUnit);
     PushState('State_GermanMode');

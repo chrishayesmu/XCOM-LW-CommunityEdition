@@ -1,14 +1,21 @@
 class LWCE_XGFoundryUI extends XGFoundryUI
     dependson(LWCETypes);
 
+struct LWCE_TFoundryTable
+{
+    var TTableMenu mnuOptions;
+    var array<LWCE_TObjectSummary> arrSummaries;
+};
+
+var LWCE_TFoundryTable m_kCETable;
 var array<LWCEFoundryProjectTemplate> m_arrCEAvailableTechs;
 
-function TObjectSummary LWCE_BuildSummary(LWCEFoundryProjectTemplate kFoundryTech)
+function LWCE_TObjectSummary LWCE_BuildSummary(LWCEFoundryProjectTemplate kFoundryTech)
 {
     local LWCE_XGFacility_Engineering kEngineering;
     local LWCE_XGFacility_Labs kLabs;
     local LWCE_XGTechTree kTechTree;
-    local TObjectSummary kSummary;
+    local LWCE_TObjectSummary kSummary;
     local XGParamTag kTag;
     local int Index;
     local name CreditName;
@@ -61,10 +68,10 @@ function UpdateTableMenu()
 {
     local array<LWCEFoundryProjectTemplate> arrCompletedTech;
     local LWCEFoundryProjectTemplate kTemplate;
-    local TFoundryTable kTable;
+    local LWCE_TFoundryTable kTable;
     local TTableMenu kTableMenu;
     local TTableMenuOption kOption;
-    local TObjectSummary kSummary;
+    local LWCE_TObjectSummary kSummary;
     local int iMenuItem;
 
     m_arrCEAvailableTechs = LWCE_XGTechTree(TECHTREE()).LWCE_GetAvailableFoundryTechs();
@@ -104,12 +111,12 @@ function UpdateTableMenu()
     kTableMenu.kHeader.arrStates = GetHeaderStates(kTableMenu.arrCategories);
     kTableMenu.bTakesNoInput = false;
     kTable.mnuOptions = kTableMenu;
-    m_kTable = kTable;
+    m_kCETable = kTable;
 }
 
 function PerformTableTransaction(int iTableOption)
 {
-    if (m_kTable.mnuOptions.arrOptions[iTableOption].iState == eUIState_Disabled)
+    if (m_kCETable.mnuOptions.arrOptions[iTableOption].iState == eUIState_Disabled)
     {
         PlayBadSound();
         return;

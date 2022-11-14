@@ -28,9 +28,17 @@ function Mutate(string MutateString, PlayerController Sender)
     {
         Handle_XComProjectile_CalculateUnitDamage(tArgs);
     }
+    else if (tArgs.MutateString == "XComProjectile.InitFX")
+    {
+        Handle_XComProjectile_InitFX(tArgs);
+    }
     else if (tArgs.MutateString == "XComProjectile.InitProjectile")
     {
         Handle_XComProjectile_InitProjectile(tArgs);
+    }
+    else if (tArgs.MutateString == "XComWeapon.PrepareProjectile")
+    {
+        Handle_XComWeapon_PrepareProjectile(tArgs);
     }
     else if (tArgs.MutateString == "XGLoadoutMgr.ApplyInventory")
     {
@@ -90,6 +98,18 @@ private function Handle_XComProjectile_CalculateUnitDamage(const out MutateArgum
     class'LWCE_XComProjectile_Extensions'.static.CalculateUnitDamage(kProjectile);
 }
 
+private function Handle_XComProjectile_InitFX(const out MutateArguments tArgs)
+{
+    local XComProjectile kProjectile;
+    local bool bResetParticles, bHit;
+
+    kProjectile = XComProjectile(FindActorByNameAndClass(tArgs.SenderName, class'XComProjectile'));
+    bResetParticles = bool(tArgs.AdditionalArgs[0]);
+    bHit = bool(tArgs.AdditionalArgs[1]);
+
+    class'LWCE_XComProjectile_Extensions'.static.InitFX(kProjectile, bResetParticles, bHit);
+}
+
 private function Handle_XComProjectile_InitProjectile(const out MutateArguments tArgs)
 {
     local XComProjectile kProjectile;
@@ -120,11 +140,26 @@ private function Handle_XComUnitPawn_TakeDirectDamage(const out MutateArguments 
     class'LWCE_XComUnitPawn_Extensions'.static.TakeDirectDamage(kPawn, Dmg);
 }
 
+private function Handle_XComWeapon_PrepareProjectile(const out MutateArguments tArgs)
+{
+    local int TemplateIndex;
+    local XComWeapon kWeapon;
+
+    kWeapon = XComWeapon(FindActorByNameAndClass(tArgs.SenderName, class'XComWeapon'));
+    TemplateIndex = int(tArgs.AdditionalArgs[0]);
+
+    class'LWCE_XComWeapon_Extensions'.static.PrepareProjectile(kWeapon, TemplateIndex);
+}
+
 private function Handle_XGLoadoutMgr_ApplyInventory(const out MutateArguments tArgs)
 {
     local XGUnit kUnit;
 
+    `LWCE_LOG_CLS("Handle_XGLoadoutMgr_ApplyInventory begin");
+
     kUnit = XGUnit(FindActorByNameAndClass(tArgs.SenderName, class'XGUnit'));
 
     class'LWCE_XGLoadoutMgr'.static.ApplyInventory(kUnit);
+
+    `LWCE_LOG_CLS("Handle_XGLoadoutMgr_ApplyInventory end");
 }

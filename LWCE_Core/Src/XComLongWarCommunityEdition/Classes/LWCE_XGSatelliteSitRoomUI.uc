@@ -19,6 +19,9 @@ function UpdateMain()
     local int iSatellite;
     local TMenu mnuSatellites;
     local TMenuOption txtOption;
+    local LWCE_XGStorage kStorage;
+
+    kStorage = LWCE_XGStorage(STORAGE());
 
     m_kUI.Current = HQ().m_arrSatellites.Length;
     m_kUI.Max = HQ().GetSatelliteLimit();
@@ -34,15 +37,15 @@ function UpdateMain()
         m_kUI.ltxtCapacity.iState = eUIState_Good;
     }
 
-    if (STORAGE().GetNumItemsAvailable(`LW_ITEM_ID(Satellite)) == 0)
+    if (kStorage.LWCE_GetNumItemsAvailable('Item_Satellite') == 0)
     {
         mnuSatellites.strLabel = m_strLabelNoSatellitesToLaunch;
     }
     else
     {
-        strSatellite = `LWCE_ITEM(`LW_ITEM_ID(Satellite)).strName;
+        strSatellite = `LWCE_ITEM('Item_Satellite').strName;
 
-        for (iSatellite = 0; iSatellite < STORAGE().GetNumItemsAvailable(`LW_ITEM_ID(Satellite)); iSatellite++)
+        for (iSatellite = 0; iSatellite < kStorage.LWCE_GetNumItemsAvailable('Item_Satellite'); iSatellite++)
         {
             txtOption.strText = strSatellite $ "-" $ iSatellite;
             mnuSatellites.arrOptions.AddItem(txtOption);

@@ -1,0 +1,1 @@
+class LWCEUFOTemplate extends LWCEShipTemplate;

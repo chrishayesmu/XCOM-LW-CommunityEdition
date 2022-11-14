@@ -61,3 +61,99 @@ function UpdateRequest()
     // This doesn't appear to ever be used
     `LWCE_LOG_DEPRECATED_NOREPLACE_CLS(UpdateRequest);
 }
+
+function UpdateView()
+{
+    local LWCE_XGFacility_Labs kLabs;
+    local LWCE_XGStorage kStorage;
+
+    kLabs = LWCE_XGFacility_Labs(LABS());
+    kStorage = LWCE_XGStorage(STORAGE());
+
+    UpdateCountries();
+
+    switch (m_iCurrentView)
+    {
+        case eSitView_Main:
+            if (PRES().bShouldUpdateSituationRoomMenu)
+            {
+                UpdateMainMenu();
+            }
+
+            UpdateObjectives();
+            UpdateCountries();
+            UpdateCode();
+            UpdateWorldMoney();
+            UpdateTicker();
+            UpdateDoom();
+            break;
+        case eSitView_Mission:
+            UpdateMission();
+            break;
+        case eSitView_Request:
+            UpdateRequest();
+            break;
+        case eSitView_RequestComplete:
+            UpdateRequestComplete();
+            break;
+        case eSitView_RequestAccepted:
+            UpdateRequestAccepted();
+            break;
+        case eSitView_RequestExpired:
+            UpdateRequestExpired();
+            break;
+        case eSitView_NewObjective:
+            break;
+        case eSitView_ObjectivesMoreInfo:
+            UpdateObjectives();
+            break;
+        case eSitView_CovertOpsExtractionMission:
+            UpdateInfiltratorMission();
+            break;
+    }
+
+    super(XGScreenMgr).UpdateView();
+
+    if (m_iCurrentView == eSitView_Main && !SITROOM().m_bDisplayMissionDetails && !SITROOM().m_bDisplayExaltRaidDetails)
+    {
+        if (kLabs.LWCE_IsResearched('Tech_Xenobiology') && !kStorage.HasAlienCaptive() && !kLabs.HasInterrogatedCaptive())
+        {
+            if (Narrative(`XComNarrativeMoment("ArcThrower_LeadOut_CEN")))
+            {
+                return;
+            }
+        }
+
+        if (kLabs.LWCE_IsResearched('Tech_AlienOperations') && !kStorage.LWCE_EverHadItem('Item_SkeletonKey'))
+        {
+            if (Narrative(`XComNarrativeMoment("AlienBaseDetected_LeadOut_CEN")))
+            {
+                return;
+            }
+        }
+
+        if (kStorage.LWCE_EverHadItem('Item_Firestorm'))
+        {
+            if (Narrative(`XComNarrativeMoment("FirestormBuilt_LeadOut_CEN")))
+            {
+                return;
+            }
+        }
+
+        if (Game().GetNumMissionsTaken(eMission_TerrorSite) > 0)
+        {
+            if (Narrative(`XComNarrativeMoment("FirstTerrorMission_LeadOut_CEN")))
+            {
+                return;
+            }
+        }
+
+        if (kLabs.HasInterrogatedCaptive())
+        {
+            if (Narrative(`XComNarrativeMoment("PostInterrogation_LeadOut_CEN")))
+            {
+                return;
+            }
+        }
+    }
+}

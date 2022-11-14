@@ -81,4 +81,5 @@ private simulated static function TakeDirectDamage_XComSectopod(const XComSectop
 
 private simulated static function TakeDirectDamage_XComUnitPawn(const XComUnitPawn kSelf, const DamageEvent Dmg)
 {
+    // TODO
 }

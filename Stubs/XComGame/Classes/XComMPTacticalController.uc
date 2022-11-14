@@ -89,7 +89,7 @@ function NotifyConnectionError(EProgressMessageType MessageType, optional string
 }
 simulated function LostConnection(EQuitReason Reason)
 {
-    XComOnlineEventMgr(GameEngine(class'Engine'.static.GetEngine()).OnlineEventManager).QueueQuitReasonMessage(Reason);
+    `ONLINEEVENTMGR.QueueQuitReasonMessage(Reason);
 }
 reliable server function ServerRestartPlayer();
 function bool IsSpectating()

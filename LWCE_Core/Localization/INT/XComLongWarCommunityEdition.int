@@ -311,6 +311,1484 @@ PilotNames="\"Blender\" Iyengar"
 PilotNames="\"Blinker\" Kamala"
 PilotNames="\"Stuntman\" Silva"
 
+[Item_AcidSpit LWCEWeaponTemplate]
+strName="Acid Spit"
+strNamePlural="Acid Spit"
+
+[Item_AdaptiveTrackingPod LWCEWeaponTemplate]
+strName="Adaptive Tracking Pod"
+strNamePlural="Adaptive Tracking Pods"
+strBriefSummary="Equipping a SHIV with Adaptive Tracking Pods removes its aim penalty for overwatch fire."
+strTacticalText= "<Bullet/> Confers Advanced Fire Control perk, cancelling aim penalty for SHIV reaction fire\n<Bullet/> Weight: 1"
+
+[Item_AdvancedSuppressionModule LWCEWeaponTemplate]
+strName="Advanced Suppression Module"
+strNamePlural="Advanced Suppression Module"
+strBriefSummary="This SHIV module will allow it to suppress multiple targets at once."
+strTacticalText= "<Bullet/> Confers Danger Zone perk, which allows Suppression to affect multiple enemy units\n<Bullet/> SHIVs only\n<Bullet/> Weight: 1"
+
+[Item_AegisArmor LWCEArmorTemplate]
+strName="Aegis Armor"
+strNamePlural="Aegis Armors"
+strBriefSummary="The Aegis Armor is an improvement of our carapace design, incorporating a prototype elerium power cell to assist the soldier in shouldering such a heavy load."
+strTacticalText= "<Bullet/> Heavy armor\n<Bullet/> +2 mobility, +7 HP"
+
+[Item_AlienAlloy LWCEItemTemplate]
+strName="Alien Alloys"
+strNamePlural="Alien Alloys"
+strBriefSummary="While extremely light, these alloys are also incredibly durable, far exceeding the strength of any substance currently available to us. As this material does not occur naturally on Earth, recovering it from the aliens is our only means of acquiring more."
+
+[Item_AlienCarbine LWCEItemTemplate]
+strName="Alien Carbine"
+strNamePlural="Alien Carbines"
+strBriefSummary="A medium-sized plasma weapon of alien manufacture. Our soldiers cannot equip it, but it may be useful as a template for plasma weapons of our own."
+
+[Item_AlienCarbine_Floater LWCEWeaponTemplate]
+strName="Alien Carbine"
+strNamePlural="Alien Carbines"
+
+[Item_AlienCarbine_Muton LWCEWeaponTemplate]
+strName="Alien Carbine"
+
+[Item_AlienCarbine_Outsider LWCEWeaponTemplate]
+strName="Alien Carbine"
+strNamePlural="Alien Carbines"
+
+[Item_AlienCarbine_ThinMan LWCEWeaponTemplate]
+strName="Alien Carbine"
+strNamePlural="Alien Carbines"
+
+[Item_AlienEntertainment LWCEItemTemplate]
+strName="Alien Entertainment"
+strNamePlural="Alien Entertainment"
+strBriefSummary="<font color='#32CD32'>This item has no research benefit, and can be sold freely or transferred to council countries.</font>\nWe can only assume this bizarre device is some form of entertainment for the aliens. It appears to induce a euphoric state in the user."
+
+[Item_AlienEntertainmentDamaged LWCEItemTemplate]
+strName="Alien Entertainment (Damaged)"
+strNamePlural="Alien Entertainment (Damaged)"
+strBriefSummary="<font color='#32CD32'>This item has no research benefit, and can be sold freely.</font>\nAlthough interesting, this device is too heavily damaged for us to conduct any research of value on."
+
+[Item_AlienFood LWCEItemTemplate]
+strName="Alien Food"
+strNamePlural="Alien Food"
+strBriefSummary="<font color='#32CD32'>This item has no research benefit, and can be sold freely.</font>\nThis...slurry...of varying genetic material has a considerable nutrient content, and could be used to provide sustenance to the aliens. Unfortunately, this mixture also contains several key markers indicating the presence of human DNA."
+
+[Item_AlienFoodDamaged LWCEItemTemplate]
+strName="Alien Food (Damaged)"
+strNamePlural="Alien Food (Damaged)"
+strBriefSummary="<font color='#32CD32'>This item has no research benefit, and can be sold freely.</font>\nThe composition of the alien food supply is intriguing, but this equipment is too damaged to risk transporting it."
+
+[Item_AlienGrenade LWCEWeaponTemplate]
+strName="Alien Grenade"
+strNamePlural="Alien Grenades"
+strBriefSummary="Although similar in function to the standard HE grenade, the alien variant uses a more powerful explosive compound. Any artifacts caught in the blast radius will not be recoverable."
+strTacticalText= "<Bullet/> The Alien Grenade does heavy damage and destroys cover\n<Bullet/> Destroys alien artifacts, preventing their recovery and exploitation\n<Bullet/> Friendly targets in the blast area are affected\n<Bullet/> Damage is reduced based on distance from point of detonation\n<Bullet/> Weight: 1"
+
+[Item_AlienGrenade_Cyberdisc LWCEWeaponTemplate]
+strName="Alien Grenade"
+strNamePlural="Alien Grenades"
+
+[Item_AlienGrenade_HeavyFloater LWCEWeaponTemplate]
+strName="Alien Grenade"
+strNamePlural="Alien Grenades"
+
+[Item_AlienGrenade_Muton LWCEWeaponTemplate]
+strName="Alien Grenade"
+strNamePlural="Alien Grenades"
+
+[Item_AlienHeavyWeapon LWCEItemTemplate]
+strName="Alien Heavy Weapon"
+strNamePlural="Alien Heavy Weapons"
+strBriefSummary="A very large plasma weapon of alien manufacture. Our soldiers cannot equip it, but it may be useful as a template for plasma weapons of our own."
+
+[Item_AlienHeavyWeapon_MutonElite LWCEWeaponTemplate]
+strName="Alien Heavy Weapon"
+strNamePlural="Alien Heavy Weapons"
+
+[Item_AlienPistol LWCEItemTemplate]
+strName="Alien Pistol"
+strNamePlural="Alien Pistols"
+strBriefSummary="A light plasma weapon of alien manufacture. Our soldiers cannot equip it, but it may be useful as a template for plasma weapons of our own."
+
+[Item_AlienPistol_Sectoid LWCEWeaponTemplate]
+strName="Alien Pistol"
+strNamePlural="Alien Pistols"
+
+[Item_AlienPistol_Seeker LWCEWeaponTemplate]
+strName="Alien Pistol"
+strNamePlural="Alien Pistols"
+
+[Item_AlienRifle LWCEItemTemplate]
+strName="Alien Rifle"
+strNamePlural="Alien Rifles"
+strBriefSummary="A large plasma weapon of alien manufacture. Our soldiers cannot equip it, but it may be useful as a template for plasma weapons of our own."
+
+[Item_AlienRifle_HeavyFloater LWCEWeaponTemplate]
+strName="Alien Rifle"
+strNamePlural="Alien Rifles"
+
+[Item_AlienRifle_Muton LWCEWeaponTemplate]
+strName="Alien Rifle"
+strNamePlural="Alien Rifles"
+
+[Item_AlienStasisTank LWCEItemTemplate]
+strName="Alien Stasis Tank"
+strNamePlural="Alien Stasis Tanks"
+strBriefSummary="These tanks appear to hold the alien's captives in a comatose state until they are ready for further experimentation."
+
+[Item_AlienStasisTankDamaged LWCEItemTemplate]
+strName="Alien Stasis Tank (Damaged)"
+strNamePlural="Alien Stasis Tank (Damaged)"
+strBriefSummary="<font color='#32CD32'>This item has no research benefit, and can be sold freely.</font>\nThe technology used in these tanks would surely be of value to our research, but these examples are too heavily damaged for us to study."
+
+[Item_AlienSurgery LWCEItemTemplate]
+strName="Alien Surgery"
+strNamePlural="Alien Surgeries"
+strBriefSummary="Although rudimentary in appearance, this device must play some role in the alien's unconscionable experiments on the human captives housed here."
+
+[Item_AlienSurgeryDamaged LWCEItemTemplate]
+strName="Alien Surgery (Damaged)"
+strNamePlural="Alien Surgery (Damaged)"
+strBriefSummary="<font color='#32CD32'>This item has no research benefit, and can be sold freely.</font>\nDiscovering the purpose of this bizarre equipment would surely be beneficial, but it's of no value to us after sustaining so much damage."
+
+[Item_AlienTrophy LWCEWeaponTemplate]
+strName="Alien Trophy"
+strNamePlural="Alien Trophies"
+strBriefSummary="One of the engineers has fashioned an alien trophy out of the remains of some alien hardware and hard organs. They serve as a reminder to the soldiers that the aliens are, in fact, mortal, and can be beaten."
+strTacticalText= "<Bullet/> One of the engineers fashioned these out of the remains of some alien hardware and hard organs. They serve as a reminder that the aliens are, in fact, mortal, and can be beaten.\n<Bullet/> Confers Steadfast perk, preventing panic when you are wounded, when an ally is killed, wounded or panicking, or when an alien roars loudly to intimidate you\n<Bullet/> Equippable by regular soldiers and MECs\n<Bullet/> Weight: 1"
+
+[Item_AlloyBipod LWCEWeaponTemplate]
+strName="Alloy Bipod"
+strNamePlural="Alloy Bipods"
+strBriefSummary="This lightweight bipod attachment will allow more accurate fire from our snipers."
+strPerkHUDSummary="Provides +6 aim and +6 crit."
+strTacticalText= "<Bullet/> Heavy-duty bipod that employs alloys to create exceptional weapon balance\n<Bullet/> Grants +6 Aim and +6 Critical\n<Bullet/> Sniper Only\n<Bullet/> Weight: 0"
+
+[Item_AlloyCannon LWCEWeaponTemplate]
+strName="Alloy Cannon"
+strNamePlural="Alloy Cannons"
+strBriefSummary="By developing a firing mechanism capable of projecting machined shards of the alien alloy, we've created an extremely powerful weapon that has a devastating effect on anything caught in range. However, accuracy falls off quickly over greater distances. In addition, it is not as effective against hardened targets or those in cover."
+strTacticalText= "<Bullet/> An advanced version of the shotgun\n<Bullet/> Has a high base chance to cause critical hits but limited range\n<Bullet/> Gauss tech weapons have a 1 in 3 chance of nullifying a point of enemy damage reduction\n<Bullet/> Does less damage against hardened targets or those in cover\n<Bullet/> Not Equippable by Gunner, Sniper and Rocketeer classes\n<Bullet/> Base ammo: 5"
+
+[Item_AlloyCarbidePlating LWCEWeaponTemplate]
+strName="Alloy Carbide Plating"
+strNamePlural="Alloy Carbide Plating"
+strBriefSummary="Alloy Carbide Plating confers extra survivability for our mechanized units."
+strTacticalText= "<Bullet/> Confers +4 extra HP to our mechanized units\n<Bullet/> Weight: 2"
+
+[Item_AlloyJacketedRounds LWCEWeaponTemplate]
+strName="Alloy Jacketed Rounds"
+strNamePlural="Alloy Jacketed Rounds"
+strBriefSummary="Confers increased damage for our ballistic and gauss weaponry."
+strPerkHUDSummary="+1 base damage to ballistic and Gauss primary weapons and rocket launchers."
+strTacticalText= "<Bullet/> Confers +1 damage for all ballistic and gauss-tech primary weapons and rockets\n<Bullet/> Equippable by regular and mechanized units\n<Bullet/> Weight: 1"
+
+[Item_AlloyStrikeRifle LWCEWeaponTemplate]
+strName="Alloy Strike Rifle"
+strNamePlural="Alloy Strike Rifles"
+strBriefSummary="A medium-range gauss rifle usable by our scouts and snipers."
+strTacticalText= "<Bullet/> Bolt-action, medium-range gauss rifle that functions in Marksman's Rifle role\n<Bullet/> Gauss tech weapons have a 1 in 3 chance of nullifying a point of enemy damage reduction\n<Bullet/> Bonus critical chance\n<Bullet/> Severe aim penalty when used at short range\n<Bullet/> Usable by snipers and scouts\n<Bullet/> Can be steadied for greater accuracy\n<Bullet/> Soldiers with Squadsight can target enemies and conduct reaction fire at up to five tiles beyond visual range\n<Bullet/> Base ammo: 4"
+
+[Item_AlloyPlating LWCEWeaponTemplate]
+strName="Alloy Plating"
+strNamePlural="Alloy Plating"
+strBriefSummary="Made from a dense weave of nanotube fibers, this lightweight vest provides extra damage absorption to the wearer."
+strPerkHUDSummary="Provides +2 hit points."
+strTacticalText= "<Bullet/> Confers <XGAbility:NanoFiberHealth/> extra health\n<Bullet/> Weight: 1"
+
+[Item_APGrenade LWCEWeaponTemplate]
+strName="AP Grenade"
+strNamePlural="AP Grenades"
+strBriefSummary="A variant on the HE Grenade, this weapon does equivalent damage over a larger area, but the projectiles cannot penetrate cover. Thus, units in cover relative to the center of the blast area will be unaffected."
+strTacticalText= "<Bullet/> The Antipersonnel grenade does more damage compared to HE grenade\n<Bullet/> Units in cover relative to center of blast radius will not take damage \n<Bullet/> Explosives may leave our researchers unable to exploit enemy artifacts\n<Bullet/> Damage is reduced based on distance from point of detonation\n<Bullet/> Weight: 1"
+
+[Item_ArchangelArmor LWCEArmorTemplate]
+strName="Archangel Armor"
+strNamePlural="Archangel Armors"
+strBriefSummary="The Archangel suit combines our heavy armor set with a small propulsion system that allows for limited flight capabilities."
+strTacticalText= "<Bullet/> Heavy armor\n<Bullet/> +1 mobility, +8 HP, 0.3 DR\n<Bullet/> Toggle flight mode to initiate flying movement\n<Bullet/> Taking off, and each turn in flight, costs 1 fuel unit\n<Bullet/> The armor carries 6 fuel units; this can be expanded with additional experimental research\n<Bullet/> Sealed: internal air supply and recycling systems provide the wearer partial immunity to acid and airway interruption\n<Bullet/> Flame Resistant: cooling systems and alien alloy construction confer immunity to environmental fire damage"
+
+[Item_ArcRifle LWCEWeaponTemplate]
+strName="Arc Rifle"
+strNamePlural="Arc Rifles"
+strBriefSummary="The Arc Rifle does low damage but can temporarily disable alien weaponry, allowing our soldiers to assist in alien captures."
+strTacticalText= "<Bullet/> Adaptation of arc thrower technology into a rifle usable by all classes except gunners and rocketeers\n<Bullet/> Grants Disabling Shot perk\n<Bullet/> Does low damage, has a low chance of causing critical hits on normal fire, and can't stun aliens, but it will temporarily disable their neural link to their weaponry, and they will have to reload to be able to fire again\n<Bullet/> Suffers close-range weapon penalties like sniper rifles\n<Bullet/> Precision Shot perk grants unlimited range for Snipers\n<Bullet/> Base ammo: 2"
+
+[Item_ArcThrower LWCEWeaponTemplate]
+strName="Arc Thrower"
+strNamePlural="Arc Throwers"
+strBriefSummary="The Arc Thrower is a non-lethal sidearm designed to stun hostile targets. The mechanism seems to be most effective against weakened enemies."
+strTacticalText= "<Bullet/> A nonlethal weapon that can stun enemies\n<Bullet/> The chance of a successful stun is much greater if the target has low health\n<Bullet/> Does not affect robotic enemies\n<Bullet/> Advanced versions have a better chance to stun, can heal friendly SHIVs, and take control of certain enemies\n<Bullet/> Weight: 2"
+
+[Item_TacArmor LWCEArmorTemplate]
+strName="Tac Armor"
+strNamePlural="Tac Armors"
+strBriefSummary="Tac Armor"
+strTacticalText= "<Bullet/> Light armor\n<Bullet/> +1 mobility, +2 HP\n<Bullet/> XCOM soldiers will appreciate it if better armor development is given a high priority"
+
+[Item_ArmorPiercingAmmo LWCEWeaponTemplate]
+strName="Armor Piercing Ammo"
+strNamePlural="Armor Piercing Ammo"
+strBriefSummary="This ammo will overcome a measure of enemy damage reduction and hardening against critical hits. It may be equipped by our gunners and mechanized units."
+strPerkHUDSummary="Nullifies 2 enemy damage reduction."
+strTacticalText= "<Bullet/> Reduces enemy Damage Reduction by 2\n<Bullet/> Does not work with sidearms or shotguns\n<Bullet/> Gunner, Engineer and mechanized units only; can't stack with some other specialized ammo\n<Bullet/> Weight: 1"
+
+[Item_AssaultCarbine LWCEWeaponTemplate]
+strName="Assault Carbine"
+strNamePlural="Assault Carbine"
+strBriefSummary="A lightweight version of the assault rifle."
+strTacticalText= "<Bullet/> Lightweight primary weapon\n<Bullet/> Less damage and crit chance than its assault rifle counterpart, but imparts +6 accuracy and +1 mobility\n<Bullet/> Can be steadied for greater accuracy\n<Bullet/> Base ammo: 3"
+
+[Item_AssaultRifle LWCEWeaponTemplate]
+strName="Assault Rifle"
+strNamePlural="Assault Rifles"
+strBriefSummary="Assault Rifle"
+strTacticalText= "<Bullet/> The assault rifle and its variants are the primary weapons XCOM rookies can use\n<Bullet/> Can be steadied for greater accuracy\n<Bullet/> Base ammo: 3"
+
+[Item_AuroraArmor LWCEArmorTemplate]
+strName="Aurora Armor"
+strNamePlural="Aurora Armors"
+strBriefSummary="This unusual suit of armor incorporates some basic implants designed to assist the wearer in employing any psi talents they have developed."
+strTacticalText= "<Bullet/> Medium armor\n<Bullet/> +4 hp, +2 mobility, +8 defense\n<Bullet/> Increases wearer's Will by 10 for psi attacks and defense\n<Bullet/> Psis only"
+
+[Item_Autocannon LWCEWeaponTemplate]
+strName="Autocannon"
+strNamePlural="Autocannons"
+strBriefSummary="The Autocannon is a large four-barrelled machine gun that is suitable for a SHIV platform."
+strTacticalText= "<Bullet/> Four-barrelled heavy machine gun suitable for mounting on a SHIV platform\n<Bullet/> Base ammo: 3"
+
+[Item_Autolaser LWCEWeaponTemplate]
+strName="Autolaser"
+strNamePlural="Autolasers"
+strBriefSummary="The continuous Autolaser requires a supplementary power supply that makes it somewhat unwieldy in combat, but it is capable of dealing high amounts of damage."
+strTacticalText= "<Bullet/> Rapid-fire version of the continuous beam Laser Rifle that functions in Squad Automatic Weapon role\n<Bullet/> -1 mobility\n<Bullet/> Beam laser; confers +6 accuracy bonus\n<Bullet/> Equippable by Gunners only\n<Bullet/> Base ammo: 6"
+
+[Item_AutoSentryTurret LWCEWeaponTemplate]
+strName="AutoSentry Turret"
+strNamePlural="AutoSentry Turrets"
+strBriefSummary="The UA571-C AutoSentry Turret Module allows the SHIV to engage multiple targets while on overwatch."
+strTacticalText= "<Bullet/> Confers Sentinel perk, giving SHIV two reaction shots per turn\n<Bullet/> Weight: 1"
+
+[Item_AvalancheMissiles LWCEShipWeaponTemplate]
+strName="Avalanche Missiles"
+strNamePlural="Avalanche Missiles"
+strBriefSummary="A crash program and a couple of lucky experiments led to the Avalanche Missiles, an air-to-air weapon of unprecedented precision. It represents the pinnacle of terrestrial guided-missile technology."
+
+[Item_BansheeArmor LWCEArmorTemplate]
+strName="Banshee Armor"
+strNamePlural="Banshee Armors"
+strBriefSummary="This armor incorporates a prototype elerium power cell with a single goal in mind: mobility. Coupled with a grapple, Banshee armor should provide the soldier the ability to reach almost anywhere on the battlefield."
+strTacticalText= "<Bullet/> Light Armor\n<Bullet/> +4 mobility, +12 Defense, +3 HP\n<Bullet/> Equipped with Grapple"
+
+[Item_BaseAugments LWCEArmorTemplate]
+strName="Base Augments"
+strTacticalText= "<Bullet/> MEC Troopers wear their cybernetic base augments when not in combat\n<Bullet/> The arms and legs lack the necessary flexibility for use in the field; hence their removal when the MEC Trooper interfaces with a MEC cybersuit\n<Bullet/> Ideally, they will permit MEC Troopers to resume normal lives should XCOM defeat the invaders"
+
+[Item_BattleComputer LWCEWeaponTemplate]
+strName="Battle Computer"
+strNamePlural="Battle Computer"
+strBriefSummary="A Sectopod-derived combat computer that provides substantial enhancements for our mechanized units."
+strPerkHUDSummary="Provides +8 aim, +8 critical chance, and +8 defense."
+strTacticalText= "<Bullet/> Enhances combat capabilities of our mechanized units, providing +8 bonuses to aim, critical hit chance, and defense\n<Bullet/> Weight: 1"
+
+[Item_BattleRifle LWCEWeaponTemplate]
+strName="Battle Rifle"
+strNamePlural="Battle Rifles"
+strBriefSummary="Battle Rifle"
+strTacticalText= "<Bullet/> A heavy assault rifle variant\n<Bullet/> Confers +1 damage over assault rifle, but moving or taking any costly (blue) actions will reduce aim by 10 until the beginning of the next turn\n<Bullet/> Can be steadied for greater accuracy\n<Bullet/> -1 mobility\n<Bullet/> Equippable by Infantry, Scout, Assault, Medic, Engineer\n<Bullet/> Base ammo: 3"
+
+[Item_BattleScanner LWCEWeaponTemplate]
+strName="Battle Scanner"
+strNamePlural="Battle Scanners"
+strTacticalText= "<Bullet/> Combined motion, heat and sonic tracking device that relays target information back to user\n<Bullet/> Support grenade\n<Bullet/> Usable by Scouts and Engineers only\n<Bullet/> Weight: 1"
+
+[Item_BerserkerBlade LWCEWeaponTemplate]
+strName="Muton Blade"
+strNamePlural="Muton Blades"
+
+[Item_Blaster LWCEWeaponTemplate]
+strName="Blaster"
+strNamePlural="Blasters"
+strBriefSummary="This pulse laser technology-based personal defense weapon may be carried in place of a pistol, providing additional combat power at the cost of some mobility."
+strTacticalText= "<Bullet/> Pulse laser-derived heavy-duty sidearm that confers -1 mobility in exchange more for more power than a pistol of comparable technological capability\n<Bullet/> Pulse weapons have increased critical chances\n<Bullet/> -8 accuracy penalty when drawn, accuracy degrades at long range\n<Bullet/> Base ammo: 2"
+
+[Item_BlasterLauncher LWCEWeaponTemplate]
+strName="Blaster Launcher"
+strNamePlural="Blaster Launchers"
+strBriefSummary="By integrating components of the advanced alien navigation systems, we can fire self-guided rockets capable of navigating to the intended target without direct line-of-sight. Damage output has also been significantly improved through the use of an alien fusion core."
+strTacticalText= "<Bullet/> Upgrade to conventional rockets that permits projectiles to navigate the battlefield\n<Bullet/> Substantial damage improvement over the conventional rocket launcher\n<Bullet/> Requires a skilled user to operate correctly\n<Bullet/> Friendly targets in the blast area are affected\n<Bullet/> Blaster bombs are useful for destroying cover and forcing enemies to spread out, but may destroy artifacts our researchers need\n<Bullet/> Damage is reduced based on distance from point of detonation\n<Bullet/> Each rocket fired confers +1 mobility for the rest of the mission\n<Bullet/> Weight: 2"
+
+[Item_BlasterRifle LWCEWeaponTemplate]
+strName="Blaster Rifle"
+strNamePlural="Blaster Rifles"
+strBriefSummary="A medium-range pulse rifle usable by our scouts and snipers."
+strTacticalText= "<Bullet/> Medium-range pulse rifle that functions in Marksman's Rifle role\n<Bullet/> Very high critical chance\n<Bullet/> Severe aim penalty when used at short range\n<Bullet/> Usable by snipers and scouts\n<Bullet/> Can be steadied for greater accuracy\n<Bullet/> Soldiers with Squadsight can target enemies and conduct reaction fire at up to five tiles beyond visual range\n<Bullet/> Base ammo: 3"
+
+[Item_BreachingAmmo LWCEWeaponTemplate]
+strName="Breaching Ammo"
+strNamePlural="Breaching Ammo"
+strBriefSummary="This shotgun ammo will give assault soldiers increased damage against armored targets."
+strPerkHUDSummary="Nullifies enemy damage reduction bonus against shotguns."
+strTacticalText= "<Bullet/> Nullifies extra damage reduction penalties for shotgun-class primary weapons (not including the sawed-off shotgun)\n<Bullet/> Assault only\n<Bullet/> Weight: 1"
+
+[Item_CaptiveBerserker LWCEItemTemplate]
+strName="Berserker Captive"
+strNamePlural="Berserker Captives"
+strBriefSummary="While most gray market buyers cannot hold a live alien, researchers are willing to offer funding to come to our facilities to perform a vivisection."
+
+[Item_CaptiveEthereal LWCEItemTemplate]
+strName="Ethereal Captive"
+strNamePlural="Ethereal Captives"
+strBriefSummary="While most gray market buyers cannot hold a live alien, researchers are willing to offer funding to come to our facilities to perform a vivisection."
+
+[Item_CaptiveFloater LWCEItemTemplate]
+strName="Floater Captive"
+strNamePlural="Floater Captives"
+strBriefSummary="While most gray market buyers cannot hold a live alien, researchers are willing to offer funding to come to our facilities to perform a vivisection."
+
+[Item_CaptiveHeavyFloater LWCEItemTemplate]
+strName="Heavy Floater Captive"
+strNamePlural="Heavy Floater Captives"
+strBriefSummary="While most gray market buyers cannot hold a live alien, researchers are willing to offer funding to come to our facilities to perform a vivisection."
+
+[Item_CaptiveMuton LWCEItemTemplate]
+strName="Muton Captive"
+strNamePlural="Muton Captives"
+strBriefSummary="While most gray market buyers cannot hold a live alien, researchers are willing to offer funding to come to our facilities to perform a vivisection."
+
+[Item_CaptiveMutonElite LWCEItemTemplate]
+strName="Muton Elite Captive"
+strNamePlural="Muton Elite Captives"
+strBriefSummary="While most gray market buyers cannot hold a live alien, researchers are willing to offer funding to come to our facilities to perform a vivisection."
+
+[Item_CaptiveSectoid LWCEItemTemplate]
+strName="Sectoid Captive"
+strNamePlural="Sectoid Captives"
+strBriefSummary="While most gray market buyers cannot hold a live alien, researchers are willing to offer funding to come to our facilities to perform a vivisection."
+
+[Item_CaptiveSectoidCommander LWCEItemTemplate]
+strName="Sectoid Commander Captive"
+strNamePlural="Sectoid Commander Captives"
+strBriefSummary="While most gray market buyers cannot hold a live alien, researchers are willing to offer funding to come to our facilities to perform a vivisection."
+
+[Item_CaptiveThinMan LWCEItemTemplate]
+strName="Thin Man Captive"
+strNamePlural="Thin Man Captives"
+strBriefSummary="While most gray market buyers cannot hold a live alien, researchers are willing to offer funding to come to our facilities to perform a vivisection."
+
+[Item_CarapaceArmor LWCEArmorTemplate]
+strName="Carapace Armor"
+strNamePlural="Carapace Armors"
+strBriefSummary="Our Carapace Armor was designed to offer substantially better protection against the alien plasma weaponry through the use of their alloys. Tests indicate a substantial survivability increase relative to conventional body armor."
+strTacticalText= "<Bullet/> Medium armor\n<Bullet/> +1 mobility, +5 HP"
+
+[Item_CeramicPlating LWCEWeaponTemplate]
+strName="Ceramic Plating"
+strNamePlural="Ceramic Plating"
+strBriefSummary="Ceramic Plating provides a measure of enhanced protection to the wearer."
+strPerkHUDSummary="Provides +1 hit point."
+strTacticalText= "<Bullet/> Provides soldier with +1 hit point\n<Bullet/> Weight: 1"
+
+[Item_ChameleonSuit LWCEWeaponTemplate]
+strName="Chameleon Suit"
+strNamePlural="Chameleon Suits"
+strBriefSummary="This suit will make our Scouts harder to hit on the battlefield."
+strPerkHUDSummary="Provides +4 defense, an additional defense bonus and immunity to critical hits when using Lightning Reflexes."
+strTacticalText= "<Bullet/> This is a kind of enhanced camouflage we believe interferes with alien tracking, communications and targeting systems.\n<Bullet/> Gives Scouts bonus protection when using Lightning Reflexes and makes them immune to criticals from enemy Overwatch fire\n<Bullet/> Also confers +4 defense bonus\n<Bullet/> Scouts only\n<Bullet/> Weight: 1"
+
+[Item_ChemGrenade LWCEWeaponTemplate]
+strName="Chem Grenade"
+strNamePlural="Chem Grenades"
+strBriefSummary="Our advanced research in alien physiology has allowed us to synthesize a modified version of the acid projected by the Thin Man, and containerize it in grenade form. It should be useful against both biological and robotic targets."
+strTacticalText= "<Bullet/> Creates a toxic cloud at impact site\n<Bullet/> Unprotected organic targets suffer reductions in mobility and take damage each turn; hunkering down can reduce damage\n<Bullet/> All targets (including robots) also suffer acid damage, reducing aim and damage reduction\n<Bullet/> Support grenade\n<Bullet/> Weight: 1"
+
+[Item_ChitinPlating LWCEWeaponTemplate]
+strName="Chitin Plating"
+strNamePlural="Chitin Plating"
+strBriefSummary="Light plating made from the Chryssalid exoskeleton, this material provides additional protection and a significant reduction to melee damage sustained. It's also sturdy enough to provide a strangulation countermeasure."
+strPerkHUDSummary="Confers extra protection that reduces incoming melee damage by 40%, grants +3 health, and immunity to strangulation."
+strTacticalText= "<Bullet/> Confers <XGAbility:ChitinPlatingHealthBonus/> extra health\n<Bullet/> Reduces damage from melee attacks\n<Bullet/> Plating also eliminates strangulation threat\n<Bullet/> Weight: 2"
+
+[Item_ChryssalidClaw LWCEWeaponTemplate]
+strName="Chryssalid Claw"
+strNamePlural="Chryssalid Claws"
+
+[Item_CognitiveEnhancer LWCEWeaponTemplate]
+strName="Cognitive Enhancer"
+strNamePlural="Cognitive Enhancers"
+strBriefSummary="This unique device enhances the wearer's ability to learn new skills. Unfortunately, we cannot replicate it."
+strPerkHUDSummary="Provides +5 will and +20% XP."
+strTacticalText= "<Bullet/> Increases XP for this soldier or MEC trooper by 20 percent when equipped.\n<Bullet/> Grants +5 will\n<Bullet/> We are unable to reverse-engineer this item for manufacturing.\n<Bullet/> Weight: 1"
+
+[Item_CombatStims LWCEWeaponTemplate]
+strName="Combat Stims"
+strNamePlural="Combat Stims"
+strBriefSummary="This powerful stimulant cocktail derived from a chemical found in the glands of a Muton Berserker provides a temporary boost to several of our soldier's vital statistics."
+strTacticalText= "<Bullet/> Grants Adrenaline Surge perk for duration of battle, granting +10 aim and critical chance, if soldier is wounded<Bullet/> When its single charge is applied to soldier, it strengthens the user's Will against panic\n<Bullet/> Reduces incoming damage by 40% and provides immunity to critical hits if not flanked or exposed during the next 2 enemy turns\n<Bullet/> Increases mobility for 2 turns\n<Bullet/> Weight: 1"
+
+[Item_CoreArmoring LWCEWeaponTemplate]
+strName="Core Armoring"
+strNamePlural="Core Armoring"
+strBriefSummary="Confers extra hit points and immunity to critical hits when installed on one of our mechanized units."
+strPerkHUDSummary="Provides +2 hit points."
+strTacticalText= "<Bullet/> Confers Resilience perk, making mechanized unit immune to critical hits.\n<Bullet/> Confers +2 hit points\n<Bullet/> Weight: 1"
+
+[Item_CorpseBerserker LWCEItemTemplate]
+strName="Berserker Corpse"
+strNamePlural="Berserker Corpses"
+strBriefSummary="The Berserker corpse continues to radiate an astonishing amount of heat despite hours in storage."
+
+[Item_CorpseChryssalid LWCEItemTemplate]
+strName="Chryssalid Carcass"
+strNamePlural="Chryssalid Carcasses"
+strBriefSummary="The Chryssalid carcass has a disturbing propensity to twitch despite having been dead for hours."
+
+[Item_CorpseEthereal LWCEItemTemplate]
+strName="Ethereal Corpse"
+strNamePlural="Ethereal Corpses"
+strBriefSummary="A frail, surprisingly delicate creature...its strength must lie beyond its physical form."
+
+[Item_CorpseFloater LWCEItemTemplate]
+strName="Floater Corpse"
+strNamePlural="Floater Corpses"
+strBriefSummary="Floater cadavers appear to be equal parts machine and organic matter, forming a tangled mess of genetic manipulation."
+
+[Item_CorpseHeavyFloater LWCEItemTemplate]
+strName="Heavy Floater Corpse"
+strNamePlural="Heavy Floater Corpses"
+strBriefSummary="An enormous, floating mass of twisted engineering, this Floater variant has even less organic tissue than the previous Floater specimen."
+
+[Item_CorpseMuton LWCEItemTemplate]
+strName="Muton Corpse"
+strNamePlural="Muton Corpses"
+strBriefSummary="The Muton corpses remain surprisingly warm to the touch even hours after their expiration."
+
+[Item_CorpseMutonElite LWCEItemTemplate]
+strName="Muton Elite Corpse"
+strNamePlural="Muton Elite Corpses"
+strBriefSummary="Despite their ornate armor, underneath, these Mutons are unremarkable in their distinction from one another...almost...featureless."
+
+[Item_CorpseSectoid LWCEItemTemplate]
+strName="Sectoid Corpse"
+strNamePlural="Sectoid Corpses"
+strBriefSummary="Sectoid cadavers exhibit very little decomposition, though after a while they begin to give off an unpleasant chemical odor."
+
+[Item_CorpseSectoidCommander LWCEItemTemplate]
+strName="Sectoid Commander Corpse"
+strNamePlural="Sectoid Commander Corpses"
+strBriefSummary="Much like the standard Sectoid variant, the Sectoid Commander corpse has a distinctive chemical smell that only gets worse over time."
+
+[Item_CorpseThinMan LWCEItemTemplate]
+strName="Thin Man Corpse"
+strNamePlural="Thin Man Corpses"
+strBriefSummary="The Thin Man cadaver begins to severely decompose within hours after death, giving off an overwhelming stench which may relate to toxins stored within its body."
+
+[Item_CyberdiscCannon LWCEWeaponTemplate]
+strName="Alien Cannon"
+strNamePlural="Alien Cannons"
+
+[Item_CyberdiscWreck LWCEItemTemplate]
+strName="Cyberdisc Wreck"
+strNamePlural="Cyberdisc Wrecks"
+strBriefSummary="Seemingly robotic in nature, we've still detected trace amounts of organic material within this puzzling specimen."
+
+[Item_DamageControlPod LWCEWeaponTemplate]
+strName="Damage Control Pod"
+strNamePlural="Damage Control Pods"
+strBriefSummary="Confers a temporary reduction in damage taken after the SHIV is hit by enemy fire."
+strTacticalText= "<Bullet/> Damage Control perk, reducing incoming damage for several turns after SHIV is damaged\n<Bullet/> Weight: 1"
+
+[Item_DefenseMatrix LWCEItemTemplate]
+strName="Defense Matrix (Dodge)"
+strNamePlural="Defense Matrices"
+strBriefSummary="Activate this module during interception to provide an immediate, temporary boost to our unit's evasive ability. The matrix will burn out after two uses. It will be unavailable if our fighter is in an aggressive posture."
+
+[Item_DroneBeam LWCEWeaponTemplate]
+strName="Drone Beam"
+strNamePlural="Drone Beams"
+
+[Item_DroneWreck LWCEItemTemplate]
+strName="Drone Wreck"
+strNamePlural="Drone Wrecks"
+strBriefSummary="A mysterious object, made up of an inelegant mess of wires and circuitry."
+
+[Item_DrumMags LWCEWeaponTemplate]
+strName="Drum Mags"
+strNamePlural="Drum Mags"
+strBriefSummary="Ammo Drums allow a significant increase in ammo capacity for our rifles."
+strPerkHUDSummary="Confers +2 ammo for primary weapon."
+strTacticalText= "<Bullet/> Confers +2 ammo to assault rifle, carbine and battle rifle series of weapons\n<Bullet/> Confers -4 penalty to soldier aim\n<Bullet/> Equippable by Infantry, Scouts, Assaults, Engineers and Medics\n<Bullet/> Weight: 2"
+
+[Item_ElectroPulse LWCEWeaponTemplate]
+strName="Electro Pulse"
+strNamePlural="Electro Pulses"
+strBriefSummary="MECs can stun organic enemies and briefly disable robotic ones with this area-of-effect electric shock device."
+strPerkHUDSummary="MECs can damage all nearby units and briefly disable robotic ones with this area-of-effect electric shock device. 3-turn cooldown."
+strTacticalText= "<Bullet/> MECs can injure all enemies and temporarily disable robotic ones with this area-of-effect electric shock device.\n<Bullet/> 3-turn cooldown\n<Bullet/> Weight: 1"
+
+[Item_Elerium LWCEItemTemplate]
+strName="Elerium"
+strNamePlural="Elerium"
+strBriefSummary="This element is unlike anything ever discovered throughout decades of research and space exploration. As of yet, we have no means of artificially recreating this material, so we should manage our limited supply accordingly. "
+
+[Item_EleriumTurbos LWCEWeaponTemplate]
+strName="Elerium Turbos"
+strNamePlural="Elerium Turbos"
+strBriefSummary="Elerium Turbos allow SHIVs to move faster on the battlefield."
+strPerkHUDSummary="Provides +2 mobility."
+strTacticalText= "<Bullet/> Confers +2 Mobility (and no weight penalty)\n<Bullet/> Can be equipped by SHIVs"
+
+[Item_EMPCannon LWCEShipWeaponTemplate]
+strName="EMP Cannon"
+strNamePlural="EMP Cannons"
+strBriefSummary="The EMP cannon was developed in an effort to increase the chance of recovering functional alien technology from downed UFOs. Although the alien systems will be disabled, the EMP does not inflict physical damage to these components."
+
+[Item_EnhancedBeamOptics LWCEWeaponTemplate]
+strName="Enhanced Beam Optics"
+strNamePlural="Enhanced Beam Optics"
+strBriefSummary="Confers increased damage for our beam and pulse laser weaponry."
+strPerkHUDSummary="+1 base damage to beam and pulse laser primary weapons."
+strTacticalText= "<Bullet/> Confers +1 damage for all beam and pulse laser primary weapons\n<Bullet/> Equippable by regular and mechanized units\n<Bullet/> Weight: 1"
+
+[Item_EtherealDevice LWCEItemTemplate]
+strName="Ethereal Device"
+strNamePlural="Ethereal Devices"
+strBriefSummary="Some members of the staff seem leery of working in close proximity to this \"Ethereal Device,\" going so far as to claim illness and fatigue in its presence."
+
+[Item_EXALTIntelligence LWCEItemTemplate]
+strName="EXALT Intelligence"
+strNamePlural="EXALT Intelligence"
+strBriefSummary="This intelligence will help us narrow down the location of EXALT's base."
+
+[Item_Firestorm LWCEShipTemplate]
+strName="Firestorm"
+strNamePlural="Firestorms"
+strBriefSummary="The Firestorm is our highly advanced combat aircraft incorporating numerous advances gained from studying the technology found in the alien ships. Power and navigational systems in particular were adapted directly from the alien designs. Once it is built, our most experienced combat aviator will take over as the pilot of the new craft."
+strTacticalText= "The Firestorm is our highly advanced combat aircraft incorporating numerous advances gained from studying the technology found in the alien ships. Power and navigational systems in particular were adapted directly from the alien designs. Once it is built, our most experienced combat aviator will take over as the pilot of the new craft. Each kill by that pilot increases future to-hit chances and damage by this aircraft."
+
+[Item_FlakAmmo LWCEWeaponTemplate]
+strName="Flak Ammo"
+strNamePlural="Flak Ammo"
+strBriefSummary="Confers bonus damage against airborne enemies and allows MECs to use Collateral Damage ability against them."
+strPerkHUDSummary="Primary weapons and rockets gain the greater of +2 or a bonus 20% base damage against flying units that are aloft."
+strTacticalText= "<Bullet/> Confers greater of +2 or 20% bonus base weapon damage against flying units that are aloft when using primary gun or rockets\n<Bullet/> Can be equipped by all units, but cannot stack with some other special ammo types\n<Bullet/> On MECs, also allows Collateral Damage ability to target airborne enemies and does bonus damage with all collateral damage attacks\n<Bullet/> Damage bonus is conferred after any damage reduction is applied\n<Bullet/> Weight: 1"
+
+[Item_Flamethrower LWCEWeaponTemplate]
+strName="Flamethrower"
+strNamePlural="Flamethrowers"
+strBriefSummary="Allows the MEC to lay waste to a cone-shaped area. Flame can spill outside the aiming area."
+strPerkHUDSummary="Allows the MEC to lay waste to a cone-shaped area. Flame can spill outside the aiming area."
+strTacticalText= "<Bullet/> Allows the MEC to lay waste to a cone-shaped area. Flame can spill outside the aiming area.\n<Bullet/> Weight: 1"
+
+[Item_FlashbangGrenade LWCEWeaponTemplate]
+strName="Flashbang Grenade"
+strNamePlural="Flashbang Grenades"
+strBriefSummary="This grenade-style weapon emits a disorienting flash of light with accompanying sounds. Any enemies that can see the blast will be disoriented, suffering severe penalties to Aim and movement. Robotic and psionic enemies are immune."
+strTacticalText= "<Bullet/> Enemy units inside the blast radius suffer significant Aim and movement penalties during their next turn.\n<Bullet/> Robotic and advanced psionic enemies are immune.\n<Bullet/> Support Grenade<Bullet/> Weight: 1"
+
+[Item_FuelCell LWCEWeaponTemplate]
+strName="Fuel Cell"
+strNamePlural="Fuel Cells"
+strBriefSummary="Equipping this allows our flight armors to stay aloft longer."
+strPerkHUDSummary="Provides additional flight fuel."
+strTacticalText= "<Bullet/> Confers additional flight fuel for Archangel and Seraph armors and Hover SHIVs\n<Bullet/> Weight: 2"
+
+[Item_FusionCore LWCEItemTemplate]
+strName="Fusion Core"
+strNamePlural="Fusion Cores"
+strBriefSummary="This equipment is part of the fusion core recovered from the largest class of the alien UFOs. We may be able to harness its capabilities for use in an advanced weapon prototype."
+
+[Item_FusionLance LWCEShipWeaponTemplate]
+strName="Fusion Lance"
+strNamePlural="Fusion Lances"
+strBriefSummary="The Fusion Lance is the most powerful anti-aircraft weapon available to XCOM. It should be capable of taking down any UFO."
+
+[Item_GatlingLaser LWCEWeaponTemplate]
+strName="Gatling Laser"
+strNamePlural="Gatling Lasers"
+strBriefSummary="An extended-range Gunner weapon that is heavier than the Autolaser, this weapon does greater damage but is difficult to relocate in a combat situation."
+strTacticalText= "<Bullet/> The largest man-portable beam laser we can construct, this functions in an LMG role\n<Bullet/> Confers increased damage relative to our laser SAWs at a -2 mobility penalty\n<Bullet/> Operator cannot take costly actions and fire in the same turn\n<Bullet/> Grants Squadsight and may fire five tiles beyond normal visual range\n<Bullet/> Beam Laser; confers +6 aim\n<Bullet/> Gunners only\n<Bullet/> Base ammo: 8"
+
+[Item_GatlingPulser LWCEWeaponTemplate]
+strName="Gatling Pulser"
+strNamePlural="Gatling Pulsers"
+strBriefSummary="An extended-range Gunner weapon that is heavier than the Pulse Autolaser, this weapon does greater damage but is difficult to relocate in a combat situation."
+strTacticalText= "<Bullet/> The largest man-portable pulse laser we can construct, this functions in an LMG role\n<Bullet/> Confers increased damage relative to our pulse SAWs at a -2 mobility penalty \n<Bullet/> Operator cannot take costly actions and fire in the same turn\n<Bullet/> Grants Squadsight and may fire five tiles beyond normal visual range\n<Bullet/> Pulse weapons have increased critical chances\n<Bullet/> Gunners only\n<Bullet/> Base ammo: 8"
+
+[Item_GaussAutopistol LWCEWeaponTemplate]
+strName="Gauss Autopistol"
+strNamePlural="Gauss Autopistols"
+strBriefSummary="This gauss technology-based personal defense weapon may be carried in place of a pistol, providing additional combat power at the cost of some mobility."
+strTacticalText= "<Bullet/> Heavy-duty sidearm that confers -1 mobility in exchange more for more power than a pistol of comparable technological capability\n<Bullet/> Gauss tech weapons have a 1 in 3 chance of nullifying a point of enemy damage reduction\n<Bullet/> -8 accuracy penalty when drawn, accuracy degrades at long range\n<Bullet/> Base ammo: 3"
+
+[Item_GaussAutorifle LWCEWeaponTemplate]
+strName="Gauss Autorifle"
+strNamePlural="Gauss Autorifles"
+strBriefSummary="This fully automatic heavy Gauss Rifle should fulfill the Squad Automatic Weapon role in our fireteams."
+strTacticalText= "<Bullet/> Rapid-fire version of Gauss Rifle that functions in Squad Automatic Weapon role\n<Bullet/> -1 mobility\n<Bullet/> Equippable by Gunners only\n<Bullet/> Gauss tech weapons have a 1 in 3 chance of nullifying a point of enemy damage reduction\n<Bullet/> Base ammo: 7"
+
+[Item_GaussCarbine LWCEWeaponTemplate]
+strName="Gauss Carbine"
+strNamePlural="Gauss Carbines"
+strBriefSummary="A lightweight version of the gauss rifle."
+strTacticalText= "<Bullet/> Lightweight primary weapon\n<Bullet/> Less damage and crit chance than its gauss rifle counterpart, but imparts +6 accuracy and +1 mobility\n<Bullet/> Gauss tech weapons have a 1 in 3 chance of nullifying a point of enemy damage reduction\n<Bullet/> Can be steadied for greater accuracy\n<Bullet/> Base ammo: 4"
+
+[Item_GaussLongRifle LWCEWeaponTemplate]
+strName="Gauss Long Rifle"
+strNamePlural="Gauss Long Rifles"
+strBriefSummary="This large-caliber anti-materiel rifle is capable of inflicting massive damage to enemy aliens and machines, but it is slow to reload."
+strTacticalText= "<Bullet/> Anti-materiel rifle based on Gauss technologies\n<Bullet/> Large-caliber slugs offer anti-materiel capabilites (grants HEAT Ammo perk and halves enemy hardened bonus against critical hits), but require manual loading after every shot without upgrades\n<Bullet/> Gauss tech weapons have a 1 in 3 chance of nullifying a point of enemy damage reduction\n<Bullet/> Unlike other weapons, Sniper Rifles are less accurate the closer the shooter gets to the target\n<Bullet/> Snipers cannot take costly actions (such as moving) and fire in the same turn without advanced training\n<Bullet/> Equippable by Snipers only\n<Bullet/> Can be steadied for greater accuracy\n<Bullet/> -2 mobility\n<Bullet/> Base ammo: 1"
+
+[Item_GaussMachineGun LWCEWeaponTemplate]
+strName="Gauss Machine Gun"
+strNamePlural="Gauss Machine Guns"
+strBriefSummary="An extended-range Gunner weapon that is heavier than the Autorifle, this weapon does greater damage but is difficult to relocate in a combat situation."
+strTacticalText= "<Bullet/> The largest man-portable gauss gun we can construct, this functions in an LMG role\n<Bullet/> Confers increased damage relative to our gauss SAWs at a -2 mobility penalty relative to our SAWs\n<Bullet/> Gauss tech weapons have a 1 in 3 chance of nullifying a point of enemy damage reduction\n<Bullet/> Operator cannot take costly actions and fire in the same turn\n<Bullet/> Grants Squadsight and may fire five tiles beyond normal visual range\n<Bullet/> Gunners only\n<Bullet/> Base ammo: 9"
+
+[Item_GaussRifle LWCEWeaponTemplate]
+strName="Gauss Rifle"
+strNamePlural="Gauss Rifles"
+strBriefSummary="The Gauss Rifle may be the deadliest personal weapon developed to date. It uses a multistage coilgun to propel rounds at massive velocities."
+strTacticalText= "<Bullet/> Significantly greater muzzle velocity and penetration than basic assault rifle\n<Bullet/> Gauss tech weapons have a 1 in 3 chance of nullifying a point of enemy damage reduction\n<Bullet/> Can be steadied for greater accuracy\n<Bullet/> Base ammo: 4"
+
+[Item_GaussStuttergun LWCEWeaponTemplate]
+strName="Gauss Stuttergun"
+strNamePlural="Gauss Stutterguns"
+strBriefSummary="A gauss version of the submachine gun."
+strTacticalText= "<Bullet/> Lightweight primary weapon\n<Bullet/> Confers +3 mobility, at a cost of damage and critical hit chances relative to rifles\n<Bullet/> Can be steadied for greater accuracy\n<Bullet/> Gauss tech weapons have a 1 in 3 chance of nullifying a point of enemy damage reduction\n<Bullet/> Base ammo: 3"
+
+[Item_Grapple LWCEWeaponTemplate]
+strName="Grapple"
+strNamePlural="Grapples"
+
+[Item_GrenadeLauncher LWCEWeaponTemplate]
+strName="Grenade Launcher"
+strNamePlural="Grenade Launchers"
+strBriefSummary="MECs can make up for their lack of thrown grenade capability with a long-range grenade launcher."
+strPerkHUDSummary="MECs can make up for their lack of thrown grenade capability with a long-range grenade launcher."
+strTacticalText= "<Bullet/> MECs can make up for their lack of thrown grenade capability with a long-range grenade launcher.\n<Bullet/> Weight: 1"
+
+[Item_HEATAmmo LWCEWeaponTemplate]
+strName="HEAT Ammo"
+strNamePlural="HEAT Ammo"
+strBriefSummary="Equipping our SHIV with High Explosive Anti-Tank (HEAT) ammo will allow it to do significant damage to enemy robotic units."
+strTacticalText= "<Bullet/> Confers HEAT Ammo perk, allowing SHIV to do additional damage to robotic enemies\n<Bullet/> Weight: 1"
+
+[Item_Heater LWCEWeaponTemplate]
+strName="Heater"
+strNamePlural="Heaters"
+strBriefSummary="This beam laser personal defense weapon may be carried in place of a pistol, providing additional combat power at the cost of some mobility."
+strTacticalText= "<Bullet/> Beam laser-derived heavy-duty sidearm that confers -1 mobility in exchange for more power than a pistol of comparable technological capability\n<Bullet/> -2 accuracy penalty when drawn; accuracy degrades at long range\n<Bullet/> Base ammo: 2"
+
+[Item_HeavyGaussRifle LWCEWeaponTemplate]
+strName="Heavy Gauss Rifle"
+strNamePlural="Heavy Gauss Rifles"
+strBriefSummary="A more powerful gauss rifle that suffers an aim penalty if a soldier is moving."
+strTacticalText= "<Bullet/> A heavy gauss rifle variant\n<Bullet/> Confers +1 damage over gauss rifle, but moving or taking any costly (blue) actions will reduce aim by 10 until the beginning of the next turn\n<Bullet/> Gauss tech weapons have a 1 in 3 chance of nullifying a point of enemy damage reduction\n<Bullet/> -1 mobility\n<Bullet/> Equippable by Infantry, Scout, Assault, Medic, Engineer\n<Bullet/> Can be steadied for greater accuracy\n<Bullet/> Base ammo: 4"
+
+[Item_HeavyLaserRifle LWCEWeaponTemplate]
+strName="Heavy Laser Rifle"
+strNamePlural="Heavy Laser Rifles"
+strBriefSummary="A more powerful laser rifle that is most accurate when a soldier has time to take aim."
+strTacticalText= "<Bullet/> A heavy laser rifle variant\n<Bullet/> Confers +1 damage over laser rifle, but moving or taking any costly (blue) actions will reduce aim by 10 until the beginning of the next turn\n<Bullet/> Confers +6 accuracy in all cases\n<Bullet/> Can be steadied for greater accuracy\n<Bullet/> -1 mobility\n<Bullet/> Equippable by Infantry, Scout, Assault, Medic, Engineer\n<Bullet/> Base ammo: 3"
+
+[Item_HeavyPlasmaRifle LWCEWeaponTemplate]
+strName="Heavy Plasma Rifle"
+strNamePlural="Heavy Plasma Rifles"
+strBriefSummary="A more powerful plasma rifle that requires a skilled soldier to operate effectively."
+strTacticalText= "<Bullet/> A heavy plasma rifle variant\n<Bullet/> Confers +1 damage over plasma rifle, but moving or taking any costly (blue) actions will reduce aim by 10 until the beginning of the next turn\n<Bullet/> Can be steadied for greater accuracy\n<Bullet/> +1 damage when steadied\n<Bullet/> -1 mobility\n<Bullet/> Equippable by Infantry, Scout, Assault, Medic, Engineer\n<Bullet/> Base ammo: 3"
+
+[Item_HeavyPulseRifle LWCEWeaponTemplate]
+strName="Heavy Pulse Rifle"
+strNamePlural="Heavy Pulse Rifles"
+strBriefSummary="A more powerful pulse rifle that works best when the soldier has good positioning."
+strTacticalText= "<Bullet/> A heavy pulse rifle variant\n<Bullet/> Confers +1 damage over pulse rifle, but moving or taking any costly (blue) actions will reduce aim by 10 until the beginning of the next turn\n<Bullet/> Confers +8 critical chance\n<Bullet/> Can be steadied for greater accuracy\n<Bullet/> -1 mobility\n<Bullet/> Equippable by Infantry, Scout, Assault, Medic, Engineer\n<Bullet/> Increased critical chance\n<Bullet/> Base ammo: 3"
+
+[Item_HEGrenade LWCEWeaponTemplate]
+strName="HE Grenade"
+strNamePlural="HE Grenades"
+strTacticalText= "<Bullet/> The High Explosive Grenade damages enemies and their cover in blast radius\n<Bullet/> Destroys alien artifacts, preventing their recovery and exploitation\n<Bullet/> Friendly targets in the blast area are affected\n<Bullet/> Damage is reduced based on distance from point of detonation\n<Bullet/> Weight: 1"
+
+[Item_HiCapMags LWCEWeaponTemplate]
+strName="Hi Cap Mags"
+strNamePlural="Hi Cap Mags"
+strBriefSummary="High-capacity magazines allow the soldier to fire an additional round or burst over standard magazines before a reload is required."
+strPerkHUDSummary="Provides one additional shot with primary weapon before a reload is required."
+strTacticalText= "<Bullet/> Provides unit with one additional burst or shot with their primary weapon before a reload is required\n<Bullet/> Ammo bonus stacks with bonus provided by soldier's Lock N' Load perk\n<Bullet/> Weight: 1"
+
+[Item_HoloTargeter LWCEWeaponTemplate]
+strName="Holo-Targeter"
+strNamePlural="Holo-Targeters"
+strBriefSummary="The Holo-Targeter will allow mechanized units transmit target data to the rest of the squad, providing a temporary boost for all attacks against the targeted unit."
+strPerkHUDSummary="Provides +4 aim."
+strTacticalText= "<Bullet/> Confers Holo-Targeting perk\n<Bullet/> Confers +4 aim\n<Bullet/> Usable both by SHIVs and MECs\n<Bullet/> Weight: 1"
+
+[Item_HyperwaveBeacon LWCEItemTemplate]
+strName="Hyperwave Beacon"
+strNamePlural="Hyperwave Beacons"
+strBriefSummary="This beacon was carefully guarded within the alien base, implying its importance to their invasion. We must work to uncover its purpose..."
+
+[Item_IlluminatorGunsight LWCEWeaponTemplate]
+strName="Illuminator Gunsight"
+strNamePlural="Illuminator Gunsights"
+strBriefSummary="This finely crafted targeting aid taken from the body of EXALT's commander detects elerium and meld exposed to our atmosphere, giving our soldiers greater accuracy against injured enemy targets. Unfortunately, we cannot replicate it."
+strPerkHUDSummary="Provides +12 aim and +12 critical chance."
+strTacticalText= "<Bullet/> Confers +12 Aim and +12 Critical chance to primary weapon\n<Bullet/> Confers Executioner perk, granting additional +10 aim and +10 critical chance against enemies at 50% health or less\n<Bullet/> We are unable to reverse-engineer this item for manufacturing.\n<Bullet/> Weight: 1"
+
+[Item_ImpactVest LWCEWeaponTemplate]
+strName="Impact Vest"
+strNamePlural="Impact Vest"
+strBriefSummary="This vest hardens against heavy impacts, reducing damage suffered by the assault at close range."
+strPerkHUDSummary="Provides +1 hit point."
+strTacticalText= "<Bullet/> Confers Shock-Absorbent Armor perk, providing 33% Damage Reduction against attacks made from within four tiles\n<Bullet/> Confers +1 Hit Point\n<Bullet/> Assault only\n<Bullet/> Weight: 1"
+
+[Item_IncineratorModule LWCEWeaponTemplate]
+strName="Incinerator Module"
+strNamePlural="Incinerator Module"
+strBriefSummary="The Incinerator Module uses alien materials to hold elerium in an excited state, increasing flame temperator and conferring bonus damage for MEC flamethrowers."
+strPerkHUDSummary="+3 Damage for Flamethrower."
+strTacticalText= "<Bullet/> Confers +3 damage for flamethrowers\n<Bullet/> Can be equipped by MECs\n<Bullet/> Weight: 1"
+
+[Item_Interceptor LWCEShipTemplate]
+strName="Interceptor"
+strNamePlural="Interceptors"
+
+[Item_KestrelArmor LWCEArmorTemplate]
+strName="Kestrel Armor"
+strNamePlural="Kestrel Armors"
+strBriefSummary="The Kestrel suit combines lightweight body armor with an integrated grappling hook for scaling objects in the field."
+strTacticalText= "<Bullet/> Very light armor\n<Bullet/> +3 mobility, +4 Defense, +2 HP\n<Bullet/> Equipped with Grapple"
+
+[Item_KineticStrikeModule LWCEWeaponTemplate]
+strName="Kinetic Strike Module"
+strNamePlural="Kinetic Strike Modules"
+strBriefSummary="A powerful arm upgrade for the MEC, allowing the wielder to pulverize adjacent cover and enemies."
+strPerkHUDSummary="A powerful arm upgrade for the MEC, allowing the wielder to pulverize adjacent cover and enemies. Also boosts mobility."
+strTacticalText= "<Bullet/> A powerful arm upgrade for the MEC, allowing the wielder to pulverize adjacent cover and enemies.\n<Bullet/> Equipping multiple KSMs confers +3 base damage for each strike\n<Bullet/> Weight: 1"
+
+[Item_LaserCannon LWCEShipWeaponTemplate]
+strName="Laser Cannon"
+strNamePlural="Laser Cannons"
+strBriefSummary="These super-cooled laser cannons should increase our ability to shoot down alien craft."
+
+[Item_LaserCarbine LWCEWeaponTemplate]
+strName="Laser Carbine"
+strNamePlural="Laser Carbine"
+strBriefSummary="A lightweight version of the laser rifle."
+strTacticalText= "<Bullet/> Lightweight primary weapon\n<Bullet/> Less damage and crit chance relative to its laser rifle counterpart, but imparts +12 accuracy and +1 mobility\n<Bullet/> Can be steadied for greater accuracy\n<Bullet/> Base ammo: 3"
+
+[Item_LaserLance LWCEWeaponTemplate]
+strName="Laser Lance"
+strNamePlural="Laser Lances"
+strBriefSummary="A heavy laser modified for mounting on a MEC."
+strTacticalText= "<Bullet/> Accurate MEC laser weapon, confers +6 aim\n<Bullet/> Base ammo: 3"
+
+[Item_LaserPistol LWCEWeaponTemplate]
+strName="Laser Pistol"
+strNamePlural="Laser Pistols"
+strBriefSummary="The laser pistol relies on our latest advancements to provide a more powerful sidearm."
+strTacticalText= "<Bullet/> Small handheld laser that serves as improvement over the conventional pistol\n<Bullet/> Beam laser; confers +6 accuracy bonus, but accuracy degrades at long range\n<Bullet/> Base ammo: 2"
+
+[Item_LaserRifle LWCEWeaponTemplate]
+strName="Laser Rifle"
+strNamePlural="Laser Rifles"
+strBriefSummary="The continuous Laser Rifle relies on advances in optics technology derived from alien materials to offer an incredibly accurate weapon."
+strTacticalText= "<Bullet/> The continuous beam Laser Rifle burns deep cavities in targets\n<Bullet/> Can be steadied for greater accuracy\n<Bullet/> Beam laser; confers +6 accuracy\n<Bullet/> Base ammo: 3"
+
+[Item_LaserShatterray LWCEWeaponTemplate]
+strName="Laser Shatterray"
+strNamePlural="Laser Shatterrays"
+strBriefSummary="A very lightweight laser weapon that trades combat power for soldier mobility."
+strTacticalText= "<Bullet/> Lightweight primary weapon\n<Bullet/> Confers +3 mobility, at a cost of damage and critical hit chances relative to rifles\n<Bullet/> Can be steadied for greater accuracy\n<Bullet/> Beam laser, confers +6 aim\n<Bullet/> Base ammo: 2"
+
+[Item_LaserSight LWCEWeaponTemplate]
+strName="Laser Sight"
+strNamePlural="Laser Sights"
+strBriefSummary="The Laser Sight provides a marginal improvement in the accuracy of the soldier's main weapon."
+strPerkHUDSummary="Provides +4 aim. With upgrade, also provides +4 critical chance."
+strTacticalText= "<Bullet/> Provides soldier with +4 aim for primary weapon and rocket launchers\n<Bullet/> Weight: 1"
+
+[Item_LaserSniperRifle LWCEWeaponTemplate]
+strName="Laser Sniper Rifle"
+strNamePlural="Laser Sniper Rifles"
+strBriefSummary="The Laser Sniper Rifle provides a greater chance of inflicting critical damage to enemy targets. However, due to the unwieldy nature of this rifle, our soldiers will suffer a penalty when attempting to strike targets at close range."
+strTacticalText= "<Bullet/> A long rifle version of the Laser Rifle that causes increased damage and has a high chance of critical hits\n<Bullet/> Unlike other weapons, Sniper Rifles are less accurate the closer the shooter gets to the target\n<Bullet/> Snipers cannot take costly actions (like moving) and fire in the same turn without advanced training\n<Bullet/> Equippable by Snipers only\n<Bullet/> Can be steadied for greater accuracy\n<Bullet/> -1 mobility\n<Bullet/> Beam laser; confers +6 accuracy\n<Bullet/> Base ammo: 3"
+
+[Item_LaserStrikeRifle LWCEWeaponTemplate]
+strName="Laser Strike Rifle"
+strNamePlural="Laser Strike Rifles"
+strBriefSummary="A medium-range laser rifle usable by our scouts and snipers."
+strTacticalText= "<Bullet/> Medium-range beam laser rifle that functions in Marksman's Rifle role\n<Bullet/> Beam laser, confers +6 aim\n<Bullet/> Bonus critical chance\n<Bullet/> Severe aim penalty when used at short range\n<Bullet/> Can be steadied for greater accuracy\n<Bullet/> Usable by snipers and scouts\n<Bullet/> Soldiers with Squadsight can target enemies and conduct reaction fire at up to five tiles beyond visual range\n<Bullet/> Base ammo: 3"
+
+[Item_LeatherJacket LWCEArmorTemplate]
+strName="Leather Jacket"
+strNamePlural="Leather Jackets"
+strBriefSummary="Covert operatives must blend into a crowd, and this lightly armored suit serves that purpose well."
+strTacticalText= "<Bullet/> Very light armor, but allows a unit to blend into everyday society\n<Bullet/> +1 HP, +3 mobility\n<Bullet/> Sharp-looking, +1 charisma"
+
+[Item_LMG LWCEWeaponTemplate]
+strName="LMG"
+strNamePlural="LMGs"
+strBriefSummary="LMG"
+strTacticalText= "<Bullet/> The largest man-portable gun in our inventory\n<Bullet/> Confers increased damage relative to our SAWs at a -2 mobility penalty\n<Bullet/> Operator cannot take costly actions and fire in the same turn\n<Bullet/> Grants Squadsight and may fire five tiles beyond normal visual range\n<Bullet/> Gunners only\n<Bullet/> Base ammo: 8"
+
+[Item_MachinePistol LWCEWeaponTemplate]
+strName="Machine Pistol"
+strNamePlural="Machine Pistols"
+strBriefSummary="Machine Pistol"
+strTacticalText= "<Bullet/> Sidearm that is more powerful than a pistol but confers -1 mobility\n<Bullet/> -8 accuracy penalty when drawn, accuracy degrades at long range\n<Bullet/> Base ammo: 2"
+
+[Item_MarksmansRifle LWCEWeaponTemplate]
+strName="Marksman's Rifle"
+strNamePlural="Marksman's Rifles"
+strBriefSummary="Marksman's Rifle"
+strTacticalText= "<Bullet/> Bolt-action, medium-range rifle\n<Bullet/> Bonus critical chance\n<Bullet/> Severe aim penalty when used at short range\n<Bullet/> Usable by snipers and scouts\n<Bullet/> Can be steadied for greater accuracy\n<Bullet/> Soldiers with Squadsight can target enemies and conduct reaction fire at up to five tiles beyond visual range\n<Bullet/> Base ammo: 5"
+
+[Item_MarksmansScope LWCEWeaponTemplate]
+strName="Marksman's Scope"
+strNamePlural="Marksman's Scopes"
+strBriefSummary="This specialized scope will give our Scouts the ability to hit targets beyond visual range with Marksman's and Strike Rifles."
+strTacticalText= "<Bullet/> Confers Squadsight Perk, granting extended range to Marksman's and Strike Rifles\n<Bullet/> Scouts only\n<Bullet/> Weight: 1"
+
+[Item_MEC1Paladin LWCEArmorTemplate]
+strName="MEC-1 Paladin"
+strNamePlural="MEC-1s"
+strBriefSummary="Our first Mechanized Exoskeletal Cybersuit, or MEC, has access to heavier primary weapons than unaugmented soldiers can use."
+strTacticalText= "<Bullet/> Secondary Weapon Slots: 1\n<Bullet/> Small Item Slots: 2\n<Bullet/> Hit Points: 8\n<Bullet/> Defense: 8\n<Bullet/> Damage Reduction: 1\n<Bullet/> Will Bonus: 0\n<Bullet> Grants Body Shield perk\n<Bullet> MECs cannot use cover and their size means reaction fire against them is more accurate\n<Bullet/> All MECs receive One For All perk, providing bonus Damage Reduction and cover for allies when activated, and Combined Arms, nullifying one point of enemy Damage Reduction"
+
+[Item_MEC2Defender LWCEArmorTemplate]
+strName="MEC-2 Defender"
+strNamePlural="MEC-2s"
+strBriefSummary="The MEC-2 Defender is an improved MEC-1 with an emphasis on survivability. It is equipped with a Body Shield generator."
+strTacticalText= "<Bullet/> Secondary Weapon Slots: 2\n<Bullet/> Small Item Slots: 2\n<Bullet/> Hit Points: 12\n<Bullet/> Defense: 8\n<Bullet/> Damage Reduction: 1.5\n<Bullet/> Will Bonus: 0\n<Bullet> Grants Body Shield perk\n<Bullet>MECs cannot use cover and their size means reaction fire against them is more accurate\n<Bullet/> All MECs receive One For All perk, providing bonus Damage Reduction and cover for allies when activated, and Combined Arms, nullifying one point of enemy Damage Reduction"
+
+[Item_MEC3Valiant LWCEArmorTemplate]
+strName="MEC-3 Valiant"
+strNamePlural="MEC-3s"
+strBriefSummary="The MEC-3 Valiant is an improved variant of the MEC-1 that is specialized toward mobility and tactical flexibility. It is equipped with Jet Boot Modules."
+strTacticalText= "<Bullet/> Secondary Weapon Slots: 2\n<Bullet/> Small Item Slots: 2\n<Bullet/> Hit Points: 10\n<Bullet/> Defense: 12\n<Bullet/> Damage Reduction: 1\n<Bullet/> Will Bonus: 0<Bullet/> Mobility Bonus: 2\n<Bullet> Grants Jet Boot Module perk\n<Bullet> MECs cannot use cover and their size means reaction fire against them is more accurate\n<Bullet/> All MECs receive One For All perk, providing bonus Damage Reduction and cover for allies when activated, and Combined Arms, nullifying one point of enemy Damage Reduction"
+
+[Item_MEC4Dauntless LWCEArmorTemplate]
+strName="MEC-4 Dauntless"
+strNamePlural="MEC-4s"
+strBriefSummary="The MEC-4 Dauntless is a heavy but balanced MEC design that somewhat favors survivability over mobility. It is equipped with a Body Shield generator."
+strTacticalText= "<Bullet/> Secondary Weapon Slots: 3\n<Bullet/> Small Item Slots: 3\n<Bullet/> Hit Points: 20\n<Bullet/> Defense: 12\n<Bullet/> Damage Reduction: 2\n<Bullet/> Will Bonus: 5<Bullet/> Mobility Penalty: -1\n<Bullet> Grants Body Shield perk\n\n<Bullet> MECs cannot use cover and their size means reaction fire against them is more accurate\n<Bullet/> All MECs receive One For All perk, providing bonus Damage Reduction and cover for allies when activated, and Combined Arms, nullifying one point of enemy Damage Reduction"
+
+[Item_MEC5Devastator LWCEArmorTemplate]
+strName="MEC-5 Devastator"
+strNamePlural="MEC-5s"
+strBriefSummary="The MEC-5 Devastator is the best-protected combat exoskeleton we can devise, but its mobility has suffered. It is equipped with a Body Shield generator."
+strTacticalText= "<Bullet/> Secondary Weapon Slots: 2\n<Bullet/> Small Item Slots: 3\n<Bullet/> Hit Points: 24\n<Bullet/> Defense: 8\n<Bullet/> Damage Reduction: 2.5\n<Bullet/> Will Bonus: 5<Bullet/> Mobility Penalty: -3\n<Bullet> Grants Body Shield perk\n\n<Bullet> MECs cannot use cover and their size means reaction fire against them is more accurate\n<Bullet/> All MECs receive One For All perk, providing bonus Damage Reduction and cover for allies when activated, and Combined Arms, nullifying one point of enemy Damage Reduction"
+
+[Item_MEC6Vanguard LWCEArmorTemplate]
+strName="MEC-6 Vanguard"
+strNamePlural="MEC-6s"
+strBriefSummary="The MEC-6 Vanguard prioritizes mobility to the extreme, but it cannot survive as many hits as our other designs. It is equipped with Jet Boot Modules."
+strTacticalText= "<Bullet/> Secondary Weapon Slots: 2\n<Bullet/> Small Item Slots: 3\n<Bullet/> Hit Points: 12\n<Bullet/> Defense: 20\n<Bullet/> Damage Reduction: 1\n<Bullet/> Will Bonus: 5<Bullet/> Mobility Bonus: 5\n<Bullet> Grants Jet Boot Module perk\n<Bullet> MECs cannot use cover and their size means reaction fire against them is more accurate\n<Bullet/> All MECs receive One For All perk, providing bonus Damage Reduction and cover for allies when activated, and Combined Arms, nullifying one point of enemy Damage Reduction"
+
+[Item_MEC7Vindicator LWCEArmorTemplate]
+strName="MEC-7 Vindicator"
+strNamePlural="MEC-7s"
+strBriefSummary="The MEC-7 Vindicator is a balanced design with a moderate emphasis on mobility over the ability to sustain damage. It is equipped with Jet Boot Modules."
+strTacticalText= "<Bullet/> Secondary Weapon Slots: 3\n<Bullet/> Small Item Slots: 3\n<Bullet/> Hit Points: 16\n<Bullet/> Defense: 16\n<Bullet/> Damage Reduction: 1.5\n<Bullet/> Will Bonus: 5<Bullet/> Mobility Bonus: 2\n<Bullet> Grants Jet Boot Module perk\n<Bullet> MECs cannot use cover and their size means reaction fire against them is more accurate\n<Bullet/> All MECs receive One For All perk, providing bonus Damage Reduction and cover for allies when activated, and Combined Arms, nullifying one point of enemy Damage Reduction"
+
+[Item_MechtoidCannon LWCEWeaponTemplate]
+strName="Alien Cannon"
+strNamePlural="Alien Cannons"
+
+[Item_MechtoidCore LWCEItemTemplate]
+strName="Mechtoid Core"
+strNamePlural="Mechtoid Cores"
+strBriefSummary="The Mechtoid's cybernetic core is a highly efficient and well-engineered control module for the battlesuit as a whole."
+
+[Item_Medikit LWCEWeaponTemplate]
+strName="Medikit"
+strNamePlural="Medikits"
+strBriefSummary="Our field-deployable Medikit can temporarily treat a soldier's wounds through the use of nanosutures and high-potency stimulants."
+strTacticalText= "<Bullet/> Restores 3 health to an ally, but can be upgraded for greater effectiveness\n<Bullet/> Can save a critically wounded ally from bleeding out\n<Bullet/> Holding a Medikit confers partial immunity to acid\n<Bullet/> Can be used to neutralize acid in an ally\n<Bullet/> Weight: 1"
+
+[Item_Meld LWCEItemTemplate]
+strName="Meld"
+strNamePlural="Meld"
+strBriefSummary="The nanites contained in this advanced alien material can be directed to fuse organic and physical structures in various ways, allowing powerful genetic and cybernetic modifications."
+
+[Item_MimicBeacon LWCEWeaponTemplate]
+strName="Mimic Beacon"
+strNamePlural="Mimic Beacons"
+strBriefSummary="This device has been programmed to mimic the auditory cues the invaders appear to use in the field. It can be used to attract their attention to an area."
+strTacticalText= "<Bullet/> Thrown like a grenade\n<Bullet/> Emits sounds and psionic cues that interfere with alien tactical comms\n<Bullet/> Causes aliens within radius to approach the beacon for 2 turns\n<Bullet/> Only psis can equip; higher will soldiers have greater chance to succeed; high-will aliens have a greater chance to resist\n<Bullet/> Draws some will when equipped\n<Bullet/> Support grenade\n<Bullet/> Weight: 1"
+
+[Item_MindShield LWCEWeaponTemplate]
+strName="Mind Shield"
+strNamePlural="Mind Shields"
+strBriefSummary="Developed using the cybernetic implants we removed from the skull of psionic alien species, this device should allow for a greater resistance to offensive psi attacks. It also projects a low-level psi field that will deter strangulation attempts."
+strPerkHUDSummary="A device that protects the wearer's mind, increasing their Will."
+strTacticalText= "<Bullet/> Strengthens the user's Will against enemy psionic attacks\n<Bullet/> Also projects a low-level psi field that deters Seeker strangulation\n<Bullet/> Confers Steadfast perk, preventing panic when wounded, when an ally is killed, wounded or panicking, and when an alien attempts the intimidation ability\n<Bullet/> Psi soldiers only\n<Bullet/> Weight: 1"
+
+[Item_Minigun LWCEWeaponTemplate]
+strName="Minigun"
+strNamePlural="Miniguns"
+strTacticalText= "<Bullet/> Only equippable by MEC Troopers\n<Bullet/> Risk of catastrophic overheating precludes suppression with this weapon\n<Bullet/> Base ammo: 2"
+
+[Item_MotionTracker LWCEWeaponTemplate]
+strName="Motion Tracker"
+strNamePlural="Motion Trackers"
+strBriefSummary="The motion tracker uses radar pulses and infrared sensors to detect nearby enemies, civilians and alien artifacts.
+strTacticalText= "<Bullet/> Scans 360 degree area around soldier to a range of 35 meters (roughly 5 tiles beyond visual range)\n<Bullet/> Allies are colored blue; aliens and meld-enhanced enemy humans red; human civilians white; bomb and active plasma bomb power nodes green; meld canisters yellow\n<Bullet/> Covert operatives will see hackable radar arrays as green markers\n<Bullet/> 3 Charges, 4 with Packmaster\n<Bullet/> One per soldier, usable by regular soldiers and SHIVs\n<Bullet/> Weight: 1"
+
+[Item_NeuralGunlink LWCEWeaponTemplate]
+strName="Neural Gunlink"
+strNamePlural="Neural Gunlinks"
+strBriefSummary="Weapon module that channels a significant portion of a psionic soldier's mental capability into precognition, allowing more accurate targeting of enemies."
+strPerkHUDSummary="Provides +12 aim and +12 critical chance."
+strTacticalText= "<Bullet/> Confers +12 Aim and +12 Critical Chance for soldier's primary weapon and any rockets\n<Bullet/> Draws 12 will\n<Bullet/> Usable by Psionic troopers only\n<Bullet/> Cannot be used with SCOPE\n<Bullet/> Weight: 1"
+
+[Item_Neuroregulator LWCEWeaponTemplate]
+strName="Neuroregulator"
+strNamePlural="Neuroregulators"
+strBriefSummary="We believe this device was given to EXALT by the aliens in an attempt to develop psionic powers in EXALT's commander, but they must not have been very successful. While we can employ it on our own troopers, we cannot replicate it."
+strPerkHUDSummary="Provides +10 will and +50% Psi XP."
+strTacticalText= "<Bullet/> Increases Psi XP for this soldier by 50 percent when equipped.\n<Bullet/> Grants +10 will\n<Bullet/> We are unable to reverse-engineer this item for manufacturing.\n<Bullet/> Weight: 1"
+
+[Item_OutsiderShard LWCEItemTemplate]
+strName="Outsider Shard"
+strNamePlural="Outsider Shards"
+strBriefSummary="This shard is all that remains of the disabled Outsider. It seems to hum with energy."
+
+[Item_ParticleCannon LWCEWeaponTemplate]
+strName="Particle Cannon"
+strNamePlural="Particle Cannons"
+strBriefSummary="Applications of our heavy plasma technology permit the creation of a burst-style particle beam, capable of unprecedented focused energy output. Its heat dispersal would be highly dangerous to an unmodified soldier, but a MEC suit is capable of mounting the necessary systems."
+strTacticalText= "<Bullet/> Devastating plasma-based MEC weapon\n<Bullet/> Only equippable by MEC Troopers\n<Bullet/> Risk of catastrophic overheating precludes suppression with this weapon\n<Bullet/> Has EMP-like effects, conferring +1 damage against robotic targets\n<Bullet/> Base ammo: 3"
+
+[Item_PhalanxArmor LWCEArmorTemplate]
+strName="Phalanx Armor"
+strNamePlural="Phalanx Armors"
+strBriefSummary="The Phalanx Armor is our first attempt to use alien materials in a complete armor suit."
+strTacticalText= "<Bullet/> Medium Armor\n<Bullet/> +2 mobility, +3 HP"
+
+[Item_PhoenixCannon LWCEShipWeaponTemplate]
+strName="Phoenix Cannon"
+strNamePlural="Phoenix Cannons"
+strBriefSummary="The Phoenix Cannon is capable of delivering massive burst damage with armor-piercing alloy-based rounds."
+
+[Item_PlasmaCannon LWCEShipWeaponTemplate]
+strName="Plasma Cannon"
+strNamePlural="Plasma Cannons"
+strBriefSummary="The focused plasma cannon is an ideal anti-UFO weapon, combining high damage output with a long effective range."
+
+[Item_Pistol LWCEWeaponTemplate]
+strName="Pistol"
+strNamePlural="Pistols"
+strTacticalText= "<Bullet/> A sidearm with limited tactical value\n<Bullet/> Useful for when a soldier's main weapon is out of ammo, or otherwise unusable\n<Bullet/> Accuracy degrades at long range\n<Bullet/> Base ammo: 2"
+
+[Item_PlasmaCarbine LWCEWeaponTemplate]
+strName="Plasma Carbine"
+strNamePlural="Plasma Carbines"
+strBriefSummary="This lightweight rifle functions on the same principle as our other plasma weapon concepts - a jet of ionized gas discharged through a focused magnetic field. The lightweight frame greatly improves the overall accuracy of this weapon."
+strTacticalText= "<Bullet/> A light, accurate variant of the Plasma Rifle\n<Bullet/> Carries a +6 Aim bonus and +1 mobility bonus, but has lower damage and crit chance relative to Plasma Rifle\n<Bullet/> Confers +6 defense, as lightweight and balanced design makes it easy for soldier to move in combat\n<Bullet/> Can be steadied for greater accuracy\n<Bullet/> Base ammo: 3"
+
+[Item_PlasmaDragon LWCEWeaponTemplate]
+strName="Plasma Dragon"
+strNamePlural="Plasma Dragons"
+strBriefSummary="An extended-range Gunner weapon that is heavier than the Plasma Novagun, this weapon does greater damage but is difficult to relocate in a combat situation."
+strTacticalText= "<Bullet/> The largest man-portable plasma weapon we can construct, this functions in an LMG role\n<Bullet/> Confers increased damage relative to our plasma SAWs at a -2 mobility penalty\n<Bullet/> Operator cannot take costly actions and fire in the same turn\n<Bullet/> Grants Squadsight and may fire five tiles beyond normal visual range\n<Bullet/> Gunners only\n<Bullet/> Does massive damage to the combat environment\n<Bullet/> Airbursting plasma charges confer +1 damage against airborne targets\n<Bullet/> Base ammo: 8"
+
+[Item_PlasmaMauler LWCEWeaponTemplate]
+strName="Plasma Mauler"
+strNamePlural="Plasma Maulers"
+strBriefSummary="This heavy plasma technology-based personal defense weapon may be carried in place of a pistol, providing additional combat power at a significant mobility cost."
+strTacticalText= "<Bullet/> Plasma-derived heavy-duty sidearm that confers -1 mobility in exchange for more power than the plasma pistol\n<Bullet/> -8 accuracy penalty when drawn, accuracy degrades at long range\n<Bullet/> Base ammo: 2"
+
+[Item_PlasmaNovagun LWCEWeaponTemplate]
+strName="Plasma Novagun"
+strNamePlural="Plasma Novaguns"
+strBriefSummary="The Plasma Novagun uses an expanded power supply and cooling mechanism to allow for a much higher rate of fire than anything we've fielded previously."
+strTacticalText= "<Bullet/> Powerful plasma-based personal weapon that functions in Squad Automatic Weapon role\n<Bullet/> Does significant damage to the combat environment\n<Bullet/> -1 mobility\n<Bullet/> Usable by Gunners only\n<Bullet/> Unlike other SAW-series weapons, the Novagun can be steadied for greater accuracy\n<Bullet/> Base ammo: 6"
+
+[Item_PlasmaPistol LWCEWeaponTemplate]
+strName="Plasma Pistol"
+strNamePlural="Plasma Pistols"
+strBriefSummary="By discharging a lethal shot of ionized gas in an artificially generated magnetic field, this weapon performs far beyond the capabilities of any projectile based sidearm."
+strTacticalText= "<Bullet/> The most powerful pistol available to XCOM\n<Bullet/> Accuracy degrades at long range\n<Bullet/> Base ammo: 2"
+
+[Item_PlasmaRifle LWCEWeaponTemplate]
+strName="Plasma Rifle"
+strNamePlural="Plasma Rifles"
+strBriefSummary="This modified assault rifle fires a jet of ionized gas through a focused magnetic field - an extremely effective plasma-based weapon."
+strTacticalText= "<Bullet/> Highly efficient and deadly primary weapon\n<Bullet/> Equippable by Infantry, Scout, Assault, Medic, Rocketeer and Engineer classes\n<Bullet/> Can be steadied for greater accuracy\n<Bullet/> Powerful plasma charge confers +1 bonus base damage on critical hits against biological enemies\n<Bullet/> Base ammo: 3"
+
+[Item_PlasmaSniperRifle LWCEWeaponTemplate]
+strName="Plasma Sniper Rifle"
+strNamePlural="Plasma Sniper Rifles"
+strBriefSummary="By modifying our current power system to hold a greater charge, we've developed a Plasma Sniper Rifle capable of delivering an extremely powerful shot that will greatly increase the odds of inflicting critical damage to hostile targets."
+strTacticalText= "<Bullet/> The deadliest sniper rifle XCOM can engineer\n<Bullet/> Unlike other weapons, Sniper Rifles are less accurate as the shooter's range to target decreases\n<Bullet/> Snipers cannot take costly actions (like moving) and fire in the same turn, unless trained appropriately\n<Bullet/> Equippable by Snipers only\n<Bullet/> Plasma charge increases in power as it travels through our atmosphere and does +1 base damage on critical hits on targets who are positioned greater than 35 tiles from the soldier\n<Bullet/> Can be steadied for greater accuracy\n<Bullet/> -1 mobility<Bullet/> Base ammo: 3"
+
+[Item_PlasmaStellerator LWCEWeaponTemplate]
+strName="Plasma Stellerator"
+strNamePlural="Plasma Stellerators"
+strBriefSummary="Confers increased damage for our plasma weaponry."
+strPerkHUDSummary="+1 base damage to plasma and reflex primary weapons."
+strTacticalText= "<Bullet/> Confers +1 damage for all plasma-tech and reflex primary weapons and rockets\n<Bullet/> Equippable by regular and mechanized units\n<Bullet/> Weight: 1"
+
+[Item_PlasmaStormgun LWCEWeaponTemplate]
+strName="Plasma Stormgun"
+strNamePlural="Plasma Stormgun"
+strBriefSummary="An extremely lightweight plasma weapon that trades combat power for soldier mobility."
+strTacticalText= "<Bullet/> Lightweight primary weapon\n<Bullet/> Confers +4 mobility, at a cost of damage and critical hit chances relative to rifles\n<Bullet/> Can be steadied for greater accuracy\n<Bullet/> Base ammo: 2"
+
+[Item_ProximityMineLauncher LWCEWeaponTemplate]
+strName="Proximity Mine Launcher"
+strNamePlural="Proximity Mine Launchers"
+strBriefSummary="Proximity mines can be deployed at medium range, and will await nearby enemy movement before triggering their explosive charges."
+strPerkHUDSummary="Proximity mines can be deployed at medium range, and will await nearby enemy movement before triggering their explosive charges."
+strTacticalText= "<Bullet/> Proximity mines can be deployed at medium range, and will await nearby enemy movement before triggering their explosive charges. They do significantly more damage but have a smaller area of effect than grenade launchers.\n<Bullet/> Weight: 1"
+
+[Item_PsiAmp LWCEWeaponTemplate]
+strName="Psi Amp"
+strNamePlural="Psi Amp"
+
+[Item_PsiGrenade LWCEWeaponTemplate]
+strName="Psi Grenade"
+strNamePlural="Psi Grenades"
+strBriefSummary="By incorporating some meld into our standard flashbangs, we believe we have developed an enhanced version that our psionic troopers can employ to disorient our enemies over a much wider area of effect."
+strTacticalText= "<Bullet/> Meld-enhanced, telekinetically-propelled flashbang that synergizes with psionic powers\n<Bullet/> Enemy units inside expanded blast radius suffer significant Aim and movement penalties during their next turn.\n<Bullet/> Robotic and advanced psionic enemies are immune\n<Bullet/> Usable only by psionic troopers\n<Bullet/> Shows up as Flashbang charge in ability icons; cannot carry these and flashbangs at the same time\n<Bullet/> Temporarily consumes a small amount of soldier's will to operate\n<Bullet/> Weight: 1"
+
+[Item_PsiLocus LWCEWeaponTemplate]
+strName="Psi Locus"
+strNamePlural="Psi Loci"
+
+[Item_PsiScreen LWCEWeaponTemplate]
+strName="Psi Screen"
+strNamePlural="Psi Screen"
+strBriefSummary="Psionic device that absorbs a measure of incoming damage to the soldier."
+strPerkHUDSummary="Provides 1 Damage Reduction."
+strTacticalText= "<Bullet/> Confers 1 DR to Psi\n<Bullet/> Draws 12 will\n<Bullet/> Weight: 1"
+
+[Item_PulseAutoblaster LWCEWeaponTemplate]
+strName="Pulse Autoblaster"
+strNamePlural="Pulse Autoblasters"
+strBriefSummary="The Pulse Autoblaster forgoes precision in favor of emitting powerful blasts of laser energy at targets."
+strTacticalText= "<Bullet/> A rapid-fire version of the Pulse Rifle that functions in Squad Automatic Weapon role\n<Bullet/> -1 mobility\n<Bullet/> Pulse weapons have an increased critical hit chance\n<Bullet/> Equippable by Gunners only\n<Bullet/> Base ammo: 6"
+
+[Item_PulseCarbine LWCEWeaponTemplate]
+strName="Pulse Carbine"
+strNamePlural="Pulse Carbine"
+strBriefSummary="A lightweight version of the pulse rifle."
+strTacticalText= "<Bullet/> Lightweight primary weapon\n<Bullet/> Less damage relative to its pulse rifle counterpart, but imparts +1 mobility and +6 accuracy\n<Bullet/> Can be steadied for greater accuracy\n<Bullet/> Pulse weapons have increased critical chances\n<Bullet/> Base ammo: 3"
+
+[Item_PulseLance LWCEWeaponTemplate]
+strName="Pulse Lance"
+strNamePlural="Pulse Lances"
+strBriefSummary="A pulse autolaser suitable for mounting on a MEC suit."
+strTacticalText= "<Bullet/> MEC weapon\n<Bullet/> Bonus critical chance\n<Bullet/> Base ammo: 3"
+
+[Item_PulseRifle LWCEWeaponTemplate]
+strName="Pulse Rifle"
+strNamePlural="Pulse Rifles"
+strBriefSummary="In some ways a rapid-fire laser drill, the Pulse Rifle should provide a significant upgrade over our existing small arms."
+strTacticalText= "<Bullet/> The Pulse Rifle emits a series of microsecond-duration blasts of light that destroy chemical bonds in targets\n<Bullet/> Pulse weapons have an increased critical hit chance\n<Bullet/> Can be steadied for greater accuracy\n<Bullet/> Base ammo: 3"
+
+[Item_PulseSniperRifle LWCEWeaponTemplate]
+strName="Pulse Sniper Rifle"
+strNamePlural="Pulse Sniper Rifles"
+strBriefSummary="This long-rifle variant of the Pulse Rifle is capable of hitting targets at significant range."
+strTacticalText= "<Bullet/> A long rifle version of the Pulse Rifle with an extremely high critical chance\n<Bullet/> Unlike other weapons, Sniper Rifles are less accurate the closer the shooter gets to the target\n<Bullet/> Sniper rifles have the best base chance to cause critical hits\n<Bullet/> Snipers cannot take costly actions (such as moving) and fire in the same turn without advanced training\n<Bullet/> Equippable by Snipers only\n<Bullet/> Can be steadied for greater accuracy\n<Bullet/> -1 mobility\n<Bullet/> Base ammo: 3"
+
+[Item_PulseStengun LWCEWeaponTemplate]
+strName="Pulse Stengun"
+strNamePlural="Pulse Stenguns"
+strBriefSummary="An extremely lightweight pulse weapon that trades combat power for soldier mobility."
+strTacticalText= "<Bullet/> Lightweight primary weapon\n<Bullet/> Confers +3 mobility, at a cost of damage and critical hit chances relative to rifles\n<Bullet/> Pulse weapons have increased critical chances\n<Bullet/> Can be steadied for greater accuracy\n<Bullet/> Base ammo: 2"
+
+[Item_Railgun LWCEWeaponTemplate]
+strName="Railgun"
+strNamePlural="Railguns"
+strBriefSummary="This high-powered, recoilless slugthrower can be fired in short bursts to devastating effect, although the sizes of its housing and power supply require it to be mounted on a MEC."
+strTacticalText= "<Bullet/> Miniaturized power supply derived from gauss tech\n<Bullet/> Gauss tech weapons have a 1 in 3 chance of nullifying a point of enemy damage reduction\n<Bullet/> Only equippable by MEC Troopers\n<Bullet/> Risk of catastrophic overheating precludes suppression with this weapon\n<Bullet/> Base ammo: 4"
+
+[Item_ReaperPack LWCEWeaponTemplate]
+strName="Reaper Pack"
+strNamePlural="Reaper Packs"
+strBriefSummary="Experimental ballistics have led to this specialized conventional weapon load. It can cause substantial extra damage to affected targets, but the additional casing elements make it less accurate at long range. The rounds will not work with pistols, though."
+strPerkHUDSummary="Provides +16 critical chance but increases short-range aim penalties for sniper rifles and marksman's/strike rifles, and doubles long-range penalties for shotguns."
+strTacticalText= "<Bullet/> Bulky supercapacitor unit for beam and pulse lasers that increases penetrative power\n<Bullet/> Adds +16 critical chance to primary weapon\n<Bullet/> Doubles the weapon's range penalty (for shotguns, sniper and marksman's rifles)\n<Bullet/> Weight: 1"
+
+[Item_RebuildSHIV LWCEItemTemplate]
+strName="Rebuild SHIV"
+strNamePlural="Rebuild SHIV"
+strBriefSummary="Selecting this project will restore a destroyed SHIV to operational status."
+strTacticalText= "<Bullet/> Restores a destroyed SHIV to active service."
+
+[Item_RebuildSHIVAlloy LWCEItemTemplate]
+strName="Rebuild Alloy SHIV"
+strNamePlural="Rebuild Alloy SHIV"
+strBriefSummary="Selecting this project will restore a destroyed Alloy SHIV to operational status."
+strTacticalText= "<Bullet/> Restores a destroyed Alloy SHIV to active service."
+
+[Item_RebuildSHIVHover LWCEItemTemplate]
+strName="Rebuild Hover SHIV"
+strNamePlural="Rebuild Hover SHIV"
+strBriefSummary="Selecting this project will restore a destroyed Hover SHIV to operational status."
+strTacticalText= "<Bullet/> Restores a destroyed Hover SHIV to active service."
+
+[Item_RecoillessRifle LWCEWeaponTemplate]
+strName="Recoilless Rifle"
+strNamePlural="Recoilless Rifles"
+strBriefSummary="The Recoilless Rifle uses our new electromagnetic technologies to propel heavier and deadlier explosive projectiles at targets than our conventional rocket launchers have allowed."
+strTacticalText= "<Bullet/> Improved rocket launcher based on gauss weapon technology\n<Bullet/> Rockets fired by this weapon have a 1 in 3 chance of nullifying a point of enemy damage reduction\n<Bullet/> Destroys alien artifacts, preventing their recovery and exploitation\n<Bullet/> Friendly targets in the blast area are affected\n<Bullet/> During targeting, rocket scatter figure is expected (average) number of tiles rocket will be off-target by\n<Bullet/> Rocket has 68% chance to be at scatter distance or less from target and 95% chance of being twice scatter distance or less\n<Bullet/> Use Steady Weapon ability to increase accuracy for the next turn\n<Bullet/> Damage is reduced based on distance from point of detonation\n<Bullet/> Each rocket fired confers +1 mobility for the rest of the mission\n<Bullet/> Weight: 1"
+
+[Item_ReflexCannon LWCEWeaponTemplate]
+strName="Reflex Cannon"
+strNamePlural="Reflex Cannons"
+strBriefSummary="An extremely deadly shotgun."
+strTacticalText= "<Bullet/> A hybrid of human and alien technologies, this weapon provides shotgun-like effects\n<Bullet/> Most effective at close range due to alloy spread\n<Bullet/> Has a high base chance to cause critical hits\n<Bullet/> Damage is maximized at point-blank range (4 tiles), with weapon conferring +1 base damage on critical hits\n<Bullet/> Not Equippable by Gunner, Sniper and Rocketeer classes\n<Bullet/> Base ammo: 4"
+
+[Item_ReflexRifle LWCEWeaponTemplate]
+strName="Reflex Rifle"
+strNamePlural="Reflex Rifles"
+strBriefSummary="A medium-range plasma rifle usable by our scouts and snipers."
+strTacticalText= "<Bullet/> Medium-range plasma rifle that functions in Marksman's Rifle role\n<Bullet/> Bonus critical chance\n<Bullet/> Severe aim penalty when used at short range\n<Bullet/> Usable by snipers and scouts\n<Bullet/> Can be steadied for greater accuracy\n<Bullet/> Soldiers with Squadsight can target enemies and conduct reaction fire at up to five tiles beyond visual range\n<Bullet/> Ball plasma charge bursts near target, causing +1 bonus base damage on critical hits when target is flanked or out of cover\n<Bullet/> Base ammo: 3"
+
+[Item_ReinforcedArmor LWCEWeaponTemplate]
+strName="Reinforced Armor"
+strNamePlural="Reinforced Armors"
+strBriefSummary="Offers extra protection for a soldier, but inhibits agility."
+strPerkHUDSummary="Provides 1 Damage reduction and -6 defense."
+strTacticalText= "<Bullet/> Confers 1 Damage Reduction and 1 hit point\n<Bullet/> Confers -6 penalty to defense\n<Bullet/> Weight: 2"
+
+[Item_RespiratorImplant LWCEWeaponTemplate]
+strName="Respirator Implant"
+strNamePlural="Respirator Implants"
+strBriefSummary="We can fabricate a module that will automatically detect chemical and physical threats to a soldier's oxygen supply, and deploy uncomfortable but potentially life-saving oxygen tube shunts in a matter of seconds. This module will fit all of XCOM's armor designs and will transmit bleed-out timer data to Central."
+strPerkHUDSummary="Life support and monitoring system that guarantees critical wounds instead of death, protects against acid and strangulation, and transmits bleed-out timer data to Central."
+strTacticalText= "<Bullet/> Causes soldiers to bleed out instead of dying the first time they go to zero health in a mission. The bleed-out timer is extended by 2 turns. (Critical wound will penalty is still assessed.)\n<Bullet/> Transmits bleed out timer to Central.\n<Bullet/> Grants +1 hit point\n<Bullet/> Confers immunity to strangle and partial immunity to acid.\n<Bullet/> Weight: 0"
+
+[Item_RestorativeMist LWCEWeaponTemplate]
+strName="Restorative Mist"
+strNamePlural="Restorative Mists"
+strBriefSummary="Medikits require fine motor control; instead, the MEC can spray Restorative Mist to heal all nearby allies."
+strPerkHUDSummary="Medikits require fine motor control; instead, the MEC can spray Restorative Mist to heal all nearby allies."
+strTacticalText= "<Bullet/> Medikits require fine motor control; instead, the MEC can spray Restorative Mist to heal all nearby allies.\n<Bullet/> Weight: 1"
+
+[Item_Rocket LWCEWeaponTemplate]
+strName="Rocket"
+strNamePlural="Rockets"
+strBriefSummary="This is a spare High Explosive rocket from our inventory. Be warned: It is bulky and will reduce a soldier's movement until fired."
+strTacticalText= "<Bullet/> Allows rocketeer to carry one additional regular rocket\n<Bullet/> Weight: 2"
+
+[Item_RocketLauncher LWCEWeaponTemplate]
+strName="Rocket Launcher"
+strNamePlural="Rocket Launchers"
+strBriefSummary="Rocket Launcher"
+strTacticalText= "<Bullet/> Rockets do significant damage and have a large blast radius \n<Bullet/> Destroys alien artifacts, preventing their recovery and exploitation\n<Bullet/> Friendly targets in the blast area are affected\n<Bullet/> During targeting, rocket scatter figure is expected (average) number of tiles rocket will be off-target by\n<Bullet/> Rocket has 68% chance to be at scatter distance or less from target and 95% chance of being twice scatter distance or less\n<Bullet/> Use Steady Weapon ability to increase accuracy for the next turn\n<Bullet/> Damage is reduced based on distance from point of detonation\n<Bullet/> Each rocket fired confers +1 mobility for the rest of the mission\n<Bullet/> Weight: 1"
+
+[Item_Satellite LWCEItemTemplate]
+strName="Satellite"
+strNamePlural="Satellites"
+strBriefSummary="An advanced reconnaissance satellite modified to detect the unique gravitational distortions caused by alien craft in flight."
+
+[Item_SAW LWCEWeaponTemplate]
+strName="SAW"
+strNamePlural="SAWs"
+strBriefSummary="LMG"
+strTacticalText= "<Bullet/> Automatic Rifle designed to serve in squad automatic weapon role\n<Bullet/> -1 mobility\n<Bullet/> Equippable by Gunners only\n<Bullet/> Base ammo: 6"
+
+[Item_SawedOffShotgun LWCEWeaponTemplate]
+strName="Sawed-off Shotgun"
+strNamePlural="Sawed-off Shotguns"
+strBriefSummary="A truncated combat shotgun, suitable for carrying in place of a pistol."
+strTacticalText= "<Bullet/> Street modification of one of our combat ballistic shotguns\n<Bullet/> May be carried in pistol slot, but confers -1 mobility\n<Bullet/> High-damage weapon that injures targets only at extremely short range, as rapid pellet spread renders it ineffective at longer ranges\n<Bullet/> Holds only one shot, and ammo capacity enhancements do not improve this\n<Bullet/> Does less damage against hardened targets or those in cover\n<Bullet/> Usable only by Infantry, Assault, Scout, Medic and Engineer"
+
+[Item_ScatterBlaster LWCEWeaponTemplate]
+strName="Scatter Blaster"
+strNamePlural="Scatter Blasters"
+strBriefSummary="A shotgun-equivalent weapon employing pulse laser technology."
+strTacticalText= "<Bullet/> An application of pulse laser technology to provide shotgun-like effects\n<Bullet/> Most effective at close range due to beam diffusion\n<Bullet/> Has a very high base chance to cause critical hits\n<Bullet/> Not Equippable by Gunner, Sniper and Rocketeer classes\n<Bullet/> Base ammo: 4"
+
+[Item_ScatterLaser LWCEWeaponTemplate]
+strName="Scatter Laser"
+strNamePlural="Scatter Lasers"
+strBriefSummary="The Scatter Laser is capable of inflicting considerable damage; however, accuracy suffers greatly as the range to target increases. In addition, it is not as effective against hardened targets or those in cover."
+strTacticalText= "<Bullet/> An application of laser technology to provide shotgun-like effects\n<Bullet/> Most effective at close range due to beam diffusion\n<Bullet/> Has a high base chance to cause critical hits\n<Bullet/> Beam laser, confers +6 accuracy bonus\n<Bullet/> Not Equippable by Gunner, Sniper and Rocketeer classes\n<Bullet/> Base ammo: 4"
+
+[Item_SCOPE LWCEWeaponTemplate]
+strName="SCOPE"
+strNamePlural="SCOPEs"
+strBriefSummary="When equipped, this advanced targeting module integrates with XCOM's Active HUD system to offer a significant increase to our soldiers' aim."
+strPerkHUDSummary="Provides +8 aim. With upgrade also provides +8 critical chance."
+strTacticalText= "<Bullet/> Provides an Aim bonus of +8 for the user's primary weapon and rocket launchers\n<Bullet/> Weight: 1"
+
+[Item_SectopodChestCannon LWCEWeaponTemplate]
+strName="Alien Cannon"
+strNamePlural="Alien Cannons"
+
+[Item_SectopodClusterBomb LWCEWeaponTemplate]
+strName="Sectopod Cluster Bomb"
+strNamePlural="Sectopod Cluster Bombs"
+
+[Item_SectopodTurret LWCEWeaponTemplate]
+strName="Alien Turret"
+strNamePlural="Alien Turrets"
+
+[Item_SectopodWreck LWCEItemTemplate]
+strName="Sectopod Wreck"
+strNamePlural="Sectopod Wrecks"
+strBriefSummary="This contorted husk of metal and electronic circuitry was quite dangerous in its original form."
+
+[Item_SeekerTentacles LWCEWeaponTemplate]
+strName="Seeker Tentacles"
+strNamePlural="Seeker Tentacles"
+
+[Item_SeekerWreck LWCEItemTemplate]
+strName="Seeker Wreck"
+strNamePlural="Seeker Wrecks"
+strBriefSummary="The Seeker's wreck retains charge, causing the tentacles to twitch unexpectedly well beyond the point of nonfunctionality."
+
+[Item_SentryGun LWCEWeaponTemplate]
+strName="Sentry Gun"
+strNamePlural="Sentry Guns"
+strBriefSummary="The four-barrelled SHIV Sentry Gun is an upgraded Minigun incorporating gauss technologies to provide a higher rate of fire and increased muzzle velocity."
+strTacticalText= "<Bullet/> Heavy machine gun employing Gauss technologies\n<Bullet/> Gauss tech weapons have a 1 in 3 chance of nullifying a point of enemy damage reduction\n<Bullet/> Base ammo: 4"
+
+[Item_SeraphArmor LWCEArmorTemplate]
+strName="Seraph Armor"
+strNamePlural="Seraph Armors"
+strBriefSummary="Seraph Armor incorporates the same jet pack as Archangel Armor, but it trades protection in favor of mobility."
+strTacticalText= "<Bullet/> Medium armor\n<Bullet/> +3 mobility, +8 Defense, +5 HP\n<Bullet/> Toggle flight mode to initiate flying movement\n<Bullet/> Taking off, and each turn in flight, costs 1 fuel unit\n<Bullet/> The armor carries 6 fuel units; this can be expanded with additional experimental research"
+
+[Item_ShadowArmor LWCEArmorTemplate]
+strName="Shadow Armor"
+strNamePlural="Shadow Armors"
+strBriefSummary="By integrating a stealth field based on the phase-shifts observed in the hyperwave beacon, this suit makes it extremely difficult for the wearer to be detected in the field. It should be noted, the stealth system is only effective when used by a soldier in cover."
+strTacticalText= "<Bullet/> Medium armor\n<Bullet/> +4 hp, +2 mobility, +16 Defense\n<Bullet/> Stealth systems allow wearer to become invisible\n<Bullet/> Ghost mode can be activated up to 3 times per battle\n<Bullet/> Activating Ghost Mode does not cost an action, nor end the soldier's turn\n<Bullet/> Provides a moderate bonus to Defense\n<Bullet/> Wearer's movement speed is increased\n<Bullet/> Grappling hook module included"
+
+[Item_ShadowDevice LWCEWeaponTemplate]
+strName="Shadow Device"
+strNamePlural="Shadow Devices"
+strBriefSummary="This psionic device contains elerium-infused particles that, when diffused onto our soldiers, causes them to become invisible. The particles will lose their elerium charge after a brief time, and competing energy sources - such as weapons fire - will disrupt them."
+strTacticalText= "<Bullet/> Confers temporary stealth on all friendly units in blast radius\n<Bullet/> Stealth lasts until the start of the unit's next turn\n<Bullet/> Attacks from stealth receive a substantial bonus to critical chance\n<Bullet/> Does not affect panicking units, Seekers or units with Concealment\n<Bullet/> Psi only, draws will to equip\n<Bullet/> Psionic strain of use only allows equipping one of these items, and it does not gain charge bonuses from perks\n<Bullet/> Weight: 1"
+
+[Item_SHIV LWCEItemTemplate]
+strName="SHIV"
+strNamePlural="SHIVs"
+strBriefSummary="The Super Heavy Infantry Vehicle, or SHIV, is an advanced weapons platform that can be deployed in place of a human soldier. While extremely capable in most combat scenarios, any damage to the SHIV will require lengthy repairs."
+strTacticalText= "<Bullet/> Autonomous mini-tank\n<Bullet/> Weapon loadout can be upgraded depending on what weapons technology has been researched\n<Bullet/> Combat logic circuits can enable suppression and other abilities if proper Foundry research is done\n<Bullet/> SHIVs need extra time to load onto the Skyranger during combat; if aborting a mission, do NOT take any action with the SHIV after moving into the extraction zone"
+
+[Item_SHIVAlloy LWCEItemTemplate]
+strName="Alloy SHIV"
+strNamePlural="Alloy SHIVs"
+strBriefSummary="Integration of the alien alloy into the basic SHIV design results in a  weapons platform that is both lighter and stronger than the original. The reinforced chassis allows for this SHIV to be used as a mobile cover position in the field."
+strTacticalText= "<Bullet/> A standard SHIV with upgraded armor based on alien alloys research\n<Bullet/> Can provide light cover to human squadmates\n<Bullet/> Particularly well suited for engagements against invaders with superior firepower\n<Bullet/> SHIVs need extra time to load onto the Skyranger during combat; if aborting a mission, do NOT take any action with the SHIV after moving into the extraction zone"
+
+[Item_SHIVAlloyChassis LWCEArmorTemplate]
+strName="Alloy SHIV Chassis"
+strNamePlural="Alloy SHIV Chassis"
+strBriefSummary="The alloy SHIV deck has a mobility of 16, base damage reduction of 2.5, and 3 upgrade slots."
+strTacticalText= "<Bullet/> Improved SHIV deck incorporating alien alloys\n<Bullet> Capacity for 3 addon modules\n<Bullet> Slow\n<Bullet> Extremely durable, with 2 damage resistance\n<Bullet> Provides cover for our soldiers\n<Bullet> Its size and inability to anticipate incoming fire means reaction fire against SHIVs is more accurate"
+
+[Item_SHIVChassis LWCEArmorTemplate]
+strName="SHIV Chassis"
+strNamePlural="SHIV Chassis"
+strBriefSummary="The basic armored SHIV deck has a mobility of 16, base damage reduction of 1.5, and 3 upgrade slots."
+strTacticalText= "<Bullet/> Basic SHIV deck\n<Bullet> Capacity for 3 addon modules\n<Bullet> Moderate speed\n<Bullet> Limited durability and 1 damage resistance\n<Bullet> Its size and inability to anticipate incoming fire means reaction fire against SHIVs is more accurate"
+
+[Item_SHIVHover LWCEItemTemplate]
+strName="Hover SHIV"
+strNamePlural="Hover SHIVs"
+strBriefSummary="Our latest modification to the SHIV vehicle involves the integration of a small pulse engine, allowing the entire platform to fly over rough terrain."
+strTacticalText= "<Bullet/> A SHIV designed around alien navigation and propulsion technology\n<Bullet/> Capable of limited flight in combat situations\n<Bullet/> Superb for high-risk recon\n<Bullet/> SHIVs need extra time to load onto the Skyranger during combat; if aborting a mission, do NOT take any action with the SHIV after moving into the extraction zone"
+
+[Item_SHIVHoverChassis LWCEArmorTemplate]
+strName="Hover SHIV Chassis"
+strNamePlural="Hover SHIV Chassis"
+strBriefSummary="The hover SHIV deck has a mobility of 18, base damage reduction of 2, and 3 upgrade slots."
+strTacticalText= "<Bullet/> Advanced antigrav SHIV deck\n<Bullet> Capacity for 3 addon modules\n<Bullet> Fast\n<Bullet> Moderate durability and 1.5 damage resistance\n<Bullet> Its size and inability to anticipate incoming fire means reaction fire against SHIVs is more accurate"
+
+[Item_Shotgun LWCEWeaponTemplate]
+strName="Shotgun"
+strNamePlural="Shotguns"
+strTacticalText= "<Bullet/> The shotgun has a high base critical chance, but extremely limited range\n<Bullet/> Does less damage against hardened targets or those in cover\n<Bullet/> Not Equippable by Gunner, Sniper and Rocketeer classes\n<Bullet/> Base ammo: 4"
+
+[Item_ShredderAmmo LWCEWeaponTemplate]
+strName="Shredder Ammo"
+strNamePlural="Shredder Ammo"
+strBriefSummary="Special ammo that briefly leaves target susceptible  to increased damage from additional hits."
+strPerkHUDSummary="Shreds a target for one round."
+strTacticalText= "<Bullet/> Using your primary weapon to hit an enemy when equipped with this ammo confers the 'shredded' effect for one turn, meaning the enemy takes extra damage from additional hits\n<Bullet/> Assault and Engineer only, can't stack with some other special ammo\n<Bullet/> Weight: 1"
+
+[Item_ShredderRocket LWCEWeaponTemplate]
+strName="Shredder Rocket"
+strNamePlural="Shredder Rockets"
+strBriefSummary="The Shredder Rocket both damages a target and leaves it vulnerable to increased damage from additional hits for several rounds. Be warned: This item is bulky and will reduce a soldier's movement when carried."
+strTacticalText= "<Bullet/> Allows rocketeer to carry a shredder rocket (and stacks with Shredder Rocket perk)\n<Bullet/> Weight: 2"
+
+[Item_CorsairArmor LWCEArmorTemplate]
+strName="Corsair Armor"
+strNamePlural="Corsair Armors"
+strBriefSummary="Our Corsair Armor is a fairly heavy offering that still offers significant increases in soldier mobility. It includes a grappling hook."
+strTacticalText= "<Bullet/> Medium armor\n<Bullet/> +3 mobility, +8 Defense, +6 HP\n<Bullet/> Equipped with Grapple"
+
+[Item_SkeletonKey LWCEItemTemplate]
+strName="Skeleton Key"
+strNamePlural="Skeleton Keys"
+strBriefSummary="This device is the culmination of our research into the shard recovered from the alien Outsider. It should allow our troops to infiltrate an alien base and find out what's inside."
+strTacticalText= "<Bullet/> Used to disable the Alien Base's defenses, enabling a raid by XCOM forces\n<Bullet/> Not equipped by soldiers; having it in XCOM HQ will suffice\n<Bullet/> Consumed after one use; we'll need more to assault additional bases"
+
+[Item_Skyranger LWCEShipTemplate]
+strName="Skyranger"
+strNamePlural="Skyrangers"
+
+[Item_SmartshellPod LWCEWeaponTemplate]
+strName="Smartshell Pod"
+strNamePlural="Smartshell Pods"
+strBriefSummary="The SHIV SmartShell Pod allows the firing of accurate, low-damage bursting rounds that force targets to change their location."
+strTacticalText= "<Bullet/> Confers Flush perk, allowing SHIV to force enemies to break cover\n<Bullet/> Confers +4 aim for SHIV\n<Bullet/> Weight: 1"
+strPerkHUDSummary="Provides +4 aim."
+
+[Item_SMG LWCEWeaponTemplate]
+strName="SMG"
+strNamePlural="SMGs"
+strBriefSummary="SMG"
+strTacticalText= "<Bullet/> Lightweight primary weapon\n<Bullet/> Confers +3 mobility, at a cost of damage and critical hit chances relative to rifles\n<Bullet/> Can be steadied for greater accuracy\n<Bullet/> Base ammo: 2"
+
+[Item_SmokeGrenade LWCEWeaponTemplate]
+strName="Smoke Grenade"
+strNamePlural="Smoke Grenades"
+strTacticalText= "<Bullet/> Confers defense bonus to all units within smoke cloud\n<Bullet/> Support grenade\n<Bullet/> Weight: 1"
+
+[Item_SniperRifle LWCEWeaponTemplate]
+strName="Sniper Rifle"
+strNamePlural="Sniper Rifles"
+strBriefSummary="Sniper Rifle"
+strTacticalText= "<Bullet/> A long rifle version of the Assault Rifle\n<Bullet/> -1 mobility\n<Bullet/> Unlike other weapons, Sniper Rifles are less accurate as the shooter's range to target decreases\n<Bullet/> Snipers cannot use any costly actions (like moving) and fire in the same turn, unless trained appropriately\n<Bullet/> Equippable by Snipers only\n<Bullet/> Can be steadied for greater accuracy\n<Bullet/> Base ammo: 5"
+
+[Item_StingrayMissiles LWCEShipWeaponTemplate]
+strName="Stingray Missiles"
+strNamePlural="Stingray Missiles"
+strBriefSummary="Stingray Missiles are small, fast air-to-air missiles. They have traded some explosive punch for a shaped warhead that can penetrate airborne hard targets."
+strTacticalText= "<Bullet/> Small guided missiles that don't do as much damage as an Avalanche, but is shaped to penetrate armored airborne targets\n<Bullet/> Weight: 1"
+
+[Item_SuperheavyLaser LWCEWeaponTemplate]
+strName="Superheavy Laser"
+strNamePlural="Superheavy Lasers"
+strBriefSummary="The Superheavy Laser is an adaptation of our infantry Autolaser for deployment on a SHIV platform."
+strTacticalText= "<Bullet/> Accurate SHIV laser weapon, confers +6 aim\n<Bullet/> Base ammo: 3"
+
+[Item_SuperheavyPlasma LWCEWeaponTemplate]
+strName="Superheavy Plasma"
+strNamePlural="Superheavy Plasmas"
+strBriefSummary="The Superheavy Plasma is the ultimate in close-combat plasma weaponry. The field generator, power supply and cooling system require a SHIV chassis for support."
+strTacticalText= "<Bullet/> The ultimate in SHIV weaponry\n<Bullet/> Confers +8 aim and +4 critical chance over baseline for SHIV weapons\n<Bullet/> Base ammo: 3"
+
+[Item_SuperheavyPulser LWCEWeaponTemplate]
+strName="Superheavy Pulser"
+strNamePlural="Superheavy Pulsers"
+strBriefSummary="The brutal Superheavy Pulser is a more powerful version of the infantry Pulse Autolaser. Its large power supply and radiators require it be mounted on a SHIV platform."
+strTacticalText= "<Bullet/> Powerful SHIV weapon with bonus critical hit chance\n<Bullet/> Base ammo: 3"
+
+[Item_TacticalSensors LWCEWeaponTemplate]
+strName="Tactical Sensors"
+strNamePlural="Tactical Sensors"
+strBriefSummary="This sensor and computer package will assist our MECs during heavy combat."
+strTacticalText= "<Bullet/> Confers Tactical Sense perk, granting +5 defense for each enemy in view, up to a maximum of +20\n<Bullet/> MEC only\n<Bullet/> Weight: 1"
+
+[Item_TacVest LWCEArmorTemplate]
+strName="Tac Vest"
+strNamePlural="Tac Vests"
+strBriefSummary="Tac Vest"
+strTacticalText= "<Bullet/> Very Light Armor \n<Bullet/> +3 mobility, +1 HP"
+
+[Item_TargetingModule LWCEWeaponTemplate]
+strName="Targeting Module"
+strNamePlural="Targeting Modules"
+strBriefSummary="Based on our preliminary understanding of alien physiology, we can construct a weapon addon that helps the soldier target critical points on our enemies, providing bonus critical chance and damage for all our units."
+strPerkHUDSummary="Provides +8 critical chance and +1 base damage when a critical hit is scored."
+strTacticalText= "<Bullet/> Confers +8 critical chance and +1 base damage when calculating critical hits\n<Bullet/> Can be equipped by all units\n<Bullet/> Weight: 1"
+
+[Item_TheThumper LWCEWeaponTemplate]
+strName="The Thumper"
+strNamePlural="Thumpers"
+strBriefSummary="This device will increase the damage done by MEC Kinetic Strike Modules."
+strPerkHUDSummary="+3 Damage for Kinetic Strike Module."
+strTacticalText= "<Bullet/> Confers +3 damage for Kinetic Strike Module\n<Bullet/> Weight: 1\n<Bullet/> Dr. Vahlen has expressed preference this device be referred to by its formal designation, the KSM-EC-7"
+
+[Item_TitanArmor LWCEArmorTemplate]
+strName="Titan Armor"
+strNamePlural="Titan Armors"
+strBriefSummary="The Titan Armor is among our heaviest designs, enhancing our soldier's protection from weapons fire, while also providing immunity to fire and toxins."
+strTacticalText= "<Bullet/> Heavy armor\n<Bullet/> +12 HP, 0.5 DR \n<Bullet/> Stiffens when taking damage (providing Damage Control perk, which provides 1.5 Damage Reduction for two turns after a hit)\n<Bullet/> Sealed: internal air supply and recycling systems provide the wearer partial immunity to acid and airway interruption\n<Bullet/> Flame Resistant: cooling systems and alien alloy construction confer immunity to environmental fire damage"
+
+[Item_UFOFlightComputer LWCEItemTemplate]
+strName="UFO Flight Computer"
+strNamePlural="UFO Flight Computers"
+strBriefSummary="This system appears to be primarily focused on navigation and celestial mapping, while also providing high-speed collision avoidance during flight."
+
+[Item_UFOFlightComputerDamaged LWCEItemTemplate]
+strName="UFO Flight Computer (Damaged)"
+strNamePlural="UFO Flight Computer (Damaged)"
+strBriefSummary="<font color='#32CD32'>This item has no research benefit, and can be sold freely.</font>\nAlthough the alien navigational systems are highly advanced, this equipment has taken too much damage for us to study."
+
+[Item_UFOFusionMkI LWCEShipWeaponTemplate]
+strName="Fusion Lance"
+strNamePlural="Fusion Lances"
+
+[Item_UFOPlasmaMkI LWCEShipWeaponTemplate]
+strName="Plasma Cannon"
+strNamePlural="Plasma Cannons"
+
+[Item_UFOPlasmaMkII LWCEShipWeaponTemplate]
+strName="Plasma Cannon"
+strNamePlural="Plasma Cannons"
+
+[Item_UFOPowerSource LWCEItemTemplate]
+strName="UFO Power Source"
+strNamePlural="UFO Power Sources"
+strBriefSummary="This power cell is apparently capable of generating enough energy to power the alien craft and its requisite systems. The Elerium core must be the key to its amazing efficiency."
+
+[Item_UFOPowerSourceDamaged LWCEItemTemplate]
+strName="UFO Power Source (Damaged)"
+strNamePlural="UFO Power Source (Damaged)"
+strBriefSummary="<font color='#32CD32'>This item has no research benefit, and can be sold freely.</font>\nResearching the alien power source is crucial to our own advances, but this particular example is too far gone to be of any use."
+
+[Item_UFOTracking LWCEItemTemplate]
+strName="UFO Tracking (Boost)"
+strNamePlural="UFO Tracking Modules"
+strBriefSummary="Activate this module during interception to provide an immediate, temporary boost to our unit's pursuit speed. The module will burn out after one use. Its technology lets us focus our satellites' computation resources on UFO pursuit, and might buy precious time to chase down even the fastest UFOs."
+
+[Item_UplinkTargeting LWCEItemTemplate]
+strName="Uplink Targeting (Aim)"
+strNamePlural="Uplink Targeting Modules"
+strBriefSummary="Activate this module during interception to provide an immediate, temporary boost to the accuracy of our aircraft's primary weapon. The module will burn out after correcting two misses with our primary weapon into hits, but it will be unavailable if our fighter is in a defensive posture."
+
+[Item_VortexArmor LWCEArmorTemplate]
+strName="Vortex Armor"
+strNamePlural="Vortex Armors"
+strBriefSummary="Our most powerful armored suit, this equipment serves to amplify the wearer's psionic abilities through a system modeled after the alien's own cybernetic implants. However, it should be noted, this armor can only be equipped by a soldier found to have Psionic abilities."
+strTacticalText= "<Bullet/> Heavy armor\n<Bullet/> +2 mobility, +8 hp\n<Bullet/> Increases wearer's Will by <XGAbility:PsiArmorWillBonus/> for psi attacks and defense\n<Bullet/> Psis only\n<Bullet/> Prevents soldier from being fatigued\n<Bullet/> A soldier with this armor and the Mind Control perk is necessary to activate the Gollop Chamber"
+
+[Item_WalkerServos LWCEWeaponTemplate]
+strName="Walker Servos"
+strNamePlural="Walker Servos"
+strBriefSummary="Exoskeletal armor addon that confers increased burst of speed or carrying capacity for our soldiers."
+strPerkHUDSummary="Provides +2 mobility."
+strTacticalText= "<Bullet/> Confers +2 mobility (and no weight penalty)"
+
+[Item_WeaponFragment LWCEItemTemplate]
+strName="Weapon Fragment"
+strNamePlural="Weapon Fragments"
+strBriefSummary="Based on our experience in the field, it seems the alien weaponry is designed to self-destruct when the operator dies. These fragments are all that we've managed to recover from the remains."
+
+[Item_WeaponSupercooler LWCEWeaponTemplate]
+strName="Weapon Supercooler"
+strNamePlural="Weapon Supercoolers"
+strBriefSummary="Barrel Supercooler technology will allow our SHIV weapons to sustain a high rate of fire."
+strTacticalText= "<Bullet/> Confers Light 'Em Up perk, allowing SHIV to take a fire action and second action during its turn\n<Bullet/> Weight: 1"
+
+[Item_ZombieFist LWCEWeaponTemplate]
+strName="Zombie Fist"
+strNamePlural="Zombie Fists"
+
 [LWCE_CouncilRequest_AlienAlloy LWCECouncilRequestTemplate]
 strName="Artifact Sales: Alien Alloys"
 strIntro="Many of the nations impacted by this crisis have been contacting XCOM for help, but <XGCountry:NameWithArticleLowerCase/> has been the most persistent. They're hoping to gain access to our supply of alien alloys in hopes of replicating them somehow. They feel if they can examine our materials, they can reinforce critical structures from future attacks."

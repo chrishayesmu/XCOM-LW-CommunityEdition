@@ -2,11 +2,14 @@ class LWCE_UIShipLoadout extends UIShipLoadout;
 
 simulated function bool OnCancel(optional string Arg = "")
 {
-    local TShipWeapon kWeapon;
+    local LWCE_XGHangarUI kMgr;
+    local LWCEShipWeaponTemplate kShipWeapon;
 
-    kWeapon = GetMgr().SHIPWEAPON(`LWCE_HANGAR.LWCE_ItemTypeToShipWeapon(m_kShip.GetWeapon()));
-    GetMgr().UpdateShipWeaponView(m_kShip, kWeapon.eType);
-    GetMgr().OnLeaveTable();
+    kMgr = LWCE_XGHangarUI(GetMgr());
+
+    kShipWeapon = LWCEShipWeaponTemplate(`LWCE_ITEM(LWCE_XGShip_Interceptor(m_kShip).LWCE_GetWeapon()));
+    kMgr.LWCE_UpdateShipWeaponView(m_kShip, kShipWeapon);
+    kMgr.OnLeaveTable();
 
     return true;
 }
@@ -16,18 +19,20 @@ function RealizeSelected()
     local int shipWpnRange, shipWpnFireRate, shipWpnBaseDamage, shipWpnArmorPen;
     local string tmpStr;
     local LWCE_XGHangarUI kMgr;
-    local TShipWeapon kWeapon;
+    local LWCEShipWeaponTemplate kShipWeapon;
 
     kMgr = LWCE_XGHangarUI(GetMgr());
 
-    kWeapon = kMgr.SHIPWEAPON(`LWCE_HANGAR.LWCE_ItemTypeToShipWeapon(kMgr.m_arrCEItems[m_iCurrentSelection].iItemId));
-    kMgr.UpdateShipWeaponView(m_kShip, kWeapon.eType);
-    shipWpnRange = kMgr.GetShipWeaponRangeBin(kWeapon.iRange);
-    shipWpnFireRate = kMgr.GetShipWeaponFiringRateBin(kWeapon.fFiringTime);
-    shipWpnBaseDamage = kMgr.GetShipWeaponDamageBin(kWeapon.iDamage);
-    shipWpnArmorPen = kMgr.GetShipWeaponArmorPenetrationBin(kWeapon.iAP);
+    kShipWeapon = LWCEShipWeaponTemplate(kMgr.m_arrCEItems[m_iCurrentSelection]);
+    kMgr.LWCE_UpdateShipWeaponView(m_kShip, kShipWeapon);
 
-    AS_SetStatData(0, class'UIItemCards'.default.m_strHitChanceLabel, string(Min(kWeapon.iToHit - 15, 95)) $ "/" $ string(Min(kWeapon.iToHit, 95)) $ "/" $ string(Min(kWeapon.iToHit + 15, 95)) $ "");
+    shipWpnRange = kMgr.GetShipWeaponRangeBin(kShipWeapon.iRange);
+    shipWpnFireRate = kMgr.GetShipWeaponFiringRateBin(kShipWeapon.fFiringTime);
+    shipWpnBaseDamage = kMgr.GetShipWeaponDamageBin(kShipWeapon.iDamage);
+    shipWpnArmorPen = kMgr.GetShipWeaponArmorPenetrationBin(kShipWeapon.iArmorPen);
+
+    // TODO make hit chance per stance configurable
+    AS_SetStatData(0, class'UIItemCards'.default.m_strHitChanceLabel, Min(kShipWeapon.iHitChance - 15, 95) $ "/" $ Min(kShipWeapon.iHitChance, 95) $ "/" $ Min(kShipWeapon.iHitChance + 15, 95) $ "");
 
     switch (shipWpnRange)
     {
@@ -90,7 +95,7 @@ function RealizeSelected()
     AS_SetStatData(4, class'UIItemCards'.default.m_strArmorPenetrationLabel, tmpStr);
 
     AS_SetSelected(m_iCurrentSelection);
-    AS_SetWeaponName(kWeapon.strName);
+    AS_SetWeaponName(kShipWeapon.strName);
     AS_SetWeaponImage(kMgr.m_kTable.arrSummaries[m_iCurrentSelection].imgOption.strPath, 0.90);
     AS_SetWeaponDescription(kMgr.m_kTable.arrSummaries[m_iCurrentSelection].txtSummary.StrValue);
 }

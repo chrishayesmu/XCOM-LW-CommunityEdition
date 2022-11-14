@@ -26,7 +26,7 @@ var name GlamCamTag;
 replication
 {
     if(Role == ROLE_Authority)
-        fFiringRate, iAmmo, 
+        fFiringRate, iAmmo,
         iOverheatChance, m_kReplicatedWeaponEntity;
 }
 
@@ -55,3 +55,12 @@ simulated function bool HasProperty(int iWeaponProperty){}
 simulated function bool CanBeStartingWeapon(){}
 native simulated function bool WeaponHasStandardShot();
 simulated function int GetOverallDamageRadius(){}
+
+defaultproperties
+{
+    iAmmo=100
+    m_strMedikitII="Medikit II"
+    m_strArcThrowerII="Arc Thrower II"
+    m_iTurnFired=100
+    GlamCamTag=Rifle
+}

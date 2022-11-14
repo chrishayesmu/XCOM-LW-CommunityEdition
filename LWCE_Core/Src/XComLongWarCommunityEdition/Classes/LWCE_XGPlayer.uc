@@ -26,10 +26,12 @@ function LoadSquad(array<TTransferSoldier> Soldiers, array<int> arrTechHistory, 
 
 function LWCE_LoadSquad(array<TTransferSoldier> Soldiers, array<LWCE_TTransferSoldier> ceSoldiers, array<XComSpawnPoint> arrSpawnPoints, array<EPawnType> arrPawnTypes)
 {
-    local XGCharacter kChar;
+    local LWCE_XGCharacter_Soldier kChar;
     local LWCE_XGUnit kUnit;
     local int iNumSoldiersToSpawn, I;
     local XComSpawnPoint kSpawn;
+
+    `LWCE_LOG_CLS("LoadSquad begin");
 
     iNumSoldiersToSpawn = Soldiers.Length;
     m_kSquad = Spawn(class'XGSquad',,,,,,, m_eTeam);
@@ -78,27 +80,26 @@ function LWCE_LoadSquad(array<TTransferSoldier> Soldiers, array<LWCE_TTransferSo
     for (I = 0; I < iNumSoldiersToSpawn; I++)
     {
         kSpawn = arrSpawnPoints[I % 6];
-        kChar = Spawn(class'XGCharacter_Soldier');
-        XGCharacter_Soldier(kChar).SetTSoldier(Soldiers[I].kSoldier);
-        kChar.SetTCharacter(Soldiers[I].kChar);
-        kChar.m_eType = arrPawnTypes[I];
+        kChar = Spawn(class'LWCE_XGCharacter_Soldier');
+        kChar.m_kCESoldier = ceSoldiers[I].kSoldier;
+        kChar.m_kCEChar = ceSoldiers[I].kChar;
 
         if (I >= 6)
         {
             kSpawn.Location = kSpawn.Location + (vector(kSpawn.Rotation) * -96.0);
         }
 
-        kUnit = LWCE_XGUnit(SpawnUnit(class'LWCE_XGUnit', m_kPlayerController, kSpawn.Location, kSpawn.Rotation, kChar, m_kSquad,, kSpawn));
-        kUnit.m_kCEChar = ceSoldiers[I].kChar;
-        kUnit.m_kCESoldier = ceSoldiers[I].kSoldier;
+        kUnit = LWCE_SpawnUnit(m_kPlayerController, kSpawn.Location, kSpawn.Rotation, kChar, ceSoldiers[I].kChar, ceSoldiers[I].kSoldier, m_kSquad,, kSpawn);
         kUnit.m_iUnitLoadoutID = Soldiers[I].iUnitLoadoutID;
         kUnit.AddStatModifiers(ceSoldiers[I].aStatModifiers);
+
+        `LWCE_LOG_CLS("Spawned soldier " $ I $ " in squad");
 
         if (kUnit != none)
         {
             if (kUnit.m_kCEChar.iCharacterType == eChar_Soldier)
             {
-                XComHumanPawn(kUnit.GetPawn()).SetAppearance(kUnit.m_kCESoldier.kAppearance);
+                LWCE_XComHumanPawn(kUnit.GetPawn()).LWCE_SetAppearance(kUnit.m_kCESoldier.kAppearance);
             }
 
             class'LWCE_XGLoadoutMgr'.static.ApplyInventory(kUnit);
@@ -106,6 +107,8 @@ function LWCE_LoadSquad(array<TTransferSoldier> Soldiers, array<LWCE_TTransferSo
             kUnit.UpdateItemCharges();
         }
     }
+
+    `LWCE_LOG_CLS("LoadSquad end");
 }
 
 protected function PostLoadGame()
@@ -157,6 +160,34 @@ simulated event ReplicatedEvent(name VarName)
     super.ReplicatedEvent(VarName);
 }
 
+function LWCE_XGUnit LWCE_SpawnUnit(PlayerController kPlayerController, Vector kLocation, Rotator kRotation, XGCharacter kCharacter, LWCE_TCharacter kCEChar, LWCE_TSoldier kCESoldier, XGSquad kSquad, optional bool bDestroyOnBadLocation = false, optional XComSpawnPoint kSpawnPoint, optional bool bSnapToGround = true, optional bool bBattleScanner = false)
+{
+    local LWCE_XGUnit kUnit;
+
+    kUnit = Spawn(class'LWCE_XGUnit', kPlayerController,, kLocation, kRotation,,, m_eTeam);
+    kUnit.SetBattleScanner(bBattleScanner);
+    kUnit.m_kCEChar = kCEChar;
+    kUnit.m_kCESoldier = kCESoldier;
+
+    if (!kUnit.Init(self, kCharacter, kSquad, bDestroyOnBadLocation, bSnapToGround))
+    {
+        kUnit.Destroy();
+        return none;
+    }
+
+    if (kSpawnPoint != none)
+    {
+        kSpawnPoint.m_kLastActorSpawned = kUnit;
+    }
+
+    if (kCharacter != none)
+    {
+        kCharacter.m_kUnit = kUnit;
+    }
+
+    return kUnit;
+}
+
 simulated state Active
 {
     simulated event BeginState(name PreviousStateName)
@@ -170,7 +201,6 @@ simulated state Active
     }
 }
 
-/*
 simulated state BeginningTurn
 {
     simulated event BeginState(name PreviousStateName)
@@ -183,7 +213,7 @@ simulated state BeginningTurn
         super.PushedState();
     }
 }
- */
+
 simulated state EndingTurn
 {
     simulated event BeginState(name PreviousStateName)

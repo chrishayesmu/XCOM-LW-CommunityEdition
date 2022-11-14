@@ -1,5 +1,27 @@
 class LWCE_XGInventory extends XGInventory;
 
+simulated function bool AddItem(XGInventoryItem kItem, ELocation eLoc, optional bool bMultipleItems = false)
+{
+    local LWCE_XGWeapon kWeapon;
+
+    if (!super.AddItem(kItem, eLoc, bMultipleItems))
+    {
+        return false;
+    }
+
+    // The inventory normally updates the secondary weapon on its own, but it seems to rely on
+    // XGWeapon.m_kTWeapon, which we aren't using in LWCE. We thus have to update the secondary ourselves.
+
+    kWeapon = LWCE_XGWeapon(kItem);
+
+    if (m_kSecondaryWeapon == none && kWeapon != none && (kWeapon.HasProperty(eWP_Pistol) || kWeapon.HasProperty(eWP_Secondary)))
+    {
+        m_kSecondaryWeapon = kWeapon;
+    }
+
+    return true;
+}
+
 function ApplyInventoryOnLoad()
 {
     local int I, J;
@@ -84,6 +106,7 @@ simulated function DetermineEngagementRange()
 {
     local float fRange;
     local int I;
+    local LWCEWeaponTemplate kWeaponTemplate;
     local XGWeapon kWeapon;
 
     m_fModifiableEngagementRange = 0.0;
@@ -93,10 +116,11 @@ simulated function DetermineEngagementRange()
     for (I = 0; I < eSlot_MAX; I++)
     {
         kWeapon = XGWeapon(GetItem(ELocation(I)));
+        kWeaponTemplate =`LWCE_WEAPON_FROM_XG(kWeapon);
 
-        if (kWeapon != none && kWeapon.GetRemainingAmmo() > 0 && !kWeapon.IsOverheated())
+        if (kWeapon != none && kWeapon.GetRemainingAmmo() > 0)
         {
-            if (kWeapon == GetActiveWeapon() || !kWeapon.CanBeStartingWeapon())
+            if (kWeapon == GetActiveWeapon() || !kWeaponTemplate.HasWeaponProperty(eWP_Secondary))
             {
                 fRange = class'LWCE_XGWeapon_Extensions'.static.LongRange(kWeapon);
 
@@ -123,16 +147,11 @@ simulated function DetermineEngagementRange()
     }
 }
 
-simulated function int GetNumItems(EItemType eItem)
+simulated function XGInventoryItem FindItemByName(name ItemName)
 {
-    // Since this is forwards-compatible, no need to deprecate the base function
-    return LWCE_GetNumItems(eItem);
-}
-
-simulated function int LWCE_GetNumItems(int iItemId)
-{
-    local int I, J, Num;
+    local int I, J;
     local ELocation eLoc;
+    local XGInventoryItem kInvItem;
 
     for (I = 0; I < eSlot_MAX; I++)
     {
@@ -140,9 +159,42 @@ simulated function int LWCE_GetNumItems(int iItemId)
 
         for (J = 0; J < GetNumberOfItemsInSlot(eLoc); J++)
         {
-            if (GetItemByIndexInSlot(J, eLoc) != none && GetItemByIndexInSlot(J, eLoc).GameplayType() == iItemId)
+            kInvItem = GetItemByIndexInSlot(J, eLoc);
+
+            if (kInvItem != none && class'LWCE_XGWeapon_Extensions'.static.GetItemName(kInvItem) == ItemName)
             {
-                ++Num;
+                return kInvItem;
+            }
+        }
+    }
+
+    return none;
+}
+
+simulated function int GetNumItems(EItemType eItem)
+{
+    `LWCE_LOG_DEPRECATED_CLS(GetNumItems);
+
+    return -1;
+}
+
+simulated function int LWCE_GetNumItems(name ItemName)
+{
+    local int I, J, Num;
+    local ELocation eLoc;
+    local XGInventoryItem kInvItem;
+
+    for (I = 0; I < eSlot_MAX; I++)
+    {
+        eLoc = ELocation(I);
+
+        for (J = 0; J < GetNumberOfItemsInSlot(eLoc); J++)
+        {
+            kInvItem = GetItemByIndexInSlot(J, eLoc);
+
+            if (kInvItem != none && class'LWCE_XGWeapon_Extensions'.static.GetItemName(kInvItem) == ItemName)
+            {
+                Num++;
             }
         }
     }
@@ -150,16 +202,117 @@ simulated function int LWCE_GetNumItems(int iItemId)
     return Num;
 }
 
-simulated function bool HasItemOfType(EItemType anItemType)
+simulated function XGInventoryItem GetRearBackpackItem(EItemType eTypeRequested)
 {
-    // Since this is forwards-compatible, no need to deprecate the base function
-    return LWCE_HasItemOfType(anItemType);
+    `LWCE_LOG_DEPRECATED_CLS(GetRearBackpackItem);
+
+    return none;
 }
 
-simulated function bool LWCE_HasItemOfType(int iItemId)
+simulated function XGInventoryItem LWCE_GetRearBackpackItem(name ItemName)
 {
-    // TODO: needs extra testing, not clear if this native function will work properly with modded items
-    return FindItemByEnum(iItemId) != none;
+    local XGInventoryItem kItem;
+    local int I;
+
+    for (I = 0; I < GetNumberOfItemsInSlot(eSlot_RearBackPack); I++)
+    {
+        kItem = GetItemByIndexInSlot(I, eSlot_RearBackPack);
+
+        if (kItem != none && class'LWCE_XGWeapon_Extensions'.static.GetItemName(kItem) == ItemName)
+        {
+            return kItem;
+        }
+    }
+
+    return none;
+}
+
+simulated function GetRearBackPackItemArray(out array<int> arrBackPackItemsReturned)
+{
+    `LWCE_LOG_DEPRECATED_CLS(GetRearBackPackItemArray);
+}
+
+simulated function LWCE_GetRearBackPackItemArray(out array<name> arrBackPackItemsReturned)
+{
+    local int I;
+    local name ItemName;
+    local XGInventoryItem kItem;
+
+    arrBackPackItemsReturned.Length = 0;
+
+    for (I = 0; I < GetNumberOfItemsInSlot(eSlot_RearBackPack); I++)
+    {
+        kItem = GetItemByIndexInSlot(I, eSlot_RearBackPack);
+
+        if (kItem != none)
+        {
+            ItemName = class'LWCE_XGWeapon_Extensions'.static.GetItemName(kItem);
+            arrBackPackItemsReturned.AddItem(ItemName);
+        }
+    }
+}
+
+simulated function XGWeapon GetSecondaryWeaponForUI()
+{
+    local LWCE_XGWeapon Weap;
+
+    if (m_kPrimaryWeapon != none && !m_kPrimaryWeapon.HasProperty(eWP_Secondary))
+    {
+        Weap = LWCE_XGWeapon(m_kSecondaryWeapon);
+    }
+    else
+    {
+        Weap = LWCE_XGWeapon(m_kPrimaryWeapon);
+    }
+
+    if (Weap == none)
+    {
+        Weap = LWCE_XGWeapon(SearchForSecondaryWeapon());
+    }
+
+    if (Weap == none || Weap.m_TemplateName == 'Item_AcidSpit')
+    {
+        return none;
+    }
+
+    return Weap;
+}
+
+simulated function bool HasItemOfType(EItemType anItemType)
+{
+    `LWCE_LOG_DEPRECATED_CLS(HasItemOfType);
+
+    return false;
+}
+
+simulated function bool LWCE_HasItemOfType(name ItemName)
+{
+    local int Slot, Index;
+
+    for (Slot = 0; Slot < eSlot_MAX; Slot++)
+    {
+        for (Index = 0; Index < m_arrStructSlots[Slot].m_iNumItems; Index++)
+        {
+            if (ItemName == class'LWCE_XGWeapon_Extensions'.static.GetItemName(m_arrStructSlots[Slot].m_arrItems[Index]))
+            {
+                return true;
+            }
+        }
+    }
+
+    return false;
+}
+
+simulated function PresEquip(XGInventoryItem kItem, bool bImmediate)
+{
+    local LWCEWeaponTemplate kWeapon;
+
+    if (kItem.IsA('XGWeapon'))
+    {
+        kWeapon = `LWCE_WEAPON(class'LWCE_XGWeapon_Extensions'.static.GetItemName(kItem));
+
+        m_kOwner.GetPawn().EquipWeapon(XComWeapon(kItem.m_kEntity), bImmediate, kWeapon.HasWeaponProperty(eWP_Backpack));
+    }
 }
 
 simulated function XGInventoryItem SearchForItemByEnumInSlot(ELocation Slot, EItemType eCompareType, optional out int iSearchIndex)

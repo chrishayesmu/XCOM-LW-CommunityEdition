@@ -5,6 +5,7 @@ struct CheckpointRecord_LWCE_XGStrategySoldier extends CheckpointRecord
     var int m_iPsionicClassId;
     var LWCE_TCharacter m_kCEChar;
     var LWCE_TSoldier m_kCESoldier;
+    var LWCE_TInventory m_kCEBackedUpLoadout;
 };
 
 var int m_iPsionicClassId;
@@ -16,26 +17,24 @@ var int m_iPsionicClassId;
 // failure to do so can cause broken behavior or even game crashes.
 var LWCE_TCharacter m_kCEChar;
 var LWCE_TSoldier m_kCESoldier;
+var LWCE_TInventory m_kCEBackedUpLoadout;
 
 function Init()
 {
     // Called after the soldier is first spawned and set up; use this opportunity
     // to sync vanilla game data into our structs
+    // TODO: all of this should be set up directly when the soldier is created, instead
 
     CopyFromVanillaCharacter();
 
-    // Syncing soldier data
+    // Sync soldier data
+    // TODO: stop doing this over time
     m_kCESoldier.iID = m_kSoldier.iID;
-    m_kCESoldier.strFirstName = m_kSoldier.strFirstName;
-    m_kCESoldier.strLastName = m_kSoldier.strLastName;
-    m_kCESoldier.strNickName = m_kSoldier.strNickName;
     m_kCESoldier.iRank = m_kSoldier.iRank;
     m_kCESoldier.iPsiRank = m_kSoldier.iPsiRank;
-    m_kCESoldier.iCountry = m_kSoldier.iCountry;
     m_kCESoldier.iXP = m_kSoldier.iXP;
     m_kCESoldier.iPsiXP = m_kSoldier.iPsiXP;
     m_kCESoldier.iNumKills = m_kSoldier.iNumKills;
-    m_kCESoldier.kAppearance = m_kSoldier.kAppearance;
     m_kCESoldier.bBlueshirt = m_kSoldier.bBlueshirt;
     m_kCESoldier.iSoldierClassId = m_kSoldier.kClass.eType;
 }
@@ -90,13 +89,12 @@ function LWCE_TTransferSoldier LWCE_BuildTransferSoldier(TTransferSoldier kTrans
     local LWCE_TTransferSoldier kCETransfer;
     local int iStat;
 
-    // A lot of soldier customization is hard to override, so just sync our appearance up
-    // before sending anyone out on any missions
-    m_kCESoldier.kAppearance = m_kSoldier.kAppearance;
-
     kCETransfer.kChar = m_kCEChar;
     kCETransfer.kSoldier = m_kCESoldier;
-    kCETransfer.kChar.kInventory = kTransfer.kChar.kInventory;
+    kCETransfer.kChar.kInventory = m_kCEChar.kInventory;
+
+    `LWCE_LOG_CLS("Building transfer soldier: m_kCEChar.iCharacterType = " $ m_kCEChar.iCharacterType $ ", m_kCEChar.kInventory.arrLargeItems.Length = " $ m_kCEChar.kInventory.arrLargeItems.Length $ ", m_kCEChar.kInventory.nmArmor = " $ m_kCEChar.kInventory.nmArmor);
+    `LWCE_LOG_CLS("m_kCESoldier.strFirstName = " $ m_kCESoldier.strFirstName $ ", m_kCESoldier.strLastName = " $ m_kCESoldier.strLastName);
 
     for (iStat = 0; iStat < 19; iStat++)
     {
@@ -155,6 +153,64 @@ function bool CanBeAugmented()
     }
 }
 
+function XComUnitPawn CreatePawn(optional name DestState = 'InHQ')
+{
+    local class<XComUnitPawn> PawnClass;
+    local LWCE_TInventory kInv;
+
+    `LWCE_LOG_CLS("CreatePawn: DestState = " $ DestState);
+
+    // TODO override other pawn classes
+    if (m_kPawn == none)
+    {
+        if (IsATank())
+        {
+            PawnClass = class'LWCE_XComTank';
+        }
+        else if (IsAugmented() && m_kCEChar.kInventory.nmArmor != 'Item_BaseAugments' && CanWearMecInRoom(ESoldierLocation(m_iHQLocation)))
+        {
+            PawnClass = class'XComMecPawn';
+        }
+        else
+        {
+            PawnClass = class'LWCE_XComHumanPawn';
+        }
+
+        m_kPawn = Spawn(PawnClass, self,,,,, /* bNoCollisionFail */ true);
+    }
+
+    m_kPawn.GotoState(DestState);
+
+    if (m_kPawn.IsA('XComHumanPawn') && DestState == 'MedalCeremony')
+    {
+        XComHumanPawn(m_kPawn).SetMedals(m_arrMedals);
+    }
+
+    if (IsATank())
+    {
+        LWCE_XComTank(m_kPawn).LWCE_Init(m_kCEChar.kInventory);
+    }
+    else if (IsAugmented() && m_kChar.kInventory.iArmor != eItem_MecCivvies)
+    {
+        if (CanWearMecInRoom(ESoldierLocation(m_iHQLocation)))
+        {
+            XComMecPawn(m_kPawn).Init(m_kChar, m_kChar.kInventory, m_kSoldier.kAppearance);
+        }
+        else
+        {
+            kInv = m_kCEChar.kInventory;
+            kInv.nmArmor = 'Item_BaseAugments';
+            LWCE_XComHumanPawn(m_kPawn).LWCE_Init(m_kCEChar, kInv, m_kCESoldier.kAppearance);
+        }
+    }
+    else
+    {
+        LWCE_XComHumanPawn(m_kPawn).LWCE_Init(m_kCEChar, m_kCEChar.kInventory, m_kCESoldier.kAppearance);
+    }
+
+    return m_kPawn;
+}
+
 /// <summary>
 /// Rolls each of the soldier's eligible equipped items to see if any were damaged or lost in the previous mission.
 /// Should only be called immediately after a mission ends, while the soldier still has their gear equipped. Calling at
@@ -162,92 +218,101 @@ function bool CanBeAugmented()
 /// </summary>
 function CheckForDamagedOrLostItems()
 {
+    local LWCEItemTemplate kItem;
+    local LWCE_XGFacility_Lockers kLockers;
     local LWCE_XGStorage kStorage;
-    local int Index, iItemId;
+    local int Index;
+    local name ItemName;
 
-    kStorage = `LWCE_STORAGE;
+    kLockers = LWCE_XGFacility_Lockers(LOCKERS());
+    kStorage = LWCE_XGStorage(STORAGE());
 
-    iItemId = GetInventory().iPistol;
+    ItemName = m_kCEChar.kInventory.nmPistol;
+    kItem = `LWCE_ITEM(ItemName);
 
-    if (iItemId != 0 && !kStorage.LWCE_IsInfinite(iItemId))
+    // TODO: this should equip the infinite secondary if there's one other than pistol
+    if (ItemName != '' && !kItem.IsInfinite())
     {
-        if (ShouldItemBeLost(iItemId))
+        if (ShouldItemBeLost())
         {
-            LOCKERS().EquipPistol(self, `LW_ITEM_ID(Pistol));
-            LoseItem(iItemId, kStorage);
+            kLockers.LWCE_EquipPistol(self, 'Item_Pistol');
+            LoseItem(ItemName, kStorage);
         }
-        else if (ShouldItemBeDamaged(iItemId))
+        else if (ShouldItemBeDamaged(ItemName))
         {
-            LOCKERS().EquipPistol(self, `LW_ITEM_ID(Pistol));
-            DamageItem(iItemId, kStorage);
-        }
-    }
-
-    for (Index = 0; Index < GetInventory().iNumLargeItems; Index++)
-    {
-        iItemId = GetInventory().arrLargeItems[Index];
-
-        if (iItemId != 0 && !kStorage.LWCE_IsInfinite(iItemId))
-        {
-            if (ShouldItemBeLost(iItemId))
-            {
-                LOCKERS().UnequipLargeItem(self, Index);
-                LoseItem(iItemId, kStorage);
-            }
-            else if (ShouldItemBeDamaged(iItemId))
-            {
-                LOCKERS().UnequipLargeItem(self, Index);
-                DamageItem(iItemId, kStorage);
-            }
+            kLockers.LWCE_EquipPistol(self, 'Item_Pistol');
+            DamageItem(ItemName, kStorage);
         }
     }
 
-    for (Index = 0; Index < GetInventory().iNumSmallItems; Index++)
+    for (Index = 0; Index < m_kCEChar.kInventory.arrLargeItems.Length; Index++)
     {
-        iItemId = GetInventory().arrSmallItems[Index];
+        ItemName = m_kCEChar.kInventory.arrLargeItems[Index];
+        kItem = `LWCE_ITEM(ItemName);
 
-        if (iItemId != 0 && !kStorage.LWCE_IsInfinite(iItemId))
+        if (ItemName != '' && !kItem.IsInfinite())
         {
-            if (ShouldItemBeLost(iItemId))
+            if (ShouldItemBeLost())
             {
-                LOCKERS().UnequipSmallItem(self, Index);
-                LoseItem(iItemId, kStorage);
+                kLockers.UnequipLargeItem(self, Index);
+                LoseItem(ItemName, kStorage);
             }
-            else if (ShouldItemBeDamaged(iItemId))
+            else if (ShouldItemBeDamaged(ItemName))
             {
-                LOCKERS().UnequipSmallItem(self, Index);
-                DamageItem(iItemId, kStorage);
+                kLockers.UnequipLargeItem(self, Index);
+                DamageItem(ItemName, kStorage);
+            }
+        }
+    }
+
+    for (Index = 0; Index < m_kCEChar.kInventory.arrSmallItems.Length; Index++)
+    {
+        ItemName = m_kCEChar.kInventory.arrSmallItems[Index];
+        kItem = `LWCE_ITEM(ItemName);
+
+        if (ItemName != '' && !kItem.IsInfinite())
+        {
+            if (ShouldItemBeLost())
+            {
+                kLockers.UnequipSmallItem(self, Index);
+                LoseItem(ItemName, kStorage);
+            }
+            else if (ShouldItemBeDamaged(ItemName))
+            {
+                kLockers.UnequipSmallItem(self, Index);
+                DamageItem(ItemName, kStorage);
             }
         }
     }
 
     if (GetPsiRank() != 7 && !IsATank())
     {
-        iItemId = GetInventory().iArmor;
+        ItemName = m_kCEChar.kInventory.nmArmor;
+        kItem = `LWCE_ITEM(ItemName);
 
-        if (!kStorage.LWCE_IsInfinite(iItemId))
+        if (!kItem.IsInfinite())
         {
-            if (ShouldItemBeLost(iItemId))
+            if (ShouldItemBeLost())
             {
-                LOCKERS().EquipArmor(self, IsAugmented() ? `LW_ITEM_ID(BaseAugments) : `LW_ITEM_ID(TacArmor));
-                LoseItem(iItemId, kStorage);
+                kLockers.LWCE_EquipArmor(self, IsAugmented() ? 'Item_BaseAugments' : 'Item_TacArmor');
+                LoseItem(ItemName, kStorage);
             }
-            else if (ShouldItemBeDamaged(iItemId))
+            else if (ShouldItemBeDamaged(ItemName))
             {
-                LOCKERS().EquipArmor(self, IsAugmented() ? `LW_ITEM_ID(BaseAugments) : `LW_ITEM_ID(TacArmor));
-                DamageItem(iItemId, kStorage);
+                kLockers.LWCE_EquipArmor(self, IsAugmented() ? 'Item_BaseAugments' : 'Item_TacArmor');
+                DamageItem(ItemName, kStorage);
             }
         }
     }
 
-    if (GetInventory().arrLargeItems[0] == 0)
+    if (m_kCEChar.kInventory.arrLargeItems.Length == 0)
     {
-        LOCKERS().EquipLargeItem(self, kStorage.LWCE_GetInfinitePrimary(self), 0);
+        kLockers.LWCE_EquipLargeItem(self, kStorage.LWCE_GetInfinitePrimary(self), 0);
     }
 
-    if (GetInventory().arrLargeItems[1] == 0)
+    if (m_kCEChar.kInventory.arrLargeItems.Length == 1)
     {
-        LOCKERS().EquipLargeItem(self, kStorage.LWCE_GetInfiniteSecondary(self), 1);
+        kLockers.LWCE_EquipLargeItem(self, kStorage.LWCE_GetInfiniteSecondary(self), 1);
     }
 
     if (GetCurrentStat(eStat_HP) == 0)
@@ -296,25 +361,48 @@ function ConvertToMecClass()
 function EquipRocketLauncher()
 {
     // Largely copied from XGStrategySoldier.GivePsiPerks, which was rewritten to do this
-    local int iArmorItemId;
+    local LWCE_XGFacility_Lockers kLockers;
+    local name ArmorName;
 
-    LOCKERS().UnequipPistol(self);
+    kLockers = LWCE_XGFacility_Lockers(LOCKERS());
 
-    iArmorItemId = m_kChar.kInventory.iArmor;
+    kLockers.UnequipPistol(self);
 
-    if (iArmorItemId == `LW_ITEM_ID(TacArmor))
+    ArmorName = m_kCEChar.kInventory.nmArmor;
+
+    if (ArmorName == 'Item_TacArmor')
     {
-        LOCKERS().EquipArmor(self, `LW_ITEM_ID(TacVest));
+        kLockers.LWCE_EquipArmor(self, 'Item_TacVest');
     }
     else
     {
-        LOCKERS().EquipArmor(self, `LW_ITEM_ID(TacArmor));
+        kLockers.LWCE_EquipArmor(self, 'Item_TacArmor');
     }
 
     // Forcibly re-equips the current armor for some reason (maybe to force the pawn to update?)
-    LOCKERS().EquipArmor(self, iArmorItemId);
-    LOCKERS().EquipLargeItem(self, `LW_ITEM_ID(RocketLauncher), 1);
+    kLockers.LWCE_EquipArmor(self, ArmorName);
+    kLockers.LWCE_EquipLargeItem(self, 'Item_RocketLauncher', 1);
     OnLoadoutChange();
+}
+
+/// <summary>
+/// Gets all of the perk IDs which this soldier has, regardless of source. The resulting array will
+/// not contain duplicate items.
+/// </summary>
+function array<int> GetAllPerks()
+{
+    local array<int> arrPerks;
+    local int Index;
+
+    for (Index = 0; Index < m_kCEChar.arrPerks.Length; Index++)
+    {
+        if (arrPerks.Find(m_kCEChar.arrPerks[Index].Id) == INDEX_NONE)
+        {
+            arrPerks.AddItem(m_kCEChar.arrPerks[Index].Id);
+        }
+    }
+
+    return arrPerks;
 }
 
 function int LWCE_GetBaseClass()
@@ -361,6 +449,20 @@ function LWCE_TClassDefinition GetClassDefinition()
 function int GetEnergy()
 {
     return LWCE_GetClass();
+}
+
+function TInventory GetInventory()
+{
+    local TInventory kInventory;
+
+    `LWCE_LOG_DEPRECATED_CLS(GetInventory);
+
+    return kInventory;
+}
+
+function LWCE_TInventory LWCE_GetInventory()
+{
+    return m_kCEChar.kInventory;
 }
 
 function EPerkType GetPerkInClassTree(int branch, int Option, optional bool bIsPsiTree)
@@ -513,6 +615,11 @@ function bool HasPerk(int iPerk)
     }
 
     return false;
+}
+
+function bool IsATank()
+{
+    return m_kCEChar.iCharacterType == eChar_Tank;
 }
 
 function bool IsAugmented()
@@ -764,6 +871,13 @@ function LWCE_RebuildAfterCombat(TTransferSoldier kTransfer, LWCE_TTransferSoldi
     m_strCauseOfDeath = kTransfer.CauseOfDeathString;
 }
 
+function SetHQLocation(int iNewHQLocation, optional bool bForce = false, optional int SlotIdx = -1, optional bool bForceNewPawn = false)
+{
+    `LWCE_LOG_CLS("SetHQLocation: " $ self $ " - iNewHQLocation = " $ ELocation(iNewHQLocation) $ ", bForce = " $ bForce $ ", SlotIdx = " $ SlotIdx $ ", bForceNewPawn = " $ bForceNewPawn);
+
+    super.SetHQLocation(iNewHQLocation, bForce, SlotIdx, bForceNewPawn);
+}
+
 function SetSoldierClass(ESoldierClass eNewClass)
 {
     `LWCE_LOG_DEPRECATED_CLS(SetSoldierClass);
@@ -778,7 +892,7 @@ function LWCE_SetSoldierClass(int iNewClassId)
     local LWCE_XGTacticalGameCore kGameCore;
     local LWCE_TClassDefinition kNewClassDef;
     local LWCE_TPerkTreeChoice kPerkChoice;
-    local TInventory kNewLoadout;
+    local LWCE_TInventory kNewLoadout;
     local array<ECharacterVoice> PossibleVoices;
 
     kBarracks = LWCE_XGFacility_Barracks(BARRACKS());
@@ -786,7 +900,7 @@ function LWCE_SetSoldierClass(int iNewClassId)
     kHQ = LWCE_XGHeadquarters(HQ());
     kStorage = `LWCE_STORAGE;
     iPreviousClassId = m_kCEChar.iClassId;
-    kNewLoadout = m_kChar.kInventory;
+    kNewLoadout = m_kCEChar.kInventory;
 
     if (iNewClassId == eSC_Mec)
     {
@@ -875,8 +989,8 @@ function LWCE_SetSoldierClass(int iNewClassId)
 
             m_kSoldier.iPsiXP = 0;
             kBarracks.UpdateFoundryPerksForSoldier(self);
-            kNewLoadout = m_kChar.kInventory;
-            kNewLoadout.iArmor = eItem_MecCivvies;
+            kNewLoadout = m_kCEChar.kInventory;
+            kNewLoadout.nmArmor = 'Item_BaseAugments';
 
             m_kCEChar.iClassId = iMecClassId;
             m_kCESoldier.iSoldierClassId = m_kCEChar.iClassId;
@@ -930,24 +1044,24 @@ function LWCE_SetSoldierClass(int iNewClassId)
     m_kSoldier.kClass.eWeaponType = EWeaponProperty(iEquipmentGroup);
     m_kSoldier.kClass.strName = GetClassName();
 
-    kGameCore.TInventoryLargeItemsSetItem(kNewLoadout, 0, kStorage.LWCE_GetInfinitePrimary(self));
-    kGameCore.TInventoryLargeItemsSetItem(m_kBackedUpLoadout, 0, kStorage.LWCE_GetInfinitePrimary(self));
+    class'LWCEInventoryUtils'.static.SetLargeItem(kNewLoadout, 0, kStorage.LWCE_GetInfinitePrimary(self));
+    class'LWCEInventoryUtils'.static.SetLargeItem(m_kCEBackedUpLoadout, 0, kStorage.LWCE_GetInfinitePrimary(self));
 
     if (iNewClassId != eSC_Mec)
     {
         if (HasPerk(`LW_PERK_ID(FireRocket)))
         {
-            kGameCore.TInventoryLargeItemsSetItem(kNewLoadout, 1, kStorage.LWCE_GetInfiniteSecondary(self));
-            kGameCore.TInventoryLargeItemsSetItem(m_kBackedUpLoadout, 1, kStorage.LWCE_GetInfiniteSecondary(self));
+            class'LWCEInventoryUtils'.static.SetLargeItem(kNewLoadout, 1, kStorage.LWCE_GetInfiniteSecondary(self));
+            class'LWCEInventoryUtils'.static.SetLargeItem(m_kCEBackedUpLoadout, 1, kStorage.LWCE_GetInfiniteSecondary(self));
         }
         else
         {
-            kNewLoadout.iPistol = kStorage.LWCE_GetInfinitePistol(self);
-            m_kBackedUpLoadout.iPistol = kStorage.LWCE_GetInfinitePistol(self);
+            kNewLoadout.nmPistol = kStorage.LWCE_GetInfinitePistol(self);
+            m_kCEBackedUpLoadout.nmPistol = kStorage.LWCE_GetInfinitePistol(self);
         }
     }
 
-    LOCKERS().ApplySoldierLoadout(self, kNewLoadout);
+    LWCE_XGFacility_Lockers(LOCKERS()).LWCE_ApplySoldierLoadout(self, kNewLoadout);
 
     if (IsOptionEnabled(`LW_SECOND_WAVE_ID(TrainingRoulette)) && !IsASuperSoldier())
     {
@@ -968,7 +1082,8 @@ protected function CopyFromVanillaCharacter()
     m_kCEChar.iCharacterType = m_kChar.iType;
     m_kCEChar.fBioElectricParticleScale = m_kChar.fBioElectricParticleScale;
     m_kCEChar.bHasPsiGift = m_kChar.bHasPsiGift;
-    m_kCEChar.kInventory = m_kChar.kInventory;
+
+    // Inventory is not copied; we should have fully replaced all use of the vanilla inventory system
 
     m_kCEChar.arrAbilities.Length = 0;
     m_kCEChar.arrPerks.Length = 0;
@@ -1027,20 +1142,20 @@ protected function CopyFromVanillaCharacter()
     SyncCharacterStatsFromVanilla();
 }
 
-protected function DamageItem(int iItemId, LWCE_XGStorage kStorage)
+protected function DamageItem(name ItemName, LWCE_XGStorage kStorage)
 {
-    kStorage.LWCE_DamageItem(iItemId, 1);
+    kStorage.LWCE_DamageItem(ItemName, 1);
 
     // Mark that an item was damaged, for the debrief UI
-    `LWCE_UTILS.AdjustItemQuantity(kStorage.m_arrCEItemsDamagedLastMission, iItemId, 1);
+    `LWCE_UTILS.AdjustItemQuantity(kStorage.m_arrCEItemsDamagedLastMission, ItemName, 1);
 }
 
-protected function LoseItem(int iItemId, LWCE_XGStorage kStorage)
+protected function LoseItem(name ItemName, LWCE_XGStorage kStorage)
 {
-    kStorage.RemoveItem(iItemId, 1);
+    kStorage.LWCE_RemoveItem(ItemName, 1);
 
     // Mark that an item was lost, for the debrief UI
-    `LWCE_UTILS.AdjustItemQuantity(kStorage.m_arrCEItemsLostLastMission, iItemId, 1);
+    `LWCE_UTILS.AdjustItemQuantity(kStorage.m_arrCEItemsLostLastMission, ItemName, 1);
 }
 
 protected function SetCosmeticsByClass()
@@ -1089,8 +1204,9 @@ protected function SetCosmeticsByClass()
     }
 }
 
-protected function bool ShouldItemBeDamaged(int iItemId)
+protected function bool ShouldItemBeDamaged(name ItemName)
 {
+    local LWCEEquipmentTemplate kItem;
     local float fPercentHPMissing;
     local int iBaseDamageChance, iScaledDamageChance;
 
@@ -1099,8 +1215,8 @@ protected function bool ShouldItemBeDamaged(int iItemId)
         return false;
     }
 
-    // TODO: need a new data source for damage chance
-    iBaseDamageChance = int(class'XGGameData'.static.GetMecBaseArmor(EItemType(iItemId)));
+    kItem = LWCEEquipmentTemplate(`LWCE_ITEM(ItemName));
+    iBaseDamageChance = kItem.iMaxChanceToBeDamaged;
 
     if (iBaseDamageChance <= 0)
     {
@@ -1125,7 +1241,7 @@ protected function bool ShouldItemBeDamaged(int iItemId)
     return Roll(int(class'XGTacticalGameCore'.default.SW_RARE_PSI));
 }
 
-protected function bool ShouldItemBeLost(int iItemId)
+protected function bool ShouldItemBeLost()
 {
     // Items are only lost when a soldier dies
     if (GetCurrentStat(eStat_HP) > 0)
@@ -1141,7 +1257,6 @@ protected function bool ShouldItemBeLost(int iItemId)
     }
 
     // TODO: potential place to add a mod hook
-
     return Roll(BLUESHIRT_HP_MOD);
 }
 

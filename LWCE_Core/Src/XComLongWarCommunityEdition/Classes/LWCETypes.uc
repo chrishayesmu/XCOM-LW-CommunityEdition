@@ -41,11 +41,46 @@ struct LWCE_TIDWithSource
     var int SourceType;
 };
 
+struct LWCE_TInventory
+{
+    var name nmArmor;
+    var name nmPistol;
+
+    var array<name> arrLargeItems;
+    var array<name> arrSmallItems;
+    var array<name> arrCustomItems;
+};
+
+struct LWCE_TLoadout
+{
+    var name Items[ELocation.EnumCount];
+    var array<name> Backpack;
+};
+
+struct LWCE_TAppearance
+{
+    var name nmHead;
+    var name nmRace;
+    var name nmHaircut;
+    var name nmFacialHair;
+    var name nmBody;
+    var name nmLanguage;
+    var name nmVoice;
+    var name nmArmorKit;
+    var int iBodyMaterial;
+    var int iFlag;
+    var int iGender;
+    var Color ArmorTintPrimary;
+    var Color ArmorTintSecondary;
+    var Color HairColor;
+    var Color SkinColor;
+};
+
 struct LWCE_TCharacter
 {
     var string strName;
     var int iCharacterType; // As in the ECharacter enum
-    var TInventory kInventory;
+    var LWCE_TInventory kInventory;
 
     var array<LWCE_TIDWithSource> arrAbilities;
 
@@ -61,6 +96,7 @@ struct LWCE_TCharacter
     var int iBaseClassId; // The first non-rookie class this character had; resets if the character becomes a MEC
     var int iClassId;     // The character's current class
     var bool bHasPsiGift;
+    var bool bIsAugmented; // TODO: not being populated yet
     var float fBioElectricParticleScale;
 };
 
@@ -115,14 +151,9 @@ struct LWCE_TSoldier
     var int iXP;
     var int iPsiXP;
     var int iNumKills;
-    var TAppearance kAppearance;
+    var LWCE_TAppearance kAppearance;
     var int iSoldierClassId;
     var bool bBlueshirt;
-
-    structdefaultproperties
-    {
-        kAppearance=(iHead=-1,iHaircut=-1,iBody=-1,iBodyMaterial=-1,iSkinColor=-1,iEyeColor=-1,iFlag=-1,iArmorSkin=-1,iVoice=-1,iArmorDeco=-1,iArmorTint=-1)
-    }
 };
 
 /// <summary>
@@ -141,11 +172,13 @@ struct LWCE_TCharacterStats
     var int iMobility;
     var int iRegen;
     var int iWill;
+    var int iShieldHP;
+    var int iSightRadius;
 };
 
 struct LWCE_TItemQuantity
 {
-    var int iItemId;
+    var name ItemName;
     var int iQuantity;
 };
 
@@ -180,7 +213,7 @@ struct LWCE_TPrereqs
 {
     var array<int> arrFacilityReqs; // A list of facility IDs that must be built. For non-unique facilities, only one needs to be built.
     var array<name> arrFoundryReqs; // A list of foundry project names that must be complete.
-    var array<int> arrItemReqs;     // A list of item IDs. The player must have possessed these at one time, but doesn't necessarily need to still have them now.
+    var array<name> arrItemReqs;    // A list of item names. The player must have possessed these at one time, but doesn't necessarily need to still have them now.
     var array<name> arrTechReqs;    // A list of research tech names that must be complete.
     var array<int> arrUfoReqs;      // A list of UFO types that must be encountered. A UFO type is considered encountered after a successful assault on a crashed or landed UFO.
 
@@ -189,97 +222,6 @@ struct LWCE_TPrereqs
 
     var bool bRequiresAutopsy;       // If true, any autopsy research must be completed.
     var bool bRequiresInterrogation; // If true, any interrogation research must be completed.
-};
-
-struct LWCE_TItem
-{
-    var string strName;           // The player-viewable name of the item (singular).
-    var string strNamePlural;     // The player-viewable name of the item (plural).
-    var string strBriefSummary;   // A summary of the item to show in the Engineering UI.
-    var string strTacticalText;   // Text shown in the detailed view of equipment items. Should be formatted as bullet points to match
-                                  // other items. See examples in XComGame.int, in the array m_aItemTacticalText, for the HTML to use.
-    var string ImagePath;         // Path to an image to show in the UI for this item. Must include the "img:///" prefix.
-                                  // Typical item images are 256x128.
-
-    var int iItemId;              // The integer ID of the item. See README if you don't know how to choose IDs.
-    var int iCategory;            // The item's category, corresponding to the enum type EItemCategory.
-
-    var int iHours;               // If >= 0, this is the number of engineer-hours needed to build this item. If < 0, this item cannot be built.
-    var int iMaxEngineers;        // The number of engineers required to make progress at normal speed on this project.
-
-    var int iReplacementItemId;  // If > 0, when this item is granted, then the replacement item ID is added to XCOM's stores instead of the actual
-                                 // item ID. This can be used to make items buildable in different ways, such as how SHIVs can be built directly,
-                                 // or they can be rebuilt using a damaged SHIV chassis. If you're using this field, then you can set strName to
-                                 // the name you want to appear in Engineering instead of the replacement item's name.
-
-    // How many of this item XCOM HQ starts the game with. If bIsInfinite is set at the start of the game, this value is ignored.
-    var int iStartingQuantity;
-
-    // Whether XCOM's stores of this item are unlimited, such as starting weapons and armor, or Alien Grenades after their Foundry project
-    // is complete. If this changes based on the state of the campaign (such as Alien Grenades do), then your mod should use the strategy hook
-    // Override_LWCE_GetItem to set this value dynamically. Note that items which are marked as infinite cannot be built in engineering, nor can
-    // they be sold in the Grey Market.
-    var bool bIsInfinite;
-
-    var bool bIsCaptive;          // Whether this represents a captive unit.
-    var int iCaptiveToCorpseId;   // If the captive is killed, this is the item ID of the corpse to add to the player's storage.
-
-    var bool bIsCorpse;           // Whether this represents the corpse of a unit.
-    var int iCorpseToCharacterId; // The ID of the character that this is the corpse of.
-
-    var bool bIsUniqueEquip;      // If true, soldiers can only have one of this item equipped. This field is ignored for non-equipment items.
-
-    // An array of item IDs that cannot be equipped at the same time as this item, such as how Drum Mags and Hi Cap Mags can't be equipped together.
-    // This field is ignored for non-equipment items.
-    var array<int> arrMutuallyExclusiveEquipment;
-
-    // If this array is populated, then this item can only be equipped if one of the item IDs in this array is equipped in a large equipment slot.
-    // This field is ignored for non-equipment items.
-    var array<int> arrCompatibleLargeEquipment;
-
-    // If this array is populated, then this item cannot be equipped if any of the item IDs in this array is equipped in a large equipment slot.
-    // This field is ignored for non-equipment items.
-    var array<int> arrIncompatibleLargeEquipment;
-
-    // When equipped, this item grants its holder all of the perk IDs listed here.
-    // This field is ignored for non-equipment items.
-    var array<int> arrPerksGranted;
-
-    // The base number of charges for this item. If something changes the number of charges globally, such as a Foundry project, the mod should use
-    // Override_GetItem to reflect that dynamically. If the number of charges changes situationally, such as with soldier perks, that should be done
-    // using Override_UpdateItemCharges instead. Items that are on a cooldown or are not limited usage should not set this field.
-    // This field is ignored for non-equipment items.
-    var int iBaseCharges;
-
-    // If iHours >= 0, kCost is the cost to build this item in Engineering, and the item can be sold for 40% of its cash cost.
-    // Otherwise, kCost.iCash is the selling price of the item, if greater than zero. If kCost.iCash <= 0, the item cannot be sold.
-    var LWCE_TCost kCost;
-
-    // Prerequisites for this item to appear in Engineering to be built. The iHours field must also be greater than or equal to zero.
-    var LWCE_TPrereqs kPrereqs;
-
-    structdefaultproperties
-    {
-        strName=""
-        strNamePlural=""
-        strBriefSummary=""
-        ImagePath=""
-        iItemId=0
-        iCategory=0
-        iHours=-1
-        iMaxEngineers=-1
-        iStartingQuantity=0
-        bIsInfinite=false
-        bIsCaptive=false
-        iCaptiveToCorpseId=0
-        bIsCorpse=false
-        iCorpseToCharacterId=0
-        bIsUniqueEquip=false
-        arrPerksGranted=()
-        iBaseCharges=0
-        kCost=(iCash=-1)
-        kPrereqs=()
-    }
 };
 
 /// <summary>
@@ -376,8 +318,8 @@ struct LWCE_TWeapon
     // The (singular) name of the weapon to show the player.
     var string strName;
 
-    // The ID of this weapon, which must match the ID of its equivalent LWCE_TItem entry.
-    var int iItemId;
+    // The ID of this weapon, which must match the ID of its equivalent LWCEItemTemplate entry.
+    var name ItemName;
 
     // IDs of abilities granted to units with this item equipped.
     var array<int> arrAbilities;
@@ -420,7 +362,7 @@ struct LWCE_TWeapon
     var int iBaseAmmo;
 
     // The maximum chance for this item to be damaged if its wearer is injured. The max chance is applied if the wearer is reduced
-    // to 0 HP, and scales linearly for other HP values. If zero, or if the corresponding LWCE_TItem is infinite, it cannot be damaged.
+    // to 0 HP, and scales linearly for other HP values. If zero, or if the corresponding LWCEItemTemplate is infinite, it cannot be damaged.
     // This is a percentage, so it should be in the range 0 to 100, inclusive.
     var int iMaxChanceToBeDamaged;
 
@@ -453,12 +395,6 @@ struct TModVersion
         Revision=0
     }
 };
-
-// ------------------------------------------------------------------------------
-// Delegate types used in various mod hooks
-// ------------------------------------------------------------------------------
-
-
 
 // ------------------------------------------------------------------------------
 // Structs beyond this point are unlikely to be needed by most mod authors. You
@@ -497,6 +433,7 @@ struct LWCE_TItemCard
     var string strName;
     var string strFlavorText;
     var string strShivWeapon;
+    var name ItemName;
     var int shipWpnRange;
     var int shipWpnArmorPen;
     var int shipWpnHitChance;
@@ -515,7 +452,6 @@ struct LWCE_TItemCard
     var float fireRate;
     var int iRangeCategory;
     var int iCardType;
-    var int iItemId;
     var int iCharges;
     var array<int> arrPerkTypes;
     var array<int> arrAbilities;
@@ -524,38 +460,21 @@ struct LWCE_TItemCard
     structdefaultproperties
     {
         strName="UNDEFINED"
-        strFlavorText=""
-        strShivWeapon=""
-        shipWpnRange=0
-        shipWpnArmorPen=0
-        shipWpnHitChance=0
-        shipWpnFireRate=0
-        iCharacterId=0
-        iHealth=0
-        iWill=0
-        iAim=0
-        iDefense=0
-        iArmorHPBonus=0
-        iBaseCritChance=0
-        iBaseDamage=0
-        iBaseDamageMax=0
-        iCritDamage=0
-        iCritDamageMax=0
-        fireRate=0.0
-        iRangeCategory=0
-        iCardType=0
-        iItemId=0
-        iCharges=0
-        arrPerkTypes=()
-        arrAbilities=()
-        arrAbilitiesShiv=()
     }
+};
+
+struct LWCE_TProjectCost
+{
+    var LWCE_TCost kCost;
+    var int iStaffTypeReq; // What type of staff are needed to work on this project.
+    var int iStaffNumReq;  // How many of that staff type are needed.
+    var int iBarracksReq;  // How much open barracks space is required to complete this project.
 };
 
 struct LWCE_TItemProject
 {
     var int iIndex;
-    var int iItemId;
+    var name ItemName;
     var int iEngineers;
     var int iMaxEngineers;
     var int iQuantity;
@@ -564,13 +483,39 @@ struct LWCE_TItemProject
     var bool bAdjusted;
     var bool bNotify;
     var bool bRush;
-    var TProjectCost kRebate;
-    var TProjectCost kOriginalCost;
+    var LWCE_TProjectCost kRebate;
+    var LWCE_TProjectCost kOriginalCost;
 
     structdefaultproperties
     {
         iIndex=-1
     }
+};
+
+struct LWCE_TObjectSummary
+{
+    var TImage imgObject;
+    var TText txtRequirementsLabel;
+    var TText txtSummary;
+    var TCostSummary kCost;
+    var bool bCanAfford;
+    var name ItemType;
+};
+
+struct LWCE_TShip
+{
+    var string strName;
+    var string strSize;
+    var EShipType eType;
+    var int iSpeed;
+    var int iEngagementSpeed;
+    var int iHP;
+    var int iArmor;
+    var int iArmorPen;
+    var int iRange;
+    var array<LWCE_TItemQuantity> arrSalvage;
+    var array<name> arrWeapons;
+    var int iImage;
 };
 
 struct LWCE_TTechState
@@ -596,102 +541,4 @@ struct LWCE_TTransferSoldier
     }
 };
 
-// ------------------------------------------------------------------------------
-// Utility functions for mixing vanilla and LWCE types
-// ------------------------------------------------------------------------------
-
-delegate OnShowMenu(TMenu kMenu, optional object Data);
-
 delegate OnSpinnerChanged(int Direction);
-
-static function TProjectCost ConvertTCostToProjectCost(LWCE_TCost kInCost)
-{
-    local LWCE_TItemQuantity kItemQuantity;
-    local TProjectCost kOutCost;
-
-    kOutCost.iCash = kInCost.iCash;
-    kOutCost.iAlloys = kInCost.iAlloys;
-    kOutCost.iElerium = kInCost.iElerium;
-
-    if (kInCost.iMeld > 0)
-    {
-        kOutCost.arrItems.AddItem(eItem_Meld);
-        kOutCost.arrItemQuantities.AddItem(kInCost.iMeld);
-    }
-
-    if (kInCost.iWeaponFragments > 0)
-    {
-        kOutCost.arrItems.AddItem(eItem_WeaponFragment);
-        kOutCost.arrItemQuantities.AddItem(kInCost.iWeaponFragments);
-    }
-
-    foreach kInCost.arrItems(kItemQuantity)
-    {
-        kOutCost.arrItems.AddItem(kItemQuantity.iItemId);
-        kOutCost.arrItemQuantities.AddItem(kItemQuantity.iQuantity);
-    }
-
-    return kOutCost;
-}
-
-static function LWCE_TCost ConvertTResearchCostToTCost(TResearchCost kInCost)
-{
-    local int Index;
-    local LWCE_TCost kOutCost;
-    local LWCE_TItemQuantity kItemQuantity;
-
-    kOutCost.iCash = kInCost.iCash;
-    kOutCost.iAlloys = kInCost.iAlloys;
-    kOutCost.iElerium = kInCost.iElerium;
-
-    for (Index = 0; Index < kInCost.arrItems.Length; Index++)
-    {
-        if (kInCost.arrItems[Index] == eItem_Meld)
-        {
-            kOutCost.iMeld = kInCost.arrItemQuantities[Index];
-        }
-        else if (kInCost.arrItems[Index] == eItem_WeaponFragment)
-        {
-            kOutCost.iWeaponFragments = kInCost.arrItemQuantities[Index];
-        }
-        else
-        {
-            kItemQuantity.iItemId = kInCost.arrItems[Index];
-            kItemQuantity.iQuantity = kInCost.arrItemQuantities[Index];
-
-            kOutCost.arrItems.AddItem(kItemQuantity);
-        }
-    }
-
-    return kOutCost;
-}
-
-static function TResearchCost ConvertTCostToTResearchCost(LWCE_TCost kInCost)
-{
-    local LWCE_TItemQuantity kItemQuantity;
-    local TResearchCost kOutCost;
-
-    kOutCost.iCash = kInCost.iCash;
-    kOutCost.iAlloys = kInCost.iAlloys;
-    kOutCost.iElerium = kInCost.iElerium;
-
-    if (kInCost.iMeld > 0)
-    {
-        kOutCost.arrItems.AddItem(eItem_Meld);
-        kOutCost.arrItemQuantities.AddItem(kInCost.iMeld);
-    }
-
-    if (kInCost.iWeaponFragments > 0)
-    {
-        kOutCost.arrItems.AddItem(eItem_WeaponFragment);
-        kOutCost.arrItemQuantities.AddItem(kInCost.iWeaponFragments);
-    }
-
-    foreach kInCost.arrItems(kItemQuantity)
-    {
-        kOutCost.arrItems.AddItem(kItemQuantity.iItemId);
-        kOutCost.arrItemQuantities.AddItem(kItemQuantity.iQuantity);
-    }
-
-    return kOutCost;
-}

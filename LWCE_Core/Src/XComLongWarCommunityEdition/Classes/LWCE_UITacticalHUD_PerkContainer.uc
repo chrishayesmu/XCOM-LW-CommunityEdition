@@ -7,7 +7,6 @@ simulated function UpdatePerks()
     local TUIPerkInfo kUIPerkInfo;
     local LWCE_TPerk kPerk;
     local int I, iPerkId;
-    local array<EItemType_Info> arrItemInfos;
 
     if (!IsInited())
     {
@@ -62,17 +61,7 @@ simulated function UpdatePerks()
             m_arrPerkData.AddItem(kUIPerkInfo);
         }
 
-        arrItemInfos = kActiveUnit.GetItemInfos();
-
-        for (I = 0; I < arrItemInfos.Length; I++)
-        {
-            kUIPerkInfo.strPerkName = class'XComLocalizer'.static.ExpandString(class'XLocalizedData'.default.m_aInventoryName[arrItemInfos[I]]);
-            kUIPerkInfo.strPerkImage = class'UIUtilities'.static.GetEItemType_InfoIcon(arrItemInfos[I]);
-            kUIPerkInfo.strCharges = "";
-            kUIPerkInfo.strCooldown = "";
-
-            m_arrPerkData.AddItem(kUIPerkInfo);
-        }
+        PopulatePerkDataFromInventory(kActiveUnit.GetInventory());
     }
 
     if (m_arrPerkData.Length > 0)
@@ -99,6 +88,45 @@ simulated function UpdatePerks()
     else
     {
         Hide();
+    }
+}
+
+protected function PopulatePerkDataFromInventory(XGInventory kInventory)
+{
+    local int I, J;
+    local TUIPerkInfo perkData;
+    local XGInventoryItem kInvItem;
+    local LWCE_XGWeapon kWeapon;
+
+    for (I = 0; I < eSlot_MAX; I++)
+    {
+        for (J = 0; J < kInventory.GetNumberOfItemsInSlot(ELocation(I)); J++)
+        {
+            kInvItem = kInventory.GetItemByIndexInSlot(J, ELocation(I));
+
+            if (kInvItem == none)
+            {
+                continue;
+            }
+
+            kWeapon = LWCE_XGWeapon(kInvItem);
+
+            if (kWeapon == none)
+            {
+                `LWCE_LOG_CLS("WARNING: found XGInventoryItem which could not be cast to LWCE_XGWeapon in slot " $ ELocation(I) $ ", index " $ J);
+                continue;
+            }
+
+            if (kWeapon.m_kTemplate.strPerkHUDIcon == "" || kWeapon.m_kTemplate.strPerkHUDSummary == "")
+            {
+                continue;
+            }
+
+            perkData.strPerkName = kWeapon.m_kTemplate.strName;
+            perkData.strPerkImage = kWeapon.m_kTemplate.strPerkHUDIcon;
+
+            m_arrPerkData.AddItem(perkData);
+        }
     }
 }
 

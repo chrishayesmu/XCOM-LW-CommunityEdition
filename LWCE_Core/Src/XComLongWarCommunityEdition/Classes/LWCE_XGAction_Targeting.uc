@@ -140,6 +140,136 @@ simulated function bool CanBePerformed()
     return true;
 }
 
+simulated function bool SetChainedDistance(EAbility eInputAbilityType, optional out float fMinDistance)
+{
+    local LWCE_XGUnit kUnit;
+    local name WeaponName;
+
+    kUnit = LWCE_XGUnit(m_kUnit);
+
+    if (!AbilityRequiresChainedDistance(eInputAbilityType) && eInputAbilityType != /* Psychokinetic Strike */ 14)
+    {
+        return false;
+    }
+
+    fMinDistance = 0.0f;
+
+    switch (eInputAbilityType)
+    {
+        case eAbility_FlashBang:
+            WeaponName = 'Item_FlashbangGrenade';
+            break;
+        case eAbility_FragGrenade:
+            WeaponName = 'Item_HEGrenade';
+            break;
+        case eAbility_SmokeGrenade:
+            WeaponName = 'Item_SmokeGrenade';
+            break;
+        case eAbility_AlienGrenade:
+            WeaponName = 'Item_AlienGrenade';
+            break;
+        case eAbility_BattleScanner:
+            WeaponName = 'Item_BattleScanner';
+            break;
+        case eAbility_GasGrenade:
+            WeaponName = 'Item_ChemGrenade';
+            break;
+        case eAbility_GhostGrenade:
+            WeaponName = 'Item_ShadowDevice';
+            break;
+        case eAbility_NeedleGrenade:
+            WeaponName = 'Item_APGrenade';
+            break;
+        case eAbility_MEC_ProximityMine:
+            WeaponName = 'Item_ProximityMineLauncher';
+            break;
+        case eAbility_MEC_GrenadeLauncher:
+            WeaponName = 'Item_GrenadeLauncher';
+            break;
+        case eAbility_Plague:
+            WeaponName = 'Item_AcidSpit';
+            break;
+        case eAbility_MimicBeacon:
+            WeaponName = 'Item_MimicBeacon';
+            break;
+    }
+
+    if (WeaponName != '')
+    {
+        fMinDistance = `LWCE_WEAPON(WeaponName).CalcAoERange(kUnit);
+    }
+
+    // TODO: centralize this stuff
+    if (fMinDistance <= 1.0f)
+    {
+        switch (eInputAbilityType)
+        {
+            case eAbility_MEC_Barrage:
+                fMinDistance = `METERSTOUNITS(27);
+                break;
+            case eAbility_Rift:
+                fMinDistance = `METERSTOUNITS(100);
+                break;
+            case eAbility_ShotDamageCover: // Psychokinetic Strike
+            case eAbility_Torch:           // Pyrokinesis
+            case eAbility_TelekineticField:
+            case eAbility_PsiInspiration:
+                fMinDistance = `METERSTOUNITS(27) * (1.0f - (28.0f / (28.0f + kUnit.GetSituationalWill(/* bIncludeBaseStat */ true, /* bIncludeNeuralDamping */ false, /* bIncludeCombatStims */ false))));
+                break;
+            case eAbility_RocketLauncher:
+            case eAbility_ShredderRocket:
+                fMinDistance = XGWeapon(kUnit.GetInventory().GetPrimaryItemInSlot(eSlot_LeftBack)).LongRange();
+
+                if (kUnit.LWCE_GetInventory().LWCE_HasItemOfType('Item_BlasterLauncher'))
+                {
+                    fMinDistance += `METERSTOUNITS(kUnit.GetOffense() - 65) / 4;
+
+                    if (kUnit.m_iMovesActionsPerformed == 0)
+                    {
+                        if (kUnit.HasPerk(`LW_PERK_ID(FireInTheHole)))
+                        {
+                            fMinDistance += `METERSTOUNITS(10) / 4;
+                        }
+
+                        if (kUnit.HasPerk(`LW_PERK_ID(PlatformStability)))
+                        {
+                            fMinDistance += `METERSTOUNITS(10) / 4;
+                        }
+                    }
+                }
+
+                if (kUnit.HasPerk(`LW_PERK_ID(JavelinRockets)))
+                {
+                    fMinDistance *= 1.250;
+                }
+
+                if (kUnit.m_iMovesActionsPerformed > 0)
+                {
+                    if (kUnit.HasPerk(`LW_PERK_ID(SnapShot)))
+                    {
+                        fMinDistance *= 0.750;
+                    }
+                    else
+                    {
+                        fMinDistance *= 0.50;
+                    }
+                }
+
+                break;
+        }
+    }
+
+    if (fMinDistance > 1.0f)
+    {
+        m_kCursor.m_fMaxChainedDistance = fMinDistance;
+        fMinDistance = 1.0f;
+        return true;
+    }
+
+    fMinDistance = 1.0f;
+    return false;
+}
+
 simulated state Executing
 {
     simulated event BeginState(name P)
@@ -187,19 +317,12 @@ simulated state Executing
         }
         else if (iType == eAbility_MEC_Barrage || (m_kShot.m_kWeapon != none && m_kShot.m_kWeapon.GameplayType() == eItem_RocketLauncher))
         {
+            // TODO: use weapon template to decide, not GameplayType
             vCenter = m_bShotIsBlocked ? m_vHitLocation : m_vTarget;
         }
         else
         {
             vCenter = m_vTarget;
-        }
-
-        if (`BATTLE.m_kDesc.m_bIsTutorial)
-        {
-            if (`PRES.GetTacticalHUD().m_kAbilityHUD.m_iUseOnlyAbility != -1 && `PRES.GetTacticalHUD().m_kAbilityHUD.m_iUseOnlyAbility != `PRES.GetTacticalHUD().m_kAbilityHUD.m_iCurrentIndex)
-            {
-                bValid = false;
-            }
         }
 
         fRadius = class'LWCE_XGAbility_Extensions'.static.GetRadius(m_kShot);
@@ -263,11 +386,11 @@ simulated state Executing
             ExplosionEmitter.ParticleSystemComponent.ActivateSystem();
         }
 
-        ExplosionEmitter.ParticleSystemComponent.SetMICVectorParameter(0, name("RadiusColor"), CylinderColor);
+        ExplosionEmitter.ParticleSystemComponent.SetMICVectorParameter(0, 'RadiusColor', CylinderColor);
 
         if (iType != eAbility_Rift)
         {
-            ExplosionEmitter.ParticleSystemComponent.SetMICVectorParameter(1, name("RadiusColor"), CylinderColor);
+            ExplosionEmitter.ParticleSystemComponent.SetMICVectorParameter(1, 'RadiusColor', CylinderColor);
         }
     }
 }

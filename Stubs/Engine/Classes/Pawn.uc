@@ -3612,135 +3612,83 @@ simulated function OnSetVelocity( SeqAct_SetVelocity Action )
 
 defaultproperties
 {
-	Begin Object Class=SpriteComponent Name=Sprite
-		Sprite=Texture2D'EditorResources.S_Actor'
-		HiddenGame=True
-		AlwaysLoadOnClient=False
-		AlwaysLoadOnServer=False
-		SpriteCategoryName="Pawns"
-	End Object
-	Components.Add(Sprite)
+    MaxStepHeight=35.0
+    MaxJumpHeight=96.0
+    WalkableFloorZ=0.70
+    LedgeCheckThreshold=4.0
+    bJumpCapable=true
+    bCanJump=true
+    bCanWalk=true
+    bAllowLedgeOverhang=true
+    bSimulateGravity=true
+    bLOSHearing=true
+    bLimitFallAccel=true
+    WalkingPhysics=EPhysics.PHYS_Walking
+    CrouchHeight=40.0
+    CrouchRadius=34.0
+    DesiredSpeed=1.0
+    MaxDesiredSpeed=1.0
+    HearingThreshold=2800.0
+    SightRadius=5000.0
+    AvgPhysicsTime=0.10
+    Mass=100.0
+    MaxPitchLimit=3072
+    GroundSpeed=600.0
+    WaterSpeed=300.0
+    AirSpeed=600.0
+    LadderSpeed=200.0
+    AccelRate=2048.0
+    JumpZ=420.0
+    OutofWaterZ=420.0
+    MaxOutOfWaterStepHeight=40.0
+    AirControl=0.050
+    WalkingPct=0.50
+    MovementSpeedModifier=1.0
+    CrouchedPct=0.50
+    MaxFallSpeed=1200.0
+    AIMaxFallSpeedFactor=1.0
+    BaseEyeHeight=64.0
+    EyeHeight=54.0
+    Health=100
+    noise1time=-10.0
+    noise2time=-10.0
+    SoundDampening=1.0
+    DamageScaling=1.0
+    ControllerClass=class'AIController'
+    LandMovementState=PlayerWalking
+    WaterMovementState=PlayerSwimming
+    RBPushRadius=10.0
+    RBPushStrength=50.0
+    VehicleCheckRadius=150.0
+    ViewPitchMin=-16384.0
+    ViewPitchMax=16383.0
+    AllowedYawError=2000
+    InventoryManagerClass=class'InventoryManager'
+    RootMotionInterpRate=1.0
+    RemoteRole=ENetRole.ROLE_SimulatedProxy
+    bUpdateSimulatedPosition=true
+    bCanBeDamaged=true
+    bShouldBaseAtStartup=true
+    bCanTeleport=true
+    bCollideActors=true
+    bCollideWorld=true
+    bBlockActors=true
+    bProjTarget=true
+    NetPriority=2.0
+    RotationRate=(Pitch=20000,Yaw=20000,Roll=20000)
 
-	// Pawns often manipulate physics components so need to be done pre-async
-	TickGroup=TG_PreAsyncWork
+    begin object name=CollisionCylinder class=CylinderComponent
+        CollisionHeight=78.0
+        CollisionRadius=34.0
+        ReplacementPrimitive=none
+        CollideActors=true
+        BlockActors=true
+    end object
 
-	InventoryManagerClass=class'InventoryManager'
-	ControllerClass=class'AIController'
+    CylinderComponent=CollisionCylinder
+    CollisionComponent=CollisionCylinder
 
-	// Flags
-	bCanBeDamaged=true
-	bCanCrouch=false
-	bCanFly=false
-	bCanJump=true
-	bCanSwim=false
-	bCanTeleport=true
-	bCanWalk=true
-	bJumpCapable=true
-	bProjTarget=true
-	bSimulateGravity=true
-	bShouldBaseAtStartup=true
-
-	// Locomotion
-	WalkingPhysics=PHYS_Walking
-	LandMovementState=PlayerWalking
-	WaterMovementState=PlayerSwimming
-
-	AccelRate=+02048.000000
-	DesiredSpeed=+00001.000000
-	MaxDesiredSpeed=+00001.000000
-	MaxFallSpeed=+1200.0
-	AIMaxFallSpeedFactor=1.0
-	NonPreferredVehiclePathMultiplier=1.0
-
-	AirSpeed=+00600.000000
-	GroundSpeed=+00600.000000
-	JumpZ=+00420.000000
-	OutofWaterZ=+420.0
-	LadderSpeed=+200.0
-	WaterSpeed=+00300.000000
-
-	bLimitFallAccel=TRUE
-	AirControl=+0.05
-
-	CrouchedPct=+0.5
-	WalkingPct=+0.5
-	MovementSpeedModifier=+1.0
-
-	// Sound
-	bLOSHearing=true
-	HearingThreshold=+2800.0
-	SoundDampening=+00001.000000
-	noise1time=-00010.000000
-	noise2time=-00010.000000
-
-	// Physics
-	AvgPhysicsTime=+00000.100000
-	bPushesRigidBodies=false
-	RBPushRadius=10.0
-	RBPushStrength=50.0
-
-	// FOV / Sight
-	ViewPitchMin=-16384
-	ViewPitchMax=16383
-	RotationRate=(Pitch=20000,Yaw=20000,Roll=20000)
-	MaxPitchLimit=3072
-
-	SightRadius=+05000.000000
-
-	// Network
-	RemoteRole=ROLE_SimulatedProxy
-	NetPriority=+00002.000000
-	bUpdateSimulatedPosition=true
-
-	// GamePlay
-	DamageScaling=+00001.000000
-	Health=100
-	bReplicateHealthToAll=false
-
-	// Collision
-	BaseEyeHeight=+00064.000000
-	EyeHeight=+00054.000000
-
-	CrouchHeight=+40.0
-	CrouchRadius=+34.0
-
-	MaxStepHeight=35.0
-	MaxJumpHeight=96.0
-	WalkableFloorZ=0.7		   // 0.7 ~= 45 degree angle for floor
-	LedgeCheckThreshold=4.0f
-
-	MaxOutOfWaterStepHeight=40.0
-	AllowedYawError=2000
-	Mass=+00100.000000
-
-	bCollideActors=true
-	bCollideWorld=true
-	bBlockActors=true
-
-	Begin Object Class=CylinderComponent Name=CollisionCylinder
-		CollisionRadius=+0034.000000
-		CollisionHeight=+0078.000000
-		BlockNonZeroExtent=true
-		BlockZeroExtent=true
-		BlockActors=true
-		CollideActors=true
-	End Object
-	CollisionComponent=CollisionCylinder
-	CylinderComponent=CollisionCylinder
-	Components.Add(CollisionCylinder)
-
-	Begin Object Class=ArrowComponent Name=Arrow
-		ArrowColor=(R=150,G=200,B=255)
-		bTreatAsASprite=True
-		SpriteCategoryName="Pawns"
-	End Object
-	Components.Add(Arrow)
-
-	VehicleCheckRadius=150
-
-	bAllowLedgeOverhang=TRUE
-
-	RootMotionInterpRate=1.f
-
-	bModifyNavPointDest=true
+    Components(0)=none
+    Components(1)=CollisionCylinder
+    Components(2)=none
 }

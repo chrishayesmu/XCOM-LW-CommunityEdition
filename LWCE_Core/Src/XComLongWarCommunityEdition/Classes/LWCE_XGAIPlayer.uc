@@ -4,6 +4,13 @@ class LWCE_XGAIPlayer extends XGAIPlayer;
 
 `LWCE_GENERATOR_XGPLAYER
 
+simulated function CreateSquad(array<XComSpawnPoint> arrSpawnPoints, array<EPawnType> arrPawnTypes)
+{
+    `LWCE_LOG_CLS("CreateSquad begin");
+    super.CreateSquad(arrSpawnPoints, arrPawnTypes);
+    `LWCE_LOG_CLS("CreateSquad end");
+}
+
 event Tick(float fDeltaT)
 {
     super.Tick(fDeltaT);
@@ -149,7 +156,7 @@ function bool UpdateHealers()
             continue;
         }
 
-        if (LWCE_XGInventory(kUnit.GetInventory()).LWCE_HasItemOfType(`LW_ITEM_ID(Medikit)) && kUnit.GetMediKitCharges() > 0)
+        if (LWCE_XGInventory(kUnit.GetInventory()).LWCE_HasItemOfType('Item_Medikit') && kUnit.GetMediKitCharges() > 0)
         {
             m_arrHealer.AddItem(kUnit);
         }
@@ -164,7 +171,7 @@ simulated function UpdateWeaponTactics(XGInventory kInventory)
 
     kCEInventory = LWCE_XGInventory(kInventory);
 
-    if (kCEInventory.LWCE_HasItemOfType(`LW_ITEM_ID(RecoillessRifle)) || kCEInventory.LWCE_HasItemOfType(`LW_ITEM_ID(RocketLauncher)))
+    if (kCEInventory.LWCE_HasItemOfType('Item_RecoillessRifle') || kCEInventory.LWCE_HasItemOfType('Item_RocketLauncher'))
     {
         m_fMinTeammateDistance = 224.0;
     }

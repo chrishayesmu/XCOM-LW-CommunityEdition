@@ -195,4 +195,3 @@ function bool IsBuildingFacility(EFacilityType eFacility){}
 function bool IsPriorityItem(EItemType eItem){}
 function bool IsPriorityFacility(EFacilityType eFacility){}
 function bool UrgeBuildMEC(){}
-

@@ -20,6 +20,14 @@ function XGScreenMgr GetMgr(class<Actor> kMgrClass, optional IScreenMgrInterface
     return super.GetMgr(kMgrClass, kInterface, iView, bIgnoreIfDoesNotExist);
 }
 
+function LWCE_Notify(name AlertType, array<LWCE_TData> arrData)
+{
+    if (m_kUIMissionControl != none)
+    {
+        LWCE_XGMissionControlUI(m_kUIMissionControl.GetMgr()).LWCE_AddNotice(AlertType, arrData);
+    }
+}
+
 function bool RemoveMgr(class<Actor> kMgrClass)
 {
     ReplaceClassWithLWCEEquivalent(kMgrClass);
@@ -127,14 +135,14 @@ reliable client simulated function UIManufactureItem(EItemType eItem, optional i
     `LWCE_LOG_DEPRECATED_CLS(UIManufactureItem);
 }
 
-reliable client simulated function LWCE_UIManufactureItem(int iItemId, optional int iQueueIndex = -1)
+reliable client simulated function LWCE_UIManufactureItem(name ItemName, optional int iQueueIndex = -1)
 {
     local LWCE_UIManufacturing kManufacturing;
 
     kManufacturing = Spawn(class'LWCE_UIManufacturing', self);
     m_kManufacturing = kManufacturing;
 
-    kManufacturing.LWCE_InitItem(XComPlayerController(Owner), Get3DMovie(), iItemId, iQueueIndex);
+    kManufacturing.LWCE_InitItem(XComPlayerController(Owner), Get3DMovie(), ItemName, iQueueIndex);
     PushState('State_Manufacture');
     CAMLookAtNamedLocation(class'UIManufacturing'.default.m_strCameraTag, 1.0);
 }

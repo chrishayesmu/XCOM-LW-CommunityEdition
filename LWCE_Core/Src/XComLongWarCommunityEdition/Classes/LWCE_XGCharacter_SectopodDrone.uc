@@ -1,9 +1,8 @@
-class LWCE_XGCharacter_SectopodDrone extends XGCharacter_SectopodDrone;
+class LWCE_XGCharacter_SectopodDrone extends XGCharacter_SectopodDrone implements(LWCE_XGCharacter);
 
-function XComUnitPawn GetPawnArchetype()
-{
-    return class'LWCE_XGCharacter_Extensions'.static.GetPawnArchetype(self);
-}
+`include(generators_xgcharacter_fields.uci)
+
+`include(generators_xgcharacter_functions.uci)
 
 defaultproperties
 {

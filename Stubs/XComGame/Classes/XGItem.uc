@@ -18,3 +18,10 @@ native static simulated function bool IsSharedAlienWeapon();
 native static simulated function EItemType GameplayType();
 static simulated function string ItemUIImage(){}
 simulated function bool IsInitialReplicationComplete(){}
+
+defaultproperties
+{
+    RemoteRole=ROLE_SimulatedProxy
+    bTickIsDisabled=true
+    bAlwaysRelevant=true
+}

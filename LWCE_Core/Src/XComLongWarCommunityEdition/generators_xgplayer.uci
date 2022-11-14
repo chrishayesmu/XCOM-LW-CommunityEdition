@@ -2,6 +2,11 @@
 // like us using the callback from a static context, for no apparent reason.
 
 `define LWCE_GENERATOR_XGPLAYER \
+simulated function XGUnit SpawnAlien(EPawnType eAlienType, XComSpawnPoint_Alien kSpawnPt, optional bool bSnapToCover = false, optional bool bSnapToGround = true, optional bool bAddFlag = true, optional bool bUseAltWeapon = false, optional bool bBattleScanner = false) \
+{ \
+    return class'LWCE_XGPlayer_Extensions'.static.SpawnAlien(self, eAlienType, kSpawnPt, bSnapToCover, bSnapToGround, bAddFlag, bUseAltWeapon, bBattleScanner); \
+} \
+\
 function XGUnit SpawnUnit(class<XGUnit> kUnitClassToSpawn, PlayerController kPlayerController, Vector kLocation, Rotator kRotation, XGCharacter kCharacter, XGSquad kSquad, optional bool bDestroyOnBadLocation = false, optional XComSpawnPoint kSpawnPoint, optional bool bSnapToGround = true, optional bool bBattleScanner = false) \
 { \
     return class'LWCE_XGPlayer_Extensions'.static.SpawnUnit(self, kUnitClassToSpawn, kPlayerController, kLocation, kRotation, kCharacter, kSquad, bDestroyOnBadLocation, kSpawnPoint, bSnapToGround, bBattleScanner); \
@@ -51,4 +56,5 @@ function FinishPendingSpawnUnit() \
 \
         `LWCE_MOD_LOADER.OnUnitSpawned(SpawnedUnit); \
     } \
+    `LWCE_LOG_CLS("FinishPendingSpawnUnit end"); \
 } \

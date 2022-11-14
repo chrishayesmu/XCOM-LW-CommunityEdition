@@ -1,0 +1,5 @@
+`define LWCE_GENERATOR_XGMISSION \
+function GenerateBattleDescription() \
+{ \
+    class'LWCE_XGMission_Extensions'.static.GenerateBattleDescription(self); \
+}

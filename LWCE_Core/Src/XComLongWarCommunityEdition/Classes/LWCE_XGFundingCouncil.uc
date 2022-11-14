@@ -96,7 +96,7 @@ function InitNewGame()
 {
     Init();
     m_bProgenyEnabled = XComHeadquartersGame(WorldInfo.Game).m_bEnableProgenyFromShell;
-    m_bSlingshotEnabled = XComOnlineEventMgr(GameEngine(class'Engine'.static.GetEngine()).OnlineEventManager).HasSlingshotPack() && XComHeadquartersGame(WorldInfo.Game).m_bEnableSlingshotFromShell;
+    m_bSlingshotEnabled = `ONLINEEVENTMGR.HasSlingshotPack() && XComHeadquartersGame(WorldInfo.Game).m_bEnableSlingshotFromShell;
 
     SetupMonthlyRequests();
     m_arrPreviousMissions.AddItem(eFCM_None);
@@ -190,11 +190,11 @@ function bool AttemptTurnInRequest(int iRequestIndex)
     {
         for (Index = 0; Index < kRequest.arrRequestedItems.Length; Index++)
         {
-            if (kRequest.arrRequestedItems[Index].iItemId != `LW_ITEM_ID(Satellite) &&
-                kRequest.arrRequestedItems[Index].iItemId != `LW_ITEM_ID(Interceptor) &&
-                kRequest.arrRequestedItems[Index].iItemId != `LW_ITEM_ID(Firestorm))
+            if (kRequest.arrRequestedItems[Index].ItemName != 'Item_Satellite' &&
+                kRequest.arrRequestedItems[Index].ItemName != 'Item_Interceptor' &&
+                kRequest.arrRequestedItems[Index].ItemName != 'Item_Firestorm')
             {
-                kStorage.RemoveItem(kRequest.arrRequestedItems[Index].iItemId, kRequest.arrRequestedItems[Index].iQuantity);
+                kStorage.LWCE_RemoveItem(kRequest.arrRequestedItems[Index].ItemName, kRequest.arrRequestedItems[Index].iQuantity);
             }
         }
 
@@ -233,7 +233,7 @@ function bool LWCE_CanAcceptRequest(LWCE_TFCRequest kRequest)
 
     for (Index = 0; Index < kRequest.arrRequestedItems.Length; Index++)
     {
-        if (kStorage.GetNumItemsAvailable(kRequest.arrRequestedItems[Index].iItemId) < kRequest.arrRequestedItems[Index].iQuantity)
+        if (kStorage.LWCE_GetNumItemsAvailable(kRequest.arrRequestedItems[Index].ItemName) < kRequest.arrRequestedItems[Index].iQuantity)
         {
             return false;
         }
@@ -368,7 +368,7 @@ function bool CreateRequestFromTemplate(out LWCE_TFCRequest kRequest, const LWCE
 
     for (Index = 0; Index < kRequestTemplate.arrRequestedItems.Length; Index++)
     {
-        kItemQuantity.iItemId = kRequestTemplate.arrRequestedItems[Index].iItemId;
+        kItemQuantity.ItemName = kRequestTemplate.arrRequestedItems[Index].ItemName;
         kItemQuantity.iQuantity = DetermineItemQuantityToRequest(kRequestTemplate.arrRequestedItems[Index], bIsDynamicWar);
 
         kRequest.arrRequestedItems.AddItem(kItemQuantity);
@@ -733,13 +733,10 @@ simulated function LWCE_GetCompletedSatRequestData(out LWCE_TFCRequest kRequestR
 
 function int GetItemQuestPrice(EItemType eItem)
 {
-    `LWCE_LOG_DEPRECATED_CLS(GetItemQuestPrice);
-    return -1;
-}
+    `LWCE_LOG_CLS("ERROR: LWCE-incompatible function GetItemQuestPrice was called. This needs to be replaced with LWCEItemTemplate.GetQuestPrice. Stack trace follows.");
+    ScriptTrace();
 
-function int LWCE_GetItemQuestPrice(int iItemId)
-{
-    return LWCE_XGItemTree(ITEMTREE()).LWCE_GetItemQuestPrice(iItemId);
+    return -1;
 }
 
 function ECountry GetLastAcceptedRequestCountry()
@@ -913,7 +910,7 @@ function LWCE_GrantFCRewards(LWCE_TRequestReward kReward, ECountry eRewardingCou
 
     for (Index = 0; Index < kReward.arrItemRewards.Length; Index++)
     {
-        kStorage.AddItem(kReward.arrItemRewards[Index].iItemId, kReward.arrItemRewards[Index].iQuantity);
+        kStorage.LWCE_AddItem(kReward.arrItemRewards[Index].ItemName, kReward.arrItemRewards[Index].iQuantity);
     }
 
     for (Index = 0; Index < kReward.arrSoldiers.Length; Index++)
@@ -1303,12 +1300,15 @@ protected function bool GetRequestTemplate(name RequestName, out LWCECouncilRequ
 /// </summary>
 protected function int GetRewardEquivalentCashValue(const out LWCE_TFCRequest kRequest, int iMinQuantity)
 {
+    local LWCEItemTemplate kItem;
     local int iCash, Index;
 
     for (Index = 0; Index < kRequest.arrRequestedItems.Length; Index++)
     {
+        kItem = `LWCE_ITEM(kRequest.arrRequestedItems[Index].ItemName);
+
         // Profit margin is deliberately applied at each step, to most closely match LW 1.0 (due to integer truncation)
-        iCash += PROFIT_MARGIN * kRequest.arrRequestedItems[Index].iQuantity * (LWCE_GetItemQuestPrice(kRequest.arrRequestedItems[Index].iItemId) + iMinQuantity);
+        iCash += PROFIT_MARGIN * kRequest.arrRequestedItems[Index].iQuantity * (kItem.GetQuestPrice() + iMinQuantity);
     }
 
     return iCash;

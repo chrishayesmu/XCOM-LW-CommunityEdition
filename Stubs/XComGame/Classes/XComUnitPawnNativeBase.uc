@@ -236,5 +236,26 @@ simulated function SetWaitingToBeZombified(bool bIsWaitingToZombify){}
 
 defaultproperties
 {
-	Components(0)=none
+    m_bTurnFinished=true
+    bUseObstructionShader=true
+    PathingRadius=19.0
+    CollisionHeight=64.0
+    CollisionRadius=14.0
+    ThrowGrenadeStartPosition=(X=-12.9280,Y=33.7270,Z=111.3980)
+    ThrowGrenadeStartPositionUnderhand=(X=46.80,Y=23.9960,Z=27.3950)
+    m_WeaponSocketNameToUse=gun_fire
+    HiddenSlots(0)=200
+    FocusFireBlendTime=0.250
+    Movement_Stop_Blend=0.250
+    Into_Idle_Blend=0.250
+    Start_Turn_Blend=0.10
+    Start_Strangle_Blend=0.10
+    Stop_Strangle_Blend=0.10
+    Kill_Strangle_Blend=0.250
+    HumanGlowMaterial=MaterialInstanceConstant'FX_Visibility.Materials.MInst_HumanGlow'
+    AlienGlowMaterial=MaterialInstanceConstant'FX_Visibility.Materials.MInst_AlienGlow'
+    CivilianGlowMaterial=MaterialInstanceConstant'FX_Visibility.Materials.MInst_CivilianGlow'
+    DamageEvent_CauseOfDeath=(DamageAmount=0,EventInstigator=none,HitLocation=(X=0.0,Y=0.0,Z=0.0),Momentum=(X=0.0,Y=0.0,Z=0.0),DamageType=none,HitInfo=(Material=none,PhysMaterial=none,Item=0,LevelIndex=0,BoneName=None,HitComponent=none),DamageCauser=none,bRadialDamage=false,Radius=0.0,bIsHit=false,IgnoredActors=none,Target=none,bDamagesUnits=true,bCausesSurroundingAreaDamage=true,bDebug=false,FilterBox=(Min=(X=0.0,Y=0.0,Z=0.0),Max=(X=0.0,Y=0.0,Z=0.0),IsValid=0),kShot=none)
+    m_bReplicateHidden=false
+    bAlwaysRelevant=true
 }

@@ -1,5 +1,6 @@
 class XGCharacter_SectopodDrone extends XGCharacter;
 
-DefaultProperties
+defaultproperties
 {
+    m_bShouldWeaponExplodeOnDeath=false
 }

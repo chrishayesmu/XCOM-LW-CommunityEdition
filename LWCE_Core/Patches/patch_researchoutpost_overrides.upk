@@ -1,0 +1,49 @@
+// TODO: this patch is intended to fix an error on the Research Outpost map which fills the logs with an irrelevant error message,
+// but it won't apply properly in PatcherGUI for some reason
+
+UPK_FILE = patch_researchoutpost.upk
+OBJECT = XComUDK.SeqAct_GetActorsTouchingVolume.Activated : AUTO
+
+[REPLACEMENT_CODE]
+// local Actor curActor;
+// local array<SequenceObject> ObjectList;
+// local SeqVar_ObjectList SeqVar_ObjectList;
+//
+// GetLinkedObjects(ObjectList, Class'SeqVar_ObjectList', false);
+1C <Engine.SequenceOp.GetLinkedObjects> 00 <.ObjectList> 20 <Engine.SeqVar_ObjectList> 28 16
+//
+// if (ObjectList.Length > 0)
+07 [@label_0x0276] 97 36 00 <.ObjectList> 25 16
+// {
+//     SeqVar_ObjectList = SeqVar_ObjectList(ObjectList[0]);
+	0F 00 <.SeqVar_ObjectList> 2E <Engine.SeqVar_ObjectList> 10 25 00 <.ObjectList>
+//     if (SeqVar_ObjectList != none)
+	07 [@label_0x0276] 77 00 <.SeqVar_ObjectList> 2A 16
+//     if (VolumeName != none) // ADDED CHECK
+//     {
+//         foreach Class'Engine'.static.GetCurrentWorldInfo().AllActors(Class'Actor', curActor)
+		2F 19 12 20 <Engine.Engine> [@] <Engine.Engine.GetCurrentWorldInfo.ReturnValue> 00 ( 1C <Engine.Engine.GetCurrentWorldInfo> 16 ) [@] <NullRef> 00 ( 61 30 20 <Engine.Actor> 00 <.curActor> 4A 16 ) [@label_0x0275]
+//         {
+//             if (((((curActor.IsA(ActorFilter) && ActorFilterType == 0) || (curActor.ObjectArchetype.Name == ActorFilter) && ActorFilterType == 1) || (curActor.Layer == ActorFilter) && ActorFilterType == 2) || (curActor.Tag == ActorFilter) && ActorFilterType == 3) && (VolumeName.Encompasses(curActor) && VolumeCollisionType == 0) || VolumeName.IsOverlapping(curActor) && VolumeCollisionType == 1)
+//             {
+			07 [@label_0x0274] 82 84 84 84 82 19 00 <.curActor> [@] <Core.Object.IsA.ReturnValue> 00 ( C5 01 <@ActorFilter> 16 ) 18 [@] ( 9A 38 3A 01 <@ActorFilterType> 38 3A 24 00 16 16 ) 18 [@] ( 82 FE 19 19 00 <.curActor> [@] <Core.Object.ObjectArchetype> 00 ( 01 <Core.Object.ObjectArchetype> ) [@] <Core.Object.Name> 00 ( 01 <Core.Object.Name> ) 01 <@ActorFilter> 16 18 [@] ( 9A 38 3A 01 <@ActorFilterType> 38 3A 24 01 16 16 ) 16 ) 18 [@] ( 82 FE 19 00 <.curActor> [@] <Engine.Actor.Layer> 00 ( 01 <Engine.Actor.Layer> ) 01 <@ActorFilter> 16 18 [@] ( 9A 38 3A 01 <@ActorFilterType> 38 3A 24 02 16 16 ) 16 ) 18 [@] ( 82 FE 19 00 <.curActor> [@] <Engine.Actor.Tag> 00 ( 01 <Engine.Actor.Tag> ) 01 <@ActorFilter> 16 18 [@] ( 9A 38 3A 01 <@ActorFilterType> 38 3A 24 03 16 16 ) 16 ) 18 [@] ( 84 82 19 01 <@VolumeName> [@] <Engine.Volume.Encompasses.ReturnValue> 00 ( 1B <Encompasses> 00 <.curActor> 16 ) 18 [@] ( 9A 38 3A 01 <@VolumeCollisionType> 38 3A 24 00 16 16 ) 18 [@] ( 82 19 01 <@VolumeName> [@] <Engine.Actor.IsOverlapping.ReturnValue> 00 ( 1C <Engine.Actor.IsOverlapping> 00 <.curActor> 16 ) 18 [@] ( 9A 38 3A 01 <@VolumeCollisionType> 38 3A 24 01 16 16 ) 16 ) 16 )
+//                 SeqVar_ObjectList.ObjList.AddItem(curActor);
+				55 19 00 <.SeqVar_ObjectList> [@] <Engine.SeqVar_ObjectList.ObjList> 00 ( 01 <Engine.SeqVar_ObjectList.ObjList> ) [@] ( 00 <.curActor> 16 )
+//                 ++ObjectsFound;
+				A5 01 <@ObjectsFound> 16
+//             }
+			[#label_0x0274]
+			31
+//          }
+		[#label_0x0275]
+		30
+//     }
+[#label_0x0276]
+// }
+//
+// ActivateOutputLink(0);
+1C <Engine.SequenceOp.ActivateOutputLink> 25 16
+//
+// return;
+04 0B
+53

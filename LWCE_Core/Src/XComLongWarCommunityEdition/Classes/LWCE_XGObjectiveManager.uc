@@ -5,6 +5,9 @@ function TSubObjective BuildSubObjective(ESubObjective eSubObj)
     local name SubName;
     local int iSubId;
     local TSubObjective kSub;
+    local LWCE_XGStorage kStorage;
+
+    kStorage = LWCE_XGStorage(STORAGE());
 
     kSub = TECHTREE().GetSubObjective(eSubObj);
     kSub.eStatus = eObjStatus_NotStarted;
@@ -43,16 +46,16 @@ function TSubObjective BuildSubObjective(ESubObjective eSubObj)
             SubName = 'Tech_AlienCommandAndControl';
             break;
         case eSubObj_CaptureOutsider:
-            iSubId = 183; // Item ID
+            SubName = 'Item_OutsiderShard';
             break;
         case eSubObj_BuildSkeletonKey:
-            iSubId = 184; // Item ID
+            SubName = 'Item_SkeletonKey';
             break;
         case eSubObj_BuildFirestorm:
-            iSubId = 104; // Item ID
+            SubName = 'Item_Firestorm';
             break;
         case eSubObj_AssaultOverseer:
-            iSubId = 180; // Item ID
+            SubName = 'Item_EtherealDevice';
             break;
     }
 
@@ -92,11 +95,11 @@ function TSubObjective BuildSubObjective(ESubObjective eSubObj)
         case eSubObj_BuildSkeletonKey:
         case eSubObj_BuildFirestorm:
         case eSubObj_AssaultOverseer:
-            if (STORAGE().EverHadItem(iSubId))
+            if (kStorage.LWCE_EverHadItem(SubName))
             {
                 kSub.eStatus = eObjStatus_Complete;
             }
-            else if (`LWCE_ENGINEERING.LWCE_IsBuildingItem(iSubId))
+            else if (`LWCE_ENGINEERING.LWCE_IsBuildingItem(SubName))
             {
                 kSub.eStatus = eObjStatus_InProgress;
             }
@@ -105,7 +108,7 @@ function TSubObjective BuildSubObjective(ESubObjective eSubObj)
         case eSubObj_ResearchArcThrower:
             if (`LWCE_LABS.LWCE_IsResearched('Tech_Xenoneurology'))
             {
-                if (STORAGE().m_arrItemArchives[eItem_ArcThrower] > 0)
+                if (kStorage.LWCE_EverHadItem('Item_ArcThrower'))
                 {
                     kSub.eStatus = eObjStatus_Complete;
                 }

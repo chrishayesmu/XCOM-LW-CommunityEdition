@@ -27,34 +27,39 @@ function bool AdvanceFeature(int Feature, int Dir)
 
 function AdvanceGender(int Dir)
 {
+    local LWCE_XComHumanPawn kPawn;
+    local LWCE_XGStrategySoldier kSoldier;
     local int iGender;
 
-    iGender = m_kPawn.m_kAppearance.iGender == eGender_Female ? eGender_Male : eGender_Female;
+    kPawn = LWCE_XComHumanPawn(m_kPawn);
+    kSoldier = LWCE_XGStrategySoldier(m_kSoldier);
+
+    iGender = kPawn.m_kAppearance.iGender == eGender_Female ? eGender_Male : eGender_Female;
 
     // XComHumanPawn doesn't have a function to change gender, so we need to set the underlying
     // variables directly. We then call SetRace because that triggers enough of the processing
     // to update the face mesh to the new gender.
-    m_kPawn.m_kAppearance.iGender = iGender;
-    m_kPawn.bIsFemale = iGender == eGender_Female;
-    m_kPawn.SetRace(ECharacterRace(m_kPawn.m_kAppearance.iRace));
+    kPawn.m_kAppearance.iGender = iGender;
+    kPawn.bIsFemale = iGender == eGender_Female;
+    kPawn.SetRace(ECharacterRace(kPawn.m_kAppearance.iRace));
 
     // Hair meshes are different between genders, so we need to make the pawn load a new one.
     // Most of the lower index meshes are hair, not helmets, which is ideal because the player probably
     // wants to see what their soldier looks like. We do Rand(560) because the RNG in use seems to have
     // some clumping issues with small inputs.
-    m_kPawn.SetHair(m_kPawn.PossibleHairs[(Rand(560) % 14) + 1]);
+    kPawn.SetHair(kPawn.PossibleHairs[(Rand(560) % 14) + 1]);
 
     // Finally, we need to trigger a reload of the character's skeleton and armor mesh, because female
     // soldiers are scaled down relative to male soldiers. If we don't do this, the soldier's head has
     // the scale of the new gender, but the rest of the model doesn't. SetInventory reloads that content
     // for us.
-    m_kPawn.SetInventory(m_kPawn.Character, m_kSoldier.m_kChar.kInventory, m_kPawn.m_kAppearance);
+    kPawn.LWCE_SetInventory(kPawn.m_kCEChar, kSoldier.m_kCEChar.kInventory, kPawn.m_kCEAppearance);
 
     // Sync back our changes to the soldier data
-    m_kSoldier.m_kSoldier.kAppearance.iGender = m_kPawn.m_kAppearance.iGender;
-    m_kSoldier.m_kSoldier.kAppearance.iHead = m_kPawn.m_kAppearance.iHead;
-    m_kSoldier.m_kSoldier.kAppearance.iHaircut = m_kPawn.m_kAppearance.iHaircut;
-    m_kSoldier.m_kSoldier.kAppearance.iHairColor = m_kPawn.m_kAppearance.iHairColor;
+    kSoldier.m_kSoldier.kAppearance.iGender = m_kPawn.m_kAppearance.iGender;
+    kSoldier.m_kSoldier.kAppearance.iHead = m_kPawn.m_kAppearance.iHead;
+    kSoldier.m_kSoldier.kAppearance.iHaircut = m_kPawn.m_kAppearance.iHaircut;
+    kSoldier.m_kSoldier.kAppearance.iHairColor = m_kPawn.m_kAppearance.iHairColor;
 }
 
 simulated function Tick(float DeltaTime)

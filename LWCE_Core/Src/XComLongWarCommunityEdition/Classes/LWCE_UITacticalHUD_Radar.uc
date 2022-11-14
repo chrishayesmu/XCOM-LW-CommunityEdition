@@ -3,7 +3,6 @@ class LWCE_UITacticalHUD_Radar extends UITacticalHUD_Radar;
 simulated function Show()
 {
     local LWCE_XGUnit kActiveUnit;
-    local TInventory kInventory;
 
     if (`BATTLE.m_kDesc.m_bIsTutorial)
     {
@@ -19,14 +18,7 @@ simulated function Show()
         return;
     }
 
-    kInventory = kActiveUnit.GetTInventory();
-
     if (kActiveUnit.HasPerk(`LW_PERK_ID(BioelectricSkin)))
-    {
-        super(UI_FxsPanel).Show();
-        ActivateRadarTracking();
-    }
-    else if (class'XGTacticalGameCoreNativeBase'.static.TInventoryHasItemType(kInventory, 255))
     {
         super(UI_FxsPanel).Show();
         ActivateRadarTracking();
@@ -41,7 +33,6 @@ simulated function Show()
 simulated function UpdateActiveUnit()
 {
     local LWCE_XGUnit kActiveUnit;
-    local TInventory kInventory;
 
     if (!IsInited())
     {
@@ -57,13 +48,7 @@ simulated function UpdateActiveUnit()
         return;
     }
 
-    kInventory = kActiveUnit.GetTInventory();
-
     if (kActiveUnit.HasPerk(`LW_PERK_ID(BioelectricSkin)))
-    {
-        Show();
-    }
-    else if (class'XGTacticalGameCoreNativeBase'.static.TInventoryHasItemType(kInventory, 255))
     {
         Show();
     }
@@ -81,6 +66,7 @@ simulated function UpdateActiveUnit()
 
     m_arrBlips.Remove(0, m_arrBlips.Length);
     UpdateBlips();
+
     WorldInfo.MyWatchVariableMgr.RegisterWatchVariable(m_kActiveUnit, 'm_bInCover', self, UpdateBlips);
     WorldInfo.MyWatchVariableMgr.RegisterWatchVariable(m_kActiveUnit, 'Location', self, UpdateBlips);
 
@@ -102,18 +88,23 @@ simulated function UpdateBlips()
     local float MaxDistance;
 
     ActiveUnit = XGUnit(m_kActiveUnit);
-    if ((ActiveUnit == none) || XComTacticalController(controllerRef) == none)
+
+    if (ActiveUnit == none || XComTacticalController(controllerRef) == none)
     {
         return;
     }
+
     m_iCurrUnitsSightRadius = class'XGTacticalGameCore'.default.BASE_REMOVAL_DAYS * 64;
+
     for (I = 0; I < m_arrBlips.Length; ++I)
     {
         m_arrBlips[I].Type = eUIRadarBlipTypes.eBlipType_None;
     }
+
     for (I = 0; I < ActiveUnit.GetSquad().GetNumMembers(); ++I)
     {
         tmpUnit = ActiveUnit.GetSquad().GetMemberAt(I);
+
         if (tmpUnit != none && tmpUnit != ActiveUnit)
         {
             if (tmpUnit.IsDead())
@@ -134,6 +125,7 @@ simulated function UpdateBlips()
             }
         }
     }
+
     if (XComPresentationLayer(controllerRef.m_Pres).m_kSpecialMissionHUD != none)
     {
         foreach AllActors(class'XComInteractiveLevelActor', ILA)
@@ -158,6 +150,7 @@ simulated function UpdateBlips()
     }
 
     MaxDistance = float((class'XGTacticalGameCore'.default.BASE_REMOVAL_DAYS * class'XGTacticalGameCore'.default.BASE_REMOVAL_DAYS) * 4096);
+
     foreach AllActors(class'XGUnit', tmpUnit)
     {
         // LWCE change: Ignore line of sight helper units
@@ -179,12 +172,14 @@ simulated function UpdateBlips()
                         }
                     }
                 }
-            } else if (tmpUnit.IsCivilian())
+            }
+            else if (tmpUnit.IsCivilian())
             {
                 UpdateBlipByType(tmpUnit, eUIRadarBlipTypes.eBlipType_Civilian);
             }
         }
     }
+
     foreach AllActors(class'XComMeldContainerActor', Index)
     {
         if (!Index.IsCollected() && VSizeSq2D(Index.Location - ActiveUnit.GetLocation()) <= MaxDistance)
@@ -192,20 +187,25 @@ simulated function UpdateBlips()
             UpdateBlipByType(Index, eUIRadarBlipTypes.eBlipType_Item);
         }
     }
+
     Data = "";
+
     for (I = 0; I < m_arrBlips.Length; ++I)
     {
         // LWCE change: This has to use string(int(Type)) instead of string(Type) because the flash code expects "4" and not "eBlipType_Opponent"
         // I thought the stub might be wrong but If I change the TURadarBlip member to `int` then the game crashes.
         Data $= string(int(m_arrBlips[I].Type)) $ "," $ string(m_arrBlips[I].Loc.X) $ "," $ string(m_arrBlips[I].Loc.Y);
-        if (I < (m_arrBlips.Length - 1))
+
+        if (I < m_arrBlips.Length - 1)
         {
             Data $= "//";
         }
     }
+
     if (m_arrBlips.Length == 0)
     {
         Data $= "0,0,0";
     }
+
     AS_UpdateBlips(Data);
 }

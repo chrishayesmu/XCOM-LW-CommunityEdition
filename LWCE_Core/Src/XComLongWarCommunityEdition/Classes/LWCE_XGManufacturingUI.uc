@@ -1,4 +1,5 @@
-class LWCE_XGManufacturingUI extends XGManufacturingUI;
+class LWCE_XGManufacturingUI extends XGManufacturingUI
+    dependson(LWCETypes);
 
 var LWCE_TItemProject m_kCEItemProject;
 var LWCE_TFoundryProject m_kCEFoundryProject;
@@ -9,7 +10,7 @@ function DirectInitialize()
     local bool bInstaBuild;
     local int iMaxEngineers, iView;
     local LWCEFoundryProjectTemplate kFoundryTech;
-    local LWCE_TItem kItem;
+    local LWCEItemTemplate kItem;
 
     kEngineering = LWCE_XGFacility_Engineering(ENGINEERING());
 
@@ -21,19 +22,18 @@ function DirectInitialize()
     m_arrButtons.Add(4);
     m_iHighlightedButton = 1;
 
-    if (iView == eManView_Item || m_kCEItemProject.iItemId != 0)
+    if (iView == eManView_Item || m_kCEItemProject.ItemName != '')
     {
-        kItem = `LWCE_ITEM(m_kCEItemProject.iItemId);
+        kItem = `LWCE_ITEM(m_kCEItemProject.ItemName);
 
-        if (m_kCEItemProject.iIndex == -1)
+        if (m_kCEItemProject.iIndex == INDEX_NONE)
         {
             m_kCEItemProject.iQuantity = 1;
             m_kCEItemProject.iQuantityLeft = 1;
-            m_kCEItemProject.iHoursLeft = kItem.iHours;
+            m_kCEItemProject.iHoursLeft = kItem.iPointsToComplete;
             m_kCEItemProject.bNotify = m_kCEItemProject.iHoursLeft != 0;
 
-            iMaxEngineers = kItem.iMaxEngineers;
-            iMaxEngineers *= float(m_kCEItemProject.iQuantity);
+            iMaxEngineers = kItem.iEngineers * m_kCEItemProject.iQuantity;
             m_kCEItemProject.iEngineers = iMaxEngineers;
             m_iAddedEngineers = m_kCEItemProject.iEngineers;
             m_kCEItemProject.iMaxEngineers = iMaxEngineers;
@@ -46,12 +46,7 @@ function DirectInitialize()
             ReleaseItemFunds();
         }
 
-        if (m_bCanRush && kItem.iCategory < 0)
-        {
-            m_bCanRush = false;
-        }
-
-        if (m_bCanRush && m_kCEItemProject.iHoursLeft == 0)
+        if (m_kCEItemProject.iHoursLeft == 0)
         {
             m_bCanRush = false;
         }
@@ -174,7 +169,7 @@ function OnIncrease()
     }
 
     // Can't build multiple satellites at once with Diminishing Returns on, since the cost increases each time
-    if (m_iCurrentView == eManView_Item && m_bCanAfford && !(m_kCEItemProject.iItemId == `LW_ITEM_ID(Satellite) && IsOptionEnabled(`LW_SECOND_WAVE_ID(DiminishingReturns))))
+    if (m_iCurrentView == eManView_Item && m_bCanAfford && !(m_kCEItemProject.ItemName == 'Item_Satellite' && IsOptionEnabled(`LW_SECOND_WAVE_ID(DiminishingReturns))))
     {
         m_kCEItemProject.iQuantity += 1;
         m_kCEItemProject.iQuantityLeft += 1;
@@ -356,25 +351,29 @@ function ReleaseFoundryFunds()
 
     kEngineering = LWCE_XGFacility_Engineering(ENGINEERING());
 
-    if (m_kCEFoundryProject.kOriginalCost.iCash != 0)
+    if (m_kCEFoundryProject.kOriginalCost.kCost.iCash != 0)
     {
-        kEngineering.RefundCost(m_kCEFoundryProject.kOriginalCost);
+        kEngineering.LWCE_RefundCost(m_kCEFoundryProject.kOriginalCost);
     }
     else
     {
-        kEngineering.RefundCost(kEngineering.LWCE_GetFoundryProjectCost(m_kCEFoundryProject.ProjectName, m_kCEFoundryProject.bRush));
+        kEngineering.LWCE_RefundCost(kEngineering.LWCE_GetFoundryProjectCost(m_kCEFoundryProject.ProjectName, m_kCEFoundryProject.bRush));
     }
 }
 
 function ReleaseItemFunds()
 {
-    if (m_kCEItemProject.kOriginalCost.iCash != 0)
+    local LWCE_XGFacility_Engineering kEngineering;
+
+    kEngineering = LWCE_XGFacility_Engineering(ENGINEERING());
+
+    if (m_kCEItemProject.kOriginalCost.kCost.iCash != 0)
     {
-        ENGINEERING().RefundCost(m_kCEItemProject.kOriginalCost);
+        kEngineering.LWCE_RefundCost(m_kCEItemProject.kOriginalCost);
     }
     else
     {
-        ENGINEERING().RefundCost(`LWCE_ENGINEERING.LWCE_GetItemProjectCost(m_kCEItemProject.iItemId, m_kCEItemProject.iQuantityLeft, m_kCEItemProject.bRush));
+        kEngineering.LWCE_RefundCost(kEngineering.LWCE_GetItemProjectCost(m_kCEItemProject.ItemName, m_kCEItemProject.iQuantityLeft, m_kCEItemProject.bRush));
     }
 }
 
@@ -392,6 +391,50 @@ function RestoreItemFunds()
     {
         ENGINEERING().RestoreItemFunds(m_kCEItemProject.iIndex);
     }
+}
+
+function UpdateHeader()
+{
+    local string strLabel;
+    local TLabeledText txtCash, txtMonthly, txtAlloys, txtElerium;
+    local UIStrategyHUD kHUD;
+    local LWCE_XGStorage kStorage;
+
+    kStorage = `LWCE_STORAGE;
+    kHUD = PRES().GetStrategyHUD();
+
+    txtCash = GetResourceText(eResource_Money);
+    txtMonthly = GetResourceText(eResource_MonthlyNet);
+
+    kHUD.ClearResources();
+    kHUD.AddResource(class'UIUtilities'.static.GetHTMLColoredText(txtCash.strLabel $ ":" @ txtCash.StrValue, txtCash.iState));
+
+    if (m_iCurrentView == eManView_Facility)
+    {
+        kHUD.AddResource(class'UIUtilities'.static.GetHTMLColoredText(txtMonthly.strLabel $ ":" @ txtMonthly.StrValue, txtMonthly.iState));
+    }
+
+    if (kStorage.LWCE_EverHadItem('Item_Elerium'))
+    {
+        txtElerium = GetResourceText(eResource_Elerium);
+        kHUD.AddResource(class'UIUtilities'.static.GetHTMLColoredText(txtElerium.strLabel $ ":" @ txtElerium.StrValue, txtElerium.iState));
+    }
+
+    if (kStorage.LWCE_EverHadItem('Item_AlienAlloy'))
+    {
+        txtAlloys = GetResourceText(eResource_Alloys);
+        kHUD.AddResource(class'UIUtilities'.static.GetHTMLColoredText(txtAlloys.strLabel $ ":" @ txtAlloys.StrValue, txtAlloys.iState));
+    }
+
+    strLabel = Repl(Caps(`LWCE_ITEM('Item_WeaponFragment').strName), "WEAPON ", "", false);
+    strLabel $= ": " $ kStorage.LWCE_GetNumItemsAvailable('Item_WeaponFragment');
+    kHUD.AddResource(class'UIUtilities'.static.GetHTMLColoredText(strLabel, eUIState_Alloys));
+
+    strLabel = GetResourceLabel(eResource_Meld) $ ":" @ GetResourceString(eResource_Meld) @ "#MELDTAG";
+    kHUD.AddResource(class'UIUtilities'.static.GetHTMLColoredText(strLabel, GetResourceUIState(eResource_Meld)));
+
+    strLabel = GetResourceLabel(eResource_Power) $ ":" @ GetResourceString(eResource_Power);
+    kHUD.AddResource(class'UIUtilities'.static.GetHTMLColoredText(strLabel, GetResourceUIState(eResource_Power)));
 }
 
 function UpdateManufactureFoundry()
@@ -488,11 +531,18 @@ function UpdateManufactureItem()
 {
     local LWCE_XGFacility_Engineering kEngineering;
     local TManWidget kWidget;
-    local LWCE_TItem kItem;
+    local LWCEItemTemplate kItem;
     local int iSatCap;
 
+    if (m_kCEItemProject.ItemName == '')
+    {
+        return;
+    }
+
     kEngineering = `LWCE_ENGINEERING;
-    kItem = `LWCE_ITEM(m_kCEItemProject.iItemId);
+
+    `LWCE_LOG_CLS("UpdateManufactureItem: m_kCEItemProject.ItemName = " $ m_kCEItemProject.ItemName);
+    kItem = `LWCE_ITEM(m_kCEItemProject.ItemName);
 
     kWidget.txtTitle.StrValue = kItem.strName;
     kWidget.txtTitle.iState = eUIState_Warning;
@@ -517,7 +567,7 @@ function UpdateManufactureItem()
     }
 
     kWidget.txtProjDuration.iState = eUIState_Warning;
-    kWidget.bCanAdjustQuantity = m_kCEItemProject.iItemId != eItem_Skeleton_Key;
+    kWidget.bCanAdjustQuantity = m_kCEItemProject.ItemName != 'Item_SkeletonKey';
     kWidget.txtEngineers.StrValue = string(m_kCEItemProject.iMaxEngineers);
     kWidget.txtEngineersLabel.StrValue = m_strLabelEngineersAssigned;
     kWidget.txtEngHelp.iButton = eButton_RBumper;
@@ -525,7 +575,7 @@ function UpdateManufactureItem()
     kWidget.txtResourcesLabel.StrValue = m_strLabelProjectCost;
     kWidget.txtResourcesLabel.iState = eUIState_Warning;
 
-    m_bCanAfford = kEngineering.LWCE_GetItemCostSummary(kWidget.kCost, m_kCEItemProject.iItemId, m_kCEItemProject.iQuantityLeft, m_kCEItemProject.bRush, false, m_kCEItemProject.iIndex);
+    m_bCanAfford = kEngineering.LWCE_GetItemCostSummary(kWidget.kCost, m_kCEItemProject.ItemName, m_kCEItemProject.iQuantityLeft, m_kCEItemProject.bRush, false, m_kCEItemProject.iIndex);
 
     if (!m_bCanAfford)
     {
@@ -552,15 +602,16 @@ function UpdateManufactureItem()
     kWidget.txtNotesLabel.StrValue = m_strLabelNotes;
     kWidget.txtNotesLabel.iState = eUIState_Normal;
 
-    if (kItem.iCategory == eItemCat_Weapons && kItem.iItemId != eItem_Skeleton_Key)
+    if (kItem.IsWeapon() && kItem.GetItemName() != 'Item_SkeletonKey')
     {
-        if (TACTICAL().WeaponHasProperty(kItem.iItemId, eWP_AnyClass))
+        if (LWCEWeaponTemplate(kItem).HasWeaponProperty(eWP_AnyClass))
         {
             kWidget.txtNotes.StrValue @= m_strNoteWeaponAllSoldiers;
         }
     }
 
-    if (kItem.iItemId == eItem_Firestorm)
+    // TODO move to template?
+    if (kItem.GetItemName() == 'Item_Firestorm')
     {
         if (HANGAR().GetFreeHangerSpots(HQ().GetContinent()) < m_kCEItemProject.iQuantity)
         {
@@ -571,14 +622,14 @@ function UpdateManufactureItem()
             kWidget.txtResourcesLabel.iState = eUIState_Bad;
         }
     }
-    else if (kItem.iItemId == eItem_Satellite)
+    else if (kItem.GetItemName() == 'Item_Satellite')
     {
         iSatCap = HQ().m_arrSatellites.Length;
         iSatCap += STORAGE().GetNumItemsAvailable(eItem_Satellite);
         iSatCap += kEngineering.GetNumSatellitesBuilding();
 
         // If this is a new project, count the requested quantity towards the cap
-        if (m_kCEItemProject.iIndex == -1)
+        if (m_kCEItemProject.iIndex == INDEX_NONE)
         {
             iSatCap += m_kCEItemProject.iQuantity;
         }
@@ -624,6 +675,10 @@ function UpdateManufactureItem()
 
 function UpdateView()
 {
+    local LWCE_XGStorage kStorage;
+
+    kStorage = LWCE_XGStorage(STORAGE());
+
     UpdateHeader();
 
     switch (m_iCurrentView)
@@ -644,11 +699,11 @@ function UpdateView()
     // If building a satellite without sufficient capacity to launch it, trigger a narrative moment to inform the player
     // LWCE issue #3: this narrative triggers without considering whether your current satellite capacity is sufficient
     // to cover every country, in which case you're just building backup satellites.
-    if (m_iCurrentView == eManView_Item && m_kCEItemProject.iItemId == eItem_Satellite)
+    if (m_iCurrentView == eManView_Item && m_kCEItemProject.ItemName == 'Item_Satellite')
     {
         if ( !m_bSatCapacity
           && HQ().GetSatelliteLimit() < GetTotalNumberOfCouncilCountries()
-          && HQ().GetSatelliteLimit() <= (HQ().m_arrSatellites.Length + STORAGE().GetNumItemsAvailable(eItem_Satellite))
+          && HQ().GetSatelliteLimit() <= (HQ().m_arrSatellites.Length + kStorage.LWCE_GetNumItemsAvailable('Item_Satellite'))
           && !(ENGINEERING().IsBuildingFacility(eFacility_SmallRadar) || ENGINEERING().IsBuildingFacility(eFacility_LargeRadar)) )
         {
             m_bSatCapacity = true;

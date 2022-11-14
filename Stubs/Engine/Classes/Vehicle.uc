@@ -102,13 +102,13 @@ cpptext
 
 	/**
 	 * Check if this actor is the owner when doing relevancy checks for actors marked bOnlyRelevantToOwner
-	 * 
+	 *
 	 * @param ReplicatedActor - the actor we're doing a relevancy test on
-	 * 
+	 *
 	 * @param ActorOwner - the owner of ReplicatedActor
-	 * 
+	 *
 	 * @param ConnectionActor - the controller of the connection that we're doing relevancy checks for
-	 * 
+	 *
 	 * @return TRUE if this actor should be considered the owner
 	 */
 	virtual UBOOL IsRelevancyOwnerFor(AActor* ReplicatedActor, AActor* ActorOwner, AActor* ConnectionActor);
@@ -930,6 +930,8 @@ simulated function ZeroMovementVariables()
 	Throttle = 0.f;
 }
 
+// Vehicle class doesn't actually exist in XCOM
+/*
 defaultproperties
 {
 	Components.Remove(Arrow)
@@ -951,3 +953,4 @@ defaultproperties
 	bPathfindsAsVehicle=true
 	bReplicateHealthToAll=true
 }
+ */

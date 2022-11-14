@@ -1,6 +1,20 @@
-class LWCE_XGCyberneticsUI extends XGCyberneticsUI;
+class LWCE_XGCyberneticsUI extends XGCyberneticsUI
+    dependson(LWCE_XGFacility_CyberneticsLab);
 
 // TODO: remove EItemType from everywhere in this class
+
+struct LWCE_TUIDamagedInventoryItem
+{
+    var name ItemName;
+    var string strName;
+    var int iState;
+    var bool bCanRepair;
+    var string strCostLabel;
+    var string strDescription;
+    var array<TLabeledText> arrCost;
+};
+
+var array<LWCE_TUIDamagedInventoryItem> m_arrRepairingItems;
 
 function TTableMenuOption BuildSoldierOption(XGStrategySoldier kSoldier, array<int> arrCategories, int soldierListIndex)
 {
@@ -126,109 +140,109 @@ function TTableMenuOption BuildSoldierOption(XGStrategySoldier kSoldier, array<i
 
 function UpdateInventory()
 {
-    local array<LWCE_TItem> arrMecArmor;
-    local TCyberneticsLabRepairingMec kRepairingMec;
-    local LWCE_TItem kMecArmor;
-    local TUIMECInventoryItem kUIMec;
+    local array<LWCEItemTemplate> arrDamagedItems;
+    local LWCEItemTemplate kItem;
+    local LWCE_TRepairingItem kRepairingItem;
+    local LWCE_TUIDamagedInventoryItem kUIDamagedItem;
     local int iItemCount;
 
-    m_arrMECInventory.Length = 0;
+    m_arrRepairingItems.Length = 0;
 
-    kUIMec.arrCost = GetRepairCosts(0, true);
-    kUIMec.strName = m_strBuildNewMEC;
-    kUIMec.strCostLabel = "";
-    kUIMec.bCanUpgrade = false;
-    kUIMec.iState = eUIState_Normal;
-    m_arrMECInventory.AddItem(kUIMec);
+    kUIDamagedItem.arrCost = GetRepairCosts(none, true);
+    kUIDamagedItem.strName = m_strBuildNewMEC;
+    kUIDamagedItem.strCostLabel = "";
+    kUIDamagedItem.iState = eUIState_Normal;
 
-    arrMecArmor = `LWCE_STORAGE.LWCE_GetDamagedItemsInCategory(0);
+    m_arrRepairingItems.AddItem(kUIDamagedItem);
 
-    foreach arrMecArmor(kMecArmor)
+    arrDamagedItems = `LWCE_STORAGE.LWCE_GetDamagedItemsInCategory('All');
+
+    foreach arrDamagedItems(kItem)
     {
-        for (iItemCount = `LWCE_STORAGE.GetNumDamagedItems(EItemType(kMecArmor.iItemId)); iItemCount > 0; iItemCount--)
+        for (iItemCount = `LWCE_STORAGE.LWCE_GetNumDamagedItems(kItem.GetItemName()); iItemCount > 0; iItemCount--)
         {
-            m_arrMECInventory.AddItem(LWCE_GenerateDamagedMEC(kMecArmor));
+            m_arrRepairingItems.AddItem(GenerateDamagedItem(kItem));
         }
     }
 
-    foreach CYBERNETICSLAB().m_arrRepairingMecs(kRepairingMec)
+    foreach LWCE_XGFacility_CyberneticsLab(CYBERNETICSLAB()).m_arrRepairingItems(kRepairingItem)
     {
-        m_arrMECInventory.AddItem(LWCE_GenerateRepairingMEC(kRepairingMec));
+        m_arrRepairingItems.AddItem(GenerateRepairingItem(kRepairingItem));
     }
 }
 
-simulated function TUIMECInventoryItem LWCE_GenerateDamagedMEC(LWCE_TItem kMecArmor)
+simulated function LWCE_TUIDamagedInventoryItem GenerateDamagedItem(LWCEItemTemplate kItem)
 {
-    local TUIMECInventoryItem kUIMec;
-    local LWCE_TItem kBaseArmor;
-    local EItemType eBaseArmor;
+    local LWCE_TUIDamagedInventoryItem kUIItem;
     local int iCost;
 
-    eBaseArmor = EItemType(kMecArmor.iItemId);
-    kBaseArmor = `LWCE_ITEM(eBaseArmor, 0);
+    kUIItem.strName = class'UIUtilities'.static.GetHTMLColoredText(m_strLabelDamaged, eUIState_Bad) @ kItem.strName;
+    kUIItem.iState = eUIState_Normal;
+    kUIItem.ItemName = kItem.GetItemName();
+    kUIItem.strCostLabel = m_strRepairCostLabel;
+    kUIItem.arrCost = GetRepairCosts(kItem, false);
+    kUIItem.bCanRepair = true;
 
-    kUIMec.strName = class'UIUtilities'.static.GetHTMLColoredText(m_strLabelDamaged, eUIState_Bad) @ kBaseArmor.strName;
-    kUIMec.iState = eUIState_Normal;
-    kUIMec.eArmorType = eBaseArmor;
-    kUIMec.bCanUpgrade = false;
-    kUIMec.strCostLabel = m_strRepairCostLabel;
-    kUIMec.arrCost = GetRepairCosts(eBaseArmor, false);
-    kUIMec.bCanRepair = true;
-
-    for (iCost = 0; iCost < kUIMec.arrCost.Length; iCost++)
+    for (iCost = 0; iCost < kUIItem.arrCost.Length; iCost++)
     {
-        if (kUIMec.arrCost[iCost].iState == eUIState_Bad)
+        if (kUIItem.arrCost[iCost].iState == eUIState_Bad)
         {
-            kUIMec.iState = eUIState_Disabled;
-            kUIMec.bCanRepair = false;
+            kUIItem.iState = eUIState_Disabled;
+            kUIItem.bCanRepair = false;
             break;
         }
     }
 
-    kUIMec.arrPerkInfo.AddItem(GenerateMecWeaponDescription(eBaseArmor));
-    return kUIMec;
+    kUIItem.strDescription = GenerateItemDescription(kItem);
+
+    return kUIItem;
 }
 
-simulated function TUIMECInventoryItem LWCE_GenerateRepairingMEC(TCyberneticsLabRepairingMec kMec)
+simulated function string GenerateItemDescription(LWCEItemTemplate kItem)
 {
-    local TUIMECInventoryItem kUIMec;
-    local LWCE_TItem kBaseArmor;
-    local EItemType eBaseArmor;
+    return class'UIUtilities'.static.CapsCheckForGermanScharfesS(kItem.strName) $ "||" $ kItem.strBriefSummary $ "||Repair";
+}
+
+simulated function LWCE_TUIDamagedInventoryItem GenerateRepairingItem(LWCE_TRepairingItem kRepairingItem)
+{
+    local LWCE_TUIDamagedInventoryItem kUIItem;
+    local LWCEItemTemplate kItem;
     local XGParamTag kTag;
 
-    eBaseArmor = kMec.m_eMecItem;
-    kBaseArmor = `LWCE_ITEM(eBaseArmor, 0);
+    kItem = `LWCE_ITEM(kRepairingItem.ItemName);
 
     kTag = XGParamTag(XComEngine(class'Engine'.static.GetEngine()).LocalizeContext.FindTag("XGParam"));
-    kTag.StrValue0 = kBaseArmor.strName;
-    kTag.IntValue0 = kMec.m_iHoursLeft / 24;
+    kTag.StrValue0 = kItem.strName;
+    kTag.IntValue0 = kRepairingItem.iHoursLeft / 24;
 
-    kUIMec.strName = class'UIUtilities'.static.GetHTMLColoredText(class'XComLocalizer'.static.ExpandString(m_strLabelRepairing), eUIState_Warning);
-    kUIMec.iState = eUIState_Normal;
-    kUIMec.eArmorType = kMec.m_eMecItem;
-    kUIMec.bCanUpgrade = false;
-    kUIMec.bCanRepair = false;
-    kUIMec.arrPerkInfo.AddItem(GenerateMecWeaponDescription(eBaseArmor));
+    kUIItem.strName = class'UIUtilities'.static.GetHTMLColoredText(class'XComLocalizer'.static.ExpandString(m_strLabelRepairing), eUIState_Warning);
+    kUIItem.iState = eUIState_Normal;
+    kUIItem.ItemName = kRepairingItem.ItemName;
+    kUIItem.bCanRepair = false;
+    kUIItem.strDescription = GenerateItemDescription(kItem);
 
-    return kUIMec;
+    return kUIItem;
 }
 
 // Updated version of GetMecCosts, which was hacked pretty heavily by LW 1.0 to support item repairs
-simulated function array<TLabeledText> GetRepairCosts(int iBaseArmorId, bool bIsRepairAll)
+simulated function array<TLabeledText> GetRepairCosts(LWCEItemTemplate kItem, bool bIsRepairAll)
 {
     local array<TLabeledText> arrCosts;
     local TLabeledText kResourceText;
-    local LWCE_TItem kBaseArmor;
+    local LWCE_XGFacility_CyberneticsLab kCyberneticsLab;
     local LWCE_XGStorage kStorage;
+    local float fMecRepairCostMod;
     local int iAlloyCost, iEleriumCost, iMeldCost, iMoneyCost, iHours, Index;
 
-    kStorage = `LWCE_STORAGE;
+    kStorage = LWCE_XGStorage(STORAGE());
+    kCyberneticsLab = LWCE_XGFacility_CyberneticsLab(CYBERNETICSLAB());
+    fMecRepairCostMod = class'XGFacility_CyberneticsLab'.default.m_fMecRepairCostMod;
 
     if (IsOptionEnabled(`LW_SECOND_WAVE_ID(MiracleWorkers)))
     {
         if (!bIsRepairAll)
         {
-            iHours = CYBERNETICSLAB().GetHoursToRepairMec(EItemType(iBaseArmorId)) / 24;
+            iHours = kCyberneticsLab.GetHoursToRepairItem(kItem.GetItemName()) / 24;
             kResourceText.StrValue = string(iHours);
             kResourceText.strLabel = m_strLabelDays;
             kResourceText.iState = eUIState_Normal;
@@ -243,23 +257,21 @@ simulated function array<TLabeledText> GetRepairCosts(int iBaseArmorId, bool bIs
         // Sum up costs across all damaged items
         for (Index = 0; Index < kStorage.m_arrCEDamagedItems.Length; Index++)
         {
-            kBaseArmor = `LWCE_ITEM(kStorage.m_arrCEDamagedItems[Index].iItemId);
+            kItem = `LWCE_ITEM(kStorage.m_arrCEDamagedItems[Index].ItemName);
 
-            iAlloyCost   += int(float(kBaseArmor.kCost.iAlloys)  * CYBERNETICSLAB().m_fMecRepairCostMod) * kStorage.m_arrCEDamagedItems[Index].iQuantity;
-            iEleriumCost += int(float(kBaseArmor.kCost.iElerium) * CYBERNETICSLAB().m_fMecRepairCostMod) * kStorage.m_arrCEDamagedItems[Index].iQuantity;
-            iMeldCost    += int(float(kBaseArmor.kCost.iMeld)    * CYBERNETICSLAB().m_fMecRepairCostMod) * kStorage.m_arrCEDamagedItems[Index].iQuantity;
-            iMoneyCost   += int(float(kBaseArmor.kCost.iCash)    * CYBERNETICSLAB().m_fMecRepairCostMod) * kStorage.m_arrCEDamagedItems[Index].iQuantity;
+            iAlloyCost   += int(float(kItem.kCost.iAlloys)  * fMecRepairCostMod) * kStorage.m_arrCEDamagedItems[Index].iQuantity;
+            iEleriumCost += int(float(kItem.kCost.iElerium) * fMecRepairCostMod) * kStorage.m_arrCEDamagedItems[Index].iQuantity;
+            iMeldCost    += int(float(kItem.kCost.iMeld)    * fMecRepairCostMod) * kStorage.m_arrCEDamagedItems[Index].iQuantity;
+            iMoneyCost   += int(float(kItem.kCost.iCash)    * fMecRepairCostMod) * kStorage.m_arrCEDamagedItems[Index].iQuantity;
         }
     }
     else
     {
         // Just get costs for the requested item
-        kBaseArmor = `LWCE_ITEM(iBaseArmorId);
-
-        iAlloyCost   = int(float(kBaseArmor.kCost.iAlloys)  * CYBERNETICSLAB().m_fMecRepairCostMod);
-        iEleriumCost = int(float(kBaseArmor.kCost.iElerium) * CYBERNETICSLAB().m_fMecRepairCostMod);
-        iMeldCost    = int(float(kBaseArmor.kCost.iMeld)    * CYBERNETICSLAB().m_fMecRepairCostMod);
-        iMoneyCost   = int(float(kBaseArmor.kCost.iCash)    * CYBERNETICSLAB().m_fMecRepairCostMod);
+        iAlloyCost   = int(float(kItem.kCost.iAlloys)  * fMecRepairCostMod);
+        iEleriumCost = int(float(kItem.kCost.iElerium) * fMecRepairCostMod);
+        iMeldCost    = int(float(kItem.kCost.iMeld)    * fMecRepairCostMod);
+        iMoneyCost   = int(float(kItem.kCost.iCash)    * fMecRepairCostMod);
     }
 
     if (iMoneyCost > 0)
@@ -295,7 +307,7 @@ simulated function array<TLabeledText> GetRepairCosts(int iBaseArmorId, bool bIs
 
     if (!bIsRepairAll)
     {
-        iHours = CYBERNETICSLAB().GetHoursToRepairMec(EItemType(iBaseArmorId)) / 24;
+        iHours = kCyberneticsLab.GetHoursToRepairItem(kItem.GetItemName()) / 24;
         kResourceText.StrValue = string(iHours);
         kResourceText.strLabel = m_strLabelDays;
         kResourceText.iState = eUIState_Normal;
@@ -339,20 +351,16 @@ function OnChooseSlot(int iSlot)
 
 simulated function RepairAll()
 {
-    local int Index, iCount;
+    local int Index;
+    local LWCE_XGFacility_CyberneticsLab kCyberneticsLab;
     local LWCE_XGStorage kStorage;
 
-    kStorage = `LWCE_STORAGE;
+    kCyberneticsLab = LWCE_XGFacility_CyberneticsLab(CYBERNETICSLAB());
+    kStorage = LWCE_XGStorage(STORAGE());
 
     for (Index = 0; Index < kStorage.m_arrCEDamagedItems.Length; Index++)
     {
-        iCount = kStorage.m_arrCEDamagedItems[Index].iQuantity;
-
-        while (iCount > 0)
-        {
-            CYBERNETICSLAB().AddMecForRepair(EItemType(kStorage.m_arrCEDamagedItems[Index].iItemId));
-            iCount--;
-        }
+        kCyberneticsLab.AddItemForRepair(kStorage.m_arrCEDamagedItems[Index].ItemName, kStorage.m_arrCEDamagedItems[Index].iQuantity);
     }
 
     UpdateView();

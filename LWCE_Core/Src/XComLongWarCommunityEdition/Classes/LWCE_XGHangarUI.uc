@@ -1,6 +1,7 @@
-class LWCE_XGHangarUI extends XGHangarUI;
+class LWCE_XGHangarUI extends XGHangarUI
+    dependson(LWCETypes);
 
-var array<LWCE_TItem> m_arrCEItems;
+var array<LWCEItemTemplate> m_arrCEItems;
 var UIShipSummary m_kShipSummaryScreen;
 
 function XGHangarUI.TTableItemSummary BuildItemSummary(TItem kItem)
@@ -12,7 +13,7 @@ function XGHangarUI.TTableItemSummary BuildItemSummary(TItem kItem)
     return kSummary;
 }
 
-function XGHangarUI.TTableItemSummary LWCE_BuildItemSummary(LWCE_TItem kItem)
+function XGHangarUI.TTableItemSummary LWCE_BuildItemSummary(LWCEItemTemplate kItem)
 {
     local XGHangarUI.TTableItemSummary kSummary;
 
@@ -32,28 +33,28 @@ static function TItemCard BuildShipWeaponCard(EItemType eWeapon)
     return kItemCard;
 }
 
-static function LWCE_TItemCard LWCE_BuildShipWeaponCard(int iWeaponId, optional XGShip_Interceptor kShip)
+static function LWCE_TItemCard LWCE_BuildShipWeaponCard(name ItemName, optional XGShip_Interceptor kShip)
 {
     local LWCE_TItemCard kItemCard;
-    local TShipWeapon kWeapon;
+    local LWCEShipWeaponTemplate kWeapon;
 
-    kWeapon = `HQGAME.GetGameCore().GetHQ().SHIPWEAPON(class'LWCE_XGFacility_Hangar'.static.LWCE_ItemTypeToShipWeapon(iWeaponId));
+    kWeapon = LWCEShipWeaponTemplate(`LWCE_ITEM(ItemName));
 
     kItemCard.iCardType = eItemCard_ShipWeapon;
     kItemCard.strName = kWeapon.strName;
     kItemCard.iBaseDamage = GetShipWeaponDamageBin(kWeapon.iDamage);
     kItemCard.shipWpnRange = GetShipWeaponRangeBin(kWeapon.iRange);
-    kItemCard.shipWpnHitChance = kWeapon.iToHit;
+    kItemCard.shipWpnHitChance = kWeapon.iHitChance;
 
     if (kShip != none)
     {
         kItemCard.shipWpnHitChance += Clamp(3 * kShip.m_iConfirmedKills, 0, 30);
     }
 
-    kItemCard.shipWpnArmorPen = GetShipWeaponArmorPenetrationBin(kWeapon.iAP);
+    kItemCard.shipWpnArmorPen = GetShipWeaponArmorPenetrationBin(kWeapon.iArmorPen);
     kItemCard.shipWpnFireRate = GetShipWeaponFiringRateBin(kWeapon.fFiringTime);
-    kItemCard.strFlavorText = class'XComLocalizer'.static.ExpandString(class'XGLocalizedData'.default.ShipWeaponFlavorTxt[kWeapon.eType]);
-    kItemCard.iItemId = iWeaponId;
+    kItemCard.strFlavorText = kWeapon.strTacticalText;
+    kItemCard.ItemName = ItemName;
 
     return kItemCard;
 }
@@ -67,7 +68,7 @@ function TTableMenuOption BuildTableItem(TItem kItem)
     return kOption;
 }
 
-function TTableMenuOption LWCE_BuildTableItem(LWCE_TItem kItem)
+function TTableMenuOption LWCE_BuildTableItem(LWCEItemTemplate kItem)
 {
     local LWCE_XGStorage kStorage;
     local TTableMenuOption kOption;
@@ -76,10 +77,11 @@ function TTableMenuOption LWCE_BuildTableItem(LWCE_TItem kItem)
 
     kOption.arrStrings[0] = kItem.strName;
     kOption.arrStates[0] = eUIState_Normal;
-    kOption.arrStrings[1] = kStorage.LWCE_IsInfinite(kItem.iItemId) ? "" : ("x" $ string(kStorage.GetNumItemsAvailable(kItem.iItemId)));
+
+    kOption.arrStrings[1] = kItem.IsInfinite() ? "" : ("x" $ kStorage.LWCE_GetNumItemsAvailable(kItem.GetItemName()));
     kOption.arrStates[1] = eUIState_Normal;
 
-    if (!HANGAR().CanEquip(kItem.iItemId, XGShip_Interceptor(m_kShip), kOption.strHelp))
+    if (!LWCE_XGFacility_Hangar(HANGAR()).LWCE_CanEquip(kItem.GetItemName(), LWCE_XGShip_Interceptor(m_kShip), kOption.strHelp))
     {
         kOption.iState = eUIState_Disabled;
     }
@@ -100,31 +102,31 @@ function LWCE_TItemCard LWCE_HANGARUIGetItemCard(optional int iContinent = 0, op
 {
     local int iView;
     local LWCE_TItemCard kItemCard;
-    local XGShip_Interceptor kShip;
+    local LWCE_XGShip_Interceptor kShip;
 
     iView = viewOverride == -1 ? m_iCurrentView : viewOverride;
 
     if (iView == eHangarView_ShipSummary)
     {
-        kItemCard = LWCE_BuildShipWeaponCard(XGShip_Interceptor(m_kShip).GetWeapon(), XGShip_Interceptor(m_kShip));
+        kItemCard = LWCE_BuildShipWeaponCard(LWCE_XGShip_Interceptor(m_kShip).LWCE_GetWeapon(), XGShip_Interceptor(m_kShip));
     }
     else if (iView == eHangarView_ShipList)
     {
         if (m_iCurrentView == eHangarView_ShipSummary)
         {
-            kShip = XGShip_Interceptor(m_kShip);
+            kShip = LWCE_XGShip_Interceptor(m_kShip);
         }
         else if (m_arrContinents[iContinent].iNumShips > 0)
         {
-            kShip = m_arrContinents[iContinent].arrCraft[iShip];
+            kShip = LWCE_XGShip_Interceptor(m_arrContinents[iContinent].arrCraft[iShip]);
         }
 
         if (kShip != none)
         {
             kItemCard.iCardType = eItemCard_Interceptor;
-            kItemCard.strName = ITEMTREE().ShipTypeNames[kShip.m_kTShip.eType];
-            kItemCard.strFlavorText = class'XComLocalizer'.static.ExpandString(ITEMTREE().ShipTypeFlavorTxt[kShip.m_kTShip.eType]);
-            kItemCard.iItemId = HANGAR().ShipTypeToItemType(kShip.m_kTShip.eType);
+            kItemCard.strName = ITEMTREE().ShipTypeNames[kShip.m_kCETShip.eType];
+            kItemCard.strFlavorText = class'XComLocalizer'.static.ExpandString(ITEMTREE().ShipTypeFlavorTxt[kShip.m_kCETShip.eType]);
+            kItemCard.ItemName = LWCE_XGFacility_Hangar(HANGAR()).LWCE_ShipTypeToItemType(kShip.m_kCETShip.eType);
         }
     }
 
@@ -140,7 +142,7 @@ function OnChooseTableOption(int iOption)
     else
     {
         `HQPRES.m_kShipSummary.m_bUpdateDataOnReceiveFocus = true;
-        `LWCE_HANGAR.LWCE_EquipWeapon(m_arrCEItems[iOption].iItemId, XGShip_Interceptor(m_kShip));
+        `LWCE_HANGAR.LWCE_EquipWeapon(m_arrCEItems[iOption].GetItemName(), XGShip_Interceptor(m_kShip));
         GoToView(eHangarView_ShipSummary);
     }
 }
@@ -164,7 +166,7 @@ function UpdateHireDisplay()
         iTotalOrders += ENGINEERING().GetNumFirestormsBuilding();
     }
 
-    iInterceptorCost = `LWCE_ITEM(`LW_ITEM_ID(Interceptor)).kCost.iCash;
+    iInterceptorCost = `LWCE_ITEM('Item_Interceptor').kCost.iCash;
 
     m_iNumInterceptors = kInfo.arrCraft.Length;
     m_iNumInterceptorsOnOrder = iTotalOrders;
@@ -202,12 +204,10 @@ function UpdateHireDisplay()
 
 function UpdateInterceptorSummary()
 {
-    local LWCE_XGFacility_Hangar kHangar;
     local TShipSummary kSummary;
     local TShipUIInfo kInfo;
-    local TShipWeapon kWeapon;
+    local LWCEShipWeaponTemplate kWeapon;
 
-    kHangar = LWCE_XGFacility_Hangar(HANGAR());
     kInfo = m_kShip.GetUIInfo();
 
     kSummary.txtStatus.strLabel = m_strLabelStatus;
@@ -249,14 +249,28 @@ function UpdateInterceptorSummary()
         kSummary.txtTransferButton.iState = eUIState_Disabled;
     }
 
-    kWeapon = SHIPWEAPON(kHangar.LWCE_ItemTypeToShipWeapon(XGShip_Interceptor(m_kShip).GetWeapon()));
+    kWeapon = LWCEShipWeaponTemplate(`LWCE_ITEM(LWCE_XGShip_Interceptor(m_kShip).LWCE_GetWeapon()));
+
     kSummary.txtWeaponLabel.StrValue = m_strLabelWeaponsSystem;
     kSummary.txtWeapon.StrValue = kWeapon.strName;
+
     kSummary.txtWeaponDamage.strLabel = m_strLabelDamage;
     kSummary.txtWeaponDamage.StrValue = string(float(kWeapon.iDamage) / kWeapon.fFiringTime) @ m_strPerSecond;
+
     kSummary.txtWeaponRange.strLabel = m_strLabelRange;
-    kSummary.txtWeaponRange.StrValue = string(kWeapon.iRange) $ "km";
+    kSummary.txtWeaponRange.StrValue = kWeapon.iRange $ "km";
+
     m_kShipSummary = kSummary;
+}
+
+function UpdateShipWeaponView(XGShip_Interceptor kShip, EShipWeapon eWeapon)
+{
+    `LWCE_LOG_DEPRECATED_CLS(UpdateShipWeaponView);
+}
+
+function LWCE_UpdateShipWeaponView(XGShip_Interceptor kShip, LWCEShipWeaponTemplate kShipWeapon)
+{
+    LWCE_XGFacility_Hangar(HANGAR()).LWCE_UpdateWeaponView(kShipWeapon.GetItemName());
 }
 
 function UpdateTableMenu()

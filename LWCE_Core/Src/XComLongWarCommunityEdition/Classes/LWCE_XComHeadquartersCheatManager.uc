@@ -9,7 +9,7 @@ exec function CreateAlienBaseAlert()
 {
     local XGMission_AlienBase kMission;
 
-    kMission = Outer.Spawn(class'XGMission_AlienBase');
+    kMission = Outer.Spawn(class'LWCE_XGMission_AlienBase');
     kMission.m_kDesc = Outer.Spawn(class'LWCE_XGBattleDesc').Init();
     kMission.m_iContinent = 0;
     kMission.m_v2Coords = vect2d(0.3020, 0.3940);
@@ -70,34 +70,13 @@ exec function GiveFoundry(optional string ProjectName)
 
 exec function GiveItem(string ItemType, optional int Amount = 1)
 {
-    local string enumName;
-    local int Index, iItemId;
-    local LWCE_TItem kItem;
+    local LWCEItemTemplate kItem;
 
-    enumName = "eItem_" $ ItemType;
-    iItemId = int(ItemType);
+    kItem = `LWCE_ITEM(name(ItemType));
 
-    // Start with base game items
-    for (Index = 0; Index < 255; Index++)
+    if (kItem != none)
     {
-        if (GetEnum(enum'EItemType', Index) == name(enumName))
-        {
-            `HQGAME.GetGameCore().GetHQ().m_kEngineering.GetStorage().AddItem(Index, Amount);
-            return;
-        }
-    }
-
-    if (iItemId <= 0)
-    {
-        return;
-    }
-
-    // Validate that the requested item exists; if not, kItem.iItemId will be 0
-    kItem = `LWCE_ITEM(iItemId);
-
-    if (kItem.iItemId == iItemId)
-    {
-        `HQGAME.GetGameCore().GetHQ().m_kEngineering.GetStorage().AddItem(iItemId, Amount);
+        `LWCE_STORAGE.LWCE_AddItem(name(ItemType), Amount);
         return;
     }
 

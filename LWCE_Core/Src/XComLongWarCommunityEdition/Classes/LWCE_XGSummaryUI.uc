@@ -9,12 +9,12 @@ function TTableMenuOption BuildArtifactLine(EItemType eItem, int iQuantity)
     return kOption;
 }
 
-function TTableMenuOption LWCE_BuildArtifactLine(int iItemId, int iQuantity)
+function TTableMenuOption LWCE_BuildArtifactLine(name ItemName, int iQuantity)
 {
-    local LWCE_TItem kItem;
+    local LWCEItemTemplate kItem;
     local TTableMenuOption kOption;
 
-    kItem = `LWCE_ITEM(iItemId);
+    kItem = `LWCE_ITEM(ItemName);
     kOption.arrStrings[0] = kItem.strName;
     kOption.arrStrings[1] = string(iQuantity);
     kOption.arrStates[0] = eUIState_Normal;
@@ -22,7 +22,7 @@ function TTableMenuOption LWCE_BuildArtifactLine(int iItemId, int iQuantity)
 
     if (kOption.arrStrings[0] == "")
     {
-        kOption.arrStrings[0] = string(iItemId);
+        kOption.arrStrings[0] = string(ItemName);
     }
 
     return kOption;
@@ -32,14 +32,16 @@ function CollectArtifactsFromDeadAliens()
 {
     local XGSquad kSquad;
     local XGUnit kAlien;
-    local int iArtifactRecoveryChance;
-    local int iAlloys, iElerium, iMeld;
-    local int I, Index, iItem;
     local EItemType eCaptive;
     local XGInventoryItem kItem;
     local LWCE_XGBattleDesc kDesc;
     local LWCE_XGDropshipCargoInfo kCargo;
     local LWCEItemContainer kCargoItems, kDescItems;
+    local LWCEEquipmentTemplate kEquipment;
+    local int iArtifactRecoveryChance;
+    local int iAlloys, iElerium, iMeld;
+    local int I, Index, iItem;
+    local name ItemName;
 
     kDesc = LWCE_XGBattleDesc(Desc());
     kDescItems = kDesc.m_kArtifactsContainer;
@@ -51,18 +53,20 @@ function CollectArtifactsFromDeadAliens()
     if (BATTLE().m_iResult == eResult_Victory)
     {
         iArtifactRecoveryChance = 100;
-        kCargoItems.Set(`LW_ITEM_ID(OutsiderShard), kDescItems.Get(`LW_ITEM_ID(OutsiderShard)).iQuantity);
+        kCargoItems.Set('Item_OutsiderShard', kDescItems.Get('Item_OutsiderShard').iQuantity);
 
+        // TODO: move rewards to config
         if (kDesc.m_iMissionType == eMission_ExaltRaid)
         {
-            kCargoItems.Set(`LW_ITEM_ID(CognitiveEnhancer), 1);
-            kCargoItems.Set(`LW_ITEM_ID(Neuroregulator), 1);
-            kCargoItems.Set(`LW_ITEM_ID(IlluminatorGunsight), 1);
+            kCargoItems.Set('Item_CognitiveEnhancer', 1);
+            kCargoItems.Set('Item_Neuroregulator', 1);
+            kCargoItems.Set('Item_IlluminatorGunsight', 1);
             kCargo.m_kReward.iCredits += 1250;
         }
     }
     else
     {
+        // When losing a mission, recovery chance scales with the number of surviving soldiers you have
         iArtifactRecoveryChance = 0;
         kSquad = XGBattle_SP(`BATTLE).GetHumanPlayer().GetSquad();
 
@@ -75,18 +79,21 @@ function CollectArtifactsFromDeadAliens()
     // Copy over artifacts from the mission data before moving on to corpses
     for (I = (iArtifactRecoveryChance == 100 ? 161 : 163) ; I < (iArtifactRecoveryChance == 100 ? 182 : 165); I++)
     {
-        for (Index = 0; Index < kDescItems.Get(I).iQuantity; Index++)
+        ItemName = class'LWCE_XGItemTree'.static.ItemNameFromBaseID(I);
+
+        for (Index = 0; Index < kDescItems.Get(ItemName).iQuantity; Index++)
         {
             if (Rand(100) < iArtifactRecoveryChance)
             {
-                kCargoItems.AdjustQuantity(I, 1);
+                kCargoItems.AdjustQuantity(ItemName, 1);
             }
         }
     }
 
     for (I = 161; I < 182; I++)
     {
-        kDescItems.Delete(I);
+        ItemName = class'LWCE_XGItemTree'.static.ItemNameFromBaseID(I);
+        kDescItems.Delete(ItemName);
     }
 
     kSquad = `BATTLE.GetAIPlayer().GetSquad();
@@ -97,57 +104,28 @@ function CollectArtifactsFromDeadAliens()
 
         if (kAlien != none)
         {
-            if (kAlien.m_bStunned)
+            // Nothing is recovered from captives unless we won
+            if (kAlien.m_bStunned && iArtifactRecoveryChance == 100)
             {
                 // TODO: connect this to item config
                 eCaptive = class'XGGameData'.static.CharToCaptive(ECharacter(kAlien.GetCharacter().m_kChar.iType));
 
-                if (eCaptive != 0 && iArtifactRecoveryChance == 100)
+                if (eCaptive != 0)
                 {
-                    kCargoItems.AdjustQuantity(eCaptive, 1);
+                    kCargoItems.AdjustQuantity(class'LWCE_XGItemTree'.static.ItemNameFromBaseID(eCaptive), 1);
                 }
 
                 for (Index = 0; Index < 22; Index++)
                 {
                     kItem = kAlien.GetInventory().GetPrimaryItemInSlot(ELocation(Index));
 
-                    if (kAlien.IsExalt())
+                    if (LWCE_XGWeapon(kItem) != none)
                     {
-                        iItem = kItem.ItemType();
-                    }
-                    else
-                    {
-                        switch (kItem.ItemType())
-                        {
-                            case eItem_SectoidPlasmaPistol:
-                                iItem = eItem_SectoidPlasmaPistol;
-                                break;
-                            case eItem_PlasmaLightRifle_ThinMan:
-                            case eItem_PlasmaLightRifle_Floater:
-                            case eItem_PlasmaLightRifle_Muton:
-                            case eItem_OutsiderWeapon:
-                                iItem = eItem_PlasmaLightRifle_ThinMan;
-                                break;
-                            case eItem_PlasmaLightRifle_Floater:
-                            case eItem_PlasmaLightRifle_Muton:
-                                iItem = eItem_PlasmaLightRifle_Floater;
-                                break;
-                            case eItem_HeavyPlasma_Muton:
-                                iItem = eItem_HeavyPlasma_Muton;
-                                break;
-                            default:
-                                iItem = kItem.GameplayType();
-                                break;
-                        }
-                    }
+                        kEquipment = LWCE_XGWeapon(kItem).m_kTemplate;
 
-                    // 41 through 47: alien weapons
-                    // 215 through 217: EXALT laser weapons
-                    if ( (iItem >= 41 && iItem <= 47) || (iItem >= 215 && iItem <= 217) || iItem == eItem_AlienGrenade )
-                    {
-                        if (iArtifactRecoveryChance == 100)
+                        if (kEquipment.nmRecoveredItem != '')
                         {
-                            kCargoItems.AdjustQuantity(iItem, 1);
+                            kCargoItems.AdjustQuantity(kEquipment.nmRecoveredItem, 1);
                         }
                     }
                 }
@@ -160,7 +138,7 @@ function CollectArtifactsFromDeadAliens()
 
                 if (iItem != 0 && Rand(100) < iArtifactRecoveryChance)
                 {
-                    kCargoItems.AdjustQuantity(iItem, 1);
+                    kCargoItems.AdjustQuantity(class'LWCE_XGItemTree'.static.ItemNameFromBaseID(iItem), 1);
                 }
 
                 iAlloys = 0;
@@ -199,7 +177,7 @@ function CollectArtifactsFromDeadAliens()
                         iAlloys = class'XGTacticalGameCore'.default.MECHTOID_ALLOYS;
                         iElerium = class'XGTacticalGameCore'.default.MECHTOID_ELERIUM;
                         iMeld = class'XGTacticalGameCore'.default.MECHTOID_MELD;
-                        kCargoItems.AdjustQuantity(`LW_ITEM_ID(SectoidCorpse), 1);
+                        kCargoItems.AdjustQuantity('Item_CorpseSectoid', 1);
                         break;
                     case eChar_ExaltEliteOperative:
                     case eChar_ExaltEliteSniper:
@@ -218,9 +196,9 @@ function CollectArtifactsFromDeadAliens()
                         }
                 }
 
-                kDescItems.AdjustQuantity(`LW_ITEM_ID(AlienAlloy), iAlloys);
-                kDescItems.AdjustQuantity(`LW_ITEM_ID(Elerium), iElerium);
-                kDescItems.AdjustQuantity(`LW_ITEM_ID(Meld), iMeld);
+                kDescItems.AdjustQuantity('Item_AlienAlloy', iAlloys);
+                kDescItems.AdjustQuantity('Item_Elerium', iElerium);
+                kDescItems.AdjustQuantity('Item_Meld', iMeld);
             }
         }
     }
@@ -228,17 +206,19 @@ function CollectArtifactsFromDeadAliens()
     // 161 through 164: elerium, alloys, weapon fragments, and meld
     for (I = 161; I < 165; I++)
     {
+        ItemName = class'LWCE_XGItemTree'.static.ItemNameFromBaseID(I);
+
         if (`GAMECORE.IsOptionEnabled(`LW_SECOND_WAVE_ID(DynamicWar)))
         {
-            kDescItems.Set(I, kDescItems.Get(I).iQuantity / class'XGTacticalGameCore'.default.SW_MARATHON);
+            kDescItems.Set(ItemName, kDescItems.Get(ItemName).iQuantity / class'XGTacticalGameCore'.default.SW_MARATHON);
         }
 
         // All resources from alien corpses are divided by 10, since they have to be integers
-        for (Index = 0; Index < (kDescItems.Get(I).iQuantity / 10); Index++)
+        for (Index = 0; Index < (kDescItems.Get(ItemName).iQuantity / 10); Index++)
         {
             if (Rand(100) < iArtifactRecoveryChance)
             {
-                kCargoItems.AdjustQuantity(I, 1);
+                kCargoItems.AdjustQuantity(ItemName, 1);
             }
         }
     }
@@ -329,7 +309,7 @@ function UpdateArtifacts()
     {
         if (kItemQuantity.iQuantity > 0)
         {
-            kTable.arrOptions.AddItem(LWCE_BuildArtifactLine(kItemQuantity.iItemId, kItemQuantity.iQuantity));
+            kTable.arrOptions.AddItem(LWCE_BuildArtifactLine(kItemQuantity.ItemName, kItemQuantity.iQuantity));
         }
     }
 

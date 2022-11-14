@@ -65,17 +65,16 @@ simulated function OnChangedFloor(){}
 
 defaultproperties
 {
-	InventoryManagerClass=class'XComInventoryManager'
-	Components(0)=none
-	Components(1)=none
-	Components(2)=none
-	
-	begin object name=CollisionCylinder
+    InventoryManagerClass=class'XComInventoryManager'
+
+    begin object name=CollisionCylinder
         ReplacementPrimitive=none
-	end object
-	Components.Add(CollisionCylinder)
-	CollisionComponent=CollisionCylinder
-	CylinderComponent=CollisionCylinder
+    end object
+
+    CylinderComponent=CollisionCylinder
+    CollisionComponent=CollisionCylinder
+
+    Components(0)=none
+    Components(1)=CollisionCylinder
+    Components(2)=none
 }
-
-

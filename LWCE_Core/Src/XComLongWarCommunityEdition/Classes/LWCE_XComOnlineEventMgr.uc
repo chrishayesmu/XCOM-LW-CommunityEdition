@@ -54,3 +54,18 @@ event FillInHeaderForSave(out SaveGameHeader Header, out string SaveFriendlyName
 
     SaveFriendlyName = Header.Description;
 }
+
+function HideSaveIndicator()
+{
+    local XComPresentationLayerBase Presentation;
+
+    bShowingSaveIndicator = false;
+    ShownSaveIndicatorTime = 0.0;
+    Presentation = XComPlayerController(class'UIInteraction'.static.GetLocalPlayer(0).Actor).m_Pres;
+
+    // LWCE: fix None access of AnchoredMessageMgr
+    if (Presentation != none && Presentation.GetAnchoredMessenger() != none)
+    {
+        Presentation.GetAnchoredMessenger().RemoveMessage("SaveIndicator");
+    }
+}

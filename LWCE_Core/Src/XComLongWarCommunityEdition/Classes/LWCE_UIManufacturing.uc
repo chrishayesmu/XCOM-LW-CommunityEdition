@@ -42,14 +42,14 @@ simulated function InitItem(XComPlayerController _controllerRef, UIFxsMovie _man
     `LWCE_LOG_DEPRECATED_CLS(InitItem);
 }
 
-simulated function LWCE_InitItem(XComPlayerController _controllerRef, UIFxsMovie _manager, int iItemId, int iIndex)
+simulated function LWCE_InitItem(XComPlayerController _controllerRef, UIFxsMovie _manager, name ItemName, int iIndex)
 {
     local LWCE_XGManufacturingUI kManufacturing;
 
     Init(_controllerRef, _manager, eManView_Item);
 
     kManufacturing = LWCE_XGManufacturingUI(GetMgr());
-    kManufacturing.m_kCEItemProject.iItemId = iItemId;
+    kManufacturing.m_kCEItemProject.ItemName = ItemName;
     kManufacturing.m_kCEItemProject.iIndex = iIndex;
     kManufacturing.DirectInitialize();
 }

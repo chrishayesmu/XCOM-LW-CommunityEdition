@@ -184,11 +184,35 @@ var config LinearColor AreaTargetingValidColor;
 var config LWCE_TRange BullRushAddedDamage;
 var config LWCE_TRange DeathBlossomAddedDamage;
 
-var array<LWCE_TWeapon> m_arrCEWeapons;
+// This field is here as a pretty big hack, to get around UnrealScript's lack of constructors. In LWCE_XGWeapon, the
+// CreateEntity method is called when the actor is spawned. At that time we need to read the weapon template, but since
+// there are no constructors, we don't know which template to use. The base game handles this by having various subclasses
+// of XGWeapon that have their item type set as a default property. LWCE handles this by having a field in this class, which
+// is set immediately before spawning and can be read from CreateEntity to do initialization.
+var name nmItemToCreate;
+
+var private LWCEItemTemplateManager m_kItemTemplateMgr;
+
+static function name LWCE_GetPrimaryWeapon(const LWCE_TInventory kInventory)
+{
+    local int Index;
+
+    for (Index = 0; Index < kInventory.arrLargeItems.Length; Index++)
+    {
+        if (kInventory.arrLargeItems[Index] != '')
+        {
+            return kInventory.arrLargeItems[Index];
+        }
+    }
+
+    return kInventory.nmPistol;
+}
 
 simulated event Init()
 {
     `LWCE_LOG_CLS("Init");
+
+    m_kItemTemplateMgr = `LWCE_ITEM_TEMPLATE_MGR;
 
     m_arrWeapons.Add(255);
     m_arrArmors.Add(255);
@@ -200,40 +224,17 @@ simulated event Init()
         m_kAbilities.Init();
     }
 
-    BuildWeapons();
+    //BuildWeapons();
     BuildArmors();
     BuildCharacters();
     m_bInitialized = true;
-}
-
-simulated function BuildWeapons()
-{
-    local LWCE_TWeapon kWeapon;
-
-    `LWCE_LOG_CLS("BuildWeapons");
-
-    // TODO delete this
-    super.BuildWeapons();
-
-    m_arrCEWeapons.Remove(0, m_arrCEWeapons.Length);
-
-    foreach default.arrCfgWeapons(kWeapon)
-    {
-        if (kWeapon.iItemId < 255)
-        {
-            kWeapon.strName = class'XLocalizedData'.default.m_aItemNames[kWeapon.iItemId];
-        }
-
-        m_arrCEWeapons.AddItem(kWeapon);
-    }
-
-    // TODO add mod hook
 }
 
 simulated function int CalcBaseHitChance(XGUnitNativeBase kShooter, XGUnitNativeBase kTarget, bool bReactionFire)
 {
     local int iDefense, iHitChance;
 
+    // TODO: this function should be deprecated and merged into other hit chance calculators
     `LWCE_LOG_CLS("CalcBaseHitChance");
 
     if (kTarget.m_bVIP) // Probably right, needs confirmation
@@ -377,11 +378,59 @@ private simulated function int CalcBaseHitChance_Original(XGUnitNativeBase kShoo
     return iHitChance;
 }
 
+function bool CalcCriticallyWounded(XGUnit kUnit, out TCharacter kCharacter, out int aCurrentStats[ECharacterStat], int iDamageAmount, int iRank, bool bIsVolunteer, bool bHasSecondaryHeart, out int iSavedBySecondaryHeart, const out Vector CharLocation, const out ETeam TeamVis)
+{
+    `LWCE_LOG_DEPRECATED_CLS(CalcCriticallyWounded);
+
+    return false;
+}
+
+function bool LWCE_CalcCriticallyWounded(XGUnit kUnit, out LWCE_TCharacter kCharacter, out int aCurrentStats[ECharacterStat], int iDamageAmount, int iRank, bool bIsVolunteer, bool bHasSecondaryHeart, out int iSavedBySecondaryHeart, const out Vector CharLocation, const out ETeam TeamVis)
+{
+    `LWCE_LOG_NOT_IMPLEMENTED(LWCE_CalcCriticallyWounded);
+
+    return false;
+}
+
+simulated function int CalcEnvironmentalDamage(int iWeapon, int iAbility, out TCharacter kCharacter, out int aCurrentStats[ECharacterStat], optional bool bCritical = false, optional bool bHasHeightBonus = false, optional float fDistanceToTarget = 0.0, optional bool bUseFlankBonus = false)
+{
+    `LWCE_LOG_DEPRECATED_CLS(CalcEnvironmentalDamage);
+
+    return 50000;
+}
+
+simulated function int LWCE_CalcEnvironmentalDamage(name WeaponName, int iAbility, out int aCurrentStats[ECharacterStat])
+{
+    local int iDamage;
+
+    iDamage = `LWCE_WEAPON(WeaponName).iEnvironmentDamage;
+
+    if (iDamage > 0)
+    {
+        iDamage += 8 * aCurrentStats[eStat_Damage];
+    }
+
+    if (iAbility == eAbility_MindMerge)
+    {
+        iDamage = 0;
+    }
+
+    return iDamage;
+}
+
 function int CalcOverallDamage(int iWeapon, int iCurrDamageStat, optional bool bCritical = false, optional bool bReflected = false)
 {
-    local int iDamage, iRandDamage;
+    `LWCE_LOG_DEPRECATED_CLS(CalcOverallDamage);
 
-    iDamage = LWCE_GetTWeapon(iWeapon).iDamage + iCurrDamageStat;
+    return 10000;
+}
+
+function int LWCE_CalcOverallDamage(name WeaponName, int iCurrDamageStat, optional bool bCritical = false, optional bool bReflected = false)
+{
+    local int iDamage, iRandDamage, iWeaponDamage;
+
+    iWeaponDamage = `LWCE_WEAPON(WeaponName).iDamage;
+    iDamage = iWeaponDamage + iCurrDamageStat;
 
     if (bReflected)
     {
@@ -401,7 +450,7 @@ function int CalcOverallDamage(int iWeapon, int iCurrDamageStat, optional bool b
 
     if (bCritical)
     {
-        iDamage = Max(iDamage, ( (IsOptionEnabled(eGO_RandomDamage) ? 6 : 5) * (m_arrWeapons[iWeapon].iDamage + iCurrDamageStat) + 2) / 4);
+        iDamage = Max(iDamage, ( (IsOptionEnabled(eGO_RandomDamage) ? 6 : 5) * (iWeaponDamage + iCurrDamageStat) + 2) / 4);
     }
 
     if (iDamage < 1)
@@ -412,19 +461,161 @@ function int CalcOverallDamage(int iWeapon, int iCurrDamageStat, optional bool b
     return iDamage;
 }
 
+simulated function int CalcRangeModForWeaponAt(int iWeapon, XGUnit kViewer, XGUnit kTarget, Vector vViewerLoc)
+{
+    `LWCE_LOG_CLS("ERROR: LWCE-incompatible function CalcRangeModForWeaponAt was called. This needs to be replaced with LWCEWeaponTemplate.CalcRangeMod. Stack trace follows.");
+    ScriptTrace();
+
+    return -1000;
+}
+
+// This function is reverse-engineered from its native version in XGTacticalGameCoreNativeBase.
+// It is unmodified and unused; this version is only kept around to see what the native
+// version does. Modifications should go in LWCE_CalcRangeModForWeaponAt.
+private simulated function int CalcRangeModForWeaponAt_Original(int iWeapon, XGUnit kViewer, XGUnit kTarget, Vector vViewerLoc)
+{
+    local float fDist;
+    local int iRangeMod;
+
+    if (kTarget == none)
+    {
+        return 0;
+    }
+
+    if (m_arrWeapons[iWeapon].aProperties[eWP_Melee] != 0)
+    {
+        return 0;
+    }
+
+    fDist = VSize(vViewerLoc - kTarget.GetLocation());
+
+    if (m_arrWeapons[iWeapon].aProperties[eWP_Assault] != 0)
+    {
+        iRangeMod = ASSAULT_AIM_CLIMB * (CLOSE_RANGE - fDist);
+
+        if (iRangeMod < ASSAULT_LONG_RANGE_MAX_PENALTY)
+        {
+            iRangeMod = ASSAULT_LONG_RANGE_MAX_PENALTY;
+        }
+    }
+    else if (m_arrWeapons[iWeapon].aProperties[eWP_Sniper] != 0)
+    {
+        if (fDist < CLOSE_RANGE)
+        {
+            iRangeMod = SNIPER_AIM_FALL * (CLOSE_RANGE - fDist);
+        }
+    }
+    else if (fDist < CLOSE_RANGE)
+    {
+        iRangeMod = AIM_CLIMB * (CLOSE_RANGE - fDist);
+    }
+
+    if (iRangeMod < 0 && kViewer.HasReaperRoundsForWeapon(iWeapon))
+    {
+        iRangeMod *= 2;
+    }
+
+    return iRangeMod;
+}
+
+simulated function int CalcRangeModForWeapon(int iWeapon, XGUnit kViewer, XGUnit kTarget)
+{
+    `LWCE_LOG_CLS("ERROR: LWCE-incompatible function CalcRangeModForWeapon was called. This needs to be replaced with LWCEWeaponTemplate.CalcRangeMod. Stack trace follows.");
+    ScriptTrace();
+
+    return -1000;
+}
+
+simulated function bool CharacterIsPsionic(const out TCharacter kCharacter)
+{
+    `LWCE_LOG_DEPRECATED_CLS(CharacterIsPsionic);
+
+    return false;
+}
+
+simulated function bool LWCE_CharacterIsPsionic(const out LWCE_TCharacter kCharacter)
+{
+    local int iAbility;
+
+    for (iAbility = 0; iAbility < kCharacter.arrAbilities.Length; iAbility++)
+    {
+        if (m_kAbilities.AbilityHasProperty(kCharacter.arrAbilities[iAbility].ID, eProp_Psionic))
+        {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+function int GenerateWeaponFragments(int iItem)
+{
+    `LWCE_LOG_DEPRECATED_CLS(GenerateWeaponFragments);
+
+    return 0;
+}
+
+function int LWCE_GenerateWeaponFragments(name ItemName)
+{
+    local int iFragments;
+
+    if (!`BATTLE.m_bAllowItemFragments)
+    {
+        return 0;
+    }
+
+    iFragments = m_kItemTemplateMgr.FindEquipmentTemplate(ItemName).iWeaponFragmentsWhenDestroyed;
+
+    if (iFragments == 0)
+    {
+        return 0;
+    }
+
+    return Max(1, int(float(iFragments) * FragmentBalance[m_iDifficulty]));
+}
+
+simulated function GetBackpackItemArray(TInventory kInventory, out array<int> arrBackPackItems)
+{
+    `LWCE_LOG_CLS("ERROR: LWCE-incompatible function GetBackpackItemArray was called. This needs to be replaced with LWCEInventoryUtils.GetAllBackpackItems. Stack trace follows.");
+    ScriptTrace();
+}
+
+simulated function int GetBackpackStatBonus(int iStat, array<int> arrBackPackItems, out TCharacter kCharacter)
+{
+    `LWCE_LOG_DEPRECATED_CLS(GetBackpackStatBonus);
+
+    return -1;
+}
+
+simulated function int LWCE_GetBackpackStatBonus(int iStat, array<name> arrBackPackItems)
+{
+    local name ItemName;
+    local int iTotal;
+
+    iTotal = 0;
+
+    foreach arrBackPackItems(ItemName)
+    {
+        iTotal += GetEquipmentItemStat(ItemName, ECharacterStat(iStat));
+    }
+
+    return iTotal;
+}
+
 /// <summary>
 /// Retrieves a TWeapon struct. THIS FUNCTION IS NOT FOR MODS TO USE.
 /// It exists strictly for parts of the vanilla code base that can't be rewritten.
-/// Mods should only use LWCE_GetTWeapon.
+/// Mods should only use LWCEWeaponTemplate.
 /// </summary>
 simulated function TWeapon GetTWeapon(int iWeapon)
 {
-    local int iAbilityId, iPropertyId;
-    local LWCE_TWeapon kCEWeapon;
     local TWeapon kWeapon;
+    // TODO: use templates? fully deprecate?
+    `LWCE_LOG_DEPRECATED_CLS(GetTWeapon);
 
-    //return super.GetTWeapon(iWeapon);
+    return kWeapon;
 
+/*
     // Map as much as we can into the original struct
     kCEWeapon = LWCE_GetTWeapon(iWeapon);
 
@@ -465,108 +656,113 @@ simulated function TWeapon GetTWeapon(int iWeapon)
     }
 
     return kWeapon;
+ */
 }
 
-simulated function LWCE_TWeapon LWCE_GetTWeapon(int iWeapon)
+/// <summary>
+/// Retrieves the requested stat modifier on the given piece of equipment. By default, most stats from primary weapons
+/// will be returned as 0, reflecting that they do not apply except when firing that weapon (the exceptions are mobility
+/// and defense, which apply at all times). This can be overridden using the bIncludePrimaryWeaponStats parameter.
+/// </summary>
+simulated function float GetEquipmentItemStat(name ItemName, ECharacterStat eCharacterStat, optional bool bIncludePrimaryWeaponStats = false)
 {
-    local int Index;
-    local LWCE_TWeapon kBlankWeapon, kWeapon;
+    local LWCE_TCharacterStats kStatChanges;
+    local LWCEEquipmentTemplate kEquipment;
+    local LWCEWeaponTemplate kWeapon;
+    local float fStat;
 
-    Index = m_arrCEWeapons.Find('iItemId', iWeapon);
-
-    if (Index == INDEX_NONE)
-    {
-        return kBlankWeapon;
-    }
-
-    kWeapon = m_arrCEWeapons[Index];
-
-    `LWCE_MOD_LOADER.Override_GetTWeapon(kWeapon);
-
-    return kWeapon;
-}
-
-// This was a rewritten function in Long War that should be deprecated, but it's called in too many
-// places to bother rewriting and it already has the right signature, so we just delegate to a method
-// that has a better name for mods to call.
-simulated function int GetUpgradeAbilities(int iRank, int iPersonality)
-{
-    return int(GetEquipmentItemStat(iRank, iPersonality));
-}
-
-// TODO: document that this doesn't apply to primary weapons or pistols
-simulated function float GetEquipmentItemStat(int iItemId, int iCharacterStat)
-{
-    local LWCE_TWeapon kWeapon;
-
-    if (iItemId == 0)
+    if (ItemName == '')
     {
         return 0;
     }
 
-    if (!WeaponHasProperty(iItemId, eWP_Secondary) && !WeaponHasProperty(iItemId, eWP_Backpack))
+    kEquipment = LWCEEquipmentTemplate(m_kItemTemplateMgr.FindItemTemplate(ItemName));
+    kWeapon = LWCEWeaponTemplate(kEquipment);
+
+    if (!bIncludePrimaryWeaponStats && kWeapon != none && kWeapon.IsPrimaryWeapon())
     {
-        if (iCharacterStat != eStat_Defense && iCharacterStat != eStat_Mobility)
+        if (eCharacterStat != eStat_Defense && eCharacterStat != eStat_Mobility)
         {
             return 0;
         }
     }
 
-    kWeapon = LWCE_GetTWeapon(iItemId);
+    // TODO: this probably needs to be passing a LWCE_TCharacter here
+    kEquipment.GetStatChanges(kStatChanges);
 
-    switch (iCharacterStat)
+    fStat = `LWCE_UTILS.GetCharacterStat(eCharacterStat, kStatChanges);
+
+    return fStat;
+}
+
+simulated function EItemType GetEquipWeapon(TInventory kInventory)
+{
+    `LWCE_LOG_DEPRECATED_CLS(GetEquipWeapon);
+
+    return eItem_None;
+}
+
+simulated function name LWCE_GetEquipWeapon(LWCE_TInventory kInventory)
+{
+    local int Index;
+    local LWCEWeaponTemplate kWeapon;
+
+    for (Index = 0; Index < kInventory.arrLargeItems.Length; Index++)
     {
-        case eStat_HP:
-            return kWeapon.kStatChanges.iHP;
-        case eStat_CriticalShot:
-            return kWeapon.kStatChanges.iCriticalChance;
-        case eStat_Offense:
-            return kWeapon.kStatChanges.iAim;
-        case eStat_FlightFuel:
-            return kWeapon.kStatChanges.iFlightFuel;
-        case eStat_Defense:
-            return kWeapon.kStatChanges.iDefense;
-        case eStat_Mobility:
-            return kWeapon.kStatChanges.iMobility;
-        case eStat_DamageReduction:
-            return kWeapon.kStatChanges.fDamageReduction;
-        case eStat_Will:
-            return kWeapon.kStatChanges.iWill;
-        default:
-            return 0;
+        if (kInventory.arrLargeItems[Index] == '')
+        {
+            continue;
+        }
+
+        kWeapon = m_kItemTemplateMgr.FindWeaponTemplate(kInventory.arrLargeItems[Index]);
+
+        if (!kWeapon.HasWeaponProperty(eWP_Secondary))
+        {
+            return kInventory.arrLargeItems[Index];
+        }
     }
+
+    return kInventory.nmPistol;
 }
 
 simulated function GetInventoryStatModifiers(out int aModifiers[ECharacterStat], out TCharacter kCharacter, EItemType iEquippedWeapon, array<int> arrBackPackItems)
 {
     `LWCE_LOG_DEPRECATED_CLS(GetInventoryStatModifiers);
-    //LWCE_GetInventoryStatModifiers(aModifiers, kCharacter, iEquippedWeapon, arrBackPackItems);
 }
 
-simulated function LWCE_GetInventoryStatModifiers(out int aModifiers[ECharacterStat], out TCharacter kCharacter, int iEquippedWeaponItemId, array<int> arrBackpackItemIds)
+// TODO: the int array here is incompatible with us using floats for DR in LWCE_TCharacterStats
+simulated function LWCE_GetInventoryStatModifiers(out int aModifiers[ECharacterStat], out LWCE_TCharacter kCharacter, name EquippedWeaponName, array<name> arrBackpackItemNames)
 {
+    local LWCEArmorTemplate kArmor;
+    local LWCEWeaponTemplate kWeapon;
     local int iStat;
+
+    `LWCE_LOG_CLS("LWCE_GetInventoryStatModifiers: character type = " $ kCharacter.iCharacterType $ ", EquippedWeaponName = " $ EquippedWeaponName $ ", armor = " $ kCharacter.kInventory.nmArmor $ ", pistol = " $ kCharacter.kInventory.nmPistol $ ", num backpack items = " $ arrBackpackItemNames.Length);
+
+    kArmor = `LWCE_ARMOR(kCharacter.kInventory.nmArmor);
+    kWeapon = `LWCE_WEAPON(EquippedWeaponName);
 
     for (iStat = 0; iStat < eStat_MAX; iStat++)
     {
-        aModifiers[iStat]  = GetWeaponStatBonus(iStat, iEquippedWeaponItemId, kCharacter);
-        aModifiers[iStat] += GetArmorStatBonus(iStat, kCharacter.kInventory.iArmor, kCharacter);
+        aModifiers[iStat]  = GetEquipmentItemStat(EquippedWeaponName, ECharacterStat(iStat));
+        aModifiers[iStat] += GetEquipmentItemStat(kCharacter.kInventory.nmArmor, ECharacterStat(iStat));
 
-        if (kCharacter.aUpgrades[27] > 0) // Extra Conditioning
+        if (iStat == eStat_HP && kCharacter.arrPerks.Find('Id', `LW_PERK_ID(ExtraConditioning)) != INDEX_NONE)
         {
-            aModifiers[iStat] += GetExtraArmorStatBonus(iStat, kCharacter.kInventory.iArmor);
+            aModifiers[iStat] += kArmor.iExtraConditioningBonusHP;
         }
 
-        if ( !WeaponHasProperty(iEquippedWeaponItemId, eWP_Pistol) || (iStat != eStat_Offense && iStat != eStat_CriticalShot) )
+        // Pistols do not get aim/crit stats from backpack items
+        if ( !kWeapon.HasWeaponProperty(eWP_Pistol) || (iStat != eStat_Offense && iStat != eStat_CriticalShot) )
         {
-            aModifiers[iStat] += GetBackpackStatBonus(iStat, arrBackPackItemIds, kCharacter);
+            aModifiers[iStat] += LWCE_GetBackpackStatBonus(iStat, arrBackpackItemNames);
 
             switch (iStat)
             {
                 case eStat_HP:
-                    if ((kCharacter.aUpgrades[123] & 1) > 0) // Shaped Armor
+                    if (`LWCE_UTILS.IsFoundryTechResearched('Foundry_ShapedArmor'))
                     {
-                        if (kCharacter.iType == eChar_Tank || kCharacter.eClass == eSC_Mec)
+                        if (kCharacter.iCharacterType == eChar_Tank || kCharacter.bIsAugmented)
                         {
                             aModifiers[iStat] += 3;
                         }
@@ -574,35 +770,28 @@ simulated function LWCE_GetInventoryStatModifiers(out int aModifiers[ECharacterS
 
                     break;
                 case eStat_Mobility:
-                    aModifiers[iStat] += TotalStatFromItem(kCharacter.kInventory.iArmor, ECharacterStat(iStat));
-
-                    if (kCharacter.aUpgrades[31] > 0) // Sprinter
+                    if (kCharacter.arrPerks.Find('Id', `LW_PERK_ID(Sprinter)) != INDEX_NONE)
                     {
                         aModifiers[iStat] += 4;
                     }
 
                     break;
                 case eStat_DamageReduction:
-                    aModifiers[iStat] += TotalStatFromItem(kCharacter.kInventory.iArmor, ECharacterStat(iStat));
-
-                    if (kCharacter.aUpgrades[132] > 0) // Automated Threat Assessment
+                    if (kCharacter.arrPerks.Find('Id', `LW_PERK_ID(AutomatedThreatAssessment)) != INDEX_NONE)
                     {
                         aModifiers[iStat] += 5;
                     }
 
-                    if (kCharacter.aUpgrades[148] > 0) // Iron Skin
+                    if (kCharacter.arrPerks.Find('Id', `LW_PERK_ID(IronSkin)) != INDEX_NONE)
                     {
                         aModifiers[iStat] += 10;
                     }
 
                     break;
-                case eStat_Offense:
-                    aModifiers[iStat] += TotalStatFromItem(kCharacter.kInventory.iArmor, ECharacterStat(iStat));
-                    break;
                 case eStat_FlightFuel:
-                    if ((kCharacter.aUpgrades[123] & 8) > 0) // Advanced Flight
+                    if (`LWCE_UTILS.IsFoundryTechResearched('Foundry_AdvancedFlight'))
                     {
-                        aModifiers[iStat] *= float(2);
+                        aModifiers[iStat] *= 2;
                     }
 
                     break;
@@ -615,48 +804,59 @@ simulated function LWCE_GetInventoryStatModifiers(out int aModifiers[ECharacterS
 
 simulated function int GetOverheatIncrement(XGUnit kUnit, int iWeapon, int iAbility, out TCharacter kCharacter, optional bool bReactionFire)
 {
+    `LWCE_LOG_DEPRECATED_CLS(GetOverheatIncrement);
+
+    return 1000;
+}
+
+// TODO: this needs to be part of the weapon/ability templates
+simulated function int LWCE_GetOverheatIncrement(name WeaponName, int iAbility, out LWCE_TCharacter kCharacter, optional bool bReactionFire)
+{
+    local LWCEWeaponTemplate kWeapon;
     local int iAmount;
 
-    if (iWeapon == 0)
+    if (WeaponName == '')
     {
         return 0;
     }
 
-    if (WeaponHasProperty(iWeapon, eWP_UnlimitedAmmo))
+    kWeapon = `LWCE_WEAPON(WeaponName);
+
+    if (kWeapon.HasWeaponProperty(eWP_UnlimitedAmmo))
     {
         return 0;
     }
 
-    if (WeaponHasProperty(iWeapon, eWP_NoReload))
+    if (kWeapon.HasWeaponProperty(eWP_NoReload))
     {
         return 0;
     }
 
-    if (WeaponHasProperty(iWeapon, eWP_Melee))
+    if (kWeapon.HasWeaponProperty(eWP_Melee))
     {
         return 0;
     }
 
-    iAmount = LWCE_GetTWeapon(iWeapon).iBaseAmmo;
+    iAmount = kWeapon.GetClipSize();
 
-    if ((kCharacter.aUpgrades[123] & 2) > 0) // Ammo Conservation
+    if (`LWCE_UTILS.IsFoundryTechResearched('Foundry_AmmoConservation'))
     {
         iAmount += 1;
     }
 
-    if (!WeaponHasProperty(iWeapon, eWP_Pistol))
+    if (!kWeapon.HasWeaponProperty(eWP_Pistol))
     {
-        if (kCharacter.aUpgrades[58] > 0) // Lock and Load
+        if (kCharacter.arrPerks.Find('ID', `LW_PERK_ID(LockNLoad)) != INDEX_NONE)
         {
             iAmount += 1;
         }
 
-        if (TInventoryHasItemType(kCharacter.kInventory, `LW_ITEM_ID(HiCapMags)))
+        if (class'LWCEInventoryUtils'.static.HasItemOfName(kCharacter.kInventory, 'Item_HiCapMags'))
         {
             iAmount += 1;
         }
 
-        if (TInventoryHasItemType(kCharacter.kInventory, `LW_ITEM_ID(DrumMags)))
+        if (class'LWCEInventoryUtils'.static.HasItemOfName(kCharacter.kInventory, 'Item_DrumMags'))
         {
             iAmount += 2;
         }
@@ -667,16 +867,10 @@ simulated function int GetOverheatIncrement(XGUnit kUnit, int iWeapon, int iAbil
 
     switch (iAbility)
     {
-        case eAbility_ShotSuppress:
-            iAmount = 2 * iAmount;
-            break;
-        case eAbility_ShotFlush:
-            iAmount = 2 * iAmount;
-            break;
         case eAbility_MEC_Barrage:
-            iAmount = 2 * iAmount;
-            break;
+        case eAbility_ShotFlush:
         case eAbility_ShotMayhem:
+        case eAbility_ShotSuppress:
             iAmount = 2 * iAmount;
             break;
     }
@@ -684,119 +878,109 @@ simulated function int GetOverheatIncrement(XGUnit kUnit, int iWeapon, int iAbil
     return iAmount;
 }
 
-simulated function int TotalStatFromItem(int iItemId, ECharacterStat eStat)
+simulated function int GetUpgradeAbilities(int iRank, int iPersonality)
 {
-    local TCharacterBalance kCharacterBalance;
-    local int iTotal;
+    `LWCE_LOG_CLS("ERROR: LWCE-incompatible function GetUpgradeAbilities was called. This needs to be replaced with GetEquipmentItemStat. Stack trace follows.");
+    ScriptTrace();
 
-    iTotal = 0;
+    return -100;
+}
 
-    if (ItemIsWeapon(iItemId))
+simulated function int GetWeaponStatBonus(int iStat, int iWeapon, const out TCharacter kCharacter)
+{
+    `LWCE_LOG_DEPRECATED_NOREPLACE_CLS(GetWeaponStatBonus);
+
+    return -100;
+}
+
+private simulated function int GetWeaponStatBonus_Original(int iStat, int iWeapon, const out TCharacter kCharacter)
+{
+    if (iStat == eStat_HP)
     {
-        return GetEquipmentItemStat(iItemId, eStat);
+        return m_arrWeapons[iWeapon].iHPBonus;
     }
 
-    // TODO: delete all of this once armor is ported to LWCE system
-    foreach BalanceMods_Classic(kCharacterBalance)
+    if (iStat == eStat_Will)
     {
-        if (kCharacterBalance.eType == iItemId)
+        return m_arrWeapons[iWeapon].iWillBonus;
+    }
+
+    if (iStat == eStat_Offense)
+    {
+        if (m_arrWeapons[iWeapon].aProperties[eWP_Pistol] != 0 && kCharacter.aUpgrades[ePerk_Foundry_PistolII] != 0)
         {
-            // Stats are mapped strangely since the original balance struct has limited fields
-            switch (eStat)
-            {
-                case eStat_Offense:
-                    iTotal += kCharacterBalance.iAim;
-                    break;
-                case eStat_Defense:
-                    iTotal += kCharacterBalance.iDefense;
-                    break;
-                case eStat_Mobility:
-                    iTotal += kCharacterBalance.iMobility;
-                    break;
-                case eStat_DamageReduction:
-                    iTotal += kCharacterBalance.iHP;
-                    break;
-                case eStat_CriticalShot:
-                    iTotal += kCharacterBalance.iCritHit;
-                    break;
-                case eStat_FlightFuel:
-                    iTotal += kCharacterBalance.iDamage;
-                    break;
-                default:
-                    break;
-            }
+            return m_arrWeapons[iWeapon].iOffenseBonus + FOUNDRY_PISTOL_AIM_BONUS;
+        }
+        else
+        {
+            return m_arrWeapons[iWeapon].iOffenseBonus;
         }
     }
 
-    return iTotal;
-}
-
-function eWeaponRangeCat GetWeaponCatRange(EItemType eWeapon)
-{
-    `LWCE_LOG_DEPRECATED_CLS(GetWeaponCatRange);
+    if (iStat == eStat_CriticalShot)
+    {
+        if (iWeapon == /* SCOPE */ 74 && kCharacter.aUpgrades[ePerk_Foundry_Scope] != 0)
+        {
+            return FOUNDRY_SCOPE_CRIT_BONUS;
+        }
+    }
 
     return 0;
 }
 
-function eWeaponRangeCat LWCE_GetWeaponCatRange(int iWeaponItemId)
+function eWeaponRangeCat GetWeaponCatRange(EItemType eWeapon)
 {
-    if (LWCE_GetTWeapon(iWeaponItemId).iRange > 30)
-    {
-        return eWRC_Long;
-    }
+    `LWCE_LOG_CLS("ERROR: LWCE-incompatible function GetWeaponCatRange was called. This needs to be replaced with LWCEWeaponTemplate.GetWeaponCatRange. Stack trace follows.");
+    ScriptTrace();
 
-    if (LWCE_GetTWeapon(iWeaponItemId).iReactionRange < 30)
-    {
-        return eWRC_Short;
-    }
-
-    return eWRC_Medium;
+    return eWRC_Short;
 }
 
 // TODO: rewrite all of the ItemIs* functions, maybe move into XGItemTree
 simulated function bool ItemIsAccessory(int iItem)
 {
-    return LWCE_GetTWeapon(iItem).iDamage <= 0;
+    `LWCE_LOG_CLS("ERROR: LWCE-incompatible function ItemIsAccessory was called. This needs to be replaced with LWCEWeaponTemplate.IsAccessory. Stack trace follows.");
+    ScriptTrace();
+
+    return false;
 }
 
 simulated function bool ItemIsWeapon(int iItem)
 {
-    return LWCE_GetTWeapon(iItem).iDamage > 0;
+    `LWCE_LOG_CLS("ERROR: LWCE-incompatible function ItemIsWeapon was called. This needs to be replaced with LWCEWeaponTemplate.IsWeapon. Stack trace follows.");
+    ScriptTrace();
+
+    return false;
 }
 
 simulated function bool ItemIsArmor(int iItem)
 {
-    return m_arrArmors[iItem].iHPBonus > 0;
+    `LWCE_LOG_CLS("ERROR: LWCE-incompatible function ItemIsArmor was called. This needs to be replaced with LWCEWeaponTemplate.IsArmor. Stack trace follows.");
+    ScriptTrace();
+
+    return false;
 }
 
 simulated function bool ItemIsMecArmor(int iItem)
 {
-    switch (iItem)
-    {
-        case 145:
-        case 148:
-        case 191:
-        case 192:
-        case 193:
-        case 194:
-        case 195:
-        case 210:
-            return true;
-        default:
-            return false;
-    }
+    `LWCE_LOG_CLS("ERROR: LWCE-incompatible function ItemIsMecArmor was called. This needs to be replaced with LWCEWeaponTemplate.IsMecArmor. Stack trace follows.");
+    ScriptTrace();
+
+    return false;
 }
 
 simulated function bool ItemIsShipWeapon(int iItem)
 {
-    return iItem >= 116 && iItem < 123;
+    `LWCE_LOG_CLS("ERROR: LWCE-incompatible function ItemIsShipWeapon was called. This needs to be replaced with LWCEWeaponTemplate.IsShipWeapon. Stack trace follows.");
+    ScriptTrace();
+
+    return false;
 }
 
 simulated function bool WeaponHasProperty(int iWeapon, int iWeaponProperty)
 {
-    local LWCE_TWeapon kWeapon;
+    `LWCE_LOG_CLS("ERROR: LWCE-incompatible function WeaponHasProperty was called. This needs to be replaced with LWCEWeaponTemplate.HasWeaponProperty. Stack trace follows.");
+    ScriptTrace();
 
-    kWeapon = LWCE_GetTWeapon(iWeapon);
-
-    return kWeapon.arrProperties.Find(iWeaponProperty) != INDEX_NONE;
+    return false;
 }

@@ -20,30 +20,56 @@ var LWCE_TMCAlert m_kCECurrentAlert;
 
 function AddNotice(EGeoscapeAlert eNotice, optional int iData1, optional int iData2, optional int iData3)
 {
+    local array<LWCE_TData> arrData;
+    local name AlertName;
+
+    arrData.Add(3);
+
+    arrData[0].eType = eDT_Int;
+    arrData[0].iData = iData1;
+
+    arrData[1].eType = eDT_Int;
+    arrData[1].iData = iData2;
+
+    arrData[2].eType = eDT_Int;
+    arrData[2].iData = iData3;
+
+    AlertName = class'LWCE_XGGeoscape'.static.AlertNameFromEnum(eNotice);
+
+    LWCE_AddNotice(AlertName, arrData);
+}
+
+function LWCE_AddNotice(name AlertName, array<LWCE_TData> arrData)
+{
+    local int iData1, iData2, iData3;
     local TMCNotice kNotice;
     local XGParamTag kTag;
 
     kTag = XGParamTag(XComEngine(class'Engine'.static.GetEngine()).LocalizeContext.FindTag("XGParam"));
     kNotice.fTimer = 6.0;
 
-    switch (eNotice)
+    switch (AlertName)
     {
-        case eGA_NewItemBuilt:
+        case 'NewItemBuilt':
             Sound().PlaySFX(SNDLIB().SFX_Notify_ItemBuilt);
-            kTag.IntValue0 = iData2;
-            kTag.StrValue0 = `LWCE_ITEM(iData1).strName;
+            kTag.IntValue0 = arrData[1].iData;
+            kTag.StrValue0 = `LWCE_ITEM(arrData[0].nmData).strName;
             kNotice.txtNotice.StrValue = class'XComLocalizer'.static.ExpandString(m_strLabelItemBuilt);
             kNotice.txtNotice.iState = eUIState_Warning;
             kNotice.imgNotice.iImage = eImage_FacilityGear;
             break;
-        case 54: // Item repairs completed
-            kTag.StrValue0 = `LWCE_ITEM(iData1, eTransaction_Sell).strName;
+        case 'ItemRepairsComplete':
+            kTag.StrValue0 = `LWCE_ITEM(arrData[0].nmData).strName;
             kNotice.txtNotice.StrValue = class'XComLocalizer'.static.ExpandString(m_strSpeakSatDestroyed);
             kNotice.txtNotice.iState = eUIState_Warning;
             kNotice.imgNotice.iImage = eImage_FacilityGear;
             break;
         default:
-            super.AddNotice(eNotice, iData1, iData2, iData3);
+            iData1 = arrData.Length > 0 ? arrData[0].iData : 0;
+            iData2 = arrData.Length > 1 ? arrData[1].iData : 0;
+            iData3 = arrData.Length > 2 ? arrData[2].iData : 0;
+
+            super.AddNotice(class'LWCE_XGGeoscape'.static.EnumFromAlertName(AlertName), iData1, iData2, iData3);
             return;
     }
 
@@ -99,7 +125,7 @@ function BuildEventOptions()
                 kOption.EventType = 'ItemProject';
                 kOption.iPriority = 2;
                 kOption.imgOption.iImage = eImage_OldManufacture;
-                kOption.txtOption.StrValue = `LWCE_ITEM(m_kCEEvents.arrEvents[iEvent].arrData[0].iData).strName;
+                kOption.txtOption.StrValue = `LWCE_ITEM(m_kCEEvents.arrEvents[iEvent].arrData[0].nmData).strName;
 
                 if (m_kCEEvents.arrEvents[iEvent].arrData[1].iData > 1)
                 {
@@ -207,9 +233,9 @@ function BuildEventOptions()
                 kOption.txtDays.StrValue = string(iDays);
                 kOption.clrOption = MakeColor(200, 0, 200, byte(175 / 3));
                 break;
-            case 'MecRepair':
+            case 'ItemRepair':
                 kTag.StrValue0 = Item(m_kCEEvents.arrEvents[iEvent].arrData[0].iData).strName;
-                kOption.EventType = 'MecRepair';
+                kOption.EventType = 'ItemRepair';
                 kOption.iPriority = 2;
                 kOption.imgOption.iImage = eImage_OldManufacture;
                 kOption.txtOption.StrValue = class'XComLocalizer'.static.ExpandString(m_strLabelMecRepair);
@@ -422,7 +448,7 @@ function OnAlertInput(int iOption)
                 }
                 else
                 {
-                    if (STORAGE().GetNumItemsAvailable(`LW_ITEM_ID(SkeletonKey)) == 0)
+                    if (LWCE_XGStorage(STORAGE()).LWCE_GetNumItemsAvailable('Item_SkeletonKey') == 0)
                     {
                         PlayBadSound();
                     }
@@ -852,7 +878,7 @@ event Tick(float fDeltaT)
 function UpdateAlert()
 {
     local LWCEFoundryProjectTemplate kFoundryTech;
-    local LWCE_TItem kItem;
+    local LWCEItemTemplate kItem;
     local LWCETechTemplate kTech;
     local LWCE_TGeoscapeAlert kGeoAlert;
     local LWCE_TMCAlert kAlert;
@@ -1715,7 +1741,7 @@ function UpdateAlert()
             break;
         case 'ItemProjectCompleted':
             Sound().PlaySFX(SNDLIB().SFX_Alert_ItemProjectComplete);
-            kItem = `LWCE_ITEM(kGeoAlert.arrData[0].iData);
+            kItem = `LWCE_ITEM(kGeoAlert.arrData[0].nmData);
 
             kAlert.txtTitle.StrValue = kItem.strName;
             kAlert.txtTitle.iState = eUIState_Good;
@@ -2221,7 +2247,7 @@ function UpdateView()
                 }
             }
 
-            if (HANGAR().m_iJetsLost >= 2 && HANGAR().m_eBestWeaponEquipped == `LW_ITEM_ID(AvalancheMissiles))
+            if (HANGAR().m_iJetsLost >= 2 && LWCE_XGFacility_Hangar(HANGAR()).m_nmCEBestWeaponEquipped == 'Item_AvalancheMissiles')
             {
                 Narrative(`XComNarrativeMoment("EngineeringBetterJet"));
             }

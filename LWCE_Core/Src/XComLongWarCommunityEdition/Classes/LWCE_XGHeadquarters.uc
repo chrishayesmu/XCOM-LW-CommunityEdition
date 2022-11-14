@@ -3,11 +3,11 @@ class LWCE_XGHeadquarters extends XGHeadQuarters
 
 struct CheckpointRecord_LWCE_XGHeadquarters extends XGHeadQuarters.CheckpointRecord
 {
-    var array<int> m_arrCELastCaptives;
+    var array<name> m_arrCELastCaptives;
     var LWCEItemContainer m_kCELastCargoArtifacts;
 };
 
-var array<int> m_arrCELastCaptives;
+var array<name> m_arrCELastCaptives;
 var LWCEItemContainer m_kCELastCargoArtifacts;
 
 function Init(bool bLoadingFromSave)
@@ -196,8 +196,8 @@ function AddFacility(int iFacility)
     else if (iFacility == eFacility_CyberneticsLab)
     {
         BARRACKS().m_kCyberneticsLab = Spawn(class'LWCE_XGFacility_CyberneticsLab');
-        `LWCE_STORAGE.AddItem(`LW_ITEM_ID(Minigun), 1000);
-        `LWCE_STORAGE.AddItem(`LW_ITEM_ID(BaseAugments), 1000);
+        `LWCE_STORAGE.LWCE_AddItem('Item_Minigun', 1000);
+        `LWCE_STORAGE.LWCE_AddItem('Item_BaseAugments', 1000);
     }
     else if (iFacility == eFacility_DeusEx)
     {
@@ -222,13 +222,13 @@ function bool ArePrereqsFulfilled(LWCE_TPrereqs kPrereqs)
     local LWCE_XGFacility_Engineering kEngineering;
     local LWCE_XGFacility_Labs kLabs;
     local XGGeoscape kGeoscape;
-    local XGStorage kStorage;
+    local LWCE_XGStorage kStorage;
 
     kBarracks = `LWCE_BARRACKS;
     kEngineering = `LWCE_ENGINEERING;
     kGeoscape = GEOSCAPE();
     kLabs = `LWCE_LABS;
-    kStorage = STORAGE();
+    kStorage = LWCE_XGStorage(STORAGE());
 
     foreach kPrereqs.arrFacilityReqs(iPrereqId)
     {
@@ -246,9 +246,9 @@ function bool ArePrereqsFulfilled(LWCE_TPrereqs kPrereqs)
         }
     }
 
-    foreach kPrereqs.arrItemReqs(iPrereqId)
+    foreach kPrereqs.arrItemReqs(PrereqName)
     {
-        if (!kStorage.EverHadItem(iPrereqId))
+        if (!kStorage.LWCE_EverHadItem(PrereqName))
         {
             return false;
         }
@@ -288,6 +288,53 @@ function bool ArePrereqsFulfilled(LWCE_TPrereqs kPrereqs)
     if (kPrereqs.bRequiresInterrogation && !kLabs.HasInterrogatedCaptive())
     {
         return false;
+    }
+
+    return true;
+}
+
+/// <summary>
+/// Checks whether the player can afford to pay the specified cost.
+/// </summary>
+/// <returns>True if affordable, false if not.</returns>
+function bool CanAffordCost(const LWCE_TCost kCost)
+{
+    local int Index;
+    local LWCE_XGStorage kStorage;
+
+    kStorage = LWCE_XGStorage(STORAGE());
+
+    if (kCost.iCash > GetResource(eResource_Money))
+    {
+        return false;
+    }
+
+    if (kCost.iAlloys > GetResource(eResource_Alloys))
+    {
+        return false;
+    }
+
+    if (kCost.iElerium > GetResource(eResource_Elerium))
+    {
+        return false;
+    }
+
+    if (kCost.iMeld > GetResource(eResource_Meld))
+    {
+        return false;
+    }
+
+    if (kCost.iWeaponFragments > kStorage.LWCE_GetNumItemsAvailable('Item_WeaponFragment'))
+    {
+        return false;
+    }
+
+    for (Index = 0; Index < kCost.arrItems.Length; Index++)
+    {
+        if (kCost.arrItems[Index].iQuantity > kStorage.LWCE_GetNumItemsAvailable(kCost.arrItems[Index].ItemName))
+        {
+            return false;
+        }
     }
 
     return true;
@@ -508,7 +555,7 @@ function OrderInterceptors(int iContinent, int iQuantity)
     local TShipOrder kOrder;
     local int iCost;
 
-    iCost = `LWCE_ITEM(`LW_ITEM_ID(Interceptor)).kCost.iCash;
+    iCost = `LWCE_ITEM('Item_Interceptor').kCost.iCash;
 
     // LWCE issue #1: normally when you order interceptors, the strategy HUD (particularly the player's current money)
     // doesn't update until you back out to the main HQ screen. This fix simply updates the HUD immediately.
@@ -552,6 +599,36 @@ function OrderStaff(int iType, int iQuantity)
     m_arrHiringOrders.AddItem(kOrder);
 }
 
+function bool PayCost(const LWCE_TCost kCost)
+{
+    local int Index;
+    local LWCE_XGStorage kStorage;
+
+    kStorage = LWCE_XGStorage(STORAGE());
+
+    if (!CanAffordCost(kCost))
+    {
+        return false;
+    }
+
+    AddResource(eResource_Money, kCost.iCash);
+    AddResource(eResource_Alloys, kCost.iAlloys);
+    AddResource(eResource_Elerium, kCost.iElerium);
+    AddResource(eResource_Meld, kCost.iMeld);
+
+    if (kCost.iWeaponFragments > 0)
+    {
+        kStorage.LWCE_RemoveItem('Item_WeaponFragment', kCost.iWeaponFragments);
+    }
+
+    for (Index = 0; Index < kCost.arrItems.Length; Index++)
+    {
+        kStorage.LWCE_RemoveItem(kCost.arrItems[Index].ItemName, kCost.arrItems[Index].iQuantity);
+    }
+
+    return true;
+}
+
 function ReduceInterceptorOrder(int iOrder)
 {
     local int iCost;
@@ -561,7 +638,7 @@ function ReduceInterceptorOrder(int iOrder)
         return;
     }
 
-    iCost = `LWCE_ITEM(`LW_ITEM_ID(Interceptor)).kCost.iCash;
+    iCost = `LWCE_ITEM('Item_Interceptor').kCost.iCash;
 
     // LWCE issue #1: same fix as in OrderInterceptors, above.
     AddResource(eResource_Money, iCost);
@@ -572,6 +649,29 @@ function ReduceInterceptorOrder(int iOrder)
     if (m_akInterceptorOrders[iOrder].iNumInterceptors <= 0)
     {
         m_akInterceptorOrders.Remove(iOrder, 1);
+    }
+}
+
+function RefundCost(const LWCE_TCost kCost)
+{
+    local int Index;
+    local LWCE_XGStorage kStorage;
+
+    kStorage = LWCE_XGStorage(STORAGE());
+
+    AddResource(eResource_Money, kCost.iCash, /* bRefund */ true);
+    AddResource(eResource_Alloys, kCost.iAlloys, /* bRefund */ true);
+    AddResource(eResource_Elerium, kCost.iElerium, /* bRefund */ true);
+    AddResource(eResource_Meld, kCost.iMeld, /* bRefund */ true);
+
+    if (kCost.iWeaponFragments > 0)
+    {
+        kStorage.LWCE_AddItem('Item_WeaponFragment', kCost.iWeaponFragments);
+    }
+
+    for (Index = 0; Index < kCost.arrItems.Length; Index++)
+    {
+        kStorage.LWCE_AddItem(kCost.arrItems[Index].ItemName, kCost.arrItems[Index].iQuantity);
     }
 }
 

@@ -70,6 +70,74 @@ var config int MinThreatForHQAssaultCounter;
 var config int CounterValueToSpawnHQAssault;
 var config int MonthToForceSpawnHQAssault;
 
+function int AddNewOverseers()
+{
+    local array<ECountry> arrVisible;
+    local int iMission, iChoice, iNumOverseers;
+    local ECountry eTargetCountry;
+
+    if (!LWCE_XGStorage(STORAGE()).LWCE_EverHadItem('Item_EtherealDevice'))
+    {
+        arrVisible = DetermineBestVisibleTargets(true);
+        iNumOverseers = Min(3, arrVisible.Length);
+
+        for (iMission = 0; iMission < iNumOverseers; iMission++)
+        {
+            iChoice = Rand(arrVisible.Length);
+            eTargetCountry = arrVisible[iChoice];
+
+            if (arrVisible.Length > 1)
+            {
+                arrVisible.Remove(iChoice, 1);
+            }
+
+            AIAddNewObjective(eObjective_Flyby, 5 + (10 * iMission), Country(eTargetCountry).GetCoords(), eTargetCountry,, eShip_UFOEthereal);
+        }
+    }
+
+    for (iChoice = 0; iChoice < 36; iChoice++)
+    {
+        if (Country(iChoice).LeftXCom())
+        {
+            eTargetCountry = ECountry(iChoice);
+            AIAddNewObjective(eObjective_Flyby, 5 + Rand(20), Country(eTargetCountry).GetCoords(), eTargetCountry,, eShip_UFOEthereal);
+            iNumOverseers += 1;
+        }
+    }
+
+    return iNumOverseers;
+}
+
+function AddNewTerrors(int iNumTerrors, int StartOfMonthResources)
+{
+    local int Index;
+    local ECountry TargetCountry;
+
+    for (Index = 0; Index < iNumTerrors; Index++) {
+        if ( (MaxTargetedTerrorsPerMonth < 0 || Index < MaxTargetedTerrorsPerMonth) &&
+             (IndiscriminateTerrorResourceThreshold < 0 || StartOfMonthResources < IndiscriminateTerrorResourceThreshold) )
+        {
+            TargetCountry = DetermineBestTerrorTarget();
+        }
+        else
+        {
+            TargetCountry = ECountry(World().GetRandomCouncilCountry().GetID());
+        }
+
+        AddNewTerrorMission(TargetCountry, 1 + Rand(23));
+    }
+}
+
+function XGAlienObjective AIAddNewObjective(EAlienObjective eObjective, int iStartDate, Vector2D v2Target, int iCountry, optional int iCity = -1, optional EShipType eUFO = eShip_None)
+{
+    local XGAlienObjective kObjective;
+
+    kObjective = Spawn(class'LWCE_XGAlienObjective');
+    kObjective.Init(m_arrTObjectives[eObjective], iStartDate, v2Target, iCountry, iCity, eUFO);
+    m_arrObjectives.AddItem(kObjective);
+
+    return kObjective;
+}
 
 function AIAddNewObjectives()
 {
@@ -213,37 +281,6 @@ function AIAddNewObjectives()
     m_iCounter = 0;
 
     `LWCE_LOG_CLS("AIAddNewObjectives complete");
-}
-
-function AddNewTerrors(int iNumTerrors, int StartOfMonthResources)
-{
-    local int Index;
-    local ECountry TargetCountry;
-
-    for (Index = 0; Index < iNumTerrors; Index++) {
-        if ( (MaxTargetedTerrorsPerMonth < 0 || Index < MaxTargetedTerrorsPerMonth) &&
-             (IndiscriminateTerrorResourceThreshold < 0 || StartOfMonthResources < IndiscriminateTerrorResourceThreshold) )
-        {
-            TargetCountry = DetermineBestTerrorTarget();
-        }
-        else
-        {
-            TargetCountry = ECountry(World().GetRandomCouncilCountry().GetID());
-        }
-
-        AddNewTerrorMission(TargetCountry, 1 + Rand(23));
-    }
-}
-
-function XGAlienObjective AIAddNewObjective(EAlienObjective eObjective, int iStartDate, Vector2D v2Target, int iCountry, optional int iCity = -1, optional EShipType eUFO = eShip_None)
-{
-    local XGAlienObjective kObjective;
-
-    kObjective = Spawn(class'LWCE_XGAlienObjective');
-    kObjective.Init(m_arrTObjectives[eObjective], iStartDate, v2Target, iCountry, iCity, eUFO);
-    m_arrObjectives.AddItem(kObjective);
-
-    return kObjective;
 }
 
 function ApplyMissionPanic(XGMission kMission, bool bXComSuccess, optional bool bExpired, optional bool bDontApplyToContinent)
@@ -494,7 +531,7 @@ function XGMission CreateTempleMission()
 {
     local XGMission_TempleShip kMission;
 
-    kMission = Spawn(class'XGMission_TempleShip');
+    kMission = Spawn(class'LWCE_XGMission_TempleShip');
     kMission.m_kDesc = Spawn(class'LWCE_XGBattleDesc').Init();
     kMission.m_iCity = -1;
     kMission.m_iContinent = -1;
@@ -509,7 +546,7 @@ function XGMission CheatTerrorMission()
 {
     local XGMission_Terror kMission;
 
-    kMission = Spawn(class'XGMission_Terror');
+    kMission = Spawn(class'LWCE_XGMission_Terror');
     kMission.m_kDesc = Spawn(class'LWCE_XGBattleDesc').Init();
     kMission.m_iCity = 4;
     kMission.m_iCountry = 0;
@@ -525,7 +562,7 @@ function XGMission CreateTerrorMission(XGShip_UFO kUFO)
 {
     local XGMission_Terror kMission;
 
-    kMission = Spawn(class'XGMission_Terror');
+    kMission = Spawn(class'LWCE_XGMission_Terror');
     kMission.m_kDesc = Spawn(class'LWCE_XGBattleDesc').Init();
     kMission.m_iCity = kUFO.m_kObjective.m_iCityTarget;
     kMission.m_iCountry = CITY(kMission.m_iCity).GetCountry();
@@ -541,7 +578,7 @@ function XGMission CreateHQAssaultMission()
 {
     local XGMission_HQAssault kMission;
 
-    kMission = Spawn(class'XGMission_HQAssault');
+    kMission = Spawn(class'LWCE_XGMission_HQAssault');
     kMission.m_kDesc = Spawn(class'LWCE_XGBattleDesc').Init();
     kMission.m_iContinent = HQ().GetContinent();
     kMission.m_v2Coords = HQ().GetCoords();
@@ -554,7 +591,7 @@ function XGMission CreateExaltRaidMission(ECountry ExaltCountry)
 {
     local XGMission_ExaltRaid kMission;
 
-    kMission = Spawn(class'XGMission_ExaltRaid');
+    kMission = Spawn(class'LWCE_XGMission_ExaltRaid');
     kMission.m_kDesc = Spawn(class'LWCE_XGBattleDesc').Init();
     kMission.m_iCity = Country(ExaltCountry).GetRandomCity();
     kMission.m_iCountry = ExaltCountry;
@@ -572,7 +609,7 @@ function XGMission CheatCrash(XGShip_UFO strMapName)
 {
     local XGMission_UFOLanded kMission;
 
-    kMission = Spawn(class'XGMission_UFOLanded');
+    kMission = Spawn(class'LWCE_XGMission_UFOLanded');
     kMission.m_kDesc = Spawn(class'LWCE_XGBattleDesc').Init();
     kMission.m_bScripted = true;
     kMission.m_kDesc.m_bScripted = true;
@@ -598,7 +635,7 @@ function CheatLandedUFO(string strMapName)
 
     if (XComEngine(class'Engine'.static.GetEngine()).MapManager.GetMapInfoFromDisplayName(strMapName, kMapMeta))
     {
-        kMission = Spawn(class'XGMission_UFOLanded');
+        kMission = Spawn(class'LWCE_XGMission_UFOLanded');
         kMission.m_kDesc = Spawn(class'LWCE_XGBattleDesc').Init();
         kMission.m_iContinent = 0;
         kMission.m_iCountry = 0;
@@ -623,8 +660,10 @@ function CheatLandedUFO(string strMapName)
 
 function CreateAlienBase()
 {
+    local int iElerium;
     local XGCountry kCountry;
-    local XGMission_AlienBase kMission;
+    local LWCE_XGMission_AlienBase kMission;
+    local LWCE_TMissionReward kReward;
 
     kCountry = Country(m_iAlienMonth);
 
@@ -643,25 +682,27 @@ function CreateAlienBase()
         return;
     }
 
-    kMission = Spawn(class'XGMission_AlienBase');
+    kMission = Spawn(class'LWCE_XGMission_AlienBase');
     kMission.m_kDesc = Spawn(class'LWCE_XGBattleDesc').Init();
     kMission.m_iCountry = kCountry.GetID();
     kMission.m_v2Coords = CITY(kCountry.GetRandomCity()).m_v2Coords;
     kMission.m_strTitle = kMission.m_strTitle $ kCountry.GetName();
     kMission.m_kDesc.m_kAlienSquad = DetermineAlienBaseSquad();
 
-    PopulateMissionRewards(kMission, `LWCE_STRATCFG(AlienBaseAssaultRewards));
-
-    kMission.m_arrArtifacts[`LW_ITEM_ID(Elerium)] += int(class'XGTacticalGameCore'.default.UFO_ELERIUM_PER_POWER_SOURCE[Game().GetDifficulty()] * float(kMission.m_arrArtifacts[`LW_ITEM_ID(UFOPowerSource)]));
+    kReward = CreateMissionRewards(`LWCE_STRATCFG(AlienBaseAssaultRewards));
+    iElerium = int(class'XGTacticalGameCore'.default.UFO_ELERIUM_PER_POWER_SOURCE[Game().GetDifficulty()] * `LWCE_UTILS.GetItemQuantity(kReward.arrItems, 'Item_UFOPowerSource').iQuantity);
+    `LWCE_UTILS.AdjustItemQuantity(kReward.arrItems, 'Item_Elerium', iElerium);
 
     if (OBJECTIVES().m_eObjective == eObj_AssaultAlienBase)
     {
-        kMission.m_arrArtifacts[`LW_ITEM_ID(HyperwaveBeacon)] = 1;
+        `LWCE_UTILS.SetItemQuantity(kReward.arrItems, 'Item_HyperwaveBeacon', 1);
     }
     else
     {
-        kMission.m_arrArtifacts[`LW_ITEM_ID(HyperwaveBeacon)] = 0;
+        `LWCE_UTILS.SetItemQuantity(kReward.arrItems, 'Item_HyperwaveBeacon', 0);
     }
+
+    class'LWCE_XGMission_Extensions'.static.SetMissionRewards(kMission, kReward);
 
     kMission.m_iDetectedBy = 0;
 
@@ -671,42 +712,25 @@ function CreateAlienBase()
 function XGMission CreateFirstMission()
 {
     local XGMission_Abduction kMission;
-    local XGMission_FundingCouncil kMeldMission;
-    local TFCMission kMeldData;
-    local ECountry MeldCountry;
 
-    if (`HQGAME.GetGameCore().m_bMeldTutorial)
-    {
-        MeldCountry = ECountry(Continent(HQ().GetContinent()).GetRandomCouncilCountry());
-        kMeldData = World().m_kFundingCouncil.BuildMission(30, MeldCountry);
-        kMeldMission = World().m_kFundingCouncil.CreateMission(kMeldData);
-        kMeldMission.m_iCity = Country(MeldCountry).GetRandomCity();
-        kMeldMission.m_iCountry = MeldCountry;
-        kMeldMission.m_iContinent = Country(MeldCountry).GetContinent();
+    kMission = Spawn(class'LWCE_XGMission_Abduction');
+    kMission.m_kDesc = Spawn(class'LWCE_XGBattleDesc').Init();
+    kMission.m_iCity = Continent(HQ().GetContinent()).GetRandomCity();
+    kMission.m_iCountry = CITY(kMission.m_iCity).GetCountry();
+    kMission.m_iContinent = HQ().GetContinent();
+    kMission.m_iDuration = 2 * `LWCE_STRATCFG(MissionGeoscapeDuration_Abduction);
+    kMission.m_v2Coords = CITY(kMission.m_iCity).m_v2Coords;
+    kMission.m_eTimeOfDay = 7;
+    kMission.m_kDesc.m_kAlienSquad = DetermineFirstMissionSquad();
 
-        return kMeldMission;
-    }
-    else
-    {
-        kMission = Spawn(class'XGMission_Abduction');
-        kMission.m_kDesc = Spawn(class'LWCE_XGBattleDesc').Init();
-        kMission.m_iCity = Continent(HQ().GetContinent()).GetRandomCity();
-        kMission.m_iCountry = CITY(kMission.m_iCity).GetCountry();
-        kMission.m_iContinent = HQ().GetContinent();
-        kMission.m_iDuration = 2 * `LWCE_STRATCFG(MissionGeoscapeDuration_Abduction);
-        kMission.m_v2Coords = CITY(kMission.m_iCity).m_v2Coords;
-        kMission.m_eTimeOfDay = 7;
-        kMission.m_kDesc.m_kAlienSquad = DetermineFirstMissionSquad();
-
-        return kMission;
-    }
+    return kMission;
 }
 
 function XGMission CreateFirstMission_Controlled()
 {
     local XGMission_Abduction kMission;
 
-    kMission = Spawn(class'XGMission_Abduction');
+    kMission = Spawn(class'LWCE_XGMission_Abduction');
     kMission.m_kDesc = Spawn(class'LWCE_XGBattleDesc').Init();
     kMission.m_bScripted = true;
     kMission.m_kDesc.m_bScripted = true;
@@ -723,19 +747,23 @@ function XGMission CreateFirstMission_Controlled()
 
 function XGMission CreateCrashMission(XGShip_UFO kUFO)
 {
-    local XGMission_UFOCrash kMission;
+    local LWCE_TMissionReward kReward;
+    local LWCE_XGMission_UFOCrash kMission;
 
-    kMission = Spawn(class'XGMission_UFOCrash');
+    kMission = Spawn(class'LWCE_XGMission_UFOCrash');
     kMission.m_kDesc = Spawn(class'LWCE_XGBattleDesc').Init();
     kMission.m_iContinent = kUFO.GetContinent();
     kMission.m_iCountry = kUFO.GetCountry();
     kMission.m_iDuration = 2 * DetermineCrashedUFOMissionTimer(kUFO);
     kMission.m_v2Coords = kUFO.GetCoords();
     kMission.m_kDesc.m_kAlienSquad = DetermineUFOSquad(kUFO, false);
-    kMission.m_arrArtifacts = kUFO.m_kTShip.arrSalvage;
     kMission.m_iUFOType = kUFO.GetType();
     kMission.m_kUFOObjective = kUFO.m_kObjective.m_kTObjective;
     kMission.m_iCounter = kUFO.m_iCounter;
+
+    kReward = CreateMissionRewards(LWCE_XGShip_UFO(kUFO).m_kCETShip.arrSalvage);
+    class'LWCE_XGMission_Extensions'.static.SetMissionRewards(kMission, kReward);
+
     RemoveUFO(kUFO);
 
     return kMission;
@@ -743,9 +771,10 @@ function XGMission CreateCrashMission(XGShip_UFO kUFO)
 
 function XGMission CreateLandedUFOMission(XGShip_UFO kUFO)
 {
-    local XGMission_UFOLanded kMission;
+    local LWCE_TMissionReward kReward;
+    local LWCE_XGMission_UFOLanded kMission;
 
-    kMission = Spawn(class'XGMission_UFOLanded');
+    kMission = Spawn(class'LWCE_XGMission_UFOLanded');
     kMission.m_kDesc = Spawn(class'LWCE_XGBattleDesc').Init();
     kMission.m_iContinent = kUFO.GetContinent();
     kMission.m_iCountry = kUFO.GetCountry();
@@ -764,7 +793,9 @@ function XGMission CreateLandedUFOMission(XGShip_UFO kUFO)
         kMission.m_iDetectedBy = -1;
     }
 
-    kMission.m_arrArtifacts = kUFO.m_kTShip.arrSalvage;
+    kReward = CreateMissionRewards(LWCE_XGShip_UFO(kUFO).m_kCETShip.arrSalvage);
+    class'LWCE_XGMission_Extensions'.static.SetMissionRewards(kMission, kReward);
+
     return kMission;
 }
 
@@ -774,7 +805,7 @@ function XGMission CreateCovertOpsExtractionMission(ECountry eMissionCountry)
     local XGCountry kCountry;
 
     kCountry = Country(eMissionCountry);
-    kMission = Spawn(class'XGMission_CovertOpsExtraction');
+    kMission = Spawn(class'LWCE_XGMission_CovertOpsExtraction');
     kMission.m_kDesc = Spawn(class'LWCE_XGBattleDesc').Init();
     kMission.m_iContinent = kCountry.GetContinent();
     kMission.m_iCountry = eMissionCountry;
@@ -791,7 +822,7 @@ function XGMission CreateCaptureAndHoldMission(ECountry eMissionCountry)
     local XGCountry kCountry;
 
     kCountry = Country(eMissionCountry);
-    kMission = Spawn(class'XGMission_CaptureAndHold');
+    kMission = Spawn(class'LWCE_XGMission_CaptureAndHold');
     kMission.m_kDesc = Spawn(class'LWCE_XGBattleDesc').Init();
     kMission.m_iContinent = kCountry.GetContinent();
     kMission.m_iCountry = eMissionCountry;
@@ -802,6 +833,150 @@ function XGMission CreateCaptureAndHoldMission(ECountry eMissionCountry)
     return kMission;
 }
 
+function DetermineAbductionReward(out TMissionReward kReward, EMissionDifficulty eDiff, EMissionRewardType eRewardType)
+{
+    `LWCE_LOG_DEPRECATED_CLS(DetermineAbductionReward);
+}
+
+function LWCE_DetermineAbductionReward(out LWCE_TMissionReward kReward, EMissionDifficulty eDiff, EMissionRewardType eRewardType)
+{
+    local LWCE_TRewardSoldier kRewardSoldier;
+
+    if (eRewardType == eMissionReward_Cash)
+    {
+        kReward.iCash = int(class'XGTacticalGameCore'.default.ABDUCTION_REWARD_CASH);
+
+        if (HQ().HasBonus(`LW_HQ_BONUS_ID(Bounties)) > 0)
+        {
+            kReward.iCash *= (1.0 + (float(HQ().HasBonus(`LW_HQ_BONUS_ID(Bounties))) / 100.0));
+        }
+
+        switch (eDiff)
+        {
+            case eMissionDiff_Easy:
+                kReward.iCash *= 0.80;
+                break;
+            case eMissionDiff_Moderate:
+                kReward.iCash *= 0.90;
+                break;
+            case eMissionDiff_Hard:
+                kReward.iCash *= 1.0;
+                break;
+            case eMissionDiff_VeryHard:
+                kReward.iCash *= 1.150;
+                break;
+        }
+
+        if (IsOptionEnabled(`LW_SECOND_WAVE_ID(DynamicWar)))
+        {
+            kReward.iCash /= class'XGTacticalGameCore'.default.SW_MARATHON;
+        }
+    }
+
+    // Long War only has cash reward types so the rest of these don't matter
+    if (eRewardType == eMissionReward_Scientist)
+    {
+        kReward.iScientists = 2;
+    }
+
+    if (eRewardType == eMissionReward_Engineer)
+    {
+        kReward.iEngineers = 2;
+    }
+
+    if (eRewardType == eMissionReward_Soldier)
+    {
+        // TODO: PickRewardSoldierClass needs an LWCE version
+        kRewardSoldier.iClassId = BARRACKS().PickRewardSoldierClass();
+        kRewardSoldier.iRank = Clamp(BARRACKS().m_iHighestRank - 1, 3, 5);
+
+        kReward.arrSoldiers.AddItem(kRewardSoldier);
+    }
+}
+
+function DetermineCrashLoot(XGShip_UFO kUFO, EShipWeapon eWeapon)
+{
+    `LWCE_LOG_DEPRECATED_CLS(DetermineCrashLoot);
+}
+
+function LWCE_DetermineCrashLoot(LWCE_XGShip_UFO kUFO, LWCE_XGShip_Interceptor kInterceptor)
+{
+    local LWCEShipWeaponTemplate kShipWeapon;
+    local int Index, iSurvived, iTotal, iSurvivalChance;
+    local float fAlloySurvival;
+
+    kShipWeapon = LWCEShipWeaponTemplate(`LWCE_ITEM(kInterceptor.LWCE_GetWeapon()));
+
+    for (Index = 0; Index < kUFO.m_kCETShip.arrSalvage.Length; Index++)
+    {
+        iTotal = kUFO.m_kCETShip.arrSalvage[Index].iQuantity;
+
+        if (kUFO.m_kCETShip.arrSalvage[Index].iQuantity > 0)
+        {
+            switch (kUFO.m_kCETShip.arrSalvage[Index].ItemName)
+            {
+                case 'Item_UFOPowerSource':
+                    iSurvivalChance = int(class'XGTacticalGameCore'.default.UFO_PS_SURVIVE);
+                    break;
+                case 'Item_UFONavigation':
+                    iSurvivalChance = int(class'XGTacticalGameCore'.default.UFO_NAV_SURVIVE);
+                    break;
+                case 'Item_AlienFood':
+                    iSurvivalChance = int(class'XGTacticalGameCore'.default.UFO_FOOD_SURVIVE);
+                    break;
+                case 'Item_AlienStasisTank':
+                    iSurvivalChance = int(class'XGTacticalGameCore'.default.UFO_STASIS_SURVIVE);
+                    break;
+                case 'Item_AlienSurgery':
+                    iSurvivalChance = int(class'XGTacticalGameCore'.default.UFO_SURGERY_SURVIVE);
+                    break;
+                case 'Item_AlienAlloy':
+                    fAlloySurvival = RandRange(class'XGTacticalGameCore'.default.MIN_WRECKED_ALLOYS, class'XGTacticalGameCore'.default.MAX_WRECKED_ALLOYS);
+                    fAlloySurvival = fAlloySurvival + (kShipWeapon.fArtifactRecoveryBonus / 100.0);
+
+                    iSurvived = int(float(iTotal) * fAlloySurvival);
+                    break;
+                default:
+                    iSurvivalChance = 100;
+                    break;
+            }
+
+            // Alloys are already handled by a slightly different method above
+            if (kUFO.m_kCETShip.arrSalvage[Index].ItemName != 'Item_AlienAlloy')
+            {
+                iSurvivalChance = iSurvivalChance + kShipWeapon.fArtifactRecoveryBonus;
+
+                iSurvived = GetSurvivingCollectibles(iTotal, iSurvivalChance);
+            }
+
+            kUFO.m_kCETShip.arrSalvage[Index].iQuantity = iSurvived;
+
+            switch (kUFO.m_kCETShip.arrSalvage[Index].ItemName)
+            {
+                case 'Item_UFOPowerSource':
+                    `LWCE_UTILS.SetItemQuantity(kUFO.m_kCETShip.arrSalvage, 'Item_UFOPowerSourceDamaged', iTotal - iSurvived);
+                    `LWCE_UTILS.AdjustItemQuantity(kUFO.m_kCETShip.arrSalvage, 'Item_Elerium', -1 * int(RandRange(class'XGTacticalGameCore'.default.MIN_LOST_WRECKED_ELERIUM * class'XGTacticalGameCore'.default.UFO_ELERIUM_PER_POWER_SOURCE[Game().GetDifficulty()], class'XGTacticalGameCore'.default.MAX_LOST_WRECKED_ELERIUM * class'XGTacticalGameCore'.default.UFO_ELERIUM_PER_POWER_SOURCE[Game().GetDifficulty()]) * float(iTotal - iSurvived)));
+                    break;
+                case 'Item_UFONavigation':
+                    `LWCE_UTILS.SetItemQuantity(kUFO.m_kCETShip.arrSalvage, 'Item_UFONavigationDamaged', iTotal - iSurvived);
+                    break;
+                case 'Item_AlienFood':
+                    `LWCE_UTILS.SetItemQuantity(kUFO.m_kCETShip.arrSalvage, 'Item_AlienFoodDamaged', iTotal - iSurvived);
+                    break;
+                case 'Item_AlienEntertainment':
+                    `LWCE_UTILS.SetItemQuantity(kUFO.m_kCETShip.arrSalvage, 'Item_AlienEntertainmentDamaged', iTotal - iSurvived);
+                    break;
+                case 'Item_AlienStasisTank':
+                    `LWCE_UTILS.SetItemQuantity(kUFO.m_kCETShip.arrSalvage, 'Item_AlienStasisTankDamaged', iTotal - iSurvived);
+                    break;
+                case 'Item_AlienSurgery':
+                    `LWCE_UTILS.SetItemQuantity(kUFO.m_kCETShip.arrSalvage, 'Item_AlienSurgeryDamaged', iTotal - iSurvived);
+                    break;
+            }
+        }
+    }
+}
+
 /**
  * Penalizes XCOM for losing a base defense mission.
  */
@@ -809,7 +984,7 @@ function FillUFOPool()
 {
     local LWCE_XGStorage kStorage;
 
-    kStorage = `LWCE_STORAGE;
+    kStorage = LWCE_XGStorage(STORAGE());
 
     // Lose the main resources (except weapon fragments)
     AddResource(eResource_Money,   -450 - Rand(100));
@@ -822,15 +997,15 @@ function FillUFOPool()
     AddResource(eResource_Scientists, -1 * Min(20 + Rand(10), GetResource(eResource_Scientists) / 3));
 
     // Free all captive aliens
-    kStorage.RemoveAllItem(`LW_ITEM_ID(SectoidCaptive));
-    kStorage.RemoveAllItem(`LW_ITEM_ID(SectoidCommanderCaptive));
-    kStorage.RemoveAllItem(`LW_ITEM_ID(FloaterCaptive));
-    kStorage.RemoveAllItem(`LW_ITEM_ID(HeavyFloaterCaptive));
-    kStorage.RemoveAllItem(`LW_ITEM_ID(ThinManCaptive));
-    kStorage.RemoveAllItem(`LW_ITEM_ID(MutonCaptive));
-    kStorage.RemoveAllItem(`LW_ITEM_ID(MutonEliteCaptive));
-    kStorage.RemoveAllItem(`LW_ITEM_ID(BerserkerCaptive));
-    kStorage.RemoveAllItem(`LW_ITEM_ID(EtherealCaptive));
+    kStorage.LWCE_RemoveAllItem('Item_SectoidCaptive');
+    kStorage.LWCE_RemoveAllItem('Item_SectoidCommanderCaptive');
+    kStorage.LWCE_RemoveAllItem('Item_FloaterCaptive');
+    kStorage.LWCE_RemoveAllItem('Item_HeavyFloaterCaptive');
+    kStorage.LWCE_RemoveAllItem('Item_ThinManCaptive');
+    kStorage.LWCE_RemoveAllItem('Item_MutonCaptive');
+    kStorage.LWCE_RemoveAllItem('Item_MutonEliteCaptive');
+    kStorage.LWCE_RemoveAllItem('Item_BerserkerCaptive');
+    kStorage.LWCE_RemoveAllItem('Item_EtherealCaptive');
 
     // ChooseUFOMissionType damages/destroyers interceptors; Stat 103 is used to pass the target continent
     STAT_SetStat(103, HQ().GetContinent());
@@ -846,6 +1021,7 @@ function LaunchBlitz(array<ECityType> arrTargetCities, optional bool bFirstBlitz
     local array<EMissionRewardType> arrRewards;
     local EMissionRewardType eReward;
     local EMissionDifficulty eDiff;
+    local LWCE_TMissionReward kBlankReward, kReward;
     local LWCE_TGeoscapeAlert kAlert;
     local LWCE_TData kData;
     local bool bMissionAdded;
@@ -869,13 +1045,15 @@ function LaunchBlitz(array<ECityType> arrTargetCities, optional bool bFirstBlitz
     // for Long War it can just be read as not being a loop.
     for (I = 0; I < arrTargetCities.Length; I++)
     {
+        kReward = kBlankReward;
+
         kCity = CITY(arrTargetCities[I]);
         iIndex = Rand(arrRewards.Length);
         eReward = arrRewards[iIndex];
         arrRewards.Remove(iIndex, 1);
         eDiff = GetAbductionDifficulty(Country(kCity.GetCountry()));
 
-        kMission = Spawn(class'XGMission_Abduction');
+        kMission = Spawn(class'LWCE_XGMission_Abduction');
         kMission.m_kDesc = Spawn(class'LWCE_XGBattleDesc').Init();
         kMission.m_iCity = kCity.m_iID;
         kMission.m_iCountry = CITY(kMission.m_iCity).GetCountry();
@@ -885,7 +1063,9 @@ function LaunchBlitz(array<ECityType> arrTargetCities, optional bool bFirstBlitz
         kMission.m_kDesc.m_kAlienSquad = DetermineAbductionSquad(eDiff);
         kMission.m_eDifficulty = eDiff;
 
-        DetermineAbductionReward(kMission.m_kReward, eDiff, eReward);
+        LWCE_DetermineAbductionReward(kReward, eDiff, eReward);
+        class'LWCE_XGMission_Extensions'.static.SetMissionRewards(kMission, kReward);
+
         kMission.m_iDetectedBy = 0;
 
         GEOSCAPE().AddMission(kMission);
@@ -998,8 +1178,9 @@ function OnUFODestroyed(XGShip_UFO kUFO)
 function OnUFOShotDown(XGShip_Interceptor kJet, XGShip_UFO kUFO)
 {
     kUFO.m_kObjective.NotifyOfCrash(kUFO);
-    DetermineCrashLoot(kUFO, EShipWeapon(LWCE_XGFacility_Hangar(HANGAR()).LWCE_ItemTypeToShipWeapon(kJet.GetWeapon())));
+    LWCE_DetermineCrashLoot(LWCE_XGShip_UFO(kUFO), LWCE_XGShip_Interceptor(kJet));
     AIAddNewMission(eMission_Crash, kUFO);
+
     STAT_AddStat(eRecap_UFOsShotDown, 1);
     STAT_AddProfileStat(eProfile_UFOsShotDown, 1);
 
@@ -1200,18 +1381,15 @@ protected function int RollMissionCount(float Count)
     return iCount;
 }
 
-protected function PopulateMissionRewards(XGMission kMission, const out array<LWCE_TItemQuantity> arrRewards)
+protected function LWCE_TMissionReward CreateMissionRewards(const out array<LWCE_TItemQuantity> arrRewards)
 {
     local LWCE_TItemQuantity kItemQuantity;
+    local LWCE_TMissionReward kReward;
 
     foreach arrRewards(kItemQuantity)
     {
-        if (kItemQuantity.iItemId > 255)
-        {
-            `LWCE_LOG_CLS("WARNING: arbitrary item IDs aren't yet supported for mission rewards. Ignoring reward " $ kItemQuantity.iItemId);
-            continue;
-        }
-
-        kMission.m_arrArtifacts[kItemQuantity.iItemId] = kItemQuantity.iQuantity;
+        kReward.arrItems.AddItem(kItemQuantity);
     }
+
+    return kReward;
 }

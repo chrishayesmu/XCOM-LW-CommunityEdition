@@ -14,7 +14,7 @@ function CollectLoot()
 
     if (ShouldAwardIntel())
     {
-        kDesc.m_kArtifactsContainer.Set(`LW_ITEM_ID(EXALTIntelligence), 1);
+        kDesc.m_kArtifactsContainer.Set('Item_EXALTIntelligence', 1);
     }
 
     class'XComCollectible'.static.CollectCollectibles(m_kDesc.m_arrArtifacts);
@@ -23,11 +23,11 @@ function CollectLoot()
     {
         if (m_kDesc.m_arrArtifacts[Index] > 0)
         {
-            kDesc.m_kArtifactsContainer.AdjustQuantity(Index, m_kDesc.m_arrArtifacts[Index]);
+            kDesc.m_kArtifactsContainer.AdjustQuantity(class'LWCE_XGItemTree'.static.ItemNameFromBaseID(Index), m_kDesc.m_arrArtifacts[Index]);
         }
     }
 
-    kDesc.m_kArtifactsContainer.Set(`LW_ITEM_ID(Meld), GetRecoveredMeldAmount());
+    kDesc.m_kArtifactsContainer.AdjustQuantity('Item_Meld', GetRecoveredMeldAmount());
 }
 
 function InitPlayers(optional bool bLoading = false)

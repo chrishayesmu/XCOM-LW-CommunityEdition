@@ -1,4 +1,8 @@
-class LWCE_XGCharacter_ExaltOperative extends XGCharacter_ExaltOperative;
+class LWCE_XGCharacter_ExaltOperative extends XGCharacter_ExaltOperative implements(LWCE_XGCharacter);
+
+`include(generators_xgcharacter_fields.uci)
+
+`include(generators_xgcharacter_functions.uci)
 
 defaultproperties
 {

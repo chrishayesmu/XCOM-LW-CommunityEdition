@@ -194,6 +194,11 @@ protected function LWCEDataTemplate FindDataTemplate(name DataName)
 {
     local int Index;
 
+    if (DataName == '')
+    {
+        return none;
+    }
+
     Index = m_arrTemplates.Find('TemplateName', DataName);
 
     if (Index == INDEX_NONE)

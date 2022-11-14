@@ -32,6 +32,22 @@ function OnChooseTile()
     }
 }
 
+function UpdateHeader()
+{
+    m_kHeader.txtCash = GetResourceText(eResource_Money);
+    m_kHeader.txtPower = GetResourceText(eResource_Power);
+
+    if (LWCE_XGStorage(STORAGE()).LWCE_EverHadItem('Item_Elerium'))
+    {
+        m_kHeader.txtElerium = GetResourceText(eResource_Elerium);
+    }
+
+    if (LWCE_XGStorage(STORAGE()).LWCE_EverHadItem('Item_Elerium'))
+    {
+        m_kHeader.txtAlloys = GetResourceText(eResource_Alloys);
+    }
+}
+
 protected function LWCE_ConfirmRemovalDialogue(int X, int Y)
 {
     local TDialogueBoxData kDialogData;

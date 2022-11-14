@@ -23,7 +23,7 @@ simulated function Init(XComPlayerController _controller, UIFxsMovie _manager)
     m_kClock = Spawn(class'LWCE_UIStrategyComponent_Clock', self);
     m_kClock.Init(_controller, _manager, self);
 
-    ProfileSettings = XComOnlineProfileSettings(class'Engine'.static.GetEngine().GetProfileSettings());
+    ProfileSettings = `PROFILESETTINGS;
 
     if (ProfileSettings != none)
     {
@@ -69,4 +69,19 @@ simulated function OnLoseFocus()
     AS_HideTicker();
     AS_HideHotlink();
     Hide();
+}
+
+simulated function UpdateMeld()
+{
+    local int iMeld;
+    local EUIState meldState;
+
+    if (!LWCE_XGStorage(m_kMgr.STORAGE()).LWCE_EverHadItem('Item_Meld'))
+    {
+        return;
+    }
+
+    iMeld = m_kMgr.GetResource(eResource_Meld);
+    meldState = iMeld > 0 ? eUIState_Meld : eUIState_Bad;
+    AS_AddResource(class'UIUtilities'.static.GetHTMLColoredText(m_kMgr.GetResourceLabel(eResource_Meld) $ ":", meldState) @ class'UIUtilities'.static.HTMLFormatMeld(iMeld, meldState));
 }

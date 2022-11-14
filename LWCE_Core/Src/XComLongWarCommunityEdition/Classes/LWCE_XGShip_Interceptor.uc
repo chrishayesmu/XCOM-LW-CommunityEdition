@@ -1,44 +1,84 @@
 class LWCE_XGShip_Interceptor extends XGShip_Interceptor;
 
+struct CheckpointRecord_LWCE_XGShip_Interceptor extends CheckpointRecord_XGShip_Interceptor
+{
+    var array<name> m_arrCEWeapons;
+};
+
+// NOTE: this is an array of weapons for possible future expansion, but for now, only
+// index 0 should be used. Other indices will be ignored.
+var array<name> m_arrCEWeapons;
+var LWCE_TShip m_kCETShip;
+
+function Init(TShip kTShip)
+{
+    // TODO: deprecate this function and replace with a template-driven LWCE version
+
+    m_v2Coords = GetHomeCoords();
+    m_v2Destination = m_v2Coords;
+    m_fFlightTime = 43200.0;
+
+    super(XGShip).Init(kTShip);
+
+    // TODO: default weapon should be determined by template
+    m_arrCEWeapons.AddItem('Item_AvalancheMissiles');
+    InitSound();
+}
+
 function EquipWeapon(EItemType eItem)
 {
     `LWCE_LOG_DEPRECATED_CLS(EquipWeapon);
 }
 
-function LWCE_EquipWeapon(int iItemId)
+function LWCE_EquipWeapon(name ItemName)
 {
-    local LWCE_XGFacility_Hangar kHangar;
-
-    kHangar = `LWCE_HANGAR;
-
-    // TODO: rewrite this method for generic ints
-    if (m_eWeapon != 0 && iItemId != 255) // Wingtip Sparrowhawks
+    if (m_arrCEWeapons[0] != '' && ItemName != 'Item_WingtipSparrowhawks')
     {
-        STORAGE().AddItem(m_eWeapon);
+        LWCE_XGStorage(STORAGE()).LWCE_AddItem(m_arrCEWeapons[0]);
     }
 
-    if (iItemId != 255) // Wingtip Sparrowhawks
+    m_kCETShip.arrWeapons.Remove(0, m_kCETShip.arrWeapons.Length);
+
+    if (ItemName != 'Item_WingtipSparrowhawks')
     {
-        m_eWeapon = EItemType(iItemId);
+        m_arrCEWeapons[0] = ItemName;
+        m_kCETShip.arrWeapons.AddItem(ItemName);
     }
 
-    m_kTShip.arrWeapons.Remove(0, m_kTShip.arrWeapons.Length);
-    m_kTShip.arrWeapons.AddItem(kHangar.LWCE_ItemTypeToShipWeapon(m_eWeapon));
-
-    if (`LWCE_ENGINEERING.LWCE_IsFoundryTechResearched('Foundry_WingtipSparrowhawks'))
+    if (ItemName == 'Item_WingtipSparrowhawks' || `LWCE_ENGINEERING.LWCE_IsFoundryTechResearched('Foundry_WingtipSparrowhawks'))
     {
-        m_kTShip.arrWeapons.AddItem(kHangar.LWCE_ItemTypeToShipWeapon(`LW_ITEM_ID(StingrayMissiles)));
+        m_kCETShip.arrWeapons.AddItem('Item_StingrayMissiles'); // TODO confirm that this is the right item and Sparrowhawks aren't separate
     }
 
     if (m_kHangarShip != none)
     {
-        m_kHangarShip.UpdateWeapon(EShipWeapon(kHangar.LWCE_ItemTypeToShipWeapon(m_eWeapon)));
+        // TODO: move somewhere centralized and potentially make extensible
+        if (LWCE_XGHangarShip_Firestorm(m_kHangarShip) != none)
+        {
+            LWCE_XGHangarShip_Firestorm(m_kHangarShip).LWCE_UpdateWeapon(m_arrCEWeapons[0]);
+        }
+        else
+        {
+            LWCE_XGHangarShip(m_kHangarShip).LWCE_UpdateWeapon(m_arrCEWeapons[0]);
+        }
     }
+}
+
+function EItemType GetWeapon()
+{
+    `LWCE_LOG_DEPRECATED_CLS(GetWeapon);
+
+    return eItem_None;
+}
+
+function name LWCE_GetWeapon()
+{
+    return m_arrCEWeapons.Length > 0 ? m_arrCEWeapons[0] : '';
 }
 
 function string GetWeaponString()
 {
-    return `LWCE_ITEM(m_eWeapon).strName;
+    return `LWCE_ITEM(LWCE_GetWeapon()).strName;
 }
 
 function XGHangarShip GetWeaponViewShip()
@@ -47,18 +87,29 @@ function XGHangarShip GetWeaponViewShip()
     {
         if (IsFirestorm())
         {
-            m_kHangarShip = Spawn(class'XGHangarShip_Firestorm', self);
+            m_kHangarShip = Spawn(class'LWCE_XGHangarShip_Firestorm', self);
+            m_kHangarShip.Init();
+            LWCE_XGHangarShip_Firestorm(m_kHangarShip).LWCE_UpdateWeapon(m_arrCEWeapons[0]);
         }
         else
         {
-            m_kHangarShip = Spawn(class'XGHangarShip', self);
+            m_kHangarShip = Spawn(class'LWCE_XGHangarShip', self);
+            m_kHangarShip.Init();
+            LWCE_XGHangarShip(m_kHangarShip).LWCE_UpdateWeapon(m_arrCEWeapons[0]);
         }
-
-        m_kHangarShip.Init();
-        m_kHangarShip.UpdateWeapon(EShipWeapon(`LWCE_HANGAR.LWCE_ItemTypeToShipWeapon(m_eWeapon)));
     }
 
     return m_kHangarShip;
+}
+
+function bool IsFirestorm()
+{
+    return m_kCETShip.eType == eShip_Firestorm;
+}
+
+function bool IsInterceptor()
+{
+    return m_kCETShip.eType == eShip_Interceptor;
 }
 
 // Custom functions for dealing with manually entering callsigns

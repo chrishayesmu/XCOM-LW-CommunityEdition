@@ -248,7 +248,7 @@ function UpdateFoundryPerksForSoldier(XGStrategySoldier kSoldier, LWCE_XGFacilit
 
 // #region Item-related events
 
-function Override_GetItem(out LWCE_TItem kItem, int iTransactionType)
+function Override_GetItem(out LWCEItemTemplate kItem, int iTransactionType)
 {
     local LWCEStrategyListener kStrategyListener;
 
@@ -258,7 +258,7 @@ function Override_GetItem(out LWCE_TItem kItem, int iTransactionType)
     }
 }
 
-function bool Override_GetInfinitePistol(XGStrategySoldier kSoldier, out int iItemId)
+function bool Override_GetInfinitePistol(XGStrategySoldier kSoldier, out name ItemName)
 {
     local bool bAnyTrue;
     local LWCEStrategyListener kStrategyListener;
@@ -267,13 +267,13 @@ function bool Override_GetInfinitePistol(XGStrategySoldier kSoldier, out int iIt
 
     foreach StrategyListeners(kStrategyListener)
     {
-        bAnyTrue = kStrategyListener.Override_GetInfinitePistol(kSoldier, iItemId) || bAnyTrue;
+        bAnyTrue = kStrategyListener.Override_GetInfinitePistol(kSoldier, ItemName) || bAnyTrue;
     }
 
     return bAnyTrue;
 }
 
-function bool Override_GetInfinitePrimary(XGStrategySoldier kSoldier, out int iItemId)
+function bool Override_GetInfinitePrimary(XGStrategySoldier kSoldier, out name ItemName)
 {
     local bool bAnyTrue;
     local LWCEStrategyListener kStrategyListener;
@@ -282,13 +282,13 @@ function bool Override_GetInfinitePrimary(XGStrategySoldier kSoldier, out int iI
 
     foreach StrategyListeners(kStrategyListener)
     {
-        bAnyTrue = kStrategyListener.Override_GetInfinitePrimary(kSoldier, iItemId) || bAnyTrue;
+        bAnyTrue = kStrategyListener.Override_GetInfinitePrimary(kSoldier, ItemName) || bAnyTrue;
     }
 
     return bAnyTrue;
 }
 
-function bool Override_GetInfiniteSecondary(XGStrategySoldier kSoldier, out int iItemId)
+function bool Override_GetInfiniteSecondary(XGStrategySoldier kSoldier, out name ItemName)
 {
     local bool bAnyTrue;
     local LWCEStrategyListener kStrategyListener;
@@ -297,7 +297,7 @@ function bool Override_GetInfiniteSecondary(XGStrategySoldier kSoldier, out int 
 
     foreach StrategyListeners(kStrategyListener)
     {
-        bAnyTrue = kStrategyListener.Override_GetInfiniteSecondary(kSoldier, iItemId) || bAnyTrue;
+        bAnyTrue = kStrategyListener.Override_GetInfiniteSecondary(kSoldier, ItemName) || bAnyTrue;
     }
 
     return bAnyTrue;
@@ -310,16 +310,6 @@ function OnItemCompleted(LWCE_TItemProject kItemProject, int iQuantity, optional
     foreach StrategyListeners(kStrategyListener)
     {
         kStrategyListener.OnItemCompleted(kItemProject, iQuantity, bInstant);
-    }
-}
-
-function OnItemsBuilt(out array<LWCE_TItem> arrItems)
-{
-    local LWCEStrategyListener kStrategyListener;
-
-    foreach StrategyListeners(kStrategyListener)
-    {
-        kStrategyListener.OnItemsBuilt(arrItems);
     }
 }
 

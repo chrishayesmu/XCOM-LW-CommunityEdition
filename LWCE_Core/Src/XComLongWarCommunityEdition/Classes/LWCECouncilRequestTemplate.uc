@@ -13,7 +13,7 @@ class LWCECouncilRequestTemplate extends LWCEDataTemplate
 
 struct LWCE_TRequestItemConfig
 {
-    var int iItemId;
+    var name ItemName;
     var bool bScaleForDynamicWar;
     var LWCE_TRange kQuantityRange;
     var LWCE_TRange kPerMonthScaling;

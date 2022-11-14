@@ -4,6 +4,8 @@ class LWCE_XComEngine extends XComEngine
 var config array<string> arrDataSets;
 var config array<string> arrDataTemplateManagers;
 
+var LWCEContentManager m_kCEContentMgr;
+
 var private array< class<LWCEDataSet> > m_arrDataSets;
 var private array<LWCEDataTemplateManager> m_arrDataTemplateManagers;
 var private bool m_bInitialized;
@@ -97,6 +99,9 @@ function LWCE_Init()
 
     `LWCE_LOG_CLS("Validating data template managers...");
     ValidateDataTemplateManagers();
+
+    m_kCEContentMgr = new (self) class'LWCEContentManager';
+    m_kCEContentMgr.Init();
 }
 
 private function AssignTemplateToManager(LWCEDataTemplate kTemplate)

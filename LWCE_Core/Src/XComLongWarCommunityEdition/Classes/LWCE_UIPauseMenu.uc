@@ -165,6 +165,6 @@ simulated function RestartMissionDialgoueCallback(EUIAction eAction)
         controllerRef.ClientTravel("?restart", TRAVEL_Relative);
 
         kDesc = LWCE_XGBattleDesc(XGBattle_SP(`BATTLE).GetDesc());
-        kDesc.m_kArtifactsContainer.Delete(`LW_ITEM_ID(WeaponFragment));
+        kDesc.m_kArtifactsContainer.Delete('Item_WeaponFragment'); // TODO: maybe deleting everything makes more sense
     }
 }

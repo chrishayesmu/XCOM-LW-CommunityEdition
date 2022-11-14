@@ -10,3 +10,10 @@ var Rotator LastRotation_WeaponDownCheck;
 simulated function OnLocalPlayerTeamTypeReceived(ETeam eLocalPlayerTeam){}
 native simulated function EvaluateWeaponPose();
 native simulated function SetWeaponDownNodes(bool bWeaponDown, float BlendTime);
+
+defaultproperties
+{
+    bRunPhysicsWithNoController=true
+    bReplicateMovement=false
+    m_bReplicateCollisionData=false
+}

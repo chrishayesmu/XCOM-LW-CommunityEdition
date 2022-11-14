@@ -2,6 +2,8 @@ class LWCE_UIUnitGermanMode extends UIUnitGermanMode;
 
 simulated function Init(XComPlayerController _controllerRef, UIFxsMovie _manager, XGUnit theUnit)
 {
+    `LWCE_LOG_CLS("Init");
+
     BaseInit(_controllerRef, _manager);
     m_kUnit = theUnit;
 
@@ -9,8 +11,8 @@ simulated function Init(XComPlayerController _controllerRef, UIFxsMovie _manager
     m_kPerks.s_name = name("body.perks");
     m_kPerks.Init(controllerRef, manager, self);
     m_kPerks.PrepareData(ePerkBuff_Passive, m_strPassivePerkListTitle, m_kUnit.GetPassivePerkList(), theUnit);
-    m_kPerks.PrepareItemData(m_kUnit.GetItemInfos());
-    m_kPerks.PrepareItemData(m_kUnit.GetWeaponInfos());
+
+    LWCE_UIUnitGermanMode_PerkList(m_kPerks).LWCE_PrepareItemData(m_kUnit.GetInventory());
 
     m_kBonuses = Spawn(class'LWCE_UIUnitGermanMode_PerkList', self);
     m_kBonuses.s_name = name("body.bonuses");

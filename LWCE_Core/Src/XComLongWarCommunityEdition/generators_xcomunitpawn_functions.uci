@@ -1,0 +1,169 @@
+// Contains functions which can be shared among the majority of XComUnitPawn subclasses.
+// It should be expected that any subclasses which are XCOM-controlled (e.g. XComHumanPawn)
+// are too different and can't use this generator.
+
+simulated event PostBeginPlay()
+{
+	local XComUnitPawn kArchetype;
+    local EPawnType PawnType;
+
+    if (GetGameUnit() != none && GetGameUnit().GetCharacter() != none)
+    {
+        PawnType = GetGameUnit().GetCharacter().m_eType;
+    }
+    else if (LWCE_XGUnit(Owner) != none && LWCE_XGUnit(Owner).GetCharacter() != none)
+    {
+        PawnType = LWCE_XGUnit(Owner).GetCharacter().m_eType;
+
+        // We're supposed to be owned by the unit's Owner; reset that here
+        SetOwner(Owner.Owner);
+    }
+
+    `LWCE_LOG_CLS("PostBeginPlay: PawnType = " $ PawnType);
+
+	kArchetype = `CONTENTMGR.GetPawnTemplate(PawnType);
+    `LWCE_LOG_CLS("kArchetype = " $ kArchetype);
+	class'LWCEActorUtilities'.static.InitPawnFromArchetype(kArchetype, self);
+
+	super.PostBeginPlay();
+}
+
+simulated function ApplyShredderRocket(const DamageEvent Dmg, bool enemyOfUnitHit)
+{
+    class'LWCE_XComUnitPawn_Extensions'.static.ApplyShredderRocket(self, Dmg, enemyOfUnitHit);
+}
+
+simulated function AttachItem(Actor A, name SocketName, bool bIsRearBackPackItem, out MeshComponent kFoundMeshComponent)
+{
+    class'LWCE_XComUnitPawn_Extensions'.static.AttachItem(self, A, SocketName, bIsRearBackPackItem, kFoundMeshComponent);
+}
+
+function DoDeathOnOutsideOfBounds()
+{
+    class'LWCE_XComUnitPawn_Extensions'.static.DoDeathOnOutsideOfBounds(self);
+}
+
+simulated event PostInitAnimTree(SkeletalMeshComponent SkelComp)
+{
+    class'LWCE_XComUnitPawn_Extensions'.static.PostInitAnimTree(self, SkelComp);
+
+    super(Pawn).PostInitAnimTree(SkelComp);
+}
+
+simulated function SetupForMatinee(optional Actor MatineeBase, optional bool bDisableFootIK, optional bool bDisableGenderBlender)
+{
+    class'LWCE_XComUnitPawn_Extensions'.static.SetupForMatinee(self, MatineeBase, bDisableFootIK, bDisableGenderBlender);
+}
+
+simulated function TakeDirectDamage(const DamageEvent Dmg)
+{
+    class'LWCE_XComUnitPawn_Extensions'.static.TakeDirectDamage(self, Dmg);
+}
+
+// Events where we just call the superclass to make sure they work properly
+
+/*
+simulated event Destroyed()
+{
+    super.Destroyed();
+}
+
+simulated event bool RestoreAnimSetsToDefault()
+{
+    return super.RestoreAnimSetsToDefault();
+}
+
+simulated event BeginAnimControl(InterpGroup InInterpGroup)
+{
+    super.BeginAnimControl(InInterpGroup);
+}
+
+simulated event FinishAnimControl(InterpGroup InInterpGroup)
+{
+    super.FinishAnimControl(InInterpGroup);
+}
+
+simulated event InterpolationStarted(SeqAct_Interp InterpAction, InterpGroupInst GroupInst)
+{
+    super.InterpolationStarted(InterpAction, GroupInst);
+}
+
+simulated event InterpolationFinished(SeqAct_Interp InterpAction)
+{
+    super.InterpolationFinished(InterpAction);
+}
+
+simulated event Tick(float DeltaTime)
+{
+    super.Tick(DeltaTime);
+}
+ */
+
+ event RigidBodyCollision(PrimitiveComponent HitComponent, PrimitiveComponent OtherComponent, const out CollisionImpactData RigidCollisionData, int ContactIndex)
+{
+	super.RigidBodyCollision(HitComponent, OtherComponent, RigidCollisionData, ContactIndex);
+}
+simulated event SetVisible(bool bVisible)
+{
+	super.SetVisible(bVisible);
+}
+simulated event Attach(Actor Other)
+{
+	super.Attach(Other);
+}
+simulated event Detach(Actor Other)
+{
+	super.Detach(Other);
+}
+event EncroachedBy(Actor Other)
+{
+	super.EncroachedBy(Other);
+}
+singular simulated event OutsideWorldBounds()
+{
+    DoDeathOnOutsideOfBounds();
+}
+simulated event FellOutOfWorld(class<DamageType> dmgType)
+{
+    DoDeathOnOutsideOfBounds();
+}
+simulated event Vector GetLeftHandIKTargetLoc()
+{
+	return super.GetLeftHandIKTargetLoc();
+}
+simulated event Vector GetWeaponStartTraceLocation(optional Weapon CurrentWeapon)
+{
+	return super.GetWeaponStartTraceLocation(CurrentWeapon);
+}
+simulated event PlayFootStepSound(int FootDown)
+{
+	super.PlayFootStepSound(FootDown);
+}
+event Landed(Vector HitNormal, Actor FloorActor)
+{
+	super.Landed(HitNormal, FloorActor);
+}
+event Bump(Actor Other, PrimitiveComponent OtherComp, Vector HitNormal)
+{
+	super.Bump(Other, OtherComp, HitNormal);
+}
+simulated event Tick(float dt)
+{
+	super.Tick(dt);
+}
+event Touch(Actor Other, PrimitiveComponent OtherComp, Vector HitLocation, Vector HitNormal)
+{
+	super.Touch(Other, OtherComp, HitLocation, HitNormal);
+}
+event UnTouch(Actor Other)
+{
+	super.UnTouch(Other);
+}
+simulated event Speak(SoundCue Cue)
+{
+	super.Speak(Cue);
+}
+simulated event TakeSplashDamage(DamageEvent Dmg)
+{
+	super.TakeSplashDamage(Dmg);
+}

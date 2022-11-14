@@ -1,0 +1,1 @@
+class LWCEBodyContentTemplate extends LWCEContentTemplate;

@@ -18,29 +18,30 @@ var array<LWCE_TItemQuantity> m_arrCEItemsLostLastMission;
 
 function Init()
 {
-    local LWCE_XGItemTree kItemTree;
-    local LWCE_TItem kItem;
-    local LWCE_TItemQuantity kItemQuantity;
+    local array<LWCEItemTemplate> arrAllItems;
+    local LWCEItemTemplateManager kItemMgr;
+    local LWCEItemTemplate kItem;
+    local int iQuantity;
 
-    kItemTree = `LWCE_ITEMTREE;
+    kItemMgr = `LWCE_ITEM_TEMPLATE_MGR;
+    arrAllItems = kItemMgr.GetAllItemTemplates();
 
-    foreach kItemTree.m_arrCEItems(kItem)
+    foreach arrAllItems(kItem)
     {
-        kItemQuantity.iItemId = kItem.iItemId;
-        kItemQuantity.iQuantity = 0;
+        iQuantity = 0;
 
-        if (kItem.bIsInfinite)
+        if (kItem.IsInfinite())
         {
-            kItemQuantity.iQuantity = 1000;
+            iQuantity = 1000;
         }
         else if (kItem.iStartingQuantity > 0)
         {
-            kItemQuantity.iQuantity = kItem.iStartingQuantity;
+            iQuantity = kItem.iStartingQuantity;
         }
 
-        if (kItemQuantity.iQuantity > 0)
+        if (iQuantity > 0)
         {
-            AddItem(kItemQuantity.iItemId, kItemQuantity.iQuantity);
+            LWCE_AddItem(kItem.GetItemName(), iQuantity);
         }
     }
 }
@@ -52,60 +53,93 @@ function AddInfiniteItem(EItemType eItem)
 
 function AddItem(int iItemId, optional int iQuantity = -1, optional int iContinent = -1)
 {
+    // The XGStrategyActor.AddResource function uses AddItem for these 3 items, and it would be a great deal of
+    // work for no benefit to change that to LWCE_AddItem, so we allow just these 3 to go through. All other items
+    // must use LWCE_AddItem.
+    if (iItemId == eItem_AlienAlloys)
+    {
+        LWCE_AddItem('Item_AlienAlloy', iQuantity, iContinent);
+        return;
+    }
+
+    if (iItemId == eItem_Elerium115)
+    {
+        LWCE_AddItem('Item_Elerium', iQuantity, iContinent);
+        return;
+    }
+
+    if (iItemId == eItem_Meld)
+    {
+        LWCE_AddItem('Item_Meld', iQuantity, iContinent);
+        return;
+    }
+
+    `LWCE_LOG_DEPRECATED_CLS(AddItem);
+}
+
+function LWCE_AddItem(name ItemName, optional int iQuantity = 1, optional int iContinent = -1)
+{
     local LWCE_XGFacility_Barracks kBarracks;
-    local LWCE_TItem kItem;
+    local LWCEItemTemplate kItem;
     local int I;
 
     kBarracks = `LWCE_BARRACKS;
 
-    if (iItemId == 0)
+    if (ItemName == '')
     {
         return;
     }
 
-    kItem = `LWCE_ITEM(iItemId);
+    kItem = `LWCE_ITEM(ItemName);
 
-    if (kItem.iReplacementItemId > 0)
+    if (kItem == none)
     {
-        AddItem(kItem.iReplacementItemId, iQuantity, iContinent);
+        `LWCE_LOG_CLS("ERROR: requested to add item " $ ItemName $ " but no such item could be found!");
         return;
     }
 
-    `LWCE_UTILS.AdjustItemQuantity(m_arrCEItems, iItemId, iQuantity);
+    if (kItem.nmReplacementItem != '')
+    {
+        LWCE_AddItem(kItem.nmReplacementItem, iQuantity, iContinent);
+        return;
+    }
+
+    `LWCE_UTILS.AdjustItemQuantity(m_arrCEItems, ItemName, iQuantity);
 
     if (iQuantity > 0)
     {
-        `LWCE_UTILS.AdjustItemQuantity(m_arrCEItemArchives, iItemId, iQuantity);
+        `LWCE_UTILS.AdjustItemQuantity(m_arrCEItemArchives, ItemName, iQuantity);
     }
 
     // Handle a few special items
+    // TODO: move this logic to templates or event listeners
     for (I = 0; I < iQuantity; I++)
     {
-        switch (iItemId)
+        switch (ItemName)
         {
-            case `LW_ITEM_ID(SHIV):
-                AddItem(`LW_ITEM_ID(SHIVChassis));
-                kBarracks.LWCE_AddTank(`LW_ITEM_ID(SHIVChassis), `LW_ITEM_ID(Autocannon));
+            case 'Item_SHIV':
+                LWCE_AddItem('Item_SHIVChassis');
+                kBarracks.LWCE_AddTank('Item_SHIVChassis', 'Item_Autocannon');
                 STAT_AddStat(eRecap_SHIVsBuilt, 1);
                 break;
-            case `LW_ITEM_ID(AlloySHIV):
-                AddItem(`LW_ITEM_ID(AlloySHIVChassis));
-                kBarracks.LWCE_AddTank(`LW_ITEM_ID(AlloySHIVChassis), `LW_ITEM_ID(Autocannon));
+            case 'Item_SHIVAlloy':
+                LWCE_AddItem('Item_SHIVAlloyChassis');
+                kBarracks.LWCE_AddTank('Item_SHIVAlloyChassis', 'Item_Autocannon');
                 STAT_AddStat(eRecap_SHIVsBuilt, 1);
                 break;
-            case `LW_ITEM_ID(HoverSHIV):
-                AddItem(`LW_ITEM_ID(HoverSHIVChassis));
-                kBarracks.LWCE_AddTank(`LW_ITEM_ID(HoverSHIVChassis), `LW_ITEM_ID(Autocannon));
+            case 'Item_SHIVHover':
+                LWCE_AddItem('Item_SHIVHoverChassis');
+                kBarracks.LWCE_AddTank('Item_SHIVHoverChassis', 'Item_Autocannon');
                 STAT_AddStat(eRecap_SHIVsBuilt, 1);
                 break;
-            case `LW_ITEM_ID(Interceptor):
+            case 'Item_Interceptor':
                 HANGAR().AddInterceptor(iContinent);
                 break;
-            case `LW_ITEM_ID(Firestorm):
+            case 'Item_Firestorm':
                 HANGAR().AddFirestorm(iContinent);
                 STAT_AddStat(eRecap_FirestormsBuilt, 1);
                 break;
-            case `LW_ITEM_ID(Skyranger):
+            case 'Item_Skyranger':
                 HANGAR().AddDropship();
                 break;
             default:
@@ -113,12 +147,12 @@ function AddItem(int iItemId, optional int iQuantity = -1, optional int iContine
         }
     }
 
-    if (iItemId == eItem_Medikit)
+    if (ItemName == 'Item_Medikit')
     {
         STAT_AddStat(eRecap_MedikitsBuilt, iQuantity);
     }
 
-    if (iItemId == eItem_ArcThrower)
+    if (ItemName == 'Item_ArcThrower')
     {
         STAT_AddStat(eRecap_ArcThrowersBuilt, iQuantity);
     }
@@ -133,169 +167,196 @@ function bool AreReaperRoundsValid(XGStrategySoldier kSoldier)
 
 function AutoEquip(XGStrategySoldier kSoldier)
 {
-    local int iItemId;
-    local TInventory kRookieLoadout;
+    local name ItemName;
+    local LWCE_TInventory kRookieLoadout;
 
     ReleaseLoadout(kSoldier);
 
+    // TODO: expose all of the default equipment to configuration
     if (kSoldier.GetCurrentStat(eStat_Mobility) >= class'XGTacticalGameCore'.default.SOLDIER_COST_HARD)
     {
-        kRookieLoadout.iArmor = `LW_ITEM_ID(TacArmor);
+        kRookieLoadout.nmArmor = 'Item_TacArmor';
     }
     else
     {
-        kRookieLoadout.iArmor = `LW_ITEM_ID(TacVest);
+        kRookieLoadout.nmArmor = 'Item_TacVest';
     }
 
-    if (`LWCE_MOD_LOADER.Override_GetInfiniteSecondary(kSoldier, iItemId))
+    if (`LWCE_MOD_LOADER.Override_GetInfiniteSecondary(kSoldier, ItemName))
     {
-        kRookieLoadout.iPistol = iItemId;
+        kRookieLoadout.nmPistol = ItemName;
     }
     else
     {
-        kRookieLoadout.iPistol = `LW_ITEM_ID(Pistol);
+        kRookieLoadout.nmPistol = 'Item_Pistol';
     }
+
+    class'LWCEInventoryUtils'.static.SetLargeItem(kRookieLoadout, 0, 'Item_AssaultCarbine');
 
     if (kSoldier.GetCurrentStat(eStat_Offense) >= class'XGTacticalGameCore'.default.SOLDIER_COST_CLASSIC)
     {
-        TACTICAL().TInventoryLargeItemsSetItem(kRookieLoadout, 0, `LW_ITEM_ID(AssaultRifle));
+        class'LWCEInventoryUtils'.static.SetLargeItem(kRookieLoadout, 0, 'Item_AssaultRifle');
     }
     else
     {
-        TACTICAL().TInventoryLargeItemsSetItem(kRookieLoadout, 0, `LW_ITEM_ID(AssaultCarbine));
+        class'LWCEInventoryUtils'.static.SetLargeItem(kRookieLoadout, 0, 'Item_AssaultCarbine');
     }
 
-    TACTICAL().TInventorySmallItemsSetItem(kRookieLoadout, 0, `LW_ITEM_ID(APGrenade));
+    class'LWCEInventoryUtils'.static.SetSmallItem(kRookieLoadout, 0, 'Item_APGrenade');
 
     switch (Rand(6))
     {
         case 0:
-            TACTICAL().TInventorySmallItemsSetItem(kRookieLoadout, 1, `LW_ITEM_ID(LaserSight));
+            class'LWCEInventoryUtils'.static.SetSmallItem(kRookieLoadout, 1, 'Item_LaserSight');
             break;
         case 1:
             if (`LWCE_ENGINEERING.LWCE_IsFoundryTechResearched('Foundry_AlienGrenades'))
             {
-                TACTICAL().TInventorySmallItemsSetItem(kRookieLoadout, 1, `LW_ITEM_ID(AlienGrenade));
+                class'LWCEInventoryUtils'.static.SetSmallItem(kRookieLoadout, 1, 'Item_AlienGrenade');
             }
             else
             {
-                TACTICAL().TInventorySmallItemsSetItem(kRookieLoadout, 1, `LW_ITEM_ID(HEGrenade));
+                class'LWCEInventoryUtils'.static.SetSmallItem(kRookieLoadout, 1, 'Item_HEGrenade');
             }
 
             break;
         case 2:
-            TACTICAL().TInventorySmallItemsSetItem(kRookieLoadout, 1, `LW_ITEM_ID(CeramicPlating));
+            class'LWCEInventoryUtils'.static.SetSmallItem(kRookieLoadout, 1, 'Item_CeramicPlating');
             break;
         case 3:
-            TACTICAL().TInventorySmallItemsSetItem(kRookieLoadout, 1, `LW_ITEM_ID(APGrenade));
+            class'LWCEInventoryUtils'.static.SetSmallItem(kRookieLoadout, 1, 'Item_APGrenade');
             break;
         case 4:
-            TACTICAL().TInventorySmallItemsSetItem(kRookieLoadout, 1, `LW_ITEM_ID(FlashbangGrenade));
+            class'LWCEInventoryUtils'.static.SetSmallItem(kRookieLoadout, 1, 'Item_FlashbangGrenade');
             break;
         case 5:
-            TACTICAL().TInventorySmallItemsSetItem(kRookieLoadout, 1, `LW_ITEM_ID(Medikit));
+            class'LWCEInventoryUtils'.static.SetSmallItem(kRookieLoadout, 1, 'Item_Medikit');
             break;
     }
 
-    if (`LWCE_MOD_LOADER.Override_GetInfinitePrimary(kSoldier, iItemId))
+    if (`LWCE_MOD_LOADER.Override_GetInfinitePrimary(kSoldier, ItemName))
     {
-        TACTICAL().TInventoryLargeItemsSetItem(kRookieLoadout, 0, iItemId);
+        class'LWCEInventoryUtils'.static.SetLargeItem(kRookieLoadout, 0, ItemName);
     }
 
-    LOCKERS().ApplySoldierLoadout(kSoldier, kRookieLoadout);
+    LWCE_XGFacility_Lockers(LOCKERS()).LWCE_ApplySoldierLoadout(kSoldier, kRookieLoadout);
 }
 
 function BackupAndReleaseInventory(XGStrategySoldier kSoldier)
 {
-    local int iItemId, I;
-    local TInventory kNewInventory;
+    local name ItemName;
+    local int I;
+    local LWCE_TInventory kNewInventory;
+    local LWCEItemTemplate kItem;
+    local LWCE_XGStrategySoldier kCESoldier;
 
-    kSoldier.m_kBackedUpLoadout = kSoldier.m_kChar.kInventory;
-    iItemId = kSoldier.m_kChar.kInventory.iArmor;
+    kCESoldier = LWCE_XGStrategySoldier(kSoldier);
 
-    if (iItemId != 0 && kSoldier.GetPsiRank() != 7 && !LWCE_IsInfinite(iItemId) && !kSoldier.IsATank())
+    kCESoldier.m_kCEBackedUpLoadout = kCESoldier.m_kCEChar.kInventory;
+
+    ItemName = kCESoldier.m_kCEChar.kInventory.nmArmor;
+    kItem = `LWCE_ITEM(ItemName);
+
+    if (ItemName != '' && kCESoldier.GetPsiRank() != 7 && !kItem.IsInfinite() && !kCESoldier.IsATank())
     {
-        kNewInventory.iArmor = kSoldier.IsAugmented() ? eItem_MecCivvies : eItem_TacArmor;
+        kNewInventory.nmArmor = kCESoldier.IsAugmented() ? 'Item_BaseAugments' : 'Item_TacArmor';
     }
     else
     {
-        kNewInventory.iArmor = iItemId;
+        kNewInventory.nmArmor = ItemName;
     }
 
-    iItemId = kSoldier.m_kChar.kInventory.arrLargeItems[0];
-
-    if (iItemId != 0 && !LWCE_IsInfinite(iItemId))
+    if (kCESoldier.m_kCEChar.kInventory.arrLargeItems.Length >= 1)
     {
-        TACTICAL().TInventoryLargeItemsSetItem(kNewInventory, 0, LWCE_GetInfinitePrimary(kSoldier));
-    }
-    else
-    {
-        TACTICAL().TInventoryLargeItemsSetItem(kNewInventory, 0, iItemId);
-    }
+        ItemName = kCESoldier.m_kCEChar.kInventory.arrLargeItems[0];
+        kItem = `LWCE_ITEM(ItemName);
 
-    TACTICAL().TInventoryLargeItemsSetItem(kNewInventory, 1, LWCE_GetInfiniteSecondary(kSoldier));
-    TACTICAL().TInventoryLargeItemsSetItem(kNewInventory, 2, 0);
-    TACTICAL().TInventoryLargeItemsSetItem(kNewInventory, 3, 0);
-
-    for (I = 0; I < kSoldier.m_kChar.kInventory.iNumSmallItems; I++)
-    {
-        iItemId = kSoldier.m_kChar.kInventory.arrSmallItems[I];
-
-        if (iItemId != 0 && !LWCE_IsInfinite(iItemId))
+        if (ItemName != '' && !kItem.IsInfinite())
         {
-            TACTICAL().TInventorySmallItemsSetItem(kNewInventory, I, 0);
+            class'LWCEInventoryUtils'.static.SetLargeItem(kNewInventory, 0, LWCE_GetInfinitePrimary(kCESoldier));
         }
         else
         {
-            TACTICAL().TInventorySmallItemsSetItem(kNewInventory, I, iItemId);
+            class'LWCEInventoryUtils'.static.SetLargeItem(kNewInventory, 0, ItemName);
         }
     }
 
-    iItemId = kSoldier.m_kChar.kInventory.iPistol;
+    class'LWCEInventoryUtils'.static.SetLargeItem(kNewInventory, 1, LWCE_GetInfiniteSecondary(kCESoldier));
+    class'LWCEInventoryUtils'.static.SetLargeItem(kNewInventory, 2, '');
+    class'LWCEInventoryUtils'.static.SetLargeItem(kNewInventory, 3, '');
 
-    if (iItemId != 0 && !LWCE_IsInfinite(iItemId))
+    for (I = 0; I < kCESoldier.m_kCEChar.kInventory.arrSmallItems.Length; I++)
     {
-        kNewInventory.iPistol = `LW_ITEM_ID(Pistol);
+        ItemName = kCESoldier.m_kCEChar.kInventory.arrSmallItems[I];
+
+        if (ItemName != '' && !`LWCE_ITEM(ItemName).IsInfinite())
+        {
+            class'LWCEInventoryUtils'.static.SetSmallItem(kNewInventory, I, '');
+        }
+        else
+        {
+            class'LWCEInventoryUtils'.static.SetSmallItem(kNewInventory, I, ItemName);
+        }
+    }
+
+    ItemName = kCESoldier.m_kCEChar.kInventory.nmPistol;
+
+    if (ItemName != '' && !`LWCE_ITEM(ItemName).IsInfinite())
+    {
+        kNewInventory.nmPistol = 'Item_Pistol';
     }
     else
     {
-        kNewInventory.iPistol = iItemId;
+        kNewInventory.nmPistol = ItemName;
     }
 
-    ReleaseLoadout(kSoldier);
-    LOCKERS().ApplySoldierLoadout(kSoldier, kNewInventory);
+    ReleaseLoadout(kCESoldier);
+    LWCE_XGFacility_Lockers(LOCKERS()).LWCE_ApplySoldierLoadout(kCESoldier, kNewInventory);
 }
 
 function bool ClaimItem(int iItemId, XGStrategySoldier kSoldier)
 {
+    `LWCE_LOG_DEPRECATED_CLS(ClaimItem);
+
+    return false;
+}
+
+function bool LWCE_ClaimItem(name ItemName, optional XGStrategySoldier kSoldier = none, optional int iQuantity = 1)
+{
     local bool bIsInfinite;
     local int Index, iPerkId;
-    local LWCE_TItem kItem;
+    local name PerkName;
+    local LWCEEquipmentTemplate kEquipment;
 
-    if (iItemId == eItem_None)
+    if (ItemName == '')
     {
         return true;
     }
 
-    Index = m_arrCEItems.Find('iItemId', iItemId);
-    bIsInfinite = LWCE_IsInfinite(iItemId);
+    kEquipment = LWCEEquipmentTemplate(`LWCE_ITEM(ItemName));
+    Index = m_arrCEItems.Find('ItemName', ItemName);
+    bIsInfinite = kEquipment.IsInfinite();
 
-    if ( !bIsInfinite && (Index == INDEX_NONE || m_arrCEItems[Index].iQuantity <= 0) )
+    if ( !bIsInfinite && (Index == INDEX_NONE || m_arrCEItems[Index].iQuantity < iQuantity) )
     {
         return false;
     }
 
-    kItem = `LWCE_ITEM(iItemId);
-
     // Perks granted by item; adding 2 indicates it's from an item and not from the class perks
-    foreach kItem.arrPerksGranted(iPerkId)
+    foreach kEquipment.arrPerks(PerkName)
     {
-        kSoldier.m_kChar.aUpgrades[iPerkId] += 2;
+        // TODO: just move everything to names once perks are templated
+        iPerkId = class'LWCE_XComPerkManager'.static.BaseIDFromPerkName(PerkName);
+
+        if (iPerkId > 0 && iPerkId < ePerk_MAX)
+        {
+            kSoldier.m_kChar.aUpgrades[iPerkId] += 2;
+        }
     }
 
     if (!bIsInfinite)
     {
-        m_arrCEItems[Index].iQuantity -= 1;
+        m_arrCEItems[Index].iQuantity -= iQuantity;
     }
 
     return true;
@@ -306,16 +367,16 @@ function DamageItem(EItemType eItem, optional int iQuantity = 1)
     `LWCE_LOG_DEPRECATED_CLS(DamageItem);
 }
 
-function LWCE_DamageItem(int iItemId, optional int iQuantity = 1)
+function LWCE_DamageItem(name ItemName, optional int iQuantity = 1)
 {
     local int iCurrentQuantity;
 
-    if (LWCE_IsInfinite(iItemId))
+    if (`LWCE_ITEM(ItemName).IsInfinite())
     {
         return;
     }
 
-    iCurrentQuantity = `LWCE_UTILS.GetItemQuantity(m_arrCEItems, iItemId).iQuantity;
+    iCurrentQuantity = `LWCE_UTILS.GetItemQuantity(m_arrCEItems, ItemName).iQuantity;
 
     if (iCurrentQuantity <= 0)
     {
@@ -327,18 +388,25 @@ function LWCE_DamageItem(int iItemId, optional int iQuantity = 1)
         iQuantity = iCurrentQuantity;
     }
 
-    `LWCE_UTILS.AdjustItemQuantity(m_arrCEDamagedItems, iItemId, iQuantity);
-    `LWCE_UTILS.AdjustItemQuantity(m_arrCEItems, iItemId, -1 * iQuantity);
+    `LWCE_UTILS.AdjustItemQuantity(m_arrCEDamagedItems, ItemName, iQuantity);
+    `LWCE_UTILS.AdjustItemQuantity(m_arrCEItems, ItemName, -1 * iQuantity);
 }
 
-function bool EverHadItem(int iItemId)
+function bool EverHadItem(int ItemName)
 {
-    if (iItemId == 0)
+    `LWCE_LOG_DEPRECATED_CLS(EverHadItem);
+
+    return false;
+}
+
+function bool LWCE_EverHadItem(name ItemName)
+{
+    if (ItemName == '')
     {
         return true;
     }
 
-    return m_arrCEItemArchives.Find('iItemId', iItemId) != INDEX_NONE;
+    return m_arrCEItemArchives.Find('ItemName', ItemName) != INDEX_NONE;
 }
 
 function array<EItemType> GetCaptives()
@@ -351,14 +419,11 @@ function array<EItemType> GetCaptives()
     return arrCaptives;
 }
 
-function array<LWCE_TItem> LWCE_GetCaptives()
+function array<LWCEItemTemplate> LWCE_GetCaptives()
 {
-    local LWCE_XGItemTree kItemTree;
-    local LWCE_TItem kItem;
+    local LWCEItemTemplate kItem;
     local LWCE_TItemQuantity kItemQuantity;
-    local array<LWCE_TItem> arrItems;
-
-    kItemTree = `LWCE_ITEMTREE;
+    local array<LWCEItemTemplate> arrItems;
 
     foreach m_arrCEItems(kItemQuantity)
     {
@@ -367,9 +432,10 @@ function array<LWCE_TItem> LWCE_GetCaptives()
             continue;
         }
 
-        if (kItemTree.LWCE_IsCaptive(kItemQuantity.iItemId))
+        kItem = `LWCE_ITEM(kItemQuantity.ItemName);
+
+        if (kItem.IsCaptive())
         {
-            kItem = kItemTree.LWCE_GetItem(kItemQuantity.iItemId);
             arrItems.AddItem(kItem);
         }
     }
@@ -387,14 +453,11 @@ function array<TItem> GetCorpses()
     return arrCorpses;
 }
 
-function array<LWCE_TItem> LWCE_GetCorpses()
+function array<LWCEItemTemplate> LWCE_GetCorpses()
 {
-    local LWCE_XGItemTree kItemTree;
-    local LWCE_TItem kItem;
+    local LWCEItemTemplate kItem;
     local LWCE_TItemQuantity kItemQuantity;
-    local array<LWCE_TItem> arrItems;
-
-    kItemTree = `LWCE_ITEMTREE;
+    local array<LWCEItemTemplate> arrItems;
 
     foreach m_arrCEItems(kItemQuantity)
     {
@@ -403,14 +466,27 @@ function array<LWCE_TItem> LWCE_GetCorpses()
             continue;
         }
 
-        if (kItemTree.LWCE_IsCorpse(kItemQuantity.iItemId))
+        kItem = `LWCE_ITEM(kItemQuantity.ItemName);
+
+        if (kItem.IsCorpse())
         {
-            kItem = kItemTree.LWCE_GetItem(kItemQuantity.iItemId);
             arrItems.AddItem(kItem);
         }
     }
 
     return arrItems;
+}
+
+function name LWCE_GetInfinitePistol(XGStrategySoldier kSoldier)
+{
+    local name ItemName;
+
+    if (`LWCE_MOD_LOADER.Override_GetInfinitePistol(kSoldier, ItemName))
+    {
+        return ItemName;
+    }
+
+    return 'Item_Pistol';
 }
 
 function EItemType GetInfinitePrimary(XGStrategySoldier kSoldier)
@@ -419,41 +495,32 @@ function EItemType GetInfinitePrimary(XGStrategySoldier kSoldier)
     return eItem_None;
 }
 
-function int LWCE_GetInfinitePistol(XGStrategySoldier kSoldier)
+function name LWCE_GetInfinitePrimary(LWCE_XGStrategySoldier kSoldier)
 {
-    local int iItemId;
+    local name ItemName;
+    local LWCE_TClassDefinition kClassDef;
 
-    if (`LWCE_MOD_LOADER.Override_GetInfinitePistol(kSoldier, iItemId))
+    if (`LWCE_MOD_LOADER.Override_GetInfinitePrimary(kSoldier, ItemName))
     {
-        return iItemId;
+        return ItemName;
     }
 
-    return `LW_ITEM_ID(Pistol);
-}
+    kClassDef = LWCE_XGFacility_Barracks(BARRACKS()).GetClassDefinition(kSoldier.m_kCESoldier.iSoldierClassId);
 
-function int LWCE_GetInfinitePrimary(XGStrategySoldier kSoldier)
-{
-    local int iItemId;
-
-    if (`LWCE_MOD_LOADER.Override_GetInfinitePrimary(kSoldier, iItemId))
-    {
-        return iItemId;
-    }
-
-    switch (kSoldier.m_kSoldier.kClass.eWeaponType)
+    switch (kClassDef.iWeaponType)
     {
         case eWP_Support:
-            return `LW_ITEM_ID(SAW);
+            return 'Item_SAW';
         case eWP_Assault:
-            return `LW_ITEM_ID(Shotgun);
+            return 'Item_Shotgun';
         case eWP_Sniper:
-            return `LW_ITEM_ID(SniperRifle);
+            return 'Item_SniperRifle';
         case eWP_Integrated:
-            return `LW_ITEM_ID(Autocannon);
+            return 'Item_Autocannon';
         case eWP_Mec:
-            return `LW_ITEM_ID(Minigun);
+            return 'Item_Minigun';
         default:
-            return `LW_ITEM_ID(AssaultRifle);
+            return 'Item_AssaultRifle';
     }
 }
 
@@ -463,21 +530,21 @@ function EItemType GetInfiniteSecondary(XGStrategySoldier kSoldier)
     return eItem_None;
 }
 
-function int LWCE_GetInfiniteSecondary(XGStrategySoldier kSoldier)
+function name LWCE_GetInfiniteSecondary(XGStrategySoldier kSoldier)
 {
-    local int iItemId;
+    local name ItemName;
 
-    if (`LWCE_MOD_LOADER.Override_GetInfiniteSecondary(kSoldier, iItemId))
+    if (`LWCE_MOD_LOADER.Override_GetInfiniteSecondary(kSoldier, ItemName))
     {
-        return iItemId;
+        return ItemName;
     }
 
     if (kSoldier.HasPerk(`LW_PERK_ID(FireRocket)))
     {
-        return `LW_ITEM_ID(RocketLauncher);
+        return 'Item_RocketLauncher';
     }
 
-    return 0;
+    return '';
 }
 
 function array<TItem> GetItemsInCategory(int iCategory, optional int iTransaction = 1, optional ESoldierClass eClassLock = 0)
@@ -490,11 +557,11 @@ function array<TItem> GetItemsInCategory(int iCategory, optional int iTransactio
     return arrItems;
 }
 
-function array<LWCE_TItem> LWCE_GetItemsInCategory(int iCategory, optional int iTransaction = eTransaction_Build, optional int iClassLock = 0)
+function array<LWCEItemTemplate> LWCE_GetItemsInCategory(name nmCategory, optional int iTransaction = eTransaction_Build, optional int iClassLock = 0)
 {
-    local LWCE_TItem kItem;
+    local LWCEItemTemplate kItem;
     local LWCE_TItemQuantity kItemQuantity;
-    local array<LWCE_TItem> arrItems;
+    local array<LWCEItemTemplate> arrItems;
 
     foreach m_arrCEItems(kItemQuantity)
     {
@@ -503,24 +570,29 @@ function array<LWCE_TItem> LWCE_GetItemsInCategory(int iCategory, optional int i
             continue;
         }
 
-        kItem = `LWCE_ITEM(kItemQuantity.iItemId, iTransaction);
+        kItem = `LWCE_ITEM(kItemQuantity.ItemName);
 
-        if (iTransaction == eTransaction_Sell && !ITEMTREE().CanBeSold(kItem.iItemId))
+        if (kItem == none)
         {
             continue;
         }
 
-        if (iTransaction == eTransaction_Build && !ENGINEERING().HavePreReqs(kItem.iItemId))
+        if (iTransaction == eTransaction_Sell && !kItem.CanBeSold())
         {
             continue;
         }
 
-        if (iCategory != eItemCat_All && kItem.iCategory != iCategory)
+        if (iTransaction == eTransaction_Build && !kItem.CanBeBuilt())
         {
             continue;
         }
 
-        if (iClassLock != 0 && !LWCE_IsClassEquippable(iClassLock, kItem.iItemId))
+        if (nmCategory != '' && nmCategory != 'All' && kItem.nmCategory != nmCategory)
+        {
+            continue;
+        }
+
+        if (iClassLock != 0 && !LWCE_IsClassEquippable(iClassLock, kItemQuantity.ItemName))
         {
             continue;
         }
@@ -541,11 +613,11 @@ function array<TItem> GetDamagedItemsInCategory(int iCategory, optional ESoldier
     return arrItems;
 }
 
-function array<LWCE_TItem> LWCE_GetDamagedItemsInCategory(int iCategory, optional int iClassLock = 0)
+function array<LWCEItemTemplate> LWCE_GetDamagedItemsInCategory(optional name nmCategory = '', optional int iClassLock = 0)
 {
-    local LWCE_TItem kItem;
+    local LWCEItemTemplate kItem;
     local LWCE_TItemQuantity kItemQuantity;
-    local array<LWCE_TItem> arrItems;
+    local array<LWCEItemTemplate> arrItems;
 
     foreach m_arrCEDamagedItems(kItemQuantity)
     {
@@ -554,14 +626,14 @@ function array<LWCE_TItem> LWCE_GetDamagedItemsInCategory(int iCategory, optiona
             continue;
         }
 
-        kItem = `LWCE_ITEM(kItemQuantity.iItemId);
+        kItem = `LWCE_ITEM(kItemQuantity.ItemName);
 
-        if (iCategory != 0 && kItem.iCategory != iCategory)
+        if (nmCategory != '' && nmCategory != 'All' && kItem.nmCategory != nmCategory)
         {
             continue;
         }
 
-        if (iClassLock != 0 && !LWCE_IsClassEquippable(iClassLock, kItem.iItemId))
+        if (iClassLock != 0 && !LWCE_IsClassEquippable(iClassLock, kItemQuantity.ItemName))
         {
             continue;
         }
@@ -575,11 +647,8 @@ function array<LWCE_TItem> LWCE_GetDamagedItemsInCategory(int iCategory, optiona
 function int GetNumCaptives()
 {
     local int iNumCaptives;
-    local LWCE_XGItemTree kItemTree;
-    local LWCE_TItem kItem;
+    local LWCEItemTemplate kItem;
     local LWCE_TItemQuantity kItemQuantity;
-
-    kItemTree = `LWCE_ITEMTREE;
 
     foreach m_arrCEItems(kItemQuantity)
     {
@@ -588,9 +657,9 @@ function int GetNumCaptives()
             continue;
         }
 
-        kItem = kItemTree.LWCE_GetItem(kItemQuantity.iItemId);
+        kItem = `LWCE_ITEM(kItemQuantity.ItemName);
 
-        if (kItem.bIsCaptive)
+        if (kItem.IsCaptive())
         {
             iNumCaptives += kItemQuantity.iQuantity;
         }
@@ -605,11 +674,11 @@ function int GetNumDamagedItems(EItemType eItem)
     return 0;
 }
 
-function int LWCE_GetNumDamagedItems(int iItemId)
+function int LWCE_GetNumDamagedItems(name ItemName)
 {
     local int Index;
 
-    Index = m_arrCEDamagedItems.Find('iItemId', iItemId);
+    Index = m_arrCEDamagedItems.Find('ItemName', ItemName);
 
     if (Index == INDEX_NONE)
     {
@@ -621,14 +690,45 @@ function int LWCE_GetNumDamagedItems(int iItemId)
 
 function int GetNumItemsAvailable(int iItemId)
 {
+    if (iItemId == eItem_AlienAlloys)
+    {
+        return LWCE_GetNumItemsAvailable('Item_AlienAlloy');
+    }
+
+    if (iItemId == eItem_Elerium115)
+    {
+        return LWCE_GetNumItemsAvailable('Item_Elerium');
+    }
+
+    if (iItemId == eItem_Meld)
+    {
+        return LWCE_GetNumItemsAvailable('Item_Meld');
+    }
+
+    `LWCE_LOG_DEPRECATED_CLS(GetNumItemsAvailable);
+
+    return -1;
+}
+
+function int LWCE_GetNumItemsAvailable(name ItemName)
+{
+    local LWCEItemTemplate kItem;
     local int Index;
 
-    if (LWCE_IsInfinite(iItemId))
+    kItem = `LWCE_ITEM(ItemName);
+
+    // Handle missing items in case of mods
+    if (kItem == none)
+    {
+        return 0;
+    }
+
+    if (kItem.IsInfinite())
     {
         return 1000;
     }
 
-    Index = m_arrCEItems.Find('iItemId', iItemId);
+    Index = m_arrCEItems.Find('ItemName', ItemName);
 
     if (Index == INDEX_NONE)
     {
@@ -640,7 +740,14 @@ function int GetNumItemsAvailable(int iItemId)
 
 function EItemType GetShivWeapon()
 {
-    return EItemType(`LW_ITEM_ID(Autocannon));
+    `LWCE_LOG_DEPRECATED_CLS(GetShivWeapon);
+
+    return eItem_None;
+}
+
+function name LWCE_GetShivWeapon()
+{
+    return 'Item_Autocannon';
 }
 
 function ESoldierClass GetWeaponClassLimit(EItemType eItem)
@@ -656,7 +763,7 @@ function bool HasAlienCaptive()
 
     foreach m_arrCEItems(kItemQuantity)
     {
-        if (kItemQuantity.iQuantity > 0 && `LWCE_ITEM(kItemQuantity.iItemId).bIsCaptive)
+        if (kItemQuantity.iQuantity > 0 && `LWCE_ITEM(kItemQuantity.ItemName).IsCaptive())
         {
             return true;
         }
@@ -685,13 +792,10 @@ function bool HasSatellites()
 
 function bool IsInfinite(EItemType eItem)
 {
-    `LWCE_LOG_DEPRECATED_CLS(IsInfinite);
-    return false;
-}
+    `LWCE_LOG_CLS("ERROR: LWCE-incompatible function IsInfinite was called. This needs to be replaced with LWCEItemTemplate.IsInfinite. Stack trace follows.");
+    ScriptTrace();
 
-function bool LWCE_IsInfinite(int iItemId)
-{
-    return `LWCE_ITEM(iItemId).bIsInfinite;
+    return false;
 }
 
 function bool IsClassEquippable(ESoldierClass eClass, EItemType eItem)
@@ -700,39 +804,51 @@ function bool IsClassEquippable(ESoldierClass eClass, EItemType eItem)
     return super.IsClassEquippable(eClass, eItem);
 }
 
-function bool LWCE_IsClassEquippable(int iEquipmentGroup, int iItemId)
+function bool LWCE_IsClassEquippable(int iEquipmentGroup, name ItemName)
 {
-    if (`LWCE_ITEM(iItemId).iCategory == eItemCat_Armor)
+    local LWCEArmorTemplate kArmor;
+    local LWCEItemTemplate kItem;
+    local LWCEWeaponTemplate kWeapon;
+
+    kItem = `LWCE_ITEM(ItemName);
+
+    // TODO: rewrite this entirely and start from the class, not the item
+
+    if (kItem.IsArmor())
     {
+        kArmor = LWCEArmorTemplate(kItem);
+
         if (iEquipmentGroup == /* All MEC classes */ 20)
         {
-            return TACTICAL().ArmorHasProperty(iItemId, eAP_MEC);
+            return kArmor.HasArmorProperty(eAP_MEC);
         }
 
         if (iEquipmentGroup == /* All SHIVs */ 14)
         {
-            return TACTICAL().ArmorHasProperty(iItemId, eAP_Tank);
+            return kArmor.HasArmorProperty(eAP_Tank);
         }
 
-        return !TACTICAL().ArmorHasProperty(iItemId, eAP_MEC) && !TACTICAL().ArmorHasProperty(iItemId, eAP_Tank);
+        return !kArmor.HasArmorProperty(eAP_MEC) && !kArmor.HasArmorProperty(eAP_Tank);
     }
 
-    if (TACTICAL().WeaponHasProperty(iItemId, eWP_AnyClass))
+    kWeapon = LWCEWeaponTemplate(kItem);
+
+    if (kWeapon.HasWeaponProperty(eWP_AnyClass))
     {
         return true;
     }
 
     if (iEquipmentGroup == /* Assault */ 6 || iEquipmentGroup == /* Engineer */ 10 || iEquipmentGroup == /* Scout */ 11)
     {
-        if (TACTICAL().WeaponHasProperty(iItemId, eWP_Rifle))
+        if (kWeapon.HasWeaponProperty(eWP_Rifle))
         {
             return true;
         }
     }
 
-    if (TACTICAL().WeaponHasProperty(iItemId, eWP_Pistol))
+    if (kWeapon.HasWeaponProperty(eWP_Pistol))
     {
-        if (iItemId == 254) // Sawed-off shotgun
+        if (ItemName == 'Item_SawedOffShotgun') // Sawed-off shotgun
         {
             return iEquipmentGroup == /* Medic, Infantry */ 5 || iEquipmentGroup == /* Assault */ 6 || iEquipmentGroup == /* Engineer */ 10 || iEquipmentGroup == /* Scout */ 11;
         }
@@ -745,17 +861,14 @@ function bool LWCE_IsClassEquippable(int iEquipmentGroup, int iItemId)
         return false;
     }
 
-    return TACTICAL().WeaponHasProperty(iItemId, iEquipmentGroup);
+    return kWeapon.HasWeaponProperty(EWeaponProperty(iEquipmentGroup));
 }
 
 /// <summary>Turns all captives in storage into corpses.</summary>
 function KillTheCaptives()
 {
-    local LWCE_XGItemTree kItemTree;
-    local LWCE_TItem kItem;
+    local LWCEItemTemplate kItem;
     local LWCE_TItemQuantity kItemQuantity;
-
-    kItemTree = `LWCE_ITEMTREE;
 
     foreach m_arrCEItems(kItemQuantity)
     {
@@ -764,19 +877,19 @@ function KillTheCaptives()
             continue;
         }
 
-        kItem = kItemTree.LWCE_GetItem(kItemQuantity.iItemId);
+        kItem = `LWCE_ITEM(kItemQuantity.ItemName);
 
-        if (kItem.bIsCaptive)
+        if (kItem.IsCaptive())
         {
-            RemoveAllItem(kItem.iItemId);
+            LWCE_RemoveAllItem(kItemQuantity.ItemName);
 
-            if (kItem.iCaptiveToCorpseId != 0)
+            if (kItem.nmCaptiveToCorpseId != '')
             {
-                AddItem(kItem.iCaptiveToCorpseId, kItemQuantity.iQuantity);
+                LWCE_AddItem(kItem.nmCaptiveToCorpseId, kItemQuantity.iQuantity);
             }
             else
             {
-                `LWCE_LOG_CLS("WARNING: Captive item ID " $ kItem.iItemId $ " doesn't have a corresponding corpse set. Captives of this type will be killed without compensation.");
+                `LWCE_LOG_CLS("WARNING: Captive item ID " $ kItem.GetItemName() $ " doesn't have a corresponding corpse set. Captives of this type will be killed without compensation.");
             }
         }
     }
@@ -784,33 +897,48 @@ function KillTheCaptives()
 
 function bool ReleaseItem(int iItemId, XGStrategySoldier kSoldier)
 {
-    local int Index;
+    `LWCE_LOG_DEPRECATED_CLS(ReleaseItem);
+
+    return false;
+}
+
+function bool LWCE_ReleaseItem(name ItemName, XGStrategySoldier kSoldier)
+{
+    local int Index, iPerkId;
     local LWCE_TItemQuantity kItemQuantity;
-    local LWCE_TItem kItem;
+    local LWCEEquipmentTemplate kItem;
 
     // Sometimes we get called to release an empty item slot, so just no-op
-    if (iItemId == 0)
+    if (ItemName == '')
     {
         return true;
     }
 
-    kItem = `LWCE_ITEM(iItemId);
+    kItem = LWCEEquipmentTemplate(`LWCE_ITEM(ItemName));
 
     // Remove any perks granted by this item
-    for (Index = 0; Index < kItem.arrPerksGranted.Length; Index++)
+    for (Index = 0; Index < kItem.arrPerks.Length; Index++)
     {
-        if (kSoldier.m_kChar.aUpgrades[kItem.arrPerksGranted[Index]] > 1)
+        iPerkId = class'LWCE_XComPerkManager'.static.BaseIDFromPerkName(kItem.arrPerks[Index]);
+
+        // TODO: just move everything to names once perks are templated
+        if (iPerkId <= 0 || iPerkId >= ePerk_MAX)
         {
-            kSoldier.m_kChar.aUpgrades[kItem.arrPerksGranted[Index]] -= 2;
+            continue;
+        }
+
+        if (kSoldier.m_kChar.aUpgrades[iPerkId] > 1)
+        {
+            kSoldier.m_kChar.aUpgrades[iPerkId] -= 2;
         }
     }
 
-    if (LWCE_IsInfinite(iItemId))
+    if (kItem.IsInfinite())
     {
         return true;
     }
 
-    Index = m_arrCEItems.Find('iItemId', iItemId);
+    Index = m_arrCEItems.Find('ItemName', ItemName);
 
     if (Index != INDEX_NONE)
     {
@@ -819,7 +947,7 @@ function bool ReleaseItem(int iItemId, XGStrategySoldier kSoldier)
     else
     {
         // This shouldn't really come up, but just in case it does through some weird mod interactions or something
-        kItemQuantity.iItemId = iItemId;
+        kItemQuantity.ItemName = ItemName;
         kItemQuantity.iQuantity = 1;
 
         m_arrCEItems.AddItem(kItemQuantity);
@@ -828,54 +956,114 @@ function bool ReleaseItem(int iItemId, XGStrategySoldier kSoldier)
     return true;
 }
 
-function ReleaseSmallItems(XGStrategySoldier kSoldier)
+function ReleaseLoadout(XGStrategySoldier kSoldier)
 {
     local int I;
-    local int iItemId;
+    local LWCE_XGStrategySoldier kCESoldier;
 
-    for (I = 0; I < kSoldier.m_kChar.kInventory.iNumSmallItems; I++)
+    kCESoldier = LWCE_XGStrategySoldier(kSoldier);
+
+    LWCE_ReleaseItem(kCESoldier.m_kCEChar.kInventory.nmArmor, kCESoldier);
+    kCESoldier.m_kCEChar.kInventory.nmArmor = '';
+
+    LWCE_ReleaseItem(kCESoldier.m_kCEChar.kInventory.nmPistol, kCESoldier);
+    kCESoldier.m_kCEChar.kInventory.nmPistol = '';
+
+    for (I = 0; I < kCESoldier.m_kCEChar.kInventory.arrLargeItems.Length; I++)
     {
-        iItemId = kSoldier.m_kChar.kInventory.arrSmallItems[I];
+        LWCE_ReleaseItem(kCESoldier.m_kCEChar.kInventory.arrLargeItems[I], kCESoldier);
+        class'LWCEInventoryUtils'.static.SetLargeItem(kCESoldier.m_kCEChar.kInventory, I, '');
+    }
 
-        if (!LWCE_IsInfinite(iItemId))
-        {
-            ReleaseItem(iItemId, kSoldier);
-            TACTICAL().TInventorySmallItemsSetItem(kSoldier.m_kChar.kInventory, I, 0);
-        }
+    for (I = 0; I < kCESoldier.m_kCEChar.kInventory.arrSmallItems.Length; I++)
+    {
+        LWCE_ReleaseItem(kCESoldier.m_kCEChar.kInventory.arrSmallItems[I], kCESoldier);
+        class'LWCEInventoryUtils'.static.SetSmallItem(kCESoldier.m_kCEChar.kInventory, I, '');
     }
 }
 
-function RemoveItem(int iItemType, optional int iQuantity = 1)
+function ReleaseSmallItems(XGStrategySoldier kSoldier)
 {
-    local int Index;
+    local LWCE_XGStrategySoldier kCESoldier;
+    local int I;
+    local name ItemName;
 
-    if (LWCE_IsInfinite(iItemType))
+    kCESoldier = LWCE_XGStrategySoldier(kSoldier);
+
+    for (I = 0; I < kCESoldier.m_kCEChar.kInventory.arrSmallItems.Length; I++)
     {
-        return;
-    }
+        ItemName = kCESoldier.m_kCEChar.kInventory.arrSmallItems[I];
 
-    Index = m_arrCEItems.Find('iItemId', iItemType);
-
-    if (Index != INDEX_NONE && m_arrCEItems[Index].iQuantity >= iQuantity)
-    {
-        m_arrCEItems[Index].iQuantity -= iQuantity;
+        if (!`LWCE_ITEM(ItemName).IsInfinite())
+        {
+            LWCE_ReleaseItem(ItemName, kCESoldier);
+            class'LWCEInventoryUtils'.static.SetSmallItem(kCESoldier.m_kCEChar.kInventory, I, '');
+        }
     }
 }
 
 function RemoveAllItem(int iItemType)
 {
+    `LWCE_LOG_DEPRECATED_CLS(RemoveAllItem);
+}
+
+function LWCE_RemoveAllItem(name ItemName)
+{
     local int Index;
 
-    if (LWCE_IsInfinite(iItemType))
+    if (`LWCE_ITEM(ItemName).IsInfinite())
     {
         return;
     }
 
-    Index = m_arrCEItems.Find('iItemId', iItemType);
+    Index = m_arrCEItems.Find('ItemName', ItemName);
 
     if (Index != INDEX_NONE)
     {
         m_arrCEItems[Index].iQuantity = 0;
+    }
+}
+
+function RemoveItem(int iItemId, optional int iQuantity = 1)
+{
+    // The XGStrategyActor.AddResource function uses RemoveItem for these 3 items, and it would be a great deal of
+    // work for no benefit to change that to LWCE_RemoveItem, so we allow just these 3 to go through. All other items
+    // must use LWCE_RemoveItem.
+    if (iItemId == eItem_AlienAlloys)
+    {
+        LWCE_RemoveItem('Item_AlienAlloy', iQuantity);
+        return;
+    }
+
+    if (iItemId == eItem_Elerium115)
+    {
+        LWCE_RemoveItem('Item_Elerium', iQuantity);
+        return;
+    }
+
+    if (iItemId == eItem_Meld)
+    {
+        LWCE_RemoveItem('Item_Meld', iQuantity);
+        return;
+    }
+
+    `LWCE_LOG_DEPRECATED_CLS(RemoveItem);
+}
+
+function LWCE_RemoveItem(name ItemName, optional int iQuantity = 1)
+{
+    local int Index;
+
+    if (`LWCE_ITEM(ItemName).IsInfinite())
+    {
+        return;
+    }
+
+    Index = m_arrCEItems.Find('ItemName', ItemName);
+
+    if (Index != INDEX_NONE && m_arrCEItems[Index].iQuantity >= iQuantity)
+    {
+        m_arrCEItems[Index].iQuantity -= iQuantity;
     }
 }
 
@@ -884,17 +1072,17 @@ function RepairItem(EItemType eItem, optional int iQuantity = 1)
     `LWCE_LOG_DEPRECATED_CLS(RepairItem);
 }
 
-function LWCE_RepairItem(int iItemId, optional int iQuantity = 1)
+function LWCE_RepairItem(name ItemName, optional int iQuantity = 1)
 {
     local int iDamagedIndex, iItemIndex;
 
-    if (LWCE_IsInfinite(iItemId))
+    if (`LWCE_ITEM(ItemName).IsInfinite())
     {
         return;
     }
 
-    iDamagedIndex = m_arrCEDamagedItems.Find('iItemId', iItemId);
-    iItemIndex = m_arrCEItems.Find('iItemId', iItemId);
+    iDamagedIndex = m_arrCEDamagedItems.Find('ItemName', ItemName);
+    iItemIndex = m_arrCEItems.Find('ItemName', ItemName);
 
     if (iQuantity > m_arrCEDamagedItems[iDamagedIndex].iQuantity)
     {

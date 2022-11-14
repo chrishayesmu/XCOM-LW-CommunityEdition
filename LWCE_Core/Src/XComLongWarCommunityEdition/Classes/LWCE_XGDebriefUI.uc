@@ -250,21 +250,21 @@ function bool CheckForMatinee()
         m_bPlayedMatinee = true;
         return true;
     }
-    else if (kHQ.m_kCELastCargoArtifacts.HasNonzeroEntry(`LW_ITEM_ID(OutsiderShard)))
+    else if (kHQ.m_kCELastCargoArtifacts.HasNonzeroEntry('Item_OutsiderShard'))
     {
         PRES().UINarrative(`XComNarrativeMoment("AlienCode"),, PostShardMatinee);
         STAT_SetStat(eRecap_ObjCollectShards, Game().GetDays());
         m_bPlayedMatinee = true;
         return true;
     }
-    else if (kHQ.m_kCELastCargoArtifacts.HasNonzeroEntry(`LW_ITEM_ID(HyperwaveBeacon)) && STAT_GetStat(eRecap_ObjAssaultBase) == 0)
+    else if (kHQ.m_kCELastCargoArtifacts.HasNonzeroEntry('Item_HyperwaveBeacon') && STAT_GetStat(eRecap_ObjAssaultBase) == 0)
     {
         PRES().UINarrative(`XComNarrativeMoment("HyperWaveRetrieved"),, PostHyperwaveMatinee);
         STAT_SetStat(eRecap_ObjAssaultBase, STAT_GetStat(eRecap_Days));
         m_bPlayedMatinee = true;
         return true;
     }
-    else if (kHQ.m_kCELastCargoArtifacts.HasNonzeroEntry(`LW_ITEM_ID(EtherealDevice)))
+    else if (kHQ.m_kCELastCargoArtifacts.HasNonzeroEntry('Item_EtherealDevice'))
     {
         PRES().UINarrative(`XComNarrativeMoment("PsiLinkRecovered"),, PostPsiLinkMatinee);
         STAT_SetStat(eRecap_ObjRecoverPsiLink, Game().GetDays());
@@ -287,57 +287,7 @@ function CheckForMedals()
 
 function int GetUnlockItem(out TTech kTech)
 {
-    `LWCE_LOG_DEPRECATED_CLS(GetUnlockItem);
-    return 0;
-}
-
-function int LWCE_GetUnlockItem(out LWCETechTemplate kTech)
-{
-    local int I, iItemId;
-    local LWCE_XGHeadquarters kHQ;
-    local LWCE_TCost kCost;
-
-    kHQ = `LWCE_HQ;
-
-    for (I = 0; I < kTech.kPrereqs.arrItemReqs.Length; I++)
-    {
-        iItemId = kTech.kPrereqs.arrItemReqs[I];
-
-        if (kHQ.m_kCELastCargoArtifacts.HasNonzeroEntry(iItemId))
-        {
-            return kTech.kPrereqs.arrItemReqs[I];
-        }
-    }
-
-    kCost = kTech.GetCost();
-
-    if (kCost.arrItems.Length > 0)
-    {
-        for (I = 0; I < kCost.arrItems.Length; I++)
-        {
-            iItemId = kCost.arrItems[I].iItemId;
-
-            if (kHQ.m_kCELastCargoArtifacts.HasNonzeroEntry(iItemId))
-            {
-                return iItemId;
-            }
-        }
-    }
-    else if (kTech.GetTechName() == 'Tech_AdvancedBodyArmor')
-    {
-        // No idea why this uses the tech ID
-        return `LW_TECH_ID(AdvancedBodyArmor);
-    }
-    else if (kTech.GetTechName() == 'Tech_Xenobiology')
-    {
-        return eItem_SectoidCorpse;
-    }
-    else if (kTech.bIsInterrogation)
-    {
-        // TODO: not sure how correct this is, since nothing ever seems to clear out this array
-        return kHQ.m_arrCELastCaptives[0];
-    }
-
+    `LWCE_LOG_DEPRECATED_NOREPLACE_CLS(GetUnlockItem);
     return 0;
 }
 
@@ -351,6 +301,27 @@ function bool IsAdvanceHighlighted()
             return m_kScienceDebrief.iHighlighted == 1;
         default:
             return true;
+    }
+}
+
+function bool IsSpecialLootItem(int iItem)
+{
+    `LWCE_LOG_DEPRECATED_CLS(IsSpecialLootItem);
+
+    return false;
+}
+
+function bool LWCE_IsSpecialLootItem(name ItemName)
+{
+    switch (ItemName)
+    {
+        case 'Item_HyperwaveBeacon':
+        case 'Item_CognitiveEnhancer':
+        case 'Item_Neuroregulator':
+        case 'Item_FlakAmmo':
+            return true;
+        default:
+            return false;
     }
 }
 
@@ -533,7 +504,7 @@ function UpdateCovertOpDebrief()
 
         if (EXALT().GetNumCountriesNotRuledOutByClues() == 1)
         {
-            XComOnlineEventMgr(GameEngine(class'Engine'.static.GetEngine()).OnlineEventManager).UnlockAchievement(AT_WhereInTheWorld);
+            `ONLINEEVENTMGR.UnlockAchievement(AT_WhereInTheWorld);
         }
     }
     else
@@ -555,7 +526,7 @@ function UpdateCovertOpDebrief()
 function UpdateEngineeringDebrief()
 {
     local LWCE_XGStorage kStorage;
-    local LWCE_TItem kItem;
+    local LWCEItemTemplate kItem;
     local LWCE_TItemQuantity kItemQuantity;
     local TEngineeringDebriefItem kData;
 
@@ -575,7 +546,7 @@ function UpdateEngineeringDebrief()
             continue;
         }
 
-        kItem = `LWCE_ITEM(kItemQuantity.iItemId);
+        kItem = `LWCE_ITEM(kItemQuantity.ItemName);
 
         kData.txtItem.StrValue = kItemQuantity.iQuantity > 1 ? kItem.strNamePlural : kItem.strName;
         kData.txtBody.StrValue = string(kItemQuantity.iQuantity);
@@ -594,7 +565,7 @@ function UpdateEngineeringDebrief()
             continue;
         }
 
-        kItem = `LWCE_ITEM(kItemQuantity.iItemId);
+        kItem = `LWCE_ITEM(kItemQuantity.ItemName);
 
         kData.txtItem.StrValue = kItemQuantity.iQuantity > 1 ? kItem.strNamePlural : kItem.strName;
         kData.txtBody.StrValue = string(kItemQuantity.iQuantity);
@@ -609,11 +580,11 @@ function UpdateScienceDebrief()
     local TScienceDebrief kDebrief;
     local TScienceDebriefItem kDebriefItem;
     local TDebriefLootItem kLootItem;
-    local LWCE_TItem kItem;
+    local LWCEItemTemplate kItem;
     local LWCETechTemplate kTech;
     local TScienceProject kProjectUI;
     local LWCE_TResearchProject kCurrentProject;
-    local int iTech, iItem, eitm;
+    local int iTech, iCargoItem, iDebriefItem;
     local LWCE_XGFacility_Engineering kEngineering;
     local LWCE_XGFacility_Labs kLabs;
     local LWCE_XGHeadQuarters kHQ;
@@ -639,22 +610,15 @@ function UpdateScienceDebrief()
         if (kLabs.m_arrCEMissionResults[iTech].eAvailabilityState == eTechState_Available)
         {
             kTech = `LWCE_TECH(kLabs.m_arrCEMissionResults[iTech].TechName);
-            iItem = LWCE_GetUnlockItem(kTech);
 
-            // Not sure how this bit works or how necessary it is
-            if (iItem != 0)
-            {
-                kDebriefItem.imgTech.strPath = kTech.ImagePath;
-            }
-            else
-            {
-                kDebriefItem.imgTech.strPath = "";
-            }
+            kDebriefItem.imgTech.strPath = kTech.ImagePath;
 
             kDebriefItem.txtTitle.StrValue = m_strNewResourceProject;
             kDebriefItem.txtTitle.iState = eUIState_Good;
+
             kDebriefItem.txtTech.StrValue = kTech.strName;
             kDebriefItem.txtTech.iState = eUIState_Highlight;
+
             kDebrief.arrItems.AddItem(kDebriefItem);
 
             if (kLabs.LWCE_IsInterrogationTech(kLabs.m_arrCEMissionResults[iTech].TechName))
@@ -693,78 +657,76 @@ function UpdateScienceDebrief()
     kDebrief.txtLootTitle.iState = eUIState_Warning;
 
     // First iterate and find "special" (aka story-critical) items
-    for (iItem = 0; iItem < kHQ.m_kCELastCargoArtifacts.m_arrEntries.Length; iItem++)
+    for (iCargoItem = 0; iCargoItem < kHQ.m_kCELastCargoArtifacts.m_arrEntries.Length; iCargoItem++)
     {
-        if (kHQ.m_kCELastCargoArtifacts.m_arrEntries[iItem].iQuantity > 0 && IsSpecialLootItem(iItem))
+        if (kHQ.m_kCELastCargoArtifacts.m_arrEntries[iCargoItem].iQuantity > 0 && LWCE_IsSpecialLootItem(kHQ.m_kCELastCargoArtifacts.m_arrEntries[iCargoItem].ItemName))
         {
-            kItem = `LWCE_ITEM(kHQ.m_kCELastCargoArtifacts.m_arrEntries[iItem].iItemId);
+            kItem = `LWCE_ITEM(kHQ.m_kCELastCargoArtifacts.m_arrEntries[iCargoItem].ItemName);
 
             kLootItem.imgItem.strPath = kItem.ImagePath;
 
             kLootItem.txtItem.StrValue = kItem.strName;
             kLootItem.txtItem.iState = eUIState_Highlight;
 
-            kLootItem.txtQuantity.StrValue = string(kHQ.m_kCELastCargoArtifacts.m_arrEntries[iItem].iQuantity);
+            kLootItem.txtQuantity.StrValue = string(kHQ.m_kCELastCargoArtifacts.m_arrEntries[iCargoItem].iQuantity);
             kLootItem.txtQuantity.iState = eUIState_Highlight;
 
             kDebrief.arrLoot.AddItem(kLootItem);
 
-            for (eitm = 0; eitm < kDebrief.arrItems.Length; eitm++)
+            for (iDebriefItem = 0; iDebriefItem < kDebrief.arrItems.Length; iDebriefItem++)
             {
-                if (kDebrief.arrItems[eitm].kDebriefLootItem.txtItem.StrValue == kLootItem.txtItem.StrValue)
+                if (kDebrief.arrItems[iDebriefItem].kDebriefLootItem.txtItem.StrValue == kLootItem.txtItem.StrValue)
                 {
-                    kDebrief.arrItems[eitm].kDebriefLootItem = kLootItem;
+                    kDebrief.arrItems[iDebriefItem].kDebriefLootItem = kLootItem;
                 }
             }
         }
     }
 
     // Then go through again for all the ordinary items
-    for (iItem = 0; iItem < kHQ.m_kCELastCargoArtifacts.m_arrEntries.Length; iItem++)
+    for (iCargoItem = 0; iCargoItem < kHQ.m_kCELastCargoArtifacts.m_arrEntries.Length; iCargoItem++)
     {
-        if (kHQ.m_kCELastCargoArtifacts.m_arrEntries[iItem].iQuantity > 0 && !IsSpecialLootItem(iItem))
+        if (kHQ.m_kCELastCargoArtifacts.m_arrEntries[iCargoItem].iQuantity > 0 && !LWCE_IsSpecialLootItem(kHQ.m_kCELastCargoArtifacts.m_arrEntries[iCargoItem].ItemName))
         {
-            kItem = `LWCE_ITEM(kHQ.m_kCELastCargoArtifacts.m_arrEntries[iItem].iItemId);
+            kItem = `LWCE_ITEM(kHQ.m_kCELastCargoArtifacts.m_arrEntries[iCargoItem].ItemName);
 
             kLootItem.imgItem.strPath = kItem.ImagePath;
 
             kLootItem.txtItem.StrValue = kItem.strName;
             kLootItem.txtItem.iState = eUIState_Highlight;
 
-            if (kHQ.m_kCELastCargoArtifacts.m_arrEntries[iItem].iItemId == `LW_ITEM_ID(Elerium))
+            if (kHQ.m_kCELastCargoArtifacts.m_arrEntries[iCargoItem].ItemName == 'Item_Elerium')
             {
                 if (kEngineering.LWCE_IsFoundryTechResearched('Foundry_AlienNucleonics'))
                 {
-                    kHQ.m_kCELastCargoArtifacts.m_arrEntries[iItem].iQuantity *= 1.20;
+                    kHQ.m_kCELastCargoArtifacts.m_arrEntries[iCargoItem].iQuantity *= 1.20;
                 }
             }
-
-            if (kHQ.m_kCELastCargoArtifacts.m_arrEntries[iItem].iItemId == `LW_ITEM_ID(AlienAlloy))
+            else if (kHQ.m_kCELastCargoArtifacts.m_arrEntries[iCargoItem].ItemName == 'Item_AlienAlloy')
             {
                 if (kEngineering.LWCE_IsFoundryTechResearched('Foundry_AlienMetallurgy'))
                 {
-                    kHQ.m_kCELastCargoArtifacts.m_arrEntries[iItem].iQuantity *= 1.20;
+                    kHQ.m_kCELastCargoArtifacts.m_arrEntries[iCargoItem].iQuantity *= 1.20;
                 }
             }
-
-            if (kHQ.m_kCELastCargoArtifacts.m_arrEntries[iItem].iItemId == `LW_ITEM_ID(WeaponFragment))
+            else if (kHQ.m_kCELastCargoArtifacts.m_arrEntries[iCargoItem].ItemName == 'Item_WeaponFragment')
             {
                 if (kEngineering.LWCE_IsFoundryTechResearched('Foundry_ImprovedSalvage'))
                 {
-                    kHQ.m_kCELastCargoArtifacts.m_arrEntries[iItem].iQuantity *= 1.20;
+                    kHQ.m_kCELastCargoArtifacts.m_arrEntries[iCargoItem].iQuantity *= 1.20;
                 }
             }
 
-            kLootItem.txtQuantity.StrValue = string(kHQ.m_kCELastCargoArtifacts.m_arrEntries[iItem].iQuantity);
+            kLootItem.txtQuantity.StrValue = string(kHQ.m_kCELastCargoArtifacts.m_arrEntries[iCargoItem].iQuantity);
             kLootItem.txtQuantity.iState = eUIState_Highlight;
 
             kDebrief.arrLoot.AddItem(kLootItem);
 
-            for (eitm = 0; eitm < kDebrief.arrItems.Length; eitm++)
+            for (iDebriefItem = 0; iDebriefItem < kDebrief.arrItems.Length; iDebriefItem++)
             {
-                if (kDebrief.arrItems[eitm].kDebriefLootItem.txtItem.StrValue == kLootItem.txtItem.StrValue)
+                if (kDebrief.arrItems[iDebriefItem].kDebriefLootItem.txtItem.StrValue == kLootItem.txtItem.StrValue)
                 {
-                    kDebrief.arrItems[eitm].kDebriefLootItem = kLootItem;
+                    kDebrief.arrItems[iDebriefItem].kDebriefLootItem = kLootItem;
                 }
             }
         }
@@ -917,7 +879,7 @@ function UpdateView()
 
             BARRACKS().m_eLastResultSpeaker = arrSpeakers[Rand(arrSpeakers.Length)];
             bMeldWasPossible = kHQ.m_kLastResult.eType == eMission_Abduction || kHQ.m_kLastResult.eType == eMission_Crash || kHQ.m_kLastResult.eType == eMission_LandedUFO;
-            bMeldWasRetrieved = kHQ.m_kCELastCargoArtifacts.Get(`LW_ITEM_ID(Meld)).iQuantity > 0;
+            bMeldWasRetrieved = kHQ.m_kCELastCargoArtifacts.Get('Item_Meld').iQuantity > 0;
 
             switch (BARRACKS().m_eLastResultSpeaker)
             {

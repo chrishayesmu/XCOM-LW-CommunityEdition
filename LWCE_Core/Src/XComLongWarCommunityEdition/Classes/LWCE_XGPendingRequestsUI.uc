@@ -158,7 +158,7 @@ function string RewardToString(EFCRewardType eReward, int iAmount)
 
 function array<string> LWCE_RewardToString(LWCE_TRequestReward kReward, ECountry eRequestingCountry)
 {
-    local LWCE_TItem kItem;
+    local LWCEItemTemplate kItem;
     local XGParamTag kTag;
     local array<string> arrStrings;
     local string strReward;
@@ -195,7 +195,7 @@ function array<string> LWCE_RewardToString(LWCE_TRequestReward kReward, ECountry
 
     for (Index = 0; Index < kReward.arrItemRewards.Length; Index++)
     {
-        kItem = `LWCE_ITEM(kReward.arrItemRewards[Index].iItemId);
+        kItem = `LWCE_ITEM(kReward.arrItemRewards[Index].ItemName);
         kTag.IntValue0 = kReward.arrItemRewards[Index].iQuantity;
         kTag.StrValue0 = kReward.arrItemRewards[Index].iQuantity != 1 ? kItem.strNamePlural : kItem.strName;
 
@@ -241,7 +241,7 @@ function LWCE_UpdateRequest(LWCE_TFCRequest kRequest)
     local array<string> arrRewardStrings;
     local bool bAllRequestedItemsAvailable;
     local int iNumAvailable, Index;
-    local LWCE_TItem kDisplayItem, kItem;
+    local LWCEItemTemplate kDisplayItem, kItem;
     local LWCE_TPendingRequest kUI;
     local TText kText;
     local XGParamTag kTag;
@@ -251,15 +251,15 @@ function LWCE_UpdateRequest(LWCE_TFCRequest kRequest)
 
     if (kRequest.eType == eFCRType_SatLaunch)
     {
-        kDisplayItem = `LWCE_ITEM(`LW_ITEM_ID(Satellite));
+        kDisplayItem = `LWCE_ITEM('Item_Satellite');
     }
     else if (kRequest.eType == eFCRType_JetTransfer)
     {
-        kDisplayItem = `LWCE_ITEM(`LW_ITEM_ID(Interceptor));
+        kDisplayItem = `LWCE_ITEM('Item_Interceptor');
     }
     else
     {
-        kDisplayItem = `LWCE_ITEM(kRequest.arrRequestedItems[0].iItemId);
+        kDisplayItem = `LWCE_ITEM(kRequest.arrRequestedItems[0].ItemName);
     }
 
     kUI.eRequestingCountry = kRequest.eRequestingCountry;
@@ -285,13 +285,13 @@ function LWCE_UpdateRequest(LWCE_TFCRequest kRequest)
 
     for (Index = 0; Index < kRequest.arrRequestedItems.Length; Index++)
     {
-        kItem = `LWCE_ITEM(kRequest.arrRequestedItems[Index].iItemId);
+        kItem = `LWCE_ITEM(kRequest.arrRequestedItems[Index].ItemName);
 
         kTag.IntValue0 = kRequest.arrRequestedItems[Index].iQuantity;
         kTag.StrValue0 = kRequest.arrRequestedItems[Index].iQuantity != 1 ? kItem.strNamePlural : kItem.strName;
         kUI.ltxtRequired.StrValue $= class'XComLocalizer'.static.ExpandString(m_strValueRequested);
 
-        iNumAvailable = STORAGE().GetNumItemsAvailable(kRequest.arrRequestedItems[Index].iItemId);
+        iNumAvailable = LWCE_XGStorage(STORAGE()).LWCE_GetNumItemsAvailable(kRequest.arrRequestedItems[Index].ItemName);
         kTag.IntValue0 = iNumAvailable;
         kTag.StrValue0 = iNumAvailable != 1 ? kItem.strNamePlural : kItem.strName;
         kUI.ltxtInStorage.StrValue $= class'XComLocalizer'.static.ExpandString(m_strValueRequested);

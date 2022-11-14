@@ -1,4 +1,5 @@
-class LWCE_XGItemCards extends Object;
+class LWCE_XGItemCards extends Object
+    dependson(LWCETypes);
 
 private static function TConfigWeapon GetConfigWeapon(int iWeaponItemId)
 {
@@ -35,37 +36,34 @@ private static function string Expand(string Str)
     return class'XComLocalizer'.static.ExpandString(Str);
 }
 
-static function LWCE_TItemCard BuildArmorCard(int iArmorItemId)
+static function LWCE_TItemCard BuildArmorCard(name ItemName)
 {
-    local LWCE_TItem kItem;
+    local LWCEArmorTemplate kArmor;
+    local LWCE_TCharacterStats kStatChanges;
     local LWCE_TItemCard kItemCard;
-    local TConfigArmor kArmor;
     local int iIndex;
 
-    if (iArmorItemId == eItem_None)
+    if (ItemName == '')
     {
         kItemCard.iCardType = eItemCard_NONE;
         return kItemCard;
     }
 
-    kItem = `LWCE_ITEM(iArmorItemId);
+    kArmor = LWCEArmorTemplate(`LWCE_ITEM(ItemName));
+    kArmor.GetStatChanges(kStatChanges);
 
     kItemCard.iCardType = eItemCard_Armor;
-    kItemCard.iItemId = iArmorItemId;
-    kArmor = GetConfigArmor(iArmorItemId);
-    kItemCard.strName = Expand(kItem.strName);
-    kItemCard.strFlavorText = Expand(kItem.strTacticalText);
-    kItemCard.iArmorHPBonus = kArmor.iHPBonus;
+    kItemCard.ItemName = ItemName;
+    kItemCard.strName = Expand(kArmor.strName);
+    kItemCard.strFlavorText = Expand(kArmor.strTacticalText);
+    kItemCard.iArmorHPBonus = kStatChanges.iHP;
 
-    for (iIndex = 0; iIndex < 4; iIndex++)
+    for (iIndex = 0; iIndex < kArmor.arrAbilities.Length; iIndex++)
     {
-        if (kArmor.ABILITIES[iIndex] != 0)
-        {
-            kItemCard.arrAbilities.AddItem(kArmor.ABILITIES[iIndex]);
-        }
+        kItemCard.arrAbilities.AddItem(class'LWCE_XGAbilityTree'.static.AbilityBaseIdFromName(kArmor.arrAbilities[iIndex]));
     }
 
-    if (`GAMECORE.ArmorHasProperty(iArmorItemId, eAP_Grapple))
+    if (kArmor.HasArmorProperty(eAP_Grapple))
     {
         kItemCard.arrAbilities.AddItem(eAbility_Grapple);
     }
@@ -73,58 +71,42 @@ static function LWCE_TItemCard BuildArmorCard(int iArmorItemId)
     return kItemCard;
 }
 
-static function LWCE_TItemCard BuildCharacterCard(int iCharacterId)
+static function TItemCard BuildCharacterCard(ECharacter eCharacterType)
 {
-    local LWCE_TItemCard kItemCard;
-    local TCharacter kCharacter;
-    local array<int> arrPerks;
-    local int iPerkId;
+    local TItemCard kItemCard;
 
-    if (iCharacterId == eChar_None)
-    {
-        kItemCard.iCardType = eItemCard_NONE;
-        return kItemCard;
-    }
-
-    kCharacter = `GAMECORE.GetTCharacter(iCharacterId);
-    kItemCard.iCardType = eItemCard_MPCharacter;
-    kItemCard.iCharacterId = iCharacterId;
-    kItemCard.strName = class'XComLocalizer'.static.ExpandString(kCharacter.strName);
-    kItemCard.strFlavorText = class'XComLocalizer'.static.ExpandString(class'XLocalizedData'.default.m_aCharacterTacticalText[iCharacterId]);
-    kItemCard.iHealth = kCharacter.aStats[eStat_HP];
-    kItemCard.iWill = kCharacter.aStats[eStat_Will];
-    kItemCard.iAim = kCharacter.aStats[eStat_Offense];
-    kItemCard.iDefense = kCharacter.aStats[eStat_Defense];
-    arrPerks = GetCharacterPerks(iCharacterId);
-
-    foreach arrPerks(iPerkId)
-    {
-        if (iPerkId != 0)
-        {
-            kItemCard.arrPerkTypes.AddItem(iPerkId);
-        }
-    }
+    // This is only used for multiplayer
+    `LWCE_LOG_DEPRECATED_NOREPLACE_CLS(GetItemCardFromOption);
 
     return kItemCard;
 }
 
-static function LWCE_TItemCard BuildEquippableItemCard(int iItemId)
+static function LWCE_TItemCard BuildEquippableItemCard(name ItemName, optional LWCE_XGStrategySoldier kSoldier)
 {
-    local LWCE_TItem kItem;
+    local LWCEEquipmentTemplate kItem;
     local LWCE_TItemCard kItemCard;
 
-    if (iItemId == eItem_None)
+    if (ItemName == '')
     {
         kItemCard.iCardType = eItemCard_NONE;
         return kItemCard;
     }
 
-    kItem = `LWCE_ITEM(iItemId);
+    kItem = LWCEEquipmentTemplate(`LWCE_ITEM(ItemName));
 
     kItemCard.iCardType = eItemCard_EquippableItem;
-    kItemCard.iItemId = iItemId;
+    kItemCard.ItemName = ItemName;
     kItemCard.strName = Expand(kItem.strName);
     kItemCard.strFlavorText = Expand(kItem.strTacticalText);
+
+    if (kSoldier != none)
+    {
+        kItemCard.iCharges = kItem.GetClipSize(kSoldier.m_kCEChar);
+    }
+    else
+    {
+        kItemCard.iCharges = kItem.GetClipSize();
+    }
 
     return kItemCard;
 }
@@ -167,48 +149,58 @@ static function LWCE_TItemCard BuildGeneModTemplateCard(EMPGeneModTemplateType e
     return kItemCard;
 }
 
-static function LWCE_TItemCard BuildItemCard(int iItemId)
+static function LWCE_TItemCard BuildItemCard(name ItemName, optional LWCE_XGStrategySoldier kSoldier)
 {
-    if (`GAMECORE.ItemIsWeapon(iItemId))
+    local LWCEItemTemplate kItem;
+
+    kItem = `LWCE_ITEM(ItemName);
+
+    // TODO: potentially pass kSoldier to other functions also
+    if (kItem.IsWeapon())
     {
-        return BuildWeaponCard(iItemId);
+        if (LWCEWeaponTemplate(kItem).IsAccessory())
+        {
+            return BuildEquippableItemCard(ItemName, kSoldier);
+        }
+
+        return BuildWeaponCard(ItemName);
     }
-    else if (`GAMECORE.ItemIsArmor(iItemId))
+    else if (kItem.IsArmor())
     {
-        return BuildArmorCard(iItemId);
+        return BuildArmorCard(ItemName);
     }
-    else if (`GAMECORE.ItemIsMecArmor(iItemId))
+    else if (kItem.IsMecArmor())
     {
-        return BuildMecSuitCard(iItemId);
+        return BuildMecSuitCard(ItemName);
     }
     else
     {
-        return BuildEquippableItemCard(iItemId);
+        return BuildEquippableItemCard(ItemName, kSoldier);
     }
 }
 
-static function LWCE_TItemCard BuildMecSuitCard(int iMecArmorId, optional TMPMECSuitTemplate kMPTemplate)
+static function LWCE_TItemCard BuildMecSuitCard(name ItemName, optional TMPMECSuitTemplate kMPTemplate)
 {
-    local LWCE_TItem kItem;
+    local LWCEArmorTemplate kArmor;
+    local LWCE_TCharacterStats kStatChanges;
     local LWCE_TItemCard kItemCard;
-    local TConfigArmor kArmor;
 
-    if (iMecArmorId == eItem_None)
+    if (ItemName == '')
     {
         kItemCard.iCardType = eItemCard_NONE;
         return kItemCard;
     }
 
-    kItem = `LWCE_ITEM(iMecArmorId);
+    kArmor = LWCEArmorTemplate(`LWCE_ITEM(ItemName));
+    kArmor.GetStatChanges(kStatChanges);
 
     kItemCard.iCardType = eItemCard_MECArmor;
-    kItemCard.iItemId = iMecArmorId;
-    kArmor = GetConfigArmor(iMecArmorId);
+    kItemCard.ItemName = ItemName;
 
     if (kMPTemplate.m_eMECSuitTemplateType == eMPMECSTT_None)
     {
-        kItemCard.strName = Expand(kItem.strName);
-        kItemCard.strFlavorText = Expand(kItem.strTacticalText);
+        kItemCard.strName = Expand(kArmor.strName);
+        kItemCard.strFlavorText = Expand(kArmor.strTacticalText);
     }
     else
     {
@@ -216,7 +208,7 @@ static function LWCE_TItemCard BuildMecSuitCard(int iMecArmorId, optional TMPMEC
         kItemCard.strFlavorText = class'XComLocalizer'.static.ExpandString(class'XGTacticalGameCore'.default.m_aSoldierMPMECSuitTemplateTacticalText[kMPTemplate.m_eMECSuitTemplateType]);
     }
 
-    kItemCard.iArmorHPBonus = kArmor.iHPBonus;
+    kItemCard.iArmorHPBonus = kStatChanges.iHP;
 
     return kItemCard;
 }
@@ -283,30 +275,32 @@ static function LWCE_TItemCard BuildSoldierTemplateCard(EMPTemplate eSoldierTemp
     return kItemCard;
 }
 
-static function LWCE_TItemCard BuildWeaponCard(int iWeaponId)
+static function LWCE_TItemCard BuildWeaponCard(name ItemName)
 {
-    local LWCE_TItem kItem;
+    local LWCEWeaponTemplate kWeapon;
+    local LWCE_TCharacterStats kStatChanges;
     local LWCE_TItemCard kItemCard;
-    local TConfigWeapon kWeapon;
+    local LWCE_XGFacility_Engineering kEngineering;
     local int iMinDamage, iMaxDamage, iMinCrit, iMaxCrit;
 
-    // TODO: rewrite this in a way that doesn't require bit fiddling
-    if ((iWeaponId & 255) == 0)
+    if (ItemName == '')
     {
-        kItemCard.iCardType = 0;
+        kItemCard.iCardType = eItemCard_NONE;
         return kItemCard;
     }
 
-    kItem = `LWCE_ITEM(iWeaponId);
-    kWeapon = GetConfigWeapon(byte(iWeaponId & 255));
+    kEngineering = `LWCE_ENGINEERING;
+    kWeapon = `LWCE_WEAPON(ItemName);
+    kWeapon.GetStatChanges(kStatChanges);
 
     kItemCard.iCardType = eItemCard_SoldierWeapon;
-    kItemCard.iItemId = iWeaponId;
-    kItemCard.strName = Expand(kItem.strName);
-    kItemCard.strFlavorText = Expand(kItem.strTacticalText);
-    kItemCard.iRangeCategory = `LWCE_GAMECORE.LWCE_GetWeaponCatRange(iWeaponId & 255);
+    kItemCard.ItemName = ItemName;
+    kItemCard.strName = Expand(kWeapon.strName);
+    kItemCard.strFlavorText = Expand(kWeapon.strTacticalText);
+    kItemCard.iRangeCategory = kWeapon.GetWeaponCatRange();
 
-    if ((iWeaponId & 65536) > 0) // Damage Roulette enabled
+    // TODO: move all of this into template
+    if (`LWCE_HQ.IsOptionEnabled(`LW_SECOND_WAVE_ID(DamageRoulette)))
     {
         iMinDamage = 2;
         iMinCrit = 6;
@@ -319,20 +313,42 @@ static function LWCE_TItemCard BuildWeaponCard(int iWeaponId)
         iMaxDamage = 2;
     }
 
-    iMaxCrit = kWeapon.iDamage + ((iWeaponId >> 8) & 255);
+    iMaxCrit = kWeapon.iDamage;
 
-    if ((iWeaponId & 131072) > 0) // Enhanced Plasma
+    if (kWeapon.HasWeaponProperty(eWP_Pistol) && kEngineering.LWCE_IsFoundryTechResearched('Foundry_ReflexPistols'))
     {
-        if (class'XGTacticalGameCore'.static.GetWeaponClass(EItemType(iWeaponId & 255)) == 5)
-        {
-            iMaxCrit += 1;
-        }
+        iMaxCrit += 1;
+    }
+
+    if (ItemName == 'Item_APGrenade' && kEngineering.LWCE_IsFoundryTechResearched('Foundry_AlienGrenades'))
+    {
+        iMaxCrit += 2;
+    }
+
+    if (ItemName == 'Item_KineticStrikeModule' && kEngineering.LWCE_IsFoundryTechResearched('Foundry_MecCloseCombat'))
+    {
+        iMaxCrit += 4;
+    }
+
+    if (ItemName == 'Item_GrenadeLauncher' && kEngineering.LWCE_IsFoundryTechResearched('Foundry_AlienGrenades'))
+    {
+        iMaxCrit += 1;
+    }
+
+    if (ItemName == 'Item_Flamethrower' && kEngineering.LWCE_IsFoundryTechResearched('Foundry_JelliedElerium'))
+    {
+        iMaxCrit += 3;
+    }
+
+    if (kWeapon.nmTechTier == 'wpn_plasma' && kEngineering.LWCE_IsFoundryTechResearched('Foundry_EnhancedPlasma'))
+    {
+        iMaxCrit += 1;
     }
 
     kItemCard.iBaseDamage = ((iMaxCrit * iMinDamage) + 1) / 4;
     kItemCard.iBaseDamageMax = ((iMaxCrit * (iMinDamage + iMaxDamage)) + 2) / 4;
 
-    if (`GAMECORE.m_arrWeapons[iWeaponId & 255].aProperties[eWP_Explosive] > 0)
+    if (kWeapon.HasWeaponProperty(eWP_Explosive))
     {
         kItemCard.iBaseDamage -= 1;
         kItemCard.iBaseDamageMax += 1;
@@ -342,9 +358,14 @@ static function LWCE_TItemCard BuildWeaponCard(int iWeaponId)
     }
     else
     {
-        kItemCard.iBaseCritChance = kWeapon.iCritical;
+        kItemCard.iBaseCritChance = kStatChanges.iCriticalChance;
         kItemCard.iCritDamage = Max((iMaxCrit * iMinCrit + 1) / 4, kItemCard.iBaseDamageMax);
         kItemCard.iCritDamageMax = ((iMaxCrit * (iMinCrit + iMaxDamage)) + 2) / 4;
+    }
+
+    if (kWeapon.HasWeaponProperty(eWP_Pistol) && kEngineering.LWCE_IsFoundryTechResearched('Foundry_MagPistols'))
+    {
+        kItemCard.iBaseCritChance += 10; // TODO config
     }
 
     return kItemCard;
@@ -352,122 +373,21 @@ static function LWCE_TItemCard BuildWeaponCard(int iWeaponId)
 
 static function int GetMecWeaponAbility(int iMecWeaponId)
 {
-    local LWCE_TWeapon kMecWeapon;
+    `LWCE_LOG_DEPRECATED_CLS(GetMecWeaponAbility);
 
-    kMecWeapon = `LWCE_GAMECORE.LWCE_GetTWeapon(iMecWeaponId);
+    return -1;
+}
 
-    if (kMecWeapon.arrAbilities.Length == 0)
+static function int LWCE_GetMecWeaponAbility(name WeaponName)
+{
+    local LWCEWeaponTemplate kWeapon;
+
+    kWeapon = `LWCE_WEAPON(WeaponName);
+
+    if (kWeapon.arrAbilities.Length == 0)
     {
         return 255;
     }
 
-    return kMecWeapon.arrAbilities[0];
-}
-
-// TODO document
-private static function array<int> GetCharacterPerks(int iCharacterId)
-{
-    local array<int> arrPerkTypes;
-
-    switch (iCharacterId)
-    {
-        case eChar_Sectoid:
-            arrPerkTypes.AddItem(ePerk_MindMerge);
-            break;
-        case eChar_SectoidCommander:
-            arrPerkTypes.AddItem(ePerk_MindFray);
-            arrPerkTypes.AddItem(ePerk_GreaterMindMerge);
-            arrPerkTypes.AddItem(ePerk_PsiPanic);
-            arrPerkTypes.AddItem(100);
-            break;
-        case eChar_Floater:
-            arrPerkTypes.AddItem(79);
-            arrPerkTypes.AddItem(80);
-            break;
-        case eChar_FloaterHeavy:
-            arrPerkTypes.AddItem(81);
-            arrPerkTypes.AddItem(79);
-            arrPerkTypes.AddItem(80);
-            break;
-        case eChar_ThinMan:
-            arrPerkTypes.AddItem(82);
-            arrPerkTypes.AddItem(83);
-            break;
-        case eChar_Chryssalid:
-            arrPerkTypes.AddItem(82);
-            arrPerkTypes.AddItem(84);
-            arrPerkTypes.AddItem(104);
-            break;
-        case eChar_Zombie:
-            arrPerkTypes.AddItem(105);
-            break;
-        case eChar_Muton:
-            arrPerkTypes.AddItem(21);
-            arrPerkTypes.AddItem(85);
-            arrPerkTypes.AddItem(86);
-            break;
-        case eChar_MutonElite:
-            arrPerkTypes.AddItem(21);
-            arrPerkTypes.AddItem(81);
-            break;
-        case eChar_MutonBerserker:
-            arrPerkTypes.AddItem(89);
-            arrPerkTypes.AddItem(88);
-            break;
-        case eChar_Cyberdisc:
-            arrPerkTypes.AddItem(79);
-            arrPerkTypes.AddItem(98);
-            arrPerkTypes.AddItem(81);
-            break;
-        case eChar_Sectopod:
-            arrPerkTypes.AddItem(103);
-            arrPerkTypes.AddItem(96);
-            break;
-        case eChar_Seeker:
-            arrPerkTypes.AddItem(79);
-            arrPerkTypes.AddItem(127);
-            arrPerkTypes.AddItem(166);
-            break;
-        case eChar_Ethereal:
-        case eChar_EtherealUber:
-            arrPerkTypes.AddItem(97);
-            arrPerkTypes.AddItem(73);
-            arrPerkTypes.AddItem(100);
-            arrPerkTypes.AddItem(101);
-            arrPerkTypes.AddItem(68);
-            break;
-        case eChar_Drone:
-            arrPerkTypes.AddItem(79);
-            arrPerkTypes.AddItem(99);
-            arrPerkTypes.AddItem(102);
-            break;
-        case eChar_Mechtoid:
-            arrPerkTypes.AddItem(126);
-            break;
-        case eChar_ExaltEliteOperative:
-            arrPerkTypes.AddItem(147);
-        case eChar_ExaltOperative:
-            break;
-        case eChar_ExaltEliteSniper:
-            arrPerkTypes.AddItem(11);
-        case eChar_ExaltSniper:
-            arrPerkTypes.AddItem(15);
-            arrPerkTypes.AddItem(16);
-            break;
-        case eChar_ExaltEliteHeavy:
-            arrPerkTypes.AddItem(23);
-        case eChar_ExaltHeavy:
-            arrPerkTypes.AddItem(18);
-            arrPerkTypes.AddItem(19);
-            arrPerkTypes.AddItem(21);
-            break;
-        case eChar_ExaltEliteMedic:
-            arrPerkTypes.AddItem(52);
-        case eChar_ExaltMedic:
-            arrPerkTypes.AddItem(47);
-            arrPerkTypes.AddItem(48);
-            break;
-    }
-
-    return arrPerkTypes;
+    return class'LWCE_XGAbilityTree'.static.AbilityBaseIdFromName(kWeapon.arrAbilities[0]);
 }

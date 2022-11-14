@@ -1,4 +1,41 @@
-class LWCE_XGSoldierUI extends XGSoldierUI;
+class LWCE_XGSoldierUI extends XGSoldierUI
+    dependson(LWCE_XGFacility_Lockers);
+
+struct LWCE_TInventoryOption
+{
+    var int iOptionType;
+    var bool bHighlight;
+    var bool bShowItemCard;
+    var bool bInfinite;
+    var TImage imgItem;
+    var TText txtName;
+    var TText txtLabel;
+    var TText txtQuantity;
+    var string strHelp;
+    var int iState;
+    var int iSlot;
+    var name ItemName;
+};
+
+struct LWCE_TSoldierGear
+{
+    var TText txtTitle;
+    var int iHighlight;
+    var bool bDataDirty;
+    var array<LWCE_TInventoryOption> arrOptions;
+};
+
+struct LWCE_TSoldierLocker
+{
+    var TText txtTitle;
+    var TText txtMsg;
+    var int iHighlight;
+    var bool bIsSelected;
+    var array<LWCE_TInventoryOption> arrOptions;
+};
+
+var LWCE_TSoldierGear m_kCEGear;
+var LWCE_TSoldierLocker m_kCELocker;
 
 var const localized string m_strStatBonusesPrefix;
 var const localized string m_strStatBonusesSeparator;
@@ -20,12 +57,21 @@ simulated function Tick(float DeltaTime)
 
 function TInventoryOption BuildInventoryOption(int iItemId, int iOptionType, bool bHighlight)
 {
-    local LWCE_TItem kItem;
     local TInventoryOption kOption;
 
-    kItem = `LWCE_ITEM(iItemId);
+    `LWCE_LOG_DEPRECATED_CLS(BuildInventoryOption);
 
-    kOption.iItem = iItemId;
+    return kOption;
+}
+
+function LWCE_TInventoryOption LWCE_BuildInventoryOption(name ItemName, int iOptionType, bool bHighlight)
+{
+    local LWCEItemTemplate kItem;
+    local LWCE_TInventoryOption kOption;
+
+    kItem = `LWCE_ITEM(ItemName);
+
+    kOption.ItemName = ItemName;
     kOption.iOptionType = iOptionType;
 
     switch (iOptionType)
@@ -44,11 +90,11 @@ function TInventoryOption BuildInventoryOption(int iItemId, int iOptionType, boo
             break;
     }
 
-    if (iItemId != 0)
+    if (ItemName != '')
     {
         kOption.txtName.StrValue = kItem.StrName;
         kOption.imgItem.strPath = kItem.ImagePath;
-        kOption.bInfinite = `LWCE_STORAGE.LWCE_IsInfinite(iItemId);
+        kOption.bInfinite = kItem.IsInfinite();
     }
     else
     {
@@ -62,14 +108,21 @@ function TInventoryOption BuildInventoryOption(int iItemId, int iOptionType, boo
 
 function TInventoryOption BuildLockerOption(TLockerItem kItem, int iOptionType)
 {
-    local LWCE_XGItemTree kItemTree;
-    local LWCE_TItem kInvItem;
     local TInventoryOption kOption;
 
-    kItemTree = `LWCE_ITEMTREE;
-    kInvItem = kItemTree.LWCE_GetItem(kItem.iItem);
+    `LWCE_LOG_DEPRECATED_CLS(BuildLockerOption);
 
-    kOption.iItem = kItem.iItem;
+    return kOption;
+}
+
+function LWCE_TInventoryOption LWCE_BuildLockerOption(LWCE_TLockerItem kItem, int iOptionType)
+{
+    local LWCEEquipmentTemplate kInvItem;
+    local LWCE_TInventoryOption kOption;
+
+    kInvItem = LWCEEquipmentTemplate(`LWCE_ITEM(kItem.ItemName));
+
+    kOption.ItemName = kItem.ItemName;
     kOption.iOptionType = iOptionType;
     kOption.iState = eUIState_Normal;
     kOption.bShowItemCard = true;
@@ -80,7 +133,7 @@ function TInventoryOption BuildLockerOption(TLockerItem kItem, int iOptionType)
     }
     else if (kItem.bClassLocked)
     {
-        if (m_kSoldier == BARRACKS().m_kVolunteer && kItemTree.IsArmor(kItem.iItem))
+        if (m_kSoldier == BARRACKS().m_kVolunteer && kInvItem.IsArmor())
         {
             kOption.txtLabel.StrValue = Caps(m_strLabelUnavailableToVolunteer);
         }
@@ -89,15 +142,15 @@ function TInventoryOption BuildLockerOption(TLockerItem kItem, int iOptionType)
             kOption.txtLabel.StrValue = m_strLabelItemUnavailableToClass;
         }
     }
-    else if (kItemTree.LWCE_IsItemUniqueEquip(kItem.iItem) && HasItemEquipped(kItem.iItem))
+    else if (kInvItem.bIsUniqueEquip && HasItemEquipped(kItem.ItemName))
     {
         kOption.txtLabel.StrValue = m_strLabelUniqueEquip;
     }
-    else if (!HasAnyOfItemsEquipped(kInvItem.arrCompatibleLargeEquipment, true))
+    else if (!HasAnyOfItemsEquipped(kInvItem.arrCompatibleEquipment, true))
     {
         kOption.txtLabel.StrValue = m_strLabelReaperRoundsRestriction;
     }
-    else if (HasAnyOfItemsEquipped(kInvItem.arrIncompatibleLargeEquipment, false))
+    else if (HasAnyOfItemsEquipped(kInvItem.arrIncompatibleEquipment, false))
     {
         kOption.txtLabel.StrValue = m_strLabelReaperRoundsRestriction;
     }
@@ -114,7 +167,7 @@ function TInventoryOption BuildLockerOption(TLockerItem kItem, int iOptionType)
 
     kOption.txtName.StrValue = kInvItem.strName;
     kOption.imgItem.strPath = kInvItem.ImagePath;
-    kOption.bInfinite = `LWCE_STORAGE.LWCE_IsInfinite(kOption.iItem);
+    kOption.bInfinite = kInvItem.IsInfinite();
 
     if (!kOption.bInfinite)
     {
@@ -276,181 +329,18 @@ function TItemCard GetItemCardFromOption(TInventoryOption kItemOp)
 {
     local TItemCard kItemCard;
 
-    `LWCE_LOG_DEPRECATED_CLS(GetItemCardFromOption);
-
-    return kItemCard;
-}
-
-function LWCE_TItemCard LWCE_GetItemCardFromOption(TInventoryOption kItemOp)
-{
-    local LWCE_TItemCard kItemCard;
-    local LWCE_XGFacility_Engineering kEngineering;
-    local int iMedalIndex, iItemId;
-
-    kEngineering = LWCE_XGFacility_Engineering(ENGINEERING());
-    iItemId = kItemOp.iItem;
-
-    if (`GAMECORE.ItemIsAccessory(iItemId))
-    {
-        kItemCard = class'LWCE_XGItemCards'.static.BuildEquippableItemCard(iItemId);
-        kItemCard.iCharges = LWCE_GetItemCharges(iItemId, false, true);
-    }
-    else if (`GAMECORE.ItemIsWeapon(iItemId))
-    {
-        iMedalIndex = iItemId;
-
-        if (IsOptionEnabled(`LW_SECOND_WAVE_ID(DamageRoulette)))
-        {
-            iMedalIndex = iMedalIndex | 65536;
-        }
-
-        if (`GAMECORE.WeaponHasProperty(iItemId, eWP_Pistol) && kEngineering.LWCE_IsFoundryTechResearched('Foundry_ReflexPistols'))
-        {
-            iMedalIndex = iMedalIndex | 256;
-        }
-
-        if (iItemId == `LW_ITEM_ID(APGrenade) && kEngineering.LWCE_IsFoundryTechResearched('Foundry_AlienGrenades'))
-        {
-            iMedalIndex = iMedalIndex | 512;
-        }
-
-        if (iItemId == `LW_ITEM_ID(KineticStrikeModule) && kEngineering.LWCE_IsFoundryTechResearched('Foundry_MecCloseCombat'))
-        {
-            iMedalIndex = iMedalIndex | 1024;
-        }
-
-        if (iItemId == `LW_ITEM_ID(GrenadeLauncher) && kEngineering.LWCE_IsFoundryTechResearched('Foundry_AlienGrenades'))
-        {
-            iMedalIndex = iMedalIndex | 256;
-        }
-
-        if (iItemId == `LW_ITEM_ID(Flamethrower) && kEngineering.LWCE_IsFoundryTechResearched('Foundry_JelliedElerium'))
-        {
-            iMedalIndex = iMedalIndex | 768;
-        }
-
-        if (kEngineering.LWCE_IsFoundryTechResearched('Foundry_EnhancedPlasma'))
-        {
-            iMedalIndex = iMedalIndex | 131072;
-        }
-
-        kItemCard = class'LWCE_XGItemCards'.static.BuildWeaponCard(iMedalIndex);
-
-        if (`GAMECORE.WeaponHasProperty(iItemId, eWP_Pistol) && kEngineering.LWCE_IsFoundryTechResearched('Foundry_MagPistols'))
-        {
-            kItemCard.iBaseCritChance += 10;
-        }
-
-        return kItemCard;
-    }
-    else
-    {
-        kItemCard = class'LWCE_XGItemCards'.static.BuildItemCard(iItemId);
-    }
+    `LWCE_LOG_CLS("ERROR: LWCE-incompatible function GetItemCardFromOption was called. This needs to be replaced with LWCE_XGItemCards.BuildItemCard. Stack trace follows.");
+    ScriptTrace();
 
     return kItemCard;
 }
 
 function int GetItemCharges(EItemType eItem, optional bool bForce1_for_NonGrenades = false, optional bool bForItemCardDisplay = false)
 {
-    `LWCE_LOG_DEPRECATED_CLS(GetItemCharges);
+    `LWCE_LOG_CLS("ERROR: LWCE-incompatible function GetItemCharges was called. This needs to be replaced with LWCEWeaponTemplate.GetItemCharges. Stack trace follows.");
+    ScriptTrace();
+
     return 0;
-}
-
-function int LWCE_GetItemCharges(int iItemId, optional bool bForce1_for_NonGrenades = false, optional bool bForItemCardDisplay = false)
-{
-    local int NumCharges;
-
-    if (iItemId == 0)
-    {
-        return 0;
-    }
-
-    NumCharges = 1;
-
-    switch (iItemId)
-    {
-        case `LW_ITEM_ID(HEGrenade):
-        case `LW_ITEM_ID(AlienGrenade):
-        case `LW_ITEM_ID(APGrenade):
-            if (m_kSoldier.HasPerk(`LW_PERK_ID(Grenadier)))
-            {
-                NumCharges++;
-            }
-
-            if (m_kSoldier.HasPerk(`LW_PERK_ID(Packmaster)))
-            {
-                NumCharges++;
-            }
-
-            break;
-        case `LW_ITEM_ID(SmokeGrenade):
-        case `LW_ITEM_ID(FlashbangGrenade):
-        case `LW_ITEM_ID(ChemGrenade):
-        case `LW_ITEM_ID(PsiGrenade):
-        case `LW_ITEM_ID(BattleScanner):
-        case `LW_ITEM_ID(MimicBeacon):
-            if (m_kSoldier.HasPerk(`LW_PERK_ID(SmokeAndMirrors)))
-            {
-                NumCharges++;
-            }
-
-            if (m_kSoldier.HasPerk(`LW_PERK_ID(Packmaster)))
-            {
-                NumCharges++;
-            }
-
-            break;
-        case `LW_ITEM_ID(Medikit):
-            if (m_kSoldier.HasPerk(`LW_PERK_ID(FieldMedic)))
-            {
-                NumCharges++;
-            }
-
-            if (m_kSoldier.HasPerk(`LW_PERK_ID(Packmaster)))
-            {
-                NumCharges++;
-            }
-
-            break;
-        case `LW_ITEM_ID(RestorativeMist):
-            if (m_kSoldier.HasPerk(`LW_PERK_ID(FieldMedic)))
-            {
-                NumCharges += 2;
-            }
-
-            if (m_kSoldier.HasPerk(`LW_PERK_ID(Packmaster)))
-            {
-                NumCharges++;
-            }
-
-            break;
-        case `LW_ITEM_ID(ArcThrower):
-            if (!bForce1_for_NonGrenades)
-            {
-                if (m_kSoldier.HasPerk(`LW_PERK_ID(Repair)))
-                {
-                    NumCharges += 2;
-                }
-
-                if (m_kSoldier.HasPerk(`LW_PERK_ID(Packmaster)))
-                {
-                    NumCharges++;
-                }
-            }
-
-            break;
-        case `LW_ITEM_ID(Rocket):
-        case `LW_ITEM_ID(ShredderRocket):
-            NumCharges = 1;
-            break;
-        default:
-            NumCharges = bForItemCardDisplay ? 0 : 1;
-    }
-
-    // TODO add mod hook
-
-    return NumCharges;
 }
 
 function string GetItemTypeName(EItemType iItem)
@@ -460,18 +350,18 @@ function string GetItemTypeName(EItemType iItem)
     return "";
 }
 
-function bool HasAnyOfItemsEquipped(out array<int> arrItems, bool bDefaultIfEmpty)
+function bool HasAnyOfItemsEquipped(out array<name> arrItems, bool bDefaultIfEmpty)
 {
-    local int iItemId;
+    local name ItemName;
 
     if (arrItems.Length == 0)
     {
         return bDefaultIfEmpty;
     }
 
-    foreach arrItems(iItemId)
+    foreach arrItems(ItemName)
     {
-        if (HasItemEquipped(iItemId))
+        if (HasItemEquipped(ItemName))
         {
             return true;
         }
@@ -480,9 +370,9 @@ function bool HasAnyOfItemsEquipped(out array<int> arrItems, bool bDefaultIfEmpt
     return false;
 }
 
-function bool HasItemEquipped(int iItemId)
+function bool HasItemEquipped(name ItemName)
 {
-    return `GAMECORE.TInventoryHasItemType(m_kSoldier.m_kChar.kInventory, iItemId);
+    return class'LWCEInventoryUtils'.static.HasItemOfName(LWCE_XGStrategySoldier(m_kSoldier).m_kCEChar.kInventory, ItemName);
 }
 
 function bool IsSlotValid(EInventorySlot eSlot)
@@ -568,33 +458,97 @@ function bool OnAcceptPromotion()
     return true;
 }
 
+function bool OnEquip(int iInventory, int iLocker)
+{
+    local LWCE_XGFacility_Lockers kLockers;
+    local bool bEquipped, bEquippedArmor;
+
+    kLockers = LWCE_XGFacility_Lockers(LOCKERS());
+
+    if (m_kCELocker.arrOptions[iLocker].iState != eUIState_Normal)
+    {
+        PlayBadSound();
+        return false;
+    }
+
+    if (m_kCEGear.arrOptions[iInventory].iOptionType == 0)
+    {
+        bEquipped = kLockers.LWCE_EquipArmor(m_kSoldier, m_kCELocker.arrOptions[iLocker].ItemName);
+        bEquippedArmor = bEquipped;
+        Sound().PlaySFX(SNDLIB().SFX_UI_EquipArmor);
+
+        if ((!BARRACKS().m_bVolunteerUrged && HQ().HasFacility(/* Gollop Chamber */ eFacility_DeusEx)) && BARRACKS().HasPotentialVolunteer())
+        {
+            BARRACKS().m_bVolunteerUrged = true;
+            m_bUrgeGollop = true;
+        }
+    }
+    else if (m_kCEGear.arrOptions[iInventory].iOptionType == 1)
+    {
+        bEquipped = kLockers.LWCE_EquipPistol(m_kSoldier, m_kCELocker.arrOptions[iLocker].ItemName);
+        Sound().PlaySFX(SNDLIB().SFX_UI_EquipWeapon);
+    }
+    else if (m_kCEGear.arrOptions[iInventory].iOptionType == 2)
+    {
+        bEquipped = kLockers.LWCE_EquipLargeItem(m_kSoldier, m_kCELocker.arrOptions[iLocker].ItemName, m_kCEGear.arrOptions[iInventory].iSlot);
+        Sound().PlaySFX(SNDLIB().SFX_UI_EquipWeapon);
+    }
+    else if (m_kCEGear.arrOptions[iInventory].iOptionType == 3)
+    {
+        bEquipped = kLockers.LWCE_EquipSmallItem(m_kSoldier, m_kCELocker.arrOptions[iLocker].ItemName, m_kCEGear.arrOptions[iInventory].iSlot);
+        Sound().PlaySFX(SNDLIB().SFX_UI_EquipWeapon);
+    }
+
+    if (bEquipped)
+    {
+        m_kSoldier.OnLoadoutChange();
+        UpdateDoll();
+
+        if (bEquippedArmor)
+        {
+            if (!m_kSoldier.IsASuperSoldier())
+            {
+                // TODO: pull this from item template
+                LOCKERS().DoNarrativeMomentsForEquipingArmors(m_kSoldier.m_kChar.kInventory.iArmor);
+            }
+        }
+    }
+
+    return bEquipped;
+}
+
 /**
  * Callback for when gear is clicked in the loadout screen, either currently-equipped gear or gear in the locker.
  */
 function OnGearAccept()
 {
     local int I;
-    local LWCE_TItem kItem;
+    local LWCEEquipmentTemplate kEquipment;
 
-    if (!m_kLocker.bIsSelected && m_kLocker.arrOptions.Length >= 0)
+    if (!m_kCELocker.bIsSelected && m_kCELocker.arrOptions.Length >= 0)
     {
-        m_kLocker.bIsSelected = true;
+        m_kCELocker.bIsSelected = true;
         PlayGoodSound();
     }
-    else if (OnEquip(m_kGear.iHighlight, m_kLocker.iHighlight))
+    else if (OnEquip(m_kCEGear.iHighlight, m_kCELocker.iHighlight))
     {
-        m_kLocker.bIsSelected = false;
-        m_kGear.bDataDirty = true;
+        m_kCELocker.bIsSelected = false;
+        m_kCEGear.bDataDirty = true;
 
         // Check if the most recent equipment change has invalidated any other equipment,
         // and if so, remove it
-        for (I = 0; I < m_kGear.arrOptions.Length; I++)
+        for (I = 0; I < m_kCEGear.arrOptions.Length; I++)
         {
-            kItem = `LWCE_ITEM(m_kGear.arrOptions[I].iItem);
+            kEquipment = LWCEEquipmentTemplate(`LWCE_ITEM(m_kCEGear.arrOptions[I].ItemName));
 
-            if (!HasAnyOfItemsEquipped(kItem.arrCompatibleLargeEquipment, true)
-              || HasAnyOfItemsEquipped(kItem.arrIncompatibleLargeEquipment, false)
-              || HasAnyOfItemsEquipped(kItem.arrMutuallyExclusiveEquipment, false))
+            if (kEquipment == none)
+            {
+                continue;
+            }
+
+            if (!HasAnyOfItemsEquipped(kEquipment.arrCompatibleEquipment, true)
+              || HasAnyOfItemsEquipped(kEquipment.arrIncompatibleEquipment, false)
+              || HasAnyOfItemsEquipped(kEquipment.arrMutuallyExclusiveEquipment, false))
             {
                 OnUnequipGear(I);
             }
@@ -650,7 +604,7 @@ function bool OnNextSoldier(optional bool includeSHIV = false, optional bool Ski
         SetActiveSoldier(NextSoldier);
     }
 
-    m_kGear.iHighlight = 0;
+    m_kCEGear.iHighlight = 0;
     UpdateView();
     PlayScrollSound();
     return true;
@@ -696,7 +650,7 @@ function bool OnPrevSoldier(optional bool includeSHIV = false, optional bool Ski
         SetActiveSoldier(PrevSoldier);
     }
 
-    m_kGear.iHighlight = 0;
+    m_kCEGear.iHighlight = 0;
     UpdateView();
     PlayScrollSound();
     return true;
@@ -760,6 +714,58 @@ function OnPromotionDown()
     SetAbilityTreeBranch(iNewBranch);
     PlayScrollSound();
     ClampAbilityTreeSelection();
+}
+
+function bool OnUnequipGear(optional int iGear = -1)
+{
+    local LWCE_TInventoryOption kOption;
+    local LWCE_XGFacility_Lockers kLockers;
+
+    kLockers = LWCE_XGFacility_Lockers(LOCKERS());
+
+    if (iGear == -1)
+    {
+        iGear = m_kCEGear.iHighlight;
+    }
+
+    if (!m_kCELocker.bIsSelected)
+    {
+        kOption = m_kCEGear.arrOptions[iGear];
+
+        if (kOption.ItemName != '')
+        {
+            switch (kOption.iOptionType)
+            {
+                case 3:
+                    kLockers.UnequipSmallItem(m_kSoldier, kOption.iSlot);
+                    break;
+                case 2:
+                    kLockers.UnequipLargeItem(m_kSoldier, kOption.iSlot);
+                    break;
+            }
+
+            m_kSoldier.OnLoadoutChange();
+
+            UpdateGear();
+            UpdateLocker();
+            UpdateView();
+
+            PRES().m_kSoldierSummary.UpdatePanels();
+            PlayGoodSound();
+
+            return true;
+        }
+        else
+        {
+            PlayBadSound();
+        }
+    }
+    else
+    {
+        PlayBadSound();
+    }
+
+    return false;
 }
 
 function bool PreviousPerksToAssign()
@@ -850,19 +856,101 @@ function UpdateAbilities()
 
 function UpdateDoll()
 {
-    if (m_kSoldier != none)
+    local LWCE_XGStrategySoldier kSoldier;
+
+    kSoldier = LWCE_XGStrategySoldier(m_kSoldier);
+
+    if (kSoldier != none)
     {
-        m_kDoll.iFlag = m_kSoldier.GetCountry();
+        m_kDoll.iFlag = kSoldier.GetCountry();
         m_kDoll.imgFlag.strPath = class'UIScreen'.static.GetFlagPath(m_kDoll.iFlag);
 
-        if (m_kSoldier.IsATank())
+        if (kSoldier.IsATank())
         {
-            m_kDoll.imgSoldier.strPath = `LWCE_ITEM(m_kSoldier.m_kChar.kInventory.iArmor).ImagePath;
+            m_kDoll.imgSoldier.strPath = `LWCE_ITEM(kSoldier.m_kCEChar.kInventory.nmArmor).ImagePath;
         }
         else
         {
             m_kDoll.imgSoldier.iImage = eImage_Soldier;
         }
+    }
+}
+
+function UpdateGear()
+{
+    local LWCE_TInventory kInv;
+    local int iItem, iOption, iIndex;
+
+    kInv = LWCE_XGStrategySoldier(m_kSoldier).LWCE_GetInventory();
+    m_kCEGear.arrOptions.Remove(0, m_kCEGear.arrOptions.Length);
+
+    if (IsSlotValid(eInvSlot_Armor))
+    {
+        m_kCEGear.arrOptions[0] = LWCE_BuildInventoryOption(kInv.nmArmor, eInvSlot_Armor, 0 == m_kCEGear.iHighlight);
+    }
+
+    if (IsSlotValid(eInvSlot_Large))
+    {
+        for (iItem = 0; iItem < kInv.arrLargeItems.Length; iItem++)
+        {
+            iOption = m_kCEGear.arrOptions.Length;
+            m_kCEGear.arrOptions.Add(1);
+            m_kCEGear.arrOptions[iOption] = LWCE_BuildInventoryOption(kInv.arrLargeItems[iItem], eInvSlot_Large, iOption == m_kCEGear.iHighlight);
+            m_kCEGear.arrOptions[iOption].iSlot = iItem;
+        }
+    }
+
+    if (IsSlotValid(eInvSlot_Pistol))
+    {
+        m_kCEGear.arrOptions.Add(1);
+        iIndex = m_kCEGear.arrOptions.Length - 1;
+        m_kCEGear.arrOptions[iIndex] = LWCE_BuildInventoryOption(kInv.nmPistol, eInvSlot_Pistol, iIndex == m_kCEGear.iHighlight);
+    }
+
+    if (IsSlotValid(eInvSlot_Small))
+    {
+        for (iItem = 0; iItem < kInv.arrSmallItems.Length; iItem++)
+        {
+            iOption = m_kCEGear.arrOptions.Length;
+            m_kCEGear.arrOptions.Add(1);
+            m_kCEGear.arrOptions[iOption] = LWCE_BuildInventoryOption(kInv.arrSmallItems[iItem], eInvSlot_Small, iOption == m_kCEGear.iHighlight);
+            m_kCEGear.arrOptions[iOption].iSlot = iItem;
+        }
+    }
+}
+
+function UpdateLocker()
+{
+    local LWCE_XGFacility_Lockers kLockers;
+    local array<LWCE_TLockerItem> arrLockerItems;
+    local int I;
+
+    kLockers = LWCE_XGFacility_Lockers(LOCKERS());
+
+    m_kCELocker.txtTitle.StrValue = m_strLabelLocker;
+    m_kCELocker.arrOptions.Remove(0, m_kCELocker.arrOptions.Length);
+
+    if (!IsSlotValid(EInventorySlot(m_kCEGear.arrOptions[m_kCEGear.iHighlight].iOptionType)))
+    {
+        return;
+    }
+
+    arrLockerItems = kLockers.LWCE_GetLockerItems(m_kCEGear.arrOptions[m_kCEGear.iHighlight].iOptionType, m_kCEGear.arrOptions[m_kCEGear.iHighlight].iSlot, m_kSoldier);
+
+    for (I = 0; I < arrLockerItems.Length; I++)
+    {
+        m_kCELocker.arrOptions[I] = LWCE_BuildLockerOption(arrLockerItems[I], m_kCEGear.arrOptions[m_kCEGear.iHighlight].iOptionType);
+        m_kCELocker.arrOptions[I].bHighlight = I == m_kCELocker.iHighlight;
+    }
+
+    if (m_kCELocker.arrOptions.Length == 0)
+    {
+        m_kCELocker.txtMsg.StrValue = m_strLabelNoneAvailable;
+        m_kCELocker.txtMsg.iState = eUIState_Bad;
+    }
+    else
+    {
+        m_kCELocker.txtMsg.StrValue = "";
     }
 }
 
@@ -1056,13 +1144,13 @@ function LWCE_TItemCard LWCE_SOLDIERUIGetItemCard()
 {
     local LWCE_TItemCard kItemCard;
 
-    if (m_kLocker.bIsSelected)
+    if (m_kCELocker.bIsSelected)
     {
-        kItemCard = LWCE_GetItemCardFromOption(m_kLocker.arrOptions[m_kLocker.iHighlight]);
+        kItemCard = class'LWCE_XGItemCards'.static.BuildItemCard(m_kCELocker.arrOptions[m_kCELocker.iHighlight].ItemName, LWCE_XGStrategySoldier(m_kSoldier));
     }
     else
     {
-        kItemCard = LWCE_GetItemCardFromOption(m_kGear.arrOptions[m_kGear.iHighlight]);
+        kItemCard = class'LWCE_XGItemCards'.static.BuildItemCard(m_kCEGear.arrOptions[m_kCEGear.iHighlight].ItemName, LWCE_XGStrategySoldier(m_kSoldier));
     }
 
     return kItemCard;
@@ -1070,70 +1158,74 @@ function LWCE_TItemCard LWCE_SOLDIERUIGetItemCard()
 
 function UpdateHeader()
 {
-    local int iOriginalArmorId, iOriginalWeaponId;
+    local name nmOriginalArmor, nmOriginalWeapon;
     local int aModifiers[ECharacterStat];
-    local array<int> arrBackPackItems;
+    local array<name> arrBackPackItems;
+    local LWCE_XGFacility_Lockers kLockers;
     local LWCE_XGTacticalGameCore kGameCore;
+    local LWCE_XGStrategySoldier kSoldier;
 
+    kLockers = LWCE_XGFacility_Lockers(LOCKERS());
     kGameCore = `LWCE_GAMECORE;
+    kSoldier = LWCE_XGStrategySoldier(m_kSoldier);
 
-    m_kHeader.txtName.StrValue = m_kSoldier.GetName(eNameType_First) @ m_kSoldier.GetName(eNameType_Last);
+    m_kHeader.txtName.StrValue = kSoldier.GetName(eNameType_First) @ kSoldier.GetName(eNameType_Last);
     m_kHeader.txtName.iState = eUIState_Normal;
 
-    m_kHeader.txtNickname.StrValue = m_kSoldier.GetName(eNameType_Nick);
+    m_kHeader.txtNickname.StrValue = kSoldier.GetName(eNameType_Nick);
     m_kHeader.txtNickname.iState = eUIState_Nickname;
 
     m_kHeader.txtStatus.strLabel = m_strLabelStatus;
-    m_kHeader.txtStatus.StrValue = m_kSoldier.GetStatusString();
-    m_kHeader.txtStatus.iState = m_kSoldier.GetStatusUIState();
+    m_kHeader.txtStatus.StrValue = kSoldier.GetStatusString();
+    m_kHeader.txtStatus.iState = kSoldier.GetStatusUIState();
 
     m_kHeader.txtOffense.strLabel = m_strLabelOffense;
-    m_kHeader.txtOffense.StrValue = string(m_kSoldier.GetMaxStat(eStat_Offense));
+    m_kHeader.txtOffense.StrValue = string(kSoldier.GetMaxStat(eStat_Offense));
     m_kHeader.txtOffense.iState = eUIState_Normal;
     m_kHeader.txtOffense.bNumber = true;
 
     m_kHeader.txtDefense.strLabel = m_strLabelDefense;
-    m_kHeader.txtDefense.StrValue = string(m_kSoldier.GetMaxStat(eStat_Defense));
+    m_kHeader.txtDefense.StrValue = string(kSoldier.GetMaxStat(eStat_Defense));
     m_kHeader.txtDefense.iState = eUIState_Normal;
     m_kHeader.txtDefense.bNumber = true;
 
     m_kHeader.txtHP.strLabel = m_strLabelHPSPACED;
-    m_kHeader.txtHP.StrValue = string(m_kSoldier.GetMaxStat(eStat_HP));
+    m_kHeader.txtHP.StrValue = string(kSoldier.GetMaxStat(eStat_HP));
 
-    if (m_kSoldier.IsInjured())
+    if (kSoldier.IsInjured())
     {
-        m_kHeader.txtHP.StrValue $= "/" $ string(m_kSoldier.GetMaxStat(eStat_HP));
+        m_kHeader.txtHP.StrValue $= "/" $ kSoldier.GetMaxStat(eStat_HP);
         m_kHeader.txtHP.iState = eUIState_Bad;
     }
 
     m_kHeader.txtHP.bNumber = true;
 
     m_kHeader.txtSpeed.strLabel = m_strLabelMobility;
-    m_kHeader.txtSpeed.StrValue = string(m_kSoldier.GetMaxStat(eStat_Mobility));
+    m_kHeader.txtSpeed.StrValue = string(kSoldier.GetMaxStat(eStat_Mobility));
     m_kHeader.txtSpeed.iState = eUIState_Normal;
     m_kHeader.txtSpeed.bNumber = true;
 
     m_kHeader.txtWill.strLabel = m_strLabelWill;
-    m_kHeader.txtWill.StrValue = string(m_kSoldier.GetMaxStat(eStat_Will));
+    m_kHeader.txtWill.StrValue = string(kSoldier.GetMaxStat(eStat_Will));
 
     if (IsInCovertOperativeMode())
     {
-        iOriginalArmorId = m_kSoldier.m_kChar.kInventory.iArmor;
-        iOriginalWeaponId = m_kSoldier.m_kChar.kInventory.arrLargeItems[0];
+        nmOriginalArmor = kSoldier.m_kCEChar.kInventory.nmArmor;
+        nmOriginalWeapon = kSoldier.m_kCEChar.kInventory.arrLargeItems[0];
 
-        m_kSoldier.m_kChar.kInventory.iArmor = `LW_ITEM_ID(LeatherJacket);
-        LOCKERS().EquipLargeItem(m_kSoldier, `LW_ITEM_ID(AssaultRifle), eSlot_None);
+        kSoldier.m_kCEChar.kInventory.nmArmor = 'Item_LeatherJacket';
+        kLockers.LWCE_EquipLargeItem(kSoldier, 'Item_AssaultRifle', 0);
 
-        kGameCore.GetBackpackItemArray(m_kSoldier.m_kChar.kInventory, arrBackPackItems);
-        kGameCore.LWCE_GetInventoryStatModifiers(aModifiers, m_kSoldier.m_kChar, `LW_ITEM_ID(AssaultRifle), arrBackPackItems);
+        arrBackpackItems = class'LWCEInventoryUtils'.static.GetAllBackpackItems(kSoldier.m_kCEChar.kInventory);
+        kGameCore.LWCE_GetInventoryStatModifiers(aModifiers, kSoldier.m_kCEChar, 'Item_AssaultRifle', arrBackPackItems);
 
-        m_kSoldier.m_kChar.kInventory.iArmor = iOriginalArmorId;
-        LOCKERS().EquipLargeItem(m_kSoldier, iOriginalWeaponId, eSlot_None);
+        kSoldier.m_kCEChar.kInventory.nmArmor = nmOriginalArmor;
+        kLockers.LWCE_EquipLargeItem(kSoldier, nmOriginalWeapon, 0);
     }
     else
     {
-        kGameCore.GetBackpackItemArray(m_kSoldier.m_kChar.kInventory, arrBackPackItems);
-        kGameCore.LWCE_GetInventoryStatModifiers(aModifiers, m_kSoldier.m_kChar, kGameCore.GetEquipWeapon(m_kSoldier.m_kChar.kInventory), arrBackPackItems);
+        arrBackpackItems = class'LWCEInventoryUtils'.static.GetAllBackpackItems(kSoldier.m_kCEChar.kInventory);
+        kGameCore.LWCE_GetInventoryStatModifiers(aModifiers, kSoldier.m_kCEChar, kGameCore.LWCE_GetEquipWeapon(kSoldier.m_kCEChar.kInventory), arrBackPackItems);
     }
 
     m_kHeader.txtHPMod.StrValue = string(aModifiers[eStat_HP]);

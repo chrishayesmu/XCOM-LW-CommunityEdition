@@ -196,15 +196,49 @@ simulated function bool OnUnrealCommand(int Cmd, int Arg)
 
 function LWCE_RealizeSelected()
 {
-    GetMgr().m_iCurrentSelection = m_iCurrentSelection;
-    LWCE_UpdateItemDesc(GetMgr().m_kTable.arrSummaries[m_iCurrentSelection]);
+    local LWCE_XGEngineeringUI kMgr;
+
+    kMgr = LWCE_XGEngineeringUI(GetMgr());
+
+    kMgr.m_iCurrentSelection = m_iCurrentSelection;
+    LWCE_UpdateItemDesc(kMgr.m_kCETable.arrSummaries[m_iCurrentSelection]);
     AS_SetFocus(string(m_arrUIOptions[m_iCurrentSelection].iIndex));
 }
 
-function LWCE_UpdateItemDesc(TObjectSummary kSummary)
+simulated function UpdateData()
+{
+    local LWCE_XGEngineeringUI kMgr;
+    local UIBuildItem.UIOption kOption;
+    local TTableMenuOption tMnuOption;
+    local TTableMenu tMnu;
+    local TEngHeader kHeader;
+    local int I;
+
+    m_arrUIOptions.Length = 0;
+
+    kMgr = LWCE_XGEngineeringUI(GetMgr());
+    tMnu = kMgr.m_kCETable.mnuItems;
+
+    for (I = 0; I < tMnu.arrOptions.Length; I++)
+    {
+        tMnuOption = tMnu.arrOptions[I];
+        kOption.iIndex = I;
+        kOption.strLabel = Caps(tMnuOption.arrStrings[0]);
+        kOption.iQuantity = int(tMnuOption.arrStrings[1]);
+        kOption.iState = tMnuOption.iState;
+        kOption.strHelp = tMnuOption.strHelp;
+        m_arrUIOptions.AddItem(kOption);
+    }
+
+    kHeader = kMgr.m_kHeader;
+    XComHQPresentationLayer(controllerRef.m_Pres).GetStrategyHUD().AS_SetHumanResources(kHeader.txtEngineers.strLabel, kHeader.txtEngineers.StrValue);
+    UpdateLayout();
+}
+
+function LWCE_UpdateItemDesc(LWCE_TObjectSummary kSummary)
 {
     local string infoText, Desc, ItemName;
-    local LWCE_TItem kItem;
+    local LWCEItemTemplate kItem;
     local TText tTextItem;
     local int iReq, iSelectedItemState;
 
@@ -244,26 +278,28 @@ function LWCE_UpdateItemDesc(TObjectSummary kSummary)
 
 simulated function UpdateLayout()
 {
-    local int I;
+    local LWCE_XGEngineeringUI kMgr;
     local ASValue kVal;
+    local UIBuildItem.UIOption kOption;
     local array<ASValue> arrData;
     local string optionText;
-    local UIBuildItem.UIOption kOption;
-    local int iTab;
+    local int Index;
 
-    AS_SetLabels(GetMgr().m_kHeader.txtTitle.StrValue, m_strItemLabel, m_strQuantityLabel);
+    kMgr = LWCE_XGEngineeringUI(GetMgr());
 
-    for (iTab = 0; iTab < GetMgr().m_kTable.arrTabs.Length; iTab++)
+    AS_SetLabels(kMgr.m_kHeader.txtTitle.StrValue, m_strItemLabel, m_strQuantityLabel);
+
+    for (Index = 0; Index < kMgr.m_kCETable.arrTabs.Length; Index++)
     {
-        AS_SetTabState(iTab, GetMgr().m_kTable.arrTabText[iTab].iState);
+        AS_SetTabState(Index, kMgr.m_kCETable.arrTabText[Index].iState);
     }
 
-    AS_SetSelectedCategory(GetMgr().m_kTable.m_iCurrentTab);
+    AS_SetSelectedCategory(kMgr.m_kCETable.m_iCurrentTab);
     Invoke("clear");
 
-    for (I = 0; I < m_arrUIOptions.Length; I++)
+    for (Index = 0; Index < m_arrUIOptions.Length; Index++)
     {
-        kOption = m_arrUIOptions[I];
+        kOption = m_arrUIOptions[Index];
 
         if (kOption.iState == eUIState_Disabled)
         {

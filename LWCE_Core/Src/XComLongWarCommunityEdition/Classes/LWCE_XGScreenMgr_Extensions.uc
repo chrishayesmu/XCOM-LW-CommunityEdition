@@ -1,11 +1,11 @@
 class LWCE_XGScreenMgr_Extensions extends Object
     abstract;
 
-static function bool UnlockItem(int iItemId)
+static function bool UnlockItem(name ItemName)
 {
     local LWCE_TItemUnlock kUnlock;
 
-    if (!Game().LWCE_UnlockItem(iItemId, kUnlock))
+    if (!Game().LWCE_UnlockItem(ItemName, kUnlock))
     {
         return false;
     }

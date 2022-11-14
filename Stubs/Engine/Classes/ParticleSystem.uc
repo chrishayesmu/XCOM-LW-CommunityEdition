@@ -112,7 +112,7 @@ var			bool									bRegenerateLODDuplicate;
 /** Structure containing per-LOD settings that pertain to the entire UParticleSystem. */
 struct native ParticleSystemLOD
 {
-	/** 
+	/**
 	 * Boolean to indicate whether the particle system accepts lights or not.
 	 * This must not be changed in-game, it can only be changed safely in the editor through Cascade.
 	 */
@@ -165,7 +165,7 @@ var				bool		ThumbnailImageOutOfDate;
 /** Internal: The PSys thumbnail image									*/
 var	editoronly	Texture2D	ThumbnailImage;
 
-/** 
+/**
  *	When TRUE, do NOT perform the spawning limiter check.
  *	Intended for effects used in pre-rendered cinematics.
  */
@@ -176,16 +176,16 @@ var(Delay) float Delay;
 /** The low end of the emitter delay if using a range. */
 var(Delay) float DelayLow;
 /**
- *	If TRUE, select the emitter delay from the range 
+ *	If TRUE, select the emitter delay from the range
  *		[DelayLow..Delay]
  */
 var(Delay) bool bUseDelayRange;
 
 /** Local space position that UVs generated with the ParticleMacroUV material node will be centered on. */
-var(MacroUV) vector MacroUVPosition; 
+var(MacroUV) vector MacroUVPosition;
 
 /** World space radius that UVs generated with the ParticleMacroUV material node will tile based on. */
-var(MacroUV) float MacroUVRadius; 
+var(MacroUV) float MacroUVRadius;
 
 /** Occlusion method enumeration */
 enum EParticleSystemOcclusionBoundsMethod
@@ -198,7 +198,7 @@ enum EParticleSystemOcclusionBoundsMethod
 	EPSOBM_CustomBounds
 };
 
-/** 
+/**
  *	Which occlusion bounds method to use for this particle system.
  *	EPSOBM_None - Don't determine occlusion for this system.
  *	EPSOBM_ParticleBounds - Use the bounds of the component when determining occlusion.
@@ -210,10 +210,10 @@ var(Occlusion)	Box										CustomOcclusionBounds;
 
 /** For mobile only, whether to use point sprite rendering to speed up particle rendering */
 var(Mobile) bool										bUseMobilePointSprites;
- 
+
 /**
  *	Temporary array for tracking 'solo' emitter mode.
- *	Entry will be true if emitter was enabled 
+ *	Entry will be true if emitter was enabled
  */
 struct native LODSoloTrack
 {
@@ -233,9 +233,9 @@ native function						SetCurrentLODMethod(ParticleSystemLODMethod InMethod);
 /** Set the distance for the given LOD index									*/
 native function bool				SetLODDistance(int LODLevelIndex, float InDistance);
 
-/** 
+/**
  *	Get the longest possible lifespan for this particle system.
- *	
+ *
  *	@param	InComponentDelay	The delay from the component using the emitter
  *
  *	@return	FLOAT				The longest lifespan this PSys could have; 0.0f if infinite.
@@ -268,7 +268,7 @@ cpptext
 	 *			FALSE	if not be determined
 	 */
 	virtual UBOOL		CalculateMaxActiveParticleCounts();
-	
+
 	/**
 	 *	Retrieve the parameters associated with this particle system.
 	 *
@@ -372,5 +372,5 @@ defaultproperties
 	FloorScale3D=(X=1.000000,Y=1.000000,Z=1.000000)
 
 	MacroUVPosition=(X=0.000000,Y=0.000000,Z=0.000000)
-	MacroUVRadius=200 
+	MacroUVRadius=200
 }

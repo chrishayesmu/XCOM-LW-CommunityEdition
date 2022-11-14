@@ -73,11 +73,11 @@ simulated function bool OnUnrealCommand(int Cmd, int Arg)
 simulated function UpdateData()
 {
     local string tmpStr;
-    local LWCE_TItem kItem;
+    local LWCEItemTemplate kItem;
 
-    if (m_tCEItemCard.iItemId != 0)
+    if (m_tCEItemCard.ItemName != '')
     {
-        kItem = `LWCE_ITEM(m_tCEItemCard.iItemId);
+        kItem = `LWCE_ITEM(m_tCEItemCard.ItemName);
     }
 
     switch (m_tCEItemCard.iCardType)
@@ -95,7 +95,7 @@ simulated function UpdateData()
 
             AS_AddTacticalInfoCardData(m_strTacticalInfoHeader, m_tCEItemCard.strFlavorText);
 
-            if (m_tCEItemCard.iItemId == eItem_MecCivvies)
+            if (m_tCEItemCard.ItemName == 'Item_BaseAugments') // TODO figure out why this is needed
             {
                 AS_SetCardImage(kItem.ImagePath, eItemCard_Armor);
             }
@@ -274,15 +274,15 @@ simulated function UpdateData()
             break;
         case eItemCard_SHIV:
             AS_SetCardTitle(Caps(m_tCEItemCard.strName));
-            switch (m_tCEItemCard.iItemId)
+            switch (m_tCEItemCard.ItemName) // TODO generalize this
             {
-                case eItem_SHIV:
+                case 'Item_SHIV':
                     tmpStr = m_strChassisTypeNormal;
                     break;
-                case eItem_SHIV_Alloy:
+                case 'Item_SHIVAlloy':
                     tmpStr = m_strChassisTypeAlloy;
                     break;
-                case eItem_SHIV_Hover:
+                case 'Item_SHIVHover':
                     tmpStr = m_strChassisTypeHover;
                     break;
             }

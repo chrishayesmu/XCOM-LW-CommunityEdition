@@ -5,7 +5,6 @@ var config array<LWCE_TClassDefinition> arrSoldierClassDefs;
 
 var array<LWCE_TClassDefinition> arrSoldierClasses;
 
-
 function Init(bool bLoadingFromSave)
 {
     BaseInit();
@@ -67,7 +66,7 @@ function AddNewSoldiers(int iNumSoldiers, optional bool bCreatePawns = true)
     for (I = 0; I < iNumSoldiers; I++)
     {
         kSoldier = Spawn(class'LWCE_XGStrategySoldier');
-        kSoldier.m_kSoldier = m_kCharGen.CreateTSoldier();
+        kSoldier.m_kCESoldier = LWCE_XGCharacterGenerator(m_kCharGen).LWCE_CreateTSoldier();
         kSoldier.m_kChar = TACTICAL().GetTCharacter(eChar_Soldier);
         kSoldier.Init();
 
@@ -90,28 +89,28 @@ function AddTank(EItemType eArmor, EItemType eWeapon)
     `LWCE_LOG_DEPRECATED_CLS(AddTank);
 }
 
-function LWCE_AddTank(int iArmorItemId, int iWeaponItemId)
+function LWCE_AddTank(name ArmorName, name WeaponName)
 {
     local LWCE_XGStrategySoldier kTank;
-    local TInventory kTankLoadout;
+    local LWCE_TInventory kTankLoadout;
 
+    // TODO: set and use m_kCEChar as well
     kTank = Spawn(class'LWCE_XGStrategySoldier');
     kTank.m_kChar = TACTICAL().GetTCharacter(eChar_Tank);
 
-    // TODO try to draw these stats dynamically from the item itself
-    if (iArmorItemId == eItem_SHIV_Alloy)
+    if (ArmorName == 'Item_SHIVAlloyChassis')
     {
-        kTank.m_kSoldier.strLastName = m_strAlloySHIVPrefix $ string(++m_iAlloyTankCounter);
+        kTank.m_kSoldier.strLastName = m_strAlloySHIVPrefix $ ++m_iAlloyTankCounter;
         kTank.m_kChar.aStats[eStat_HP] += class'XGTacticalGameCore'.default.ALLOY_SHIV_HP_BONUS;
     }
-    else if (iArmorItemId == eItem_SHIV_Hover)
+    else if (ArmorName == 'Item_SHIVHoverChassis')
     {
-        kTank.m_kSoldier.strLastName = m_strHoverSHIVPrefix $ string(++m_iHoverTankCounter);
+        kTank.m_kSoldier.strLastName = m_strHoverSHIVPrefix $ ++m_iHoverTankCounter;
         kTank.m_kChar.aStats[eStat_HP] += class'XGTacticalGameCore'.default.HOVER_SHIV_HP_BONUS;
     }
     else
     {
-        kTank.m_kSoldier.strLastName = m_strSHIVPrefix $ string(++m_iTankCounter);
+        kTank.m_kSoldier.strLastName = m_strSHIVPrefix $ ++m_iTankCounter;
     }
 
     if (IsOptionEnabled(`LW_SECOND_WAVE_ID(CinematicMode)))
@@ -131,13 +130,12 @@ function LWCE_AddTank(int iArmorItemId, int iWeaponItemId)
 
     kTank.m_kSoldier.iRank = -1;
     kTank.m_kSoldier.iCountry = 66;
-    kTankLoadout.iArmor = iArmorItemId;
+    kTankLoadout.nmArmor = ArmorName;
     kTank.Init();
 
-    TACTICAL().TInventoryLargeItemsSetItem(kTankLoadout, 0, iWeaponItemId);
-    m_kLockers.ApplyTankLoadout(kTank, kTankLoadout);
+    class'LWCEInventoryUtils'.static.SetLargeItem(kTankLoadout, 0, WeaponName);
+    LWCE_XGFacility_Lockers(m_kLockers).LWCE_ApplyTankLoadout(kTank, kTankLoadout);
     AddNewSoldier(kTank);
-
 }
 
 function BuildClassDefinitions()
@@ -254,7 +252,7 @@ function bool CanLoadSoldier(XGStrategySoldier kSoldier, optional bool bAllowInj
         return false;
     }
 
-    if (kSoldier.m_kChar.kInventory.iArmor == 0)
+    if (LWCE_XGStrategySoldier(kSoldier).m_kCEChar.kInventory.nmArmor == '')
     {
         return false;
     }
@@ -306,14 +304,16 @@ function XGStrategySoldier CreateSoldier(ESoldierClass iClassId, int iSoldierLev
 function XGStrategySoldier LWCE_CreateSoldier(int iClassId, int iSoldierLevel, int iCountry, optional bool bBlueshirt = false)
 {
     local LWCE_XGFacility_Engineering kEngineering;
+    local LWCE_XGFacility_Lockers kLockers;
     local LWCE_XGStrategySoldier kSoldier;
     local int I;
 
     kEngineering = LWCE_XGFacility_Engineering(ENGINEERING());
+    kLockers = LWCE_XGFacility_Lockers(LOCKERS());
 
     kSoldier = Spawn(class'LWCE_XGStrategySoldier');
-    kSoldier.m_kSoldier = m_kCharGen.CreateTSoldier(, iCountry);
-    kSoldier.m_kSoldier.bBlueshirt = bBlueshirt;
+    kSoldier.m_kCESoldier = LWCE_XGCharacterGenerator(m_kCharGen).LWCE_CreateTSoldier(, iCountry);
+    kSoldier.m_kCESoldier.bBlueshirt = bBlueshirt;
     kSoldier.m_kChar = TACTICAL().GetTCharacter(eChar_Soldier);
     kSoldier.Init();
 
@@ -324,12 +324,12 @@ function XGStrategySoldier LWCE_CreateSoldier(int iClassId, int iSoldierLevel, i
     {
         if (kEngineering.LWCE_IsFoundryTechResearched('Foundry_SecurityTrainingWeapons'))
         {
-            LOCKERS().EquipLargeItem(kSoldier, `LW_ITEM_ID(LaserRifle), 0);
+            kLockers.LWCE_EquipLargeItem(kSoldier, 'Item_LaserRifle', 0);
         }
 
         if (kEngineering.LWCE_IsFoundryTechResearched('Foundry_SecurityTrainingArmor'))
         {
-            LOCKERS().EquipArmor(kSoldier, `LW_ITEM_ID(PhalanxArmor));
+            kLockers.LWCE_EquipArmor(kSoldier, 'Item_PhalanxArmor');
         }
     }
 
@@ -436,7 +436,7 @@ function DetermineTimeOut(XGStrategySoldier kSoldier)
         kCESoldier.m_iTurnsOut -= Min(24, kCESoldier.m_iTurnsOut);
     }
 
-    if (kCESoldier.GetInventory().iArmor == `LW_ITEM_ID(VortexArmor))
+    if (kCESoldier.m_kCEChar.kInventory.nmArmor == 'Item_VortexArmor')
     {
         kCESoldier.m_iTurnsOut = 0;
         kCESoldier.m_bAllIn = false;
@@ -1001,23 +1001,23 @@ function SelectSoldiersForSkyrangerSquad(XGShip_Dropship kSkyranger, out array<X
 
         if (kVolunteer != none && kVolunteer.MedalCount() > 4)
         {
-            XComOnlineEventMgr(GameEngine(class'Engine'.static.GetEngine()).OnlineEventManager).UnlockAchievement(AT_GuardianOfEarth);
+            `ONLINEEVENTMGR.UnlockAchievement(AT_GuardianOfEarth);
         }
     }
 
-    foreach BARRACKS().m_aLastMissionSoldiers(kSoldier)
+    foreach m_aLastMissionSoldiers(kSoldier)
     {
-        if (arrSoldiers.Length < iNumToPreload && kSoldier != kVolunteer && BARRACKS().CanLoadSoldier(kSoldier))
+        if (arrSoldiers.Length < iNumToPreload && kSoldier != kVolunteer && CanLoadSoldier(kSoldier))
         {
             arrSoldiers.AddItem(kSoldier);
         }
     }
 
-    foreach BARRACKS().m_arrSoldiers(kSoldier)
+    foreach m_arrSoldiers(kSoldier)
     {
         if (arrSoldiers.Length < iNumToPreload)
         {
-            if (arrSoldiers.Find(kSoldier) < 0 && BARRACKS().CanLoadSoldier(kSoldier))
+            if (arrSoldiers.Find(kSoldier) < 0 && CanLoadSoldier(kSoldier))
             {
                 if (kSoldier.GetStatus() != 8)
                 {
@@ -1162,4 +1162,32 @@ function UpdateFoundryPerksForSoldier(XGStrategySoldier kSoldier)
     kSoldier.m_kChar.aUpgrades[113] = 0;
 
     `LWCE_MOD_LOADER.UpdateFoundryPerksForSoldier(kSoldier, kEngineering);
+}
+
+function UpdateGrenades(EItemType eWeapon)
+{
+    `LWCE_LOG_DEPRECATED_CLS(UpdateGrenades);
+}
+
+function LWCE_UpdateGrenades(name OldWeaponName, name NewWeaponName)
+{
+    local XGStrategySoldier kSoldier;
+    local LWCE_XGStrategySoldier kCESoldier;
+    local int iSmallItem;
+
+    foreach m_arrSoldiers(kSoldier)
+    {
+        kCESoldier = LWCE_XGStrategySoldier(kSoldier);
+
+        if (!kCESoldier.IsATank())
+        {
+            for (iSmallItem = 0; iSmallItem < kCESoldier.m_kCEChar.kInventory.arrSmallItems.Length; iSmallItem++)
+            {
+                if (kCESoldier.m_kCEChar.kInventory.arrSmallItems[iSmallItem] == OldWeaponName)
+                {
+                    LWCE_XGFacility_Lockers(m_kLockers).LWCE_EquipSmallItem(kCESoldier, NewWeaponName, iSmallItem);
+                }
+            }
+        }
+    }
 }

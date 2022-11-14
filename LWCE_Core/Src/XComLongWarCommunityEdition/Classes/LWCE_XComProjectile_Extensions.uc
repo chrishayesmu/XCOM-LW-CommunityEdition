@@ -32,6 +32,121 @@ static simulated function CalculateUnitDamage(XComProjectile kSelf)
     }
 }
 
+static function InitFX(XComProjectile kSelf, bool bResetParticles, bool bHit)
+{
+    local LWCEWeaponTemplate kWeaponTemplate;
+    local XComWeapon OwnerWeapon;
+
+    if (!kSelf.bPreview && kSelf.Mesh != none)
+    {
+        if (kSelf.ProjectileTrailEffect != none)
+        {
+            if (bResetParticles)
+            {
+                kSelf.ProjectileTrailEffect.InitializeSystem();
+                kSelf.ProjectileTrailEffect.SetActive(true);
+            }
+
+            kSelf.Mesh.AttachComponentToSocket(kSelf.ProjectileTrailEffect, kSelf.ProjectileTrailSocket);
+        }
+
+        if (kSelf.ProjectileLightComponent != none)
+        {
+            kSelf.Mesh.AttachComponentToSocket(kSelf.ProjectileLightComponent, kSelf.ProjectileTrailSocket);
+        }
+
+        OwnerWeapon = XComWeapon(kSelf.Owner);
+
+        if (OwnerWeapon != none && kSelf.MuzzleFlashLight != none)
+        {
+            SkeletalMeshComponent(OwnerWeapon.Mesh).AttachComponentToSocket(kSelf.MuzzleFlashLight, 'gun_fire');
+        }
+
+        if (XComUnitPawn(kSelf.Owner.Owner) != none && XGAction_Fire(kSelf.m_kFiredFromUnit.GetAction()) != none && XGAction_Fire(kSelf.m_kFiredFromUnit.GetAction()).CanApplyTracerBeamFX())
+        {
+            XGAction_Fire(kSelf.m_kFiredFromUnit.GetAction()).m_iTracerBeamShots++;
+
+            if (XGAction_Fire(kSelf.m_kFiredFromUnit.GetAction()).m_iTracerBeamShots == 2)
+            {
+                XGAction_Fire(kSelf.m_kFiredFromUnit.GetAction()).CurrentShotReplicationData.m_bCanApplyTracerBeamFX = false;
+            }
+            else
+            {
+                return;
+            }
+
+            kSelf.TracerBeamTrailEffect = kSelf.WorldInfo.MyEmitterPool.SpawnEmitterMeshAttachment(ParticleSystem(`CONTENTMGR.GetGameContent("FX_Soldier_Abilities.P_Tracer_Beam_Trail")), kSelf.Mesh, kSelf.ProjectileTrailSocket, true);
+
+            if (bResetParticles)
+            {
+                kSelf.TracerBeamTrailEffect.InitializeSystem();
+            }
+
+            kSelf.TracerBeamTrailEffect.SetActive(true);
+        }
+
+        if (OwnerWeapon != none && OwnerWeapon.m_kGameWeapon != none)
+        {
+            kWeaponTemplate = LWCE_XGWeapon(OwnerWeapon.m_kGameWeapon).m_kTemplate;
+
+            if (kWeaponTemplate.UsesProjectileTrailFx('HeatBullets') && kSelf.m_kFiredFromUnit.GetCharacter().HasUpgrade(ePerk_HEATAmmo))
+            {
+                kSelf.HeatBulletTrailEffect = kSelf.WorldInfo.MyEmitterPool.SpawnEmitterMeshAttachment(ParticleSystem(`CONTENTMGR.GetGameContent("FX_Soldier_Abilities.P_HEAT_Bullet_Trail")), kSelf.Mesh, kSelf.ProjectileTrailSocket, true);
+
+                if (bResetParticles)
+                {
+                    kSelf.HeatBulletTrailEffect.InitializeSystem();
+                }
+
+                kSelf.HeatBulletTrailEffect.SetActive(true);
+            }
+
+            if (kWeaponTemplate.UsesProjectileTrailFx('HeatRocket'))
+            {
+                kSelf.HeatRocketTrailEffect = kSelf.WorldInfo.MyEmitterPool.SpawnEmitterMeshAttachment(ParticleSystem(`CONTENTMGR.GetGameContent("FX_Soldier_Abilities.P_HEAT_Rocket_Trail")), kSelf.Mesh, kSelf.ProjectileTrailSocket, true);
+
+                if (bResetParticles)
+                {
+                    kSelf.HeatRocketTrailEffect.InitializeSystem();
+                }
+
+                kSelf.HeatRocketTrailEffect.SetActive(true);
+            }
+
+            if (kWeaponTemplate.UsesProjectileTrailFx('ReaperBullets'))
+            {
+                if (kWeaponTemplate.HasProperty('Assault'))
+                {
+                    kSelf.ReaperRoundsTrailEffect = kSelf.WorldInfo.MyEmitterPool.SpawnEmitterMeshAttachment(ParticleSystem(`CONTENTMGR.GetGameContent("FX_Reaper_Rounds.P_Reaper_Rounds_Trail_Shotgun")), kSelf.Mesh, kSelf.ProjectileTrailSocket, true);
+                }
+                else
+                {
+                    kSelf.ReaperRoundsTrailEffect = kSelf.WorldInfo.MyEmitterPool.SpawnEmitterMeshAttachment(ParticleSystem(`CONTENTMGR.GetGameContent("FX_Reaper_Rounds.P_Reaper_Rounds_Trail")), kSelf.Mesh, kSelf.ProjectileTrailSocket, true);
+                }
+
+                if (bResetParticles)
+                {
+                    kSelf.ReaperRoundsTrailEffect.InitializeSystem();
+                }
+
+                kSelf.ReaperRoundsTrailEffect.SetActive(true);
+            }
+
+            if (kWeaponTemplate.UsesProjectileTrailFx('ShredderRocket') && XGAction_Fire(kSelf.m_kFiredFromUnit.GetAction()) != none && XGAction_Fire(kSelf.m_kFiredFromUnit.GetAction()).m_kShot.GetType() == eAbility_ShredderRocket)
+            {
+                kSelf.ShredderRocketTrailEffect = kSelf.WorldInfo.MyEmitterPool.SpawnEmitterMeshAttachment(ParticleSystem(`CONTENTMGR.GetGameContent("FX_Soldier_Abilities.P_Shredder_Trail")), kSelf.Mesh, kSelf.ProjectileTrailSocket, true);
+
+                if (bResetParticles)
+                {
+                    kSelf.ShredderRocketTrailEffect.InitializeSystem();
+                }
+
+                kSelf.ShredderRocketTrailEffect.SetActive(true);
+            }
+        }
+    }
+}
+
 static simulated function InitProjectile(XComProjectile kSelf, Vector Direction, optional bool bPreviewOnly = false, optional bool bCanDoDamage = true)
 {
     local XGUnit kAttacker, kTargetToUse;

@@ -7,7 +7,7 @@ simulated function Init(XComTacticalController _controllerRef, UIFxsMovie _manag
     m_kInfoBox = Spawn(class'LWCE_UITacticalHUD_InfoPanel', self);
     m_kInfoBox.Init(controllerRef, manager, self);
 
-    m_kAbilityHUD = Spawn(class'UITacticalHUD_AbilityContainer', self);
+    m_kAbilityHUD = Spawn(class'LWCE_UITacticalHUD_AbilityContainer', self);
     m_kAbilityHUD.s_name = 'theRightHUD';
     m_kAbilityHUD.Init(controllerRef, manager, self);
 

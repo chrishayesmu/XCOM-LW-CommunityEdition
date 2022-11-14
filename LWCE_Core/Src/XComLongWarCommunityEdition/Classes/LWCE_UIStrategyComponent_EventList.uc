@@ -123,7 +123,7 @@ simulated function string LWCE_GetEventImageLabel(name EventType, int iContinent
             return "_genemod";
         case 'CyberneticModification':
             return "_mech";
-        case 'MecRepair':
+        case 'ItemRepair':
             return "_mech";
         case 'FCRequest':
             return class'UIUtilities'.static.GetEventListFCRequestIcon(iContinentMakingRequest);

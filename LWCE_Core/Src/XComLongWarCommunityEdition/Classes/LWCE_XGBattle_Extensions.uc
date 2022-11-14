@@ -229,6 +229,8 @@ static function InitPlayers(XGBattle_SP kSelf, optional bool bLoading = false)
             kSelf.PRES().GetCamera().m_kLookAtView.SetTransition(eTransition_Blend);
         }
     }
+
+    `LWCE_LOG_CLS("InitPlayers end");
 }
 
 static function PutSoldiersOnDropship(XGBattle_SP kSelf)
@@ -311,9 +313,8 @@ static function SpawnCovertOperative(XGBattle_SPCovertOpsExtraction kSelf)
     local XComSpawnPoint kSpawnPoint;
     local TTransferSoldier kTransferSoldier;
     local LWCE_TTransferSoldier kCETransferSoldier;
-    local XGCharacter_Soldier kChar;
+    local LWCE_XGCharacter_Soldier kChar;
     local LWCE_XGUnit kUnit;
-    local bool bGeneMod;
 
     kSpawnPoint = kSelf.ChooseCovertOperativeSpawnPoint();
 
@@ -339,14 +340,11 @@ static function SpawnCovertOperative(XGBattle_SPCovertOpsExtraction kSelf)
         kTransferSoldier = kSelf.CreateDebugCovertOperative(kPlayer.GetSquad().GetMemberAt(0));
     }
 
-    bGeneMod = class'LWCE_XComPerkManager'.static.LWCE_HasAnyGeneMod(kCETransferSoldier.kChar);
-
     kSelf.ForceCovertOperativeLoadout(kTransferSoldier);
 
-    kChar = kSelf.Spawn(class'XGCharacter_Soldier');
-    kChar.SetTSoldier(kTransferSoldier.kSoldier);
-    kChar.SetTCharacter(kTransferSoldier.kChar);
-    kChar.m_eType = EPawnType(class'XGBattleDesc'.static.MapSoldierToPawn(kTransferSoldier.kChar.kInventory.iArmor, kTransferSoldier.kSoldier.kAppearance.iGender, bGeneMod));
+    kChar = kSelf.Spawn(class'LWCE_XGCharacter_Soldier');
+    kChar.m_kCESoldier = kCETransferSoldier.kSoldier;
+    kChar.m_kCEChar = kCETransferSoldier.kChar;
 
     kUnit = LWCE_XGUnit(kPlayer.SpawnUnit(class'LWCE_XGUnit', kPlayer.m_kPlayerController, kSpawnPoint.Location, kSpawnPoint.Rotation, kChar, kPlayer.GetSquad(),, kSpawnPoint));
     kUnit.m_iUnitLoadoutID = kTransferSoldier.iUnitLoadoutID;
@@ -354,7 +352,7 @@ static function SpawnCovertOperative(XGBattle_SPCovertOpsExtraction kSelf)
     kUnit.m_kCESoldier = kCETransferSoldier.kSoldier;
     kUnit.AddStatModifiers(kTransferSoldier.aStatModifiers);
 
-    XComHumanPawn(kUnit.GetPawn()).SetAppearance(kChar.m_kSoldier.kAppearance);
+    LWCE_XComHumanPawn(kUnit.GetPawn()).LWCE_SetAppearance(kUnit.m_kCESoldier.kAppearance);
     class'LWCE_XGLoadoutMgr'.static.ApplyInventory(kUnit);
     kUnit.UpdateItemCharges();
 

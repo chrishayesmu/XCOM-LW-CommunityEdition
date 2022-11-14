@@ -204,7 +204,7 @@ var class<ReachSpec> DefaultReachSpecClass;
 // Navigation Mesh generation configuration parameters					//
 //////////////////////////////////////////////////////////////////////////
 
-// EdgePathColors                      - color to draw edges at the given index 
+// EdgePathColors                      - color to draw edges at the given index
 var array<Color> EdgePathColors;
 
 // NavMeshGen_StepSize                 - Size of our expansion step. (also the size of the base square added at each step to the mesh)
@@ -284,50 +284,13 @@ simulated event PreBeginPlay()
 
 defaultproperties
 {
-	Components.Remove(Sprite)
-	Components.Remove(Arrow)
+    AccelRate=1.0
+    RemoteRole=ENetRole.ROLE_None
+    bCollideActors=false
+    bCollideWorld=false
+    bBlockActors=false
+    bProjTarget=false
+    bPathColliding=true
 
-	RemoteRole=ROLE_None
-	AccelRate=+00001.000000
-	bCollideActors=false
-	bCollideWorld=false
-	bBlockActors=false
-	bProjTarget=false
-	bPathColliding=true
-
-	PathSizes(0)=(Desc=Human,Radius=48,Height=80)
-	PathSizes(1)=(Desc=Common,Radius=72,Height=100)
-	PathSizes(2)=(Desc=Max,Radius=120,Height=120)
-	PathSizes(3)=(Desc=Vehicle,Radius=260,Height=120)
-
-	EdgePathColors(0)=(R=0,G=0,B=255)
-	EdgePathColors(1)=(R=0,G=255,B=0)
-	EdgePathColors(2)=(R=255,G=0,B=0)
-	EdgePathColors(3)=(R=0,G=255,B=255)
-
-	TestJumpZ=420
-	TestGroundSpeed=600
-	TestMaxFallSpeed=2500
-	TestFallSpeed=1200
-	MinNumPlayerStarts=1
-	DefaultReachSpecClass=class'Engine.Reachspec'
-
-
-	NavMeshGen_StepSize=30.0
-	NavMeshGen_MaxGroundCheckSize=30.0f
-	NavMeshGen_EntityHalfHeight=72.0
-	NavMeshGen_StartingHeightOffset=65.0
-	NavMeshGen_MaxDropHeight=60.0
-	NavMeshGen_MaxStepHeight=35.0
-	NavMeshGen_VertZDeltaSnapThresh=20.0
-	NavMeshGen_MinPolyArea=25
-	NavMeshGen_BorderBackfill_CheckDist=70.0
-	NavMeshGen_MinMergeDotAreaThreshold=2.0
-	NavMeshGen_MinMergeDotSmallArea=0.0
-	NavMeshGen_MinMergeDotLargeArea=0.95
-	NavMeshGen_MaxPolyHeight=160.0
-	NavMeshGen_HeightMergeThreshold=10
-	NavMeshGen_EdgeMaxDelta=2.0
-	NavMeshGen_MinEdgeLength=7.0
-	NavMeshGen_ExpansionDoObstacleMeshSimplification=TRUE
+    Components(0)=CollisionCylinder
 }

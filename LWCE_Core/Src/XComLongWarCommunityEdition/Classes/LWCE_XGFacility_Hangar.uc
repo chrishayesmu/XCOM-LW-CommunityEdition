@@ -6,7 +6,7 @@ var const localized array<string> PilotRanks;
 
 var config bool bAutoNicknameNewPilots;
 
-var int m_iCEBestWeaponEquipped;
+var name m_nmCEBestWeaponEquipped; // TODO: not being populated
 
 function AddDropship()
 {
@@ -122,6 +122,40 @@ function AssignRandomCallsign(XGShip_Interceptor kShip)
     LWCE_XGShip_Interceptor(kShip).SetCallsign(PilotNames[Rand(PilotNames.Length)]);
 }
 
+function bool CanEquip(int iItem, XGShip_Interceptor kShip, out string strHelp)
+{
+    `LWCE_LOG_DEPRECATED_CLS(CanEquip);
+
+    return false;
+}
+
+function bool LWCE_CanEquip(name ItemName, LWCE_XGShip_Interceptor kShip, out string strHelp)
+{
+    local LWCEShipWeaponTemplate kShipWeapon;
+
+    if (kShip.LWCE_GetWeapon() == ItemName)
+    {
+        strHelp = m_strCanEquipMessage;
+        return false;
+    }
+
+    kShipWeapon = LWCEShipWeaponTemplate(`LWCE_ITEM(ItemName));
+
+    if (!kShipWeapon.bCanEquipOnFirestorm && kShip.IsFirestorm())
+    {
+        strHelp = m_sUnavailable;
+        return false;
+    }
+
+    if (!kShipWeapon.bCanEquipOnInterceptor && kShip.IsInterceptor())
+    {
+        strHelp = m_sUnavailable;
+        return false;
+    }
+
+    return true;
+}
+
 function DetermineInterceptorStatus(XGShip_Interceptor kInterceptor)
 {
     kInterceptor.m_iStatus = eShipStatus_Ready;
@@ -154,14 +188,14 @@ function EquipWeapon(EItemType eItem, XGShip_Interceptor kShip)
     `LWCE_LOG_DEPRECATED_CLS(EquipWeapon);
 }
 
-function LWCE_EquipWeapon(int iItemId, XGShip_Interceptor kShip)
+function LWCE_EquipWeapon(name ItemName, XGShip_Interceptor kShip)
 {
-    STORAGE().RemoveItem(iItemId, 1);
+    LWCE_XGStorage(STORAGE()).LWCE_RemoveItem(ItemName, 1);
     Sound().PlaySFX(SNDLIB().SFX_Facility_ConstructItem);
-    LWCE_XGShip_Interceptor(kShip).LWCE_EquipWeapon(iItemId);
+    LWCE_XGShip_Interceptor(kShip).LWCE_EquipWeapon(ItemName);
     kShip.m_iStatus = eShipStatus_Rearming;
 
-    if (iItemId == `LW_ITEM_ID(StingrayMissiles) || iItemId == `LW_ITEM_ID(AvalancheMissiles))
+    if (ItemName == 'Item_StingrayMissiles' || ItemName == 'Item_AvalancheMissiles')
     {
         kShip.m_iHoursDown = 12;
     }
@@ -170,10 +204,12 @@ function LWCE_EquipWeapon(int iItemId, XGShip_Interceptor kShip)
         kShip.m_iHoursDown = class'XGTacticalGameCore'.default.INTERCEPTOR_REARM_HOURS;
     }
 
-    if (iItemId > m_iCEBestWeaponEquipped)
+/* TODO implement an analogue for this
+    if (ItemName > m_iCEBestWeaponEquipped)
     {
-        m_iCEBestWeaponEquipped = iItemId;
+        m_iCEBestWeaponEquipped = ItemName;
     }
+*/
 }
 
 function TContinentInfo GetContinentInfo(EContinent eCont)
@@ -204,7 +240,7 @@ function TContinentInfo GetContinentInfo(EContinent eCont)
     {
         foreach kEngineering.m_arrCEItemProjects(kProject)
         {
-            if (kProject.iItemId == `LW_ITEM_ID(Firestorm))
+            if (kProject.ItemName == 'Item_Firestorm')
             {
                 kInfo.iNumShips += kProject.iQuantity;
             }
@@ -243,21 +279,23 @@ function array<TItem> GetUpgrades(XGShip_Interceptor kShip)
     return arrItems;
 }
 
-function array<LWCE_TItem> LWCE_GetUpgrades(XGShip_Interceptor kShip)
+function array<LWCEShipWeaponTemplate> LWCE_GetUpgrades(XGShip_Interceptor kShip)
 {
-    local LWCE_XGItemTree kItemTree;
-    local XGStorage kStorage;
-    local array<LWCE_TItem> arrItems;
-    local LWCE_TItem kItem;
+    local LWCE_XGStorage kStorage;
+    local array<LWCEShipWeaponTemplate> arrItems, arrTemplates;
+    local LWCEItemTemplateManager kItemMgr;
+    local LWCEShipWeaponTemplate kShipWeapon;
 
-    kItemTree = `LWCE_ITEMTREE;
-    kStorage = STORAGE();
+    kItemMgr = `LWCE_ITEM_TEMPLATE_MGR;
+    kStorage = LWCE_XGStorage(STORAGE());
 
-    foreach kItemTree.m_arrCEItems(kItem)
+    arrTemplates = kItemMgr.GetAllShipWeaponTemplates();
+
+    foreach arrTemplates(kShipWeapon)
     {
-        if (kItemTree.IsShipWeapon(kItem.iItemId) && kStorage.GetNumItemsAvailable(kItem.iItemId) > 0)
+        if (kStorage.LWCE_GetNumItemsAvailable(kShipWeapon.GetItemName()) > 0)
         {
-            arrItems.AddItem(kItem);
+            arrItems.AddItem(kShipWeapon);
         }
     }
 
@@ -290,31 +328,7 @@ function GiveMissionReward(XGShip_Dropship kSkyranger)
 
 static function EShipWeapon ItemTypeToShipWeapon(EItemType eItem)
 {
-    `LWCE_LOG_DEPRECATED(ItemTypeToShipWeapon);
-    return 0;
-}
-
-static function int LWCE_ItemTypeToShipWeapon(int iItemId)
-{
-    // TODO: add mod hook
-    switch (iItemId)
-    {
-        case `LW_ITEM_ID(StingrayMissiles):
-            return eShipWeapon_Stingray;
-        case `LW_ITEM_ID(PhoenixCannon):
-            return eShipWeapon_Cannon;
-        case `LW_ITEM_ID(AvalancheMissiles):
-            return eShipWeapon_Avalanche;
-        case `LW_ITEM_ID(LaserCannon):
-            return eShipWeapon_Laser;
-        case `LW_ITEM_ID(PlasmaCannon):
-            return eShipWeapon_Plasma;
-        case `LW_ITEM_ID(EMPCannon):
-            return eShipWeapon_EMP;
-        case `LW_ITEM_ID(FusionLance):
-            return eShipWeapon_Fusion;
-    }
-
+    `LWCE_LOG_DEPRECATED_NOREPLACE_CLS(ItemTypeToShipWeapon);
     return 0;
 }
 
@@ -342,68 +356,143 @@ function LandDropship(XGShip_Dropship kSkyranger)
     kLabs.LWCE_CompilePostMissionReport(arrPreLandTechs, arrPostLandTechs);
 
     BARRACKS().LandSoldiers(kSkyranger);
-    kSkyranger.CargoInfo.m_kReward = kEmptyReward;
+    kSkyranger.CargoInfo.m_kReward = kEmptyReward; // TODO: need to convert to LWCE_TMissionReward
     GEOSCAPE().Resume();
+}
+
+function bool OrderedHigher(XGShip_Interceptor kCraft1, XGShip_Interceptor kCraft2)
+{
+    // Same as the base OrderedHigher but without GetWeapon calls since our items are unordered
+
+    if (kCraft1.m_iHomeContinent == HQ().m_iContinent && kCraft2.m_iHomeContinent != HQ().m_iContinent)
+    {
+        return true;
+    }
+    else if (kCraft2.m_iHomeContinent == HQ().m_iContinent && kCraft1.m_iHomeContinent != HQ().m_iContinent)
+    {
+        return false;
+    }
+    else if (kCraft1.m_iHomeContinent < kCraft2.m_iHomeContinent)
+    {
+        return true;
+    }
+    else if (kCraft2.m_iHomeContinent < kCraft1.m_iHomeContinent)
+    {
+        return false;
+    }
+
+    if (!kCraft1.IsDamaged() && kCraft2.IsDamaged())
+    {
+        return true;
+    }
+    else if (!kCraft2.IsDamaged() && kCraft1.IsDamaged())
+    {
+        return false;
+    }
+
+    if (kCraft1.m_iStatus != 2 && kCraft2.m_iStatus == 2)
+    {
+        return true;
+    }
+    else if (kCraft2.m_iStatus != 2 && kCraft1.m_iStatus == 2)
+    {
+        return false;
+    }
+
+    if (kCraft1.IsFirestorm() && !kCraft2.IsFirestorm())
+    {
+        return true;
+    }
+    else if (!kCraft1.IsFirestorm() && kCraft2.IsFirestorm())
+    {
+        return false;
+    }
+
+    return false;
+}
+
+function EItemType ShipTypeToItemType(EShipType eShip)
+{
+    `LWCE_LOG_DEPRECATED_CLS(ShipTypeToItemType);
+
+    return eItem_None;
+}
+
+function name LWCE_ShipTypeToItemType(EShipType eShip)
+{
+    switch (eShip)
+    {
+        case eShip_Interceptor:
+            return 'Item_Interceptor';
+        case eShip_Skyranger:
+            return 'Item_Skyranger';
+        case eShip_Firestorm:
+            return 'Item_Firestorm';
+        default:
+            return '';
+    }
 }
 
 function UnloadArtifacts(XGShip_Dropship kSkyranger)
 {
-    local int Index, iItemId, iNumArtifacts;
+    local int Index, iNumArtifacts;
+    local name ItemName;
+    local LWCEItemTemplate kItem;
     local LWCE_XGDropshipCargoInfo kCargo;
     local LWCE_XGFacility_Engineering kEngineering;
     local LWCE_XGHeadquarters kHQ;
-    local LWCE_XGItemTree kItemTree;
+    local LWCE_XGStorage kStorage;
 
     kCargo = LWCE_XGDropshipCargoInfo(kSkyranger.CargoInfo);
     kEngineering = LWCE_XGFacility_Engineering(ENGINEERING());
     kHQ = `LWCE_HQ;
-    kItemTree = `LWCE_ITEMTREE;
+    kStorage = LWCE_XGStorage(STORAGE());
 
     kHQ.m_kCELastCargoArtifacts = Spawn(class'LWCEItemContainer');
     kHQ.m_kCELastCargoArtifacts.CopyFrom(kCargo.m_kArtifactsContainer);
+
     `LWCE_LOG_CLS("Unloading artifacts from dropship: there are " $ kCargo.m_kArtifactsContainer.m_arrEntries.Length $ " entries to process");
 
     for (Index = 0; Index < kCargo.m_kArtifactsContainer.m_arrEntries.Length; Index++)
     {
-        iItemId = kCargo.m_kArtifactsContainer.m_arrEntries[Index].iItemId;
+        ItemName = kCargo.m_kArtifactsContainer.m_arrEntries[Index].ItemName;
         iNumArtifacts = kCargo.m_kArtifactsContainer.m_arrEntries[Index].iQuantity;
+        kItem = `LWCE_ITEM(ItemName);
 
         if (iNumArtifacts > 0)
         {
-            if (!kItemTree.LWCE_ItemIsValid(iItemId))
-            {
-                kHQ.m_kCELastCargoArtifacts.Delete(iItemId);
-            }
-            else if (kItemTree.LWCE_IsCaptive(iItemId))
+            if (kItem.IsCaptive())
             {
                 if (!kHQ.HasFacility(eFacility_AlienContain))
                 {
-                    kHQ.m_kCELastCargoArtifacts.Delete(iItemId);
-                    iItemId = kItemTree.LWCE_CaptiveToCorpse(iItemId);
+                    // Delete the captive from the cargo report
+                    kHQ.m_kCELastCargoArtifacts.Delete(ItemName);
+                    ItemName = kItem.nmCaptiveToCorpseId;
                     LABS().m_bCaptiveDied = true;
 
                     // Add captive's corpse to cargo
-                    kHQ.m_kCELastCargoArtifacts.AdjustQuantity(iItemId, iNumArtifacts);
+                    kHQ.m_kCELastCargoArtifacts.AdjustQuantity(ItemName, iNumArtifacts);
                 }
                 else
                 {
-                    kHQ.m_arrCELastCaptives.AddItem(iItemId);
+                    kHQ.m_arrCELastCaptives.AddItem(ItemName);
 
-                    if (!STORAGE().EverHadItem(iItemId))
+                    if (!kStorage.LWCE_EverHadItem(ItemName))
                     {
                         STAT_AddStat(eRecap_DifferentAliensCaptured, 1);
                     }
 
-                    if (iItemId >= 0 && iItemId <= 255)
-                    {
-                        Base().BeginAlienContainment(EItemType(iItemId));
-                    }
+                    // TODO: figure out if and why we need to start containment from the hangar rather than labs
+                    // if (ItemName >= 0 && ItemName <= 255)
+                    // {
+                    //     Base().BeginAlienContainment(EItemType(ItemName));
+                    // }
                 }
 
                 SITROOM().PushNarrativeHeadline(eTickerNarrative_AlienCaptured);
-                STORAGE().AddItem(iItemId, iNumArtifacts);
+                kStorage.LWCE_AddItem(ItemName, iNumArtifacts);
             }
-            else if (iItemId == `LW_ITEM_ID(Elerium))
+            else if (ItemName == 'Item_Elerium')
             {
                 if (kEngineering.LWCE_IsFoundryTechResearched('Foundry_AlienNucleonics'))
                 {
@@ -412,7 +501,7 @@ function UnloadArtifacts(XGShip_Dropship kSkyranger)
 
                 AddResource(eResource_Elerium, iNumArtifacts);
             }
-            else if (iItemId == `LW_ITEM_ID(AlienAlloy))
+            else if (ItemName == 'Item_AlienAlloy')
             {
                 if (kEngineering.LWCE_IsFoundryTechResearched('Foundry_AlienMetallurgy'))
                 {
@@ -423,7 +512,7 @@ function UnloadArtifacts(XGShip_Dropship kSkyranger)
             }
             else
             {
-                if (iItemId == `LW_ITEM_ID(WeaponFragment))
+                if (ItemName == 'Item_WeaponFragment')
                 {
                     if (kEngineering.LWCE_IsFoundryTechResearched('Foundry_ImprovedSalvage'))
                     {
@@ -431,10 +520,28 @@ function UnloadArtifacts(XGShip_Dropship kSkyranger)
                     }
                 }
 
-                STORAGE().AddItem(iItemId, iNumArtifacts);
+                kStorage.LWCE_AddItem(ItemName, iNumArtifacts);
             }
         }
     }
 
     kCargo.m_kArtifactsContainer.Clear();
+}
+
+function UpdateWeaponView(EShipWeapon eWeapon)
+{
+    `LWCE_LOG_DEPRECATED_CLS(UpdateWeaponView);
+}
+
+function LWCE_UpdateWeaponView(name ShipWeaponName)
+{
+    // TODO: move somewhere centralized and potentially make extensible
+    if (LWCE_XGHangarShip_Firestorm(m_kViewWeaponsShip) != none)
+    {
+        LWCE_XGHangarShip_Firestorm(m_kViewWeaponsShip).LWCE_UpdateWeapon(ShipWeaponName);
+    }
+    else
+    {
+        LWCE_XGHangarShip(m_kViewWeaponsShip).LWCE_UpdateWeapon(ShipWeaponName);
+    }
 }

@@ -9,6 +9,236 @@ struct LWCE_TGeoscapeAlert
 
 var array<LWCE_TGeoscapeAlert> m_arrCEAlerts;
 
+static function name AlertNameFromEnum(EGeoscapeAlert eAlert)
+{
+    switch (eAlert)
+    {
+        case eGA_UFODetected:
+            return 'UFODetected';
+        case eGA_Abduction:
+            return 'Abduction';
+        case eGA_Terror:
+            return 'Terror';
+        case eGA_FCMission:
+            return 'FCMission';
+        case eGA_UFOCrash:
+            return 'UFOCrash';
+        case eGA_UFOLost:
+            return 'UFOLost';
+        case eGA_UFOLanded:
+            return 'UFOLanded';
+        case eGA_DropArrive:
+            return 'DropArrive';
+        case eGA_AlienBase:
+            return 'AlienBase';
+        case eGA_Temple:
+            return 'TempleShip';
+        case eGA_MissedAliens:
+            return 'MissedAliens';
+        case eGA_SecretPact:
+            return 'CountryLost';
+        case eGA_UFOScanning:
+            return 'UFOScanning';
+        case eGA_HQAssault:
+            return 'HQAssault';
+        case eGA_NewSoldiers:
+            return 'NewSoldiers';
+        case eGA_SoldierHealed:
+            return 'SoldierHealed';
+        case eGA_NewEngineers:
+            return 'NewEngineers';
+        case eGA_NewScientists:
+            return 'NewScientists';
+        case eGA_NewInterceptors:
+            return 'NewInterceptors';
+        case eGA_NewItemsReceived:
+            return 'NewItemsReceived';
+        case eGA_NewItemBuilt:
+            return 'NewItemBuilt';
+        case eGA_NewFacilityBuilt:
+            return 'NewFacilityBuilt';
+        case eGA_ExcavationComplete:
+            return 'ExcavationComplete';
+        case eGA_FacilityRemoved:
+            return 'FacilityRemoved';
+        case 24:
+            return 'CountryRejoinedXCom';
+        case eGA_ItemProjectCompleted:
+            return 'ItemProjectCompleted';
+        case eGA_FoundryProjectCompleted:
+            return 'FoundryProjectCompleted';
+        case eGA_WorkshopRebate:
+            return 'WorkshopRebate';
+        case eGA_ResearchCompleted:
+            return 'ResearchCompleted';
+        case eGA_PsiTraining:
+            return 'PsiTraining';
+        case eGA_ShipTransferred:
+            return 'ShipTransferred';
+        case eGA_ShipArmed:
+            return 'ShipArmed';
+        case eGA_ShipOnline:
+            return 'ShipOnline';
+        case eGA_SatelliteOnline:
+            return 'SatelliteOnline';
+        case eGA_CountryPanic:
+            return 'CountryPanic';
+        case eGA_SatelliteDestroyed:
+            return 'SatelliteDestroyed';
+        case eGA_FCActivity:
+            return 'FCActivity';
+        case eGA_ModalNotify:
+            return 'ModalNotify';
+        case eGA_PayDay:
+            return 'PayDay';
+        case eGA_FCJetTransfer:
+            return 'FCJetTransfer';
+        case eGA_FCExpiredRequest:
+            return 'FCExpiredRequest';
+        case eGA_FCDelayedRequest:
+            return 'FCDelayedRequest';
+        case eGA_FCSatCountry:
+            return 'FCSatCountry';
+        case eGA_FCMissionActivity:
+            return 'FCMissionActivity';
+        case eGA_ExaltMissionActivity:
+            return 'ExaltMissionActivity';
+        case eGA_ExaltAlert:
+            return 'ExaltAlert';
+        case eGA_ExaltResearchHack:
+            return 'ExaltResearchHack';
+        case eGA_CellHides:
+            return 'CellHides';
+        case eGA_GeneMod:
+            return 'GeneMod';
+        case eGA_Augmentation:
+            return 'Augmentation';
+        case eGA_ExaltRaidFailCountry:
+            return 'ExaltRaidFailCountry';
+        case eGA_ExaltRaidFailContinent:
+            return 'ExaltRaidFailContinent';
+        case 53:
+            return 'AirBaseDefenseFailed';
+        case 54:
+            return 'ItemRepairsComplete';
+    }
+}
+
+static function EGeoscapeAlert EnumFromAlertName(name AlertType)
+{
+    switch (AlertType)
+    {
+        case 'UFODetected':
+            return eGA_UFODetected;
+        case 'Abduction':
+            return eGA_Abduction;
+        case 'Terror':
+            return eGA_Terror;
+        case 'FCMission':
+            return eGA_FCMission;
+        case 'UFOCrash':
+            return eGA_UFOCrash;
+        case 'UFOLost':
+            return eGA_UFOLost;
+        case 'UFOLanded':
+            return eGA_UFOLanded;
+        case 'DropArrive':
+            return eGA_DropArrive;
+        case 'AlienBase':
+            return eGA_AlienBase;
+        case 'TempleShip':
+            return eGA_Temple;
+        case 'MissedAliens':
+            return eGA_MissedAliens;
+        case 'CountryLost':
+            return eGA_SecretPact;
+        case 'UFOScanning':
+            return eGA_UFOScanning;
+        case 'HQAssault':
+            return eGA_HQAssault;
+        case 'NewSoldiers':
+            return eGA_NewSoldiers;
+        case 'SoldierHealed':
+            return eGA_SoldierHealed;
+        case 'NewEngineers':
+            return eGA_NewEngineers;
+        case 'NewScientists':
+            return eGA_NewScientists;
+        case 'NewInterceptors':
+            return eGA_NewInterceptors;
+        case 'NewItemsReceived':
+            return eGA_NewItemsReceived;
+        case 'NewItemBuilt':
+            return eGA_NewItemBuilt;
+        case 'NewFacilityBuilt':
+            return eGA_NewFacilityBuilt;
+        case 'ExcavationComplete':
+            return eGA_ExcavationComplete;
+        case 'FacilityRemoved':
+            return eGA_FacilityRemoved;
+        case 'CountryRejoinedXCom':
+            return EGeoscapeAlert(24);
+        case 'ItemProjectCompleted':
+            return eGA_ItemProjectCompleted;
+        case 'FoundryProjectCompleted':
+            return eGA_FoundryProjectCompleted;
+        case 'WorkshopRebate':
+            return eGA_WorkshopRebate;
+        case 'ResearchCompleted':
+            return eGA_ResearchCompleted;
+        case 'PsiTraining':
+            return eGA_PsiTraining;
+        case 'ShipTransferred':
+            return eGA_ShipTransferred;
+        case 'ShipArmed':
+            return eGA_ShipArmed;
+        case 'ShipOnline':
+            return eGA_ShipOnline;
+        case 'SatelliteOnline':
+            return eGA_SatelliteOnline;
+        case 'CountryPanic':
+            return eGA_CountryPanic;
+        case 'SatelliteDestroyed':
+            return eGA_SatelliteDestroyed;
+        case 'FCActivity':
+            return eGA_FCActivity;
+        case 'ModalNotify':
+            return eGA_ModalNotify;
+        case 'PayDay':
+            return eGA_PayDay;
+        case 'FCJetTransfer':
+            return eGA_FCJetTransfer;
+        case 'FCExpiredRequest':
+            return eGA_FCExpiredRequest;
+        case 'FCDelayedRequest':
+            return eGA_FCDelayedRequest;
+        case 'FCSatCountry':
+            return eGA_FCSatCountry;
+        case 'FCMissionActivity':
+            return eGA_FCMissionActivity;
+        case 'ExaltMissionActivity':
+            return eGA_ExaltMissionActivity;
+        case 'ExaltAlert':
+            return eGA_ExaltAlert;
+        case 'ExaltResearchHack':
+            return eGA_ExaltResearchHack;
+        case 'CellHides':
+            return eGA_CellHides;
+        case 'GeneMod':
+            return eGA_GeneMod;
+        case 'Augmentation':
+            return eGA_Augmentation;
+        case 'ExaltRaidFailCountry':
+            return eGA_ExaltRaidFailCountry;
+        case 'ExaltRaidFailContinent':
+            return eGA_ExaltRaidFailContinent;
+        case 'AirBaseDefenseFailed':
+            return EGeoscapeAlert(53);
+        case 'ItemRepairsComplete':
+            return EGeoscapeAlert(54);
+    }
+}
+
 function Init()
 {
     UI = Spawn(class'LWCE_XGGeoscapeUI');
@@ -158,121 +388,6 @@ function LWCE_Alert(LWCE_TGeoscapeAlert kAlert)
     if (`HQGAME.GetGameCore().m_bIronMan && CanExit())
     {
         XComGameReplicationInfo(class'Engine'.static.GetCurrentWorldInfo().GRI).GetAutosaveMgr().DoAutosave(true);
-    }
-}
-
-function name AlertNameFromEnum(EGeoscapeAlert eAlert)
-{
-    switch (eAlert)
-    {
-        case eGA_UFODetected:
-            return 'UFODetected';
-        case eGA_Abduction:
-            return 'Abduction';
-        case eGA_Terror:
-            return 'Terror';
-        case eGA_FCMission:
-            return 'FCMission';
-        case eGA_UFOCrash:
-            return 'UFOCrash';
-        case eGA_UFOLost:
-            return 'UFOLost';
-        case eGA_UFOLanded:
-            return 'UFOLanded';
-        case eGA_DropArrive:
-            return 'DropArrive';
-        case eGA_AlienBase:
-            return 'AlienBase';
-        case eGA_Temple:
-            return 'TempleShip';
-        case eGA_MissedAliens:
-            return 'MissedAliens';
-        case eGA_SecretPact:
-            return 'CountryLost';
-        case eGA_UFOScanning:
-            return 'UFOScanning';
-        case eGA_HQAssault:
-            return 'HQAssault';
-        case eGA_NewSoldiers:
-            return 'NewSoldiers';
-        case eGA_SoldierHealed:
-            return 'SoldierHealed';
-        case eGA_NewEngineers:
-            return 'NewEngineers';
-        case eGA_NewScientists:
-            return 'NewScientists';
-        case eGA_NewInterceptors:
-            return 'NewInterceptors';
-        case eGA_NewItemsReceived:
-            return 'NewItemsReceived';
-        case eGA_NewItemBuilt:
-            return 'NewItemBuilt';
-        case eGA_NewFacilityBuilt:
-            return 'NewFacilityBuilt';
-        case eGA_ExcavationComplete:
-            return 'ExcavationComplete';
-        case eGA_FacilityRemoved:
-            return 'FacilityRemoved';
-        case 24:
-            return 'CountryRejoinedXCom';
-        case eGA_ItemProjectCompleted:
-            return 'ItemProjectCompleted';
-        case eGA_FoundryProjectCompleted:
-            return 'FoundryProjectCompleted';
-        case eGA_WorkshopRebate:
-            return 'WorkshopRebate';
-        case eGA_ResearchCompleted:
-            return 'ResearchCompleted';
-        case eGA_PsiTraining:
-            return 'PsiTraining';
-        case eGA_ShipTransferred:
-            return 'ShipTransferred';
-        case eGA_ShipArmed:
-            return 'ShipArmed';
-        case eGA_ShipOnline:
-            return 'ShipOnline';
-        case eGA_SatelliteOnline:
-            return 'SatelliteOnline';
-        case eGA_CountryPanic:
-            return 'CountryPanic';
-        case eGA_SatelliteDestroyed:
-            return 'SatelliteDestroyed';
-        case eGA_FCActivity:
-            return 'FCActivity';
-        case eGA_ModalNotify:
-            return 'ModalNotify';
-        case eGA_PayDay:
-            return 'PayDay';
-        case eGA_FCJetTransfer:
-            return 'FCJetTransfer';
-        case eGA_FCExpiredRequest:
-            return 'FCExpiredRequest';
-        case eGA_FCDelayedRequest:
-            return 'FCDelayedRequest';
-        case eGA_FCSatCountry:
-            return 'FCSatCountry';
-        case eGA_FCMissionActivity:
-            return 'FCMissionActivity';
-        case eGA_ExaltMissionActivity:
-            return 'ExaltMissionActivity';
-        case eGA_ExaltAlert:
-            return 'ExaltAlert';
-        case eGA_ExaltResearchHack:
-            return 'ExaltResearchHack';
-        case eGA_CellHides:
-            return 'CellHides';
-        case eGA_GeneMod:
-            return 'GeneMod';
-        case eGA_Augmentation:
-            return 'Augmentation';
-        case eGA_ExaltRaidFailCountry:
-            return 'ExaltRaidFailCountry';
-        case eGA_ExaltRaidFailContinent:
-            return 'ExaltRaidFailContinent';
-        case 53:
-            return 'AirBaseDefenseFailed';
-        case 54:
-            return 'ItemRepairsComplete';
     }
 }
 
@@ -599,11 +714,13 @@ function OnUFODetected(int iUFO)
 
 simulated function PreloadSquadIntoSkyranger(EGeoscapeAlert eAlertType, bool bUnload)
 {
-    `LWCE_LOG_DEPRECATED_CLS(PreloadSquadIntoSkyranger);
+    `LWCE_LOG_CLS("PreloadSquadIntoSkyranger: eAlertType = " $ eAlertType $ ", bUnload = " $ bUnload);
+    LWCE_PreloadSquadIntoSkyranger(AlertNameFromEnum(eAlertType), bUnload);
 }
 
 simulated function LWCE_PreloadSquadIntoSkyranger(name nmAlertType, bool bUnload)
 {
+    `LWCE_LOG_CLS("LWCE_PreloadSquadIntoSkyranger: nmAlertType = " $ nmAlertType $ ", bUnload = " $ bUnload);
     switch (nmAlertType)
     {
         case 'Abduction':

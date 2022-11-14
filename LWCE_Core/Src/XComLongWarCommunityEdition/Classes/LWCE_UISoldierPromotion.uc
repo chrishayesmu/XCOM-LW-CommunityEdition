@@ -95,7 +95,7 @@ simulated function InitializeTree()
     if (kSoldier.IsAugmented())
     {
         // Move camera to accommodate MECs who aren't in the base augments, due to their model's size
-        if (m_kSoldier.m_kChar.kInventory.iArmor != `LW_ITEM_ID(BaseAugments))
+        if (kSoldier.m_kCEChar.kInventory.nmArmor != 'Item_BaseAugments')
         {
             kCameraOffset += (TransformVectorByRotation(m_kCameraRig.Rotation, vect(0.0, 0.0, 1.0)) * m_kCameraRigMecVerticalOffset);
         }

@@ -255,6 +255,7 @@ simulated function ClearRequestedContent(){}
 simulated function FlushArchetypeCache(){}
 final function NotifyClientsOfRequiredContent(){}
 native final simulated function RequestContentForCheckpoint(Checkpoint InCheckpoint);
+native final function XComLinearColorPalette GetColorPalette(EColorPalette PaletteType);
 final function RequestObjectAsync(string Object, optional Object CallbackObject, optional delegate<OnObjectLoaded> Callback){}
 final function RequestContentArchetype(EContentCategory ContentType, int Id, optional int SubID=-1, optional Object CallbackObject, optional delegate<OnArchetypeLoaded> Callback, optional bool bAsync){}
 final function RequestContentArchetypeByTag(EContentCategory ContentType, name CustomTag, optional Object CallbackObject, optional delegate<OnArchetypeLoaded> Callback, optional bool bAsync){}

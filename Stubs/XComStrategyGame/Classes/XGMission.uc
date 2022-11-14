@@ -71,6 +71,6 @@ function XGShip_Dropship GetAssignedSkyranger(){}
 function GenerateBattleDescription(){}
 function TBriefingInfo GetBriefingInfo(){}
 function string CalcTime(){}
-protected function string GenerateOpName(optional bool bTutorial){}
+function string GenerateOpName(optional bool bTutorial){}
 function int GetEnemyCount(){}
 function string GetSpeciesList(){}

@@ -105,6 +105,72 @@ static function LoadSquad(XGPlayer kSelf, array<TTransferSoldier> Soldiers, arra
         // Other player types ultimately just delegate to this
         kSelf.CreateSquad(arrSpawnPoints, arrPawnTypes);
     }
+
+    `LWCE_LOG_CLS("LoadSquad end");
+}
+
+static function XGUnit SpawnAlien(XGPlayer kSelf, EPawnType eAlienType, XComSpawnPoint_Alien kSpawnPt, optional bool bSnapToCover = false, optional bool bSnapToGround = true, optional bool bAddFlag = true, optional bool bUseAltWeapon = false, optional bool bBattleScanner = false)
+{
+    local XGCharacter kChar;
+    local XGUnit kAlien;
+    local Vector vLoc, HitLocation, HitNormal;
+
+    if (eAlienType == ePawnType_None)
+    {
+        eAlienType = ePawnType_Sectoid;
+    }
+
+    kChar = kSelf.Spawn(AlienTypeToClass(eAlienType));
+
+    if (bSnapToGround)
+    {
+        if (kSelf.Trace(HitLocation, HitNormal, kSpawnPt.GetSpawnPointLocation() + vect(0.0, 0.0, -128.0), kSpawnPt.GetSpawnPointLocation(), false) != none)
+        {
+            vLoc = HitLocation + vect(0.0, 0.0, 32.0);
+        }
+        else
+        {
+            vLoc = kSpawnPt.GetSpawnPointLocation() + vect(0.0, 0.0, 32.0);
+        }
+    }
+    else
+    {
+        vLoc = kSpawnPt.GetSpawnPointLocation();
+    }
+
+    kAlien = kSelf.SpawnUnit(class'XGUnit', kSelf.m_kPlayerController, vLoc, kSpawnPt.Rotation, kChar, kSelf.m_kSquad, /* bDestroyOnBadLocation */ true, kSpawnPt, bSnapToGround, bBattleScanner);
+
+    if (kAlien == none)
+    {
+        vLoc = XComTacticalGRI(kSelf.WorldInfo.GRI).GetClosestValidLocation(kSpawnPt.GetSpawnPointLocation(), none,, false);
+        kAlien = kSelf.SpawnUnit(class'XGUnit', kSelf.m_kPlayerController, vLoc, kSpawnPt.Rotation, kChar, kSelf.m_kSquad, /* bDestroyOnBadLocation */ true, kSpawnPt);
+    }
+
+    if (kAlien != none)
+    {
+        kAlien.SetDiscState(eDS_Bad);
+        class'LWCE_XGLoadoutMgr'.static.EquipUnit(kAlien, class'XGLoadoutMgr'.static.GetLoadoutTemplateFromCharacter(ECharacter(kAlien.GetCharacter().m_kChar.iType), bUseAltWeapon));
+        kAlien.UpdateItemCharges();
+
+        if (!bBattleScanner)
+        {
+            kAlien.GetPawn().MovementNode.SetActiveChild(1, 0.10);
+        }
+
+        if (bAddFlag && `PRES.m_kUnitFlagManager != none)
+        {
+            `PRES.m_kUnitFlagManager.AddFlag(kAlien);
+        }
+
+        if (eAlienType != ePawnType_BattleScanner)
+        {
+            class'XComWorldData'.static.GetWorldData().SetTileBlockedByUnitFlag(kAlien);
+        }
+    }
+
+    `LWCE_LOG_CLS("SpawnAlien: end");
+
+    return kAlien;
 }
 
 static function XGUnit SpawnUnit(XGPlayer kSelf, class<XGUnit> kUnitClassToSpawn, PlayerController kPlayerController, Vector kLocation, Rotator kRotation, XGCharacter kCharacter, XGSquad kSquad, optional bool bDestroyOnBadLocation = false, optional XComSpawnPoint kSpawnPoint, optional bool bSnapToGround = true, optional bool bBattleScanner = false)

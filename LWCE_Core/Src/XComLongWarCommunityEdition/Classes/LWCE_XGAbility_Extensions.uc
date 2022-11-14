@@ -175,24 +175,24 @@ private static function int CalcCritModFromPerks_Original(XGAbility_Targeted kSe
 
 static function CalcDamage(XGAbility_Targeted kSelf)
 {
-    local EItemType eWeaponGameplayType;
-    local int iWeaponItemId;
-    local LWCE_XGUnit kPrimTarget, kShooter;
+    local name WeaponName;
     local bool bDoesSplashDamage;
+    local LWCE_XGTacticalGameCore kGameCore;
+    local LWCE_XGUnit kPrimTarget, kShooter;
     local XComWeapon kTemplate;
 
+    kGameCore = `LWCE_GAMECORE;
     kPrimTarget = LWCE_XGUnit(kSelf.GetPrimaryTarget());
     kShooter = LWCE_XGUnit(kSelf.m_kUnit);
 
     if (kSelf.m_kWeapon != none)
     {
-        eWeaponGameplayType = kSelf.m_kWeapon.GameplayType();
-        iWeaponItemId = class'LWCE_XGWeapon_Extensions'.static.GetItemId(kSelf.m_kWeapon);
+        WeaponName = class'LWCE_XGWeapon_Extensions'.static.GetItemName(kSelf.m_kWeapon);
     }
 
     if (!`GAMECORE.m_kAbilities.AbilityHasProperty(kSelf.GetType(), eProp_InvulnerableWorld))
     {
-        kSelf.m_iActualEnvironmentDamage = `GAMECORE.CalcEnvironmentalDamage(iWeaponItemId, kSelf.GetType(), kShooter.GetCharacter().m_kChar, kShooter.m_aCurrentStats, kSelf.m_bCritical, kSelf.m_bHasHeightAdvantage, kSelf.m_fDistanceToTarget, kSelf.m_bHasFlank);
+        kSelf.m_iActualEnvironmentDamage = kGameCore.LWCE_CalcEnvironmentalDamage(WeaponName, kSelf.GetType(), kShooter.m_aCurrentStats);
 
         if (kShooter.HasPerk(`LW_PERK_ID(Sapper)))
         {
@@ -239,11 +239,11 @@ static function CalcDamage(XGAbility_Targeted kSelf)
                 kSelf.m_iActualEnvironmentDamage *= 0.0;
                 // Deliberate case fall-through
             default:
-                kSelf.m_iActualDamage = `GAMECORE.CalcOverallDamage(iWeaponItemId, CalculateAbilityModifiedDamage(kSelf), kSelf.m_bCritical, kSelf.m_bReflected);
+                kSelf.m_iActualDamage = kGameCore.LWCE_CalcOverallDamage(WeaponName, CalculateAbilityModifiedDamage(kSelf), kSelf.m_bCritical, kSelf.m_bReflected);
                 break;
         }
 
-        kTemplate = `CONTENTMGR.GetWeaponTemplate(eWeaponGameplayType);
+        kTemplate = `LWCE_CONTENT_MGR.GetWeaponTemplate(WeaponName);
 
         if (kTemplate != none && kTemplate.ProjectileTemplate != none)
         {
@@ -310,7 +310,7 @@ private static function int CalcHitChance_Original(XGAbility_Targeted kSelf)
     {
         if (kSelf.iType == eAbility_MindControl)
         {
-            iHitPenalty = class'XGTacticalGameCoreNativeBase'.default.MIND_CONTROL_DIFFICULTY;
+            iHitPenalty = class'LWCE_XGTacticalGameCore'.default.MIND_CONTROL_DIFFICULTY;
         }
 
         return kSelf.m_kUnit.WillTestChance(kTarget.m_aCurrentStats[eStat_Will], iHitPenalty, /* bUseArmorBonus */ true, /* bUseMindShieldBonus */ true, kTarget, /* iEvenStatsChanceToFail */ 50, /* unused */ iFinalWill);
@@ -504,13 +504,14 @@ private static function int CalcHitModFromPerks_Original(XGAbility_Targeted kSel
     return iHitChance;
 }
 
+// Rewritten form of XGAbility_Targeted.TShotInfo_ToString
 static simulated function int CalculateAbilityModifiedDamage(XGAbility_Targeted kSelf)
 {
-    local int iWeaponDamage, iTotalDamage, iDamageBonusItemId;
-    local int iWeaponItemId;
-	local TInventory kInventory;
+    local int iWeaponDamage, iTotalDamage;
+    local name nmDamageBonusItemId, WeaponName;
+	local LWCE_TInventory kInventory;
     local XGWeapon kWeapon;
-    local LWCE_TWeapon kTWeapon;
+    local LWCEWeaponTemplate kWeaponTemplate;
     local LWCE_XGUnit kShooter;
 
     kShooter = LWCE_XGUnit(kSelf.m_kUnit);
@@ -523,39 +524,34 @@ static simulated function int CalculateAbilityModifiedDamage(XGAbility_Targeted 
         return iTotalDamage;
     }
 
-    kTWeapon = `LWCE_TWEAPON_FROM_XG(kWeapon);
-    iWeaponItemId = kTWeapon.iItemId;
-    iWeaponDamage = kTWeapon.iDamage;
+    kWeaponTemplate = `LWCE_WEAPON_FROM_XG(kWeapon);
+    WeaponName = kWeaponTemplate.GetItemName();
+    iWeaponDamage = kWeaponTemplate.iDamage;
 
-    // Weapon class is used here to represent the weapon tech tier
-    // TODO: GetWeaponClass needs a LWCE equivalent
-    switch (class'XGTacticalGameCore'.static.GetWeaponClass(kWeapon.ItemType()))
+    switch (kWeaponTemplate.nmTechTier)
     {
-        case 1: // Ballistic
-        case 3: // Gauss
-            iDamageBonusItemId = `LW_ITEM_ID(AlloyJacketedRounds);
+        case 'wpn_ballistic':
+        case 'wpn_gauss':
+            nmDamageBonusItemId = 'Item_AlloyJacketedRounds';
             break;
-        case 2: // Laser
-        case 4: // Pulse
-            iDamageBonusItemId = `LW_ITEM_ID(EnhancedBeamOptics);
+        case 'wpn_laser':
+        case 'wpn_pulse':
+            nmDamageBonusItemId = 'Item_EnhancedBeamOptics';
             break;
-        case 5: // Plasma
-            iDamageBonusItemId = `LW_ITEM_ID(PlasmaStellerator);
+        case 'wpn_plasma':
+            nmDamageBonusItemId = 'Item_PlasmaStellerator';
             break;
         default:
-            iDamageBonusItemId = 0;
+            nmDamageBonusItemId = '';
             break;
     }
 
     // If unit has an applicable +damage item, apply it
-    if (iDamageBonusItemId > 0)
+    if (nmDamageBonusItemId != '')
     {
-        if (class'XGTacticalGameCoreNativeBase'.static.TInventoryHasItemType(kInventory, iDamageBonusItemId))
+        if (kWeaponTemplate.IsLarge() && class'LWCEInventoryUtils'.static.HasItemOfName(kInventory, nmDamageBonusItemId))
         {
-            if (kTWeapon.iSize == 1)
-            {
-                iTotalDamage += 1;
-            }
+            iTotalDamage += 1;
         }
     }
 
@@ -565,12 +561,12 @@ static simulated function int CalculateAbilityModifiedDamage(XGAbility_Targeted 
         case eAbility_RapidFire:
             if (kShooter.HasPerk(`LW_PERK_ID(Mayhem)))
             {
-                if (kWeapon.HasProperty(eWP_Support)) // SAWs/LMGs
+                if (kWeaponTemplate.HasWeaponProperty(eWP_Support)) // SAWs/LMGs
                 {
                     iTotalDamage += `LWCE_TACCFG(iMayhemDamageBonusForMachineGuns);
                 }
 
-                if (kWeapon.HasProperty(eWP_Sniper))
+                if (kWeaponTemplate.HasWeaponProperty(eWP_Sniper))
                 {
                     iTotalDamage += `LWCE_TACCFG(iMayhemDamageBonusForSniperRifles);
                 }
@@ -631,29 +627,23 @@ static simulated function int CalculateAbilityModifiedDamage(XGAbility_Targeted 
         case eAbility_PrecisionShot:
             if (kSelf.m_bCritical)
             {
-                if (iWeaponItemId == `LW_ITEM_ID(GaussLongRifle))
+                switch (WeaponName)
                 {
-                    iTotalDamage += `LWCE_TACCFG(iPrecisionShotDamageBonusForGaussSniper);
-                }
-
-                if (iWeaponItemId == `LW_ITEM_ID(SniperRifle))
-                {
-                    iTotalDamage += `LWCE_TACCFG(iPrecisionShotDamageBonusForBallisticSniper);
-                }
-
-                if (iWeaponItemId == `LW_ITEM_ID(PulseSniperRifle))
-                {
-                    iTotalDamage += `LWCE_TACCFG(iPrecisionShotDamageBonusForPulseSniper);
-                }
-
-                if (iWeaponItemId == `LW_ITEM_ID(LaserSniperRifle))
-                {
-                    iTotalDamage += `LWCE_TACCFG(iPrecisionShotDamageBonusForLaserSniper);
-                }
-
-                if (iWeaponItemId == `LW_ITEM_ID(PlasmaSniperRifle))
-                {
-                    iTotalDamage += `LWCE_TACCFG(iPrecisionShotDamageBonusForPlasmaSniper);
+                    case 'Item_GaussLongRifle':
+                        iTotalDamage += `LWCE_TACCFG(iPrecisionShotDamageBonusForGaussSniper);
+                        break;
+                    case 'Item_SniperRifle':
+                        iTotalDamage += `LWCE_TACCFG(iPrecisionShotDamageBonusForBallisticSniper);
+                        break;
+                    case 'Item_PulseSniperRifle':
+                        iTotalDamage += `LWCE_TACCFG(iPrecisionShotDamageBonusForPulseSniper);
+                        break;
+                    case 'Item_LaserSniperRifle':
+                        iTotalDamage += `LWCE_TACCFG(iPrecisionShotDamageBonusForLaserSniper);
+                        break;
+                    case 'Item_PlasmaSniperRifle':
+                        iTotalDamage += `LWCE_TACCFG(iPrecisionShotDamageBonusForPlasmaSniper);
+                        break;
                 }
             }
 
@@ -678,7 +668,7 @@ static simulated function int CalculateAbilityModifiedDamage(XGAbility_Targeted 
             iTotalDamage -= (iWeaponDamage - 1);
             break;
         case eAbility_MEC_Flamethrower:
-            if (class'XGTacticalGameCoreNativeBase'.static.TInventoryHasItemType(kInventory, `LW_ITEM_ID(IncineratorModule)))
+            if (class'LWCEInventoryUtils'.static.HasItemOfName(kInventory, 'Item_IncineratorModule'))
             {
                 iTotalDamage += 3;
             }
@@ -690,7 +680,7 @@ static simulated function int CalculateAbilityModifiedDamage(XGAbility_Targeted 
                 iTotalDamage += `LWCE_TACCFG(iMecCloseCombatDamageBonus);
             }
 
-            if (class'XGTacticalGameCoreNativeBase'.static.TInventoryHasItemType(kInventory, `LW_ITEM_ID(TheThumper)))
+            if (class'LWCEInventoryUtils'.static.HasItemOfName(kInventory, 'Item_TheThumper'))
             {
                 iTotalDamage += 3;
             }
@@ -698,17 +688,17 @@ static simulated function int CalculateAbilityModifiedDamage(XGAbility_Targeted 
             // +3 damage for each extra Kinetic Strike Module. Take away 3 because we know there's at least one KSM equipped
             iTotalDamage -= 3;
 
-            if (kInventory.arrLargeItems[1] == `LW_ITEM_ID(KineticStrikeModule))
+            if (kInventory.arrLargeItems[1] == 'Item_KineticStrikeModule')
             {
                 iTotalDamage += 3;
             }
 
-            if (kInventory.arrLargeItems[2] == `LW_ITEM_ID(KineticStrikeModule))
+            if (kInventory.arrLargeItems[2] == 'Item_KineticStrikeModule')
             {
                 iTotalDamage += 3;
             }
 
-            if (kInventory.arrLargeItems[3] == `LW_ITEM_ID(KineticStrikeModule))
+            if (kInventory.arrLargeItems[3] == 'Item_KineticStrikeModule')
             {
                 iTotalDamage += 3;
             }
@@ -728,12 +718,12 @@ static simulated function int CalculateAbilityModifiedDamage(XGAbility_Targeted 
 
     if (kShooter.HasPerk(`LW_PERK_ID(Ranger)))
     {
-        if (kTWeapon.iSize == 1)
+        if (kWeaponTemplate.IsLarge())
         {
             iTotalDamage += `LWCE_TACCFG(iRangerDamageBonusPrimary);
         }
 
-        if (kWeapon.HasProperty(eWP_Pistol))
+        if (kWeaponTemplate.HasWeaponProperty(eWP_Pistol))
         {
             iTotalDamage += `LWCE_TACCFG(iRangerDamageBonusPistol);
         }
@@ -741,7 +731,7 @@ static simulated function int CalculateAbilityModifiedDamage(XGAbility_Targeted 
 
     if ((kShooter.GetCharacter().m_kChar.aUpgrades[123] & 16) > 0) // Reflex Pistols
     {
-        if (kWeapon.HasProperty(eWP_Pistol))
+        if (kWeaponTemplate.HasWeaponProperty(eWP_Pistol))
         {
             iTotalDamage += `LWCE_TACCFG(iReflexPistolsDamageBonus);
         }
@@ -753,7 +743,7 @@ static simulated function int CalculateAbilityModifiedDamage(XGAbility_Targeted 
         {
             if (`GAMECORE.m_kAbilities.HasAutopsyTechForChar(kSelf.GetPrimaryTarget().m_kCharacter.m_kChar.iType))
             {
-                if (kWeapon.HasProperty(eWP_Pistol))
+                if (kWeaponTemplate.HasWeaponProperty(eWP_Pistol))
                 {
                     iTotalDamage += `LWCE_TACCFG(iVitalPointTargetingDamageBonusPistol);
                 }
@@ -765,7 +755,7 @@ static simulated function int CalculateAbilityModifiedDamage(XGAbility_Targeted 
         }
     }
 
-    if (class'XGTacticalGameCore'.static.GetWeaponClass(kWeapon.ItemType()) == 5)
+    if (kWeaponTemplate.nmTechTier == 'wpn_plasma')
     {
         if ((kShooter.GetCharacter().m_kChar.aUpgrades[123] & 4) > 0) // Enhanced Plasma
         {
@@ -773,19 +763,20 @@ static simulated function int CalculateAbilityModifiedDamage(XGAbility_Targeted 
         }
     }
 
-    if (kSelf.m_bCritical && class'XGTacticalGameCoreNativeBase'.static.TInventoryHasItemType(kInventory, `LW_ITEM_ID(TargetingModule)))
+    if (kSelf.m_bCritical && class'LWCEInventoryUtils'.static.HasItemOfName(kInventory, 'Item_TargetingModule'))
     {
         iTotalDamage += 1;
     }
 
+    // TODO: move this stuff into templates
     if (kSelf.m_bCritical)
     {
-        if (iWeaponItemId == `LW_ITEM_ID(PlasmaRifle) && !kSelf.GetPrimaryTarget().IsVulnerableToElectropulse())
+        if (WeaponName == 'Item_PlasmaRifle' && !kSelf.GetPrimaryTarget().IsVulnerableToElectropulse())
         {
             iTotalDamage += 1;
         }
 
-        if (iWeaponItemId == `LW_ITEM_ID(ReflexCannon))
+        if (WeaponName == 'Item_ReflexCannon')
         {
             if (VSize(kShooter.Location -kSelf. GetPrimaryTarget().Location) <= float(`TILESTOUNITS(4)))
             {
@@ -793,7 +784,7 @@ static simulated function int CalculateAbilityModifiedDamage(XGAbility_Targeted 
             }
         }
 
-        if (iWeaponItemId == `LW_ITEM_ID(ReflexRifle))
+        if (WeaponName == 'Item_ReflexRifle')
         {
             if (kSelf.GetPrimaryTarget().IsFlankedByLoc(kShooter.Location) || kSelf.GetPrimaryTarget().IsFlankedBy(kShooter) || !kSelf.GetPrimaryTarget().IsInCover())
             {
@@ -801,7 +792,7 @@ static simulated function int CalculateAbilityModifiedDamage(XGAbility_Targeted 
             }
         }
 
-        if (iWeaponItemId == `LW_ITEM_ID(PlasmaSniperRifle))
+        if (WeaponName == 'Item_PlasmaSniperRifle')
         {
             if (VSize(kShooter.Location - kSelf.GetPrimaryTarget().Location) >= float(`TILESTOUNITS(35)))
             {
@@ -810,17 +801,17 @@ static simulated function int CalculateAbilityModifiedDamage(XGAbility_Targeted 
         }
     }
 
-    if (iWeaponItemId == `LW_ITEM_ID(PlasmaDragon) && kSelf.GetPrimaryTarget().IsFlying())
+    if (WeaponName == 'Item_PlasmaDragon' && kSelf.GetPrimaryTarget().IsFlying())
     {
         iTotalDamage += 1;
     }
 
-    if (iWeaponItemId == `LW_ITEM_ID(ParticleCannon) && kSelf.GetPrimaryTarget().IsVulnerableToElectropulse())
+    if (WeaponName == 'Item_ParticleCannon' && kSelf.GetPrimaryTarget().IsVulnerableToElectropulse())
     {
         iTotalDamage += 1;
     }
 
-    if (iWeaponItemId == `LW_ITEM_ID(HeavyPlasmaRifle) && kShooter.IsAffectedByAbility(eAbility_Aim))
+    if (WeaponName == 'Item_HeavyPlasmaRifle' && kShooter.IsAffectedByAbility(eAbility_Aim))
     {
         iTotalDamage += 1;
     }
@@ -861,22 +852,22 @@ static simulated function GetCritSummary(XGAbility_Targeted kSelf, out TShotInfo
 {
     local TShotHUDStat kStat;
     local int I, iBackpackItem, iCritStat, iMod;
-    local array<int> arrItems;
-    local XGTacticalGameCore kGameCore;
+    local array<name> arrItems;
+    local LWCE_XGTacticalGameCore kGameCore;
     local LWCE_XComPerkManager kPerksMgr;
     local LWCE_XGUnit kShooter, kTarget;
-    local XGWeapon kWeapon;
+    local LWCE_XGWeapon kWeapon;
 
     if (kSelf.m_kGameCore == none)
     {
         kSelf.GetTacticalGameCore();
     }
 
-    kGameCore = XGTacticalGameCore(kSelf.m_kGameCore);
+    kGameCore = LWCE_XGTacticalGameCore(kSelf.m_kGameCore);
     kPerksMgr = `LWCE_PERKS_TAC;
     kShooter = LWCE_XGUnit(kSelf.m_kUnit);
     kTarget = LWCE_XGUnit(kSelf.GetPrimaryTarget());
-    kWeapon = kSelf.m_kWeapon;
+    kWeapon = LWCE_XGWeapon(kSelf.m_kWeapon);
 
     if (!kSelf.ShouldShowCritPercentage())
     {
@@ -908,7 +899,7 @@ static simulated function GetCritSummary(XGAbility_Targeted kSelf, out TShotInfo
         return;
     }
 
-    if (kWeapon != none && kWeapon.m_kTWeapon.aProperties[eWP_Melee] > 0)
+    if (kWeapon != none && kWeapon.m_kTemplate.HasProperty('Melee'))
     {
         return;
     }
@@ -928,7 +919,7 @@ static simulated function GetCritSummary(XGAbility_Targeted kSelf, out TShotInfo
         return;
     }
 
-    if (kSelf.m_bReactionFire && class'XGTacticalGameCoreNativeBase'.static.TInventoryHasItemType(kTarget.GetCharacter().m_kChar.kInventory, `LW_ITEM_ID(ChameleonSuit)))
+    if (kSelf.m_bReactionFire && class'LWCEInventoryUtils'.static.HasItemOfName(kTarget.m_kCEChar.kInventory, 'Item_ChameleonSuit'))
     {
         return;
     }
@@ -962,7 +953,7 @@ static simulated function GetCritSummary(XGAbility_Targeted kSelf, out TShotInfo
 
     if (kWeapon != none)
     {
-        I = kGameCore.GetTWeapon(kWeapon.ItemType()).iCritical;
+        I = kWeapon.m_kTemplate.kStatChanges.iCriticalChance;
 
         if (I > 0)
         {
@@ -971,16 +962,16 @@ static simulated function GetCritSummary(XGAbility_Targeted kSelf, out TShotInfo
         }
     }
 
-    kGameCore.GetBackpackItemArray(kShooter.GetCharacter().m_kChar.kInventory, arrItems);
+    arrItems = class'LWCEInventoryUtils'.static.GetAllBackpackItems(kShooter.m_kCEChar.kInventory);
 
     for (iBackpackItem = 0; iBackpackItem < arrItems.Length; iBackpackItem++)
     {
-        iMod = kGameCore.GetUpgradeAbilities(arrItems[iBackpackItem], eStat_CriticalShot);
+        iMod = kGameCore.GetEquipmentItemStat(arrItems[iBackpackItem], eStat_CriticalShot);
 
-        if (arrItems[iBackpackItem] == `LW_ITEM_ID(TargetingModule) ||
-            arrItems[iBackpackItem] == `LW_ITEM_ID(AlloyBipod) ||
-            arrItems[iBackpackItem] == `LW_ITEM_ID(NeuralGunlink) ||
-            arrItems[iBackpackItem] == `LW_ITEM_ID(IlluminatorGunsight))
+        if (arrItems[iBackpackItem] == 'Item_TargetingModule' ||
+            arrItems[iBackpackItem] == 'Item_AlloyBipod' ||
+            arrItems[iBackpackItem] == 'Item_NeuralGunlink' ||
+            arrItems[iBackpackItem] == 'Item_IlluminatorGunsight')
         {
             if (kWeapon.HasProperty(eWP_Pistol))
             {
@@ -990,12 +981,12 @@ static simulated function GetCritSummary(XGAbility_Targeted kSelf, out TShotInfo
 
         if (iMod > 0)
         {
-            kInfo.arrCritBonusStrings.AddItem(kGameCore.GetTWeapon(arrItems[iBackpackItem]).strName);
+            kInfo.arrCritBonusStrings.AddItem(`LWCE_ITEM(arrItems[iBackpackItem]).strName);
             kInfo.arrCritBonusValues.AddItem(iMod);
         }
         else if (iMod < 0)
         {
-            kInfo.arrCritPenaltyStrings.AddItem(kGameCore.GetTWeapon(arrItems[iBackpackItem]).strName);
+            kInfo.arrCritPenaltyStrings.AddItem(`LWCE_ITEM(arrItems[iBackpackItem]).strName);
             kInfo.arrCritPenaltyValues.AddItem(iMod);
         }
     }
@@ -1021,7 +1012,7 @@ static simulated function GetCritSummary(XGAbility_Targeted kSelf, out TShotInfo
     {
         kInfo.arrCritPenaltyStrings.AddItem(kSelf.m_strPenaltyCritEnemyHardened);
 
-        if (kWeapon.ItemType() != `LW_ITEM_ID(GaussLongRifle))
+        if (class'LWCE_XGWeapon_Extensions'.static.GetItemName(kWeapon) != 'Item_GaussLongRifle')
         {
             kInfo.arrCritPenaltyValues.AddItem(-1 * kGameCore.GetHardenedCritBonus());
         }
@@ -1099,15 +1090,15 @@ static simulated function GetCritSummary(XGAbility_Targeted kSelf, out TShotInfo
 
     if (kShooter.HasPerk(`LW_PERK_ID(SCOPEUpgrade)) && !kWeapon.HasProperty(eWP_Pistol))
     {
-        if (class'XGTacticalGameCoreNativeBase'.static.TInventoryHasItemType(kShooter.GetCharacter().m_kChar.kInventory, `LW_ITEM_ID(LaserSight)))
+        if (class'LWCEInventoryUtils'.static.HasItemOfName(kShooter.m_kCEChar.kInventory, 'Item_LaserSight'))
         {
-            kInfo.arrCritBonusStrings.AddItem(kGameCore.GetTWeapon(`LW_ITEM_ID(LaserSight)).strName);
+            kInfo.arrCritBonusStrings.AddItem(`LWCE_ITEM('Item_LaserSight').strName);
             kInfo.arrCritBonusValues.AddItem(class'XGTacticalGameCore'.default.FOUNDRY_SCOPE_CRIT_BONUS / 2);
         }
 
-        if (class'XGTacticalGameCoreNativeBase'.static.TInventoryHasItemType(kShooter.GetCharacter().m_kChar.kInventory, `LW_ITEM_ID(SCOPE)))
+        if (class'LWCEInventoryUtils'.static.HasItemOfName(kShooter.m_kCEChar.kInventory, 'Item_SCOPE'))
         {
-            kInfo.arrCritBonusStrings.AddItem(kGameCore.GetTWeapon(`LW_ITEM_ID(SCOPE)).strName);
+            kInfo.arrCritBonusStrings.AddItem(`LWCE_ITEM('Item_SCOPE').strName);
             kInfo.arrCritBonusValues.AddItem(class'XGTacticalGameCore'.default.FOUNDRY_SCOPE_CRIT_BONUS);
         }
     }
@@ -1145,11 +1136,11 @@ static simulated function GetCritSummary(XGAbility_Targeted kSelf, out TShotInfo
         kInfo.arrCritBonusValues.AddItem(`LWCE_TACCFG(iPlatformStabilityCritChanceBonus));
     }
 
-    if (class'XGTacticalGameCoreNativeBase'.static.TInventoryHasItemType(kShooter.GetCharacter().m_kChar.kInventory, `LW_ITEM_ID(ReaperPack)))
+    if (class'LWCEInventoryUtils'.static.HasItemOfName(kShooter.m_kCEChar.kInventory, 'Item_ReaperPack'))
     {
         if (kWeapon != none && !kWeapon.HasProperty(eWP_Pistol))
         {
-            kInfo.arrCritBonusStrings.AddItem(kGameCore.GetTWeapon(`LW_ITEM_ID(ReaperPack)).strName);
+            kInfo.arrCritBonusStrings.AddItem(`LWCE_ITEM('Item_ReaperPack').strName);
             kInfo.arrCritBonusValues.AddItem(16); // TODO: replace this with a stat from Reaper Pack itself
         }
     }
@@ -1196,7 +1187,7 @@ static simulated function string GetHelpText(XGAbility kSelf)
 
             if (kTargeted.m_kWeapon != none)
             {
-                strText = Repl(strText, "<XGAbility:WeaponName/>", kTargeted.m_kWeapon.m_kTWeapon.strName);
+                strText = Repl(strText, "<XGAbility:WeaponName/>", LWCE_XGWeapon(kTargeted.m_kWeapon).m_kTemplate.strName);
             }
         }
     }
@@ -1362,7 +1353,7 @@ static simulated function int GetPossibleDamage(XGAbility_Targeted kSelf)
 
     if (kSelf.m_kWeapon != none)
     {
-        iPossibleDamage = CalculateAbilityModifiedDamage(kSelf) + `LWCE_TWEAPON_FROM_XG(kSelf.m_kWeapon).iDamage;
+        iPossibleDamage = CalculateAbilityModifiedDamage(kSelf) + `LWCE_WEAPON_FROM_XG(kSelf.m_kWeapon).iDamage;
     }
 
     if (kSelf.GetType() == eAbility_Mindfray)
@@ -1405,19 +1396,20 @@ static simulated function int GetPossibleDamage(XGAbility_Targeted kSelf)
     return iPossibleDamage;
 }
 
+// TODO centralize this
 static simulated function float GetRadius(XGAbility_Targeted kSelf)
 {
-    local int iWeaponId;
+    local name WeaponName;
     local float fRadius;
-    local XGWeapon kWeapon;
+    local LWCE_XGWeapon kWeapon;
     local LWCE_XGUnit kShooter;
 
-    kWeapon = kSelf.m_kWeapon;
+    kWeapon = LWCE_XGWeapon(kSelf.m_kWeapon);
 
     if (kWeapon != none)
     {
-        fRadius = kWeapon.m_kTWeapon.iRadius;
-        iWeaponId = class'LWCE_XGWeapon_Extensions'.static.GetItemId(kWeapon);
+        fRadius = kWeapon.m_kTemplate.iRadius;
+        WeaponName = class'LWCE_XGWeapon_Extensions'.static.GetItemName(kWeapon);
         kShooter = LWCE_XGUnit(kWeapon.m_kOwner);
     }
 
@@ -1465,21 +1457,21 @@ static simulated function float GetRadius(XGAbility_Targeted kSelf)
             break;
     }
 
-    switch (iWeaponId)
+    switch (WeaponName)
     {
-        case `LW_ITEM_ID(RocketLauncher):
-        case `LW_ITEM_ID(BlasterLauncher):
-        case `LW_ITEM_ID(RecoillessRifle):
-        case `LW_ITEM_ID(GrenadeLauncher):
-        case `LW_ITEM_ID(ProximityMineLauncher):
-            if (kWeapon.m_kOwner != none && kShooter.HasPerk(`LW_PERK_ID(DangerZone)))
+        case 'Item_RocketLauncher':
+        case 'Item_BlasterLauncher':
+        case 'Item_RecoillessRifle':
+        case 'Item_GrenadeLauncher':
+        case 'Item_ProximityMineLauncher':
+            if (kShooter != none && kShooter.HasPerk(`LW_PERK_ID(DangerZone)))
             {
                 fRadius *= Sqrt(1.60);
             }
 
             break;
-        case `LW_ITEM_ID(HEGrenade):
-            if (kWeapon.m_kOwner != none && kShooter.HasPerk(`LW_PERK_ID(AlienGrenades)))
+        case 'Item_HEGrenade':
+            if (kShooter != none && kShooter.HasPerk(`LW_PERK_ID(AlienGrenades)))
             {
                 fRadius *= Sqrt(2.0);
             }
@@ -1536,17 +1528,18 @@ static simulated function int GetScatterChance(XGAbility_Targeted kSelf, float f
 
 static simulated function GetShotSummary(XGAbility_Targeted kSelf, out TShotResult kResult, out TShotInfo kInfo)
 {
-    local float fDistanceToTarget, fOverDistance;
     local int iBackpackItem, iDefense, iMod, iType;
-    local array<int> arrItems;
+    local array<name> arrItems;
+    local LWCEEquipmentTemplate kEquipment;
+    local LWCE_TCharacterStats kStatChanges;
     local LWCE_XGUnit kShooter, kTarget;
     local LWCE_XComPerkManager kPerksMgr;
     local LWCE_XGTacticalGameCore kGameCore;
-    local XGWeapon kWeapon;
+    local LWCE_XGWeapon kWeapon;
 
     kShooter = LWCE_XGUnit(kSelf.m_kUnit);
     kTarget = LWCE_XGUnit(kSelf.GetPrimaryTarget());
-    kWeapon = kSelf.m_kWeapon;
+    kWeapon = LWCE_XGWeapon(kSelf.m_kWeapon);
     kPerksMgr = `LWCE_PERKS_TAC;
     iType = kSelf.iType;
 
@@ -1648,7 +1641,6 @@ static simulated function GetShotSummary(XGAbility_Targeted kSelf, out TShotResu
     }
 
     // No more special cases, now we can calculate the hit chance
-    fDistanceToTarget = VSize(kTarget.GetLocation() - kShooter.GetLocation());
 
     // Baseline unit aim
     iMod = kShooter.m_aCurrentStats[eStat_Offense];
@@ -1668,37 +1660,40 @@ static simulated function GetShotSummary(XGAbility_Targeted kSelf, out TShotResu
     // Weapon aim
     if (kWeapon != none)
     {
-        iMod = kGameCore.GetWeaponStatBonus(eStat_Offense, kWeapon.ItemType(), kShooter.GetCharacter().m_kChar);
+        iMod = kWeapon.m_kTemplate.kStatChanges.iAim;
 
         if (iMod > 0)
         {
-            kInfo.arrHitBonusStrings.AddItem(`LWCE_TWEAPON_FROM_XG(kWeapon).strName);
+            kInfo.arrHitBonusStrings.AddItem(kWeapon.m_kTemplate.strName);
             kInfo.arrHitBonusValues.AddItem(iMod);
         }
         else if (iMod < 0)
         {
-            kInfo.arrHitPenaltyStrings.AddItem(`LWCE_TWEAPON_FROM_XG(kWeapon).strName);
+            kInfo.arrHitPenaltyStrings.AddItem(kWeapon.m_kTemplate.strName);
             kInfo.arrHitPenaltyValues.AddItem(iMod);
         }
     }
 
     // Aim modifiers from small items
-    kGameCore.GetBackpackItemArray(kShooter.GetCharacter().m_kChar.kInventory, arrItems);
+    arrItems = class'LWCEInventoryUtils'.static.GetAllBackpackItems(kShooter.m_kCEChar.kInventory);
 
-    for (iBackpackItem = 0; iBackpackItem < arrItems.Length; iBackpackItem++)
+    if (kWeapon != none && !kWeapon.HasProperty(eWP_Pistol))
     {
-        if (kWeapon != none && !kWeapon.HasProperty(eWP_Pistol))
+        for (iBackpackItem = 0; iBackpackItem < arrItems.Length; iBackpackItem++)
         {
-            iMod = kGameCore.GetUpgradeAbilities(arrItems[iBackpackItem], eStat_Offense);
+            kEquipment = LWCEEquipmentTemplate(`LWCE_ITEM(arrItems[iBackpackItem]));
+            kEquipment.GetStatChanges(kStatChanges, kShooter.m_kCEChar);
+
+            iMod = `LWCE_UTILS.GetCharacterStat(eStat_Offense, kStatChanges);
 
             if (iMod > 0)
             {
-                kInfo.arrHitBonusStrings.AddItem(kGameCore.LWCE_GetTWeapon(arrItems[iBackpackItem]).strName);
+                kInfo.arrHitBonusStrings.AddItem(kEquipment.strName);
                 kInfo.arrHitBonusValues.AddItem(iMod);
             }
             else if (iMod < 0)
             {
-                kInfo.arrHitPenaltyStrings.AddItem(kGameCore.LWCE_GetTWeapon(arrItems[iBackpackItem]).strName);
+                kInfo.arrHitPenaltyStrings.AddItem(kEquipment.strName);
                 kInfo.arrHitPenaltyValues.AddItem(iMod);
             }
         }
@@ -2072,27 +2067,8 @@ static simulated function GetShotSummary(XGAbility_Targeted kSelf, out TShotResu
     }
 
     // Weapon range penalties
-    iMod = kGameCore.CalcRangeModForWeapon(class'LWCE_XGWeapon_Extensions'.static.GetItemId(kWeapon), kShooter, kTarget);
-
-    if (kWeapon.HasProperty(eWP_Pistol))
-    {
-        // With Ranger: negate the range penalty
-        if (iMod < 0 && kShooter.HasPerk(`LW_PERK_ID(Ranger)))
-        {
-            iMod = 0;
-        }
-
-        // Without Ranger: use a custom range calculation for penalties (not for bonuses)
-        if (!kShooter.HasPerk(`LW_PERK_ID(Ranger)))
-        {
-            fOverDistance = (fDistanceToTarget - `LWCE_TACCFG(fPistolMaxEffectiveRange)) / 64.0f;
-
-            if (fOverDistance > 0.0f)
-            {
-                iMod = int(fOverDistance * `LWCE_TACCFG(fPistolAimPenaltyPerMeter));
-            }
-        }
-    }
+    iMod = kWeapon.m_kTemplate.CalcRangeMod(kShooter, kTarget);
+    `LWCE_LOG_CLS("Range mod: " $ iMod);
 
     if (iMod > 0)
     {
@@ -2187,7 +2163,7 @@ static function RollForHit(XGAbility_Targeted kSelf, XGAction_Fire kFireAction)
             {
                 if (kTarget.GetCharacter().m_kChar.iType == eChar_Ethereal || kTarget.GetCharacter().m_kChar.iType == eChar_EtherealUber)
                 {
-                    XComOnlineEventMgr(GameEngine(class'Engine'.static.GetEngine()).OnlineEventManager).UnlockAchievement(AT_Xavier);
+                    `ONLINEEVENTMGR.UnlockAchievement(AT_Xavier);
 
                     // Marks that this unit has mind controlled an Ethereal, making them eligible to learn Rift
                     kShooter.GetCharacter().m_kChar.aUpgrades[ePerk_MindControl] += 2;
@@ -2252,7 +2228,7 @@ static function RollForHit(XGAbility_Targeted kSelf, XGAction_Fire kFireAction)
                 {
                     fChance *= kTarget.m_bLightningReflexesUsed ? `LWCE_TACCFG(fReactionFireAimMultiplierUsedLightningReflexes) : `LWCE_TACCFG(fReactionFireAimMultiplierUnusedLightningReflexes);
 
-                    if (class'XGTacticalGameCoreNativeBase'.static.TInventoryHasItemType(kTarget.GetCharacter().m_kChar.kInventory, `LW_ITEM_ID(ChameleonSuit)))
+                    if (class'LWCEInventoryUtils'.static.HasItemOfName(kTarget.m_kCEChar.kInventory, 'Item_ChameleonSuit'))
                     {
                         fChance *= `LWCE_TACCFG(fReactionFireAimMultiplierWithChameleonSuit);
                     }

@@ -25,3 +25,10 @@ simulated function Actor CreateEntity(){}
 simulated function AttachEntityMesh(Actor kEntity){};
 simulated function bool IsGrenade(){}
 simulated function bool IsRearBackPackItem(){}
+
+defaultproperties
+{
+    m_eEquipLocation=ELocation.eSlot_RightHand
+    m_eReserveLocation=ELocation.eSlot_RightBack
+    m_bSpawnEntity=true
+}

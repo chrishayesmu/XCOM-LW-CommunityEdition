@@ -19,6 +19,23 @@ enum EApproachType
     eApproach_MAX
 };
 
+struct CheckpointRecord_XGShip_UFO extends CheckpointRecord
+{
+    var XGAlienObjective m_kObjective;
+    var int m_iDetectedBy;
+    var ECharacter m_eSpecies;
+    var int m_iCounter;
+    var bool m_bEverDetected;
+    var bool m_bWasEngaged;
+    var bool m_bLanded;
+    var Vector2D m_v2Target;
+    var Vector2D m_v2Intermediate;
+    var array<int> m_arrFlightPlan;
+    var EApproachType m_eApproach;
+    var ECountry m_eCountryTarget;
+    var float m_fTimeInCountry;
+};
+
 var XGAlienObjective m_kObjective;
 var int m_iDetectedBy;
 var XGGameData.ECharacter m_eSpecies;

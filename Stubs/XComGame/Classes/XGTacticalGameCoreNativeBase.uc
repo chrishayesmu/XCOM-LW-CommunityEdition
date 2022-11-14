@@ -395,7 +395,7 @@ enum EPerkType
     ePerk_CriticallyWounded,
     ePerk_Flying,
     ePerk_Stealth,
-    ePerk_HEAWarheads,
+    ePerk_HEATWarheads,
     ePerk_CombatStimActive,
     ePerk_JavelinRockets,
     ePerk_Panicked,
@@ -565,6 +565,21 @@ struct TAppearance
     var int iAttitude;
     var int iArmorDeco;
     var int iArmorTint;
+
+    structdefaultproperties
+    {
+        iHead=-1
+        iHaircut=-1
+        iBody=-1
+        iBodyMaterial=-1
+        iSkinColor=-1
+        iEyeColor=-1
+        iFlag=-1
+        iArmorSkin=-1
+        iVoice=-1
+        iArmorDeco=-1
+        iArmorTint=-1
+    }
 };
 
 struct TInventory

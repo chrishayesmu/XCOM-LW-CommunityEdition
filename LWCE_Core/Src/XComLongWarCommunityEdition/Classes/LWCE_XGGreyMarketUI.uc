@@ -1,33 +1,33 @@
 class LWCE_XGGreyMarketUI extends XGGreyMarketUI;
 
-var array<LWCE_TItem> m_arrCEItems;
+var array<LWCEItemTemplate> m_arrCEItems;
 
 function AddSpecialItemsToList(EItemType eItem)
 {
     `LWCE_LOG_DEPRECATED_CLS(AddSpecialItemsToList);
 }
 
-function LWCE_AddSpecialItemsToList(int iItemId)
+function LWCE_AddSpecialItemsToList(name ItemName)
 {
-    if (STORAGE().GetNumItemsAvailable(iItemId) > 0)
+    if (LWCE_XGStorage(STORAGE()).LWCE_GetNumItemsAvailable(ItemName) > 0)
     {
-        m_arrCEItems.AddItem(`LWCE_ITEM(iItemId));
+        m_arrCEItems.AddItem(`LWCE_ITEM(ItemName));
         m_arrItemList.Add(1);
     }
 }
 
 function BuildItemList()
 {
-    m_arrCEItems = `LWCE_STORAGE.LWCE_GetItemsInCategory(eItemCat_All, eTransaction_Sell);
+    m_arrCEItems = LWCE_XGStorage(STORAGE()).LWCE_GetItemsInCategory('All', eTransaction_Sell);
     m_arrCEItems.Sort(SortItems);
 
     m_arrItemList.Remove(0, m_arrItemList.Length);
     m_arrItemList.Add(m_arrCEItems.Length);
 
-    LWCE_AddSpecialItemsToList(`LW_ITEM_ID(OutsiderShard));
-    LWCE_AddSpecialItemsToList(`LW_ITEM_ID(SkeletonKey));
-    LWCE_AddSpecialItemsToList(`LW_ITEM_ID(HyperwaveBeacon));
-    LWCE_AddSpecialItemsToList(`LW_ITEM_ID(EtherealDevice));
+    LWCE_AddSpecialItemsToList('Item_OutsiderShard');
+    LWCE_AddSpecialItemsToList('Item_SkeletonKey');
+    LWCE_AddSpecialItemsToList('Item_HyperwaveBeacon');
+    LWCE_AddSpecialItemsToList('Item_EtherealDevice');
 
     BuildItemProperties();
 
@@ -37,16 +37,18 @@ function BuildItemList()
 
 function BuildItemProperties()
 {
-    local name TechName;
-    local int Index, iItemId;
+    local name ItemName, TechName;
+    local int Index;
     local LWCE_XGFacility_Labs kLabs;
+    local LWCE_XGTechTree kTechTree;
 
     kLabs = LWCE_XGFacility_Labs(LABS());
+    kTechTree = LWCE_XGTechTree(TECHTREE());
 
     for (Index = 0; Index < m_arrCEItems.Length; Index++)
     {
-        iItemId = m_arrCEItems[Index].iItemId;
-        TechName = `LWCE_TECHTREE.LWCE_GetResultingTech(iItemId);
+        ItemName = m_arrCEItems[Index].GetItemName();
+        TechName = kTechTree.LWCE_GetResultingTech(ItemName);
 
         if (TechName != '' && !kLabs.LWCE_IsResearched(TechName))
         {
@@ -55,12 +57,7 @@ function BuildItemProperties()
             m_arrItemList[Index].bNotResearched = true;
         }
 
-        m_arrItemList[Index].bCanBeSold = ITEMTREE().CanBeSold(iItemId);
-
-        if (iItemId == eItem_AlienAlloys || iItemId == eItem_Elerium115 || iItemId == eItem_WeaponFragment)
-        {
-            m_arrItemList[Index].bBulk = true;
-        }
+        m_arrItemList[Index].bCanBeSold = m_arrCEItems[Index].CanBeSold();
     }
 }
 
@@ -81,7 +78,7 @@ function OnCompleteTransaction()
     {
         if (m_arrItemList[iItem].iSelling > 0)
         {
-            STORAGE().RemoveItem(m_arrCEItems[iItem].iItemId, m_arrItemList[iItem].iSelling);
+            LWCE_XGStorage(STORAGE()).LWCE_RemoveItem(m_arrCEItems[iItem].GetItemName(), m_arrItemList[iItem].iSelling);
         }
     }
 
@@ -94,7 +91,7 @@ function OnSellItem()
 {
     local int iNumInStorage;
 
-    iNumInStorage = STORAGE().GetNumItemsAvailable(m_arrCEItems[m_iHighlight].iItemId);
+    iNumInStorage = LWCE_XGStorage(STORAGE()).LWCE_GetNumItemsAvailable(m_arrCEItems[m_iHighlight].GetItemName());
 
     if (m_arrItemList[m_iHighlight].bCanBeSold && iNumInStorage > m_arrItemList[m_iHighlight].iSelling)
     {
@@ -117,21 +114,9 @@ function OnSellItem()
 
 function string RecordGreyMarketSale()
 {
-    local string OutputString;
-    local int iItem;
+    `LWCE_LOG_DEPRECATED_NOREPLACE_CLS(RecordGreyMarketSale);
 
-    OutputString = GEOSCAPE().m_kDateTime.GetDateString() @ GEOSCAPE().m_kDateTime.GetTimeString() @ ": Sold alien techology to the highest bidder: \n" $ "########################################################\n";
-
-    for (iItem = 0; iItem < m_arrItemList.Length; iItem++)
-    {
-        if (m_arrItemList[iItem].iSelling > 0)
-        {
-            OutputString = OutputString $ m_arrCEItems[iItem].strName $ " x" $ string(m_arrItemList[iItem].iSelling) $ "\n";
-        }
-    }
-
-    OutputString = OutputString $ "########################################################\n";
-    return OutputString;
+    return "";
 }
 
 function SetHighlighted(optional int Target = -1)
@@ -148,11 +133,11 @@ function SetHighlighted(optional int Target = -1)
     }
 }
 
-function int SortItems(LWCE_TItem kItem1, LWCE_TItem kItem2)
+function int SortItems(LWCEItemTemplate kItem1, LWCEItemTemplate kItem2)
 {
     // LWCE issue #16: Items are sorted by category: alien artifacts first, then corpses/captives,
     // then equipment. Within each category, items are sorted by name.
-    if (kItem1.iCategory == kItem2.iCategory)
+    if (kItem1.nmCategory == kItem2.nmCategory)
     {
         if (kItem1.strName > kItem2.strName)
         {
@@ -160,22 +145,32 @@ function int SortItems(LWCE_TItem kItem1, LWCE_TItem kItem2)
         }
     }
 
-    if (kItem1.iCategory == eItemCat_Alien)
+    if (kItem1.nmCategory == 'AlienArtifact')
     {
         return 0;
     }
 
-    if (kItem2.iCategory == eItemCat_Alien)
+    if (kItem2.nmCategory == 'AlienArtifact')
     {
         return -1;
     }
 
-    if (kItem1.iCategory == eItemCat_Corpses)
+    if (kItem1.nmCategory == 'Corpse')
     {
         return 0;
     }
 
-    if (kItem2.iCategory == eItemCat_Corpses)
+    if (kItem2.nmCategory == 'Corpse')
+    {
+        return -1;
+    }
+
+    if (kItem1.nmCategory == 'Captive')
+    {
+        return 0;
+    }
+
+    if (kItem2.nmCategory == 'Captive')
     {
         return -1;
     }
@@ -190,12 +185,12 @@ function int SortItems(LWCE_TItem kItem1, LWCE_TItem kItem2)
 
 function UpdateItem()
 {
-    local int iItemId;
-    local LWCE_TItem kItem;
+    local name ItemName;
+    local LWCEItemTemplate kItem;
     local TGMSummary kSummary;
 
-    iItemId = m_arrCEItems[m_iHighlight].iItemId;
-    kItem = `LWCE_ITEM(iItemId, eTransaction_Sell);
+    ItemName = m_arrCEItems[m_iHighlight].GetItemName();
+    kItem = `LWCE_ITEM(ItemName);
 
     kSummary.imgItem.strPath = kItem.ImagePath;
     kSummary.txtName.StrValue = kItem.strName;
@@ -207,9 +202,12 @@ function UpdateItem()
 
 function UpdateList()
 {
+    local LWCE_XGStorage kStorage;
     local int iItem, iCreditTotal, iQuantity;
     local string strTemp;
-    local int iItemId;
+    local name ItemName;
+
+    kStorage = LWCE_XGStorage(STORAGE());
 
     m_iTotal = 0;
 
@@ -218,8 +216,8 @@ function UpdateList()
         m_arrItemList[iItem].btxtToSell.iButton = 10;
         m_arrItemList[iItem].btxtToStorage.iButton = 9;
 
-        iItemId = m_arrCEItems[iItem].iItemId;
-        iQuantity = STORAGE().GetNumItemsAvailable(iItemId) - m_arrItemList[iItem].iSelling;
+        ItemName = m_arrCEItems[iItem].GetItemName();
+        iQuantity = kStorage.LWCE_GetNumItemsAvailable(ItemName) - m_arrItemList[iItem].iSelling;
         m_arrItemList[iItem].txtItemName.StrValue = m_arrCEItems[iItem].strName;
 
         if (m_arrItemList[iItem].txtItemName.StrValue == "")

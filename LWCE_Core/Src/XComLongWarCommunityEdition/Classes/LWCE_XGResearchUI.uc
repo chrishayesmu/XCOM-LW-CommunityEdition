@@ -64,7 +64,7 @@ function TTechSummary LWCE_BuildTechSummary(LWCETechTemplate kTech)
 {
     local LWCE_XGFacility_Labs kLabs;
     local LWCE_XGTechTree kTechTree;
-    local TResearchCost kCost;
+    local LWCE_TProjectCost kProjectCost;
     local TTechSummary kSummary;
     local XGParamTag kTag;
     local int Index;
@@ -99,8 +99,9 @@ function TTechSummary LWCE_BuildTechSummary(LWCETechTemplate kTech)
     kSummary.txtRequirementsLabel.StrValue = m_strCostLabel;
     kSummary.txtRequirementsLabel.iState = eUIState_Warning;
 
-    kCost = class'LWCETypes'.static.ConvertTCostToTResearchCost(kTech.GetCost());
-    kSummary.bCanAfford = kLabs.GetCostSummary(kSummary.kCost, kCost);
+    kProjectCost.iStaffTypeReq = eStaff_Scientist;
+    kProjectCost.kCost = kTech.GetCost();
+    kSummary.bCanAfford = kLabs.LWCE_GetCostSummary(kSummary.kCost, kProjectCost);
 
     return kSummary;
 }
@@ -437,10 +438,12 @@ function UpdateMainMenu()
 function UpdateReport()
 {
     local TResearchReport kReport;
+    local LWCEItemTemplate kItem;
     local LWCETechTemplate kTech;
     local array<name> arrNameResults;
     local array<int> arrResults;
-    local int iProgressIndex, iSampleItemid, Index;
+    local name SampleItemName;
+    local int iProgressIndex, Index;
     local XGParamTag kTag;
     local XGDateTime kDateTime;
     local LWCE_XGFacility_Labs kLabs;
@@ -451,7 +454,7 @@ function UpdateReport()
     // populated. This is because they are never read, and would need to be replaced with int types.
 
     kLabs = `LWCE_LABS;
-    kTechTree = `LWCE_TECHTREE;
+    kTechTree = LWCE_XGTechTree(TECHTREE());
     kTag = XGParamTag(XComEngine(class'Engine'.static.GetEngine()).LocalizeContext.FindTag("XGParam"));
     kTech = `LWCE_TECH(m_nmCEReportTech);
 
@@ -523,23 +526,27 @@ function UpdateReport()
         }
     }
 
-    arrResults = kTechTree.LWCE_GetItemResults(m_nmCEReportTech);
+    arrNameResults = kTechTree.LWCE_GetItemResults(m_nmCEReportTech);
 
-    if (arrResults.Length > 0)
+    if (arrNameResults.Length > 0)
     {
-        for (Index = 0; Index < arrResults.Length; Index++)
+        for (Index = 0; Index < arrNameResults.Length; Index++)
         {
-            if (ITEMTREE().CanBeBuilt(arrResults[Index]) || ITEMTREE().IsMecArmor(arrResults[Index]))
+            kItem = `LWCE_ITEM(arrNameResults[Index]);
+
+            if (kItem.CanBeBuilt() || kItem.IsMecArmor())
             {
-                kTag.StrValue0 = `LWCE_ITEM(arrResults[Index]).strName;
+                kTag.StrValue0 = kItem.strName;
+
                 kReport.txtResults.Add(1);
                 kReport.txtResults[kReport.txtResults.Length - 1].StrValue = class'XComLocalizer'.static.ExpandString(m_strItemBuildAvailable);
                 kReport.txtResults[kReport.txtResults.Length - 1].iState = eUIState_Warning;
-                kLabs.m_arrCEUnlockedItems.AddItem(arrResults[Index]);
+
+                kLabs.m_arrCEUnlockedItems.AddItem(arrNameResults[Index]);
             }
         }
 
-        iSampleItemid = arrResults[0];
+        SampleItemName = arrNameResults[0];
     }
 
     arrResults = kTechTree.LWCE_GetGeneResults(m_nmCEReportTech);
@@ -597,9 +604,9 @@ function UpdateReport()
         kReport.btxtInfo.iButton = 3;
         kReport.btxtInfo.StrValue = m_strLabelTacticalSummary @ TACTICAL().GetTCharacter(kTech.iSubjectCharacterId).strName;
     }
-    else if (iSampleItemid != 0)
+    else if (SampleItemName != '')
     {
-        kReport.btxtInfo.StrValue = m_strLabelTacticalSummary @ `LWCE_ITEM(iSampleItemid).strName;
+        kReport.btxtInfo.StrValue = m_strLabelTacticalSummary @ `LWCE_ITEM(SampleItemName).strName;
     }
 
     m_kReport = kReport;
@@ -645,8 +652,10 @@ function UpdateTechTable()
 function UpdateView()
 {
     local LWCE_XGFacility_Labs kLabs;
+    local LWCE_XGStorage kStorage;
 
-    kLabs = `LWCE_LABS;
+    kLabs = LWCE_XGFacility_Labs(LABS());
+    kStorage = LWCE_XGStorage(STORAGE());
 
     switch (m_iCurrentView)
     {
@@ -701,7 +710,7 @@ function UpdateView()
             }
         }
 
-        if (HQ().HasFacility(eFacility_AlienContain) && `LWCE_STORAGE.GetNumItemsAvailable(`LW_ITEM_ID(ArcThrower)) > 0 && !STORAGE().HasAlienCaptive())
+        if (HQ().HasFacility(eFacility_AlienContain) && kStorage.LWCE_GetNumItemsAvailable('Item_ArcThrower') > 0 && !kStorage.HasAlienCaptive())
         {
             if (Narrative(`XComNarrativeMoment("UrgeCaptive")))
             {
@@ -709,7 +718,7 @@ function UpdateView()
             }
         }
 
-        if (kLabs.LWCE_IsResearched('Tech_AlienOperations') && !STORAGE().EverHadItem(`LW_ITEM_ID(HyperwaveBeacon)))
+        if (kLabs.LWCE_IsResearched('Tech_AlienOperations') && !kStorage.LWCE_EverHadItem('Item_HyperwaveBeacon'))
         {
             if (Narrative(`XComNarrativeMoment("AlienBaseDetected_LeadOut_CS")))
             {
@@ -733,7 +742,7 @@ function UpdateView()
             }
         }
 
-        if (kLabs.HasInterrogatedCaptive() && !STORAGE().EverHadItem(`LW_ITEM_ID(OutsiderShard)))
+        if (kLabs.HasInterrogatedCaptive() && !kStorage.LWCE_EverHadItem('Item_OutsiderShard'))
         {
             if (Narrative(`XComNarrativeMoment("PostInterrogation_LeadOut_CS")))
             {
@@ -780,7 +789,7 @@ function UpdateView()
             }
         }
 
-        if (STORAGE().GetResource(eResource_Meld) > 150 && !HQ().m_bUrgedEWFacility)
+        if (kStorage.GetResource(eResource_Meld) > 150 && !HQ().m_bUrgedEWFacility)
         {
             if (!HQ().HasFacility(eFacility_CyberneticsLab) && !HQ().HasFacility(eFacility_GeneticsLab) && !ENGINEERING().IsBuildingFacility(eFacility_CyberneticsLab) && !ENGINEERING().IsBuildingFacility(eFacility_GeneticsLab))
             {

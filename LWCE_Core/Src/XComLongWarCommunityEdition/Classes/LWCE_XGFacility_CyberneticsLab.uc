@@ -1,10 +1,67 @@
 class LWCE_XGFacility_CyberneticsLab extends XGFacility_CyberneticsLab
     dependson(LWCETypes);
 
+struct LWCE_TRepairingItem
+{
+    var name ItemName;
+    var int iHoursLeft;
+};
+
+var array<LWCE_TRepairingItem> m_arrRepairingItems;
+
 function Update()
 {
     LWCE_UpdatePatients();
     UpdateRepairingMecs();
+}
+
+function bool AddItemForRepair(name ItemName, optional int iQuantity = 1)
+{
+    local LWCE_TRepairingItem kRepairingItem;
+    local LWCE_XGStorage kStorage;
+
+    kStorage = LWCE_XGStorage(STORAGE());
+
+    if (CanAffordItemRepair(ItemName, iQuantity))
+    {
+        kRepairingItem.ItemName = ItemName;
+        kRepairingItem.iHoursLeft = GetHoursToRepairItem(ItemName);
+        m_arrRepairingItems.AddItem(kRepairingItem);
+
+        PayItemRepairCost(ItemName, iQuantity);
+
+        kStorage.LWCE_RepairItem(ItemName, iQuantity);
+        kStorage.LWCE_ClaimItem(ItemName, /* kSoldier */ none, iQuantity);
+
+        return true;
+    }
+
+    return false;
+}
+
+function bool AddMecForRepair(EItemType eItem)
+{
+    `LWCE_LOG_CLS("ERROR: LWCE-incompatible function AddMecForRepair was called. This needs to be replaced with AddItemForRepair. Stack trace follows.");
+    ScriptTrace();
+
+    return false;
+}
+
+function bool CanAffordItemRepair(name ItemName, int iQuantity)
+{
+    local LWCE_TCost kCost;
+
+    kCost = GetCostToRepairItem(ItemName, iQuantity);
+
+    return LWCE_XGHeadquarters(HQ()).CanAffordCost(kCost);
+}
+
+function bool CanAffordMecRepair(EItemType eItem)
+{
+    `LWCE_LOG_CLS("ERROR: LWCE-incompatible function CanAffordMecRepair was called. This needs to be replaced with CanAffordItemRepair. Stack trace follows.");
+    ScriptTrace();
+
+    return false;
 }
 
 function GetEvents(out array<THQEvent> arrEvents)
@@ -16,6 +73,61 @@ function LWCE_GetEvents(out array<LWCE_THQEvent> arrEvents)
 {
     LWCE_GetPatientEvents(arrEvents);
     LWCE_GetRepairingMecEvents(arrEvents);
+}
+
+/// <summary>
+/// Calculates the cost to repair a quantity of the given item. By default, repairing items only
+/// costs money, alloys, elerium, and meld, proportional to the cost to build the item.
+/// </summary>
+function LWCE_TCost GetCostToRepairItem(name ItemName, int iQuantity)
+{
+    local LWCE_TCost kItemCost, kRepairCost;
+
+    // Miracle Workers removes all repair costs; they only take time
+    if (IsOptionEnabled(`LW_SECOND_WAVE_ID(MiracleWorkers)))
+    {
+        return kRepairCost;
+    }
+
+    kItemCost = `LWCE_ITEM(ItemName).GetCost(/* bRush */ false);
+
+    // Costs are normally paid one at a time, so we have to floor the individual cost before multiplying
+    kRepairCost.iCash = iQuantity * int(kItemCost.iCash * m_fMecRepairCostMod);
+    kRepairCost.iAlloys = iQuantity * int(kItemCost.iAlloys * m_fMecRepairCostMod);
+    kRepairCost.iElerium = iQuantity * int(kItemCost.iElerium * m_fMecRepairCostMod);
+    kRepairCost.iMeld = iQuantity * int(kItemCost.iMeld * m_fMecRepairCostMod);
+
+    return kRepairCost;
+}
+
+function int GetHoursToRepairItem(name ItemName)
+{
+    local float fAdvancedRepairMult, fEngWorkPerHour, fRepairTimePercentage;
+    local LWCE_XGFacility_Engineering kEngineering;
+    local LWCEItemTemplate kItem;
+
+    kEngineering = LWCE_XGFacility_Engineering(ENGINEERING());
+    kItem = `LWCE_ITEM(ItemName);
+
+    if (kItem.iPointsToComplete <= 0)
+    {
+        return 0;
+    }
+
+    // TODO move min repair time, advanced repair effect into config
+    fAdvancedRepairMult = kEngineering.LWCE_IsFoundryTechResearched('Foundry_AdvancedRepair') ? 0.67f : 1.0f;
+    fEngWorkPerHour = kEngineering.GetWorkPerHour(GetResource(eResource_Engineers), /* bRush */ false);
+    fRepairTimePercentage = class'XGTacticalGameCore'.default.CB_EXPERT_BONUS / 100.0f;
+
+    return Max(72, (kItem.iPointsToComplete * fRepairTimePercentage * fAdvancedRepairMult) / fEngWorkPerHour);
+}
+
+function int GetHoursToRepairMec(EItemType eItem)
+{
+    `LWCE_LOG_CLS("ERROR: LWCE-incompatible function GetHoursToRepairMec was called. This needs to be replaced with GetHoursToRepairItem. Stack trace follows.");
+    ScriptTrace();
+
+    return -1;
 }
 
 function LWCE_GetPatientEvents(out array<LWCE_THQEvent> arrEvents)
@@ -65,24 +177,24 @@ function LWCE_GetRepairingMecEvents(out array<LWCE_THQEvent> arrEvents)
     local array<int> arrEventTimes;
     local LWCE_TData kData;
     local LWCE_THQEvent kBlankEvent, kEvent;
-    local TCyberneticsLabRepairingMec kMec;
+    local LWCE_TRepairingItem kRepairingItem;
 
-    foreach m_arrRepairingMecs(kMec)
+    foreach m_arrRepairingItems(kRepairingItem)
     {
-        if (arrEventTimes.Find(kMec.m_iHoursLeft) == INDEX_NONE)
+        if (arrEventTimes.Find(kRepairingItem.iHoursLeft) == INDEX_NONE)
         {
-            arrEventTimes.AddItem(kMec.m_iHoursLeft);
+            arrEventTimes.AddItem(kRepairingItem.iHoursLeft);
         }
     }
 
-    for (iRepairTime = 0; iRepairTime < m_arrRepairingMecs.Length; iRepairTime++)
+    for (iRepairTime = 0; iRepairTime < m_arrRepairingItems.Length; iRepairTime++)
     {
         kEvent = kBlankEvent;
-        kEvent.EventType = 'MecRepair';
-        kEvent.iHours = m_arrRepairingMecs[iRepairTime].m_iHoursLeft;
+        kEvent.EventType = 'ItemRepair';
+        kEvent.iHours = m_arrRepairingItems[iRepairTime].iHoursLeft;
 
-        kData.eType = eDT_Int;
-        kData.iData = m_arrRepairingMecs[iRepairTime].m_eMecItem;
+        kData.eType = eDT_Name;
+        kData.nmData = m_arrRepairingItems[iRepairTime].ItemName;
         kEvent.arrData.AddItem(kData);
 
         bAdded = false;
@@ -118,6 +230,15 @@ function MecCinematicComplete()
 
     GEOSCAPE().Resume();
     LWCE_UpdatePatients();
+}
+
+function bool PayItemRepairCost(name ItemName, int iQuantity)
+{
+    local LWCE_TCost kCost;
+
+    kCost = GetCostToRepairItem(ItemName, iQuantity);
+
+    return LWCE_XGHeadquarters(HQ()).PayCost(kCost);
 }
 
 function LWCE_UpdatePatients()

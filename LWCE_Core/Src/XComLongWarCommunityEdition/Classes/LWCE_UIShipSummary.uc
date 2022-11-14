@@ -207,8 +207,10 @@ simulated function OnWeaponItemCard()
 
 function UpdateData()
 {
+    local LWCE_XGShip_Interceptor kShip;
     local int shipStatusID;
 
+    kShip = LWCE_XGShip_Interceptor(m_kShip);
     shipStatusID = eUIState_Normal;
 
     switch (m_kShip.GetStatus())
@@ -232,6 +234,6 @@ function UpdateData()
     AS_SetWeaponLabel(m_strWeaponLabel);
     AS_SetWeaponName(m_kShip.GetWeaponString());
     AS_SetShipStatus(class'UIUtilities'.static.GetHTMLColoredText(m_kShip.GetStatusString(), shipStatusID), shipStatusID);
-    AS_SetKills(m_strKillsLabel @ string(m_kShip.m_iConfirmedKills));
-    AS_SetWeaponImage(`LWCE_ITEM(m_kShip.GetWeapon()).ImagePath);
+    AS_SetKills(m_strKillsLabel @ m_kShip.m_iConfirmedKills);
+    AS_SetWeaponImage(`LWCE_ITEM(kShip.LWCE_GetWeapon()).ImagePath);
 }

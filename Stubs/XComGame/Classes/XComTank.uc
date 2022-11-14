@@ -15,8 +15,8 @@ var AnimNode_MultiBlendPerBone TreadWheelsNode;
 var AnimNodeSequence m_kTreadWheelNodeLeft;
 var AnimNodeSequence m_kTreadWheelNodeRight;
 var float m_fWheelFactor;
-var private EItemType PrimaryWeapon;
-var private bool m_bUnitContentLoaded;
+var EItemType PrimaryWeapon;
+var bool m_bUnitContentLoaded;
 
 simulated function InitializeTreadWheelsNode(){}
 simulated event PostBeginPlay(){}

@@ -27,11 +27,11 @@ function CollectLoot()
     {
         if (m_kDesc.m_arrArtifacts[Index] > 0)
         {
-            kDesc.m_kArtifactsContainer.AdjustQuantity(Index, m_kDesc.m_arrArtifacts[Index]);
+            kDesc.m_kArtifactsContainer.AdjustQuantity(class'LWCE_XGItemTree'.static.ItemNameFromBaseID(Index), m_kDesc.m_arrArtifacts[Index]);
         }
     }
 
-    kDesc.m_kArtifactsContainer.Set(`LW_ITEM_ID(Meld), GetRecoveredMeldAmount());
+    kDesc.m_kArtifactsContainer.Set('Item_Meld', GetRecoveredMeldAmount());
 
     if (strMapName == "DLC1_3_Gangplank")
     {
@@ -40,7 +40,7 @@ function CollectLoot()
 
     foreach arrRewards(kItemQuantity)
     {
-        kDesc.m_kArtifactsContainer.AdjustQuantity(kItemQuantity.iItemId, kItemQuantity.iQuantity);
+        kDesc.m_kArtifactsContainer.AdjustQuantity(kItemQuantity.ItemName, kItemQuantity.iQuantity);
     }
 }
 

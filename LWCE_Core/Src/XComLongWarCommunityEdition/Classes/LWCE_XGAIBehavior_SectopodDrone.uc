@@ -1,5 +1,3 @@
 class LWCE_XGAIBehavior_SectopodDrone extends XGAIBehavior_SectopodDrone;
 
-`include(generators.uci)
-
-`LWCE_GENERATOR_XGAIBEHAVIOR
+`include(generators_aibehavior.uci)

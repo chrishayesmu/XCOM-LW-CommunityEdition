@@ -1,0 +1,37 @@
+defaultproperties
+{
+	CollisionComponent=none
+	CylinderComponent=none
+	LightEnvironment=none
+	Mesh=none
+	RangeIndicator=none
+	MindMergeFX_Send=none
+	MindMergeFX_Receive=none
+	MindFrayFX_Receive=none
+	MindControlFX_Receive=none
+	MindControlFX_Send=none
+	PsiPanicFX_Receive=none
+	PsiInspiredFX_Receive=none
+	DisablingShot_Receive=none
+	StunShot_Receive=none
+	TracerBeamedFX=none
+	PoisonedByChryssalidFX=none
+	PoisonedByThinmanFX=none
+	ElectropulsedFX=none
+	Components(0)=none
+	Components(1)=none
+	Components(2)=none
+	Components(3)=none
+	Components(4)=none
+	Components(5)=none
+	Components(6)=none
+	Components(7)=none
+	Components(8)=none
+	Components(9)=none
+	Components(10)=none
+	Components(11)=none
+	Components(12)=none
+	Components(13)=none
+	Components(14)=none
+	BlockRigidBody=true
+}

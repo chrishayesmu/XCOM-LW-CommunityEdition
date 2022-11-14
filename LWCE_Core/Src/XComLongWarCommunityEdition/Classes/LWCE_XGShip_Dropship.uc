@@ -22,6 +22,9 @@ function BuildTransferData()
 
     kCargoInfo = LWCE_XGDropshipCargoInfo(CargoInfo);
 
+    `LWCE_LOG_CLS("Building transfer data for mission. We have " $ m_arrSoldiers.Length $ " soldiers to build");
+    `LWCE_LOG_CLS("Barracks contains " $ BARRACKS().m_arrSoldiers.Length $ " soldiers");
+
     BARRACKS().MarkWussySoldiers(self);
 
     // Transfer LWCE data into the dropship. Make sure to do so after vanilla data is done
@@ -42,9 +45,9 @@ function BuildTransferData()
 
         if (kCESoldier.HasPsiGift())
         {
-            if (`GAMECORE.TInventoryCustomItemsFind(kCargoInfo.m_kCovertOperative.kChar.kInventory, `LW_ITEM_ID(PsiAmp)) == INDEX_NONE)
+            if (!class'LWCEInventoryUtils'.static.HasItemOfName(kCESoldier.m_kCEChar.kInventory, 'Item_PsiAmp'))
             {
-                `GAMECORE.TInventoryCustomItemsAddItem(kCargoInfo.m_kCovertOperative.kChar.kInventory, `LW_ITEM_ID(PsiAmp));
+                class'LWCEInventoryUtils'.static.AddCustomItem(kCESoldier.m_kCEChar.kInventory, 'Item_PsiAmp');
             }
         }
 

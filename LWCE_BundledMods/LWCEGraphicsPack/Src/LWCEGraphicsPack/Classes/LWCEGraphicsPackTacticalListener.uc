@@ -82,7 +82,7 @@ simulated function Projectile_OnInit(XComProjectile kProjectile)
 
     // TODO: not sure how to do this in an inheritance-safe way
     // Probably want to use the weapon info like so:
-    //     iWeaponId = `LWCE_TWEAPON_FROM_XG(kProjectile.GetGameWeapon()).iItemId;
+    //     iWeaponId = `LWCE_WEAPON_FROM_XG(kProjectile.GetGameWeapon()).iItemId;
     if (kProjectile.MyDamageType == class'XComDamageType_Plasma')
     {
         kPointLightComp = FindOrCreatePointLight(kProjectile);

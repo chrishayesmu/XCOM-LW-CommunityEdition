@@ -24,7 +24,7 @@ simulated function BuildMenu()
         return;
     }
 
-    OnlineEventMgr = XComOnlineEventMgr(GameEngine(class'Engine'.static.GetEngine()).OnlineEventManager);
+    OnlineEventMgr = `ONLINEEVENTMGR;
     OnlineEventMgr.EnsureSavesAreComplete();
     AS_Clear();
     SaveSlotStatus.Remove(0, SaveSlotStatus.Length);

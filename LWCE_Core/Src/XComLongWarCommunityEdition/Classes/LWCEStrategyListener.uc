@@ -38,20 +38,6 @@ function OnFoundryProjectCanceled(LWCE_TFoundryProject kProject, LWCEFoundryProj
 function OnFoundryProjectCompleted(LWCE_TFoundryProject kProject, LWCEFoundryProjectTemplate kFoundryTech) {}
 
 /// <summary>
-/// Called after the tech tree has built its list of Foundry techs. Techs can be removed from the list,
-/// or new techs added. These represent the Foundry techs that are available over the course of the entire
-/// campaign, not techs which are currently researched or available. At the point when this is called, Foundry
-/// project costs have not yet been adjusted for the Dynamic War option; any techs that you add to the list
-/// will also have their cost adjusted for Dynamic War if the option is enabled.
-///
-/// Note that since this list is always built dynamically, if your mod is uninstalled or modified, anything
-/// you've previously changed in the list will be restored to its original state. If your mod adds Foundry techs
-/// and you want to make sure you're backwards compatible with existing saves, then rather than removing unwanted
-/// Foundry techs in updates, you should hide them using LWCEFoundryProjectTemplate.bForceUnavailable flag.
-/// </summary>
-function OnFoundryTechsBuilt(out array<LWCEFoundryProjectTemplate> Techs) {}
-
-/// <summary>
 /// Called as part of XGFacility_Barracks.UpdateFoundryPerksForSoldier. This can occur for a variety of reasons, most
 /// common being the completion of a Foundry project, but also due to serialization or other factors.
 ///
@@ -75,7 +61,7 @@ function UpdateFoundryPerksForSoldier(XGStrategySoldier kSoldier, LWCE_XGFacilit
 /// </summary>
 /// <param name="kItem">The current state of the item, including any modifications made by mods before this one.</param>
 /// <param name="iTransactionType">The type of transaction this item is being retrieved for, corresponding to a value in XGStrategyActorNativeBase.ETransactionType.</param>
-function Override_GetItem(out LWCE_TItem kItem, int iTransactionType) {}
+function Override_GetItem(out LWCEItemTemplate kItem, int iTransactionType) {}
 
 /// <summary>
 /// Called when equipping a soldier with their default pistol, such as when a new soldier is hired, or when the
@@ -84,9 +70,9 @@ function Override_GetItem(out LWCE_TItem kItem, int iTransactionType) {}
 /// Note that this is also called when creating a blueshirt soldier for base defense. You can check kSoldier.m_bBlueShirt for this.
 /// </summary>
 /// <param name="kSoldier">The soldier to be equipped.</param>
-/// <param name="iItemId">The ID of the pistol they will be equipped with.</param>
-/// <returns>True if iItemId was modified by this function, false otherwise.</returns>
-function bool Override_GetInfinitePistol(XGStrategySoldier kSoldier, out int iItemId) { return false; }
+/// <param name="ItemName">The ID of the pistol they will be equipped with.</param>
+/// <returns>True if ItemName was modified by this function, false otherwise.</returns>
+function bool Override_GetInfinitePistol(XGStrategySoldier kSoldier, out name ItemName) { return false; }
 
 /// <summary>
 /// Called when equipping a soldier with their default primary weapon, such as when a new soldier is hired, or when the
@@ -95,9 +81,9 @@ function bool Override_GetInfinitePistol(XGStrategySoldier kSoldier, out int iIt
 /// Note that this is also called when creating a blueshirt soldier for base defense. You can check kSoldier.m_bBlueShirt for this.
 /// </summary>
 /// <param name="kSoldier">The soldier to be equipped.</param>
-/// <param name="iItemId">The ID of the primary weapon they will be equipped with.</param>
-/// <returns>True if iItemId was modified by this function, false otherwise.</returns>
-function bool Override_GetInfinitePrimary(XGStrategySoldier kSoldier, out int iItemId) { return false; }
+/// <param name="ItemName">The ID of the primary weapon they will be equipped with.</param>
+/// <returns>True if ItemName was modified by this function, false otherwise.</returns>
+function bool Override_GetInfinitePrimary(XGStrategySoldier kSoldier, out name ItemName) { return false; }
 
 /// <summary>
 /// Called when equipping a soldier with their default secondary weapon, such as when a new soldier is hired, or when the
@@ -107,9 +93,9 @@ function bool Override_GetInfinitePrimary(XGStrategySoldier kSoldier, out int iI
 /// Note that this is also called when creating a blueshirt soldier for base defense. You can check kSoldier.m_bBlueShirt for this.
 /// </summary>
 /// <param name="kSoldier">The soldier to be equipped.</param>
-/// <param name="iItemId">The ID of the secondary weapon they will be equipped with.</param>
-/// <returns>True if iItemId was modified by this function, false otherwise.</returns>
-function bool Override_GetInfiniteSecondary(XGStrategySoldier kSoldier, out int iItemId) { return false; }
+/// <param name="ItemName">The ID of the secondary weapon they will be equipped with.</param>
+/// <returns>True if ItemName was modified by this function, false otherwise.</returns>
+function bool Override_GetInfiniteSecondary(XGStrategySoldier kSoldier, out name ItemName) { return false; }
 
 /// <summary>
 /// Called after an item is built. When this is called, the UI notification has been queued (but not viewed), the resulting
@@ -119,12 +105,6 @@ function bool Override_GetInfiniteSecondary(XGStrategySoldier kSoldier, out int 
 /// <param name="iQuantity">The number of items added to storage.</param>
 /// <param name="bInstant">Whether the project was completed instantly or not.</param>
 function OnItemCompleted(LWCE_TItemProject kItemProject, int iQuantity, optional bool bInstant) {}
-
-/// <summary>
-/// Called after the item tree has built its list of items. See documentation for OnFoundryTechsBuilt; it functions
-/// in largely the same way as OnItemsBuilt.
-/// </summary>
-function OnItemsBuilt(out array<LWCE_TItem> arrItems) {}
 
 /// -----------------------------------------------------
 /// Research events

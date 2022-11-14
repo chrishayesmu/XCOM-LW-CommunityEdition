@@ -167,7 +167,7 @@ simulated function Update(XGUnit kUnit, XGAbility kAbility)
 
             if (kActiveWeapon != none)
             {
-                SetWeaponStats(`LWCE_TWEAPON_FROM_XG(kActiveWeapon).strName);
+                SetWeaponStats(`LWCE_WEAPON_FROM_XG(kActiveWeapon).strName);
             }
         }
         else
@@ -180,7 +180,7 @@ simulated function Update(XGUnit kUnit, XGAbility kAbility)
 
                 if (kActiveWeapon != none)
                 {
-                    SetWeaponStats(`LWCE_TWEAPON_FROM_XG(kActiveWeapon).strName);
+                    SetWeaponStats(`LWCE_WEAPON_FROM_XG(kActiveWeapon).strName);
                 }
             }
         }

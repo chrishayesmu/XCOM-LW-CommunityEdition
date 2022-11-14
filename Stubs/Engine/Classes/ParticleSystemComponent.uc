@@ -757,6 +757,8 @@ native function SetMICVectorParameter(int ElementIndex, name ParameterName, Line
 native final function			SetLODLevel(int InLODLevel);
 native final function			SetEditorLODLevel(int InLODLevel);
 
+native final function InitializeSystem();
+
 /**
  *	GetLODLevel - gets the LOD level currently set.
  */

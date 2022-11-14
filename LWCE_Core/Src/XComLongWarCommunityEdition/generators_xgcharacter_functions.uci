@@ -1,0 +1,14 @@
+function LWCE_TCharacter GetCharacter()
+{
+    return m_kCEChar;
+}
+
+function int GetCharacterType()
+{
+    return m_kCEChar.iCharacterType;
+}
+
+function SetCharacter(const LWCE_TCharacter kChar)
+{
+    m_kCEChar = kChar;
+}

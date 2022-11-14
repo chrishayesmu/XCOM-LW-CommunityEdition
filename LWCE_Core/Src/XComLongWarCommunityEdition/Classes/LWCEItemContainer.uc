@@ -13,18 +13,18 @@ var array<LWCE_TItemQuantity> m_arrEntries;
 /// one will be created with the quantity equal to iQuantity.
 /// </summary>
 /// <param name="bDeleteIfAllRemoved">If true, and modifying the entry brings its quantity to 0 or lower, the entry is removed.</param>
-function AdjustQuantity(int Id, int iQuantity, optional bool bDeleteIfAllRemoved = true)
+function AdjustQuantity(name ItemName, int iQuantity, optional bool bDeleteIfAllRemoved = true)
 {
     local int Index;
     local LWCE_TItemQuantity kItemQuantity;
 
-    Index = m_arrEntries.Find('iItemId', Id);
+    Index = m_arrEntries.Find('ItemName', ItemName);
 
     if (Index == INDEX_NONE)
     {
         if (iQuantity > 0)
         {
-            kItemQuantity.iItemId = Id;
+            kItemQuantity.ItemName = ItemName;
             kItemQuantity.iQuantity = iQuantity;
 
             Index = m_arrEntries.Length;
@@ -69,11 +69,11 @@ function CopyFrom(LWCEItemContainer Other)
 /// <summary>
 /// Deletes the entry with the given ID, if one exists.
 /// </summary>
-function Delete(int Id)
+function Delete(name ItemName)
 {
     local int Index;
 
-    Index = m_arrEntries.Find('iItemId', Id);
+    Index = m_arrEntries.Find('ItemName', ItemName);
 
     if (Index != INDEX_NONE)
     {
@@ -85,15 +85,15 @@ function Delete(int Id)
 /// Returns the entry with the given ID, if one exists; otherwise returns an entry with quantity 0.
 /// Bear in mind that the entry will be a copy, and modifications to it are not reflected in this container.
 /// </summary>
-function LWCE_TItemQuantity Get(int Id, optional out int Index)
+function LWCE_TItemQuantity Get(name ItemName, optional out int Index)
 {
     local LWCE_TItemQuantity kItemQuantity;
 
-    Index = m_arrEntries.Find('iItemId', Id);
+    Index = m_arrEntries.Find('ItemName', ItemName);
 
     if (Index == INDEX_NONE)
     {
-        kItemQuantity.iItemId = Id;
+        kItemQuantity.ItemName = ItemName;
         kItemQuantity.iQuantity = 0;
 
         return kItemQuantity;
@@ -103,36 +103,36 @@ function LWCE_TItemQuantity Get(int Id, optional out int Index)
 }
 
 /// <summary>
-/// Returns whether this container has an entry for the given ID, regardless of the associated quantity.
+/// Returns whether this container has an entry for the given item, regardless of the associated quantity.
 /// </summary>
-function bool HasEntry(int Id)
+function bool HasEntry(name ItemName)
 {
-    return m_arrEntries.Find('iItemId', Id) != INDEX_NONE;
+    return m_arrEntries.Find('ItemName', ItemName) != INDEX_NONE;
 }
 
 /// <summary>
-/// Returns whether this container has an entry for the given ID with a quantity other than zero.
+/// Returns whether this container has an entry for the given item with a quantity other than zero.
 /// </summary>
-function bool HasNonzeroEntry(int Id)
+function bool HasNonzeroEntry(name ItemName)
 {
-    return Get(Id).iQuantity != 0;
+    return Get(ItemName).iQuantity != 0;
 }
 
 /// <summary>
-/// Sets the quantity for the entry with the given ID, adding an entry if one does not exist.
+/// Sets the quantity for the given item, adding an entry if one does not exist.
 /// </summary>
-function Set(int Id, int iQuantity)
+function Set(name ItemName, int iQuantity)
 {
     local int Index;
     local LWCE_TItemQuantity kItemQuantity;
 
-    Index = m_arrEntries.Find('iItemId', Id);
+    Index = m_arrEntries.Find('ItemName', ItemName);
 
     if (Index == INDEX_NONE)
     {
         if (iQuantity > 0)
         {
-            kItemQuantity.iItemId = Id;
+            kItemQuantity.ItemName = ItemName;
             kItemQuantity.iQuantity = iQuantity;
 
             m_arrEntries.AddItem(kItemQuantity);

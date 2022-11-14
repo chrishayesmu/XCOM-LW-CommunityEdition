@@ -270,10 +270,10 @@ function array<name> LWCE_GetFoundryResults(name CompletedTechName)
     local array<LWCEFoundryProjectTemplate> arrTemplates;
     local array<name> arrResults;
     local bool bIsValid;
-    local int iItemReq;
-    local name nmTechReq;
+    local name nmItemReq, nmTechReq;
     local LWCEFoundryProjectTemplate kTemplate;
     local LWCE_XGFacility_Labs kLabs;
+    local LWCE_XGStorage kStorage;
 
     if (CompletedTechName == '' || !HQ().HasFacility(eFacility_Foundry))
     {
@@ -281,6 +281,7 @@ function array<name> LWCE_GetFoundryResults(name CompletedTechName)
     }
 
     kLabs = LWCE_XGFacility_Labs(LABS());
+    kStorage = LWCE_XGStorage(STORAGE());
     arrTemplates = m_kFoundryTemplateMgr.GetAllProjectTemplates();
 
     // Iterate all Foundry techs to find ones that will be available if iCompletedTechId is done
@@ -298,9 +299,9 @@ function array<name> LWCE_GetFoundryResults(name CompletedTechName)
         // but it will throw off any modded projects using other prereq fields
 
         // Validate item requirements
-        foreach kTemplate.kPrereqs.arrItemReqs(iItemReq)
+        foreach kTemplate.kPrereqs.arrItemReqs(nmItemReq)
         {
-            if (!STORAGE().EverHadItem(iItemReq))
+            if (!kStorage.LWCE_EverHadItem(nmItemReq))
             {
                 bIsValid = false;
                 break;
@@ -346,24 +347,24 @@ function array<int> GetItemResults(int iTech)
     return arrResults;
 }
 
-function array<int> LWCE_GetItemResults(name TechName)
+function array<name> LWCE_GetItemResults(name TechName)
 {
-    local array<int> arrResults;
-    local LWCE_XGItemTree kItemTree;
-    local LWCE_TItem kItem;
-
-    kItemTree = `LWCE_ITEMTREE;
+    local array<name> arrResults;
+    local array<LWCEItemTemplate> arrTemplates;
+    local LWCEItemTemplate kItem;
 
     if (TechName == '')
     {
         return arrResults;
     }
 
-    foreach kItemTree.m_arrCEItems(kItem)
+    arrTemplates = `LWCE_ITEM_TEMPLATE_MGR.GetAllItemTemplates();
+
+    foreach arrTemplates(kItem)
     {
         if (kItem.kPrereqs.arrTechReqs.Find(TechName) != INDEX_NONE)
         {
-            arrResults.AddItem(kItem.iItemId);
+            arrResults.AddItem(kItem.GetItemName());
         }
     }
 
@@ -425,7 +426,8 @@ function ETechType GetResultingTech(EItemType eItem)
     return 0;
 }
 
-function name LWCE_GetResultingTech(int iItemId)
+// TODO: this should return an array
+function name LWCE_GetResultingTech(name ItemName)
 {
     local array<LWCETechTemplate> arrTemplates;
     local LWCE_XGFacility_Labs kLabs;
@@ -436,7 +438,7 @@ function name LWCE_GetResultingTech(int iItemId)
 
     for (Index = 0; Index < arrTemplates.Length; Index++)
     {
-        if (arrTemplates[Index].kPrereqs.arrItemReqs.Find(iItemId) != INDEX_NONE && !kLabs.LWCE_IsResearched(arrTemplates[Index].GetTechName()))
+        if (arrTemplates[Index].kPrereqs.arrItemReqs.Find(ItemName) != INDEX_NONE && !kLabs.LWCE_IsResearched(arrTemplates[Index].GetTechName()))
         {
             return arrTemplates[Index].GetTechName();
         }

@@ -15,6 +15,9 @@ var(Rendering) const array<MaterialInterface>	Materials;
  */
 native function MaterialInterface GetMaterial(int ElementIndex);
 
+native function MaterialInterface GetAuxMaterial(int ElementIndex);
+native function SetAuxMaterial(int ElementIndex, MaterialInterface AuxMaterial);
+
 /**
  * Changes the material applied to an element of the mesh.
  * @param ElementIndex - The element to access the material of.
