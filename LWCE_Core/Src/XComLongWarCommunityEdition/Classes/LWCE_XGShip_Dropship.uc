@@ -139,9 +139,12 @@ function ReconstructTransferData()
 
     kCargoInfo = LWCE_XGDropshipCargoInfo(CargoInfo);
 
-    for (I = 0; I < kCargoInfo.m_arrSoldiers.Length; I++)
+    `LWCE_LOG_CLS("ReconstructTransferData: kCargoInfo.m_arrCESoldiers.Length = " $ kCargoInfo.m_arrCESoldiers.Length $ ", kCargoInfo.m_arrSoldiers.Length = " $ kCargoInfo.m_arrSoldiers.Length);
+
+    for (I = 0; I < kCargoInfo.m_arrCESoldiers.Length; I++)
     {
-        kSoldier = LWCE_XGStrategySoldier(BARRACKS().GetSoldierByID(kCargoInfo.m_arrSoldiers[I].kSoldier.iID));
+        `LWCE_LOG_CLS("Soldier " $ I $ " has ID " $ kCargoInfo.m_arrCESoldiers[I].kSoldier.iID);
+        kSoldier = LWCE_XGStrategySoldier(BARRACKS().GetSoldierByID(kCargoInfo.m_arrCESoldiers[I].kSoldier.iID));
         kSoldier.LWCE_RebuildAfterCombat(kCargoInfo.m_arrSoldiers[I], kCargoInfo.m_arrCESoldiers[I]);
     }
 

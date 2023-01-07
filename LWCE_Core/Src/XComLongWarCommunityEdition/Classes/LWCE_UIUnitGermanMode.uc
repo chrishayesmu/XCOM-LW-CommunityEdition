@@ -27,3 +27,63 @@ simulated function Init(XComPlayerController _controllerRef, UIFxsMovie _manager
     m_kInfoPanel = Spawn(class'UIUnitGermanMode_ShotInfo', self);
     m_kInfoPanel.Init(controllerRef, manager, self);
 }
+
+simulated function OnInit()
+{
+    super(UI_FxsScreen).OnInit();
+    LWCE_UpdateHeader();
+    AS_SetButtonHelp(m_strCloseGermanModeLabel, class'UI_FxsGamepadIcons'.static.GetBackButtonIcon());
+}
+
+protected simulated function LWCE_UpdateHeader()
+{
+    local LWCE_XGCharacter_Soldier kCharacterSoldier;
+    local LWCE_XGCharacter kChar;
+    local bool bIsShiv;
+    local int iRank;
+
+    kChar = LWCE_XGCharacter(m_kUnit.GetCharacter());
+
+    if (m_kUnit.isHuman() || m_kUnit.IsShiv())
+    {
+        if (kChar.GetCharacterType() == eChar_Civilian)
+        {
+            if (m_kUnit.SafeGetCharacterFullName() != "")
+            {
+                AS_SetSoldierInformation(m_kUnit.SafeGetCharacterFullName(), m_kUnit.SafeGetCharacterNickname(), "", "", false);
+            }
+            else
+            {
+                AS_SetSoldierInformation(m_kUnit.SafeGetCharacterName(), m_strCivilianNickname, "", "", false);
+            }
+
+            AS_SetUnitAllegiance(false);
+        }
+        else
+        {
+            kCharacterSoldier = LWCE_XGCharacter_Soldier(kChar);
+
+            if (m_kUnit.IsATank())
+            {
+                iRank = m_kUnit.GetSHIVRank();
+                bIsShiv = true;
+            }
+            else
+            {
+                iRank = kCharacterSoldier.m_kCESoldier.iRank;
+                bIsShiv = false;
+            }
+
+            // TODO get class label from new source
+            AS_SetSoldierInformation(m_kUnit.SafeGetCharacterFullName(), m_kUnit.SafeGetCharacterNickname(), kCharacterSoldier.m_kCESoldier.strClassIcon, Class'UIUtilities'.static.GetRankLabel(iRank, bIsShiv), kCharacterSoldier.LeveledUp());
+        }
+
+        AS_SetUnitStats(m_strHealthLabel @ Max(m_kUnit.GetUnitMaxHP(), m_kUnit.m_aCurrentStats[eStat_HP]), m_strWillLabel @ GetWillBonus(m_kUnit), m_strOffenseLabel @ m_kUnit.GetOffense(), m_strDefenseLabel @ GetDefenseBonus(m_kUnit));
+        AS_SetUnitAllegiance(false);
+    }
+    else
+    {
+        AS_SetAlienInformation(class'UIUtilities'.static.GetHTMLColoredText(m_kUnit.SafeGetCharacterName(), eUIState_Bad), false, m_kUnit.IsExalt());
+        AS_SetUnitAllegiance(true);
+    }
+}

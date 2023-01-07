@@ -2,6 +2,7 @@ class LWCE_UITacticalHUD_PerkContainer extends UITacticalHUD_PerkContainer;
 
 simulated function UpdatePerks()
 {
+    local LWCE_TCharacter kChar;
     local LWCE_XComPerkManager kPerksMgr;
     local LWCE_XGUnit kActiveUnit;
     local TUIPerkInfo kUIPerkInfo;
@@ -19,12 +20,13 @@ simulated function UpdatePerks()
 
     if (kActiveUnit != none)
     {
+        kChar = kActiveUnit.LWCE_GetCharacter().GetCharacter();
         kPerksMgr = LWCE_XComPerkManager(XComTacticalController(controllerRef).PERKS());
 
         // TODO: iterate these in order of perk ID, to match vanilla behavior
-        for (I = 0; I < kActiveUnit.m_kCEChar.arrPerks.Length; I++)
+        for (I = 0; I < kChar.arrPerks.Length; I++)
         {
-            iPerkId = kActiveUnit.m_kCEChar.arrPerks[I].Id;
+            iPerkId = kChar.arrPerks[I].Id;
 
             if (iPerkId == 0)
             {

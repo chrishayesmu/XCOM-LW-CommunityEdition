@@ -4,19 +4,23 @@ var protected GFxObject m_gfxVisibilityPreviewIcon;
 
 simulated function OnInit()
 {
+    local LWCE_XGCharacter kCECharacter;
+
     super(UI_FxsPanel).OnInit();
 
     m_kCharacter = m_kUnit.GetCharacter();
+    kCECharacter = LWCE_XGCharacter(m_kCharacter);
+
     SetAim(m_kUnit.GetOffense());
     SetWeapon();
     RealizeHitPoints();
 
-    if (m_kCharacter.m_kChar.iType == eChar_Soldier)
+    if (kCECharacter.GetCharacterType() == eChar_Soldier)
     {
         SetNames(m_kCharacter.GetLastName(), m_kCharacter.GetNickname());
-        SetRank(XGCharacter_Soldier(m_kCharacter).m_kSoldier.iRank);
+        SetRank(LWCE_XGCharacter_Soldier(m_kCharacter).m_kCESoldier.iRank);
     }
-    else if (m_kCharacter.m_kChar.iType == eChar_Civilian)
+    else if (kCECharacter.GetCharacterType() == eChar_Civilian)
     {
         SetNames(m_kCharacter.GetLastName(), m_kCharacter.GetNickname());
     }
@@ -68,6 +72,18 @@ simulated function OnInit()
     // Changes in LWCE
     WorldInfo.MyWatchVariableMgr.RegisterWatchVariable(m_kUnit, 'm_arrCEBonuses',   self, RealizeBuffs);
     WorldInfo.MyWatchVariableMgr.RegisterWatchVariable(m_kUnit, 'm_arrCEPenalties', self, RealizeDebuffs);
+}
+
+simulated function RealizeRank()
+{
+    if (LWCE_XGCharacter(m_kCharacter).GetCharacterType() == eChar_Soldier)
+    {
+        SetRank(LWCE_XGCharacter_Soldier(m_kCharacter).m_kCESoldier.iRank);
+    }
+    else
+    {
+        SetRank(-1);
+    }
 }
 
 simulated function Update(XGUnit kNewActiveUnit)

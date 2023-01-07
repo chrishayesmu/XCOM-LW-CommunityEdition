@@ -2,6 +2,7 @@ class LWCE_UITacticalHUD_WeaponPanel extends UITacticalHUD_WeaponPanel;
 
 simulated function SetWeaponAndAmmo(XGWeapon kWeapon)
 {
+    local LWCE_TCharacter kChar;
     local ASValue myValue;
     local array<ASValue> myArray;
     local XGAbility_Targeted kTAbility;
@@ -27,7 +28,8 @@ simulated function SetWeaponAndAmmo(XGWeapon kWeapon)
         }
         else
         {
-            myValue.N = `LWCE_GAMECORE.LWCE_GetOverheatIncrement(LWCE_XGWeapon(kTAbility.m_kWeapon).m_TemplateName, kTAbility.GetType(), LWCE_XGUnit(kTAbility.m_kUnit).m_kCEChar, /* bReactionFire */ false);
+            kChar = LWCE_XGUnit(kTAbility.m_kUnit).LWCE_GetCharacter().GetCharacter();
+            myValue.N = `LWCE_GAMECORE.LWCE_GetOverheatIncrement(LWCE_XGWeapon(kTAbility.m_kWeapon).m_TemplateName, kTAbility.GetType(), kChar, /* bReactionFire */ false);
 
             if (kTAbility.GetType() == eAbility_RapidFire)
             {

@@ -56,7 +56,7 @@ simulated event PostBeginPlay()
         {
             m_kCEAppearance = kUnit.m_kCESoldier.kAppearance;
             `LWCE_LOG_CLS("FindMatchingPawn: calling in tac game, unit iGender = " $ kUnit.m_kCESoldier.kAppearance.iGender $ ", local iGender = " $ m_kCEAppearance.iGender);
-            kPawnTemplate = `LWCE_CONTENT_TEMPLATE_MGR.FindMatchingPawn(ECharacter(kUnit.m_kCEChar.iCharacterType), EGender(kUnit.m_kCESoldier.kAppearance.iGender), kUnit.m_kCEChar.kInventory.nmArmor);
+            kPawnTemplate = `LWCE_CONTENT_TEMPLATE_MGR.FindMatchingPawn(ECharacter(kUnit.LWCE_GetCharacter().GetCharacterType()), EGender(kUnit.m_kCESoldier.kAppearance.iGender), kUnit.LWCE_GetCharacter().GetCharacter().kInventory.nmArmor);
             kArchetype = XComUnitPawn(`LWCE_CONTENT_MGR.GetArchetypeByPath(kPawnTemplate.ArchetypeName));
             class'LWCEActorUtilities'.static.InitPawnFromArchetype(kArchetype, self);
         }
@@ -126,7 +126,7 @@ simulated function AddKitRequests()
 
     GameUnit = LWCE_XGUnit(GetGameUnit());
     nmPrimaryWeapon = class'LWCE_XGTacticalGameCore'.static.LWCE_GetPrimaryWeapon(kChar.kInventory);
-    kChar = GameUnit.m_kCEChar;
+    kChar = GameUnit.LWCE_GetCharacter().GetCharacter();
     m_iRequestKit = -1;
 
     if (m_kCEAppearance.nmArmorKit != '' && kChar.kInventory.nmArmor != 'Item_LeatherJacket')
@@ -270,14 +270,13 @@ simulated function MakeAllContentRequests()
     // TODO: may need to load content asynchronously somehow
     for (Index = 0; Index < m_arrCEPawnContentRequests.Length; Index++)
     {
-        `LWCE_LOG_CLS("Making request for content " $ m_arrCEPawnContentRequests[Index].ArchetypeName);
         m_arrCEPawnContentRequests[Index].kContent = kContentMgr.GetArchetypeByPath(m_arrCEPawnContentRequests[Index].ArchetypeName);
         ContentLoadedFn = m_arrCEPawnContentRequests[Index].ContentLoadedFn;
-        `LWCE_LOG_CLS("Loaded object " $ m_arrCEPawnContentRequests[Index].kContent);
+
+        `LWCE_LOG_CLS("Requested content " $ m_arrCEPawnContentRequests[Index].ArchetypeName $ " and loaded object " $ m_arrCEPawnContentRequests[Index].kContent);
 
         if (ContentLoadedFn != none)
         {
-            `LWCE_LOG_CLS("Calling ContentLoadedFn");
             ContentLoadedFn(m_arrCEPawnContentRequests[Index]);
         }
     }
@@ -334,7 +333,6 @@ simulated function PawnContentFullyLoaded()
         DetachAuxMesh(m_kKitMesh);
     }
 
-    `LWCE_LOG_CLS("Resetting light environment");
     UpdateAllMeshMaterials();
     LightEnvironment.ResetEnvironment();
 
@@ -600,10 +598,8 @@ simulated function UpdateArmorMaterial(MeshComponent MeshComp, MaterialInstanceC
 
     ParamColor = ColorToLinearColor(m_kCEAppearance.ArmorTintPrimary);
     MIC.GetVectorParameterValue('CMOD', ParamColor);
-    `LWCE_LOG_CLS("Primary color: R=" $ ParamColor.R $ ", G=" $ ParamColor.G $ ", B=" $ ParamColor.B $ ", A=" $ ParamColor.A);
 
     ParamColor = ColorToLinearColor(m_kCEAppearance.ArmorTintSecondary);
-    `LWCE_LOG_CLS("Secondary color: R=" $ ParamColor.R $ ", G=" $ ParamColor.G $ ", B=" $ ParamColor.B $ ", A=" $ ParamColor.A);
     MIC.GetVectorParameterValue('CMODB', ParamColor);
 }
 
@@ -613,11 +609,9 @@ simulated function UpdateSkinMaterial(MaterialInstanceConstant MIC, bool bHasHai
     local FacialHairPreset FacialHair;
 
     ParamColor = ColorToLinearColor(m_kCEAppearance.SkinColor);
-    `LWCE_LOG_CLS("Skin color: R=" $ ParamColor.R $ ", G=" $ ParamColor.G $ ", B=" $ ParamColor.B $ ", A=" $ ParamColor.A);
     MIC.SetVectorParameterValue('SkinColor', ParamColor);
 
     ParamColor = ColorToLinearColor(m_kCEAppearance.HairColor);
-    `LWCE_LOG_CLS("Hair color: R=" $ ParamColor.R $ ", G=" $ ParamColor.G $ ", B=" $ ParamColor.B $ ", A=" $ ParamColor.A);
     MIC.SetVectorParameterValue('HairColor', ParamColor);
 
     // TODO: add facial hair to m_kCEAppearance and rewrite this

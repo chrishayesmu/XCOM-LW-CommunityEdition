@@ -337,7 +337,7 @@ function TItemCard GetItemCardFromOption(TInventoryOption kItemOp)
 
 function int GetItemCharges(EItemType eItem, optional bool bForce1_for_NonGrenades = false, optional bool bForItemCardDisplay = false)
 {
-    `LWCE_LOG_CLS("ERROR: LWCE-incompatible function GetItemCharges was called. This needs to be replaced with LWCEWeaponTemplate.GetItemCharges. Stack trace follows.");
+    `LWCE_LOG_CLS("ERROR: LWCE-incompatible function GetItemCharges was called. This needs to be replaced with LWCEEquipmentTemplate.GetClipSize. Stack trace follows.");
     ScriptTrace();
 
     return 0;
@@ -345,7 +345,7 @@ function int GetItemCharges(EItemType eItem, optional bool bForce1_for_NonGrenad
 
 function string GetItemTypeName(EItemType iItem)
 {
-    `LWCE_LOG_CLS("GetItemTypeName is deprecated in LWCE. Use LWCE_TItem.strName instead.");
+    `LWCE_LOG_CLS("GetItemTypeName is deprecated in LWCE. Use LWCEItemTemplate.strName instead.");
     ScriptTrace();
     return "";
 }
@@ -441,7 +441,7 @@ function bool OnAcceptPromotion()
         }
         else
         {
-            kSoldier.GivePerk(kPerkChoice.iPerkId);
+            kSoldier.LWCE_GivePerk(kPerkChoice.iPerkId, 'Innate');
 
             if (kPerkChoice.iNewClassId != -1)
             {
@@ -456,6 +456,39 @@ function bool OnAcceptPromotion()
 
     UpdateView();
     return true;
+}
+
+function OnDismissSoldier()
+{
+    local TDialogueBoxData kData;
+    local XGStrategySoldierTag kTag;
+
+    if (LWCE_XGStrategySoldier(m_kSoldier).m_kCESoldier.iPsiRank == 7 || m_kSoldier.GetStatus() == eStatus_CovertOps)
+    {
+        PlayBadSound();
+        GoToView(eSoldierView_MainMenu);
+        return;
+    }
+
+    kTag = new class'XGStrategySoldierTag';
+    kTag.m_kSoldier = m_kSoldier;
+
+    kData.eType = eDialog_Warning;
+    kData.strTitle = m_strDismissSoldierDialogTitle;
+    kData.strText = class'XComLocalizer'.static.ExpandStringByTag(m_strDismissSoldierDialogText, kTag);
+
+    if (m_kSoldier.IsATank())
+    {
+        kData.strTitle = m_strDismissTankDialogTitle;
+        kData.strText = m_strDismissTankDialogText;
+    }
+
+    kData.strAccept = class'UIDialogueBox'.default.m_strDefaultAcceptLabel;
+    kData.strCancel = class'UIDialogueBox'.default.m_strDefaultCancelLabel;
+    kData.fnCallback = DismissSoldierActionCallback;
+
+    `HQPRES.UIRaiseDialog(kData);
+    PlaySmallOpenSound();
 }
 
 function bool OnEquip(int iInventory, int iLocker)

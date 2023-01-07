@@ -242,6 +242,7 @@ function LWCE_UpdateItemDesc(LWCE_TObjectSummary kSummary)
     local TText tTextItem;
     local int iReq, iSelectedItemState;
 
+    `LWCE_LOG_CLS("LWCE_UpdateItemDesc: ItemType = " $ kSummary.ItemType);
     kItem = `LWCE_ITEM(kSummary.ItemType);
     ItemName = "";
     infoText = "";

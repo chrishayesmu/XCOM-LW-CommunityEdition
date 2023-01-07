@@ -282,7 +282,7 @@ function LWCE_UpdatePatients()
             kCESoldier.LWCE_SetSoldierClass(eSC_Mec);
 
             kData.eType = eDT_Int;
-            kData.iData = m_arrPatients[iPatient].m_kSoldier.m_kSoldier.iID;
+            kData.iData = kCESoldier.m_kCESoldier.iID;
             kAlert.arrData.AddItem(kData);
 
             LWCE_XGGeoscape(GEOSCAPE()).LWCE_Alert(kAlert);

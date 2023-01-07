@@ -52,7 +52,7 @@ simulated function UpdateSoldierInfo()
 
     iMecClassId = kBarracks.GetResultingMecClass(kSoldier.m_kCEChar.iClassId);
     bIsGeneModded = class'LWCE_XComPerkManager'.static.LWCE_HasAnyGeneMod(kSoldier.m_kCEChar);
-    bIsPsionic = kSoldier.m_kChar.bHasPsiGift;
+    bIsPsionic = kSoldier.m_kCEChar.bHasPsiGift;
 
     AS_SetSoldierData(kSoldier.GetName(eNameType_FullNick),
                       kSoldier.GetClassName(),

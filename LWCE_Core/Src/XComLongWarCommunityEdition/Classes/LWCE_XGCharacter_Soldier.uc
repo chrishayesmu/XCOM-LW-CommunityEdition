@@ -4,7 +4,56 @@ class LWCE_XGCharacter_Soldier extends XGCharacter_Soldier implements(LWCE_XGCha
 
 var LWCE_TSoldier m_kCESoldier;
 
+`define NO_SOLDIER_FUNCS
 `include(generators_xgcharacter_functions.uci)
+`undefine(NO_SOLDIER_FUNCS)
+
+function AddKills(int iNumKills)
+{
+    `LWCE_LOG_CLS("AddKills: iNumKills = " $ iNumKills);
+
+    m_kCESoldier.iNumKills += iNumKills;
+
+    if (m_kCESoldier.bBlueshirt)
+    {
+        XGBattle_SP(`BATTLE).AddBlueshirtKills(iNumKills);
+    }
+}
+
+function AddXP(int iXP)
+{
+    `LWCE_LOG_CLS("AddXP: iXP = " $ iXP);
+
+    if (CanGainXP())
+    {
+        if (`GAMECORE.IsOptionEnabled(`LW_SECOND_WAVE_ID(DynamicWar)))
+        {
+            iXP /= `GAMECORE.SW_MARATHON;
+        }
+
+        if (HasItemInInventory('Item_CognitiveEnhancer'))
+        {
+            iXP *= 1.20;
+        }
+
+        m_kCESoldier.iXP += iXP;
+    }
+}
+
+function int GetXP()
+{
+    return m_kCESoldier.iXP;
+}
+
+function SetXP(int iXP)
+{
+    `LWCE_LOG_CLS("SetXP: iXP = " $ iXP);
+
+    if (CanGainXP())
+    {
+        m_kCESoldier.iXP = iXP;
+    }
+}
 
 simulated function string GetName()
 {
@@ -96,6 +145,18 @@ simulated function string GetNickname()
     else
     {
         return "'" $ m_kCESoldier.strNickName $ "'";
+    }
+}
+
+function bool LeveledUp()
+{
+    if (CanGainXP())
+    {
+        return m_kCESoldier.iXP >= `GAMECORE.GetXPRequired(m_kCESoldier.iRank + 1);
+    }
+    else
+    {
+        return false;
     }
 }
 

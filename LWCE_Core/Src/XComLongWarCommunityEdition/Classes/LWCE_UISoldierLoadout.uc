@@ -28,7 +28,7 @@ simulated function Init(XGStrategySoldier kSoldier, XComPlayerController _contro
     m_kSoldierHeader = Spawn(class'LWCE_UIStrategyComponent_SoldierInfo', self);
     m_kSoldierHeader.Init(_controllerRef, _manager, self, m_kSoldier);
 
-    m_kSoldierStats = Spawn(class'UIStrategyComponent_SoldierStats', self);
+    m_kSoldierStats = Spawn(class'LWCE_UIStrategyComponent_SoldierStats', self);
     m_kSoldierStats.Init(GetMgr(), _controllerRef, _manager, self);
 
     m_kAbilityList = Spawn(class'LWCE_UIStrategyComponent_SoldierAbilityList', self);
@@ -425,6 +425,7 @@ simulated function UpdateData()
 
 simulated function UpdateInventoryList()
 {
+    local int iDisplayedCharges;
     local int I, Length, Type;
     local string imgPath;
     local LWCEEquipmentTemplate kEquipment;
@@ -442,6 +443,7 @@ simulated function UpdateInventoryList()
     {
         kOption = kMgr.m_kCEGear.arrOptions[I];
 
+        // These types are clearly mapping to something in Flash; not sure what
         switch (kOption.iOptionType)
         {
             case 0:
@@ -466,9 +468,20 @@ simulated function UpdateInventoryList()
         }
 
         kEquipment = LWCEEquipmentTemplate(`LWCE_ITEM(kOption.ItemName));
-
         imgPath = kOption.imgItem.strPath;
-        AS_AddInventoryItem(Type, kOption.txtName.StrValue, imgPath, kEquipment != none ? kEquipment.GetClipSize(kSoldier.m_kCEChar) : 0, GetMecArmorIconsArray(0));
+
+        if (kEquipment.bLoadoutScreenFanoutPerCharge)
+        {
+            iDisplayedCharges = Max(kEquipment.GetClipSize(kSoldier.m_kCEChar), 1);
+        }
+        else
+        {
+            // The Flash movie requires at least 1 "charge" set, even for static equipment
+            iDisplayedCharges = 1;
+        }
+
+
+        AS_AddInventoryItem(Type, kOption.txtName.StrValue, imgPath, iDisplayedCharges, GetMecArmorIconsArray(0));
     }
 }
 

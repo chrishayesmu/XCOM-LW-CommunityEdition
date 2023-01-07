@@ -56,7 +56,7 @@ function TTableMenuOption BuildSoldierOption(XGStrategySoldier kSoldier, array<i
 
                 break;
             case 0:
-                strCategory = string(kCESoldier.m_kSoldier.iCountry);
+                strCategory = string(kCESoldier.m_kCESoldier.iCountry);
                 break;
             case 1:
                 strCategory = string(kCESoldier.GetRank());
@@ -81,10 +81,6 @@ function TTableMenuOption BuildSoldierOption(XGStrategySoldier kSoldier, array<i
                 {
                     iState = eUIState_Disabled;
                 }
-                else
-                {
-                    iState = eUIState_Normal;
-                }
 
                 break;
             case 9:
@@ -92,20 +88,12 @@ function TTableMenuOption BuildSoldierOption(XGStrategySoldier kSoldier, array<i
                 {
                     iState = eUIState_Disabled;
                 }
-                else
-                {
-                    iState = eUIState_Normal;
-                }
 
                 break;
             case 10:
-                if (kCESoldier.m_kChar.bHasPsiGift)
+                if (kCESoldier.m_kCEChar.bHasPsiGift)
                 {
                     iState = eUIState_Disabled;
-                }
-                else
-                {
-                    iState = eUIState_Normal;
                 }
 
                 break;
@@ -113,10 +101,6 @@ function TTableMenuOption BuildSoldierOption(XGStrategySoldier kSoldier, array<i
                 if (class'LWCE_XComPerkManager'.static.LWCE_HasAnyGeneMod(kCESoldier.m_kCEChar))
                 {
                     iState = eUIState_Disabled;
-                }
-                else
-                {
-                    iState = eUIState_Normal;
                 }
 
                 break;

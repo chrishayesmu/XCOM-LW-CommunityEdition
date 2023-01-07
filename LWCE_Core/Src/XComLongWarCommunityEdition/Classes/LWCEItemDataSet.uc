@@ -15,6 +15,21 @@ static function OnPostTemplatesCreated()
     kItemMgr.FindItemTemplate('Item_BaseAugments').IsInfiniteFn = IsInfinite_MecBaseGear;
     kItemMgr.FindItemTemplate('Item_Minigun').IsInfiniteFn = IsInfinite_MecBaseGear;
 
+    kItemMgr.FindEquipmentTemplate('Item_ArcThrower').GetBonusWeaponAmmoFn = GetBonusWeaponAmmoFn_ArcThrower;
+    kItemMgr.FindEquipmentTemplate('Item_Medikit').GetBonusWeaponAmmoFn = GetBonusWeaponAmmoFn_Medikit;
+    kItemMgr.FindEquipmentTemplate('Item_RestorativeMist').GetBonusWeaponAmmoFn = GetBonusWeaponAmmoFn_RestorativeMist;
+
+    kItemMgr.FindEquipmentTemplate('Item_AlienGrenade').GetBonusWeaponAmmoFn = GetBonusWeaponAmmoFn_OffensiveGrenade;
+    kItemMgr.FindEquipmentTemplate('Item_APGrenade').GetBonusWeaponAmmoFn    = GetBonusWeaponAmmoFn_OffensiveGrenade;
+    kItemMgr.FindEquipmentTemplate('Item_HEGrenade').GetBonusWeaponAmmoFn    = GetBonusWeaponAmmoFn_OffensiveGrenade;
+
+    kItemMgr.FindEquipmentTemplate('Item_BattleScanner').GetBonusWeaponAmmoFn    = GetBonusWeaponAmmoFn_SupportGrenade;
+    kItemMgr.FindEquipmentTemplate('Item_ChemGrenade').GetBonusWeaponAmmoFn      = GetBonusWeaponAmmoFn_SupportGrenade;
+    kItemMgr.FindEquipmentTemplate('Item_FlashbangGrenade').GetBonusWeaponAmmoFn = GetBonusWeaponAmmoFn_SupportGrenade;
+    kItemMgr.FindEquipmentTemplate('Item_MimicBeacon').GetBonusWeaponAmmoFn      = GetBonusWeaponAmmoFn_SupportGrenade;
+    kItemMgr.FindEquipmentTemplate('Item_PsiGrenade').GetBonusWeaponAmmoFn       = GetBonusWeaponAmmoFn_SupportGrenade;
+    kItemMgr.FindEquipmentTemplate('Item_SmokeGrenade').GetBonusWeaponAmmoFn     = GetBonusWeaponAmmoFn_SupportGrenade;
+
     // TODO: stat changes should be handled as a new perk which applies to the character
     kItemMgr.FindEquipmentTemplate('Item_LaserSight').ModifyStatChangesFn = ModifyStatChanges_ScopeUpgrade;
     kItemMgr.FindEquipmentTemplate('Item_SCOPE').ModifyStatChangesFn = ModifyStatChanges_ScopeUpgrade;
@@ -38,6 +53,93 @@ private static function AdjustBuildTimes(array<LWCEItemTemplate> arrTemplates)
     {
         arrTemplates[Index].iPointsToComplete *= class'XGTacticalGameCore'.default.ITEM_TIME_BALANCE;
     }
+}
+
+private static function int GetBonusWeaponAmmoFn_ArcThrower(const LWCEEquipmentTemplate kEquipment, const LWCE_TCharacter kChar)
+{
+    local int iTotalBonus;
+
+    if (HasPerk(kChar, `LW_PERK_ID(Repair)))
+    {
+        iTotalBonus += 2;
+    }
+
+    if (HasPerk(kChar, `LW_PERK_ID(Packmaster)))
+    {
+        iTotalBonus += 1;
+    }
+
+    return iTotalBonus;
+}
+
+private static function int GetBonusWeaponAmmoFn_Medikit(const LWCEEquipmentTemplate kEquipment, const LWCE_TCharacter kChar)
+{
+    local int iTotalBonus;
+
+    if (HasPerk(kChar, `LW_PERK_ID(FieldMedic)))
+    {
+        iTotalBonus += 1;
+    }
+
+    if (HasPerk(kChar, `LW_PERK_ID(Packmaster)))
+    {
+        iTotalBonus += 1;
+    }
+
+    return iTotalBonus;
+}
+
+private static function int GetBonusWeaponAmmoFn_OffensiveGrenade(const LWCEEquipmentTemplate kEquipment, const LWCE_TCharacter kChar)
+{
+    local int iTotalBonus;
+
+    if (HasPerk(kChar, `LW_PERK_ID(Grenadier)))
+    {
+        iTotalBonus += 1;
+    }
+
+    if (HasPerk(kChar, `LW_PERK_ID(Packmaster)))
+    {
+        iTotalBonus += 1;
+    }
+
+    return iTotalBonus;
+}
+
+private static function int GetBonusWeaponAmmoFn_RestorativeMist(const LWCEEquipmentTemplate kEquipment, const LWCE_TCharacter kChar)
+{
+    local int iTotalBonus;
+
+    if (HasPerk(kChar, `LW_PERK_ID(FieldMedic)))
+    {
+        iTotalBonus += 2;
+    }
+
+    if (HasPerk(kChar, `LW_PERK_ID(Packmaster)))
+    {
+        iTotalBonus += 1;
+    }
+
+    return iTotalBonus;
+}
+
+private static function int GetBonusWeaponAmmoFn_SupportGrenade(const LWCEEquipmentTemplate kEquipment, const LWCE_TCharacter kChar)
+{
+    local int iTotalBonus;
+
+    if (HasPerk(kChar, `LW_PERK_ID(SmokeAndMirrors)))
+    {
+        iTotalBonus += 1;
+    }
+
+    if (HasPerk(kChar, `LW_PERK_ID(Packmaster)))
+    {
+        iTotalBonus += 1;
+    }
+
+    if (kEquipment.GetItemName() == 'Item_SmokeGrenade' && HasPerk(kChar, `LW_PERK_ID(SmokeGrenade)))
+
+    return iTotalBonus;
 }
 
 /// <summary>
@@ -133,6 +235,7 @@ private static function int GetBonusWeaponAmmoFn_ToBeDeleted(const LWCEEquipment
 
     if (HasPerk(kChar, `LW_PERK_ID(SmokeGrenade)) && ItemName == 'Item_SmokeGrenade')
     {
+        // TODO this will apply per-item
         iTotalBonus += 1;
     }
 

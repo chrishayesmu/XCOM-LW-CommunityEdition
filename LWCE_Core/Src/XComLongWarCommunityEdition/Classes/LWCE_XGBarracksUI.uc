@@ -28,7 +28,7 @@ function TTableMenuOption BuildSoldierOption(XGStrategySoldier kSoldier, array<i
         switch (arrCategories[iCategory])
         {
             case 0:
-                strCategory = string(kSoldier.m_kSoldier.iCountry);
+                strCategory = string(LWCE_XGStrategySoldier(kSoldier).m_kCESoldier.iCountry);
                 break;
             case 1:
                 strCategory = string(kSoldier.GetRank());

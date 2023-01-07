@@ -160,7 +160,7 @@ static function InitPlayers(XGBattle_SP kSelf, optional bool bLoading = false)
     }
     else
     {
-        kSelf.m_kPodMgr = kSelf.Spawn(class'XComAlienPodManager');
+        kSelf.m_kPodMgr = kSelf.Spawn(class'LWCE_XComAlienPodManager');
         kSelf.m_kPodMgr.InitPods();
 
         for (I = 0; I < kSelf.m_iNumPlayers; I++)
@@ -237,10 +237,12 @@ static function PutSoldiersOnDropship(XGBattle_SP kSelf)
 {
     local bool bFound, bSquadHasFieldSurgeon;
     local int iSoldier, iMember;
-    local TTransferSoldier kTransferSoldier;
+    local LWCE_TTransferSoldier kTransferSoldier;
+    local LWCE_XGDropshipCargoInfo kCargoInfo;
     local XGUnit kCovertOperative, kSoldier;
     local XGSquad kSquad;
 
+    kCargoInfo = LWCE_XGDropshipCargoInfo(kSelf.Desc().m_kDropShipCargoInfo);
     kSquad = kSelf.GetHumanPlayer().GetSquad();
     iSoldier = 0;
 
@@ -253,11 +255,12 @@ static function PutSoldiersOnDropship(XGBattle_SP kSelf)
             if (!kSoldier.IsDeadOrDying() && !kSoldier.IsCriticallyWounded() && !kSoldier.m_bLeftBehind)
             {
                 bSquadHasFieldSurgeon = true;
+                break;
             }
         }
     }
 
-    for (iSoldier = 0; iSoldier < kSelf.Desc().m_kDropShipCargoInfo.m_arrSoldiers.Length; iSoldier++)
+    for (iSoldier = 0; iSoldier < kCargoInfo.m_arrSoldiers.Length; iSoldier++)
     {
         bFound = false;
 
@@ -265,7 +268,7 @@ static function PutSoldiersOnDropship(XGBattle_SP kSelf)
         {
             kSoldier = kSquad.GetPermanentMemberAt(iMember);
 
-            if (kSoldier != none && kSoldier.GetCharacter().IsA('XGCharacter_Soldier') && XGCharacter_Soldier(kSoldier.GetCharacter()).m_kSoldier.iID == kSelf.Desc().m_kDropShipCargoInfo.m_arrSoldiers[iSoldier].kSoldier.iID)
+            if (kSoldier != none && kSoldier.GetCharacter().IsA('XGCharacter_Soldier') && LWCE_XGCharacter_Soldier(kSoldier.GetCharacter()).m_kCESoldier.iID == kCargoInfo.m_arrCESoldiers[iSoldier].kSoldier.iID)
             {
                 if (!kSoldier.IsDeadOrDying() && !kSoldier.m_bLeftBehind && !kSoldier.IsCriticallyWounded())
                 {
@@ -275,8 +278,8 @@ static function PutSoldiersOnDropship(XGBattle_SP kSelf)
                     }
                 }
 
-                kTransferSoldier = kSelf.BuildReturningDropshipSoldier(kSoldier, iSoldier == 0);
-                kSelf.Desc().m_kDropShipCargoInfo.m_arrSoldiers[iSoldier] = kTransferSoldier;
+                kTransferSoldier = LWCE_BuildReturningDropshipSoldier(kSelf, kSoldier);
+                kCargoInfo.m_arrCESoldiers[iSoldier] = kTransferSoldier;
 
                 bFound = true;
                 break;
@@ -285,7 +288,7 @@ static function PutSoldiersOnDropship(XGBattle_SP kSelf)
 
         if (!bFound)
         {
-            kSelf.Desc().m_kDropShipCargoInfo.m_arrSoldiers[iSoldier].iHPAfterCombat = kSelf.Desc().m_kDropShipCargoInfo.m_arrSoldiers[iSoldier].kChar.aStats[0];
+            kCargoInfo.m_arrCESoldiers[iSoldier].iHPAfterCombat = kCargoInfo.m_arrCESoldiers[iSoldier].kChar.aStats[eStat_HP];
         }
     }
 
@@ -301,9 +304,9 @@ static function PutSoldiersOnDropship(XGBattle_SP kSelf)
 
     if (kCovertOperative != none)
     {
-        kTransferSoldier = kSelf.BuildReturningDropshipSoldier(kCovertOperative, false);
-        kSelf.Desc().m_kDropShipCargoInfo.m_kCovertOperative = kTransferSoldier;
-        kSelf.Desc().m_kDropShipCargoInfo.m_bHasCovertOperative = true;
+        kTransferSoldier = LWCE_BuildReturningDropshipSoldier(kSelf, kCovertOperative);
+        kCargoInfo.m_kCECovertOperative = kTransferSoldier;
+        kCargoInfo.m_bHasCovertOperative = true;
     }
 }
 
@@ -348,7 +351,7 @@ static function SpawnCovertOperative(XGBattle_SPCovertOpsExtraction kSelf)
 
     kUnit = LWCE_XGUnit(kPlayer.SpawnUnit(class'LWCE_XGUnit', kPlayer.m_kPlayerController, kSpawnPoint.Location, kSpawnPoint.Rotation, kChar, kPlayer.GetSquad(),, kSpawnPoint));
     kUnit.m_iUnitLoadoutID = kTransferSoldier.iUnitLoadoutID;
-    kUnit.m_kCEChar = kCETransferSoldier.kChar;
+    kUnit.LWCE_GetCharacter().SetCharacter(kCETransferSoldier.kChar);
     kUnit.m_kCESoldier = kCETransferSoldier.kSoldier;
     kUnit.AddStatModifiers(kTransferSoldier.aStatModifiers);
 
@@ -357,4 +360,52 @@ static function SpawnCovertOperative(XGBattle_SPCovertOpsExtraction kSelf)
     kUnit.UpdateItemCharges();
 
     kSelf.m_kCovertOperative = kUnit;
+}
+
+private static function LWCE_TTransferSoldier LWCE_BuildReturningDropshipSoldier(XGBattle_SP kSelf, XGUnit kSoldier)
+{
+    local LWCE_TTransferSoldier kTransferSoldier;
+    local LWCE_XGCharacter_Soldier kSoldierChar;
+    local int iHP;
+
+    kSoldierChar = LWCE_XGCharacter_Soldier(kSoldier.GetCharacter());
+
+    if (kSoldierChar == none)
+    {
+        // TODO: need to expand this to SHIVs
+        // kSoldierChar = XGCharacter_Tank(kSoldier.GetCharacter());
+    }
+
+    kTransferSoldier.kChar = kSoldierChar.m_kCEChar;
+    kTransferSoldier.kSoldier = kSoldierChar.m_kCESoldier;
+    iHP = Min(kSoldier.m_iLowestHP, kSoldierChar.GetCharMaxStat(eStat_HP));
+
+    `LWCE_LOG_CLS("LWCE_BuildReturningDropshipSoldier: kSoldier.m_iLowestHP = " $ kSoldier.m_iLowestHP $ ", kSoldierChar.GetCharMaxStat(eStat_HP) = " $ kSoldierChar.GetCharMaxStat(eStat_HP));
+
+    if (!kSoldier.IsDeadOrDying())
+    {
+        iHP = Max(1, iHP);
+    }
+
+    kTransferSoldier.CauseOfDeathString = kSoldier.m_strCauseOfDeath;
+
+    // If bleeding out and the mission is not a win, the soldier dies
+    if (kSelf.m_iResult != eResult_Victory && kSoldier.IsCriticallyWounded())
+    {
+        iHP = 0;
+        kTransferSoldier.CauseOfDeathString = `GAMECORE.UnknownCauseOfDeathString;
+    }
+
+    if (kSoldier.m_bLeftBehind)
+    {
+        iHP = 0;
+        kTransferSoldier.bLeftBehind = true;
+        kTransferSoldier.CauseOfDeathString = `GAMECORE.UnknownCauseOfDeathString;
+    }
+
+    kTransferSoldier.iHPAfterCombat = iHP;
+    kTransferSoldier.iCriticalWoundsTaken = kSoldier.m_aCurrentStats[eStat_CriticalWoundsReceived];
+    kTransferSoldier.kChar.aStats[eStat_CriticalWoundsReceived] = kSoldier.m_aCurrentStats[eStat_CriticalWoundsReceived];
+
+    return kTransferSoldier;
 }

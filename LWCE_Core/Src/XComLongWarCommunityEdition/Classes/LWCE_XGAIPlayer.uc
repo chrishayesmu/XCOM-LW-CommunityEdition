@@ -6,9 +6,74 @@ class LWCE_XGAIPlayer extends XGAIPlayer;
 
 simulated function CreateSquad(array<XComSpawnPoint> arrSpawnPoints, array<EPawnType> arrPawnTypes)
 {
-    `LWCE_LOG_CLS("CreateSquad begin");
-    super.CreateSquad(arrSpawnPoints, arrPawnTypes);
-    `LWCE_LOG_CLS("CreateSquad end");
+    local Vector vDropShipLoc;
+    local int iPodGroup;
+
+    GetSquadLocation(m_kSquadStart.vCenter, m_kSquadStart.fRadius);
+    `BATTLE.m_kPodMgr.InitPlayer(self);
+    m_fMaxUnitRadius = 0.0;
+    m_kSquad = Spawn(class'LWCE_XGSquad',,,,,,, m_eTeam);
+    m_kSquad.m_kPlayer = self;
+    InitRules();
+
+    if (`BATTLE.m_kDesc.m_iMissionType != eMission_Final && `BATTLE.m_kDesc.m_iMissionType != eMission_HQAssault)
+    {
+        if (XGBattle_SP(`BATTLE) != none)
+        {
+            if (`BATTLE.ProfileSettingsSaveDataIsValid())
+            {
+                iPodGroup = `BATTLE.ProfileSettingsPodGroup();
+            }
+            else if (XGBattle_SP(`BATTLE).m_kDesc != none)
+            {
+                iPodGroup = XGBattle_SP(`BATTLE).m_kDesc.m_iPodGroup;
+            }
+        }
+
+        m_nPreplacedAliens = `BATTLE.m_kPodMgr.SpawnAllPodAliens(iPodGroup);
+        m_eDefaultType = `BATTLE.m_kDesc.m_kAlienInfo.iPodSupporterType;
+
+        if (`BATTLE.m_kDesc.m_kAlienInfo.bProcedural)
+        {
+            `BATTLE.m_kPodMgr.RemoveAllPods();
+        }
+        else if (`BATTLE.m_kDesc.m_kAlienInfo.iNumRandomAI > 0)
+        {
+            `BATTLE.m_kPodMgr.PullFromPods(`BATTLE.m_kDesc.m_kAlienInfo.iNumRandomAI);
+        }
+
+        if (m_nPreplacedAliens > 0)
+        {
+            if (`BATTLE.m_kDesc.m_kAlienInfo.iNumAliens != 0)
+            {
+                if (`BATTLE.m_kDesc.m_kAlienInfo.iNumAliens < m_nPreplacedAliens)
+                {
+                    `BATTLE.m_kPodMgr.PullFromPods(m_nPreplacedAliens - `BATTLE.m_kDesc.m_kAlienInfo.iNumAliens, true);
+                }
+            }
+
+            UpdateTerrorMission();
+            UpdatePawnCounts();
+        }
+        else
+        {
+            SpawnForced(arrSpawnPoints, arrPawnTypes, true);
+            m_uiHasBeenVisible = 0;
+
+            if (`BATTLE.m_kLevel.GetDropship() != none)
+            {
+                vDropShipLoc = `BATTLE.m_kLevel.GetDropship().Location;
+            }
+
+            m_arrDebugSpawnPts = arrSpawnPoints;
+            SpawnAliensFromList(arrSpawnPoints, 4, arrPawnTypes, vDropShipLoc, true);
+        }
+    }
+
+    if (m_kOvermindHandler != none)
+    {
+        m_kOvermindHandler.bEnabled = m_kOvermindHandler.bEnabled && `BATTLE.m_kDesc.m_bOvermindEnabled;
+    }
 }
 
 event Tick(float fDeltaT)

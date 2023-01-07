@@ -111,7 +111,7 @@ exec function GivePerk(string strName)
         if (kSoldierUI != none && kSoldierUI.m_kSoldier != none)
         {
             GetConsole().OutputTextLine("Giving perk " $ iPerkId);
-            kSoldierUI.m_kSoldier.GivePerk(iPerkId);
+            LWCE_XGStrategySoldier(kSoldierUI.m_kSoldier).LWCE_GivePerk(iPerkId, 'Innate');
         }
     }
 }

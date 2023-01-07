@@ -396,13 +396,16 @@ static function int AbilityBaseIdFromName(name AbilityName)
 
 function ApplyActionCost(XGAbility_Targeted kAbility)
 {
+    local LWCE_TCharacter kChar;
     local int iCost;
+
+    kChar = LWCE_XGUnit(kAbility.m_kUnit).LWCE_GetCharacter().GetCharacter();
 
     if (kAbility.HasProperty(eProp_FireWeapon) || kAbility.GetType() == eAbility_Ghost || kAbility.GetType() == eAbility_MEC_RestorativeMist)
     {
         if (kAbility.m_kWeapon != none)
         {
-            iCost = `LWCE_GAMECORE.LWCE_GetOverheatIncrement(LWCE_XGWeapon(kAbility.m_kWeapon).m_TemplateName, kAbility.GetType(), LWCE_XGUnit(kAbility.m_kUnit).m_kCEChar, kAbility.m_bReactionFire);
+            iCost = `LWCE_GAMECORE.LWCE_GetOverheatIncrement(LWCE_XGWeapon(kAbility.m_kWeapon).m_TemplateName, kAbility.GetType(), kChar, kAbility.m_bReactionFire);
         }
 
         if (kAbility.GetType() == eAbility_FragGrenade)
@@ -522,7 +525,7 @@ function ApplyActionCost(XGAbility_Targeted kAbility)
 
         if (kAbility.m_kWeapon != none)
         {
-            kAbility.GraduatedOdds(iCost, none, (kAbility.m_kUnit.GetCharacter().m_kChar.aUpgrades[123] & 2) > 0);
+            kAbility.GraduatedOdds(iCost, none, LWCE_XGUnit(kAbility.m_kUnit).HasPerk(`LW_PERK_ID(AmmoConservation)));
         }
     }
 

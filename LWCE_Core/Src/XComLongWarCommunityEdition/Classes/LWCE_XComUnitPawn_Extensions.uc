@@ -46,7 +46,7 @@ static simulated function ApplyShredderRocket(XComUnitPawn kSelf, const DamageEv
         // TODO: rapid fire should probably be able to apply shred for MECs also; make configurable
         iShredDuration = `LWCE_TACCFG(iShredderDebuffDurationFromPerk);
     }
-    else if (class'LWCEInventoryUtils'.static.HasItemOfName(kInstigator.m_kCEChar.kInventory, 'Item_ShredderAmmo') && kInstigatorWeapon.IsLarge())
+    else if (kInstigator.LWCE_GetCharacter().HasItemInInventory('Item_ShredderAmmo') && kInstigatorWeapon.IsLarge())
     {
         iShredDuration = `LWCE_TACCFG(iShredderDebuffDurationFromSmallItem);
     }

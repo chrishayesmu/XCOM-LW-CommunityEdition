@@ -4,9 +4,21 @@ class LWCE_XComPresentationLayer extends XComPresentationLayer;
 
 `LWCE_GENERATOR_XCOMPRESENTATIONLAYERBASE
 
+simulated function PHUDLevelUp(XGCharacter_Soldier kSoldier)
+{
+    local LWCE_XGCharacter_Soldier kCESoldier;
+    local string Message;
+
+    kCESoldier = LWCE_XGCharacter_Soldier(kSoldier);
+
+    Message = Repl(m_sLevelUp, "%sRANK", `GAMECORE.GetRankString(kCESoldier.m_kCESoldier.iRank));
+    ReplaceText(Message, "%sNAME", kCESoldier.m_kCESoldier.strLastName);
+    GetMessenger().Message(Message, 5, 1, 5.0);
+    kCESoldier.m_kUnit.SetTimer(3.0, false, 'DelayPromotionSound');
+}
+
 simulated function UIUnitGermanMode(XGUnit TargetUnit)
 {
-    `LWCE_LOG_CLS("UIUnitGermanMode");
     m_kGermanMode = Spawn(class'LWCE_UIUnitGermanMode', self);
     m_kGermanMode.Init(XComPlayerController(Owner), GetHUD(), TargetUnit);
     PushState('State_GermanMode');

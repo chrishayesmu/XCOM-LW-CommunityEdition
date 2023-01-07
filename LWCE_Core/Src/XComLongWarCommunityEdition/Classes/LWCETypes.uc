@@ -37,8 +37,8 @@ struct LWCE_TRange
 struct LWCE_TIDWithSource
 {
     var int Id;
-    var int SourceId;
-    var int SourceType;
+    var name SourceId;
+    var name SourceType;
 };
 
 struct LWCE_TInventory
@@ -145,6 +145,7 @@ struct LWCE_TSoldier
     var string strFirstName;
     var string strLastName;
     var string strNickName;
+    var string strClassIcon;
     var int iRank;
     var int iPsiRank;
     var int iCountry;

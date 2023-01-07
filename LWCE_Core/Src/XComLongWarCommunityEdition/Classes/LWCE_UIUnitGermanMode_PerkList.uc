@@ -43,8 +43,6 @@ simulated function LWCE_PrepareItemData(XGInventory kInventory)
     local XGInventoryItem kInvItem;
     local LWCE_XGWeapon kWeapon;
 
-    `LWCE_LOG_CLS("LWCE_PrepareItemData");
-
     for (I = 0; I < eSlot_MAX; I++)
     {
         for (J = 0; J < kInventory.GetNumberOfItemsInSlot(ELocation(I)); J++)
@@ -64,10 +62,8 @@ simulated function LWCE_PrepareItemData(XGInventory kInventory)
                 continue;
             }
 
-            `LWCE_LOG_CLS("Handling item " $ kWeapon.m_TemplateName);
             if (kWeapon.m_kTemplate.strPerkHUDIcon == "" || kWeapon.m_kTemplate.strPerkHUDSummary == "")
             {
-                `LWCE_LOG_CLS("Missing data: icon = " $ kWeapon.m_kTemplate.strPerkHUDIcon $ ", summary = " $ kWeapon.m_kTemplate.strPerkHUDSummary);
                 continue;
             }
 

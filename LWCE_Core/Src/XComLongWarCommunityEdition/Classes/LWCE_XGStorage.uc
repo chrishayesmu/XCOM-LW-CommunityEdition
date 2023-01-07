@@ -327,12 +327,14 @@ function bool LWCE_ClaimItem(name ItemName, optional XGStrategySoldier kSoldier 
     local int Index, iPerkId;
     local name PerkName;
     local LWCEEquipmentTemplate kEquipment;
+    local LWCE_XGStrategySoldier kCESoldier;
 
     if (ItemName == '')
     {
         return true;
     }
 
+    kCESoldier = LWCE_XGStrategySoldier(kSoldier);
     kEquipment = LWCEEquipmentTemplate(`LWCE_ITEM(ItemName));
     Index = m_arrCEItems.Find('ItemName', ItemName);
     bIsInfinite = kEquipment.IsInfinite();
@@ -342,15 +344,16 @@ function bool LWCE_ClaimItem(name ItemName, optional XGStrategySoldier kSoldier 
         return false;
     }
 
-    // Perks granted by item; adding 2 indicates it's from an item and not from the class perks
-    foreach kEquipment.arrPerks(PerkName)
+    if (kCESoldier != none)
     {
-        // TODO: just move everything to names once perks are templated
-        iPerkId = class'LWCE_XComPerkManager'.static.BaseIDFromPerkName(PerkName);
-
-        if (iPerkId > 0 && iPerkId < ePerk_MAX)
+        foreach kEquipment.arrPerks(PerkName)
         {
-            kSoldier.m_kChar.aUpgrades[iPerkId] += 2;
+            iPerkId = class'LWCE_XComPerkManager'.static.BaseIDFromPerkName(PerkName);
+
+            if (iPerkId > 0 && iPerkId < ePerk_MAX)
+            {
+                kCESoldier.LWCE_GivePerk(iPerkId, 'Item');
+            }
         }
     }
 
@@ -907,6 +910,9 @@ function bool LWCE_ReleaseItem(name ItemName, XGStrategySoldier kSoldier)
     local int Index, iPerkId;
     local LWCE_TItemQuantity kItemQuantity;
     local LWCEEquipmentTemplate kItem;
+    local LWCE_XGStrategySoldier kCESoldier;
+
+    kCESoldier = LWCE_XGStrategySoldier(kSoldier);
 
     // Sometimes we get called to release an empty item slot, so just no-op
     if (ItemName == '')
@@ -927,10 +933,7 @@ function bool LWCE_ReleaseItem(name ItemName, XGStrategySoldier kSoldier)
             continue;
         }
 
-        if (kSoldier.m_kChar.aUpgrades[iPerkId] > 1)
-        {
-            kSoldier.m_kChar.aUpgrades[iPerkId] -= 2;
-        }
+        kCESoldier.RemovePerk(iPerkId, 'Item');
     }
 
     if (kItem.IsInfinite())

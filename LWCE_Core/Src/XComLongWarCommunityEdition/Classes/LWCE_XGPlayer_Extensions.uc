@@ -112,7 +112,7 @@ static function LoadSquad(XGPlayer kSelf, array<TTransferSoldier> Soldiers, arra
 static function XGUnit SpawnAlien(XGPlayer kSelf, EPawnType eAlienType, XComSpawnPoint_Alien kSpawnPt, optional bool bSnapToCover = false, optional bool bSnapToGround = true, optional bool bAddFlag = true, optional bool bUseAltWeapon = false, optional bool bBattleScanner = false)
 {
     local XGCharacter kChar;
-    local XGUnit kAlien;
+    local LWCE_XGUnit kAlien;
     local Vector vLoc, HitLocation, HitNormal;
 
     if (eAlienType == ePawnType_None)
@@ -138,18 +138,18 @@ static function XGUnit SpawnAlien(XGPlayer kSelf, EPawnType eAlienType, XComSpaw
         vLoc = kSpawnPt.GetSpawnPointLocation();
     }
 
-    kAlien = kSelf.SpawnUnit(class'XGUnit', kSelf.m_kPlayerController, vLoc, kSpawnPt.Rotation, kChar, kSelf.m_kSquad, /* bDestroyOnBadLocation */ true, kSpawnPt, bSnapToGround, bBattleScanner);
+    kAlien = LWCE_XGUnit(kSelf.SpawnUnit(class'XGUnit', kSelf.m_kPlayerController, vLoc, kSpawnPt.Rotation, kChar, kSelf.m_kSquad, /* bDestroyOnBadLocation */ true, kSpawnPt, bSnapToGround, bBattleScanner));
 
     if (kAlien == none)
     {
         vLoc = XComTacticalGRI(kSelf.WorldInfo.GRI).GetClosestValidLocation(kSpawnPt.GetSpawnPointLocation(), none,, false);
-        kAlien = kSelf.SpawnUnit(class'XGUnit', kSelf.m_kPlayerController, vLoc, kSpawnPt.Rotation, kChar, kSelf.m_kSquad, /* bDestroyOnBadLocation */ true, kSpawnPt);
+        kAlien = LWCE_XGUnit(kSelf.SpawnUnit(class'XGUnit', kSelf.m_kPlayerController, vLoc, kSpawnPt.Rotation, kChar, kSelf.m_kSquad, /* bDestroyOnBadLocation */ true, kSpawnPt));
     }
 
     if (kAlien != none)
     {
         kAlien.SetDiscState(eDS_Bad);
-        class'LWCE_XGLoadoutMgr'.static.EquipUnit(kAlien, class'XGLoadoutMgr'.static.GetLoadoutTemplateFromCharacter(ECharacter(kAlien.GetCharacter().m_kChar.iType), bUseAltWeapon));
+        class'LWCE_XGLoadoutMgr'.static.EquipUnit(kAlien, class'XGLoadoutMgr'.static.GetLoadoutTemplateFromCharacter(ECharacter(kAlien.GetCharType()), bUseAltWeapon));
         kAlien.UpdateItemCharges();
 
         if (!bBattleScanner)

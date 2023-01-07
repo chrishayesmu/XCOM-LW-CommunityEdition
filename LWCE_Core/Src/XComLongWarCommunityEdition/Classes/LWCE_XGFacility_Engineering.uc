@@ -918,6 +918,36 @@ function bool LWCE_GetCostSummary(out TCostSummary kCostSummary, LWCE_TProjectCo
         kCostSummary.arrRequirements.AddItem(txtCost);
     }
 
+    if (kProjectCost.kCost.iMeld > 0 && !bFreeBuild)
+    {
+        txtCost.StrValue = kProjectCost.kCost.iMeld $ "x" @ `LWCE_ITEM('Item_Meld').strName;
+        txtCost.iState = eUIState_Meld;
+
+        if (kProjectCost.kCost.iMeld > GetResource(eResource_Meld) && !bFreeBuild)
+        {
+            bCanAfford = false;
+            txtCost.iState = eUIState_Bad;
+            kCostSummary.strHelp = m_strErrInsufficientItems;
+        }
+
+        kCostSummary.arrRequirements.AddItem(txtCost);
+    }
+
+    if (kProjectCost.kCost.iWeaponFragments > 0 && !bFreeBuild)
+    {
+        txtCost.StrValue = kProjectCost.kCost.iWeaponFragments $ "x" @ `LWCE_ITEM('Item_WeaponFragment').strName;
+        txtCost.iState = eUIState_Normal;
+
+        if (kProjectCost.kCost.iWeaponFragments > kStorage.LWCE_GetNumItemsAvailable('Item_WeaponFragment') && !bFreeBuild)
+        {
+            bCanAfford = false;
+            txtCost.iState = eUIState_Bad;
+            kCostSummary.strHelp = m_strErrInsufficientItems;
+        }
+
+        kCostSummary.arrRequirements.AddItem(txtCost);
+    }
+
     if (kProjectCost.kCost.arrItems.Length > 0 && !bFreeBuild)
     {
         for (iItem = 0; iItem < kProjectCost.kCost.arrItems.Length; iItem++)
@@ -1137,7 +1167,7 @@ function bool LWCE_GetItemCostSummary(out TCostSummary kCostSummary, name ItemNa
         return false;
     }
 
-    if (iProjectIndex != -1 && IsCostPopulated(m_arrCEItemProjects[iProjectIndex].kOriginalCost))
+    if (iProjectIndex != INDEX_NONE && IsCostPopulated(m_arrCEItemProjects[iProjectIndex].kOriginalCost))
     {
         kCost = m_arrCEItemProjects[iProjectIndex].kOriginalCost;
     }
@@ -1255,7 +1285,6 @@ function LWCE_TProjectCost LWCE_GetItemProjectCost(name ItemName, int iQuantity,
     local LWCE_TProjectCost kProjectCost;
     local int Index;
 
-    `LWCE_LOG_CLS("GetITemProjectCost: ItemName = " $ ItemName);
     kItem = `LWCE_ITEM(ItemName);
 
     kProjectCost.kCost = kItem.kCost;
@@ -1307,8 +1336,6 @@ function array<TItem> GetItemsByCategory(int iCategory, int iTransactionType)
 
 function array<LWCEItemTemplate> LWCE_GetItemsByCategory(name nmCategory, int iTransactionType)
 {
-    `LWCE_LOG_CLS("LWCE_GetItemsByCategory: nmCategory = " $ nmCategory $ ", iTransactionType = " $ iTransactionType);
-
     if (iTransactionType == eTransaction_Build)
     {
         return LWCE_XGItemTree(ITEMTREE()).LWCE_GetBuildItems(nmCategory);
@@ -1619,7 +1646,6 @@ function RemoveItemProject(int iIndex)
 {
     local int iProject;
 
-    `LWCE_LOG_CLS("Removing item project at index " $ iIndex);
     RemoveItemProjectFromQueue(iIndex);
     m_arrCEItemProjects.Remove(iIndex, 1);
 

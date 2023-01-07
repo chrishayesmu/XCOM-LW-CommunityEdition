@@ -3,6 +3,7 @@ class LWCE_XGLoadoutMgr extends Object
 
 static function ApplyInventory(XGUnit kUnit, optional bool bLoadFromCheckpoint = false)
 {
+    local LWCE_TCharacter kChar;
     local LWCE_XGUnit kCEUnit;
     local LWCE_TLoadout Loadout;
     local int iType;
@@ -10,12 +11,13 @@ static function ApplyInventory(XGUnit kUnit, optional bool bLoadFromCheckpoint =
     `LWCE_LOG_CLS("ApplyInventory begin");
 
     kCEUnit = LWCE_XGUnit(kUnit);
-    iType = kCEUnit.m_kCEChar.iCharacterType;
+    iType = kCEUnit.LWCE_GetCharacter().GetCharacterType();
+    kChar = kCEUnit.LWCE_GetCharacter().GetCharacter();
 
     // XCOM soldiers and EXALT units
     if ( iType == eChar_Soldier || (iType >= 24 && iType <= 31) )
     {
-        LWCE_ConvertTInventoryToSoldierLoadout(kCEUnit.m_kCEChar, kCEUnit.m_kCEChar.kInventory, Loadout);
+        LWCE_ConvertTInventoryToSoldierLoadout(kChar, kChar.kInventory, Loadout);
 
         if (kCEUnit.HasPerk(`LW_PERK_ID(FieldMedic)) && !kCEUnit.IsAugmented())
         {
@@ -24,11 +26,11 @@ static function ApplyInventory(XGUnit kUnit, optional bool bLoadFromCheckpoint =
     }
     else if (iType == eChar_Tank)
     {
-        LWCE_ConvertTInventoryToTankLoadout(kCEUnit.m_kCEChar.kInventory, Loadout);
+        LWCE_ConvertTInventoryToTankLoadout(kChar.kInventory, Loadout);
     }
     else
     {
-        LWCE_ConvertTInventoryToAlienLoadout(kCEUnit.m_kCEChar, kCEUnit.m_kCEChar.kInventory, Loadout);
+        LWCE_ConvertTInventoryToAlienLoadout(kChar, kChar.kInventory, Loadout);
     }
 
     LWCE_ApplyLoadout(kCEUnit, Loadout, bLoadFromCheckpoint);
@@ -297,16 +299,16 @@ static function EquipUnit(XGUnit kUnit, optional ELoadoutTypes eLoadoutType = eL
                 switch (eLoadoutType)
                 {
                     case eLoadout_Floater:
-                        ItemName = 'Item_AlienCarbine__Floater';
+                        ItemName = 'Item_AlienCarbine_Floater';
                         break;
                     case eLoadout_Muton:
-                        ItemName = 'Item_AlienCarbine__Muton';
+                        ItemName = 'Item_AlienCarbine_Muton';
                         break;
                     case eLoadout_ThinMan:
-                        ItemName = 'Item_AlienCarbine__ThinMan';
+                        ItemName = 'Item_AlienCarbine_ThinMan';
                         break;
                     case eLoadout_Outsider:
-                        ItemName = 'Item_AlienCarbine__Outsider';
+                        ItemName = 'Item_AlienCarbine_Outsider';
                         break;
                 }
             }
@@ -389,7 +391,7 @@ static function EquipUnit(XGUnit kUnit, optional ELoadoutTypes eLoadoutType = eL
             `LWCE_LOG_CLS("Custom item " $ Index $ ": " $ ItemName);
         }
 
-        LWCE_XGUnit(kUnit).m_kCEChar.kInventory = kInventory;
+        LWCE_XGUnit(kUnit).LWCE_GetCharacter().SetInventory(kInventory);
     }
 
     ApplyInventory(kUnit);

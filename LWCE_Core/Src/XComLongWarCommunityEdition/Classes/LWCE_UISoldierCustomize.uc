@@ -178,7 +178,7 @@ simulated function UpdateData()
 
     if (m_kSoldier.IsAugmented())
     {
-        if (m_kSoldier.m_kChar.kInventory.iArmor != eItem_MecCivvies)
+        if (LWCE_XGStrategySoldier(m_kSoldier).m_kCEChar.kInventory.nmArmor != 'Item_BaseAugments')
         {
             kCameraOffset  = TransformVectorByRotation(m_kCameraRig.Rotation, vect(1.0, 0.0, 0.0)) * m_kCameraRigMecDistanceOffset;
             kCameraOffset += TransformVectorByRotation(m_kCameraRig.Rotation, vect(0.0, 1.0, 0.0)) * m_kCameraRigMecHorizontalOffset;

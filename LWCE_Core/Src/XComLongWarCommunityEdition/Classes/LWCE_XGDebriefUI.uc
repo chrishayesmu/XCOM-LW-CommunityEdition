@@ -92,7 +92,7 @@ function LWCE_TSoldierDebriefItem LWCE_BuildSoldierOption(XGStrategySoldier kSol
     kItem.txtName.StrValue = kSoldier.GetName(eNameType_FullNick);
     kItem.txtName.iState = eUIState_Warning;
 
-    if (kSoldier.m_kSoldier.kAppearance.iGender == eGender_Female)
+    if (LWCE_XGStrategySoldier(kSoldier).m_kCESoldier.kAppearance.iGender == eGender_Female)
     {
         kItem.imgSoldier.iImage = eImage_MugshotFemale;
     }

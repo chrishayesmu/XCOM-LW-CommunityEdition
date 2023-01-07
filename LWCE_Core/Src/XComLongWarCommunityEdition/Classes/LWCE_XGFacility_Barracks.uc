@@ -58,6 +58,26 @@ function InitNewGame()
     bInitingNewGame = false;
 }
 
+function AddNewSoldier(XGStrategySoldier kSoldier, optional bool bSkipReorder = false, optional bool bBlueshirt = false)
+{
+    LWCE_XGStrategySoldier(kSoldier).m_kCESoldier.iID = m_iSoldierCounter++;
+
+    UpdateOTSPerksForSoldier(kSoldier);
+    UpdateFoundryPerksForSoldier(kSoldier);
+    NameCheck(kSoldier);
+    m_arrSoldiers.AddItem(kSoldier);
+
+    if (!bSkipReorder)
+    {
+        ReorderRanks();
+    }
+
+    if (STAT_GetStat(eRecap_MaxSoldiers) < m_arrSoldiers.Length)
+    {
+        STAT_SetStat(eRecap_MaxSoldiers, m_arrSoldiers.Length);
+    }
+}
+
 function AddNewSoldiers(int iNumSoldiers, optional bool bCreatePawns = true)
 {
     local LWCE_XGStrategySoldier kSoldier;
@@ -100,17 +120,17 @@ function LWCE_AddTank(name ArmorName, name WeaponName)
 
     if (ArmorName == 'Item_SHIVAlloyChassis')
     {
-        kTank.m_kSoldier.strLastName = m_strAlloySHIVPrefix $ ++m_iAlloyTankCounter;
+        kTank.m_kCESoldier.strLastName = m_strAlloySHIVPrefix $ ++m_iAlloyTankCounter;
         kTank.m_kChar.aStats[eStat_HP] += class'XGTacticalGameCore'.default.ALLOY_SHIV_HP_BONUS;
     }
     else if (ArmorName == 'Item_SHIVHoverChassis')
     {
-        kTank.m_kSoldier.strLastName = m_strHoverSHIVPrefix $ ++m_iHoverTankCounter;
+        kTank.m_kCESoldier.strLastName = m_strHoverSHIVPrefix $ ++m_iHoverTankCounter;
         kTank.m_kChar.aStats[eStat_HP] += class'XGTacticalGameCore'.default.HOVER_SHIV_HP_BONUS;
     }
     else
     {
-        kTank.m_kSoldier.strLastName = m_strSHIVPrefix $ ++m_iTankCounter;
+        kTank.m_kCESoldier.strLastName = m_strSHIVPrefix $ ++m_iTankCounter;
     }
 
     if (IsOptionEnabled(`LW_SECOND_WAVE_ID(CinematicMode)))
@@ -128,8 +148,8 @@ function LWCE_AddTank(name ArmorName, name WeaponName)
         kTank.m_kChar.aStats[eStat_Offense] += HQ().HasBonus(`LW_HQ_BONUS_ID(Robotics));
     }
 
-    kTank.m_kSoldier.iRank = -1;
-    kTank.m_kSoldier.iCountry = 66;
+    kTank.m_kCESoldier.iRank = -1;
+    kTank.m_kCESoldier.iCountry = 66;
     kTankLoadout.nmArmor = ArmorName;
     kTank.Init();
 
@@ -301,7 +321,7 @@ function XGStrategySoldier CreateSoldier(ESoldierClass iClassId, int iSoldierLev
     return none;
 }
 
-function XGStrategySoldier LWCE_CreateSoldier(int iClassId, int iSoldierLevel, int iCountry, optional bool bBlueshirt = false)
+function LWCE_XGStrategySoldier LWCE_CreateSoldier(int iClassId, int iSoldierLevel, int iCountry, optional bool bBlueshirt = false)
 {
     local LWCE_XGFacility_Engineering kEngineering;
     local LWCE_XGFacility_Lockers kLockers;
@@ -392,7 +412,7 @@ function DetermineTimeOut(XGStrategySoldier kSoldier)
 
             for (iBaseTimeOut = 0; iBaseTimeOut < class'XGTacticalGameCore'.default.ItemBalance_Easy.Length; iBaseTimeOut++)
             {
-                if (kCESoldier.m_kChar.aUpgrades[class'XGTacticalGameCore'.default.ItemBalance_Easy[iBaseTimeOut].eItem] > 0)
+                if (kCESoldier.HasPerk(class'XGTacticalGameCore'.default.ItemBalance_Easy[iBaseTimeOut].eItem))
                 {
                     if (HQ().HasBonus(`LW_HQ_BONUS_ID(GiftOfOsiris)) > 0)
                     {
@@ -431,7 +451,7 @@ function DetermineTimeOut(XGStrategySoldier kSoldier)
     kCESoldier.m_iTurnsOut += kCESoldier.GetMaxStat(eStat_CriticalWoundsReceived) * class'XGTacticalGameCore'.default.CB_AIRANDSPACE_BONUS;
     kCESoldier.m_iTurnsOut *= float(class'XGTacticalGameCore'.default.RAND_DAYS_INJURED_TANK) / 100.0f;
 
-    if (kCESoldier.m_kChar.aUpgrades[`LW_PERK_ID(StayFrosty)] > 0)
+    if (kCESoldier.HasPerk(`LW_PERK_ID(StayFrosty)))
     {
         kCESoldier.m_iTurnsOut -= Min(24, kCESoldier.m_iTurnsOut);
     }
@@ -473,7 +493,7 @@ function DetermineTimeOut(XGStrategySoldier kSoldier)
                 }
             }
 
-            if (kCESoldier.m_kChar.aUpgrades[`LW_PERK_ID(AdaptiveBoneMarrow)] > 0)
+            if (kCESoldier.HasPerk(`LW_PERK_ID(AdaptiveBoneMarrow)))
             {
                 iRandTimeOut *= (1.0 - class'XGTacticalGameCore'.default.GENEMOD_BONEMARROW_RECOVERY_BONUS);
             }
@@ -503,24 +523,45 @@ function DetermineTimeOut(XGStrategySoldier kSoldier)
     STAT_AddStat(eRecap_DaysInInfirmary, kCESoldier.m_iTurnsOut / 24);
 }
 
+function DismissSoldier(XGStrategySoldier kSoldier)
+{
+    if (kSoldier == none)
+    {
+        return;
+    }
+
+    if (LWCE_XGStrategySoldier(kSoldier).m_kCESoldier.iPsiRank == 7)
+    {
+        return;
+    }
+
+    RemoveSoldier(kSoldier);
+    STORAGE().ReleaseLoadout(kSoldier);
+    RollStat(kSoldier, 0, 0); // Releases any officer medals used by this soldier
+    kSoldier.Destroy();
+}
+
 function GenerateNewNickname(XGStrategySoldier kNickSoldier)
 {
+    local LWCE_XGStrategySoldier kCESoldier;
     local LWCE_TClassDefinition kClassDef;
     local array<string> NickNames;
 
-    if (kNickSoldier.m_kSoldier.strNickName == "")
+    kCESoldier = LWCE_XGStrategySoldier(kNickSoldier);
+
+    if (kCESoldier.m_kCESoldier.strNickName == "")
     {
-        kClassDef = GetClassDefinition(LWCE_XGStrategySoldier(kNickSoldier).LWCE_GetClass());
-        NickNames = kNickSoldier.m_kSoldier.kAppearance.iGender == eGender_Female ? kClassDef.NicknamesFemale : kClassDef.NicknamesMale;
+        kClassDef = GetClassDefinition(kCESoldier.LWCE_GetClass());
+        NickNames = kCESoldier.m_kCESoldier.kAppearance.iGender == eGender_Female ? kClassDef.NicknamesFemale : kClassDef.NicknamesMale;
 
         if (NickNames.Length == 0)
         {
-            `LWCE_LOG_CLS("WARNING! Class ID " $ kClassDef.iSoldierClassId $ " does not have any nicknames configured for gender " $ (kNickSoldier.m_kSoldier.kAppearance.iGender == eGender_Female ? "female" : "male"));
+            `LWCE_LOG_CLS("WARNING! Class ID " $ kClassDef.iSoldierClassId $ " does not have any nicknames configured for gender " $ (kCESoldier.m_kCESoldier.kAppearance.iGender == eGender_Female ? "female" : "male"));
             return;
         }
 
-        kNickSoldier.m_kSoldier.strNickName = NickNames[Rand(NickNames.Length)];
-        NickNameCheck(kNickSoldier);
+        kCESoldier.m_kCESoldier.strNickName = NickNames[Rand(NickNames.Length)];
+        NickNameCheck(kCESoldier);
     }
 }
 
@@ -732,6 +773,21 @@ function int GetResultingMecClass(int iClassId)
     return kClassDef.iAugmentsIntoClassId;
 }
 
+function XGStrategySoldier GetSoldierByID(int iID)
+{
+    local XGStrategySoldier kSoldier;
+
+    foreach m_arrSoldiers(kSoldier)
+    {
+        if (LWCE_XGStrategySoldier(kSoldier).m_kCESoldier.iID == iID)
+        {
+            return kSoldier;
+        }
+    }
+
+    return none;
+}
+
 function bool HasSoldierOfRankOrHigher(int iRank)
 {
     local XGStrategySoldier kSoldier;
@@ -745,6 +801,61 @@ function bool HasSoldierOfRankOrHigher(int iRank)
     }
 
     return false;
+}
+
+function HealAndRest()
+{
+    local XGMission kMission;
+    local XGStrategySoldier kSoldier;
+    local int iHP;
+
+    foreach m_arrSoldiers(kSoldier)
+    {
+        if (kSoldier.GetStatus() == eStatus_OnMission)
+        {
+            continue;
+        }
+
+        if (kSoldier.m_iTurnsOut <= 0)
+        {
+            if (kSoldier.GetStatus() == eStatus_Healing || kSoldier.GetStatus() == /* fatigued */ 8)
+            {
+                iHP = kSoldier.GetMaxStat(eStat_HP) - kSoldier.GetCurrentStat(eStat_HP);
+                kSoldier.Heal(iHP);
+                PRES().Notify(eGA_SoldierHealed, LWCE_XGStrategySoldier(kSoldier).m_kCESoldier.iID);
+
+                foreach GEOSCAPE().m_arrMissions(kMission)
+                {
+                    if (kMission.m_iDetectedBy >= 0)
+                    {
+                        GEOSCAPE().RestoreNormalTimeFrame();
+                        break;
+                    }
+                }
+
+                kSoldier.SetStatus(eStatus_Active);
+                kSoldier.m_bAllIn = false;
+                STORAGE().RestoreBackedUpInventory(kSoldier);
+            }
+        }
+
+        if (kSoldier.m_iTurnsOut > 0)
+        {
+            if (kSoldier.GetStatus() == eStatus_Healing)
+            {
+                iHP = kSoldier.GetMaxStat(eStat_HP) - kSoldier.GetCurrentStat(eStat_HP);
+                if (((iHP - 1) / kSoldier.m_iTurnsOut) >= 1)
+                {
+                    kSoldier.Heal((iHP - 1) / kSoldier.m_iTurnsOut);
+                }
+            }
+
+            kSoldier.m_iTurnsOut--;
+        }
+    }
+
+    ReorderRanks();
+    STAT_SetStat(1, Max(Game().GetDays(), Game().GetDays() + STAT_GetStat(2)));
 }
 
 // Rewritten for Long War: tries to find the index of the soldier who's going to be commanding this mission,
@@ -817,21 +928,24 @@ function int LWCE_NeverGiven()
 function NickNameCheck(XGStrategySoldier kSoldier)
 {
     local int iCounter;
+    local LWCE_XGStrategySoldier kCESoldier;
     local LWCE_TClassDefinition kClassDef;
     local array<string> NickNames;
 
-    if (kSoldier.IsATank())
+    kCESoldier = LWCE_XGStrategySoldier(kSoldier);
+
+    if (kCESoldier.IsATank())
     {
         return;
     }
 
-    kClassDef = GetClassDefinition(LWCE_XGStrategySoldier(kSoldier).LWCE_GetClass());
-    NickNames = kSoldier.m_kSoldier.kAppearance.iGender == eGender_Female ? kClassDef.NicknamesFemale : kClassDef.NicknamesMale;
+    kClassDef = GetClassDefinition(kCESoldier.LWCE_GetClass());
+    NickNames = kCESoldier.m_kCESoldier.kAppearance.iGender == eGender_Female ? kClassDef.NicknamesFemale : kClassDef.NicknamesMale;
 
     iCounter = 20;
-    while (NickNameMatch(kSoldier) && iCounter > 0)
+    while (NickNameMatch(kCESoldier) && iCounter > 0)
     {
-        kSoldier.m_kSoldier.strNickName = NickNames[Rand(NickNames.Length)];
+        kCESoldier.m_kCESoldier.strNickName = NickNames[Rand(NickNames.Length)];
         iCounter--;
     }
 }
@@ -944,6 +1058,213 @@ function PostMission(XGShip_Dropship kSkyranger, bool bSkipSetHQLocation)
     }
 }
 
+function RandomizeStats(XGStrategySoldier kRecruit)
+{
+    local LWCE_XGStrategySoldier kCERecruit;
+
+    // iMultiple is originally a simple int, expanded by Long War to an array with the following mapping
+    // (taken from the LW souce files, S_XGFacility_Barracks_RandomizeStats.upk_mod):
+    //
+    //    pointArray[5]      (0-4)
+    //    totalPoints        (5)
+    //    currentPoints	     (6)
+    //    iterations         (7)
+    //    finder             (8)
+    //    selection	         (9)
+    //    stat               (10)
+    //    statsArray[5]       (11-15)
+    //    deltaArray[5]      (16-20)
+    //    totalDeltaStat     (21)
+    //    temp               (22)
+    //
+    // Within this function, the stats are mapped in this way:
+    //
+    //    HP                  0
+    //    Aim                 1
+    //    Defense             2
+    //    Mobility            3
+    //    Will                4
+
+    local int deltaArray[5], pointArray[5], statsArray[5];
+    local int currentPoints, totalDeltaStat, totalPoints, finder, iterations, selection, iStat, iTemp;
+
+    kCERecruit = LWCE_XGStrategySoldier(kRecruit);
+
+    if (!IsOptionEnabled(/* Strict Screening */ 2))
+    {
+        // TODO: don't use the baseline character for anything; replace the generation entirely
+        // TODO: introduce new config variables
+        deltaArray[0] = kCERecruit.m_kChar.aStats[eStat_HP] - class'XGTacticalGameCore'.default.HIGH_WILL;
+        deltaArray[1] = kCERecruit.m_kChar.aStats[eStat_Offense] - class'XGTacticalGameCore'.default.LOW_AIM;
+        deltaArray[2] = -class'XGTacticalGameCore'.default.HIGH_MOBILITY;
+        deltaArray[3] = kCERecruit.m_kChar.aStats[eStat_Mobility] - class'XGTacticalGameCore'.default.LOW_MOBILITY;
+        deltaArray[4] = kCERecruit.m_kChar.aStats[eStat_Will] - class'XGTacticalGameCore'.default.LOW_WILL;
+
+        pointArray[0] = deltaArray[0] * (class'XGTacticalGameCore'.default.ROOKIE_STARTING_WILL / 100);
+        pointArray[1] = deltaArray[1] * class'XGTacticalGameCore'.default.ROOKIE_AIM;
+        pointArray[2] = deltaArray[2] * (class'XGTacticalGameCore'.default.ROOKIE_MOBILITY / 100);
+        pointArray[3] = deltaArray[3] * (class'XGTacticalGameCore'.default.ROOKIE_MOBILITY % 100);
+        pointArray[4] = deltaArray[4] * (class'XGTacticalGameCore'.default.ROOKIE_STARTING_WILL % 100);
+
+        // All stats are initialized to their lowest possible value
+        kCERecruit.m_kChar.aStats[eStat_HP] = class'XGTacticalGameCore'.default.HIGH_WILL;
+        kCERecruit.m_kChar.aStats[eStat_Offense] = class'XGTacticalGameCore'.default.LOW_AIM;
+        kCERecruit.m_kChar.aStats[eStat_Defense] += class'XGTacticalGameCore'.default.HIGH_MOBILITY;
+        kCERecruit.m_kChar.aStats[eStat_Mobility] = class'XGTacticalGameCore'.default.LOW_MOBILITY;
+        kCERecruit.m_kChar.aStats[eStat_Will] = class'XGTacticalGameCore'.default.LOW_WILL;
+
+        totalPoints = 0;
+        totalDeltaStat = 0;
+
+        for (iStat = 0; iStat < 5; iStat++)
+        {
+            totalPoints += pointArray[iStat];
+            totalDeltaStat += ((1260 * deltaArray[iStat]) / (1 + Max(1, (deltaArray[iStat] - 1) / 3)));
+        }
+
+        if (HQ().HasBonus(/* Per Ardua Ad Astra */ 10) > 0)
+        {
+            totalPoints += HQ().HasBonus(10);
+        }
+
+        currentPoints = totalPoints;
+
+        for (iterations = 0; currentPoints > 0 && iterations < 512; iterations++)
+        {
+            selection = Rand(totalDeltaStat);
+            finder = 0;
+
+            for (iStat = 0; iStat < 5; iStat++)
+            {
+                finder += ((1260 * deltaArray[iStat]) / (1 + Max(1, (deltaArray[iStat] - 1) / 3)));
+
+                if (finder > selection)
+                {
+                    break;
+                }
+            }
+
+            if (iStat == 0)
+            {
+                if (statsArray[0] < 2 * deltaArray[0]) // if (statsArray[0] < 2 * deltaArray[0])
+                {
+                    if ((currentPoints - (class'XGTacticalGameCore'.default.ROOKIE_STARTING_WILL / 100)) >= 0) // if (currentPoints - hpPointCost >= 0)
+                    {
+                        currentPoints -= (class'XGTacticalGameCore'.default.ROOKIE_STARTING_WILL / 100); // currentPoints -= hpPointCost;
+                        statsArray[0] += 1; // statsArray[0] += 1;
+                    }
+                }
+            }
+
+            if (iStat == 1) // if (stat == 1)
+            {
+                iTemp = 1 + Rand((deltaArray[1] - 1) / 3);
+                iTemp = Min(iTemp, (2 * deltaArray[1]) - statsArray[1]);
+                iTemp = Min(iTemp, currentPoints / class'XGTacticalGameCore'.default.ROOKIE_AIM);
+
+                if (statsArray[1] < (2 * deltaArray[1]))
+                {
+                    if (currentPoints - class'XGTacticalGameCore'.default.ROOKIE_AIM >= 0)
+                    {
+                        currentPoints -= (iTemp * class'XGTacticalGameCore'.default.ROOKIE_AIM);
+                        statsArray[1] += iTemp;
+                    }
+                }
+            }
+
+            if (iStat == 2) // if (stat == 2)
+            {
+                iTemp = 1 + Rand((deltaArray[2] - 1) / 3);
+                iTemp = Min(iTemp, (2 * deltaArray[2]) - statsArray[2]);
+                iTemp = Min(iTemp, currentPoints / (class'XGTacticalGameCore'.default.ROOKIE_MOBILITY / 100));
+
+                if (statsArray[2] < 2 * deltaArray[2])
+                {
+                    if (currentPoints - (class'XGTacticalGameCore'.default.ROOKIE_MOBILITY / 100) >= 0)
+                    {
+                        currentPoints -= (iTemp * (class'XGTacticalGameCore'.default.ROOKIE_MOBILITY / 100));
+                        statsArray[2] += iTemp;
+                    }
+                }
+            }
+
+            if (iStat == 3) // if (stat == 3)
+            {
+                if (statsArray[3] < (2 * deltaArray[3]))
+                {
+                    if ((currentPoints - (class'XGTacticalGameCore'.default.ROOKIE_MOBILITY % 100)) >= 0)
+                    {
+                        currentPoints -= (class'XGTacticalGameCore'.default.ROOKIE_MOBILITY % 100);
+                        statsArray[3] += 1;
+                    }
+                }
+            }
+
+            if (iStat == 4) // if (stat == 4)
+            {
+                iTemp = 1 + Rand((deltaArray[4] - 1) / 3);
+                iTemp = Min(iTemp, (2 * deltaArray[4]) - statsArray[4]);
+                iTemp = Min(iTemp, currentPoints / (class'XGTacticalGameCore'.default.ROOKIE_STARTING_WILL % 100));
+
+                if (statsArray[4] < (2 * deltaArray[4]))
+                {
+                    // End:0xC83
+                    if ((currentPoints - (class'XGTacticalGameCore'.default.ROOKIE_STARTING_WILL % 100)) >= 0)
+                    {
+                        currentPoints -= (iTemp * (class'XGTacticalGameCore'.default.ROOKIE_STARTING_WILL % 100));
+                        statsArray[4] += iTemp;
+                    }
+                }
+            }
+        }
+
+        kCERecruit.m_kChar.aStats[eStat_HP] += statsArray[0];
+        kCERecruit.m_kChar.aStats[eStat_Offense] += statsArray[1];
+        kCERecruit.m_kChar.aStats[eStat_Defense] += statsArray[2];
+        kCERecruit.m_kChar.aStats[eStat_Mobility] += statsArray[3];
+        kCERecruit.m_kChar.aStats[eStat_Will] += statsArray[4];
+    }
+    else if (HQ().HasBonus(/* Per Ardua Ad Astra */ 10) > 0)
+    {
+        kCERecruit.m_kChar.aStats[eStat_Offense] += 2;
+        kCERecruit.m_kChar.aStats[eStat_Defense] += 1;
+        kCERecruit.m_kChar.aStats[eStat_Will] += 2;
+    }
+
+    if (IsOptionEnabled(/* Cinematic Mode */ 11))
+    {
+        kCERecruit.m_kChar.aStats[eStat_Offense] += int(class'XGTacticalGameCore'.default.ABDUCTION_REWARD_SCI);
+    }
+
+    if (HQ().HasBonus(/* Pax Nigeriana */ 8) > 0)
+    {
+        kCERecruit.m_kChar.aStats[eStat_Mobility] += HQ().HasBonus(8);
+    }
+
+    if (HQ().HasBonus(/* Special Air Service */ 15) > 0)
+    {
+        kCERecruit.m_kChar.aStats[eStat_Offense] += HQ().HasBonus(15);
+    }
+
+    if (HQ().HasBonus(/* Patriae Semper Vigilis */ 21) > 0)
+    {
+        kCERecruit.m_kChar.aStats[eStat_Will] += HQ().HasBonus(21);
+    }
+
+    if (HQ().HasBonus(/* Survival Training */ 27) > 0)
+    {
+        kCERecruit.m_kChar.aStats[eStat_HP] += HQ().HasBonus(27);
+    }
+
+    `LWCE_LOG_CLS("New recruit final stats for " $ kCERecruit.GetName(eNameType_Full) $ ": HP = " $ kCERecruit.m_kChar.aStats[eStat_HP] $ "; aim = " $ kCERecruit.m_kChar.aStats[eStat_Offense] $ "; mobility = " $ kCERecruit.m_kChar.aStats[eStat_Mobility] $ "; Will = " $ kCERecruit.m_kChar.aStats[eStat_Will]);
+
+    kCERecruit.m_kCEChar.aStats[eStat_HP] = kCERecruit.m_kChar.aStats[eStat_HP];
+    kCERecruit.m_kCEChar.aStats[eStat_Offense] = kCERecruit.m_kChar.aStats[eStat_Offense];
+    kCERecruit.m_kCEChar.aStats[eStat_Defense] = kCERecruit.m_kChar.aStats[eStat_Defense];
+    kCERecruit.m_kCEChar.aStats[eStat_Mobility] = kCERecruit.m_kChar.aStats[eStat_Mobility];
+    kCERecruit.m_kCEChar.aStats[eStat_Will] = kCERecruit.m_kChar.aStats[eStat_Will];
+}
+
 /// <summary>
 /// Selects the class ID of a base class at random, without regard for the current or historical XCOM roster.
 /// </summary>
@@ -990,7 +1311,7 @@ function SelectSoldiersForSkyrangerSquad(XGShip_Dropship kSkyranger, out array<X
     {
         foreach m_arrSoldiers(kSoldier)
         {
-            if (kSoldier.m_kSoldier.iPsiRank == 7)
+            if (LWCE_XGStrategySoldier(kSoldier).m_kCESoldier.iPsiRank == 7)
             {
                 kVolunteer = kSoldier;
                 arrSoldiers.AddItem(kSoldier);
@@ -1099,67 +1420,121 @@ function bool UnloadSoldier(XGStrategySoldier kSoldier)
 function UpdateFoundryPerksForSoldier(XGStrategySoldier kSoldier)
 {
     local LWCE_XGFacility_Engineering kEngineering;
+    local LWCE_XGStrategySoldier kCESoldier;
 
     kEngineering = `LWCE_ENGINEERING;
+    kCESoldier = LWCE_XGStrategySoldier(kSoldier);
 
+    // TODO: Foundry templates could just specify what perks they give instead
     if (HQ().HasFacility(eFacility_Foundry))
     {
-        // LWCE issue #4: LW 1.0 uses the ID for Phoenix Coilguns (44) in this block, where it means to use Quenchguns (46)
-        kSoldier.m_kChar.aUpgrades[109] = kEngineering.LWCE_IsFoundryTechResearched('Foundry_SCOPEUpgrade') ? 1 : 0;
-        kSoldier.m_kChar.aUpgrades[110] = kEngineering.LWCE_IsFoundryTechResearched('Foundry_MagPistols') ? 1 : 0;
-        kSoldier.m_kChar.aUpgrades[111] = kEngineering.LWCE_IsFoundryTechResearched('Foundry_RailPistols') ? 1 : 0;
+        if (kEngineering.LWCE_IsFoundryTechResearched('Foundry_SCOPEUpgrade'))
+        {
+            kCESoldier.LWCE_GivePerk(`LW_PERK_ID(SCOPEUpgrade), 'Foundry', 'Foundry_SCOPEUpgrade');
+        }
 
-        // aUpgrades[123] is a bitfield of different Foundry upgrades
-        kSoldier.m_kChar.aUpgrades[123] = kEngineering.LWCE_IsFoundryTechResearched('Foundry_AmmoConservation') ? 1 << 1 : 0;
-        kSoldier.m_kChar.aUpgrades[123] = kSoldier.m_kChar.aUpgrades[123] | (kEngineering.LWCE_IsFoundryTechResearched('Foundry_EnhancedPlasma')  ? 1 << 2 : 0);
-        kSoldier.m_kChar.aUpgrades[123] = kSoldier.m_kChar.aUpgrades[123] | (kEngineering.LWCE_IsFoundryTechResearched('Foundry_AdvancedFlight') ? 1 << 3 : 0);
-        kSoldier.m_kChar.aUpgrades[123] = kSoldier.m_kChar.aUpgrades[123] | (kEngineering.LWCE_IsFoundryTechResearched('Foundry_ReflexPistols') ? 1 << 4 : 0);
-        kSoldier.m_kChar.aUpgrades[123] = kSoldier.m_kChar.aUpgrades[123] | (kEngineering.LWCE_IsFoundryTechResearched('Foundry_Quenchguns') ? 1 << 5 : 0);
-        kSoldier.m_kChar.aUpgrades[123] = kSoldier.m_kChar.aUpgrades[123] | (kEngineering.LWCE_IsFoundryTechResearched('Foundry_ImprovedMedikit')  ? 1 << 6 : 0);
+        if (kEngineering.LWCE_IsFoundryTechResearched('Foundry_MagPistols'))
+        {
+            kCESoldier.LWCE_GivePerk(`LW_PERK_ID(MagPistols), 'Foundry', 'Foundry_MagPistols');
+        }
 
-        kSoldier.m_kChar.aUpgrades[115] = kEngineering.LWCE_IsFoundryTechResearched('Foundry_ImprovedArcThrower') ? 1 : 0;
-        kSoldier.m_kChar.aUpgrades[117] = kEngineering.LWCE_IsFoundryTechResearched('Foundry_DroneCapture') ? 1 : 0;
-        kSoldier.m_kChar.aUpgrades[118] = kEngineering.LWCE_IsFoundryTechResearched('Foundry_FieldRepairs') ? 1 : 0;
-        kSoldier.m_kChar.aUpgrades[120] = kEngineering.LWCE_IsFoundryTechResearched('Foundry_JelliedElerium') ? 1 : 0;
-        kSoldier.m_kChar.aUpgrades[125] = kEngineering.LWCE_IsFoundryTechResearched('Foundry_AlienGrenades') ? 1 : 0;
+        if (kEngineering.LWCE_IsFoundryTechResearched('Foundry_RailPistols'))
+        {
+            kCESoldier.LWCE_GivePerk(`LW_PERK_ID(RailPistols), 'Foundry', 'Foundry_RailPistols');
+        }
+
+        if (kEngineering.LWCE_IsFoundryTechResearched('Foundry_AmmoConservation'))
+        {
+            kCESoldier.LWCE_GivePerk(`LW_PERK_ID(AmmoConservation), 'Foundry', 'Foundry_AmmoConservation');
+        }
+
+        if (kEngineering.LWCE_IsFoundryTechResearched('Foundry_EnhancedPlasma'))
+        {
+            kCESoldier.LWCE_GivePerk(`LW_PERK_ID(EnhancedPlasma), 'Foundry', 'Foundry_EnhancedPlasma');
+        }
+
+        if (kEngineering.LWCE_IsFoundryTechResearched('Foundry_AdvancedFlight'))
+        {
+            kCESoldier.LWCE_GivePerk(`LW_PERK_ID(AdvancedFlight), 'Foundry', 'Foundry_AdvancedFlight');
+        }
+
+        if (kEngineering.LWCE_IsFoundryTechResearched('Foundry_ReflexPistols'))
+        {
+            kCESoldier.LWCE_GivePerk(`LW_PERK_ID(ReflexPistols), 'Foundry', 'Foundry_ReflexPistols');
+        }
+
+        if (kEngineering.LWCE_IsFoundryTechResearched('Foundry_Quenchguns'))
+        {
+            kCESoldier.LWCE_GivePerk(`LW_PERK_ID(Quenchguns), 'Foundry', 'Foundry_Quenchguns');
+        }
+
+        if (kEngineering.LWCE_IsFoundryTechResearched('Foundry_ImprovedMedikit'))
+        {
+            kCESoldier.LWCE_GivePerk(`LW_PERK_ID(ImprovedMedikit), 'Foundry', 'Foundry_ImprovedMedikit');
+        }
+
+        if (kEngineering.LWCE_IsFoundryTechResearched('Foundry_ImprovedArcThrower'))
+        {
+            kCESoldier.LWCE_GivePerk(`LW_PERK_ID(ImprovedArcThrower), 'Foundry', 'Foundry_ImprovedArcThrower');
+        }
+
+        if (kEngineering.LWCE_IsFoundryTechResearched('Foundry_DroneCapture'))
+        {
+            kCESoldier.LWCE_GivePerk(`LW_PERK_ID(DroneCapture), 'Foundry', 'Foundry_DroneCapture');
+        }
+
+        if (kEngineering.LWCE_IsFoundryTechResearched('Foundry_FieldRepairs'))
+        {
+            kCESoldier.LWCE_GivePerk(`LW_PERK_ID(FieldRepairs), 'Foundry', 'Foundry_FieldRepairs');
+        }
+
+        if (kEngineering.LWCE_IsFoundryTechResearched('Foundry_JelliedElerium'))
+        {
+            kCESoldier.LWCE_GivePerk(`LW_PERK_ID(JelliedElerium), 'Foundry', 'Foundry_JelliedElerium');
+        }
+
+        if (kEngineering.LWCE_IsFoundryTechResearched('Foundry_AlienGrenades'))
+        {
+            kCESoldier.LWCE_GivePerk(`LW_PERK_ID(AlienGrenades), 'Foundry', 'Foundry_AlienGrenades');
+        }
 
         kSoldier.UpdateTacticalRigging(kEngineering.LWCE_IsFoundryTechResearched('Foundry_TacticalRigging'));
 
         if (kSoldier.IsATank())
         {
-            kSoldier.m_kChar.aUpgrades[124] = kEngineering.LWCE_IsFoundryTechResearched('Foundry_SentinelDrone') ? 1 : 0;
-            kSoldier.m_kChar.aUpgrades[139] = kEngineering.LWCE_IsFoundryTechResearched('Foundry_SentinelDrone') ? 1 : 0;
-            kSoldier.m_kChar.aUpgrades[`LW_PERK_ID(Suppression)] = kEngineering.LWCE_IsFoundryTechResearched('Foundry_SHIVSuppression') ? 1 : 0;
+            if (kEngineering.LWCE_IsFoundryTechResearched('Foundry_SentinelDrone'))
+            {
+                kCESoldier.LWCE_GivePerk(`LW_PERK_ID(SentinelDrone), 'Foundry', 'Foundry_SentinelDrone');
+                kCESoldier.LWCE_GivePerk(`LW_PERK_ID(RepairServos), 'Foundry', 'Foundry_SentinelDrone');
+            }
+
+            if (kEngineering.LWCE_IsFoundryTechResearched('Foundry_SHIVSuppression'))
+            {
+                kCESoldier.LWCE_GivePerk(`LW_PERK_ID(Suppression), 'Foundry', 'Foundry_SHIVSuppression');
+            }
         }
 
         if (kSoldier.IsAugmented())
         {
-            kSoldier.m_kChar.aUpgrades[121] = kEngineering.LWCE_IsFoundryTechResearched('Foundry_MECCloseCombat') ? 1 : 0;
+            if (kEngineering.LWCE_IsFoundryTechResearched('Foundry_MECCloseCombat'))
+            {
+                kCESoldier.LWCE_GivePerk(`LW_PERK_ID(MECCloseCombat), 'Foundry', 'Foundry_MECCloseCombat');
+            }
         }
 
         if (kSoldier.IsATank() || kSoldier.IsAugmented())
         {
-            kSoldier.m_kChar.aUpgrades[31] = kEngineering.LWCE_IsFoundryTechResearched('Foundry_AdvancedServomotors') ? 1 : 0;
-            kSoldier.m_kChar.aUpgrades[123] = kSoldier.m_kChar.aUpgrades[123] | (kEngineering.LWCE_IsFoundryTechResearched('Foundry_ShapedArmor') ? 1 : 0);
+            if (kEngineering.LWCE_IsFoundryTechResearched('Foundry_AdvancedServomotors'))
+            {
+                kCESoldier.LWCE_GivePerk(`LW_PERK_ID(Sprinter), 'Foundry', 'Foundry_AdvancedServomotors');
+            }
+
+            if (kEngineering.LWCE_IsFoundryTechResearched('Foundry_ShapedArmor'))
+            {
+                kCESoldier.LWCE_GivePerk(`LW_PERK_ID(ShapedArmor), 'Foundry', 'Foundry_ShapedArmor');
+            }
         }
     }
-    else
-    {
-        kSoldier.m_kChar.aUpgrades[109] = 0; // SCOPE Upgrade
-        kSoldier.m_kChar.aUpgrades[110] = 0; // Mag Pistols
-        kSoldier.m_kChar.aUpgrades[111] = 0; // Rail Pistols
-        kSoldier.m_kChar.aUpgrades[115] = 0; // Improved Arc Thrower
-        kSoldier.m_kChar.aUpgrades[117] = 0; // Drone Capture
-        kSoldier.m_kChar.aUpgrades[118] = 0; // Field Repairs
-        kSoldier.m_kChar.aUpgrades[120] = 0; // Jellied Elerium
-        kSoldier.m_kChar.aUpgrades[121] = 0; // MEC Close Combat
-        kSoldier.m_kChar.aUpgrades[123] = 0; // Bitfield of multiple upgrades
-        kSoldier.m_kChar.aUpgrades[124] = 0; // Sentinel Drone
-        kSoldier.m_kChar.aUpgrades[125] = 0; // Alien Grenades
-        kSoldier.UpdateTacticalRigging(false);
-    }
-
-    kSoldier.m_kChar.aUpgrades[113] = 0;
 
     `LWCE_MOD_LOADER.UpdateFoundryPerksForSoldier(kSoldier, kEngineering);
 }

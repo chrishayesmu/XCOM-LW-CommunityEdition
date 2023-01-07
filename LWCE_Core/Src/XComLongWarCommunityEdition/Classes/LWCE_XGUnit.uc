@@ -2,16 +2,16 @@ class LWCE_XGUnit extends XGUnit;
 
 struct CheckpointRecord_LWCE_XGUnit extends CheckpointRecord_XGUnit
 {
-    var LWCE_TCharacter m_kCEChar;
     var LWCE_TSoldier m_kCESoldier;
+    var LWCE_TAppearance m_kCESavedAppearance;
 
     var array<int> m_arrCEBonuses;
     var array<int> m_arrCEPassives;
     var array<int> m_arrCEPenalties;
 };
 
-var LWCE_TCharacter m_kCEChar;
 var LWCE_TSoldier m_kCESoldier;
+var LWCE_TAppearance m_kCESavedAppearance;
 
 var array<int> m_arrCEBonuses;
 var array<int> m_arrCEPassives;
@@ -31,7 +31,7 @@ function LWCE_XGCharacter LWCE_GetCharacter()
 
 function int GetClassId()
 {
-    return m_kCEChar.iClassId;
+    return LWCE_GetCharacter().GetCharacter().iClassId;
 }
 
 function LWCE_XGInventory LWCE_GetInventory()
@@ -141,7 +141,7 @@ function int GetTrueCoverValue(XGUnit kAttacker)
     return Max(0, m_iCurrentCoverValue - iNonCoverBonus);
 }
 
-function GivePerk(int iPerkId, optional int iSourceTypeId = 0, optional int iSourceId = 0)
+function GivePerk(int iPerkId, optional name nmSourceTypeId = 'Innate', optional name nmSourceId)
 {
     local LWCE_TIDWithSource kPerkData;
 
@@ -152,31 +152,20 @@ function GivePerk(int iPerkId, optional int iSourceTypeId = 0, optional int iSou
     }
 
     kPerkData.Id = iPerkId;
-    kPerkData.SourceId = iSourceId;
-    kPerkData.SourceType = iSourceTypeId;
+    kPerkData.SourceId = nmSourceId;
+    kPerkData.SourceType = nmSourceTypeId;
 
-    m_kCEChar.arrPerks.AddItem(kPerkData);
+    LWCE_GetCharacter().AddPerk(kPerkData);
 }
 
 function bool HasAbility(int iAbilityId)
 {
-    // A ternary would make sense here but UnrealScript keeps breaking shit when I use them
-    if (m_kCEChar.arrAbilities.Find('Id', iAbilityId) != INDEX_NONE)
-    {
-        return true;
-    }
-
-    return false;
+    return LWCE_GetCharacter().HasAbility(iAbilityId);
 }
 
 function bool HasCharacterProperty(int iCharPropId)
 {
-    if (m_kCEChar.arrProperties.Find('Id', iCharPropId) != INDEX_NONE)
-    {
-        return true;
-    }
-
-    return false;
+    return LWCE_GetCharacter().HasCharacterProperty(iCharPropId);
 }
 
 function bool HasPerk(int iPerkId)
@@ -187,22 +176,12 @@ function bool HasPerk(int iPerkId)
         return true;
     }
 
-    if (m_kCEChar.arrPerks.Find('Id', iPerkId) != INDEX_NONE)
-    {
-        return true;
-    }
-
-    return false;
+    return LWCE_GetCharacter().HasPerk(iPerkId);
 }
 
 function bool HasTraversal(int iTraversalId)
 {
-    if (m_kCEChar.arrTraversals.Find('Id', iTraversalId) != INDEX_NONE)
-    {
-        return true;
-    }
-
-    return false;
+    return LWCE_GetCharacter().HasTraversal(iTraversalId);
 }
 
 function bool IsInExecutionerRange()
@@ -212,7 +191,7 @@ function bool IsInExecutionerRange()
 
 function bool IsPsionic()
 {
-    return m_kCEChar.bHasPsiGift;
+    return LWCE_GetCharacter().IsPsionic();
 }
 
 // -------------------------------------------------
@@ -221,6 +200,7 @@ function bool IsPsionic()
 
 function int AbsorbDamage(const int IncomingDamage, XGUnit kDamageCauser, XGWeapon kWeapon)
 {
+    local LWCE_XGUnit kCEDamageCauser;
     local LWCE_XGWeapon kCEWeapon;
     local float fAbsorptionFieldsBasis, fReturnDmg, fDist;
     local int iReturnDmg;
@@ -230,6 +210,7 @@ function int AbsorbDamage(const int IncomingDamage, XGUnit kDamageCauser, XGWeap
         return 0;
     }
 
+    kCEDamageCauser = LWCE_XGUnit(kDamageCauser);
     kCEWeapon = LWCE_XGWeapon(kWeapon);
     fReturnDmg = float(IncomingDamage);
 
@@ -298,9 +279,9 @@ function int AbsorbDamage(const int IncomingDamage, XGUnit kDamageCauser, XGWeap
     }
 
     // Shock-Absorbent Armor if attacker within 4 tiles
-    if (kDamageCauser != none && HasPerk(ePerk_ShockAbsorbentArmor))
+    if (kCEDamageCauser != none && HasPerk(ePerk_ShockAbsorbentArmor))
     {
-        fDist = VSize(GetLocation() - kDamageCauser.GetLocation());
+        fDist = VSize(GetLocation() - kCEDamageCauser.GetLocation());
 
         if (fDist <= `LWCE_TACCFG(fShockAbsorbentArmorRadius))
         {
@@ -328,7 +309,7 @@ function int AbsorbDamage(const int IncomingDamage, XGUnit kDamageCauser, XGWeap
 
     if (IsInCover())
     {
-        if (!IsFlankedBy(kDamageCauser) || (kWeapon != none && kWeapon.IsA('XGWeapon_NeedleGrenade')))
+        if (!IsFlankedBy(kCEDamageCauser) || (kWeapon != none && kWeapon.IsA('XGWeapon_NeedleGrenade')))
         {
             fDist = fReturnDmg;
 
@@ -376,15 +357,15 @@ function int AbsorbDamage(const int IncomingDamage, XGUnit kDamageCauser, XGWeap
         }
     }
 
-    if (kDamageCauser != none)
+    if (kCEDamageCauser != none)
     {
         // Combined Arms: negate 1 DR
-        if (LWCE_XGUnit(kDamageCauser).HasPerk(`LW_PERK_ID(CombinedArms)))
+        if (kCEDamageCauser.HasPerk(`LW_PERK_ID(CombinedArms)))
         {
             fReturnDmg += `LWCE_TACCFG(fCombinedArmsDRPenetration);
         }
 
-        if (class'LWCEInventoryUtils'.static.HasItemOfName(LWCE_XGUnit(kDamageCauser).m_kCEChar.kInventory, 'Item_ArmorPiercingAmmo'))
+        if (kCEDamageCauser.LWCE_GetCharacter().HasItemInInventory('Item_ArmorPiercingAmmo'))
         {
             if (kWeapon != none && !kWeapon.HasProperty(eWP_Assault) && !kWeapon.HasProperty(eWP_Pistol))
             {
@@ -398,7 +379,7 @@ function int AbsorbDamage(const int IncomingDamage, XGUnit kDamageCauser, XGWeap
             {
                 fReturnDmg += `LWCE_TACCFG(fGaussWeaponsDRPenetration);
 
-                if ((kDamageCauser.m_kCharacter.m_kChar.aUpgrades[123] & 32) > 0) // Quenchguns
+                if (kCEDamageCauser.HasPerk(`LW_PERK_ID(Quenchguns)))
                 {
                     fReturnDmg += `LWCE_TACCFG(fQuenchgunsDRPenetration);
                 }
@@ -410,19 +391,19 @@ function int AbsorbDamage(const int IncomingDamage, XGUnit kDamageCauser, XGWeap
 
     if (fReturnDmg < float(IncomingDamage))
     {
-        if (kDamageCauser != none)
+        if (kCEDamageCauser != none)
         {
             if (kWeapon != none && kWeapon.HasProperty(eWP_Assault))
             {
                 // DR penalty for shotguns unless using Breaching Ammo
-                if (!class'LWCEInventoryUtils'.static.HasItemOfName(LWCE_XGUnit(kDamageCauser).m_kCEChar.kInventory, 'Item_BreachingAmmo'))
+                if (!kCEDamageCauser.LWCE_GetCharacter().HasItemInInventory('Item_BreachingAmmo'))
                 {
                     fReturnDmg -= (`LWCE_TACCFG(fShotgunDRPenalty) * (float(IncomingDamage) - fReturnDmg));
                 }
             }
         }
 
-        fReturnDmg = FMax(fReturnDmg, float(0));
+        fReturnDmg = FMax(fReturnDmg, 0.0f);
 
         if (kWeapon != none && kWeapon.IsA('XGWeapon_MEC_KineticStrike'))
         {
@@ -545,7 +526,7 @@ simulated function bool ActiveWeaponHasAmmoForShot(optional int iAbilityType = e
         return true;
     }
 
-    if (kActiveWeapon.GetRemainingAmmo() < kGameCore.LWCE_GetOverheatIncrement(class'LWCE_XGWeapon_Extensions'.static.GetItemName(kActiveWeapon), iAbilityType, m_kCEChar, bReactionShot))
+    if (kActiveWeapon.GetRemainingAmmo() < kGameCore.LWCE_GetOverheatIncrement(class'LWCE_XGWeapon_Extensions'.static.GetItemName(kActiveWeapon), iAbilityType, LWCE_GetCharacter().GetCharacter(), bReactionShot))
     {
         return false;
     }
@@ -614,8 +595,60 @@ function AddCriticallyWoundedAction(optional bool bStunAlien = false, optional b
     AddAction(kAction);
 }
 
+simulated event AddPsiAbilities(Vector vLocation, out array<XGAbility> arrAbilities, optional bool bForLocalUseOnly = false)
+{
+    local XGCharacter kChar;
+
+    if (IsAlien_CheckByCharType())
+    {
+        return;
+    }
+
+    kChar = GetCharacter();
+
+    if (kChar.HasUpgrade(ePerk_MindFray))
+    {
+        GenerateAbilities(eAbility_Mindfray, vLocation, arrAbilities,, bForLocalUseOnly);
+    }
+
+    if (kChar.HasUpgrade(ePerk_PsiPanic))
+    {
+        GenerateAbilities(eAbility_PsiPanic, vLocation, arrAbilities,, bForLocalUseOnly);
+    }
+
+    if (kChar.HasUpgrade(ePerk_PsiInspiration))
+    {
+        GenerateAbilities(eAbility_PsiInspiration, vLocation, arrAbilities,, bForLocalUseOnly);
+        GenerateAbilities(eAbility_PsiInspired, vLocation, arrAbilities,, bForLocalUseOnly);
+    }
+
+    if (kChar.HasUpgrade(ePerk_MindControl))
+    {
+        GenerateAbilities(eAbility_MindControl, vLocation, arrAbilities,, bForLocalUseOnly);
+    }
+
+    if (kChar.HasUpgrade(ePerk_TelekineticField))
+    {
+        GenerateAbilities(eAbility_TelekineticField, vLocation, arrAbilities,, bForLocalUseOnly);
+    }
+
+    if (!kChar.HasUpgrade(ePerk_Rift))
+    {
+        if (kChar.IsA('XGCharacter_Soldier') && LWCE_XGCharacter_Soldier(kChar).m_kCESoldier.iPsiRank == 7)
+        {
+            kChar.GivePerk(ePerk_Rift);
+        }
+    }
+
+    if (kChar.HasUpgrade(ePerk_Rift))
+    {
+        GenerateAbilities(eAbility_Rift, vLocation, arrAbilities,, bForLocalUseOnly);
+    }
+}
+
 simulated function AddWeaponAbilities(XGTacticalGameCoreNativeBase GameCore, Vector vLocation, out array<XGAbility> arrAbilities, optional bool bForLocalUseOnly = false)
 {
+    local bool bLog;
     local int Index, iAbilityId, iBackpackIndex;
     local name nmAbilityId;
     local XGCharacter kChar;
@@ -625,6 +658,7 @@ simulated function AddWeaponAbilities(XGTacticalGameCoreNativeBase GameCore, Vec
     local LWCEWeaponTemplate kWeaponTemplate;
     local array<LWCE_XGWeapon> arrWeapons, arrEquippableWeapons;
 
+    bLog = false;
     kChar = m_kCharacter;
     kInventory = LWCE_XGInventory(m_kInventory);
     kGameCore = `LWCE_GAMECORE;
@@ -738,7 +772,7 @@ simulated function AddWeaponAbilities(XGTacticalGameCoreNativeBase GameCore, Vec
 
     foreach arrWeapons(kWeapon)
     {
-        `LWCE_LOG_CLS("Checking weapon item " $ kWeapon.m_kTemplate.DataName);
+        `LWCE_LOG_CLS("Checking weapon item " $ kWeapon.m_kTemplate.DataName, bLog);
         if (kWeapon.HasProperty(eWP_Sniper))
         {
             if (HasPerk(`LW_PERK_ID(PrecisionShot)))
@@ -820,7 +854,7 @@ simulated function AddWeaponAbilities(XGTacticalGameCoreNativeBase GameCore, Vec
             nmAbilityId = kWeaponTemplate.arrAbilities[Index];
             iAbilityId = class'LWCE_XGAbilityTree'.static.AbilityBaseIdFromName(nmAbilityId);
 
-            `LWCE_LOG_CLS("Weapon template " $ kWeaponTemplate.DataName $ " has ability " $ nmAbilityId $ ", mapping to ID " $ iAbilityId);
+            `LWCE_LOG_CLS("Weapon template " $ kWeaponTemplate.DataName $ " has ability " $ nmAbilityId $ ", mapping to ID " $ iAbilityId, bLog);
             if (AbilityIsInList(iAbilityId, arrAbilities))
             {
                 continue;
@@ -845,6 +879,7 @@ simulated function AddWeaponAbilities(XGTacticalGameCoreNativeBase GameCore, Vec
 
 function ApplyInventoryStatModifiers()
 {
+    local LWCE_TCharacter kChar;
     local name nmEquippedWeapon;
     local XGInventory kInventory;
     local XGWeapon kWeapon;
@@ -862,11 +897,12 @@ function ApplyInventoryStatModifiers()
         }
     }
 
-    arrBackPackItems = class'LWCEInventoryUtils'.static.GetAllBackpackItems(m_kCEChar.kInventory);
+    arrBackPackItems = LWCE_GetCharacter().GetAllBackpackItems();
     m_aCurrentStats[9] = m_aCurrentStats[eStat_HP];
     RemoveStatModifiers(m_aInventoryStats);
 
-    `LWCE_GAMECORE.LWCE_GetInventoryStatModifiers(m_aInventoryStats, m_kCEChar, nmEquippedWeapon, arrBackPackItems);
+    kChar = LWCE_GetCharacter().GetCharacter();
+    `LWCE_GAMECORE.LWCE_GetInventoryStatModifiers(m_aInventoryStats, kChar, nmEquippedWeapon, arrBackPackItems);
 
     if (m_iWillCheatBonus > 0 && IsAI())
     {
@@ -1171,6 +1207,7 @@ function CalcHitRolls(int ShotIndex, XGAbility_Targeted ShotAbility, XGAction_Fi
     TargetPawn = PrimaryTarget != none ? PrimaryTarget.GetPawn() : none;
 
     // TODO: tons of this is redundant and should be centralized
+    // TODO: replace use of XGCharacter with LWCE_XGCharacter
     if (FireData.m_bHit && ShotAbility.DoesDamage() && !ShotAbility.IsRocketShot())
     {
         if (TargetPawn != none)
@@ -1321,6 +1358,28 @@ function CheckForDamagedItems()
             }
         }
     }
+}
+
+function CreateCheckpointRecord()
+{
+    local LWCE_XComHumanPawn HumanPawn;
+
+    if (m_kPawn != none)
+    {
+        m_ePawnOpenCloseState = m_kPawn.m_eOpenCloseState;
+        HumanPawn = LWCE_XComHumanPawn(m_kPawn);
+
+        if (HumanPawn != none)
+        {
+            m_kCESavedAppearance = HumanPawn.m_kCEAppearance;
+        }
+    }
+}
+
+simulated function DebugAnims(int kCanvas, XComTacticalCheatManager kCheatManager)
+{
+    `LWCE_LOG_CLS("ERROR: LWCE-incompatible function DebugAnims was called. This needs to be replaced with InitUnitUpgrades. Stack trace follows.");
+    ScriptTrace();
 }
 
 simulated function DebugCoverActors(XComTacticalCheatManager kCheatManager)
@@ -1621,8 +1680,6 @@ simulated function GenerateAbilities(int iAbility, Vector vLocation, out array<X
     local array<XGUnitNativeBase> arrPotentialTargets;
     local array<XGUnit> arrActualTargets;
 
-    `LWCE_LOG_CLS("GenerateAbilities: iAbility = " $ iAbility);
-
     fCustomRange = 0.0;
     kGameCore = `GAMECORE;
     kAbilityTree = kGameCore.m_kAbilities;
@@ -1818,6 +1875,11 @@ simulated function array<int> GetBonusesPerkList()
     return m_arrCEBonuses;
 }
 
+simulated function int GetCharType()
+{
+    return LWCE_GetCharacter().GetCharacterType();
+}
+
 simulated function array<EItemType_Info> GetItemInfos()
 {
     local LWCE_XGInventory kInventory;
@@ -1854,157 +1916,157 @@ simulated function array<EItemType_Info> GetItemInfos()
                 m_arrItemInfos.AddItem(5);
             }
 
-            if (class'LWCEInventoryUtils'.static.HasItemOfName(m_kCEChar.kInventory, 'Item_AlloyJacketedRounds'))
+            if (LWCE_GetCharacter().HasItemInInventory('Item_AlloyJacketedRounds'))
             {
                 m_arrItemInfos.AddItem(14);
             }
 
-            if (class'LWCEInventoryUtils'.static.HasItemOfName(m_kCEChar.kInventory, 'Item_EnhancedBeamOptics'))
+            if (LWCE_GetCharacter().HasItemInInventory('Item_EnhancedBeamOptics'))
             {
                 m_arrItemInfos.AddItem(15);
             }
 
-            if (class'LWCEInventoryUtils'.static.HasItemOfName(m_kCEChar.kInventory, 'Item_PlasmaStellerator'))
+            if (LWCE_GetCharacter().HasItemInInventory('Item_PlasmaStellerator'))
             {
                 m_arrItemInfos.AddItem(16);
             }
 
-            if (class'LWCEInventoryUtils'.static.HasItemOfName(m_kCEChar.kInventory, 'Item_LaserSight'))
+            if (LWCE_GetCharacter().HasItemInInventory('Item_LaserSight'))
             {
                 m_arrItemInfos.AddItem(17);
             }
 
-            if (class'LWCEInventoryUtils'.static.HasItemOfName(m_kCEChar.kInventory, 'Item_CeramicPlating'))
+            if (LWCE_GetCharacter().HasItemInInventory('Item_CeramicPlating'))
             {
                 m_arrItemInfos.AddItem(18);
             }
 
-            if (class'LWCEInventoryUtils'.static.HasItemOfName(m_kCEChar.kInventory, 'Item_HiCapMags'))
+            if (LWCE_GetCharacter().HasItemInInventory('Item_HiCapMags'))
             {
                 m_arrItemInfos.AddItem(19);
             }
 
-            if (class'LWCEInventoryUtils'.static.HasItemOfName(m_kCEChar.kInventory, 'Item_BattleComputer'))
+            if (LWCE_GetCharacter().HasItemInInventory('Item_BattleComputer'))
             {
                 m_arrItemInfos.AddItem(20);
             }
 
-            if (class'LWCEInventoryUtils'.static.HasItemOfName(m_kCEChar.kInventory, 'Item_ChameleonSuit'))
+            if (LWCE_GetCharacter().HasItemInInventory('Item_ChameleonSuit'))
             {
                 m_arrItemInfos.AddItem(21);
             }
 
-            if (class'LWCEInventoryUtils'.static.HasItemOfName(m_kCEChar.kInventory, 'Item_HoloTargeter'))
+            if (LWCE_GetCharacter().HasItemInInventory('Item_HoloTargeter'))
             {
                 m_arrItemInfos.AddItem(22);
             }
 
-            if (class'LWCEInventoryUtils'.static.HasItemOfName(m_kCEChar.kInventory, 'Item_SmartshellPod'))
+            if (LWCE_GetCharacter().HasItemInInventory('Item_SmartshellPod'))
             {
                 m_arrItemInfos.AddItem(23);
             }
 
-            if (class'LWCEInventoryUtils'.static.HasItemOfName(m_kCEChar.kInventory, 'Item_CoreArmoring'))
+            if (LWCE_GetCharacter().HasItemInInventory('Item_CoreArmoring'))
             {
                 m_arrItemInfos.AddItem(24);
             }
 
-            if (class'LWCEInventoryUtils'.static.HasItemOfName(m_kCEChar.kInventory, 'Item_TheThumper'))
+            if (LWCE_GetCharacter().HasItemInInventory('Item_TheThumper'))
             {
                 m_arrItemInfos.AddItem(25);
             }
 
-            if (class'LWCEInventoryUtils'.static.HasItemOfName(m_kCEChar.kInventory, 'Item_ImpactVest'))
+            if (LWCE_GetCharacter().HasItemInInventory('Item_ImpactVest'))
             {
                 m_arrItemInfos.AddItem(26);
             }
 
-            if (class'LWCEInventoryUtils'.static.HasItemOfName(m_kCEChar.kInventory, 'Item_FuelCell'))
+            if (LWCE_GetCharacter().HasItemInInventory('Item_FuelCell'))
             {
                 m_arrItemInfos.AddItem(27);
             }
 
-            if (class'LWCEInventoryUtils'.static.HasItemOfName(m_kCEChar.kInventory, 'Item_AlloyBipod'))
+            if (LWCE_GetCharacter().HasItemInInventory('Item_AlloyBipod'))
             {
                 m_arrItemInfos.AddItem(28);
             }
 
-            if (class'LWCEInventoryUtils'.static.HasItemOfName(m_kCEChar.kInventory, 'Item_BreachingAmmo'))
+            if (LWCE_GetCharacter().HasItemInInventory('Item_BreachingAmmo'))
             {
                 m_arrItemInfos.AddItem(29);
             }
 
-            if (class'LWCEInventoryUtils'.static.HasItemOfName(m_kCEChar.kInventory, 'Item_ArmorPiercingAmmo'))
+            if (LWCE_GetCharacter().HasItemInInventory('Item_ArmorPiercingAmmo'))
             {
                 m_arrItemInfos.AddItem(30);
             }
 
-            if (class'LWCEInventoryUtils'.static.HasItemOfName(m_kCEChar.kInventory, 'Item_WalkerServos'))
+            if (LWCE_GetCharacter().HasItemInInventory('Item_WalkerServos'))
             {
                 m_arrItemInfos.AddItem(31);
             }
 
-            if (class'LWCEInventoryUtils'.static.HasItemOfName(m_kCEChar.kInventory, 'Item_NeuralGunlink'))
+            if (LWCE_GetCharacter().HasItemInInventory('Item_NeuralGunlink'))
             {
                 m_arrItemInfos.AddItem(32);
             }
 
-            if (class'LWCEInventoryUtils'.static.HasItemOfName(m_kCEChar.kInventory, 'Item_ShredderAmmo'))
+            if (LWCE_GetCharacter().HasItemInInventory('Item_ShredderAmmo'))
             {
                 m_arrItemInfos.AddItem(33);
             }
 
-            if (class'LWCEInventoryUtils'.static.HasItemOfName(m_kCEChar.kInventory, 'Item_PsiScreen'))
+            if (LWCE_GetCharacter().HasItemInInventory('Item_PsiScreen'))
             {
                 m_arrItemInfos.AddItem(34);
             }
 
-            if (class'LWCEInventoryUtils'.static.HasItemOfName(m_kCEChar.kInventory, 'Item_IlluminatorGunsight'))
+            if (LWCE_GetCharacter().HasItemInInventory('Item_IlluminatorGunsight'))
             {
                 m_arrItemInfos.AddItem(35);
             }
 
-            if (class'LWCEInventoryUtils'.static.HasItemOfName(m_kCEChar.kInventory, 'Item_IncineratorModule'))
+            if (LWCE_GetCharacter().HasItemInInventory('Item_IncineratorModule'))
             {
                 m_arrItemInfos.AddItem(36);
             }
 
-            if (class'LWCEInventoryUtils'.static.HasItemOfName(m_kCEChar.kInventory, 'Item_TargetingModule'))
+            if (LWCE_GetCharacter().HasItemInInventory('Item_TargetingModule'))
             {
                 m_arrItemInfos.AddItem(37);
             }
 
-            if (class'LWCEInventoryUtils'.static.HasItemOfName(m_kCEChar.kInventory, 'Item_ReinforcedArmor'))
+            if (LWCE_GetCharacter().HasItemInInventory('Item_ReinforcedArmor'))
             {
                 m_arrItemInfos.AddItem(38);
             }
 
-            if (class'LWCEInventoryUtils'.static.HasItemOfName(m_kCEChar.kInventory, 'Item_EleriumTurbos'))
+            if (LWCE_GetCharacter().HasItemInInventory('Item_EleriumTurbos'))
             {
                 m_arrItemInfos.AddItem(39);
             }
 
-            if (class'LWCEInventoryUtils'.static.HasItemOfName(m_kCEChar.kInventory, 'Item_CognitiveEnhancer'))
+            if (LWCE_GetCharacter().HasItemInInventory('Item_CognitiveEnhancer'))
             {
                 m_arrItemInfos.AddItem(40);
             }
 
-            if (class'LWCEInventoryUtils'.static.HasItemOfName(m_kCEChar.kInventory, 'Item_Neuroregulator'))
+            if (LWCE_GetCharacter().HasItemInInventory('Item_Neuroregulator'))
             {
                 m_arrItemInfos.AddItem(41);
             }
 
-            if (class'LWCEInventoryUtils'.static.HasItemOfName(m_kCEChar.kInventory, 'Item_FlakAmmo'))
+            if (LWCE_GetCharacter().HasItemInInventory('Item_FlakAmmo'))
             {
                 m_arrItemInfos.AddItem(42);
             }
 
-            if (class'LWCEInventoryUtils'.static.HasItemOfName(m_kCEChar.kInventory, 'Item_AlloyPlating'))
+            if (LWCE_GetCharacter().HasItemInInventory('Item_AlloyPlating'))
             {
                 m_arrItemInfos.AddItem(43);
             }
 
-            if (class'LWCEInventoryUtils'.static.HasItemOfName(m_kCEChar.kInventory, 'Item_DrumMags'))
+            if (LWCE_GetCharacter().HasItemInInventory('Item_DrumMags'))
             {
                 m_arrItemInfos.AddItem(44);
             }
@@ -2060,10 +2122,10 @@ simulated function int GetOffense()
     }
 
     kWeapon = `LWCE_WEAPON_FROM_XG(GetInventory().GetActiveWeapon());
-    kWeapon.GetStatChanges(kStatChanges, m_kCEChar);
 
-    // I'm not really sure why we subtract the weapon's aim, but that's how it's done in the original
-    iAim -= `LWCE_WEAPON_FROM_XG(GetInventory().GetActiveWeapon()).kStatChanges.iAim;
+    // The weapon's aim is already included in m_aCurrentStats, so we have to remove it here
+    kWeapon.GetStatChanges(kStatChanges, LWCE_GetCharacter().GetCharacter());
+    iAim -= kStatChanges.iAim;
 
     if (IsBeingSuppressed())
     {
@@ -2229,6 +2291,16 @@ simulated function GetTargetsInRange(int iTargetType, int iRangeType, out array<
     }
 }
 
+simulated function int GetUnitMaxHP()
+{
+    return LWCE_GetCharacter().GetCharacter().aStats[eStat_HP];
+}
+
+simulated function int GetMaxShieldHP()
+{
+    return LWCE_GetCharacter().GetCharacter().aStats[eStat_ShieldHP];
+}
+
 function bool HasAttackableCivilians(optional out XGUnitNativeBase kUnit_Out)
 {
     local XGUnit kUnit;
@@ -2303,6 +2375,628 @@ simulated function bool HasBonuses()
     return false;
 }
 
+simulated function bool HasHandledMoraleEventThisTurn(EMoraleEvent eEvent)
+{
+    local int Index;
+
+    for (Index = 0; Index < m_arrMoraleEventsThisTurn.Length; Index++)
+    {
+        if (m_arrMoraleEventsThisTurn[Index] == eEvent)
+        {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+function bool Init(XGPlayer kPlayer, XGCharacter kNewChar, XGSquad kSquad, optional bool bDestroyOnBadLocation = false, optional bool bSnapToGround = true)
+{
+    local LWCE_TCharacter kChar;
+
+    super(XGUnitNativeBase).Init(kPlayer, kNewChar, kSquad, bDestroyOnBadLocation);
+
+    m_kReplicatedOwner = Owner;
+
+    m_kCharacter = kNewChar;
+    m_kCharacter.InitTCharacter();
+
+    kChar = LWCE_GetCharacter().GetCharacter();
+    AddStatModifiers(kChar.aStats);
+
+    `LWCE_LOG_CLS("Character " $ m_kCharacter.GetFullName() $ " stats: HP = " $ kChar.aStats[eStat_HP] $ "; aim = " $ kChar.aStats[eStat_Offense] $ "; mobility = " $ kChar.aStats[eStat_Mobility]);
+
+    m_aCurrentStats[eStat_ShieldHP] = 0;
+    m_kPlayer = kPlayer;
+
+    ResetUseAbilities();
+    ResetMoves();
+    ResetReaction();
+    ResetTurnActions();
+
+    m_bCanOpenWindowsAndDoors = m_kCharacter.m_bCanOpenWindowsAndDoors;
+
+    SetIdleState(eIdle_Normal);
+    SpawnPawn(bSnapToGround);
+
+    if (m_kPawn == none)
+    {
+        return false;
+    }
+
+    if (bDestroyOnBadLocation && DestroyOnBadLocation())
+    {
+        return false;
+    }
+
+    kSquad.AddUnit(self, m_bBattleScanner);
+
+    if (IsAI())
+    {
+        InitBehavior();
+
+        if (`BATTLE.m_kDesc.m_iMissionType == eMission_Final)
+        {
+            // Every enemy on the Temple Ship is L8
+            InitUnitUpgrades(8);
+        }
+        else if (`BATTLE.m_kDesc.m_iMissionType == eMission_HQAssault)
+        {
+            // Leaders appear to be rolled specially on base defense missions
+            if (Rand(100) > ((`BATTLE.STAT_GetStat(1) - 250) / 10))
+            {
+                InitUnitUpgrades(Clamp(Rand(`BATTLE.STAT_GetStat(1) / 64), 1, 7));
+            }
+        }
+    }
+
+    if (m_kCharacter.m_kChar.iType == eChar_Zombie)
+    {
+        m_bHasChryssalidEgg = true;
+    }
+
+    m_iRepairServosHPLeft = 6;
+
+    SetDiscState(eDS_None);
+    CreateUnitView();
+    AddIdleAction();
+
+    m_iLowestHP = GetUnitHP();
+
+    return true;
+}
+
+simulated function InitUnitUpgrades(int iLeaderLevel)
+{
+    local bool bApplyUpgrade, bIsAlienBaseMission;
+    local int iCharType, iCurrentResearch, iMaxNavigatorRoll;
+    local LWCE_TIDWithSource kPerkData;
+    local LWCE_TCharacter kChar;
+    local MeshComponent MeshComp;
+    local TCharacterBalance kSeq;
+    local Vector vScale;
+
+    bIsAlienBaseMission = `BATTLE.m_kDesc.m_iMissionType == eMission_AlienBase;
+    iCharType = LWCE_GetCharacter().GetCharacterType();
+    iCurrentResearch = `BATTLE.STAT_GetStat(1);
+    kChar = LWCE_GetCharacter().GetCharacter();
+
+    // TODO: replace all of this with our own config/logic
+
+    foreach class'XGTacticalGameCore'.default.BalanceMods_Hard(kSeq)
+    {
+        if (kSeq.eType == iCharType)
+        {
+            // High digits of iCritHit are the alien research requirements for this config entry to activate
+            if ((kSeq.iCritHit / 100) <= iCurrentResearch)
+            {
+                bApplyUpgrade = false;
+
+                // If the leader level is greater than the low digits of iCritHit, this is a leader upgrade
+                // and this unit is eligible for it
+                if (iLeaderLevel >= (kSeq.iCritHit % 100))
+                {
+                    bApplyUpgrade = true;
+                }
+
+                // If the low digits of iCritHit are >= 10, then this config entry is a navigator upgrade, and
+                // the low digits represent the percentage chance of applying the upgrade
+                if ((kSeq.iCritHit % 100) >= 10)
+                {
+                    iMaxNavigatorRoll = bIsAlienBaseMission ? 50 : 100;
+
+                    if (Rand(iMaxNavigatorRoll) <= (kSeq.iCritHit % 100))
+                    {
+                        bApplyUpgrade = true;
+                    }
+                }
+
+                if (bApplyUpgrade)
+                {
+                    kChar.aStats[eStat_HP] += kSeq.iHP;
+                    SetUnitHP(GetUnitMaxHP());
+
+                    kChar.aStats[eStat_Offense] += kSeq.iAim;
+                    m_aCurrentStats[eStat_Offense] += kSeq.iAim;
+
+                    kChar.aStats[eStat_Damage] += kSeq.iDamage;
+                    m_aCurrentStats[eStat_Damage] += kSeq.iDamage;
+
+                    kChar.aStats[eStat_Will] += kSeq.iWill;
+                    m_aCurrentStats[eStat_Will] += kSeq.iWill;
+
+                    kPerkData.Id = kSeq.iMobility;
+                    kPerkData.SourceType = 'Innate';
+                    LWCE_GetCharacter().AddPerk(kPerkData);
+
+                    m_iFlamethrowerCharges += kSeq.iDefense;
+                }
+            }
+        }
+    }
+
+    // Set unit pawn's scale
+    if (m_iFlamethrowerCharges != 0)
+    {
+        vScale.X = 1.0f + (float(m_iFlamethrowerCharges) / 100.0f);
+        vScale.X = FClamp(vScale.X, 0.20, 10.0);
+
+        foreach GetPawn().ComponentList(class'MeshComponent', MeshComp)
+        {
+            MeshComp.SetScale(vScale.X);
+        }
+    }
+
+    // TODO: CHEAT_InitPawnPerkContent needs to be updated
+    GetPawn().XComUpdateAnimSetList();
+    GetPawn().CHEAT_InitPawnPerkContent(GetCharacter().m_kChar);
+
+    // Setting special unit names if the unit has been autopsied. Perk numbers have been replaced with the enum values where appropriate;
+    // in cases where the enum value has been repurposed, the perk is listed in comments instead, to avoid being misleading.
+    if (`GAMECORE.m_kAbilities.HasAutopsyTechForChar(iCharType))
+    {
+        switch (iCharType)
+        {
+            case eChar_Sectoid:
+                if (LWCE_GetCharacter().HasPerk(`LW_PERK_ID(Executioner)))
+                {
+                    kChar.strName = class'XLocalizedData'.default.m_aCharacterName[32]; // Sectoid Leader
+                }
+
+                if (LWCE_GetCharacter().HasPerk(`LW_PERK_ID(TacticalSense)))
+                {
+                    kChar.strName = class'XLocalizedData'.default.m_aCharacterName[33]; // Sectoid Master
+                }
+
+                if (LWCE_GetCharacter().HasPerk(`LW_PERK_ID(CombinedArms)))
+                {
+                    kChar.strName = class'XLocalizedData'.default.m_aCharacterName[34]; // Reticulan
+                }
+
+                break;
+
+            case eChar_Floater:
+                if (LWCE_GetCharacter().HasPerk(`LW_PERK_ID(CoveringFire)))
+                {
+                    kChar.strName = class'XLocalizedData'.default.m_aCharacterName[35]; // Floater Sentry
+                }
+
+                if (LWCE_GetCharacter().HasPerk(`LW_PERK_ID(Sprinter)))
+                {
+                    kChar.strName = class'XLocalizedData'.default.m_aCharacterName[36]; // Floater Raider
+                }
+
+                if (LWCE_GetCharacter().HasPerk(`LW_PERK_ID(ReadyForAnything)))
+                {
+                    kChar.strName = class'XLocalizedData'.default.m_aCharacterName[37]; // Floater Reaver
+                }
+
+                if (LWCE_GetCharacter().HasPerk(`LW_PERK_ID(TacticalSense)))
+                {
+                    kChar.strName = class'XLocalizedData'.default.m_aCharacterName[38]; // Great Reaver
+                }
+
+                if (LWCE_GetCharacter().HasPerk(`LW_PERK_ID(CombinedArms)))
+                {
+                    kChar.strName = class'XLocalizedData'.default.m_aCharacterName[39]; // Reaver Lord
+                }
+
+                break;
+            case eChar_Thinman:
+                if (LWCE_GetCharacter().HasPerk(`LW_PERK_ID(LightningReflexes)))
+                {
+                    kChar.strName = class'XLocalizedData'.default.m_aCharacterName[40]; // Sidewinder
+                }
+
+                if (LWCE_GetCharacter().HasPerk(`LW_PERK_ID(SquadSight)))
+                {
+                    kChar.strName = class'XLocalizedData'.default.m_aCharacterName[41]; // Thin Man Sniper
+                }
+
+                if (LWCE_GetCharacter().HasPerk(`LW_PERK_ID(CombinedArms)))
+                {
+                    kChar.strName = class'XLocalizedData'.default.m_aCharacterName[42]; // Typhon
+                }
+
+                break;
+            case eChar_Muton:
+                if (LWCE_GetCharacter().HasPerk(`LW_PERK_ID(CoveringFire)))
+                {
+                    kChar.strName = class'XLocalizedData'.default.m_aCharacterName[43]; // Muton Sentry
+                }
+
+                if (LWCE_GetCharacter().HasPerk(`LW_PERK_ID(Bombard)))
+                {
+                    kChar.strName = class'XLocalizedData'.default.m_aCharacterName[44]; // Muton Grenadier
+                }
+
+                if (LWCE_GetCharacter().HasPerk(`LW_PERK_ID(Sentinel)))
+                {
+                    kChar.strName = class'XLocalizedData'.default.m_aCharacterName[45]; // Muton Sentinel
+                }
+
+                if (LWCE_GetCharacter().HasPerk(`LW_PERK_ID(SquadSight)))
+                {
+                    kChar.strName = class'XLocalizedData'.default.m_aCharacterName[46]; // Muton Sniper
+                }
+
+                if (LWCE_GetCharacter().HasPerk(`LW_PERK_ID(LightEmUp)))
+                {
+                    kChar.strName = class'XLocalizedData'.default.m_aCharacterName[47]; // Muton Centurion
+                }
+
+                if (LWCE_GetCharacter().HasPerk(`LW_PERK_ID(CombinedArms)))
+                {
+                    kChar.strName = class'XLocalizedData'.default.m_aCharacterName[48]; // Sargon
+                }
+
+                break;
+            case eChar_Cyberdisc:
+                if (LWCE_GetCharacter().HasPerk(`LW_PERK_ID(DamageControl)))
+                {
+                    kChar.strName = class'XLocalizedData'.default.m_aCharacterName[49]; // Cyberdisc Gunship
+                }
+
+                if (LWCE_GetCharacter().HasPerk(`LW_PERK_ID(HEATAmmo)))
+                {
+                    kChar.strName = class'XLocalizedData'.default.m_aCharacterName[50]; // Cyberdisc Destroyer
+                }
+
+                if (LWCE_GetCharacter().HasPerk(`LW_PERK_ID(LightEmUp)))
+                {
+                    kChar.strName = class'XLocalizedData'.default.m_aCharacterName[51]; // Gunstar
+                }
+
+                if (LWCE_GetCharacter().HasPerk(`LW_PERK_ID(CombinedArms)))
+                {
+                    kChar.strName = class'XLocalizedData'.default.m_aCharacterName[52]; // Dreadnought
+                }
+                break;
+            case eChar_SectoidCommander:
+                if (LWCE_GetCharacter().HasPerk(`LW_PERK_ID(CombinedArms)))
+                {
+                    kChar.strName = class'XLocalizedData'.default.m_aCharacterName[53]; // Great Reticulan
+                }
+
+                break;
+            case eChar_FloaterHeavy:
+                if (LWCE_GetCharacter().HasPerk(`LW_PERK_ID(CoveringFire)))
+                {
+                    kChar.strName = class'XLocalizedData'.default.m_aCharacterName[54]; // Heavy Floater Sentry
+                }
+
+                if (LWCE_GetCharacter().HasPerk(`LW_PERK_ID(HEATAmmo)))
+                {
+                    kChar.strName = class'XLocalizedData'.default.m_aCharacterName[55]; // Heavy Floater Destroyer
+                }
+
+                if (LWCE_GetCharacter().HasPerk(`LW_PERK_ID(TacticalSense)))
+                {
+                    kChar.strName = class'XLocalizedData'.default.m_aCharacterName[56]; // Aircobra
+                }
+
+                if (LWCE_GetCharacter().HasPerk(`LW_PERK_ID(DamnGoodGround)))
+                {
+                    kChar.strName = class'XLocalizedData'.default.m_aCharacterName[57]; // Warmaster
+                }
+
+                if (LWCE_GetCharacter().HasPerk(`LW_PERK_ID(CombinedArms)))
+                {
+                    kChar.strName = class'XLocalizedData'.default.m_aCharacterName[58]; // Archon
+                }
+
+                break;
+            case eChar_MutonElite:
+                if (LWCE_GetCharacter().HasPerk(`LW_PERK_ID(CoveringFire)))
+                {
+                    kChar.strName = class'XLocalizedData'.default.m_aCharacterName[59]; // Muton Elite Sentry
+                }
+
+                // BUG: this should be after Light Em Up, since the Centurion is a higher rank leader than the Legionary
+                if (LWCE_GetCharacter().HasPerk(`LW_PERK_ID(TacticalSense)))
+                {
+                    kChar.strName = class'XLocalizedData'.default.m_aCharacterName[60]; // Muton Elite Centurion
+                }
+
+                if (LWCE_GetCharacter().HasPerk(`LW_PERK_ID(SquadSight)))
+                {
+                    kChar.strName = class'XLocalizedData'.default.m_aCharacterName[61]; // Muton Elite Sniper
+                }
+
+                if (LWCE_GetCharacter().HasPerk(`LW_PERK_ID(LightEmUp)))
+                {
+                    kChar.strName = class'XLocalizedData'.default.m_aCharacterName[62]; // Muton Elite Legionary
+                }
+
+                if (LWCE_GetCharacter().HasPerk(`LW_PERK_ID(CombinedArms)))
+                {
+                    kChar.strName = class'XLocalizedData'.default.m_aCharacterName[63]; // Muton Elite Commando
+                }
+
+                if (LWCE_GetCharacter().HasPerk(`LW_PERK_ID(ReactiveTargetingSensors)))
+                {
+                    kChar.strName = class'XLocalizedData'.default.m_aCharacterName[64]; // Muton Elite Praetorian
+                }
+
+                if (LWCE_GetCharacter().HasPerk(`LW_PERK_ID(ShredderAmmo)))
+                {
+                    kChar.strName = class'XLocalizedData'.default.m_aCharacterName[65]; // Bashar
+                }
+
+                break;
+            case eChar_Ethereal:
+                if (LWCE_GetCharacter().HasPerk(`LW_PERK_ID(CombinedArms)))
+                {
+                    kChar.strName = class'XLocalizedData'.default.m_aCharacterName[66]; // Ethereal Overmind
+                }
+
+                break;
+            case eChar_Chryssalid:
+                if (LWCE_GetCharacter().HasPerk(`LW_PERK_ID(LightningReflexes)))
+                {
+                    kChar.strName = class'XLocalizedData'.default.m_aCharacterName[67]; // Chryssalid Warrior
+                }
+
+                if (LWCE_GetCharacter().HasPerk(`LW_PERK_ID(Sprinter)))
+                {
+                    kChar.strName = class'XLocalizedData'.default.m_aCharacterName[68]; // Chryssalid Charger
+                }
+
+                if (LWCE_GetCharacter().HasPerk(`LW_PERK_ID(ShockAbsorbentArmor)))
+                {
+                    kChar.strName = class'XLocalizedData'.default.m_aCharacterName[69]; // Hive Queen
+                }
+
+                if (LWCE_GetCharacter().HasPerk(`LW_PERK_ID(Resilience)))
+                {
+                    kChar.strName = class'XLocalizedData'.default.m_aCharacterName[70]; // Greater Hive Queen
+                }
+
+                break;
+            case eChar_MutonBerserker:
+                if (LWCE_GetCharacter().HasPerk(`LW_PERK_ID(ShockAbsorbentArmor)))
+                {
+                    kChar.strName = class'XLocalizedData'.default.m_aCharacterName[71]; // Behemoth
+                }
+
+                if (LWCE_GetCharacter().HasPerk(`LW_PERK_ID(Sprinter)))
+                {
+                    kChar.strName = class'XLocalizedData'.default.m_aCharacterName[72]; // Juggernaut
+                }
+
+                if (LWCE_GetCharacter().HasPerk(`LW_PERK_ID(LightningReflexes)))
+                {
+                    kChar.strName = class'XLocalizedData'.default.m_aCharacterName[73]; // Mongo
+                }
+
+                break;
+            case eChar_Sectopod:
+                if (LWCE_GetCharacter().HasPerk(`LW_PERK_ID(HEATAmmo)))
+                {
+                    kChar.strName = class'XLocalizedData'.default.m_aCharacterName[74]; // Sectopod Destroyer
+                }
+
+                if (LWCE_GetCharacter().HasPerk(`LW_PERK_ID(ReactiveTargetingSensors)))
+                {
+                    kChar.strName = class'XLocalizedData'.default.m_aCharacterName[75]; // Reaper
+                }
+
+                if (LWCE_GetCharacter().HasPerk(`LW_PERK_ID(CombinedArms)))
+                {
+                    kChar.strName = class'XLocalizedData'.default.m_aCharacterName[76]; // Titan
+                }
+
+                break;
+            case eChar_Drone:
+                if (LWCE_GetCharacter().HasPerk(`LW_PERK_ID(HoloTargeting)))
+                {
+                    kChar.strName = class'XLocalizedData'.default.m_aCharacterName[77]; // Tracker Drone
+                }
+
+                if (LWCE_GetCharacter().HasPerk(`LW_PERK_ID(AbsorptionFields)))
+                {
+                    kChar.strName = class'XLocalizedData'.default.m_aCharacterName[78]; // Battle Drone
+                }
+
+                if (LWCE_GetCharacter().HasPerk(`LW_PERK_ID(LightEmUp)))
+                {
+                    kChar.strName = class'XLocalizedData'.default.m_aCharacterName[79]; // Atlas Drone
+                }
+
+                break;
+            case eChar_Outsider:
+                if (LWCE_GetCharacter().HasPerk(`LW_PERK_ID(Opportunist)))
+                {
+                    kChar.strName = class'XLocalizedData'.default.m_aCharacterName[80]; // Outsider Engineer
+                }
+
+                if (LWCE_GetCharacter().HasPerk(`LW_PERK_ID(LightningReflexes)))
+                {
+                    kChar.strName = class'XLocalizedData'.default.m_aCharacterName[81]; // Outsider Navigator
+                }
+
+                if (LWCE_GetCharacter().HasPerk(`LW_PERK_ID(CloseCombatSpecialist)))
+                {
+                    kChar.strName = class'XLocalizedData'.default.m_aCharacterName[82]; // Outsider Captain
+                }
+
+                if (LWCE_GetCharacter().HasPerk(`LW_PERK_ID(DamageControl)))
+                {
+                    kChar.strName = class'XLocalizedData'.default.m_aCharacterName[83]; // Outsider Commander
+                }
+
+                if (LWCE_GetCharacter().HasPerk(`LW_PERK_ID(CombinedArms)))
+                {
+                    kChar.strName = class'XLocalizedData'.default.m_aCharacterName[84]; // Outsider Overlord
+                }
+
+                break;
+            case eChar_Mechtoid:
+                if (LWCE_GetCharacter().HasPerk(`LW_PERK_ID(ShockAbsorbentArmor)))
+                {
+                    kChar.strName = class'XLocalizedData'.default.m_aCharacterName[85]; // Vulcan Mechtoid
+                }
+
+                if (LWCE_GetCharacter().HasPerk(`LW_PERK_ID(ReactiveTargetingSensors)))
+                {
+                    kChar.strName = class'XLocalizedData'.default.m_aCharacterName[86]; // Leviathan Mechtoid
+                }
+
+                if (LWCE_GetCharacter().HasPerk(`LW_PERK_ID(HEATAmmo)))
+                {
+                    kChar.strName = class'XLocalizedData'.default.m_aCharacterName[87]; // Colossus
+                }
+
+                break;
+            case eChar_Seeker:
+                if (LWCE_GetCharacter().HasPerk(`LW_PERK_ID(UnlimitedCloak)))
+                {
+                    kChar.strName = class'XLocalizedData'.default.m_aCharacterName[88]; // Stalker
+                }
+
+                if (LWCE_GetCharacter().HasPerk(`LW_PERK_ID(PlatformStability)))
+                {
+                    kChar.strName = class'XLocalizedData'.default.m_aCharacterName[89]; // Wraith
+                }
+
+                if (LWCE_GetCharacter().HasPerk(`LW_PERK_ID(CombinedArms)))
+                {
+                    kChar.strName = class'XLocalizedData'.default.m_aCharacterName[90]; // Hydra
+                }
+
+                break;
+            case eChar_ExaltOperative:
+                if (LWCE_GetCharacter().HasPerk(`LW_PERK_ID(CoveringFire)))
+                {
+                    kChar.strName = class'XLocalizedData'.default.m_aCharacterName[91]; // EXALT Sentry
+                }
+
+                if (LWCE_GetCharacter().HasPerk(`LW_PERK_ID(LightningReflexes)))
+                {
+                    kChar.strName = class'XLocalizedData'.default.m_aCharacterName[92]; // EXALT Scout
+                }
+
+                if (LWCE_GetCharacter().HasPerk(`LW_PERK_ID(LightEmUp)))
+                {
+                    kChar.strName = class'XLocalizedData'.default.m_aCharacterName[93]; // EXALT Lieutenant
+                }
+
+                break;
+            case eChar_ExaltSniper:
+                if (LWCE_GetCharacter().HasPerk(`LW_PERK_ID(SquadSight)))
+                {
+                    kChar.strName = class'XLocalizedData'.default.m_aCharacterName[94]; // EXALT Sniper
+                }
+
+                break;
+            case eChar_ExaltHeavy:
+                if (LWCE_GetCharacter().HasPerk(`LW_PERK_ID(JavelinRockets)))
+                {
+                    kChar.strName = class'XLocalizedData'.default.m_aCharacterName[95]; // EXALT Rocketeer
+                }
+
+                break;
+            case eChar_ExaltMedic:
+                if (LWCE_GetCharacter().HasPerk(`LW_PERK_ID(CoveringFire)))
+                {
+                    kChar.strName = class'XLocalizedData'.default.m_aCharacterName[96]; // EXALT Defender
+                }
+
+                break;
+            case eChar_ExaltEliteOperative:
+                if (LWCE_GetCharacter().HasPerk(`LW_PERK_ID(CoveringFire)))
+                {
+                    kChar.strName = class'XLocalizedData'.default.m_aCharacterName[97]; // EXALT Elite Sentry
+                }
+
+                if (LWCE_GetCharacter().HasPerk(`LW_PERK_ID(LightningReflexes)))
+                {
+                    kChar.strName = class'XLocalizedData'.default.m_aCharacterName[98]; // EXALT Elite Scout
+                }
+
+                if (LWCE_GetCharacter().HasPerk(`LW_PERK_ID(Sharpshooter)))
+                {
+                    kChar.strName = class'XLocalizedData'.default.m_aCharacterName[99]; // EXALT Deputy Commander
+                }
+
+                break;
+            case eChar_ExaltEliteHeavy:
+                if (LWCE_GetCharacter().HasPerk(`LW_PERK_ID(JavelinRockets)))
+                {
+                    kChar.strName = class'XLocalizedData'.default.m_aCharacterName[100]; // EXALT Elite Rocketeer
+                }
+
+                if (LWCE_GetCharacter().HasPerk(`LW_PERK_ID(TacticalSense)))
+                {
+                    kChar.strName = class'XLocalizedData'.default.m_aCharacterName[103]; // EXALT Commander Iago Van Doorn
+                }
+
+                break;
+            case eChar_ExaltEliteMedic:
+                if (LWCE_GetCharacter().HasPerk(`LW_PERK_ID(CoveringFire)))
+                {
+                    kChar.strName = class'XLocalizedData'.default.m_aCharacterName[101]; // EXALT Elite Defender
+                }
+
+                if (LWCE_GetCharacter().HasPerk(`LW_PERK_ID(LightEmUp)))
+                {
+                    kChar.strName = class'XLocalizedData'.default.m_aCharacterName[102]; // EXALT Elite Captain
+                }
+
+                break;
+            default:
+                // Deliberately missing case for eChar_ExaltEliteSniper; has no alternate names
+                break;
+        }
+    }
+
+    LWCE_GetCharacter().SetCharacter(kChar);
+}
+
+/**
+ * Originally rewritten by Long War to check morale events; now deprecated and that functionality
+ * is moved to HasHandledMoraleEventThisTurn.
+ */
+simulated function bool IsAboveFloorTile(Vector vLoc, optional int iMinTiles)
+{
+    `LWCE_LOG("ERROR: LWCE-incompatible function IsAboveFloorTile was called. This needs to be replaced with HasHandledMoraleEventThisTurn. Stack trace follows.");
+    ScriptTrace();
+
+    return false;
+}
+
+simulated function bool IsAlien_CheckByCharType()
+{
+    if (GetCharType() >= eChar_Sectoid)
+    {
+        return true;
+    }
+    else
+    {
+        return false;
+    }
+}
+
 simulated function bool IsTargetInReactionArea(XGUnit kTarget)
 {
     local XGWeapon kActiveWeapon;
@@ -2335,16 +3029,131 @@ simulated function bool IsTargetInReactionArea(XGUnit kTarget)
 
 function bool LoadInit(XGPlayer NewPlayer)
 {
-    if (super.LoadInit(NewPlayer))
-    {
-        // LWCE issue #23: the character's reference to the unit is not persisted, causing it to be lost
-        // if the tac game is saved and loaded. We simply restore it manually.
-        m_kCharacter.m_kUnit = self;
+    super(XGUnitNativeBase).LoadInit(NewPlayer);
 
-        return true;
+    if (m_kPlayer == none)
+    {
+        m_kPlayer = NewPlayer;
     }
 
-    return false;
+    // LWCE issue #23: the character's reference to the unit is not persisted, causing it to be lost
+    // if the tac game is saved and loaded. We simply restore it manually.
+    m_kCharacter.m_kUnit = self;
+
+    SpawnPawn(false, true);
+
+    if (m_bOffTheBattlefield)
+    {
+        SetVisible(false);
+    }
+
+    if (m_kPawn == none)
+    {
+        return false;
+    }
+
+    if (m_kPawn.IsA('LWCE_XComHumanPawn') && m_kCharacter.IsA('LWCE_XGCharacter_Soldier'))
+    {
+        // TODO does omitting this cause any problems?
+        //LWCE_XComHumanPawn(m_kPawn).LWCE_SetAppearance(LWCE_XGCharacter_Soldier(m_kCharacter).m_kCESoldier.kAppearance);
+    }
+    else if (m_kPawn.IsA('XComHumanPawn'))
+    {
+        // TODO: might need LWCE appearance here
+        XComCivilian(m_kPawn).SetAppearance(m_SavedAppearance);
+    }
+
+    GetInventory().OnLoad(self);
+    CreateUnitView();
+    ProcessNewPosition();
+
+    m_bCanOpenWindowsAndDoors = m_kCharacter.m_bCanOpenWindowsAndDoors;
+
+    if (IsDead())
+    {
+        ProcessDeathOnLoad();
+    }
+    else if (IsCriticallyWounded())
+    {
+        AddCriticallyWoundedAction(false, true);
+        SetDiscState(0);
+    }
+    else if (m_iPanicCounter > 0)
+    {
+        AddIdleAction();
+        GotoState('Panicked');
+    }
+    else
+    {
+        AddIdleAction();
+        SetDiscState(0);
+    }
+
+    if (IsBattleScanner())
+    {
+        OnBattleScannerBegin(GetPawn().Location);
+    }
+
+    if (m_bHiding)
+    {
+        if (XComSeeker(GetPawn()) != none)
+        {
+            XComSeeker(GetPawn()).BeginStealth();
+        }
+        else
+        {
+            GetPawn().SetGhostFX(true);
+        }
+    }
+
+    if (m_bWeaponDisabled)
+    {
+        XComUnitPawn(m_kPawn).ApplyDisablingShot();
+    }
+
+    if (m_bStunned)
+    {
+        XComUnitPawn(m_kPawn).ApplyStunFX();
+    }
+
+    if (!IsDead())
+    {
+        UpdatePsiEffects();
+    }
+
+    if ((XComOutsider(m_kPawn) != none) && m_kPod == none)
+    {
+        XComOutsider(m_kPawn).SwapToRevealMaterials();
+    }
+
+    if (XComSectopod(m_kPawn) != none && IsApplyingAbility(eAbility_ClusterBomb))
+    {
+        XComSectopod(GetPawn()).EnableClusterBombTargeting(true);
+        XComSectopod(GetPawn()).UpdateTargetingLocation(GetAppliedAbility(eAbility_ClusterBomb).m_vTargetLocation);
+    }
+
+    if (IsApplyingAbility(eAbility_Strangle) || IsAffectedByAbility(eAbility_Strangle))
+    {
+        m_bStrangleStarted = true;
+        IdleStateMachine.bLoadInitStrangle = true;
+        IdleStateMachine.CheckForStanceUpdate();
+    }
+
+    if (m_numSuppressionTargets > 0)
+    {
+        IdleStateMachine.CheckForStanceUpdate();
+        StoredEnterCoverAction = Spawn(class'XGAction_EnterCover', self);
+        StoredEnterCoverAction.Init(self);
+        StoredEnterCoverAction.PrimaryTarget = XGUnit(m_arrSuppressionTargets[0]);
+        StoredEnterCoverAction.vTarget = StoredEnterCoverAction.PrimaryTarget.Location;
+    }
+
+    if (!IsDead())
+    {
+        m_kPawn.XComUpdateOpenCloseStateNode(m_ePawnOpenCloseState, true);
+    }
+
+    return true;
 }
 
 function OnEnterPoison(XGVolume kVolume)
@@ -2870,6 +3679,72 @@ simulated function bool ReactionWeaponCheck()
     return true;
 }
 
+function RecordKill(XGUnit kVictim, optional bool bDiedFromExplosiveDamage = false)
+{
+    local LWCE_XGCharacter_Soldier kSoldierChar;
+    local XGAction_Fire kFireAction;
+    local bool bAlreadyLeveledUp;
+
+    kSoldierChar = LWCE_XGCharacter_Soldier(m_kCharacter);
+    kFireAction = XGAction_Fire(m_kCurrAction);
+
+    if (kFireAction != none)
+    {
+        kFireAction.AddVictim(kVictim);
+    }
+
+    if (GetCharType() == eChar_Soldier && IsEnemy(kVictim))
+    {
+        bAlreadyLeveledUp = kSoldierChar.LeveledUp();
+        kSoldierChar.AddXP(`GAMECORE.CalcXP(self, eGameEvent_Kill, kVictim));
+
+        if (kSoldierChar.LeveledUp() && !bAlreadyLeveledUp)
+        {
+            XComTacticalController(Owner).ClientPHUDLevelUp(kSoldierChar);
+        }
+
+        if (XGBattle_SP(`BATTLE) != none)
+        {
+            if (kVictim.IsAlien_CheckByCharType())
+            {
+                if (IsFlying())
+                {
+                    `ONLINEEVENTMGR.UnlockAchievement(AT_ThePersuader);
+                }
+
+                `BATTLE.STAT_AddProfileStat(eProfile_AliensKilled, 1.0);
+                `BATTLE.STAT_AddStat(eRecap_AliensKilled, 1);
+
+                if (bDiedFromExplosiveDamage)
+                {
+                    `BATTLE.STAT_AddProfileStat(eProfile_AliensKilledFromExplosions, 1.0);
+                    `BATTLE.STAT_AddStat(eRecap_AliensKilledFromExplosives, 1);
+                }
+
+                if (`BATTLE.STAT_GetProfileStat(eProfile_AliensKilledFromExplosions) >= 50)
+                {
+                    `ONLINEEVENTMGR.UnlockAchievement(AT_BadaBoom);
+                }
+
+                if (`BATTLE.STAT_GetProfileStat(eProfile_AliensKilled) >= 150)
+                {
+                    `ONLINEEVENTMGR.UnlockAchievement(AT_WelcomeToEarth);
+                }
+
+                if (`BATTLE.STAT_GetProfileStat(eProfile_AliensKilled) >= 500)
+                {
+                    `ONLINEEVENTMGR.UnlockAchievement(AT_AndHeRode);
+                }
+
+                if (kVictim.GetCharType() == eChar_ExaltEliteMedic && bDiedFromExplosiveDamage)
+                {
+                    `ONLINEEVENTMGR.UnlockAchievement(AT_RegenerateThis);
+                }
+            }
+        }
+    }
+}
+
 simulated event ReplicatedEvent(name VarName)
 {
     super.ReplicatedEvent(VarName);
@@ -2893,10 +3768,12 @@ simulated function ShowMouseOverDisc(optional bool bShow = true)
 
 function SpawnPawn(optional bool bSnapToGround = true, optional bool bLoaded = false)
 {
+    local LWCE_TCharacter kChar;
     local MeshComponent MeshComp;
     local Vector vRotDir;
     local class<XComUnitPawn> PawnClass;
 
+    kChar = LWCE_GetCharacter().GetCharacter();
     PawnClass = m_kCharacter.GetPawnClass();
 
     `LWCE_LOG_CLS("SpawnPawn: bSnapToGround = " $ bSnapToGround $ ", bLoaded = " $ bLoaded);
@@ -2957,7 +3834,7 @@ function SpawnPawn(optional bool bSnapToGround = true, optional bool bLoaded = f
 
     if (PawnClass == class'LWCE_XComHumanPawn')
     {
-        LWCE_XComHumanPawn(m_kPawn).LWCE_Init(m_kCEChar, m_kCEChar.kInventory, m_kCESoldier.kAppearance);
+        LWCE_XComHumanPawn(m_kPawn).LWCE_Init(kChar, kChar.kInventory, m_kCESoldier.kAppearance);
     }
 
     if (bLoaded)
@@ -3091,8 +3968,8 @@ function UpdateItemCharges()
 
     if (HasPerk(`LW_PERK_ID(ShredderAmmo)))
     {
-        SetShredderRockets(m_kCharacter.m_kChar.aUpgrades[ePerk_ShredderRocket] & 1);
-        SetShredderRockets(m_iShredderRockets + (m_kCharacter.m_kChar.aUpgrades[ePerk_ShredderRocket] >> 1));
+        // TODO: HasPerk needs to differentiate the innate perk from the one granted by the item
+        m_iShredderRockets = 1 + kInventory.LWCE_GetNumItems('Item_ShredderRocket');
     }
 
     if (HasPerk(`LW_PERK_ID(FireRocket)))
@@ -3176,6 +4053,7 @@ function UpdateItemCharges()
         m_iAlienGrenades = 0;
         m_iMediKitCharges = 0;
 
+        // TODO change characters
         for (m_iDamageControlTurns = 0; m_iDamageControlTurns < m_kCharacter.m_kChar.kInventory.iNumLargeItems; m_iDamageControlTurns++)
         {
             if (m_kCharacter.m_kChar.kInventory.arrLargeItems[m_iDamageControlTurns] == eItem_MecFlameThrower)
@@ -3290,7 +4168,7 @@ function UpdateItemCharges()
                 m_iFlamethrowerCharges += 1;
             }
 
-            if (class'LWCEInventoryUtils'.static.HasItemOfName(m_kCEChar.kInventory, 'Item_MotionTracker'))
+            if (LWCE_GetCharacter().HasItemInInventory('Item_MotionTracker'))
             {
                 m_iProximityMines = class'XGTacticalGameCore'.default.EXALT_LOOT1;
 

@@ -295,7 +295,7 @@ function LWCE_TItemCard LWCE_ENGINEERINGUIGetItemCard()
 
 function int ENGINEERINGUIGetItemCharges(EItemType eItem, optional bool bForce1_for_NonGrenades = false, optional bool bForItemCardDisplay = false)
 {
-    `LWCE_LOG_CLS("ERROR: LWCE-incompatible function ENGINEERINGUIGetItemCharges was called. This needs to be replaced with LWCEEquipmentTemplate.GetCharges. Stack trace follows.");
+    `LWCE_LOG_CLS("ERROR: LWCE-incompatible function ENGINEERINGUIGetItemCharges was called. This needs to be replaced with LWCEEquipmentTemplate.GetClipSize. Stack trace follows.");
     ScriptTrace();
 
     return 0;

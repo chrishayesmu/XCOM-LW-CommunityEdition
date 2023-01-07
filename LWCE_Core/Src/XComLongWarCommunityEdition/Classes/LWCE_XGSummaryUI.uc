@@ -28,6 +28,53 @@ function TTableMenuOption LWCE_BuildArtifactLine(name ItemName, int iQuantity)
     return kOption;
 }
 
+function TTableMenuOption BuildSoldierLine(XGUnit kUnit, array<int> arrCategories)
+{
+    local TTableMenuOption kOption;
+    local LWCE_XGCharacter_Soldier kSoldier;
+    local int iCategory, iStatus;
+
+    kSoldier = LWCE_XGCharacter_Soldier(kUnit.GetCharacter());
+    iStatus = GetSoldierStatus(kUnit);
+
+    for (iCategory = 0; iCategory < arrCategories.Length; iCategory++)
+    {
+        switch (arrCategories[iCategory])
+        {
+            case 13:
+                kOption.arrStrings[iCategory] = string(kSoldier.m_kCESoldier.iCountry);
+                break;
+            case 14:
+                kOption.arrStrings[iCategory] = kSoldier.SafeGetCharacterName();
+                break;
+            case 15:
+                kOption.arrStrings[iCategory] = kSoldier.SafeGetCharacterNickname();
+                break;
+            case 18:
+                kOption.arrStrings[iCategory] = GetSoldierStatusString(iStatus, kSoldier.IsA('XGCharacter_Tank'));
+                kOption.arrStates[iCategory] = GetSoldierStatusState(iStatus);
+                break;
+            case 19:
+                kOption.arrStrings[iCategory] = GetSoldierPromotionString(kSoldier, iStatus);
+
+                if (kOption.arrStrings[iCategory] != "")
+                {
+                    kOption.arrStates[iCategory] = eUIState_Good;
+                }
+
+                break;
+        }
+    }
+
+    // Status 0 indicates soldier is dead
+    if (iStatus == 0)
+    {
+        kOption.iState = eUIState_Disabled;
+    }
+
+    return kOption;
+}
+
 function CollectArtifactsFromDeadAliens()
 {
     local XGSquad kSquad;
@@ -290,6 +337,21 @@ function TMissionFactor GetCiviliansSavedFactor()
     kFactor.iState = GetRatingState(iRating);
 
     return kFactor;
+}
+
+function string GetSoldierPromotionString(XGCharacter_Soldier kSoldier, int iStatus)
+{
+    local XGParamTag kTag;
+
+    if (!kSoldier.LeveledUp())
+    {
+        return "";
+    }
+
+    kTag = XGParamTag(XComEngine(class'Engine'.static.GetEngine()).LocalizeContext.FindTag("XGParam"));
+    kTag.StrValue0 = `GAMECORE.GetRankString(LWCE_XGCharacter_Soldier(kSoldier).m_kCESoldier.iRank + 1);
+
+    return class'XComLocalizer'.static.ExpandString(iStatus == 0 ? m_strPromotedToDead : m_strPromotedTo);
 }
 
 function UpdateArtifacts()

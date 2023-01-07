@@ -214,6 +214,7 @@ simulated event Init()
 
     m_kItemTemplateMgr = `LWCE_ITEM_TEMPLATE_MGR;
 
+    // These need to be populated to avoid crashing, since native code accesses them
     m_arrWeapons.Add(255);
     m_arrArmors.Add(255);
     m_arrCharacters.Add(32);
@@ -224,10 +225,55 @@ simulated event Init()
         m_kAbilities.Init();
     }
 
-    //BuildWeapons();
+    BuildWeapons();
     BuildArmors();
     BuildCharacters();
     m_bInitialized = true;
+}
+
+// TODO: macro undefine this function's body when not in dev builds
+simulated function BuildArmors()
+{
+    local int Index;
+
+    for (Index = 0; Index < m_arrWeapons.Length; Index++)
+    {
+        m_arrArmors[Index].strName = "Armor " $ Index;
+        m_arrArmors[Index].iType = Index;
+        m_arrArmors[Index].iHPBonus = 100;
+        m_arrArmors[Index].iDefenseBonus = 100;
+        m_arrArmors[Index].iFlightFuel = 100;
+        m_arrArmors[Index].iWillBonus = 100;
+        m_arrArmors[Index].iLargeItems = 100;
+        m_arrArmors[Index].iSmallItems = 100;
+        m_arrArmors[Index].iMobilityBonus = 100;
+    }
+}
+
+// TODO: macro undefine this function's body when not in dev builds
+simulated function BuildWeapons()
+{
+    local int Index;
+
+    // Set up weapons with a bunch of values that will be immediately obvious if they're
+    // being used somewhere important
+    for (Index = 0; Index < m_arrWeapons.Length; Index++)
+    {
+        m_arrWeapons[Index].strName = "Weapon " $ Index;
+        m_arrWeapons[Index].iType = Index;
+        m_arrWeapons[Index].iDamage = 100;
+        m_arrWeapons[Index].iEnvironmentDamage = 100;
+        m_arrWeapons[Index].iRange = 100;
+        m_arrWeapons[Index].iReactionRange = 100;
+        m_arrWeapons[Index].iReactionAngle = 100;
+        m_arrWeapons[Index].iCritical = 100;
+        m_arrWeapons[Index].iRadius = 100;
+        m_arrWeapons[Index].iOffenseBonus = 100;
+        m_arrWeapons[Index].iSuppression = 100;
+        m_arrWeapons[Index].iSize = 100;
+        m_arrWeapons[Index].iHPBonus = 100;
+        m_arrWeapons[Index].iWillBonus = 100;
+    }
 }
 
 simulated function int CalcBaseHitChance(XGUnitNativeBase kShooter, XGUnitNativeBase kTarget, bool bReactionFire)
@@ -526,6 +572,140 @@ simulated function int CalcRangeModForWeapon(int iWeapon, XGUnit kViewer, XGUnit
     return -1000;
 }
 
+simulated function bool CalcReflection(int iAbilityType, int iWeaponType, out TCharacter kShooter, out TCharacter kTarget, bool bIsHit)
+{
+    `LWCE_LOG_DEPRECATED_CLS(CalcReflection);
+
+    return true;
+}
+
+simulated function bool LWCE_CalcReflection(int iAbilityType, name nmWeapon, LWCE_XGUnit kShooter, LWCE_XGUnit kTarget, bool bIsHit)
+{
+    local int iTargetCharacterType;
+    local LWCEWeaponTemplate kWeapon;
+
+    iTargetCharacterType = kTarget.LWCE_GetCharacter().GetCharacterType();
+    kWeapon = m_kItemTemplateMgr.FindWeaponTemplate(nmWeapon);
+
+    if (kWeapon == none)
+    {
+        return false;
+    }
+
+    if (iAbilityType == eAbility_ShotStun)
+    {
+        return false;
+    }
+
+    if (!kWeapon.CanBeReflected(kShooter, kTarget))
+    {
+        return false;
+    }
+
+    if (!bIsHit && (iTargetCharacterType == eChar_Ethereal || iTargetCharacterType == eChar_EtherealUber))
+    {
+        return true;
+    }
+
+    return false;
+}
+
+simulated function int CalcXP(XGUnit kSoldier, int iEvent, XGUnit kVictim)
+{
+    local int iXPEarned;
+    local LWCE_XGCharacter_Soldier kSoldierChar;
+
+    kSoldierChar = LWCE_XGCharacter_Soldier(kSoldier.GetCharacter());
+
+    // TODO: make all of the exp events configurable
+    switch (iEvent)
+    {
+        case eGameEvent_Sight:
+            if (XGCharacter_Soldier(kSoldier.GetCharacter()) != none && LWCE_IsBetterAlien(kSoldierChar.m_kCESoldier, kVictim.GetCharType(), false))
+            {
+                kSoldier.m_bSeenBetterAlien = true;
+            }
+
+            break;
+        case eGameEvent_Kill:
+            if (XGCharacter_Soldier(kSoldier.GetCharacter()) != none && LWCE_IsBetterAlien(kSoldierChar.m_kCESoldier, kVictim.GetCharType()))
+            {
+                iXPEarned = GetBetterAlienKillXP(kSoldier);
+                kSoldier.m_bSeenBetterAlien = true;
+            }
+            else
+            {
+                iXPEarned = GetBasicKillXP(kSoldier);
+            }
+
+            break;
+        case eGameEvent_MissionComplete:
+            if (DeservesBetterAlienBonus(kSoldier))
+            {
+                iXPEarned = 110;
+            }
+            else
+            {
+                iXPEarned = 80;
+            }
+
+            if (kSoldierChar != none)
+            {
+                if (kSoldierChar.m_kCESoldier.iRank <= 4 && kSoldier.GetSquad().SquadHasStarOfTerra(false))
+                {
+                    iXPEarned += (iXPEarned / default.TERRA_XP);
+                }
+            }
+
+            break;
+        case eGameEvent_SpecialMissionComplete:
+            if (DeservesBetterAlienBonus(kSoldier))
+            {
+                iXPEarned = 180;
+            }
+            else
+            {
+                iXPEarned = 120;
+            }
+
+            if (kSoldierChar != none)
+            {
+                if (kSoldierChar.m_kCESoldier.iRank <= 4 && kSoldier.GetSquad().SquadHasStarOfTerra(false))
+                {
+                    iXPEarned += (iXPEarned / default.TERRA_XP);
+                }
+            }
+
+            break;
+        case eGameEvent_ZeroDeadSoldiersBonus:
+            iXPEarned = 20;
+            break;
+        case eGameEvent_TargetResistPsiAttack:
+            iXPEarned = 10;
+            break;
+        case eGameEvent_KillMindControlEnemy:
+            iXPEarned = 0;
+            break;
+        case eGameEvent_SuccessfulMindControl:
+            iXPEarned = 25;
+            break;
+        case eGameEvent_SuccessfulMindFray:
+            iXPEarned = 20;
+            break;
+        case eGameEvent_SuccessfulInspiration:
+            iXPEarned = 0;
+            break;
+        case eGameEvent_AssistPsiInspiration:
+            iXPEarned = 0;
+            break;
+        case eGameEvent_SuccessfulPsiPanic:
+            iXPEarned = 15;
+            break;
+    }
+
+    return iXPEarned;
+}
+
 simulated function bool CharacterIsPsionic(const out TCharacter kCharacter)
 {
     `LWCE_LOG_DEPRECATED_CLS(CharacterIsPsionic);
@@ -540,6 +720,41 @@ simulated function bool LWCE_CharacterIsPsionic(const out LWCE_TCharacter kChara
     for (iAbility = 0; iAbility < kCharacter.arrAbilities.Length; iAbility++)
     {
         if (m_kAbilities.AbilityHasProperty(kCharacter.arrAbilities[iAbility].ID, eProp_Psionic))
+        {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+simulated function bool DeservesBetterAlienBonus(XGUnit kSoldier)
+{
+    local LWCE_XGCharacter_Soldier kChar;
+    local XGUnit kUnit;
+    local XGSquad kSquad;
+    local int kNumMembers, I;
+
+    kChar = LWCE_XGCharacter_Soldier(kSoldier.GetCharacter());
+
+    if (kChar == none)
+    {
+        return false;
+    }
+
+    if (kChar.m_kCESoldier.iRank > 4)
+    {
+        return false;
+    }
+
+    kSquad = kSoldier.GetSquad();
+    kNumMembers = kSquad.GetNumMembers();
+
+    for (I = 0; I < kNumMembers; I++)
+    {
+        kUnit = kSquad.GetMemberAt(I);
+
+        if (kUnit.m_bSeenBetterAlien)
         {
             return true;
         }
@@ -602,16 +817,20 @@ simulated function int LWCE_GetBackpackStatBonus(int iStat, array<name> arrBackP
     return iTotal;
 }
 
-/// <summary>
-/// Retrieves a TWeapon struct. THIS FUNCTION IS NOT FOR MODS TO USE.
-/// It exists strictly for parts of the vanilla code base that can't be rewritten.
-/// Mods should only use LWCEWeaponTemplate.
-/// </summary>
+simulated function TArmor GetTArmor(int iArmor)
+{
+    local TArmor kArmor;
+
+    `LWCE_LOG_DEPRECATED_NOREPLACE_CLS(GetTArmor);
+
+    return kArmor;
+}
+
 simulated function TWeapon GetTWeapon(int iWeapon)
 {
     local TWeapon kWeapon;
-    // TODO: use templates? fully deprecate?
-    `LWCE_LOG_DEPRECATED_CLS(GetTWeapon);
+
+    `LWCE_LOG_DEPRECATED_NOREPLACE_CLS(GetTWeapon);
 
     return kWeapon;
 
@@ -810,7 +1029,7 @@ simulated function int GetOverheatIncrement(XGUnit kUnit, int iWeapon, int iAbil
 }
 
 // TODO: this needs to be part of the weapon/ability templates
-simulated function int LWCE_GetOverheatIncrement(name WeaponName, int iAbility, out LWCE_TCharacter kCharacter, optional bool bReactionFire)
+simulated function int LWCE_GetOverheatIncrement(name WeaponName, int iAbility, LWCE_TCharacter kCharacter, optional bool bReactionFire)
 {
     local LWCEWeaponTemplate kWeapon;
     local int iAmount;
@@ -820,6 +1039,7 @@ simulated function int LWCE_GetOverheatIncrement(name WeaponName, int iAbility, 
         return 0;
     }
 
+    `LWCE_LOG_CLS("WARNING: LWCE_GetOverheatIncrement needs to be replaced");
     kWeapon = `LWCE_WEAPON(WeaponName);
 
     if (kWeapon.HasWeaponProperty(eWP_UnlimitedAmmo))
@@ -936,6 +1156,39 @@ function eWeaponRangeCat GetWeaponCatRange(EItemType eWeapon)
     return eWRC_Short;
 }
 
+simulated function bool IsBetterAlien(TSoldier kSoldier, int iTargetCharType, optional bool bCheckSoldierRank = true)
+{
+    `LWCE_LOG_DEPRECATED_CLS(IsBetterAlien);
+
+    return true;
+}
+
+simulated function bool LWCE_IsBetterAlien(LWCE_TSoldier kSoldier, int iTargetCharType, optional bool bCheckSoldierRank = true)
+{
+    local int iRank;
+    local bool isLesserRank;
+    local int iAlien;
+
+    iRank = kSoldier.iRank;
+    iAlien = iTargetCharType;
+
+    if (bCheckSoldierRank)
+    {
+        isLesserRank = iRank < 4;
+    }
+    else
+    {
+        isLesserRank = true;
+    }
+
+    if (isLesserRank)
+    {
+        return iAlien == eChar_SectoidCommander || iAlien == eChar_MutonElite || iAlien == eChar_Ethereal || iAlien == eChar_Sectopod || iAlien == eChar_Outsider || iAlien == eChar_EtherealUber || iAlien == eChar_Mechtoid;
+    }
+
+    return false;
+}
+
 // TODO: rewrite all of the ItemIs* functions, maybe move into XGItemTree
 simulated function bool ItemIsAccessory(int iItem)
 {
@@ -975,6 +1228,20 @@ simulated function bool ItemIsShipWeapon(int iItem)
     ScriptTrace();
 
     return false;
+}
+
+function bool RollForHit(float fChance, out TCharacter kShooter, out TCharacter kTarget, out float fRoll)
+{
+    `LWCE_LOG_DEPRECATED_CLS(RollForHit);
+
+    fRoll = -1.0f;
+    return false;
+}
+
+function bool LWCE_RollForHit(float fChance, out float fRoll)
+{
+    fRoll = class'XComEngine'.static.SyncFRand(Name @ GetStateName() @ GetFuncName());
+    return fRoll <= fChance;
 }
 
 simulated function bool WeaponHasProperty(int iWeapon, int iWeaponProperty)

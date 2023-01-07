@@ -75,9 +75,6 @@ function bool LWCE_ApplyTankLoadout(XGStrategySoldier kTank, LWCE_TInventory kIn
         LWCE_EquipLargeItem(kTank, kInventory.arrLargeItems[I], I);
     }
 
-    // TODO: do this in the LWCE-equivalent struct
-    kTank.m_kSoldier.kClass.eWeaponType = eWP_Integrated;
-
     return true;
 }
 

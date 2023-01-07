@@ -1,3 +1,47 @@
+// --------------------------------------
+// Functions added by LWCE
+// --------------------------------------
+
+function AddPerk(const LWCE_TIDWithSource kData)
+{
+    m_kCEChar.arrPerks.AddItem(kData);
+}
+
+function array<name> GetAllBackpackItems()
+{
+    return class'LWCEInventoryUtils'.static.GetAllBackpackItems(m_kCEChar.kInventory);
+}
+
+function bool HasAbility(int iAbilityId)
+{
+    return m_kCEChar.arrAbilities.Find('Id', iAbilityId) != INDEX_NONE;
+}
+
+function bool HasCharacterProperty(int iCharPropId)
+{
+    return m_kCEChar.arrProperties.Find('Id', iCharPropId) != INDEX_NONE;
+}
+
+function bool HasItemInInventory(name ItemName)
+{
+    return class'LWCEInventoryUtils'.static.HasItemOfName(m_kCEChar.kInventory, ItemName);
+}
+
+function bool HasPerk(int iPerkId)
+{
+    return m_kCEChar.arrPerks.Find('Id', iPerkId) != INDEX_NONE;
+}
+
+function bool HasTraversal(int iTraversalId)
+{
+    return m_kCEChar.arrTraversals.Find('Id', iTraversalId) != INDEX_NONE;
+}
+
+function bool IsPsionic()
+{
+    return m_kCEChar.bHasPsiGift;
+}
+
 function LWCE_TCharacter GetCharacter()
 {
     return m_kCEChar;
@@ -8,7 +52,191 @@ function int GetCharacterType()
     return m_kCEChar.iCharacterType;
 }
 
+function LWCE_TInventory GetInventory()
+{
+    return m_kCEChar.kInventory;
+}
+
 function SetCharacter(const LWCE_TCharacter kChar)
 {
     m_kCEChar = kChar;
 }
+
+function SetInventory(const LWCE_TInventory kInventory)
+{
+    m_kCEChar.kInventory = kInventory;
+}
+
+// --------------------------------------
+// Overrides for base game functions
+// --------------------------------------
+
+simulated function int GetCharMaxStat(ECharacterStat eStat)
+{
+    return m_kCEChar.aStats[eStat];
+}
+
+simulated function int GetCharMaxPathLength()
+{
+    return m_kCEChar.aStats[eStat_Mobility];
+}
+
+simulated function int GetCharMaxOffense()
+{
+    return m_kCEChar.aStats[eStat_Offense];
+}
+
+simulated function int GetCharMaxHP()
+{
+    return m_kCEChar.aStats[eStat_HP];
+}
+
+simulated function int GetCharMaxFlightFuel()
+{
+    return m_kCEChar.aStats[eStat_FlightFuel];
+}
+
+simulated function int GetCharMaxDefense()
+{
+    return m_kCEChar.aStats[eStat_Defense];
+}
+
+simulated function int GetCharMaxStrength()
+{
+    return m_kCEChar.aStats[4];
+}
+
+simulated function int GetCharMaxShieldHP()
+{
+    return m_kCEChar.aStats[eStat_ShieldHP];
+}
+
+simulated function float GetCharBioElectricParticleScaling()
+{
+    return m_kCEChar.fBioElectricParticleScale;
+}
+
+simulated function bool CanGainXP()
+{
+    return WorldInfo.NetMode == NM_Standalone && HasCharacterProperty(eCP_CanGainXP);
+}
+
+simulated function bool HasUpgrade(int iUpgrade)
+{
+    return HasPerk(iUpgrade);
+}
+
+simulated function bool HasAnyGeneMod()
+{
+    `LWCE_LOG_DEPRECATED_NOREPLACE_CLS(HasAnyGeneMod);
+
+    return false;
+}
+
+function InitTCharacter()
+{
+    local LWCE_TIDWithSource kData;
+    local TCharacter kVanillaChar;
+    local int Index;
+
+    //super.InitTCharacter();
+
+    kData.SourceType = 'Innate';
+
+    if (m_eType != ePawnType_None && m_kChar.iType == eChar_None)
+    {
+        kVanillaChar = GetTCharacterFromPawnType(m_eType);
+
+        m_kCEChar.strName = kVanillaChar.strName;
+        m_kCEChar.iCharacterType = kVanillaChar.iType;
+        m_kCEChar.bHasPsiGift = kVanillaChar.bHasPsiGift;
+        m_kCEChar.fBioElectricParticleScale = kVanillaChar.fBioElectricParticleScale;
+
+        // Copy data from the vanilla character to ours
+        // TODO: move character config into LWCE and drop this
+
+        for (Index = 0; Index < ePerk_MAX; Index++)
+        {
+            if (kVanillaChar.aUpgrades[Index] != 0)
+            {
+                kData.ID = Index;
+                m_kCEChar.arrPerks.AddItem(kData);
+            }
+        }
+
+        for (Index = 0; Index < eAbility_MAX; Index++)
+        {
+            m_kChar.aAbilities[Index] = kVanillaChar.aAbilities[Index];
+
+            if (kVanillaChar.aAbilities[Index] != 0)
+            {
+                kData.ID = Index;
+                m_kCEChar.arrAbilities.AddItem(kData);
+            }
+        }
+
+        for (Index = 0; Index < eCP_MAX; Index++)
+        {
+            m_kChar.aProperties[Index] = kVanillaChar.aProperties[Index];
+
+            if (kVanillaChar.aProperties[Index] != 0)
+            {
+                kData.ID = Index;
+                m_kCEChar.arrProperties.AddItem(kData);
+            }
+        }
+
+        for (Index = 0; Index < eTraversal_MAX; Index++)
+        {
+            // Someday we might override the native code that handles traversing the map, but until then,
+            // we need to have the traversals in the vanilla struct or no one can move.
+            m_kChar.aTraversals[Index] = kVanillaChar.aTraversals[Index];
+
+            if (kVanillaChar.aTraversals[Index] != 0)
+            {
+                kData.ID = Index;
+                m_kCEChar.arrTraversals.AddItem(kData);
+            }
+        }
+
+        if (!IsA('LWCE_XGCharacter_Soldier'))
+        {
+            `LWCE_LOG_CLS("LWCE_XGCharacter.InitTCharacter: Copying vanilla aim value " $ kVanillaChar.aStats[eStat_Offense]);
+
+            for (Index = 0; Index < eStat_MAX; Index++)
+            {
+                m_kCEChar.aStats[Index] = kVanillaChar.aStats[Index];
+            }
+        }
+    }
+}
+
+// Don't emit these functions for soldier characters, which have special definitions of their own
+`if(`notdefined(NO_SOLDIER_FUNCS))
+
+simulated function string GetName()
+{
+    return m_kCEChar.strName;
+}
+
+simulated function string GetFullName()
+{
+    return m_kCEChar.strName;
+}
+
+simulated function string GetFirstName()
+{
+    return "";
+}
+
+simulated function string GetLastName()
+{
+    return m_kCEChar.strName;
+}
+
+simulated function string GetNickname()
+{
+    return m_kCEChar.strName;
+}
+
+`endif

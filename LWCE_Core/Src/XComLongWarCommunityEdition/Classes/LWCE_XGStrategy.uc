@@ -328,6 +328,25 @@ function bool LWCE_UnlockItem(name ItemName, out LWCE_TItemUnlock kUnlock)
     return true;
 }
 
+function PlayFinalCinematic()
+{
+    local XComNarrativeMoment lMoment;
+
+    if (LWCE_XGStrategySoldier(BARRACKS().m_kVolunteer).m_kCESoldier.kAppearance.iGender == eGender_Female)
+    {
+        lMoment = `XComNarrativeMoment("TP13_TheEnd_Female");
+    }
+    else
+    {
+        lMoment = `XComNarrativeMoment("TP13_TheEnd");
+    }
+
+    if (!PRES().UINarrative(lMoment,, PostFinalCinematic, SendSoldierToFinalCinematic))
+    {
+        PostFinalCinematic();
+    }
+}
+
 protected function PopulateDropshipTechHistory(LWCE_XGBattleDesc kBattleDesc)
 {
     local name TechName;

@@ -34,7 +34,7 @@ function LWCE_LoadSquad(array<TTransferSoldier> Soldiers, array<LWCE_TTransferSo
     `LWCE_LOG_CLS("LoadSquad begin");
 
     iNumSoldiersToSpawn = Soldiers.Length;
-    m_kSquad = Spawn(class'XGSquad',,,,,,, m_eTeam);
+    m_kSquad = Spawn(class'LWCE_XGSquad',,,,,,, m_eTeam);
     m_kSquad.m_kPlayer = self;
 
     // Some sort of fixes for specific maps/missions
@@ -97,7 +97,7 @@ function LWCE_LoadSquad(array<TTransferSoldier> Soldiers, array<LWCE_TTransferSo
 
         if (kUnit != none)
         {
-            if (kUnit.m_kCEChar.iCharacterType == eChar_Soldier)
+            if (kUnit.LWCE_GetCharacter().GetCharacterType() == eChar_Soldier)
             {
                 LWCE_XComHumanPawn(kUnit.GetPawn()).LWCE_SetAppearance(kUnit.m_kCESoldier.kAppearance);
             }
@@ -166,7 +166,7 @@ function LWCE_XGUnit LWCE_SpawnUnit(PlayerController kPlayerController, Vector k
 
     kUnit = Spawn(class'LWCE_XGUnit', kPlayerController,, kLocation, kRotation,,, m_eTeam);
     kUnit.SetBattleScanner(bBattleScanner);
-    kUnit.m_kCEChar = kCEChar;
+    kUnit.LWCE_GetCharacter().SetCharacter(kCEChar);
     kUnit.m_kCESoldier = kCESoldier;
 
     if (!kUnit.Init(self, kCharacter, kSquad, bDestroyOnBadLocation, bSnapToGround))

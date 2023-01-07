@@ -4,6 +4,14 @@ class LWCE_XGAIPlayer_Animal extends XGAIPlayer_Animal;
 
 `LWCE_GENERATOR_XGPLAYER
 
+simulated function CreateSquad(array<XComSpawnPoint> arrSpawnPoints, array<EPawnType> arrPawnTypes)
+{
+    GetSquadLocation(m_kSquadStart.vCenter, m_kSquadStart.fRadius);
+    m_kSquad = Spawn(class'LWCE_XGSquad',,,,,,, m_eTeam);
+    m_kSquad.m_kPlayer = self;
+    InitializeCivilians();
+}
+
 simulated function LoadInit()
 {
     super.LoadInit();

@@ -97,15 +97,16 @@ simulated function UpdateData(int Index, XGAbility kAbility, out array<ASValue> 
     }
 
     iCharge = kAbility.GetCharge();
-    `LWCE_LOG_CLS("UpdateData: iType = " $ iType $ ", iCharge = " $ iCharge $ ", m_iCharge = " $ m_iCharge);
 
-    if (true || m_iCharge != iCharge)
+    // LWCE issue #67: Motion Tracker and Command don't normally show their remaining charges when on cooldown.
+    // This has been rewritten to remove the exception that applied to them, so the charges can be seen.
+    if (m_iCharge != iCharge)
     {
         m_iCharge = iCharge;
 
         if (iCharge > 0)
         {
-            QueueFunctionString("SetCharge", m_kContainer.m_strChargePrefix $ string(iCharge), arrData);
+            QueueFunctionString("SetCharge", m_kContainer.m_strChargePrefix $ iCharge, arrData);
         }
         else
         {
@@ -171,7 +172,7 @@ simulated function UpdateData(int Index, XGAbility kAbility, out array<ASValue> 
         kASVal.Type = AS_Null;
         arrData.InsertItem(iPrevDataLen, kASVal);
 
-        kASVal.N = float(Index);
+        kASVal.N = Index;
         kASVal.Type = AS_Number;
         arrData.InsertItem(iPrevDataLen + 1, kASVal);
     }

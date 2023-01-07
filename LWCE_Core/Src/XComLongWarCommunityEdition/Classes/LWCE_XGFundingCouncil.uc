@@ -801,10 +801,10 @@ function bool GetTempRequestItems(out EItemType eItem, out int iAmount)
     return false;
 }
 
-// TODO: add LWCE version that doesn't use ESoldierClass
+// TODO: add LWCE version that doesn't use ESoldierClass or TCharacter
 function GiveCustomSoldier(const out TFundingCouncilRewardSoldier CustomSoldier)
 {
-    local XGStrategySoldier Soldier;
+    local LWCE_XGStrategySoldier Soldier;
 
     Soldier = LWCE_XGFacility_Barracks(BARRACKS()).LWCE_CreateSoldier(CustomSoldier.soldierClass, CustomSoldier.SoldierRank, CustomSoldier.Country);
     Soldier.m_kSoldier.kAppearance = CustomSoldier.Appearance;
@@ -827,7 +827,7 @@ function GiveCustomSoldier(const out TFundingCouncilRewardSoldier CustomSoldier)
         Soldier.m_kChar.aStats[eStat_Offense] = 65;
         Soldier.m_kChar.aStats[eStat_Will] = 38;
         Soldier.m_kChar.aStats[eStat_Mobility] = 13;
-        Soldier.GivePerk(`LW_PERK_ID(LoneWolf));
+        Soldier.LWCE_GivePerk(`LW_PERK_ID(LoneWolf), 'Innate');
     }
     else if (CustomSoldier.Appearance.iHead == 420)
     {
@@ -836,37 +836,37 @@ function GiveCustomSoldier(const out TFundingCouncilRewardSoldier CustomSoldier)
         Soldier.m_kSoldier.iPsiRank = 2;
         Soldier.m_kSoldier.iPsiXP = TACTICAL().GetPsiXPRequired(2);
         Soldier.m_kChar.aStats[eStat_Mobility] = 13;
-        Soldier.GivePerk(Rand(2) == 0 ? `LW_PERK_ID(NeuralFeedback) : `LW_PERK_ID(Mindfray));
-        Soldier.GivePerk(Rand(2) == 0 ? `LW_PERK_ID(PsiInspiration) : `LW_PERK_ID(DistortionField));
+        Soldier.LWCE_GivePerk(Rand(2) == 0 ? `LW_PERK_ID(NeuralFeedback) : `LW_PERK_ID(Mindfray), 'Innate');
+        Soldier.LWCE_GivePerk(Rand(2) == 0 ? `LW_PERK_ID(PsiInspiration) : `LW_PERK_ID(DistortionField), 'Innate');
     }
     else if (Soldier.m_kSoldier.strNickName == "Tisiphone")
     {
         Soldier.m_kChar.bHasPsiGift = true;
         Soldier.m_kSoldier.iPsiRank = 2;
         Soldier.m_kSoldier.iPsiXP = TACTICAL().GetPsiXPRequired(2);
-        Soldier.GivePerk(`LW_PERK_ID(NeuralFeedback)); // Neural Feedback
-        Soldier.GivePerk(Rand(2) == 0 ? `LW_PERK_ID(PsiInspiration) : `LW_PERK_ID(DistortionField));
+        Soldier.LWCE_GivePerk(`LW_PERK_ID(NeuralFeedback), 'Innate');
+        Soldier.LWCE_GivePerk(Rand(2) == 0 ? `LW_PERK_ID(PsiInspiration) : `LW_PERK_ID(DistortionField), 'Innate');
     }
     else if (Soldier.m_kSoldier.strNickName == "Megaera")
     {
         Soldier.m_kChar.bHasPsiGift = true;
         Soldier.m_kSoldier.iPsiRank = 2;
         Soldier.m_kSoldier.iPsiXP = TACTICAL().GetPsiXPRequired(2);
-        Soldier.GivePerk(`LW_PERK_ID(RegenBiofield)); // Regen Biofield
-        Soldier.GivePerk(Rand(2) == 0 ? `LW_PERK_ID(PsiInspiration) : `LW_PERK_ID(DistortionField));
+        Soldier.LWCE_GivePerk(`LW_PERK_ID(RegenBiofield), 'Innate');
+        Soldier.LWCE_GivePerk(Rand(2) == 0 ? `LW_PERK_ID(PsiInspiration) : `LW_PERK_ID(DistortionField), 'Innate');
     }
     else if (Soldier.m_kSoldier.strNickName == "Alecto")
     {
         Soldier.m_kChar.bHasPsiGift = true;
         Soldier.m_kSoldier.iPsiRank = 1;
         Soldier.m_kSoldier.iPsiXP = TACTICAL().GetPsiXPRequired(1);
-        Soldier.GivePerk(`LW_PERK_ID(MindFray));
+        Soldier.LWCE_GivePerk(`LW_PERK_ID(MindFray), 'Innate');
     }
     else if (Soldier.m_kSoldier.strNickName == "The General")
     {
         // Van Doorn
         Soldier.m_kChar.aStats[eStat_Mobility] = 13;
-        Soldier.GivePerk(`LW_PERK_ID(Steadfast));
+        Soldier.LWCE_GivePerk(`LW_PERK_ID(Steadfast), 'Innate');
     }
 
     if (IsOptionEnabled(`LW_SECOND_WAVE_ID(CinematicMode)))

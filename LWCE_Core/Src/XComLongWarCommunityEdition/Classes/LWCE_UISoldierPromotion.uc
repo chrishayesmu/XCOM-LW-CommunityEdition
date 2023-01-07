@@ -42,7 +42,7 @@ simulated function Init(XGStrategySoldier kSoldier, XComPlayerController _contro
     m_kSoldierHeader = Spawn(class'LWCE_UIStrategyComponent_SoldierInfo', self);
     m_kSoldierHeader.Init(_controllerRef, _manager, self, m_kSoldier);
 
-    m_kSoldierStats = Spawn(class'UIStrategyComponent_SoldierStats', self);
+    m_kSoldierStats = Spawn(class'LWCE_UIStrategyComponent_SoldierStats', self);
     m_kSoldierStats.Init(GetMgr(), _controllerRef, _manager, self);
 
     m_kMecSoldierStats = Spawn(class'LWCE_UISoldierPromotion_MecBonusAbility', self);

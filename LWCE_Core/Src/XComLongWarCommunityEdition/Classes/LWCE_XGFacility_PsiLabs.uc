@@ -257,7 +257,7 @@ function int RollForGift(XGStrategySoldier kSoldier)
     }
 
     iTargetWill = m_arrCETraining[iSoldierIndex].kPerk.iTargetWill;
-    iTraineeWill = Max(kSoldier.m_kChar.aStats[eStat_Will], 1);
+    iTraineeWill = Max(LWCE_XGStrategySoldier(kSoldier).m_kCEChar.aStats[eStat_Will], 1);
     iEvenWillSuccessChance = int(float(100) * class'XGTacticalGameCore'.default.PSI_GIFT_CHANCE);
 
     if (iTraineeWill <= (iTargetWill + 80 - iEvenWillSuccessChance))
@@ -278,4 +278,32 @@ function int RollForGift(XGStrategySoldier kSoldier)
     }
 
     return iChance;
+}
+
+state WaitingToStartPsiCinematic
+{
+Begin:
+    PRES().GetALocalPlayerController().ClientSetCameraFade(true, MakeColor(0, 0, 0), vect2d(0.0, 1.0), 0.50);
+    PRES().HideUIForCinematics();
+    PRES().UILoadAnimation(true);
+    PRES().GetStrategyHUD().AS_HideResourcesPanel();
+
+    PsiCinematicSoldier.SetHQLocation(eSoldierLoc_PsiLabsCinematic, true, 0, true);
+
+    while (PsiCinematicSoldier.m_kPawn == none || !PsiCinematicSoldier.m_kPawn.IsPawnReadyForViewing())
+    {
+        Sleep(0.10);
+    }
+
+    if (LWCE_XGStrategySoldier(PsiCinematicSoldier).m_kCESoldier.kAppearance.iGender == eGender_Male)
+    {
+        PRES().UINarrative(`XComNarrativeMoment("Psionics"),, PsiCinematicComplete, SendSoldierToPsiCinematic, Base().GetFacility3DLocation(eFacility_PsiLabs));
+    }
+    else
+    {
+        PRES().UINarrative(`XComNarrativeMoment("Psionics_Female"),, PsiCinematicComplete, SendSoldierToPsiCinematic, Base().GetFacility3DLocation(eFacility_PsiLabs));
+    }
+
+    GotoState('None');
+    stop;
 }

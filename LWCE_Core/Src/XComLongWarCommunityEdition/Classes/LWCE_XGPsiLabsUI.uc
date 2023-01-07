@@ -55,11 +55,13 @@ function TTableMenuOption LWCE_BuildResultOption(LWCE_TPsiTrainee kTrainee)
 
 function TTableMenuOption BuildSoldierOption(XGStrategySoldier kSoldier, array<int> arrCategories, int iSoldierListIndex)
 {
+    local LWCE_XGStrategySoldier kCESoldier;
     local TTableMenuOption kOption;
     local int iCategory;
     local string strCategory;
     local int iState;
 
+    kCESoldier = LWCE_XGStrategySoldier(kSoldier);
     kOption.iState = kSoldier.IsReadyToPsiLevelUp() ? eUIState_Good : eUIState_Disabled;
 
     for (iCategory = 0; iCategory < arrCategories.Length; iCategory++)
@@ -70,32 +72,32 @@ function TTableMenuOption BuildSoldierOption(XGStrategySoldier kSoldier, array<i
         switch (arrCategories[iCategory])
         {
             case 0:
-                strCategory = string(kSoldier.m_kSoldier.iCountry);
+                strCategory = string(kCESoldier.m_kCESoldier.iCountry);
                 break;
             case 1:
-                strCategory = string(kSoldier.GetRank());
+                strCategory = string(kCESoldier.GetRank());
                 break;
             case 2:
-                strCategory = string(kSoldier.GetEnergy());
+                strCategory = string(kCESoldier.GetEnergy());
                 break;
             case 3:
-                strCategory = kSoldier.GetClassName();
+                strCategory = kCESoldier.GetClassName();
                 break;
             case 4:
-                strCategory = kSoldier.GetName(8);
+                strCategory = kCESoldier.GetName(8);
                 break;
             case 5:
-                strCategory = kSoldier.GetName(eNameType_Last);
+                strCategory = kCESoldier.GetName(eNameType_Last);
                 break;
             case 6:
-                strCategory = kSoldier.GetName(eNameType_Nick);
+                strCategory = kCESoldier.GetName(eNameType_Nick);
                 break;
             case 7:
-                strCategory = kSoldier.GetStatusString();
-                iState = kSoldier.GetStatusUIState();
+                strCategory = kCESoldier.GetStatusString();
+                iState = kCESoldier.GetStatusUIState();
                 break;
             case 8:
-                if (kSoldier.HasAvailablePerksToAssign())
+                if (kCESoldier.HasAvailablePerksToAssign())
                 {
                     iState = eUIState_Disabled;
                 }
@@ -106,7 +108,7 @@ function TTableMenuOption BuildSoldierOption(XGStrategySoldier kSoldier, array<i
 
                 break;
             case 9:
-                if (kSoldier.HasAvailablePerksToAssign(true))
+                if (kCESoldier.HasAvailablePerksToAssign(true))
                 {
                     iState = eUIState_Disabled;
                 }
@@ -117,31 +119,24 @@ function TTableMenuOption BuildSoldierOption(XGStrategySoldier kSoldier, array<i
 
                 break;
             case 10:
-                if (kSoldier.m_kChar.bHasPsiGift)
+                if (kCESoldier.m_kCEChar.bHasPsiGift)
                 {
                     iState = eUIState_Disabled;
-                }
-                else
-                {
-                    iState = eUIState_Normal;
                 }
 
                 break;
             case 11:
-                if (class'LWCE_XComPerkManager'.static.LWCE_HasAnyGeneMod(LWCE_XGStrategySoldier(kSoldier).m_kCEChar))
+                if (class'LWCE_XComPerkManager'.static.LWCE_HasAnyGeneMod(kCESoldier.m_kCEChar))
                 {
                     iState = eUIState_Disabled;
                 }
-                else
-                {
-                    iState = eUIState_Normal;
-                }
+
                 break;
             case 13:
-                iState = kSoldier.GetSHIVRank();
+                iState = kCESoldier.GetSHIVRank();
                 break;
             case 12:
-                strCategory = class'UIUtilities'.static.GetMedalLabels(kSoldier.m_arrMedals);
+                strCategory = class'UIUtilities'.static.GetMedalLabels(kCESoldier.m_arrMedals);
                 break;
             case 14:
                 strCategory = string(iSoldierListIndex);

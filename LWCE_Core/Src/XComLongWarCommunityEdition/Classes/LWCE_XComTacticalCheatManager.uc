@@ -340,7 +340,9 @@ reliable server function ServerGivePerk(string strName)
     if (kPerksMgr.LWCE_GetPerk(iPerkId).bIsPsionic)
     {
         kUnit.GetPawn().CHEAT_InitPawnPerkContent(kUnit.GetCharacter().m_kChar);
-        kInventory = kUnit.m_kCEChar.kInventory;
+
+        // TODO: doesn't affect actual inventory (might be bug in original too)
+        kInventory = kUnit.LWCE_GetCharacter().GetCharacter().kInventory;
 
         if (!class'LWCEInventoryUtils'.static.HasItemOfName(kInventory, 'Item_PsiAmp'))
         {

@@ -1,6 +1,6 @@
-class LWCE_XGGollopUI extends XGGollopUI;
+class LWCE_XGMedalsUI extends XGMedalsUI;
 
-function TTableMenuOption BuildSoldierOption(XGStrategySoldier kSoldier, array<int> arrCategories)
+function TTableMenuOption BuildSoldierOption(XGStrategySoldier kSoldier, array<int> arrCategories, int iSoldierListIndex)
 {
     local LWCE_XGStrategySoldier kCESoldier;
     local TTableMenuOption kOption;
@@ -10,14 +10,18 @@ function TTableMenuOption BuildSoldierOption(XGStrategySoldier kSoldier, array<i
 
     kCESoldier = LWCE_XGStrategySoldier(kSoldier);
 
-    if (kCESoldier.GetStatus() != eStatus_Active)
+    if (!BARRACKS().CanAwardMedalToSoldier(m_arrMainMenu[m_iCurrentMedal].Type, kCESoldier))
     {
         kOption.iState = eUIState_Disabled;
+    }
+    else
+    {
+        kOption.iState = eUIState_Good;
     }
 
     for (iCategory = 0; iCategory < arrCategories.Length; iCategory++)
     {
-        iState = eUIState_Normal;
+        iState = 0;
         strCategory = "";
 
         switch (arrCategories[iCategory])
@@ -35,7 +39,7 @@ function TTableMenuOption BuildSoldierOption(XGStrategySoldier kSoldier, array<i
                 strCategory = kCESoldier.GetClassName();
                 break;
             case 4:
-                strCategory = kCESoldier.GetName(eNameType_Full);
+                strCategory = kCESoldier.GetName(8);
                 break;
             case 5:
                 strCategory = kCESoldier.GetName(eNameType_Last);
@@ -76,10 +80,13 @@ function TTableMenuOption BuildSoldierOption(XGStrategySoldier kSoldier, array<i
 
                 break;
             case 13:
-                iState = -1;
+                iState = kCESoldier.GetSHIVRank();
                 break;
             case 12:
                 strCategory = class'UIUtilities'.static.GetMedalLabels(kCESoldier.m_arrMedals);
+                break;
+            case 14:
+                strCategory = string(iSoldierListIndex);
                 break;
         }
 
@@ -88,15 +95,4 @@ function TTableMenuOption BuildSoldierOption(XGStrategySoldier kSoldier, array<i
     }
 
     return kOption;
-}
-
-function GollopWarningCallback(EUIAction eAction)
-{
-    if (eAction == eUIAction_Accept)
-    {
-        GoToView(eGollopView_Choose);
-        PRES().UISoldierList(class'LWCE_UISoldierList_Gollop');
-    }
-
-    UpdateView();
 }

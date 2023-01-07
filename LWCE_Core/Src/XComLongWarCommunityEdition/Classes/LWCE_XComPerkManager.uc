@@ -712,6 +712,21 @@ static function name PerkNameFromBaseID(int iPerkId)
     return '';
 }
 
+static function int LWCE_NumGeneMods(const out LWCE_TCharacter kChar)
+{
+    local int iTotal, Index;
+
+    for (Index = 0; Index < kChar.arrPerks.Length; Index++)
+    {
+        if (kChar.arrPerks[Index].SourceType == 'Innate' && kChar.arrPerks[Index].SourceId == 'GeneMod')
+        {
+            iTotal++;
+        }
+    }
+
+    return iTotal;
+}
+
 simulated function Init()
 {
     BuildPerkTables();
@@ -1239,6 +1254,7 @@ function LWCE_TCharacterStats GetPerkStatChanges(LWCE_XGStrategySoldier kSoldier
     return kPerkChoice.kStatChanges;
 }
 
+// TODO is this function ever even used outside of cheats?
 function GivePerk(XGUnit kUnit, int iPerkId)
 {
     local LWCE_XGUnit kCEUnit;

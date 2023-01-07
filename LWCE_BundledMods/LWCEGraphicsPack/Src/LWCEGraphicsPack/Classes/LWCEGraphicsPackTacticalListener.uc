@@ -78,7 +78,7 @@ simulated function Projectile_OnInit(XComProjectile kProjectile)
     local int iCharType;
     local PointLightComponent kPointLightComp;
 
-    iCharType = kProjectile.m_kFiredFromUnit.GetCharacter().m_kChar.iType;
+    iCharType = LWCE_XGUnit(kProjectile.m_kFiredFromUnit).LWCE_GetCharacter().GetCharacterType();
 
     // TODO: not sure how to do this in an inheritance-safe way
     // Probably want to use the weapon info like so:
@@ -181,7 +181,7 @@ protected function AddUnitLighting(LWCE_XGUnit kUnit)
         return;
     }
 
-    iCharType = kUnit.GetCharacter().m_kChar.iType;
+    iCharType = kUnit.LWCE_GetCharacter().GetCharacterType();
 
     switch (iCharType)
     {

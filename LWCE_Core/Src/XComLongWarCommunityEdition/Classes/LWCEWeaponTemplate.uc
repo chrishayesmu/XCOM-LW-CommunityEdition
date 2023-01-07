@@ -217,6 +217,11 @@ function int CalcRangeModAtLocation(LWCE_XGUnit kShooter, LWCE_XGUnit kTarget, V
     return iRangeMod;
 }
 
+function bool CanBeReflected(LWCE_XGUnit kShooter, LWCE_XGUnit kTarget)
+{
+    return !HasProperty('ReflectImmunity');
+}
+
 function eWeaponRangeCat GetWeaponCatRange()
 {
     if (iRange > 30)

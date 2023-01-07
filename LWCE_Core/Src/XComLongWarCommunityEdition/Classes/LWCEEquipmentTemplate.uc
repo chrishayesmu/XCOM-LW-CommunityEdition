@@ -50,6 +50,9 @@ var config int iClipSize;                              // Clip size for this ite
                                                        // reload. For small items and armor, this is the number of charges for abilities associated with the item. Ex: on a Medikit,
                                                        // this is the number of uses per medikit, shared across Heal/Revive/Stabilize.
 
+var config bool bLoadoutScreenFanoutPerCharge;         // If true, when equipping this item in the lockers, the item image will "fan out" to however many charges the soldier has while
+                                                       // using the item (e.g. how  HE Grenades will show 2 grenade images if the soldier has Grenadier). If false, always shows a single image.
+
 var config int iWeaponFragmentsWhenDestroyed;          // How many weapon fragments this item is worth when an enemy who has it equipped is killed. This will be multiplied by the appropriate
                                                        // FragmentBalance value for the player's difficulty, and that value is then floored. Note that if you set this to a positive value, then
                                                        // the item will always be worth at least 1 fragment, even if the math above would otherwise make it worth 0.

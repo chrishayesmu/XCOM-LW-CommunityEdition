@@ -29,14 +29,14 @@ function Init()
 
     // Sync soldier data
     // TODO: stop doing this over time
-    m_kCESoldier.iID = m_kSoldier.iID;
-    m_kCESoldier.iRank = m_kSoldier.iRank;
-    m_kCESoldier.iPsiRank = m_kSoldier.iPsiRank;
-    m_kCESoldier.iXP = m_kSoldier.iXP;
-    m_kCESoldier.iPsiXP = m_kSoldier.iPsiXP;
-    m_kCESoldier.iNumKills = m_kSoldier.iNumKills;
-    m_kCESoldier.bBlueshirt = m_kSoldier.bBlueshirt;
-    m_kCESoldier.iSoldierClassId = m_kSoldier.kClass.eType;
+    // m_kCESoldier.iID = m_kCESoldier.iID;
+    // m_kCESoldier.iRank = m_kCESoldier.iRank;
+    // m_kCESoldier.iPsiRank = m_kCESoldier.iPsiRank;
+    // m_kCESoldier.iXP = m_kCESoldier.iXP;
+    // m_kCESoldier.iPsiXP = m_kCESoldier.iPsiXP;
+    // m_kCESoldier.iNumKills = m_kCESoldier.iNumKills;
+    // m_kCESoldier.bBlueshirt = m_kCESoldier.bBlueshirt;
+    // m_kCESoldier.iSoldierClassId = m_kSoldier.kClass.eType;
 }
 
 function DEMOUltimateSoldier()
@@ -95,6 +95,7 @@ function LWCE_TTransferSoldier LWCE_BuildTransferSoldier(TTransferSoldier kTrans
 
     `LWCE_LOG_CLS("Building transfer soldier: m_kCEChar.iCharacterType = " $ m_kCEChar.iCharacterType $ ", m_kCEChar.kInventory.arrLargeItems.Length = " $ m_kCEChar.kInventory.arrLargeItems.Length $ ", m_kCEChar.kInventory.nmArmor = " $ m_kCEChar.kInventory.nmArmor);
     `LWCE_LOG_CLS("m_kCESoldier.strFirstName = " $ m_kCESoldier.strFirstName $ ", m_kCESoldier.strLastName = " $ m_kCESoldier.strLastName);
+    `LWCE_LOG_CLS("Aim: " $ m_kCEChar.aStats[eStat_Offense] $ "; m_aStatModifiers[eStat_Offense] = " $ m_aStatModifiers[eStat_Offense]);
 
     for (iStat = 0; iStat < 19; iStat++)
     {
@@ -465,6 +466,101 @@ function LWCE_TInventory LWCE_GetInventory()
     return m_kCEChar.kInventory;
 }
 
+function string GetName(ENameType eType)
+{
+    local string strOut;
+
+    switch (eType)
+    {
+        case eNameType_First:
+            return m_kCESoldier.strFirstName;
+        case eNameType_Last:
+            return m_kCESoldier.strLastName;
+        case eNameType_Nick:
+            if (m_kCESoldier.strNickName != "")
+            {
+                if (Left(m_kCESoldier.strNickName, 1) != "'" && Right(m_kCESoldier.strNickName, 1) != "'")
+                {
+                    return "'" $ m_kCESoldier.strNickName $ "'";
+                }
+
+                return m_kCESoldier.strNickName;
+            }
+
+            return "";
+        case eNameType_Full:
+            if (HasAnyMedal())
+            {
+                return GetName(eNameType_RankFull) @ m_kCESoldier.strLastName;
+            }
+
+            return m_kCESoldier.strFirstName @ m_kCESoldier.strLastName;
+        case eNameType_Rank:
+            if (HasAnyMedal())
+            {
+                return BARRACKS().m_arrMedalNames[MedalCount()];
+            }
+
+            return TACTICAL().GetRankString(m_kCESoldier.iRank);
+        case eNameType_RankFull:
+            return GetName(9) @ m_kCESoldier.strFirstName @ m_kCESoldier.strLastName;
+        case eNameType_FullNick:
+            if (m_kCESoldier.strNickName != "")
+            {
+                return GetName(9) @ m_kCESoldier.strFirstName @ GetName(eNameType_Nick) @ m_kCESoldier.strLastName;
+            }
+
+            return GetName(eNameType_RankFull);
+        case 7: // Rank abbreviation + last name
+            return GetName(9) @ m_kCESoldier.strLastName;
+        case 8:
+            strOut = GetName(eNameType_FullNick) $ "|" $ m_kCEChar.aStats[eStat_HP] $ "|" $ m_kCEChar.aStats[eStat_Mobility] $ "|" $ m_kCEChar.aStats[eStat_Will] $ "|" $ m_kCEChar.aStats[eStat_Offense] $ "|" $ m_kCEChar.aStats[eStat_Defense] $ "|";
+
+            if (!IsATank())
+            {
+                strOut $= "<font size='1'><br></font><font color='#FFD038' size='16'>" $ m_kCESoldier.iXP;
+
+                if (m_kCESoldier.iRank < 7)
+                {
+                    strOut $= "/" $ TACTICAL().GetXPRequired(m_kCESoldier.iRank + 1);
+                }
+
+                strOut $= "</font>";
+            }
+
+            strOut $= "|";
+
+            // Check if this soldier is psionically capable
+            if (!HasAnyMedal() && m_kCESoldier.iPsiRank >= 1 && !HasPerk(`LW_PERK_ID(NeuralDamping)) && !IsAugmented() && !IsATank() && `LWCE_LABS.LWCE_IsResearched('Tech_Xenopsionics'))
+            {
+                strOut $= "<font size='1'><br></font><font color='#A59ED1' size='16'>" $ m_kCESoldier.iPsiXP;
+
+                if (m_kCESoldier.iPsiRank < 6)
+                {
+                    strOut $= "/" $ TACTICAL().GetPsiXPRequired(m_kCESoldier.iPsiRank + 1);
+                }
+
+                strOut $= "</font>";
+            }
+
+            return strOut;
+        case 9: // Returns the soldier's rank abbreviation (either officer or normal rank)
+            if (HasAnyMedal())
+            {
+                return BARRACKS().m_arrMedalNames[MedalCount() + 5];
+            }
+
+            return TACTICAL().GetRankString(m_kCESoldier.iRank, /* bAbbreviated */ true);
+    }
+
+    return "???";
+}
+
+function int GetNumKills()
+{
+    return m_kCESoldier.iNumKills;
+}
+
 function EPerkType GetPerkInClassTree(int branch, int Option, optional bool bIsPsiTree)
 {
     `LWCE_LOG_DEPRECATED_CLS(GetPerkInClassTree);
@@ -481,14 +577,28 @@ function int LWCE_GetPerkInClassTree(int iRow, int iColumn, optional bool bIsPsi
     return `LWCE_PERKS_STRAT.LWCE_GetPerkInTree(self, iRow, iColumn, bIsPsiTree);
 }
 
+function int GetPsiRank()
+{
+    return m_kCESoldier.iPsiRank;
+}
+
+function int GetRank()
+{
+    return m_kCESoldier.iRank;
+}
+
+function GivePerk(int iPerkId)
+{
+    `LWCE_LOG_DEPRECATED_CLS(GivePerk);
+}
+
 /// <summary>
 /// Gives the soldier the specified perk. Note that calling this function alone will not give them
 /// any stat bonuses associated with the perk (unless those stat bonuses are built into the perk itself,
 /// e.g. Sprinter).
 /// </summary>
-function GivePerk(int iPerkId)
+function LWCE_GivePerk(int iPerkId, name SourceType, optional name SourceId = '')
 {
-    local bool bHadGeneMod, bIsGeneMod;
     local LWCE_TIDWithSource kPerkData;
 
     if (HasPerk(iPerkId))
@@ -496,32 +606,20 @@ function GivePerk(int iPerkId)
         return;
     }
 
-    bHadGeneMod = class'LWCE_XComPerkManager'.static.LWCE_HasAnyGeneMod(m_kCEChar);
-
     if (iPerkId < ePerk_MAX)
     {
         ++m_kChar.aUpgrades[iPerkId];
     }
 
     kPerkData.Id = iPerkId;
-    kPerkData.SourceId = 0; // Marks perk as innate to the character
-    kPerkData.SourceType = 0;
+    kPerkData.SourceId = SourceId;
+    kPerkData.SourceType = SourceType;
     m_kCEChar.arrPerks.AddItem(kPerkData);
-
-    bIsGeneMod = class'LWCE_XComPerkManager'.static.LWCE_HasAnyGeneMod(m_kCEChar);
 
     if (iPerkId == `LW_PERK_ID(FireRocket))
     {
         // Remove soldier's pistol and give them a rocket launcher
         EquipRocketLauncher();
-    }
-
-    if (!bHadGeneMod && bIsGeneMod)
-    {
-        if (m_kPawn != none)
-        {
-            XComHumanPawn(m_kPawn).Init(m_kChar, m_kChar.kInventory, m_kSoldier.kAppearance);
-        }
     }
 
     if (m_kPawn != none)
@@ -531,6 +629,10 @@ function GivePerk(int iPerkId)
             m_kPawn.InitPawnPerkContent(m_kChar);
         }
     }
+
+    // Make sure our class icon is up-to-date with the current state of the soldier
+    // TODO: there must be a better spot (spots?) to do this
+    m_kCESoldier.strClassIcon = LWCE_XGFacility_Barracks(BARRACKS()).GetClassIcon(m_kCESoldier.iSoldierClassId, class'LWCE_XComPerkManager'.static.LWCE_HasAnyGeneMod(m_kCEChar), m_kCEChar.bHasPsiGift);
 }
 
 function GivePsiPerks()
@@ -608,7 +710,7 @@ function bool HasPerk(int iPerk)
 
     for (Index = 0; Index < m_kCEChar.arrPerks.Length; Index++)
     {
-        if (m_kCEChar.arrPerks[Index].Id == iPerk && m_kCEChar.arrPerks[Index].SourceType == 0)
+        if (m_kCEChar.arrPerks[Index].Id == iPerk && m_kCEChar.arrPerks[Index].SourceType == 'Innate')
         {
             return true;
         }
@@ -667,6 +769,58 @@ function bool IsAvailableForCovertOps()
     return true;
 }
 
+function bool IsReadyToLevelUp()
+{
+    if (IsATank())
+    {
+        return false;
+    }
+    else
+    {
+        return m_kCESoldier.iXP >= TACTICAL().GetXPRequired(GetRank() + 1);
+    }
+}
+
+function bool IsReadyToPsiLevelUp()
+{
+    if (!HQ().HasFacility(eFacility_PsiLabs))
+    {
+        return false;
+    }
+
+    if (m_bPsiTested)
+    {
+        return false;
+    }
+
+    if (HasPerk(`LW_PERK_ID(NeuralDamping)))
+    {
+        return false;
+    }
+
+    if (GetStatus() != eStatus_Active)
+    {
+        return false;
+    }
+
+    if (IsAugmented())
+    {
+        return false;
+    }
+
+    if (IsATank())
+    {
+        return false;
+    }
+
+    if (HasPerk(`LW_PERK_ID(LeadByExample))) // no officers allowed to be psi
+    {
+        return false;
+    }
+
+    return m_kCESoldier.iPsiXP >= TACTICAL().GetPsiXPRequired(GetPsiRank() + 1);
+}
+
 function LevelUp(optional ESoldierClass eClass, optional out string statsString)
 {
     `LWCE_LOG_DEPRECATED_CLS(LevelUp);
@@ -678,7 +832,7 @@ function LWCE_LevelUp(optional int iClassId)
 
     kBarracks = LWCE_XGFacility_Barracks(BARRACKS());
 
-    if (m_kSoldier.iRank == 0)
+    if (m_kCESoldier.iRank == 0)
     {
         if (iClassId == 0)
         {
@@ -690,25 +844,25 @@ function LWCE_LevelUp(optional int iClassId)
         m_kCEChar.iClassId = iClassId;
     }
 
-    m_kSoldier.iRank += 1;
+    m_kCESoldier.iRank += 1;
 
     if (GetRank() == 3)
     {
         kBarracks.GenerateNewNickname(self);
     }
 
-    if (m_kSoldier.iXP < TACTICAL().GetXPRequired(GetRank()))
+    if (m_kCESoldier.iXP < TACTICAL().GetXPRequired(GetRank()))
     {
-        m_kSoldier.iXP = TACTICAL().GetXPRequired(GetRank());
+        m_kCESoldier.iXP = TACTICAL().GetXPRequired(GetRank());
     }
 
     kBarracks.ReorderRanks();
 
-    if (m_kSoldier.iRank > kBarracks.m_iHighestRank)
+    if (m_kCESoldier.iRank > kBarracks.m_iHighestRank)
     {
-        kBarracks.m_iHighestRank = m_kSoldier.iRank;
+        kBarracks.m_iHighestRank = m_kCESoldier.iRank;
 
-        if (m_kSoldier.iRank == 7)
+        if (m_kCESoldier.iRank == 7)
         {
             STAT_SetStat(eRecap_FirstColonel, Game().GetDays());
         }
@@ -716,9 +870,9 @@ function LWCE_LevelUp(optional int iClassId)
 
     if (IsAugmented())
     {
-        if (m_kSoldier.iRank > kBarracks.m_iHighestMecRank)
+        if (m_kCESoldier.iRank > kBarracks.m_iHighestMecRank)
         {
-            kBarracks.m_iHighestMecRank = m_kSoldier.iRank;
+            kBarracks.m_iHighestMecRank = m_kCESoldier.iRank;
         }
     }
 
@@ -862,13 +1016,32 @@ function RebuildAfterCombat(TTransferSoldier kTransfer)
 
 function LWCE_RebuildAfterCombat(TTransferSoldier kTransfer, LWCE_TTransferSoldier kCETransfer)
 {
+    `LWCE_LOG_CLS("LWCE_RebuildAfterCombat: kCETransfer.kSoldier name is " $ kCETransfer.kSoldier.strFirstName @ kCETransfer.kSoldier.strLastName $ ", with " $ kCETransfer.kSoldier.iXP $ " XP");
+
     m_kChar = kTransfer.kChar;
-    m_kCEChar = kCETransfer.kChar;
     m_kSoldier = kTransfer.kSoldier;
+
+    m_kCEChar = kCETransfer.kChar;
     m_kCESoldier = kCETransfer.kSoldier;
-    m_aStatModifiers[0] = kTransfer.iHPAfterCombat - GetMaxStat(eStat_HP);
-    m_bMIA = kTransfer.bLeftBehind;
-    m_strCauseOfDeath = kTransfer.CauseOfDeathString;
+    m_aStatModifiers[eStat_HP] = kCETransfer.iHPAfterCombat - GetMaxStat(eStat_HP);
+    m_bMIA = kCETransfer.bLeftBehind;
+    m_strCauseOfDeath = kCETransfer.CauseOfDeathString;
+}
+
+function bool RemovePerk(int iPerkId, name nmSourceType, optional name nmSourceId = '')
+{
+    local int Index;
+
+    for (Index = 0; Index < m_kCEChar.arrPerks.Length; Index++)
+    {
+        if (m_kCEChar.arrPerks[Index].Id == iPerkId && m_kCEChar.arrPerks[Index].SourceType == nmSourceType && (nmSourceId == '' || m_kCEChar.arrPerks[Index].SourceId == nmSourceId))
+        {
+            m_kCEChar.arrPerks.Remove(Index, 1);
+            return true;
+        }
+    }
+
+    return false;
 }
 
 function SetHQLocation(int iNewHQLocation, optional bool bForce = false, optional int SlotIdx = -1, optional bool bForceNewPawn = false)
@@ -962,11 +1135,11 @@ function LWCE_SetSoldierClass(int iNewClassId)
             m_bPsiTested = true;
             iOriginalWill = m_kChar.aStats[eStat_Will];
             m_kChar = kGameCore.GetTCharacter(eChar_Soldier);
-            m_kSoldier.iPsiRank = 0;
+            m_kCESoldier.iPsiRank = 0;
 
             ClearPerks();
-            GivePerk(`LW_PERK_ID(OneForAll));
-            GivePerk(`LW_PERK_ID(CombinedArms));
+            LWCE_GivePerk(`LW_PERK_ID(OneForAll), 'Innate');
+            LWCE_GivePerk(`LW_PERK_ID(CombinedArms), 'Innate');
 
             ApplyPermanentStatChanges(`LWCE_STRATCFG(BaseStatsChangeWhenAugmented));
 
@@ -987,7 +1160,7 @@ function LWCE_SetSoldierClass(int iNewClassId)
                 m_kChar.aStats[eStat_Will] += iCarryOverWill;
             }
 
-            m_kSoldier.iPsiXP = 0;
+            m_kCESoldier.iPsiXP = 0;
             kBarracks.UpdateFoundryPerksForSoldier(self);
             kNewLoadout = m_kCEChar.kInventory;
             kNewLoadout.nmArmor = 'Item_BaseAugments';
@@ -997,18 +1170,18 @@ function LWCE_SetSoldierClass(int iNewClassId)
 
             if (GetRank() < 7)
             {
-                m_kSoldier.iXP = kGameCore.GetXPRequired(GetRank() - 1) + int(float(kGameCore.GetXPRequired(GetRank()) - kGameCore.GetXPRequired(GetRank() - 1)) * (float(1) - (float(kGameCore.GetXPRequired(GetRank() + 1) - m_kSoldier.iXP) / float(kGameCore.GetXPRequired(GetRank() + 1) - kGameCore.GetXPRequired(GetRank())))));
+                m_kCESoldier.iXP = kGameCore.GetXPRequired(GetRank() - 1) + int(float(kGameCore.GetXPRequired(GetRank()) - kGameCore.GetXPRequired(GetRank() - 1)) * (float(1) - (float(kGameCore.GetXPRequired(GetRank() + 1) - m_kCESoldier.iXP) / float(kGameCore.GetXPRequired(GetRank() + 1) - kGameCore.GetXPRequired(GetRank())))));
             }
             else
             {
-                m_kSoldier.iXP = kGameCore.GetXPRequired(GetRank() - 1);
+                m_kCESoldier.iXP = kGameCore.GetXPRequired(GetRank() - 1);
             }
 
-            m_kSoldier.iRank -= 1;
+            m_kCESoldier.iRank -= 1;
 
-            if (m_kSoldier.iRank > kBarracks.m_iHighestMecRank)
+            if (m_kCESoldier.iRank > kBarracks.m_iHighestMecRank)
             {
-                kBarracks.m_iHighestMecRank = m_kSoldier.iRank;
+                kBarracks.m_iHighestMecRank = m_kCESoldier.iRank;
             }
 
             if (!IsASpecialSoldier())
@@ -1035,7 +1208,7 @@ function LWCE_SetSoldierClass(int iNewClassId)
             // TODO: this should be more generic since there's no guarantee a tree contains Random Subclass
             iPerkColumn = 2 * Rand(2);
             `LWCE_PERKS_STRAT.TryGetPerkChoiceInTree(kPerkChoice, self, 0, iPerkColumn);
-            GivePerk(kPerkChoice.iPerkId);
+            LWCE_GivePerk(kPerkChoice.iPerkId, 'Innate');
             LWCE_SetSoldierClass(kPerkChoice.iNewClassId);
 
             return;
@@ -1073,6 +1246,7 @@ function LWCE_SetSoldierClass(int iNewClassId)
     CopyFromVanillaCharacter();
 }
 
+// TODO: eventually we'll just deprecate the vanilla character entirely
 protected function CopyFromVanillaCharacter()
 {
     local int Index;
@@ -1096,8 +1270,8 @@ protected function CopyFromVanillaCharacter()
         if (m_kChar.aAbilities[Index] > 0)
         {
             kIdWithSource.Id = Index;
-            kIdWithSource.SourceId = 0;
-            kIdWithSource.SourceType = 0;
+            kIdWithSource.SourceId = '';
+            kIdWithSource.SourceType = 'Innate';
 
             m_kCEChar.arrAbilities.AddItem(kIdWithSource);
         }
@@ -1108,8 +1282,8 @@ protected function CopyFromVanillaCharacter()
         if (m_kChar.aUpgrades[Index] > 0)
         {
             kIdWithSource.Id = Index;
-            kIdWithSource.SourceId = 0;
-            kIdWithSource.SourceType = 0;
+            kIdWithSource.SourceId = '';
+            kIdWithSource.SourceType = 'Innate';
 
             m_kCEChar.arrPerks.AddItem(kIdWithSource);
         }
@@ -1120,8 +1294,8 @@ protected function CopyFromVanillaCharacter()
         if (m_kChar.aProperties[Index] > 0)
         {
             kIdWithSource.Id = Index;
-            kIdWithSource.SourceId = 0;
-            kIdWithSource.SourceType = 0;
+            kIdWithSource.SourceId = '';
+            kIdWithSource.SourceType = 'Innate';
 
             m_kCEChar.arrProperties.AddItem(kIdWithSource);
         }
@@ -1132,8 +1306,8 @@ protected function CopyFromVanillaCharacter()
         if (m_kChar.aTraversals[Index] > 0)
         {
             kIdWithSource.Id = Index;
-            kIdWithSource.SourceId = 0;
-            kIdWithSource.SourceType = 0;
+            kIdWithSource.SourceId = '';
+            kIdWithSource.SourceType = 'Innate';
 
             m_kCEChar.arrTraversals.AddItem(kIdWithSource);
         }
@@ -1190,6 +1364,7 @@ protected function SetCosmeticsByClass()
             break;
     }
 
+    // TODO rewrite to m_kCESoldier
     if (Index != 0)
     {
         if (class'XGTacticalGameCore'.default.HQ_BASE_POWER[Index] >= 1)
@@ -1263,6 +1438,8 @@ protected function bool ShouldItemBeLost()
 protected function SyncCharacterStatsFromVanilla()
 {
     local int Index;
+
+    `LWCE_LOG_CLS("SyncCharacterStatsFromVanilla for " $ GetName(eNameType_Full) $ ": copying vanilla aim " $ m_kChar.aStats[eStat_Offense] $ "; current is " $ m_kCEChar.aStats[eStat_Offense]);
 
     for (Index = 0; Index < eStat_MAX; Index++)
     {

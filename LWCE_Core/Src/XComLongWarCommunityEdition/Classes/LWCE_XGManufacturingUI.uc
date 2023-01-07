@@ -116,11 +116,11 @@ function bool IsNewProject()
     switch (m_iCurrentView)
     {
         case eManView_Item:
-            return m_kCEItemProject.iIndex == -1;
+            return m_kCEItemProject.iIndex == INDEX_NONE;
         case eManView_Facility:
-            return m_kFProject.iIndex == -1;
+            return m_kFProject.iIndex == INDEX_NONE;
         case eManView_Foundry:
-            return m_kCEFoundryProject.iIndex == -1;
+            return m_kCEFoundryProject.iIndex == INDEX_NONE;
         default:
             return false;
     }
@@ -567,7 +567,7 @@ function UpdateManufactureItem()
     }
 
     kWidget.txtProjDuration.iState = eUIState_Warning;
-    kWidget.bCanAdjustQuantity = m_kCEItemProject.ItemName != 'Item_SkeletonKey';
+    kWidget.bCanAdjustQuantity = m_kCEItemProject.ItemName != 'Item_SkeletonKey'; // TODO move to template or maybe just delete
     kWidget.txtEngineers.StrValue = string(m_kCEItemProject.iMaxEngineers);
     kWidget.txtEngineersLabel.StrValue = m_strLabelEngineersAssigned;
     kWidget.txtEngHelp.iButton = eButton_RBumper;
@@ -602,15 +602,12 @@ function UpdateManufactureItem()
     kWidget.txtNotesLabel.StrValue = m_strLabelNotes;
     kWidget.txtNotesLabel.iState = eUIState_Normal;
 
-    if (kItem.IsWeapon() && kItem.GetItemName() != 'Item_SkeletonKey')
+    if (kItem.IsWeapon() && LWCEWeaponTemplate(kItem).HasWeaponProperty(eWP_AnyClass))
     {
-        if (LWCEWeaponTemplate(kItem).HasWeaponProperty(eWP_AnyClass))
-        {
-            kWidget.txtNotes.StrValue @= m_strNoteWeaponAllSoldiers;
-        }
+        kWidget.txtNotes.StrValue @= m_strNoteWeaponAllSoldiers;
     }
 
-    // TODO move to template?
+    // TODO move to template
     if (kItem.GetItemName() == 'Item_Firestorm')
     {
         if (HANGAR().GetFreeHangerSpots(HQ().GetContinent()) < m_kCEItemProject.iQuantity)
@@ -625,7 +622,7 @@ function UpdateManufactureItem()
     else if (kItem.GetItemName() == 'Item_Satellite')
     {
         iSatCap = HQ().m_arrSatellites.Length;
-        iSatCap += STORAGE().GetNumItemsAvailable(eItem_Satellite);
+        iSatCap += LWCE_XGStorage(STORAGE()).LWCE_GetNumItemsAvailable('Item_Satellite');
         iSatCap += kEngineering.GetNumSatellitesBuilding();
 
         // If this is a new project, count the requested quantity towards the cap
