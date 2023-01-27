@@ -241,7 +241,7 @@ function bool HasMovedThisTurn()
 {}
 simulated function bool HasPath()
 {}
-function bool HasVisibleEnemies(optional bool bTwoWayCheck)
+function bool HasVisibleEnemies(optional bool bTwoWayCheck = false)
 {}
 native function HidePodBody();
 simulated function Init()
@@ -384,12 +384,30 @@ function InitPodVisibilityForReveal(){}
 
 auto state Dormant
 {
-	function Activate(optional XGUnit kEnemy){}
+    function Activate(optional XGUnit kEnemy = none)
+    {
+        if (IsAlive())
+        {
+            if (kEnemy != none)
+            {
+                m_kEnemy = kEnemy;
+            }
+
+            `LOG("Activate called: kEnemy = " $ kEnemy);
+            ScriptTrace();
+            GotoState('Active');
+        }
+        else
+        {
+            GotoState('Inactive');
+        }
+    }
+
 	function OnSeeEnemy(XGUnit kEnemy){}
 	function OnHearCall(Vector vSource, XGUnit kSource){}
 
 Begin:
-    stop;                
+    stop;
 }
 state Inactive{}
 state Patrol extends Dormant
@@ -442,7 +460,7 @@ state PatrolReveal extends Patrol
             kNearest.SpawnOnSeenEnemyAction(m_kEnemy);
         }
         return kNearest;
-    }       
+    }
 }
 defaultproperties
 {

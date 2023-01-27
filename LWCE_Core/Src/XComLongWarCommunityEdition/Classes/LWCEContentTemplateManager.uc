@@ -10,14 +10,29 @@ function bool AddContentTemplate(LWCEContentTemplate Data, bool ReplaceDuplicate
     return AddDataTemplate(Data, ReplaceDuplicate);
 }
 
-function LWCEBodyContentTemplate FindBodyTemplate(name DataName)
+function LWCEArmorColorContentTemplate FindArmorColorTemplate(name DataName)
 {
+    return LWCEArmorColorContentTemplate(FindDataTemplate(DataName));
+}
 
+function LWCEArmorKitContentTemplate FindArmorKitTemplate(name DataName)
+{
+    return LWCEArmorKitContentTemplate(FindDataTemplate(DataName));
+}
+
+function LWCEFacialHairContentTemplate FindFacialHairTemplate(name DataName)
+{
+    return LWCEFacialHairContentTemplate(FindDataTemplate(DataName));
 }
 
 function LWCEHairContentTemplate FindHairTemplate(name DataName)
 {
     return LWCEHairContentTemplate(FindDataTemplate(DataName));
+}
+
+function LWCEHairColorContentTemplate FindHairColorTemplate(name DataName)
+{
+    return LWCEHairColorContentTemplate(FindDataTemplate(DataName));
 }
 
 function LWCEHeadContentTemplate FindHeadTemplate(name DataName)
@@ -30,9 +45,54 @@ function LWCEPawnContentTemplate FindPawnTemplate(name DataName)
     return LWCEPawnContentTemplate(FindDataTemplate(DataName));
 }
 
+function LWCERaceTemplate FindRaceTemplate(name DataName)
+{
+    return LWCERaceTemplate(FindDataTemplate(DataName));
+}
+
+function LWCESkinColorContentTemplate FindSkinColorTemplate(name DataName)
+{
+    return LWCESkinColorContentTemplate(FindDataTemplate(DataName));
+}
+
 function LWCEVoiceContentTemplate FindVoiceTemplate(name DataName)
 {
     return LWCEVoiceContentTemplate(FindDataTemplate(DataName));
+}
+
+/**
+ * Finds all armor kits which are usable with the given armor. If nmWeapon and kDefaultKit are provided, then kDefaultKit will be populated with whichever
+ * armor kit is set as the default to go with the given weapon, if any. If multiple armor kits are set this way, which one is used is unspecified.
+ */
+function array<LWCEArmorKitContentTemplate> FindMatchingArmorKits(name nmArmor, optional name nmWeapon, optional out LWCEArmorKitContentTemplate kDefaultKit)
+{
+    local int Index;
+    local LWCEArmorKitContentTemplate ArmorKit;
+    local array<LWCEArmorKitContentTemplate> ArmorKits;
+
+    for (Index = 0; Index < m_arrTemplates.Length; Index++)
+    {
+        ArmorKit = LWCEArmorKitContentTemplate(m_arrTemplates[Index].kTemplate);
+
+        if (ArmorKit == none)
+        {
+            continue;
+        }
+
+        if (ArmorKit.arrSupportedArmors.Find(nmArmor) == INDEX_NONE)
+        {
+            continue;
+        }
+
+        if (nmWeapon != '' && ArmorKit.arrDefaultForWeapons.Find(nmWeapon) != INDEX_NONE)
+        {
+            kDefaultKit = ArmorKit;
+        }
+
+        ArmorKits.AddItem(ArmorKit);
+    }
+
+    return ArmorKits;
 }
 
 function array<LWCEHairContentTemplate> FindMatchingHair(EGender Gender, optional bool bCivilianOnly = false, optional bool bAllowHelmets = false, optional name CustomTag = '')
@@ -50,7 +110,7 @@ function array<LWCEHairContentTemplate> FindMatchingHair(EGender Gender, optiona
             continue;
         }
 
-        if (Hair.Gender != Gender)
+        if (Hair.Gender != Gender && !Hair.bIsHelmet)
         {
             continue;
         }
@@ -158,6 +218,32 @@ function LWCEPawnContentTemplate FindMatchingPawn(ECharacter Character, optional
     return Pawns[0];
 }
 
+function array<LWCESkinColorContentTemplate> FindMatchingSkinColors(name nmRace)
+{
+    local int Index;
+    local LWCESkinColorContentTemplate SkinColor;
+    local array<LWCESkinColorContentTemplate> SkinColors;
+
+    for (Index = 0; Index < m_arrTemplates.Length; Index++)
+    {
+        SkinColor = LWCESkinColorContentTemplate(m_arrTemplates[Index].kTemplate);
+
+        if (SkinColor == none)
+        {
+            continue;
+        }
+
+        if (SkinColor.Race != nmRace)
+        {
+            continue;
+        }
+
+        SkinColors.AddItem(SkinColor);
+    }
+
+    return SkinColors;
+}
+
 function array<LWCEVoiceContentTemplate> FindMatchingVoices(EGender Gender, name Language, optional bool bIsMec = false, optional name CustomTag = '')
 {
     local int Index;
@@ -197,6 +283,90 @@ function array<LWCEVoiceContentTemplate> FindMatchingVoices(EGender Gender, name
     }
 
     return Voices;
+}
+
+function array<LWCEArmorColorContentTemplate> GetArmorColors()
+{
+    local int Index;
+    local LWCEArmorColorContentTemplate ArmorColor;
+    local array<LWCEArmorColorContentTemplate> ArmorColorTemplates;
+
+    for (Index = 0; Index < m_arrTemplates.Length; Index++)
+    {
+        ArmorColor = LWCEArmorColorContentTemplate(m_arrTemplates[Index].kTemplate);
+
+        if (ArmorColor == none)
+        {
+            continue;
+        }
+
+        ArmorColorTemplates.AddItem(ArmorColor);
+    }
+
+    return ArmorColorTemplates;
+}
+
+function array<LWCEFacialHairContentTemplate> GetFacialHairs()
+{
+    local int Index;
+    local LWCEFacialHairContentTemplate FacialHair;
+    local array<LWCEFacialHairContentTemplate> FacialHairTemplates;
+
+    for (Index = 0; Index < m_arrTemplates.Length; Index++)
+    {
+        FacialHair = LWCEFacialHairContentTemplate(m_arrTemplates[Index].kTemplate);
+
+        if (FacialHair == none)
+        {
+            continue;
+        }
+
+        FacialHairTemplates.AddItem(FacialHair);
+    }
+
+    return FacialHairTemplates;
+}
+
+function array<LWCEHairColorContentTemplate> GetHairColors()
+{
+    local int Index;
+    local LWCEHairColorContentTemplate HairColor;
+    local array<LWCEHairColorContentTemplate> HairColorTemplates;
+
+    for (Index = 0; Index < m_arrTemplates.Length; Index++)
+    {
+        HairColor = LWCEHairColorContentTemplate(m_arrTemplates[Index].kTemplate);
+
+        if (HairColor == none)
+        {
+            continue;
+        }
+
+        HairColorTemplates.AddItem(HairColor);
+    }
+
+    return HairColorTemplates;
+}
+
+function array<LWCERaceTemplate> GetRaces()
+{
+    local int Index;
+    local LWCERaceTemplate Race;
+    local array<LWCERaceTemplate> RaceTemplates;
+
+    for (Index = 0; Index < m_arrTemplates.Length; Index++)
+    {
+        Race = LWCERaceTemplate(m_arrTemplates[Index].kTemplate);
+
+        if (Race == none)
+        {
+            continue;
+        }
+
+        RaceTemplates.AddItem(Race);
+    }
+
+    return RaceTemplates;
 }
 
 defaultproperties

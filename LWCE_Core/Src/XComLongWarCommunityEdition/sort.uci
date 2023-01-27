@@ -1,0 +1,30 @@
+// Generates a function named Nm, to sort an array of type T. The expression Cmp must
+// evaluate to a boolean; when Cmp evaluates to true, it indicates that the two elements
+// are out of order and should be swapped. (The two elements to compare will be in scope
+// as arrElements[Index] and arrElements[Index + 1].)
+`define GENERATE_SORT(Nm, T, Cmp)                                      \
+function `{Nm} (out array<`{T}> arrElements)                           \
+{                                                                      \
+    local bool bDidSwap, bShouldSwap;                                  \
+    local int Index;                                                   \
+    local `{T} Temp;                                                   \
+                                                                       \
+    do                                                                 \
+    {                                                                  \
+        bDidSwap = false;                                              \
+                                                                       \
+        for (Index = 0; Index < arrElements.Length - 1; Index++)       \
+        {                                                              \
+            bShouldSwap = `{Cmp};                                      \
+                                                                       \
+            if (bShouldSwap)                                           \
+            {                                                          \
+                Temp = arrElements[Index];                             \
+                arrElements[Index] = arrElements[Index + 1];           \
+                arrElements[Index + 1] = Temp;                         \
+                                                                       \
+                bDidSwap = true;                                       \
+            }                                                          \
+        }                                                              \
+    } until (!bDidSwap);                                               \
+}

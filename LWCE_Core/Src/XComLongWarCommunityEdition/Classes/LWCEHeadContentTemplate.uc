@@ -7,5 +7,3 @@ var config ECharacter Character;
 var config name Race;
 
 var config name CustomTag;
-
-var const localized string strName;

@@ -70,10 +70,11 @@ struct LWCE_TAppearance
     var int iBodyMaterial;
     var int iFlag;
     var int iGender;
-    var Color ArmorTintPrimary;
-    var Color ArmorTintSecondary;
-    var Color HairColor;
-    var Color SkinColor;
+
+    // TODO: deprecate using templates for colors
+    var name nmArmorColor;
+    var name nmHairColor;
+    var name nmSkinColor;
 };
 
 struct LWCE_TCharacter

@@ -1,0 +1,1 @@
+class LWCEArmorColorContentTemplate extends LWCEColorContentTemplate;

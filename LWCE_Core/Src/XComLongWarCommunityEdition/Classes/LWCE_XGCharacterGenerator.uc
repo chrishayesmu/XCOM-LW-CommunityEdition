@@ -1,35 +1,12 @@
 class LWCE_XGCharacterGenerator extends XGCharacterGenerator
     config(LWCECharacters);
 
-struct LWCE_TRaceHairColor
-{
-    var name nmRace;
-    var Color HairColor;
-
-    structdefaultproperties
-    {
-        HairColor=(A=255)
-    }
-};
-
-struct LWCE_TRaceSkinColor
-{
-    var name nmRace;
-    var Color SkinColor;
-
-    structdefaultproperties
-    {
-        SkinColor=(A=255)
-    }
-};
-
 struct LWCE_TDefaultSoldierAppearance
 {
     var int iSoldierClassId;
+    var name nmArmorColor;
     var name nmArmorKit;
     var name nmHair;
-    var Color ArmorTintPrimary;
-    var Color ArmorTintSecondary;
 };
 
 struct LWCE_TNextVoice
@@ -40,8 +17,6 @@ struct LWCE_TNextVoice
     var bool bIsMec;
 };
 
-var config array<LWCE_TRaceHairColor> arrHairColorsByRace;
-var config array<LWCE_TRaceSkinColor> arrSkinColorsByRace;
 var config array<LWCE_TDefaultSoldierAppearance> arrSoldierColors;
 
 var private array<LWCE_TNextVoice> m_arrNextVoices;
@@ -220,7 +195,7 @@ function LWCE_TSoldier LWCE_CreateTSoldier(optional EGender eForceGender, option
     }
 
     // Soldier language: check the game setting for all soldiers speaking the player's language
-    if ((`PROFILESETTINGS != none && `PROFILESETTINGS.Data != none && `PROFILESETTINGS.Data.m_bForeignLanguages) || WorldInfo.NetMode != NM_Standalone)
+    if (`PROFILESETTINGS != none && `PROFILESETTINGS.Data != none && `PROFILESETTINGS.Data.m_bForeignLanguages)
     {
         kSoldier.kAppearance.nmLanguage = LanguageNameByBaseID(GetLanguageByCountry(ECountry(iCountry)));
     }
@@ -252,11 +227,10 @@ function LWCE_TSoldier LWCE_CreateTSoldier(optional EGender eForceGender, option
         kSoldier.kAppearance.nmVoice = LWCE_GetNextVoice(EGender(kSoldier.kAppearance.iGender), kSoldier.kAppearance.nmLanguage, /* bIsAugmented */ false);
     }
 
+    kSoldier.kAppearance.nmArmorColor = DefaultAppearance.nmArmorColor;
     kSoldier.kAppearance.nmArmorKit = DefaultAppearance.nmArmorKit;
-    kSoldier.kAppearance.ArmorTintPrimary = DefaultAppearance.ArmorTintPrimary;
-    kSoldier.kAppearance.ArmorTintSecondary = DefaultAppearance.ArmorTintSecondary;
-    kSoldier.kAppearance.HairColor = ChooseRandomHairColorForRace(kSoldier.kAppearance.nmRace);
-    kSoldier.kAppearance.SkinColor = ChooseRandomSkinColorForRace(kSoldier.kAppearance.nmRace);
+    kSoldier.kAppearance.nmHairColor = ChooseRandomHairColor().GetContentTemplateName();
+    kSoldier.kAppearance.nmSkinColor = ChooseRandomSkinColorForRace(kSoldier.kAppearance.nmRace).GetContentTemplateName();
 
     // TODO add LWCE_GenerateName
     GenerateName(kSoldier.kAppearance.iGender, kSoldier.iCountry, kSoldier.strFirstName, kSoldier.strLastName, RaceBaseIDByName(kSoldier.kAppearance.nmRace));
@@ -332,57 +306,42 @@ function int GetRandomRaceByCountry(int iCountry)
 
 function name LWCE_GetRandomRaceByCountry(int iCountry)
 {
-    return RaceNameByBaseID(super.GetRandomRaceByCountry(iCountry));
+    local array<LWCERaceTemplate> arrTemplates;
+    local int Index;
+    local name nmRace;
+
+    // TODO: define this mapping in country templates later
+    nmRace = RaceNameByBaseID(super.GetRandomRaceByCountry(iCountry));
+
+    arrTemplates = `LWCE_CONTENT_TEMPLATE_MGR.GetRaces();
+
+    for (Index = 0; Index < arrTemplates.Length; Index++)
+    {
+        if (arrTemplates[Index].Race == nmRace)
+        {
+            return arrTemplates[Index].GetContentTemplateName();
+        }
+    }
+
+    return '';
 }
 
-static protected function Color ChooseRandomHairColorForRace(name nmRace)
+static protected function LWCEHairColorContentTemplate ChooseRandomHairColor()
 {
-    local array<Color> arrPossibleHairColors;
+    local array<LWCEHairColorContentTemplate> arrPossibleHairColors;
 
-    arrPossibleHairColors = GetPossibleHairColorsForRace(nmRace);
+    arrPossibleHairColors = `LWCE_CONTENT_TEMPLATE_MGR.GetHairColors();
 
     return arrPossibleHairColors[Rand(arrPossibleHairColors.Length)];
 }
 
-static protected function Color ChooseRandomSkinColorForRace(name nmRace)
+static protected function LWCESkinColorContentTemplate ChooseRandomSkinColorForRace(name nmRace)
 {
-    local array<Color> arrPossibleSkinColors;
+    local array<LWCESkinColorContentTemplate> arrPossibleSkinColors;
 
-    arrPossibleSkinColors = GetPossibleSkinColorsForRace(nmRace);
+    arrPossibleSkinColors = `LWCE_CONTENT_TEMPLATE_MGR.FindMatchingSkinColors(nmRace);
 
     return arrPossibleSkinColors[Rand(arrPossibleSkinColors.Length)];
-}
-
-static function array<Color> GetPossibleHairColorsForRace(name nmRace)
-{
-    local LWCE_TRaceHairColor kHairColorCfg;
-    local array<Color> arrPossibleHairColors;
-
-    foreach default.arrHairColorsByRace(kHairColorCfg)
-    {
-        if (kHairColorCfg.nmRace == '' || kHairColorCfg.nmRace == nmRace)
-        {
-            arrPossibleHairColors.AddItem(kHairColorCfg.HairColor);
-        }
-    }
-
-    return arrPossibleHairColors;
-}
-
-static function array<Color> GetPossibleSkinColorsForRace(name nmRace)
-{
-    local LWCE_TRaceSkinColor kSkinColorCfg;
-    local array<Color> arrPossibleSkinColors;
-
-    foreach default.arrSkinColorsByRace(kSkinColorCfg)
-    {
-        if (kSkinColorCfg.nmRace == '' || kSkinColorCfg.nmRace == nmRace)
-        {
-            arrPossibleSkinColors.AddItem(kSkinColorCfg.SkinColor);
-        }
-    }
-
-    return arrPossibleSkinColors;
 }
 
 /// <summary>

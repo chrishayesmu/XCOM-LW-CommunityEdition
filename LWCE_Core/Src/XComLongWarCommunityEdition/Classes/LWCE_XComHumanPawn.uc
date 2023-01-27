@@ -1,5 +1,7 @@
 class LWCE_XComHumanPawn extends XComHumanPawn;
 
+`include(sort.uci)
+
 // Based on XCOM 2's PawnContentRequest
 struct LWCE_PawnContentRequest
 {
@@ -17,11 +19,17 @@ var LWCE_TAppearance m_kCEAppearance;
 var name m_nmArmor;
 var name m_nmPrimaryWeapon;
 
-var private array<LWCE_PawnContentRequest> m_arrCEPawnContentRequests;
+var array<LWCEArmorColorContentTemplate> m_arrCEArmorColors;
+var array<LWCEArmorKitContentTemplate> m_arrCEArmorKits;
+var array<LWCEFacialHairContentTemplate> m_arrCEFacialHairs;
+var array<LWCEHairContentTemplate> m_arrCEHairs;
+var array<LWCEHairColorContentTemplate> m_arrCEHairColors;
+var array<LWCEHeadContentTemplate> m_arrCEHeads;
+var array<LWCERaceTemplate> m_arrCERaces;
+var array<LWCESkinColorContentTemplate> m_arrCESkinColors;
+var array<LWCEVoiceContentTemplate> m_arrCEVoices;
 
-var private array<LWCEHairContentTemplate> m_arrCEHairs;
-var private array<LWCEHeadContentTemplate> m_arrCEHeads;
-var private array<LWCEVoiceContentTemplate> m_arrCEVoices;
+var private array<LWCE_PawnContentRequest> m_arrCEPawnContentRequests;
 
 delegate OnContentLoadedDelegate(LWCE_PawnContentRequest ContentRequest);
 
@@ -119,13 +127,11 @@ simulated function AttachItem(Actor A, name SocketName, bool bIsRearBackPackItem
 
 simulated function AddKitRequests()
 {
-    local name nmPrimaryWeapon;
     local LWCE_PawnContentRequest kRequest;
     local LWCE_XGUnit GameUnit;
     local LWCE_TCharacter kChar;
 
     GameUnit = LWCE_XGUnit(GetGameUnit());
-    nmPrimaryWeapon = class'LWCE_XGTacticalGameCore'.static.LWCE_GetPrimaryWeapon(kChar.kInventory);
     kChar = GameUnit.LWCE_GetCharacter().GetCharacter();
     m_iRequestKit = -1;
 
@@ -165,7 +171,6 @@ simulated function RequestFullPawnContent()
     local LWCE_PawnContentRequest kRequest;
     local LWCE_XGUnit GameUnit;
     local LWCEContentTemplateManager kTemplateMgr;
-    local XComHairPackageInfo kHairInfo;
 
     GameUnit = LWCE_XGUnit(GetGameUnit());
     kTemplateMgr = `LWCE_CONTENT_TEMPLATE_MGR;
@@ -194,12 +199,12 @@ simulated function RequestFullPawnContent()
             m_arrCEPawnContentRequests.AddItem(kRequest);
         }
 
-        if (m_kCEAppearance.nmBody != '')
+        if (m_kCEAppearance.nmArmorKit != '')
         {
-            `LWCE_LOG_CLS("Getting body template " $ m_kCEAppearance.nmBody);
-            ContentTemplate = kTemplateMgr.FindBodyTemplate(m_kCEAppearance.nmBody);
+            `LWCE_LOG_CLS("Getting armor kit template " $ m_kCEAppearance.nmArmorKit);
+            ContentTemplate = kTemplateMgr.FindArmorKitTemplate(m_kCEAppearance.nmArmorKit);
 
-            kRequest.ContentCategory = 'Body';
+            kRequest.ContentCategory = 'ArmorKit';
             kRequest.Template = ContentTemplate.GetContentTemplateName();
             kRequest.ArchetypeName = ContentTemplate.ArchetypeName;
 
@@ -248,10 +253,7 @@ simulated function RequestFullPawnContent()
             m_arrCEPawnContentRequests.AddItem(kRequest);
         }
 
-        if (!IsInStrategy())
-        {
-            AddKitRequests();
-        }
+        //AddKitRequests();
 
         NumPawnContentRequestsRemaining = m_arrCEPawnContentRequests.Length;
 
@@ -315,6 +317,7 @@ simulated function PawnContentFullyLoaded()
                 break;
             case 'ArmorKit':
                 bLoadedArmorKit = kRequest.kContent != none;
+                `LWCE_LOG_CLS("Armor kit loaded: kRequest.kContent = " $ kRequest.kContent);
                 OnArmorKitLoaded(kRequest.kContent);
                 break;
             case 'Voice':
@@ -389,32 +392,63 @@ simulated function LWCE_SetInventory(const out LWCE_TCharacter inCharacter, cons
 function LWCE_FindPossibleCustomParts(const out LWCE_TCharacter inCharacter)
 {
     local LWCEContentTemplateManager kTemplateMgr;
-
-    m_arrCEHairs.Length = 0;
-    m_arrCEHeads.Length = 0;
-    PossibleArmorKits.Length = 0;
-    m_arrCEVoices.Length = 0;
+    local bool bResetAppearance;
+    local name nmRace;
 
     kTemplateMgr = `LWCE_CONTENT_TEMPLATE_MGR;
 
+    // Handle race first, because many other part types depend on it
+    m_arrCERaces = kTemplateMgr.GetRaces();
+
+    if (m_kCEAppearance.nmRace == '')
+    {
+        m_kCEAppearance.nmRace = m_arrCERaces[Rand(m_arrCERaces.Length)].GetContentTemplateName();
+        bResetAppearance = true;
+
+        `LWCE_LOG_CLS(self $ ": Chose new race " $ m_kCEAppearance.nmRace);
+    }
+
+    nmRace = kTemplateMgr.FindRaceTemplate(m_kCEAppearance.nmRace).Race;
+    `LWCE_LOG_CLS("Soldier's race is " $ m_kCEAppearance.nmRace $ " which resolves to " $ nmRace);
+
+    m_arrCEArmorKits = kTemplateMgr.FindMatchingArmorKits(inCharacter.kInventory.nmArmor); // TODO get default and set if needed
+    m_arrCEFacialHairs = kTemplateMgr.GetFacialHairs();
     m_arrCEHairs = kTemplateMgr.FindMatchingHair(EGender(m_kCEAppearance.iGender), /* bCivilianOnly */ false, /* bAllowHelmets */ true);
-    m_arrCEHeads = kTemplateMgr.FindMatchingHeads(ECharacter(m_kCEChar.iCharacterType), m_kCEAppearance.nmRace, EGender(m_kCEAppearance.iGender));
+    m_arrCEHeads = kTemplateMgr.FindMatchingHeads(ECharacter(m_kCEChar.iCharacterType), nmRace, EGender(m_kCEAppearance.iGender));
     m_arrCEVoices = kTemplateMgr.FindMatchingVoices(EGender(m_kCEAppearance.iGender), m_kCEAppearance.nmLanguage, inCharacter.bIsAugmented);
 
-    // Armor kit -1 represents the default armor kit, which changes based on armor + weapon combo
-    // TODO replace
-    PossibleArmorKits.AddItem(-1);
+    m_arrCEArmorColors = kTemplateMgr.GetArmorColors();
+    m_arrCEHairColors = kTemplateMgr.GetHairColors();
+    m_arrCESkinColors = kTemplateMgr.FindMatchingSkinColors(nmRace);
 
-    if (inCharacter.bIsAugmented && inCharacter.kInventory.nmArmor != 'Item_BaseAugments')
+    // If we've just changed race or gender, some of our appearance may be invalid. If that's the case, pick replacements at random.
+    if (m_kCEAppearance.nmHaircut == '')
     {
-        // TODO modify these?
-        PossibleArmorKits.AddItem(0);
-        PossibleArmorKits.AddItem(1);
-        PossibleArmorKits.AddItem(2);
+        m_kCEAppearance.nmHaircut = m_arrCEHairs[Rand(m_arrCEHairs.Length)].GetContentTemplateName();
+        bResetAppearance = true;
     }
-    else
+
+    if (m_kCEAppearance.nmHead == '')
     {
-        `LWCE_CONTENT_MGR.GetPossibleArmorKits(inCharacter.kInventory.nmArmor, PossibleArmorKits);
+        m_kCEAppearance.nmHead = m_arrCEHeads[Rand(m_arrCEHeads.Length)].GetContentTemplateName();
+        bResetAppearance = true;
+    }
+
+    if (m_kCEAppearance.nmSkinColor == '')
+    {
+        m_kCEAppearance.nmSkinColor = m_arrCESkinColors[Rand(m_arrCESkinColors.Length)].GetContentTemplateName();
+        bResetAppearance = true;
+    }
+
+    if (m_kCEAppearance.nmVoice == '')
+    {
+        m_kCEAppearance.nmVoice = m_arrCEVoices[Rand(m_arrCEVoices.Length)].GetContentTemplateName();
+        bResetAppearance = true;
+    }
+
+    if (bResetAppearance)
+    {
+        LWCE_SetAppearance(m_kCEAppearance);
     }
 }
 
@@ -438,7 +472,6 @@ function InHQ_OnArmorLoaded(Object ArmorArchetype, int ContentId, int SubID)
     local SkeletalMesh BodyMesh, WeaponMesh;
     local XComHumanPawn PawnArchetype;
     local XComLinearColorPalette ArmorTintPalette;
-    local XComUnitPackageInfo UnitInfo;
 
     `LWCE_LOG_CLS("Loaded armor archetype " $ ArmorArchetype $ ". ContentId = " $ ContentId $ ", SubID = " $ SubID);
 
@@ -579,6 +612,147 @@ simulated event PostInitAnimTree(SkeletalMeshComponent SkelComp)
     }
 }
 
+simulated function SetArmorDeco(int DecoIdx)
+{
+    `LWCE_LOG_DEPRECATED_CLS(SetArmorDeco);
+}
+
+simulated function LWCE_SetArmorDeco(name nmArmorKit)
+{
+    m_kCEAppearance.nmArmorKit = nmArmorKit;
+
+    if (IsA('XComMecPawn'))
+    {
+        UpdateAllMeshMaterials();
+    }
+
+    LWCE_SetAppearance(m_kCEAppearance);
+}
+
+simulated function SetArmorTint(int TintIdx)
+{
+    `LWCE_LOG_DEPRECATED_CLS(SetArmorTint);
+}
+
+simulated function LWCE_SetArmorTint(name nmArmorColor)
+{
+    m_kCEAppearance.nmArmorColor = nmArmorColor;
+    UpdateAllMeshMaterials();
+}
+
+// There is no non-LWCE SetGender, but this keeps it consistent with other functions
+simulated function LWCE_SetGender(int iGender)
+{
+    m_kCEAppearance.iGender = iGender;
+
+    // Invalidate fields that are gender-dependent
+    m_kCEAppearance.nmHaircut = '';
+    m_kCEAppearance.nmHead = '';
+    m_kCEAppearance.nmVoice = '';
+
+    // Refresh the possible parts for this pawn. Don't bother calling LWCE_SetAppearance, that will
+    // be done automatically in LWCE_FindPossibleCustomParts after it replaces the newly-blank fields.
+    LWCE_FindPossibleCustomParts(m_kCEChar);
+}
+
+simulated function SetFacialHair(int PresetIdx)
+{
+    `LWCE_LOG_DEPRECATED_CLS(SetFacialHair);
+}
+
+simulated function LWCE_SetFacialHair(name nmFacialHair)
+{
+    if (m_kCEAppearance.iGender == eGender_Male)
+    {
+        m_kCEAppearance.nmFacialHair = nmFacialHair;
+        UpdateMeshMaterials(m_kHeadMeshComponent);
+    }
+}
+
+simulated function SetHair(int HairId)
+{
+    `LWCE_LOG_DEPRECATED_CLS(SetHair);
+}
+
+simulated function LWCE_SetHair(name nmHaircut)
+{
+    m_kCEAppearance.nmHaircut = nmHaircut;
+    LWCE_SetAppearance(m_kCEAppearance);
+}
+
+simulated function SetHairColor(int ColorIdx)
+{
+    `LWCE_LOG_DEPRECATED_CLS(SetHairColor);
+}
+
+simulated function LWCE_SetHairColor(name nmHairColor)
+{
+    m_kCEAppearance.nmHairColor = nmHairColor;
+    LWCE_SetAppearance(m_kCEAppearance);
+}
+
+simulated function SetHead(int HeadId)
+{
+    `LWCE_LOG_DEPRECATED_CLS(SetHead);
+}
+
+simulated function LWCE_SetHead(name nmHead)
+{
+    m_kCEAppearance.nmHead = nmHead;
+    LWCE_SetAppearance(m_kCEAppearance);
+}
+
+simulated function SetRace(ECharacterRace Race)
+{
+    `LWCE_LOG_DEPRECATED_CLS(SetRace);
+}
+
+simulated function LWCE_SetRace(name nmRace)
+{
+    m_kCEAppearance.nmRace = nmRace;
+
+    // Invalidate fields that are race-dependent
+    m_kCEAppearance.nmHead = '';
+    m_kCEAppearance.nmSkinColor = '';
+
+    // Update possible parts and trigger replacements of newly-invalid parts
+    LWCE_FindPossibleCustomParts(m_kCEChar);
+}
+
+simulated function SetSkinColor(int ColorIdx)
+{
+    `LWCE_LOG_DEPRECATED_CLS(SetSkinColor);
+}
+
+simulated function LWCE_SetSkinColor(name nmSkinColor)
+{
+    m_kCEAppearance.nmSkinColor = nmSkinColor;
+    UpdateMeshMaterials(m_kHeadMeshComponent);
+    UpdateMeshMaterials(Mesh);
+}
+
+simulated function SetVoice(ECharacterVoice NewVoice)
+{
+    `LWCE_LOG_DEPRECATED_CLS(SetVoice);
+}
+
+simulated function LWCE_SetVoice(name nmNewVoice)
+{
+    bShouldSpeak = true;
+    m_kCEAppearance.nmVoice = nmNewVoice;
+    LWCE_SetAppearance(m_kCEAppearance);
+}
+
+simulated function SetVoiceSilently(ECharacterVoice NewVoice)
+{
+    `LWCE_LOG_DEPRECATED_CLS(SetVoiceSilently);
+}
+
+simulated function LWCE_SetVoiceSilently(name nmNewVoice)
+{
+    m_kCEAppearance.nmVoice = nmNewVoice;
+}
+
 simulated function SetupForMatinee(optional Actor MatineeBase, optional bool bDisableFootIK, optional bool bDisableGenderBlender)
 {
     PrepForMatinee();
@@ -595,31 +769,75 @@ simulated function SetupForMatinee(optional Actor MatineeBase, optional bool bDi
 simulated function UpdateArmorMaterial(MeshComponent MeshComp, MaterialInstanceConstant MIC)
 {
     local LinearColor ParamColor;
+    local LWCEColorContentTemplate kTemplate;
 
-    ParamColor = ColorToLinearColor(m_kCEAppearance.ArmorTintPrimary);
-    MIC.GetVectorParameterValue('CMOD', ParamColor);
+    kTemplate = `LWCE_CONTENT_TEMPLATE_MGR.FindArmorColorTemplate(m_kCEAppearance.nmArmorColor);
 
-    ParamColor = ColorToLinearColor(m_kCEAppearance.ArmorTintSecondary);
-    MIC.GetVectorParameterValue('CMODB', ParamColor);
+    if (kTemplate != none)
+    {
+        `LWCE_LOG_CLS("Setting primary color to " $ kTemplate.PrimaryColor.R $ ", " $ kTemplate.PrimaryColor.G $ ", " $ kTemplate.PrimaryColor.B $ " and secondary to " $ kTemplate.SecondaryColor.R $ ", " $ kTemplate.SecondaryColor.G $ ", " $ kTemplate.SecondaryColor.B);
+        ParamColor = ColorToLinearColor(kTemplate.PrimaryColor);
+        MIC.SetVectorParameterValue('CMOD', ParamColor);
+
+        ParamColor = ColorToLinearColor(kTemplate.SecondaryColor);
+        MIC.SetVectorParameterValue('CMODB', ParamColor);
+    }
+    else
+    {
+        ParamColor = MakeLinearColor(1.0f, 1.0f, 1.0f, 0.0f);
+
+        MIC.SetVectorParameterValue('CMOD', ParamColor);
+        MIC.SetVectorParameterValue('CMODB', ParamColor);
+    }
+}
+
+simulated function UpdateHairMaterial(MaterialInstanceConstant MIC)
+{
+    local LWCEColorContentTemplate kTemplate;
+    local LinearColor ParamColor;
+
+    kTemplate = `LWCE_CONTENT_TEMPLATE_MGR.FindHairColorTemplate(m_kCEAppearance.nmHairColor);
+    ParamColor = ColorToLinearColor(kTemplate.PrimaryColor);
+    MIC.SetVectorParameterValue('ColorMod', ParamColor);
 }
 
 simulated function UpdateSkinMaterial(MaterialInstanceConstant MIC, bool bHasHair)
 {
     local LinearColor ParamColor;
-    local FacialHairPreset FacialHair;
+    local LWCEColorContentTemplate kTemplate;
+    local LWCEFacialHairContentTemplate kFacialHair;
+    local LWCEContentTemplateManager kTemplateMgr;
 
-    ParamColor = ColorToLinearColor(m_kCEAppearance.SkinColor);
+    kTemplateMgr = `LWCE_CONTENT_TEMPLATE_MGR;
+
+    kTemplate = kTemplateMgr.FindSkinColorTemplate(m_kCEAppearance.nmSkinColor);
+    ParamColor = ColorToLinearColor(kTemplate.PrimaryColor);
     MIC.SetVectorParameterValue('SkinColor', ParamColor);
 
-    ParamColor = ColorToLinearColor(m_kCEAppearance.HairColor);
+    kTemplate = kTemplateMgr.FindHairColorTemplate(m_kCEAppearance.nmHairColor);
+    ParamColor = ColorToLinearColor(kTemplate.PrimaryColor);
     MIC.SetVectorParameterValue('HairColor', ParamColor);
 
-    // TODO: add facial hair to m_kCEAppearance and rewrite this
-    if (m_kAppearance.iGender == eGender_Male && bHasHair && m_kAppearance.iFacialHair != -1)
+    if (m_kCEAppearance.iGender == eGender_Male && bHasHair && m_kCEAppearance.nmFacialHair != '')
     {
-        FacialHair = `CONTENTMGR.FacialHairPresets[m_kAppearance.iFacialHair];
-        MIC.SetScalarParameterValue('UVOffset', FacialHair.U);
-        MIC.SetVectorParameterValue('ChannelMask', FacialHair.Mask);
+        kFacialHair = kTemplateMgr.FindFacialHairTemplate(m_kCEAppearance.nmFacialHair);
+        ParamColor = ColorToLinearColor(kFacialHair.Mask);
+
+        `LWCE_LOG_CLS("Using facial hair " $ m_kCEAppearance.nmFacialHair $ " and setting UVOffset to " $ kFacialHair.UVOffset $ ", ChannelMask to " $ `COLORTOSTR(ParamColor));
+
+        MIC.SetScalarParameterValue('UVOffset', kFacialHair.UVOffset);
+        MIC.SetVectorParameterValue('ChannelMask', ParamColor);
+    }
+    else
+    {
+        // Reset to no facial hair
+        ParamColor.A = 1.0f;
+        ParamColor.R = 0.0f;
+        ParamColor.G = 0.0f;
+        ParamColor.B = 1.0f;
+
+        MIC.SetScalarParameterValue('UVOffset', 0.0f);
+        MIC.SetVectorParameterValue('ChannelMask', ParamColor);
     }
 }
 
@@ -705,6 +923,7 @@ state CharacterCustomization
 
     simulated function OnVoiceLoaded(Object VoiceArchetype)
     {
+        `LWCE_LOG_CLS("Loaded voice archetype " $ VoiceArchetype);
         super.OnVoiceLoaded(VoiceArchetype);
     }
 
@@ -724,42 +943,11 @@ state CharacterCustomization
     }
 }
 
-/*
-defaultproperties
-{
-    CollisionComponent=none
-	CylinderComponent=none
-	LightEnvironment=none
-	Mesh=none
-	RangeIndicator=none
-	MindMergeFX_Send=none
-	MindMergeFX_Receive=none
-	MindFrayFX_Receive=none
-	MindControlFX_Receive=none
-	MindControlFX_Send=none
-	PsiPanicFX_Receive=none
-	PsiInspiredFX_Receive=none
-	DisablingShot_Receive=none
-	StunShot_Receive=none
-	TracerBeamedFX=none
-	PoisonedByChryssalidFX=none
-	PoisonedByThinmanFX=none
-	ElectropulsedFX=none
-	Components(0)=none
-	Components(1)=none
-	Components(2)=none
-	Components(3)=none
-	Components(4)=none
-	Components(5)=none
-	Components(6)=none
-	Components(7)=none
-	Components(8)=none
-	Components(9)=none
-	Components(10)=none
-	Components(11)=none
-	Components(12)=none
-	Components(13)=none
-	Components(14)=none
-	Components(15)=none
-}
- */
+`GENERATE_SORT(SortArmorKitTemplates,   LWCEArmorKitContentTemplate,   arrElements[Index].DisplayName > arrElements[Index + 1].DisplayName)
+`GENERATE_SORT(SortHairTemplates,       LWCEHairContentTemplate,       arrElements[Index].DisplayName > arrElements[Index + 1].DisplayName)
+`GENERATE_SORT(SortHeadTemplates,       LWCEHeadContentTemplate,       arrElements[Index].DisplayName > arrElements[Index + 1].DisplayName)
+`GENERATE_SORT(SortRaceTemplates,       LWCERaceTemplate,              arrElements[Index].DisplayName > arrElements[Index + 1].DisplayName)
+`GENERATE_SORT(SortVoiceTemplates,      LWCEVoiceContentTemplate,      arrElements[Index].DisplayName > arrElements[Index + 1].DisplayName)
+`GENERATE_SORT(SortArmorColorTemplates, LWCEArmorColorContentTemplate, arrElements[Index].DisplayName > arrElements[Index + 1].DisplayName)
+`GENERATE_SORT(SortHairColorTemplates,  LWCEHairColorContentTemplate,  arrElements[Index].DisplayName > arrElements[Index + 1].DisplayName)
+`GENERATE_SORT(SortSkinColorTemplates,  LWCESkinColorContentTemplate,  arrElements[Index].DisplayName > arrElements[Index + 1].DisplayName)

@@ -4,6 +4,8 @@ class LWCEContentTemplate extends LWCEDataTemplate
 
 var config string ArchetypeName;
 
+var localized string DisplayName;
+
 function name GetContentTemplateName()
 {
     return DataName;

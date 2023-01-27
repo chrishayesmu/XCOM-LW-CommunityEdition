@@ -1,0 +1,1 @@
+class LWCEHairColorContentTemplate extends LWCEColorContentTemplate;

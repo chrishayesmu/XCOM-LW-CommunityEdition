@@ -36,6 +36,7 @@ m_strPromotionAvailable="Can Promote"
 m_strGenderLabel="GENDER"
 m_strGenderMale="Male"
 m_strGenderFemale="Female"
+m_strNoContent="None"
 
 [LWCE_XGPendingRequestsUI]
 m_strDefenseIncrease="<XGParam:StrValue0/>: +<XGParam:IntValue0/> Defense"
@@ -2726,3 +2727,1448 @@ strName="Xenopsionics"
 strSummary="\"Our studies of the Sectoid's abilities to manipulate reality by thought alone has yielded a surprising result: Humans, with the proper training and technological aids, should be able to do the same. Pursuing this project may open an entirely new world of human experience.\""
 strCodeName="Backfire"
 strReport="A thousand rumors and charlatans over the centuries, and yet, in a matter of weeks, we have proven it is true: Humans, with suitable training and technological assistance, can manipulate reality by thought alone. We are still arguing whether to call this new branch of human experience psionics or noetics, but one thing is certain: With a suitable investment of resources, we can begin training some of our talented soldiers in specialized techniques to assist them on the battlefield."
+
+[Race_African LWCERaceTemplate]
+DisplayName=African
+
+[Race_Asian LWCERaceTemplate]
+DisplayName=Asian
+
+[Race_Caucasian LWCERaceTemplate]
+DisplayName=Caucasian
+
+[Race_Hispanic LWCERaceTemplate]
+DisplayName=Hispanic
+
+[ArmorColor_0 LWCEArmorColorContentTemplate]
+DisplayName="Color 01"
+
+[ArmorColor_1 LWCEArmorColorContentTemplate]
+DisplayName="Color 02"
+
+[ArmorColor_2 LWCEArmorColorContentTemplate]
+DisplayName="Color 03"
+
+[ArmorColor_3 LWCEArmorColorContentTemplate]
+DisplayName="Color 04"
+
+[ArmorColor_4 LWCEArmorColorContentTemplate]
+DisplayName="Color 05"
+
+[ArmorColor_5 LWCEArmorColorContentTemplate]
+DisplayName="Color 06"
+
+[ArmorColor_6 LWCEArmorColorContentTemplate]
+DisplayName="Color 07"
+
+[ArmorColor_7 LWCEArmorColorContentTemplate]
+DisplayName="Color 08"
+
+[ArmorColor_8 LWCEArmorColorContentTemplate]
+DisplayName="Color 09"
+
+[ArmorColor_9 LWCEArmorColorContentTemplate]
+DisplayName="Color 10"
+
+[ArmorColor_10 LWCEArmorColorContentTemplate]
+DisplayName="Color 11"
+
+[ArmorColor_11 LWCEArmorColorContentTemplate]
+DisplayName="Color 12"
+
+[ArmorColor_12 LWCEArmorColorContentTemplate]
+DisplayName="Color 13"
+
+[ArmorColor_13 LWCEArmorColorContentTemplate]
+DisplayName="Color 14"
+
+[ArmorColor_14 LWCEArmorColorContentTemplate]
+DisplayName="Color 15"
+
+[ArmorColor_15 LWCEArmorColorContentTemplate]
+DisplayName="Color 16"
+
+[ArmorColor_16 LWCEArmorColorContentTemplate]
+DisplayName="Color 17"
+
+[ArmorColor_17 LWCEArmorColorContentTemplate]
+DisplayName="Color 18"
+
+[ArmorColor_18 LWCEArmorColorContentTemplate]
+DisplayName="Color 19"
+
+[ArmorColor_19 LWCEArmorColorContentTemplate]
+DisplayName="Color 20"
+
+[ArmorColor_20 LWCEArmorColorContentTemplate]
+DisplayName="Color 21"
+
+[ArmorColor_21 LWCEArmorColorContentTemplate]
+DisplayName="Color 22"
+
+[ArmorColor_22 LWCEArmorColorContentTemplate]
+DisplayName="Color 23"
+
+[ArmorColor_23 LWCEArmorColorContentTemplate]
+DisplayName="Color 24"
+
+[ArmorColor_24 LWCEArmorColorContentTemplate]
+DisplayName="Color 25"
+
+[ArmorColor_25 LWCEArmorColorContentTemplate]
+DisplayName="Color 26"
+
+[ArmorColor_26 LWCEArmorColorContentTemplate]
+DisplayName="Color 27"
+
+[ArmorColor_27 LWCEArmorColorContentTemplate]
+DisplayName="Color 28"
+
+[ArmorColor_28 LWCEArmorColorContentTemplate]
+DisplayName="Color 29"
+
+[ArmorColor_29 LWCEArmorColorContentTemplate]
+DisplayName="Color 30"
+
+[ArmorColor_30 LWCEArmorColorContentTemplate]
+DisplayName="Color 31"
+
+[ArmorColor_31 LWCEArmorColorContentTemplate]
+DisplayName="Color 32"
+
+[ArmorKitContent_Deco_Carapace0 LWCEArmorKitContentTemplate]
+DisplayName="Advanced Armor (Medium) 1"
+
+[ArmorKitContent_Deco_Carapace1 LWCEArmorKitContentTemplate]
+DisplayName="Advanced Armor (Medium) 2"
+
+[ArmorKitContent_Deco_Carapace2 LWCEArmorKitContentTemplate]
+DisplayName="Advanced Armor (Medium) 3"
+
+[ArmorKitContent_Deco_Corsair0 LWCEArmorKitContentTemplate]
+DisplayName="Power Armor (Light) 1"
+
+[ArmorKitContent_Deco_Corsair1 LWCEArmorKitContentTemplate]
+DisplayName="Power Armor (Light) 2"
+
+[ArmorKitContent_Deco_Corsair2 LWCEArmorKitContentTemplate]
+DisplayName="Power Armor (Light) 3"
+
+[ArmorKitContent_Deco_Flight0 LWCEArmorKitContentTemplate]
+DisplayName="Flight 1"
+
+[ArmorKitContent_Deco_Flight1 LWCEArmorKitContentTemplate]
+DisplayName="Flight 2"
+
+[ArmorKitContent_Deco_Kevlar0 LWCEArmorKitContentTemplate]
+DisplayName="Kevlar 1"
+
+[ArmorKitContent_Deco_Kevlar1 LWCEArmorKitContentTemplate]
+DisplayName="Kevlar 2"
+
+[ArmorKitContent_Deco_Psi0 LWCEArmorKitContentTemplate]
+DisplayName="Psi 1"
+
+[ArmorKitContent_Deco_Psi1 LWCEArmorKitContentTemplate]
+DisplayName="Psi 2"
+
+[ArmorKitContent_Deco_Shadow0 LWCEArmorKitContentTemplate]
+DisplayName="Advanced Armor (Light)"
+
+[ArmorKitContent_Deco_Titan0 LWCEArmorKitContentTemplate]
+DisplayName="Power Armor (Medium) 1"
+
+[ArmorKitContent_Deco_Titan1 LWCEArmorKitContentTemplate]
+DisplayName="Power Armor (Medium) 2"
+
+[ArmorKitContent_T1_AR_Medium LWCEArmorKitContentTemplate]
+DisplayName="Rifle (Kevlar)"
+
+[ArmorKitContent_T2_AR_Light LWCEArmorKitContentTemplate]
+DisplayName="Rifle (Light Advanced Armor)"
+
+[ArmorKitContent_T2_AR_Medium LWCEArmorKitContentTemplate]
+DisplayName="Rifle (Medium Advanced Armor)"
+
+[ArmorKitContent_T3_AR_Light LWCEArmorKitContentTemplate]
+DisplayName="Rifle (Light Power Armor)"
+
+[ArmorKitContent_T3_AR_Medium LWCEArmorKitContentTemplate]
+DisplayName="Rifle (Heavy Power Armor)"
+
+[ArmorKitContent_T1_LaserAR_Medium LWCEArmorKitContentTemplate]
+DisplayName="Laser Rifle (Kevlar)"
+
+[ArmorKitContent_T2_LaserAR_Light LWCEArmorKitContentTemplate]
+DisplayName="Laser Rifle (Light Advanced Armor)"
+
+[ArmorKitContent_T2_LaserAR_Medium LWCEArmorKitContentTemplate]
+DisplayName="Laser Rifle (Medium Advanced Armor)"
+
+[ArmorKitContent_T3_LaserAR_Light LWCEArmorKitContentTemplate]
+DisplayName="Laser Rifle (Light Power Armor)"
+
+[ArmorKitContent_T3_LaserAR_Medium LWCEArmorKitContentTemplate]
+DisplayName="Laser Rifle (Heavy Power Armor)"
+
+[ArmorKitContent_T1_PlasmaAR_Medium LWCEArmorKitContentTemplate]
+DisplayName="Plasma Rifle (Kevlar)"
+
+[ArmorKitContent_T2_PlasmaAR_Light LWCEArmorKitContentTemplate]
+DisplayName="Plasma Rifle (Light Advanced Armor)"
+
+[ArmorKitContent_T2_PlasmaAR_Medium LWCEArmorKitContentTemplate]
+DisplayName="Plasma Rifle (Medium Advanced Armor)"
+
+[ArmorKitContent_T3_PlasmaAR_Light LWCEArmorKitContentTemplate]
+DisplayName="Plasma Rifle (Light Power Armor)"
+
+[ArmorKitContent_T3_PlasmaAR_Medium LWCEArmorKitContentTemplate]
+DisplayName="Plasma Rifle (Heavy Power Armor)"
+
+[ArmorKitContent_T1_LMG_Medium LWCEArmorKitContentTemplate]
+DisplayName="MG (Kevlar)"
+
+[ArmorKitContent_T2_LMG_Light LWCEArmorKitContentTemplate]
+DisplayName="MG (Light Advanced Armor)"
+
+[ArmorKitContent_T2_LMG_Medium LWCEArmorKitContentTemplate]
+DisplayName="MG (Medium Advanced Armor)"
+
+[ArmorKitContent_T3_LMG_Light LWCEArmorKitContentTemplate]
+DisplayName="MG (Light Power Armor)"
+
+[ArmorKitContent_T3_LMG_Medium LWCEArmorKitContentTemplate]
+DisplayName="MG (Heavy Power Armor)"
+
+[ArmorKitContent_T1_LaserLMG_Medium LWCEArmorKitContentTemplate]
+DisplayName="Laser MG (Kevlar)"
+
+[ArmorKitContent_T2_LaserLMG_Light LWCEArmorKitContentTemplate]
+DisplayName="Laser MG (Light Advanced Armor)"
+
+[ArmorKitContent_T2_LaserLMG_Medium LWCEArmorKitContentTemplate]
+DisplayName="Laser MG (Medium Advanced Armor)"
+
+[ArmorKitContent_T3_LaserLMG_Light LWCEArmorKitContentTemplate]
+DisplayName="Laser MG (Light Power Armor)"
+
+[ArmorKitContent_T3_LaserLMG_Medium LWCEArmorKitContentTemplate]
+DisplayName="Laser MG (Heavy Power Armor)"
+
+[ArmorKitContent_T1_PlasmaLMG_Medium LWCEArmorKitContentTemplate]
+DisplayName="Plasma MG (Kevlar)"
+
+[ArmorKitContent_T2_PlasmaLMG_Light LWCEArmorKitContentTemplate]
+DisplayName="Plasma MG (Light Advanced Armor)"
+
+[ArmorKitContent_T2_PlasmaLMG_Medium LWCEArmorKitContentTemplate]
+DisplayName="Plasma MG (Medium Advanced Armor)"
+
+[ArmorKitContent_T3_PlasmaLMG_Light LWCEArmorKitContentTemplate]
+DisplayName="Plasma MG (Light Power Armor)"
+
+[ArmorKitContent_T3_PlasmaLMG_Medium LWCEArmorKitContentTemplate]
+DisplayName="Plasma MG (Heavy Power Armor)"
+
+[ArmorKitContent_T1_Shotgun_Medium LWCEArmorKitContentTemplate]
+DisplayName="Shotgun (Kevlar)"
+
+[ArmorKitContent_T2_Shotgun_Light LWCEArmorKitContentTemplate]
+DisplayName="Shotgun (Light Advanced Armor)"
+
+[ArmorKitContent_T2_Shotgun_Medium LWCEArmorKitContentTemplate]
+DisplayName="Shotgun (Medium Advanced Armor)"
+
+[ArmorKitContent_T3_Shotgun_Light LWCEArmorKitContentTemplate]
+DisplayName="Shotgun (Light Power Armor)"
+
+[ArmorKitContent_T3_Shotgun_Medium LWCEArmorKitContentTemplate]
+DisplayName="Shotgun (Heavy Power Armor)"
+
+[ArmorKitContent_T1_LaserShotgun_Medium LWCEArmorKitContentTemplate]
+DisplayName="Laser Shotgun (Kevlar)"
+
+[ArmorKitContent_T2_LaserShotgun_Light LWCEArmorKitContentTemplate]
+DisplayName="Laser Shotgun (Light Advanced Armor)"
+
+[ArmorKitContent_T2_LaserShotgun_Medium LWCEArmorKitContentTemplate]
+DisplayName="Laser Shotgun (Medium Advanced Armor)"
+
+[ArmorKitContent_T3_LaserShotgun_Light LWCEArmorKitContentTemplate]
+DisplayName="Laser Shotgun (Light Power Armor)"
+
+[ArmorKitContent_T3_LaserShotgun_Medium LWCEArmorKitContentTemplate]
+DisplayName="Laser Shotgun (Heavy Power Armor)"
+
+[ArmorKitContent_T1_PlasmaShotgun_Medium LWCEArmorKitContentTemplate]
+DisplayName="Plasma Shotgun (Kevlar)"
+
+[ArmorKitContent_T2_PlasmaShotgun_Light LWCEArmorKitContentTemplate]
+DisplayName="Plasma Shotgun (Light Advanced Armor)"
+
+[ArmorKitContent_T2_PlasmaShotgun_Medium LWCEArmorKitContentTemplate]
+DisplayName="Plasma Shotgun (Medium Advanced Armor)"
+
+[ArmorKitContent_T3_PlasmaShotgun_Light LWCEArmorKitContentTemplate]
+DisplayName="Plasma Shotgun (Light Power Armor)"
+
+[ArmorKitContent_T3_PlasmaShotgun_Medium LWCEArmorKitContentTemplate]
+DisplayName="Plasma Shotgun (Heavy Power Armor)"
+
+[ArmorKitContent_T1_Sniper_Medium LWCEArmorKitContentTemplate]
+DisplayName="Sniper (Kevlar)"
+
+[ArmorKitContent_T2_Sniper_Light LWCEArmorKitContentTemplate]
+DisplayName="Sniper (Light Advanced Armor)"
+
+[ArmorKitContent_T2_Sniper_Medium LWCEArmorKitContentTemplate]
+DisplayName="Sniper (Medium Advanced Armor)"
+
+[ArmorKitContent_T3_Sniper_Light LWCEArmorKitContentTemplate]
+DisplayName="Sniper (Light Power Armor)"
+
+[ArmorKitContent_T3_Sniper_Medium LWCEArmorKitContentTemplate]
+DisplayName="Sniper (Heavy Power Armor)"
+
+[ArmorKitContent_T1_LaserSniper_Medium LWCEArmorKitContentTemplate]
+DisplayName="Laser Sniper (Kevlar)"
+
+[ArmorKitContent_T2_LaserSniper_Light LWCEArmorKitContentTemplate]
+DisplayName="Laser Sniper (Light Advanced Armor)"
+
+[ArmorKitContent_T2_LaserSniper_Medium LWCEArmorKitContentTemplate]
+DisplayName="Laser Sniper (Medium Advanced Armor)"
+
+[ArmorKitContent_T3_LaserSniper_Light LWCEArmorKitContentTemplate]
+DisplayName="Laser Sniper (Light Power Armor)"
+
+[ArmorKitContent_T3_LaserSniper_Medium LWCEArmorKitContentTemplate]
+DisplayName="Laser Sniper (Heavy Power Armor)"
+
+[ArmorKitContent_T1_PlasmaSniper_Medium LWCEArmorKitContentTemplate]
+DisplayName="Plasma Sniper (Kevlar)"
+
+[ArmorKitContent_T2_PlasmaSniper_Light LWCEArmorKitContentTemplate]
+DisplayName="Plasma Sniper (Light Advanced Armor)"
+
+[ArmorKitContent_T2_PlasmaSniper_Medium LWCEArmorKitContentTemplate]
+DisplayName="Plasma Sniper (Medium Advanced Armor)"
+
+[ArmorKitContent_T3_PlasmaSniper_Light LWCEArmorKitContentTemplate]
+DisplayName="Plasma Sniper (Light Power Armor)"
+
+[ArmorKitContent_T3_PlasmaSniper_Medium LWCEArmorKitContentTemplate]
+DisplayName="Plasma Sniper (Heavy Power Armor)"
+
+[ArmorKitContent_Sleeveless_1 LWCEArmorKitContentTemplate]
+DisplayName="Sleeveless 1"
+
+[ArmorKitContent_Sleeveless_2 LWCEArmorKitContentTemplate]
+DisplayName="Sleeveless 2"
+
+[ArmorKitContent_Sleeveless_3 LWCEArmorKitContentTemplate]
+DisplayName="Sleeveless 3"
+
+[ArmorKitContent_Sleeveless_4 LWCEArmorKitContentTemplate]
+DisplayName="Sleeveless 4"
+
+[ArmorKitContent_Sleeveless_5 LWCEArmorKitContentTemplate]
+DisplayName="Sleeveless 5"
+
+[ArmorKitContent_Sleeveless_6 LWCEArmorKitContentTemplate]
+DisplayName="Sleeveless 6"
+
+[ArmorKitContent_Sleeveless_7 LWCEArmorKitContentTemplate]
+DisplayName="Sleeveless 7"
+
+[ArmorKitContent_Sleeveless_8 LWCEArmorKitContentTemplate]
+DisplayName="Sleeveless 8"
+
+[FacialHair_1 LWCEFacialHairContentTemplate]
+DisplayName="Facial Hair 02"
+
+[FacialHair_2 LWCEFacialHairContentTemplate]
+DisplayName="5 O'Clock Shadow"
+
+[FacialHair_3 LWCEFacialHairContentTemplate]
+DisplayName="Facial Hair 04"
+
+[FacialHair_4 LWCEFacialHairContentTemplate]
+DisplayName="Facial Hair 05"
+
+[FacialHair_5 LWCEFacialHairContentTemplate]
+DisplayName="Facial Hair 06"
+
+[FacialHair_6 LWCEFacialHairContentTemplate]
+DisplayName="Facial Hair 07"
+
+[FacialHair_7 LWCEFacialHairContentTemplate]
+DisplayName="Facial Hair 08"
+
+[FacialHair_8 LWCEFacialHairContentTemplate]
+DisplayName="Soul Patch"
+
+[FacialHair_9 LWCEFacialHairContentTemplate]
+DisplayName="Horseshoe"
+
+[FacialHair_10 LWCEFacialHairContentTemplate]
+DisplayName="Stubble Mustache"
+
+[FacialHair_11 LWCEFacialHairContentTemplate]
+DisplayName="Facial Hair 12"
+
+[FacialHair_12 LWCEFacialHairContentTemplate]
+DisplayName="Facial Hair 13"
+
+[FacialHair_13 LWCEFacialHairContentTemplate]
+DisplayName="Facial Hair 14"
+
+[FacialHair_14 LWCEFacialHairContentTemplate]
+DisplayName="Facial Hair 15"
+
+[FacialHair_15 LWCEFacialHairContentTemplate]
+DisplayName="Soul Patch with Mustache"
+
+[FacialHair_16 LWCEFacialHairContentTemplate]
+DisplayName="Facial Hair 17"
+
+[FacialHair_17 LWCEFacialHairContentTemplate]
+DisplayName="Facial Hair 18"
+
+[FacialHair_18 LWCEFacialHairContentTemplate]
+DisplayName="Mutton Chops"
+
+[FacialHair_19 LWCEFacialHairContentTemplate]
+DisplayName="Mustache (Light)"
+
+[FacialHair_20 LWCEFacialHairContentTemplate]
+DisplayName="Sideburns (Short)"
+
+[FacialHair_21 LWCEFacialHairContentTemplate]
+DisplayName="Sideburns (Long)"
+
+[FacialHair_22 LWCEFacialHairContentTemplate]
+DisplayName="Goatee"
+
+[FacialHair_23 LWCEFacialHairContentTemplate]
+DisplayName="Facial Hair 24"
+
+[HairColor_0 LWCEHairColorContentTemplate]
+DisplayName="Color 01"
+
+[HairColor_1 LWCEHairColorContentTemplate]
+DisplayName="Color 02"
+
+[HairColor_2 LWCEHairColorContentTemplate]
+DisplayName="Color 03"
+
+[HairColor_3 LWCEHairColorContentTemplate]
+DisplayName="Color 04"
+
+[HairColor_4 LWCEHairColorContentTemplate]
+DisplayName="Color 05"
+
+[HairColor_5 LWCEHairColorContentTemplate]
+DisplayName="Color 06"
+
+[HairColor_6 LWCEHairColorContentTemplate]
+DisplayName="Color 07"
+
+[HairColor_7 LWCEHairColorContentTemplate]
+DisplayName="Color 08"
+
+[HairColor_8 LWCEHairColorContentTemplate]
+DisplayName="Color 09"
+
+[HairColor_9 LWCEHairColorContentTemplate]
+DisplayName="Color 10"
+
+[HairColor_10 LWCEHairColorContentTemplate]
+DisplayName="Color 11"
+
+[HairColor_11 LWCEHairColorContentTemplate]
+DisplayName="Color 12"
+
+[HairColor_12 LWCEHairColorContentTemplate]
+DisplayName="Color 13"
+
+[HairColor_13 LWCEHairColorContentTemplate]
+DisplayName="Color 14"
+
+[HairContent_AnnetteDurand LWCEHairContentTemplate]
+DisplayName="Annette Durand"
+
+[HairContent_Bodyguard LWCEHairContentTemplate]
+DisplayName="Bodyguard 1"
+
+[HairContent_Bodyguard1 LWCEHairContentTemplate]
+DisplayName="Bodyguard 2"
+
+[HairContent_JoeKelly LWCEHairContentTemplate]
+DisplayName="Joe Kelly"
+
+[HairContent_Thorne LWCEHairContentTemplate]
+DisplayName="Minister Thorne"
+
+[HairContent_VanDoorn LWCEHairContentTemplate]
+DisplayName="Van Doorn"
+
+[HairContent_Zhang LWCEHairContentTemplate]
+DisplayName="Shaojie Zhang"
+
+[HairContent_FemaleA LWCEHairContentTemplate]
+DisplayName="Female A"
+
+[HairContent_FemaleB LWCEHairContentTemplate]
+DisplayName="Female B"
+
+[HairContent_FemaleC LWCEHairContentTemplate]
+DisplayName="Female C"
+
+[HairContent_FemaleD LWCEHairContentTemplate]
+DisplayName="Female D"
+
+[HairContent_FemaleE LWCEHairContentTemplate]
+DisplayName="Female E"
+
+[HairContent_FemaleF LWCEHairContentTemplate]
+DisplayName="Low Bun"
+
+[HairContent_FemaleG LWCEHairContentTemplate]
+DisplayName="Tight Bun"
+
+[HairContent_FemaleH LWCEHairContentTemplate]
+DisplayName="Female H"
+
+[HairContent_FemaleI LWCEHairContentTemplate]
+DisplayName="Ponytail"
+
+[HairContent_FemaleJ LWCEHairContentTemplate]
+DisplayName="Female J"
+
+[HairContent_FemaleK LWCEHairContentTemplate]
+DisplayName="Female K"
+
+[HairContent_FemaleN LWCEHairContentTemplate]
+DisplayName="Female N"
+
+[HairContent_FemaleO LWCEHairContentTemplate]
+DisplayName="Female O"
+
+[HairContent_FemaleP LWCEHairContentTemplate]
+DisplayName="Female P"
+
+[HairContent_FemaleQ LWCEHairContentTemplate]
+DisplayName="Female Q"
+
+[HairContent_MaleD LWCEHairContentTemplate]
+DisplayName="Flat Top"
+
+[HairContent_MaleE LWCEHairContentTemplate]
+DisplayName="Male E"
+
+[HairContent_MaleF LWCEHairContentTemplate]
+DisplayName="Buzz Cut"
+
+[HairContent_MaleG LWCEHairContentTemplate]
+DisplayName="Male G"
+
+[HairContent_MaleJ LWCEHairContentTemplate]
+DisplayName="Male J"
+
+[HairContent_MaleK LWCEHairContentTemplate]
+DisplayName="Male K"
+
+[HairContent_MaleO LWCEHairContentTemplate]
+DisplayName="Cornrows"
+
+[HairContent_MaleP LWCEHairContentTemplate]
+DisplayName="Male P"
+
+[HairContent_MaleQ LWCEHairContentTemplate]
+DisplayName="Combed Mohawk"
+
+[HairContent_MaleR LWCEHairContentTemplate]
+DisplayName="Flat Top High"
+
+[HairContent_CarapaceHelmet0 LWCEHairContentTemplate]
+DisplayName="Carapace 0"
+
+[HairContent_CarapaceHelmet2 LWCEHairContentTemplate]
+DisplayName="Carapace 2"
+
+[HairContent_CarapaceHelmet3 LWCEHairContentTemplate]
+DisplayName="Carapace 3"
+
+[HairContent_CarapaceHelmet5 LWCEHairContentTemplate]
+DisplayName="Carapace 5"
+
+[HairContent_CarterHat LWCEHairContentTemplate]
+DisplayName="Carter"
+
+[HairContent_GhostHelmet0 LWCEHairContentTemplate]
+DisplayName="Ghost 0"
+
+[HairContent_GhostHelmet1 LWCEHairContentTemplate]
+DisplayName="Ghost 1"
+
+[HairContent_GhostHelmet4 LWCEHairContentTemplate]
+DisplayName="Ghost 4"
+
+[HairContent_GhostHelmet2 LWCEHairContentTemplate]
+DisplayName="Ghost 2"
+
+[HairContent_KevlarHelmet0 LWCEHairContentTemplate]
+DisplayName="Kevlar 0"
+
+[HairContent_KevlarHelmet1 LWCEHairContentTemplate]
+DisplayName="Beret 01"
+
+[HairContent_KevlarHelmet2 LWCEHairContentTemplate]
+DisplayName="Kevlar 2"
+
+[HairContent_KevlarHelmet3 LWCEHairContentTemplate]
+DisplayName="Cap (Headset)"
+
+[HairContent_KevlarHelmet5 LWCEHairContentTemplate]
+DisplayName="Kevlar 5"
+
+[HairContent_KevlarHelmet8 LWCEHairContentTemplate]
+DisplayName="Beret 02"
+
+[HairContent_KevlarHelmet9 LWCEHairContentTemplate]
+DisplayName="Cap"
+
+[HairContent_KevlarHelmet10 LWCEHairContentTemplate]
+DisplayName="Backwards Cap"
+
+[HairContent_KevlarHelmet11 LWCEHairContentTemplate]
+DisplayName="Backwards Cap (Headset)"
+
+[HairContent_KevlarHelmet12 LWCEHairContentTemplate]
+DisplayName="Beanie"
+
+[HairContent_PsiHelmet0 LWCEHairContentTemplate]
+DisplayName="Psi 0"
+
+[HairContent_PsiHelmet1 LWCEHairContentTemplate]
+DisplayName="Psi 1"
+
+[HairContent_SkeletonHelmet0 LWCEHairContentTemplate]
+DisplayName="Skeleton 0"
+
+[HairContent_SkeletonHelmet2 LWCEHairContentTemplate]
+DisplayName="Skeleton 2"
+
+[HairContent_SkeletonHelmet3 LWCEHairContentTemplate]
+DisplayName="Skeleton 3"
+
+;;; Soldiers: Female, African
+
+[HeadContent_52 LWCEHeadContentTemplate]
+DisplayName="African 01"
+
+[HeadContent_53 LWCEHeadContentTemplate]
+DisplayName="African 02"
+
+[HeadContent_54 LWCEHeadContentTemplate]
+DisplayName="African 03"
+
+[HeadContent_102 LWCEHeadContentTemplate]
+DisplayName="African 04"
+
+[HeadContent_103 LWCEHeadContentTemplate]
+DisplayName="African 05"
+
+;;; Soldiers: Male, African
+
+[HeadContent_22 LWCEHeadContentTemplate]
+DisplayName="African 01"
+
+[HeadContent_23 LWCEHeadContentTemplate]
+DisplayName="African 02"
+
+[HeadContent_24 LWCEHeadContentTemplate]
+DisplayName="African 03"
+
+[HeadContent_25 LWCEHeadContentTemplate]
+DisplayName="African 04"
+
+[HeadContent_26 LWCEHeadContentTemplate]
+DisplayName="African 05"
+
+[HeadContent_97 LWCEHeadContentTemplate]
+DisplayName="African 06"
+
+[HeadContent_144 LWCEHeadContentTemplate]
+DisplayName="African 07"
+
+[HeadContent_155 LWCEHeadContentTemplate]
+DisplayName="African 08"
+
+;;; Soldiers: Female, Asian
+
+[HeadContent_58 LWCEHeadContentTemplate]
+DisplayName="Asian 01"
+
+[HeadContent_59 LWCEHeadContentTemplate]
+DisplayName="Asian 02"
+
+[HeadContent_60 LWCEHeadContentTemplate]
+DisplayName="Asian 03"
+
+[HeadContent_61 LWCEHeadContentTemplate]
+DisplayName="Asian 04"
+
+[HeadContent_62 LWCEHeadContentTemplate]
+DisplayName="Asian 05"
+
+[HeadContent_131 LWCEHeadContentTemplate]
+DisplayName="Asian 06"
+
+[HeadContent_132 LWCEHeadContentTemplate]
+DisplayName="Asian 07"
+
+;;; Soldiers: Male, Asian
+
+[HeadContent_29 LWCEHeadContentTemplate]
+DisplayName="Asian 01"
+
+[HeadContent_30 LWCEHeadContentTemplate]
+DisplayName="Asian 02"
+
+[HeadContent_31 LWCEHeadContentTemplate]
+DisplayName="Asian 03"
+
+[HeadContent_32 LWCEHeadContentTemplate]
+DisplayName="Asian 04"
+
+[HeadContent_99 LWCEHeadContentTemplate]
+DisplayName="Asian 05"
+
+[HeadContent_147 LWCEHeadContentTemplate]
+DisplayName="Asian 06"
+
+[HeadContent_153 LWCEHeadContentTemplate]
+DisplayName="Asian 07"
+
+;;; Soldiers: Female, Caucasian
+
+[HeadContent_43 LWCEHeadContentTemplate]
+DisplayName="Caucasian 01"
+
+[HeadContent_44 LWCEHeadContentTemplate]
+DisplayName="Caucasian 02"
+
+[HeadContent_45 LWCEHeadContentTemplate]
+DisplayName="Caucasian 03"
+
+[HeadContent_46 LWCEHeadContentTemplate]
+DisplayName="Caucasian 04"
+
+[HeadContent_47 LWCEHeadContentTemplate]
+DisplayName="Caucasian 05"
+
+[HeadContent_48 LWCEHeadContentTemplate]
+DisplayName="Caucasian 06"
+
+[HeadContent_49 LWCEHeadContentTemplate]
+DisplayName="Caucasian 07"
+
+[HeadContent_50 LWCEHeadContentTemplate]
+DisplayName="Caucasian 08"
+
+[HeadContent_51 LWCEHeadContentTemplate]
+DisplayName="Caucasian 09"
+
+[HeadContent_136 LWCEHeadContentTemplate]
+DisplayName="Caucasian 10"
+
+[HeadContent_137 LWCEHeadContentTemplate]
+DisplayName="Caucasian 11"
+
+[HeadContent_138 LWCEHeadContentTemplate]
+DisplayName="Caucasian 12"
+
+;;; Soldiers: Male, Caucasian
+
+[HeadContent_1 LWCEHeadContentTemplate]
+DisplayName="Caucasian 01"
+
+[HeadContent_2 LWCEHeadContentTemplate]
+DisplayName="Caucasian 02"
+
+[HeadContent_12 LWCEHeadContentTemplate]
+DisplayName="Caucasian 03"
+
+[HeadContent_15 LWCEHeadContentTemplate]
+DisplayName="Caucasian 04"
+
+[HeadContent_17 LWCEHeadContentTemplate]
+DisplayName="Caucasian 05"
+
+[HeadContent_18 LWCEHeadContentTemplate]
+DisplayName="Caucasian 06"
+
+[HeadContent_19 LWCEHeadContentTemplate]
+DisplayName="Caucasian 07"
+
+[HeadContent_21 LWCEHeadContentTemplate]
+DisplayName="Caucasian 08"
+
+[HeadContent_116 LWCEHeadContentTemplate]
+DisplayName="Caucasian 09"
+
+[HeadContent_120 LWCEHeadContentTemplate]
+DisplayName="Caucasian 10"
+
+[HeadContent_142 LWCEHeadContentTemplate]
+DisplayName="Caucasian 11"
+
+[HeadContent_143 LWCEHeadContentTemplate]
+DisplayName="Caucasian 12"
+
+[HeadContent_145 LWCEHeadContentTemplate]
+DisplayName="Caucasian 13"
+
+;;; Soldiers: Female, Hispanic
+
+[HeadContent_64 LWCEHeadContentTemplate]
+DisplayName="Hispanic 01"
+
+[HeadContent_65 LWCEHeadContentTemplate]
+DisplayName="Hispanic 02"
+
+[HeadContent_66 LWCEHeadContentTemplate]
+DisplayName="Hispanic 03"
+
+[HeadContent_104 LWCEHeadContentTemplate]
+DisplayName="Hispanic 04"
+
+[HeadContent_105 LWCEHeadContentTemplate]
+DisplayName="Hispanic 05"
+
+[HeadContent_134 LWCEHeadContentTemplate]
+DisplayName="Hispanic 06"
+
+[HeadContent_135 LWCEHeadContentTemplate]
+DisplayName="Hispanic 07"
+
+;;; Soldiers: Male, Hispanic
+
+[HeadContent_36 LWCEHeadContentTemplate]
+DisplayName="Hispanic 01"
+
+[HeadContent_37 LWCEHeadContentTemplate]
+DisplayName="Hispanic 02"
+
+[HeadContent_38 LWCEHeadContentTemplate]
+DisplayName="Hispanic 03"
+
+[HeadContent_39 LWCEHeadContentTemplate]
+DisplayName="Hispanic 04"
+
+[HeadContent_40 LWCEHeadContentTemplate]
+DisplayName="Hispanic 05"
+
+[HeadContent_146 LWCEHeadContentTemplate]
+DisplayName="Hispanic 06"
+
+[HeadContent_152 LWCEHeadContentTemplate]
+DisplayName="Hispanic 07"
+
+;;; Civilians: Female, African
+
+[HeadContent_73 LWCEHeadContentTemplate]
+DisplayName="African 01"
+
+[HeadContent_74 LWCEHeadContentTemplate]
+DisplayName="African 02"
+
+;;; Civilians: Male, African
+
+[HeadContent_95 LWCEHeadContentTemplate]
+DisplayName="African 01"
+
+[HeadContent_96 LWCEHeadContentTemplate]
+DisplayName="African 02"
+
+;;; Civilians: Female, Asian
+
+[HeadContent_80 LWCEHeadContentTemplate]
+DisplayName="Asian 01"
+
+[HeadContent_81 LWCEHeadContentTemplate]
+DisplayName="Asian 02"
+
+[HeadContent_82 LWCEHeadContentTemplate]
+DisplayName="Asian 03"
+
+;;; Civilians: Male, Asian
+
+[HeadContent_93 LWCEHeadContentTemplate]
+DisplayName="Asian 01"
+
+;;; Civilians: Female, Caucasian
+
+[HeadContent_86 LWCEHeadContentTemplate]
+DisplayName="Caucasian 01"
+
+[HeadContent_87 LWCEHeadContentTemplate]
+DisplayName="Caucasian 02"
+
+[HeadContent_88 LWCEHeadContentTemplate]
+DisplayName="Caucasian 03"
+
+;;; Civilians: Male, Caucasian
+
+[HeadContent_77 LWCEHeadContentTemplate]
+DisplayName="Caucasian 01"
+
+;;; Civilians: Female, Hispanic
+
+[HeadContent_84 LWCEHeadContentTemplate]
+DisplayName="Hispanic 01"
+
+[HeadContent_85 LWCEHeadContentTemplate]
+DisplayName="Hispanic 02"
+
+;;; Civilians: Male, Hispanic
+
+[HeadContent_91 LWCEHeadContentTemplate]
+DisplayName="Hispanic 03"
+
+;;; Tagged characters
+
+[HeadContent_20 LWCEHeadContentTemplate]
+DisplayName=""
+
+[HeadContent_16 LWCEHeadContentTemplate]
+DisplayName=""
+
+[HeadContent_70 LWCEHeadContentTemplate]
+DisplayName="Minister Hutch"
+
+[HeadContent_71 LWCEHeadContentTemplate]
+DisplayName="Bodyguard 1"
+
+[HeadContent_72 LWCEHeadContentTemplate]
+DisplayName="Bodyguard 2"
+
+[HeadContent_78 LWCEHeadContentTemplate]
+DisplayName="Minister Thorne"
+
+[HeadContent_79 LWCEHeadContentTemplate]
+DisplayName="Carlock"
+
+[HeadContent_92 LWCEHeadContentTemplate]
+DisplayName="Marazuki"
+
+; Van Doorn (civilian)
+[HeadContent_101 LWCEHeadContentTemplate]
+DisplayName="Van Doorn"
+
+; Van Doorn (soldier)
+[HeadContent_148 LWCEHeadContentTemplate]
+DisplayName="Van Doorn"
+
+[HeadContent_106 LWCEHeadContentTemplate]
+DisplayName="Annette Durand"
+
+[HeadContent_107 LWCEHeadContentTemplate]
+DisplayName="Sid"
+
+[HeadContent_108 LWCEHeadContentTemplate]
+DisplayName="Ken"
+
+[HeadContent_109 LWCEHeadContentTemplate]
+DisplayName="Carter"
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; Skin color (by character race)
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+[SkinColor_African_0 LWCESkinColorContentTemplate]
+DisplayName="African 0"
+
+[SkinColor_African_1 LWCESkinColorContentTemplate]
+DisplayName="African 1"
+
+[SkinColor_African_2 LWCESkinColorContentTemplate]
+DisplayName="African 2"
+
+[SkinColor_African_3 LWCESkinColorContentTemplate]
+DisplayName="African 3"
+
+[SkinColor_African_4 LWCESkinColorContentTemplate]
+DisplayName="African 4"
+
+[SkinColor_African_5 LWCESkinColorContentTemplate]
+DisplayName="African 5"
+
+[SkinColor_African_6 LWCESkinColorContentTemplate]
+DisplayName="African 6"
+
+[SkinColor_Asian_0 LWCESkinColorContentTemplate]
+DisplayName="Asian 0"
+
+[SkinColor_Asian_1 LWCESkinColorContentTemplate]
+DisplayName="Asian 1"
+
+[SkinColor_Asian_2 LWCESkinColorContentTemplate]
+DisplayName="Asian 2"
+
+[SkinColor_Asian_3 LWCESkinColorContentTemplate]
+DisplayName="Asian 3"
+
+[SkinColor_Asian_4 LWCESkinColorContentTemplate]
+DisplayName="Asian 4"
+
+[SkinColor_Caucasian_0 LWCESkinColorContentTemplate]
+DisplayName="Caucasian 0"
+
+[SkinColor_Caucasian_1 LWCESkinColorContentTemplate]
+DisplayName="Caucasian 1"
+
+[SkinColor_Caucasian_2 LWCESkinColorContentTemplate]
+DisplayName="Caucasian 2"
+
+[SkinColor_Caucasian_3 LWCESkinColorContentTemplate]
+DisplayName="Caucasian 3"
+
+[SkinColor_Caucasian_4 LWCESkinColorContentTemplate]
+DisplayName="Caucasian 4"
+
+[SkinColor_Caucasian_5 LWCESkinColorContentTemplate]
+DisplayName="Caucasian 5"
+
+[SkinColor_Hispanic_0 LWCESkinColorContentTemplate]
+DisplayName="Hispanic 0"
+
+[SkinColor_Hispanic_1 LWCESkinColorContentTemplate]
+DisplayName="Hispanic 1"
+
+[SkinColor_Hispanic_2 LWCESkinColorContentTemplate]
+DisplayName="Hispanic 2"
+
+[SkinColor_Hispanic_3 LWCESkinColorContentTemplate]
+DisplayName="Hispanic 3"
+
+[SkinColor_Hispanic_4 LWCESkinColorContentTemplate]
+DisplayName="Hispanic 4"
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; Voices
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+[VoiceContent_AnnetteDurand LWCEVoiceContentTemplate]
+DisplayName="Annette Durand"
+
+[VoiceContent_FemaleBlueshirt LWCEVoiceContentTemplate]
+DisplayName=""
+
+[VoiceContent_MaleBlueshirt LWCEVoiceContentTemplate]
+DisplayName=""
+
+[VoiceContent_ShaojieZhang LWCEVoiceContentTemplate]
+DisplayName=""
+
+[VoiceContent_VanDoorn LWCEVoiceContentTemplate]
+DisplayName=""
+
+[VoiceContent_FemaleVoice1_EnglishAmerican LWCEVoiceContentTemplate]
+DisplayName="Female 1"
+
+[VoiceContent_FemaleVoice2_EnglishAmerican LWCEVoiceContentTemplate]
+DisplayName="Female 2"
+
+[VoiceContent_FemaleVoice3_EnglishAmerican LWCEVoiceContentTemplate]
+DisplayName="Female 3"
+
+[VoiceContent_FemaleVoice4_EnglishAmerican LWCEVoiceContentTemplate]
+DisplayName="Female 4"
+
+[VoiceContent_FemaleVoice5_EnglishAmerican LWCEVoiceContentTemplate]
+DisplayName="Female 5"
+
+[VoiceContent_FemaleVoice6_EnglishAmerican LWCEVoiceContentTemplate]
+DisplayName="Calm"
+
+[VoiceContent_FemaleVoice1_French LWCEVoiceContentTemplate]
+DisplayName="Female 1"
+
+[VoiceContent_FemaleVoice2_French LWCEVoiceContentTemplate]
+DisplayName="Female 2"
+
+[VoiceContent_FemaleVoice3_French LWCEVoiceContentTemplate]
+DisplayName="Female 3"
+
+[VoiceContent_FemaleVoice4_French LWCEVoiceContentTemplate]
+DisplayName="Female 4"
+
+[VoiceContent_FemaleVoice5_French LWCEVoiceContentTemplate]
+DisplayName="Female 5"
+
+[VoiceContent_FemaleVoice6_French LWCEVoiceContentTemplate]
+DisplayName="Female 6"
+
+[VoiceContent_FemaleVoice1_German LWCEVoiceContentTemplate]
+DisplayName="Female 1"
+
+[VoiceContent_FemaleVoice2_German LWCEVoiceContentTemplate]
+DisplayName="Female 2"
+
+[VoiceContent_FemaleVoice3_German LWCEVoiceContentTemplate]
+DisplayName="Female 3"
+
+[VoiceContent_FemaleVoice4_German LWCEVoiceContentTemplate]
+DisplayName="Female 4"
+
+[VoiceContent_FemaleVoice5_German LWCEVoiceContentTemplate]
+DisplayName="Female 5"
+
+[VoiceContent_FemaleVoice6_German LWCEVoiceContentTemplate]
+DisplayName="Female 6"
+
+[VoiceContent_FemaleVoice1_Italian LWCEVoiceContentTemplate]
+DisplayName="Female 1"
+
+[VoiceContent_FemaleVoice2_Italian LWCEVoiceContentTemplate]
+DisplayName="Female 2"
+
+[VoiceContent_FemaleVoice3_Italian LWCEVoiceContentTemplate]
+DisplayName="Female 3"
+
+[VoiceContent_FemaleVoice4_Italian LWCEVoiceContentTemplate]
+DisplayName="Female 4"
+
+[VoiceContent_FemaleVoice5_Italian LWCEVoiceContentTemplate]
+DisplayName="Female 5"
+
+[VoiceContent_FemaleVoice6_Italian LWCEVoiceContentTemplate]
+DisplayName="Female 6"
+
+[VoiceContent_FemaleVoice1_Polish LWCEVoiceContentTemplate]
+DisplayName="Female 1"
+
+[VoiceContent_FemaleVoice2_Polish LWCEVoiceContentTemplate]
+DisplayName="Female 2"
+
+[VoiceContent_FemaleVoice3_Polish LWCEVoiceContentTemplate]
+DisplayName="Female 3"
+
+[VoiceContent_FemaleVoice4_Polish LWCEVoiceContentTemplate]
+DisplayName="Female 4"
+
+[VoiceContent_FemaleVoice5_Polish LWCEVoiceContentTemplate]
+DisplayName="Female 5"
+
+[VoiceContent_FemaleVoice6_Polish LWCEVoiceContentTemplate]
+DisplayName="Female 6"
+
+[VoiceContent_FemaleVoice1_Russian LWCEVoiceContentTemplate]
+DisplayName="Female 1"
+
+[VoiceContent_FemaleVoice2_Russian LWCEVoiceContentTemplate]
+DisplayName="Female 2"
+
+[VoiceContent_FemaleVoice3_Russian LWCEVoiceContentTemplate]
+DisplayName="Female 3"
+
+[VoiceContent_FemaleVoice4_Russian LWCEVoiceContentTemplate]
+DisplayName="Female 4"
+
+[VoiceContent_FemaleVoice5_Russian LWCEVoiceContentTemplate]
+DisplayName="Female 5"
+
+[VoiceContent_FemaleVoice6_Russian LWCEVoiceContentTemplate]
+DisplayName="Female 6"
+
+[VoiceContent_FemaleVoice1_Spanish LWCEVoiceContentTemplate]
+DisplayName="Female 1"
+
+[VoiceContent_FemaleVoice2_Spanish LWCEVoiceContentTemplate]
+DisplayName="Female 2"
+
+[VoiceContent_FemaleVoice3_Spanish LWCEVoiceContentTemplate]
+DisplayName="Female 3"
+
+[VoiceContent_FemaleVoice4_Spanish LWCEVoiceContentTemplate]
+DisplayName="Female 4"
+
+[VoiceContent_FemaleVoice5_Spanish LWCEVoiceContentTemplate]
+DisplayName="Female 5"
+
+[VoiceContent_FemaleVoice6_Spanish LWCEVoiceContentTemplate]
+DisplayName="Female 6"
+
+[VoiceContent_FemaleVoice1_EnglishBritish LWCEVoiceContentTemplate]
+DisplayName="Female 1"
+
+[VoiceContent_FemaleVoice1_EnglishAustralian LWCEVoiceContentTemplate]
+DisplayName="Female 1"
+
+[VoiceContent_FemaleVoice1_EnglishSouthAfrican LWCEVoiceContentTemplate]
+DisplayName="Female 1"
+
+[VoiceContent_FemaleVoice1_EnglishSoutheastAsian LWCEVoiceContentTemplate]
+DisplayName="Female 1"
+
+[VoiceContent_FemaleVoice1_EnglishSwiss LWCEVoiceContentTemplate]
+DisplayName="Female 1"
+
+[VoiceContent_MaleVoice1_EnglishAmerican LWCEVoiceContentTemplate]
+DisplayName="Male 1"
+
+[VoiceContent_MaleVoice3_EnglishAmerican LWCEVoiceContentTemplate]
+DisplayName="Male 2"
+
+[VoiceContent_MaleVoice4_EnglishAmerican LWCEVoiceContentTemplate]
+DisplayName="Male 3"
+
+[VoiceContent_MaleVoice5_EnglishAmerican LWCEVoiceContentTemplate]
+DisplayName="Male 4"
+
+[VoiceContent_MaleVoice6_EnglishAmerican LWCEVoiceContentTemplate]
+DisplayName="Male 5"
+
+[VoiceContent_MaleVoice7_EnglishAmerican LWCEVoiceContentTemplate]
+DisplayName="Male 6"
+
+[VoiceContent_MaleVoice1_French LWCEVoiceContentTemplate]
+DisplayName="Male 1"
+
+[VoiceContent_MaleVoice2_French LWCEVoiceContentTemplate]
+DisplayName="Male 2"
+
+[VoiceContent_MaleVoice3_French LWCEVoiceContentTemplate]
+DisplayName="Male 3"
+
+[VoiceContent_MaleVoice6_French LWCEVoiceContentTemplate]
+DisplayName="Male 4"
+
+[VoiceContent_MaleVoice7_French LWCEVoiceContentTemplate]
+DisplayName="Male 5"
+
+[VoiceContent_MaleVoice9_French LWCEVoiceContentTemplate]
+DisplayName="Male 6"
+
+[VoiceContent_MaleVoice1_German LWCEVoiceContentTemplate]
+DisplayName="Male 1"
+
+[VoiceContent_MaleVoice2_German LWCEVoiceContentTemplate]
+DisplayName="Male 2"
+
+[VoiceContent_MaleVoice4_German LWCEVoiceContentTemplate]
+DisplayName="Male 3"
+
+[VoiceContent_MaleVoice6_German LWCEVoiceContentTemplate]
+DisplayName="Male 4"
+
+[VoiceContent_MaleVoice7_German LWCEVoiceContentTemplate]
+DisplayName="Male 5"
+
+[VoiceContent_MaleVoice9_German LWCEVoiceContentTemplate]
+DisplayName="Male 6"
+
+[VoiceContent_MaleVoice1_Italian LWCEVoiceContentTemplate]
+DisplayName="Male 1"
+
+[VoiceContent_MaleVoice2_Italian LWCEVoiceContentTemplate]
+DisplayName="Male 2"
+
+[VoiceContent_MaleVoice3_Italian LWCEVoiceContentTemplate]
+DisplayName="Male 3"
+
+[VoiceContent_MaleVoice5_Italian LWCEVoiceContentTemplate]
+DisplayName="Male 4"
+
+[VoiceContent_MaleVoice7_Italian LWCEVoiceContentTemplate]
+DisplayName="Male 5"
+
+[VoiceContent_MaleVoice9_Italian LWCEVoiceContentTemplate]
+DisplayName="Male 6"
+
+[VoiceContent_MaleVoice1_Polish LWCEVoiceContentTemplate]
+DisplayName="Male 1"
+
+[VoiceContent_MaleVoice3_Polish LWCEVoiceContentTemplate]
+DisplayName="Male 2"
+
+[VoiceContent_MaleVoice4_Polish LWCEVoiceContentTemplate]
+DisplayName="Male 3"
+
+[VoiceContent_MaleVoice5_Polish LWCEVoiceContentTemplate]
+DisplayName="Male 4"
+
+[VoiceContent_MaleVoice6_Polish LWCEVoiceContentTemplate]
+DisplayName="Male 5"
+
+[VoiceContent_MaleVoice7_Polish LWCEVoiceContentTemplate]
+DisplayName="Male 6"
+
+[VoiceContent_MaleVoice1_Russian LWCEVoiceContentTemplate]
+DisplayName="Male 1"
+
+[VoiceContent_MaleVoice3_Russian LWCEVoiceContentTemplate]
+DisplayName="Male 2"
+
+[VoiceContent_MaleVoice4_Russian LWCEVoiceContentTemplate]
+DisplayName="Male 3"
+
+[VoiceContent_MaleVoice6_Russian LWCEVoiceContentTemplate]
+DisplayName="Male 4"
+
+[VoiceContent_MaleVoice7_Russian LWCEVoiceContentTemplate]
+DisplayName="Male 5"
+
+[VoiceContent_MaleVoice9_Russian LWCEVoiceContentTemplate]
+DisplayName="Male 6"
+
+[VoiceContent_MaleVoice1_Spanish LWCEVoiceContentTemplate]
+DisplayName="Male 1"
+
+[VoiceContent_MaleVoice3_Spanish LWCEVoiceContentTemplate]
+DisplayName="Male 2"
+
+[VoiceContent_MaleVoice4_Spanish LWCEVoiceContentTemplate]
+DisplayName="Male 3"
+
+[VoiceContent_MaleVoice5_Spanish LWCEVoiceContentTemplate]
+DisplayName="Male 4"
+
+[VoiceContent_MaleVoice7_Spanish LWCEVoiceContentTemplate]
+DisplayName="Male 5"
+
+[VoiceContent_MaleVoice9_Spanish LWCEVoiceContentTemplate]
+DisplayName="Male 6"
+
+[VoiceContent_MaleVoice1_EnglishBritish LWCEVoiceContentTemplate]
+DisplayName="Male 1"
+
+[VoiceContent_MaleVoice2_EnglishBritish LWCEVoiceContentTemplate]
+DisplayName="Male 2"
+
+[VoiceContent_MaleVoice3_EnglishBritish LWCEVoiceContentTemplate]
+DisplayName="Male 3"
+
+[VoiceContent_MaleVoice1_EnglishAustralian LWCEVoiceContentTemplate]
+DisplayName="Male 1"
+
+[VoiceContent_MaleVoice2_EnglishAustralian LWCEVoiceContentTemplate]
+DisplayName="Male 2"
+
+[VoiceContent_MaleVoice3_EnglishAustralian LWCEVoiceContentTemplate]
+DisplayName="Male 3"
+
+[VoiceContent_MaleVoice1_EnglishScottish LWCEVoiceContentTemplate]
+DisplayName="Male 1"
+
+[VoiceContent_MaleVoice1_EnglishIrish LWCEVoiceContentTemplate]
+DisplayName="Male 1"
+
+[VoiceContent_MaleVoice2_EnglishIrish LWCEVoiceContentTemplate]
+DisplayName="Male 2"
+
+[VoiceContent_MaleVoice1_EnglishSouthAfrican LWCEVoiceContentTemplate]
+DisplayName="Male 1"
+
+[VoiceContent_MaleVoice2_EnglishSouthAfrican LWCEVoiceContentTemplate]
+DisplayName="Male 2"
+
+[VoiceContent_MaleVoice1_EnglishSoutheastAsian LWCEVoiceContentTemplate]
+DisplayName="Male 1"
+
+[VoiceContent_MaleVoice1_EnglishPolish LWCEVoiceContentTemplate]
+DisplayName="Male 1"
+
+[VoiceContent_MaleVoice1_EnglishDutch LWCEVoiceContentTemplate]
+DisplayName="Male 1"
+
+[VoiceContent_MaleVoice1_EnglishGerman LWCEVoiceContentTemplate]
+DisplayName="Male 1"
+
+[VoiceContent_MecFemaleVoice1_EnglishAmerican LWCEVoiceContentTemplate]
+DisplayName="Female 1"
+
+[VoiceContent_MecFemaleVoice2_EnglishAmerican LWCEVoiceContentTemplate]
+DisplayName="Female 2"
+
+[VoiceContent_MecFemaleVoice1_French LWCEVoiceContentTemplate]
+DisplayName="Female 1"
+
+[VoiceContent_MecFemaleVoice2_French LWCEVoiceContentTemplate]
+DisplayName="Female 2"
+
+[VoiceContent_MecFemaleVoice1_German LWCEVoiceContentTemplate]
+DisplayName="Female 1"
+
+[VoiceContent_MecFemaleVoice2_German LWCEVoiceContentTemplate]
+DisplayName="Female 2"
+
+[VoiceContent_MecFemaleVoice1_Italian LWCEVoiceContentTemplate]
+DisplayName="Female 1"
+
+[VoiceContent_MecFemaleVoice2_Italian LWCEVoiceContentTemplate]
+DisplayName="Female 2"
+
+[VoiceContent_MecFemaleVoice1_Polish LWCEVoiceContentTemplate]
+DisplayName="Female 1"
+
+[VoiceContent_MecFemaleVoice2_Polish LWCEVoiceContentTemplate]
+DisplayName="Female 2"
+
+[VoiceContent_MecFemaleVoice1_Russian LWCEVoiceContentTemplate]
+DisplayName="Female 1"
+
+[VoiceContent_MecFemaleVoice2_Russian LWCEVoiceContentTemplate]
+DisplayName="Female 2"
+
+[VoiceContent_MecFemaleVoice1_Spanish LWCEVoiceContentTemplate]
+DisplayName="Female 1"
+
+[VoiceContent_MecFemaleVoice2_Spanish LWCEVoiceContentTemplate]
+DisplayName="Female 2"
+
+[VoiceContent_MecMaleVoice1_EnglishAmerican LWCEVoiceContentTemplate]
+DisplayName="Male 1"
+
+[VoiceContent_MecMaleVoice2_EnglishAmerican LWCEVoiceContentTemplate]
+DisplayName="Male 2"
+
+[VoiceContent_MecMaleVoice1_French LWCEVoiceContentTemplate]
+DisplayName="Male 1"
+
+[VoiceContent_MecMaleVoice2_French LWCEVoiceContentTemplate]
+DisplayName="Male 2"
+
+[VoiceContent_MecMaleVoice1_German LWCEVoiceContentTemplate]
+DisplayName="Male 1"
+
+[VoiceContent_MecMaleVoice2_German LWCEVoiceContentTemplate]
+DisplayName="Male 2"
+
+[VoiceContent_MecMaleVoice1_Italian LWCEVoiceContentTemplate]
+DisplayName="Male 1"
+
+[VoiceContent_MecMaleVoice2_Italian LWCEVoiceContentTemplate]
+DisplayName="Male 2"
+
+[VoiceContent_MecMaleVoice1_Polish LWCEVoiceContentTemplate]
+DisplayName="Male 1"
+
+[VoiceContent_MecMaleVoice2_Polish LWCEVoiceContentTemplate]
+DisplayName="Male 2"
+
+[VoiceContent_MecMaleVoice1_Russian LWCEVoiceContentTemplate]
+DisplayName="Male 1"
+
+[VoiceContent_MecMaleVoice2_Russian LWCEVoiceContentTemplate]
+DisplayName="Male 2"
+
+[VoiceContent_MecMaleVoice1_Spanish LWCEVoiceContentTemplate]
+DisplayName="Male 1"
+
+[VoiceContent_MecMaleVoice2_Spanish LWCEVoiceContentTemplate]
+DisplayName="Male 2"
