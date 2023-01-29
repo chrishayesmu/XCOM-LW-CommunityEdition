@@ -156,13 +156,14 @@ function TSoldier CreateTSoldier(optional EGender eForceGender, optional int iCo
     return kSoldier;
 }
 
-function LWCE_TSoldier LWCE_CreateTSoldier(optional EGender eForceGender, optional int iCountry = -1, optional name nmRace = '', optional bool bIsAugmented = false)
+function LWCE_TSoldier LWCE_CreateTSoldier(optional EGender eForceGender, optional int iCountry = -1, optional name nmRaceTemplate = '', optional bool bIsAugmented = false)
 {
     local LWCE_TSoldier kSoldier;
     local LWCE_TDefaultSoldierAppearance DefaultAppearance;
     local LWCEContentTemplateManager kTemplateMgr;
     local array<LWCEHairContentTemplate> arrHairs;
     local array<LWCEHeadContentTemplate> arrHeads;
+    local name nmRaceNonTemplate; // Race as in 'Asian', not the template name 'Race_Asian'; needed for other template lookups
 
     kTemplateMgr = `LWCE_CONTENT_TEMPLATE_MGR;
     DefaultAppearance = FindDefaultAppearanceForClass(/* iSoldierClassId */ 0);
@@ -176,14 +177,16 @@ function LWCE_TSoldier LWCE_CreateTSoldier(optional EGender eForceGender, option
     kSoldier.kAppearance.iFlag = kSoldier.iCountry;
     kSoldier.iRank = 0;
 
-    if (nmRace == '')
+    if (nmRaceTemplate == '')
     {
         kSoldier.kAppearance.nmRace = LWCE_GetRandomRaceByCountry(kSoldier.iCountry);
     }
     else
     {
-        kSoldier.kAppearance.nmRace = nmRace;
+        kSoldier.kAppearance.nmRace = nmRaceTemplate;
     }
+
+    nmRaceNonTemplate = kTemplateMgr.FindRaceTemplate(kSoldier.kAppearance.nmRace).Race;
 
     if (eForceGender != eGender_None)
     {
@@ -214,7 +217,7 @@ function LWCE_TSoldier LWCE_CreateTSoldier(optional EGender eForceGender, option
         kSoldier.kAppearance.nmHaircut = arrHairs[Rand(arrHairs.Length)].GetContentTemplateName();
     }
 
-    arrHeads = kTemplateMgr.FindMatchingHeads(eChar_Soldier, kSoldier.kAppearance.nmRace, EGender(kSoldier.kAppearance.iGender));
+    arrHeads = kTemplateMgr.FindMatchingHeads(eChar_Soldier, nmRaceNonTemplate, EGender(kSoldier.kAppearance.iGender));
     kSoldier.kAppearance.nmHead = arrHeads[Rand(arrHeads.Length)].GetContentTemplateName();
 
     // bIsAugmented: right now soldiers are only generated as bio troops, but possibly a mod will want hooks to create new MECs directly
@@ -230,14 +233,10 @@ function LWCE_TSoldier LWCE_CreateTSoldier(optional EGender eForceGender, option
     kSoldier.kAppearance.nmArmorColor = DefaultAppearance.nmArmorColor;
     kSoldier.kAppearance.nmArmorKit = DefaultAppearance.nmArmorKit;
     kSoldier.kAppearance.nmHairColor = ChooseRandomHairColor().GetContentTemplateName();
-    kSoldier.kAppearance.nmSkinColor = ChooseRandomSkinColorForRace(kSoldier.kAppearance.nmRace).GetContentTemplateName();
+    kSoldier.kAppearance.nmSkinColor = ChooseRandomSkinColorForRace(nmRaceNonTemplate).GetContentTemplateName();
 
     // TODO add LWCE_GenerateName
     GenerateName(kSoldier.kAppearance.iGender, kSoldier.iCountry, kSoldier.strFirstName, kSoldier.strLastName, RaceBaseIDByName(kSoldier.kAppearance.nmRace));
-
-    `LWCE_LOG_CLS("After generation: soldier name is " $ kSoldier.strFirstName $ " " $ kSoldier.strLastName $ "; gender is " $ EGender(kSoldier.kAppearance.iGender) $ "; country is " $ kSoldier.iCountry);
-    `LWCE_LOG_CLS("Head is " $ kSoldier.kAppearance.nmHead $ " out of " $ arrHeads.Length $ " options");
-    `LWCE_LOG_CLS("Hair is " $ kSoldier.kAppearance.nmHaircut $ " out of " $ arrHairs.Length $ " options");
 
     return kSoldier;
 }
@@ -291,8 +290,6 @@ function name LWCE_GetNextVoice(EGender Gender, name nmLanguage, bool bIsMec)
     }
 
     m_arrNextVoices[iVoiceTrackingIndex].iNextIndex++;
-
-    `LWCE_LOG_CLS("Gender " $ Gender $ ", language " $ nmLanguage $ ", and bIsMec " $ bIsMec $ ": selected voice is " $ PossibleVoices[m_arrNextVoices[iVoiceTrackingIndex].iNextIndex - 1].GetContentTemplateName());
 
     return PossibleVoices[m_arrNextVoices[iVoiceTrackingIndex].iNextIndex - 1].GetContentTemplateName();
 }
