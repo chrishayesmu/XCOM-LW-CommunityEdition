@@ -29,7 +29,7 @@ struct Medal
     var int m_iUsed;
     var int m_iMissionsLeft;
 };
-	
+
 struct MedalRequirements
 {
     var int m_iNumAbductions;

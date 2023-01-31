@@ -823,8 +823,6 @@ simulated function UpdateSkinMaterial(MaterialInstanceConstant MIC, bool bHasHai
         kFacialHair = kTemplateMgr.FindFacialHairTemplate(m_kCEAppearance.nmFacialHair);
         ParamColor = ColorToLinearColor(kFacialHair.Mask);
 
-        `LWCE_LOG_CLS("Using facial hair " $ m_kCEAppearance.nmFacialHair $ " and setting UVOffset to " $ kFacialHair.UVOffset $ ", ChannelMask to " $ `COLORTOSTR(ParamColor));
-
         MIC.SetScalarParameterValue('UVOffset', kFacialHair.UVOffset);
         MIC.SetVectorParameterValue('ChannelMask', ParamColor);
     }
@@ -834,7 +832,7 @@ simulated function UpdateSkinMaterial(MaterialInstanceConstant MIC, bool bHasHai
         ParamColor.A = 1.0f;
         ParamColor.R = 0.0f;
         ParamColor.G = 0.0f;
-        ParamColor.B = 1.0f;
+        ParamColor.B = 0.0f;
 
         MIC.SetScalarParameterValue('UVOffset', 0.0f);
         MIC.SetVectorParameterValue('ChannelMask', ParamColor);
