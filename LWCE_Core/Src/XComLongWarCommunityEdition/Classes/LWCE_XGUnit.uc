@@ -3064,6 +3064,12 @@ function bool LoadInit(XGPlayer NewPlayer)
     }
 
     GetInventory().OnLoad(self);
+
+    if (!IsMine())
+    {
+        InitBehavior();
+    }
+
     CreateUnitView();
     ProcessNewPosition();
 
