@@ -471,7 +471,6 @@ function InHQ_OnArmorLoaded(Object ArmorArchetype, int ContentId, int SubID)
     local ItemAttachment Item;
     local SkeletalMesh BodyMesh, WeaponMesh;
     local XComHumanPawn PawnArchetype;
-    local XComLinearColorPalette ArmorTintPalette;
 
     `LWCE_LOG_CLS("Loaded armor archetype " $ ArmorArchetype $ ". ContentId = " $ ContentId $ ", SubID = " $ SubID);
 
@@ -510,16 +509,6 @@ function InHQ_OnArmorLoaded(Object ArmorArchetype, int ContentId, int SubID)
         Mesh.SetLightEnvironment(LightEnvironment);
     }
 
-// TODO
-/*
-    if (`CONTENTMGR.GetContentInfo_Unit(PawnType, UnitInfo))
-    {
-        NumPossibleArmorSkins = UnitInfo.SkinArchetypes.Length;
-    }
- */
-
-    ArmorTintPalette = `CONTENTMGR.GetColorPalette(ePalette_ArmorTint);
-    NumPossibleArmorTints = ArmorTintPalette != none ? ArmorTintPalette.Entries.Length : 0;
     RemoveAttachments();
 
     if (PawnType != ePawnType_MecCivvies && PawnType != ePawnType_Female_MecCivvies)
@@ -551,7 +540,6 @@ function InHQ_OnArmorLoaded(Object ArmorArchetype, int ContentId, int SubID)
 
     SetLightingChannelsForUnit();
     LightEnvironment.ResetEnvironment();
-    //SetTimer(0.10, false, 'RequestKitPostArmor');
 }
 
 simulated event PostInitAnimTree(SkeletalMeshComponent SkelComp)

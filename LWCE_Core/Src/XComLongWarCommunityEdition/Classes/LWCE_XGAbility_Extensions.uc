@@ -930,7 +930,7 @@ static simulated function GetCritSummary(XGAbility_Targeted kSelf, out TShotInfo
     }
 
     // Baseline stat
-    iCritStat = kShooter.m_aCurrentStats[eStat_CriticalShot];
+    iCritStat = kShooter.LWCE_GetCharacter().GetCharacter().aStats[eStat_CriticalShot];
 
     if (kShooter.HasBonus(`LW_PERK_ID(Concealment)))
     {

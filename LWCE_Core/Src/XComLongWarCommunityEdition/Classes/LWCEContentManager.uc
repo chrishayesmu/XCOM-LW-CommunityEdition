@@ -94,6 +94,7 @@ simulated function Object GetArchetypeByPath(string ArchetypePath)
     // Conversely, DynamicLoadObject works on strat, but not tac.
     if (kArchetype == none)
     {
+        `LWCE_LOG_CLS("Couldn't load archetype " $ ArchetypePath $ " from content package; falling back to DynamicLoadObject");
         kArchetype = DynamicLoadObject(ArchetypePath, class'Object', /* MayFail */ true);
     }
 
@@ -117,6 +118,7 @@ simulated function Object GetDefaultKitArchetypeForWeaponAndArmor(name WeaponIte
         }
     }
 
+    // TODO: delete this fallback crap
     // Check for armor fallbacks first
     Index = arrArmorFallbacks.Find('ItemName', ArmorItemName);
 

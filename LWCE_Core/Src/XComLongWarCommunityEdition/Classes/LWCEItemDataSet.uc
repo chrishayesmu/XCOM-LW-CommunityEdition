@@ -138,6 +138,9 @@ private static function int GetBonusWeaponAmmoFn_SupportGrenade(const LWCEEquipm
     }
 
     if (kEquipment.GetItemName() == 'Item_SmokeGrenade' && HasPerk(kChar, `LW_PERK_ID(SmokeGrenade)))
+    {
+        iTotalBonus += 1;
+    }
 
     return iTotalBonus;
 }

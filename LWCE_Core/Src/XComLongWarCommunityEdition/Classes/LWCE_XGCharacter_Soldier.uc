@@ -1,5 +1,13 @@
 class LWCE_XGCharacter_Soldier extends XGCharacter_Soldier implements(LWCE_XGCharacter);
 
+// Can't use the generator macro for this; make sure the fields in this struct stay in sync with
+// what's in generators_xgcharacter_checkpointrecord
+struct CheckpointRecord_LWCE_XGCharacter_Soldier extends CheckpointRecord_XGCharacter_Soldier
+{
+    var LWCE_TCharacter m_kCEChar;
+    var LWCE_TSoldier m_kCESoldier;
+};
+
 `include(generators_xgcharacter_fields.uci)
 
 var LWCE_TSoldier m_kCESoldier;
@@ -10,8 +18,6 @@ var LWCE_TSoldier m_kCESoldier;
 
 function AddKills(int iNumKills)
 {
-    `LWCE_LOG_CLS("AddKills: iNumKills = " $ iNumKills);
-
     m_kCESoldier.iNumKills += iNumKills;
 
     if (m_kCESoldier.bBlueshirt)
@@ -22,8 +28,6 @@ function AddKills(int iNumKills)
 
 function AddXP(int iXP)
 {
-    `LWCE_LOG_CLS("AddXP: iXP = " $ iXP);
-
     if (CanGainXP())
     {
         if (`GAMECORE.IsOptionEnabled(`LW_SECOND_WAVE_ID(DynamicWar)))
@@ -47,8 +51,6 @@ function int GetXP()
 
 function SetXP(int iXP)
 {
-    `LWCE_LOG_CLS("SetXP: iXP = " $ iXP);
-
     if (CanGainXP())
     {
         m_kCESoldier.iXP = iXP;

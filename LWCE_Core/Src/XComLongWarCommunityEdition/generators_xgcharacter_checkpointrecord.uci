@@ -1,0 +1,5 @@
+`define GENERATE_CHECKPOINT_STRUCT(className) \
+struct CheckpointRecord_LWCE_`{className} extends CheckpointRecord \
+{ \
+    var LWCE_TCharacter m_kCEChar; \
+};

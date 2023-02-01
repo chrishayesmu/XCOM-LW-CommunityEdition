@@ -963,7 +963,7 @@ simulated function LWCE_GetInventoryStatModifiers(out int aModifiers[ECharacterS
 
     for (iStat = 0; iStat < eStat_MAX; iStat++)
     {
-        aModifiers[iStat]  = GetEquipmentItemStat(EquippedWeaponName, ECharacterStat(iStat));
+        aModifiers[iStat]  = GetEquipmentItemStat(EquippedWeaponName, ECharacterStat(iStat), /* bIncludePrimaryWeaponStats */ true);
         aModifiers[iStat] += GetEquipmentItemStat(kCharacter.kInventory.nmArmor, ECharacterStat(iStat));
 
         if (iStat == eStat_HP && kCharacter.arrPerks.Find('Id', `LW_PERK_ID(ExtraConditioning)) != INDEX_NONE)
