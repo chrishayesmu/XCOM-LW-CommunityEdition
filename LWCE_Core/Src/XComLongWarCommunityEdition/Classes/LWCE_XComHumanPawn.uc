@@ -107,8 +107,6 @@ simulated event PostBeginPlay()
 
 function LWCE_Init(const out LWCE_TCharacter inCharacter, const out LWCE_TInventory Inv, const out LWCE_TAppearance Appearance)
 {
-    `LWCE_LOG_CLS("LWCE_Init: current state is " $ GetStateName());
-
     m_kCEChar = inCharacter;
     bIsFemale = Appearance.iGender == eGender_Female;
     m_kCEAppearance = Appearance;
@@ -153,16 +151,6 @@ simulated function AddKitRequests()
     {
         // TODO use default kit for gear
     }
-
-// TODO
-//    Kit = `LWCE_CONTENT_MGR.GetDefaultKitArchetypeForWeaponAndArmor(kChar.kInventory.nmArmor, nmPrimaryWeapon);
-//
-//    if (Kit != eKit_None)
-//    {
-//        kRequest.iID = Kit;
-//        m_arrCEPawnContentRequests.AddItem(kRequest);
-//        m_iRequestKit = Kit;
-//    }
 }
 
 simulated function RequestFullPawnContent()
@@ -201,7 +189,6 @@ simulated function RequestFullPawnContent()
 
         if (m_kCEAppearance.nmArmorKit != '')
         {
-            `LWCE_LOG_CLS("Getting armor kit template " $ m_kCEAppearance.nmArmorKit);
             ContentTemplate = kTemplateMgr.FindArmorKitTemplate(m_kCEAppearance.nmArmorKit);
 
             kRequest.ContentCategory = 'ArmorKit';
@@ -213,7 +200,6 @@ simulated function RequestFullPawnContent()
 
         if (m_kCEAppearance.nmHead != '')
         {
-            `LWCE_LOG_CLS("Getting head template " $ m_kCEAppearance.nmHead);
             ContentTemplate = kTemplateMgr.FindHeadTemplate(m_kCEAppearance.nmHead);
 
             kRequest.ContentCategory = 'Head';
@@ -225,10 +211,9 @@ simulated function RequestFullPawnContent()
 
         if (m_kCEAppearance.nmHaircut != '')
         {
-            `LWCE_LOG_CLS("Getting hair template " $ m_kCEAppearance.nmHaircut);
             ContentTemplate = kTemplateMgr.FindHairTemplate(m_kCEAppearance.nmHaircut);
 
-            // TODO: pick a random applicable hair template and save it to the appearance
+            // TODO: pick a random applicable hair template and use it temporarily (should be consistent somehow)
             if (LWCEHairContentTemplate(ContentTemplate).bIsHelmet && !AreHelmetsAllowed())
             {
 
@@ -243,7 +228,6 @@ simulated function RequestFullPawnContent()
 
         if (m_kCEAppearance.nmVoice != '')
         {
-            `LWCE_LOG_CLS("Getting voice template " $ m_kCEAppearance.nmVoice);
             ContentTemplate = kTemplateMgr.FindVoiceTemplate(m_kCEAppearance.nmVoice);
 
             kRequest.ContentCategory = 'Voice';
@@ -252,8 +236,6 @@ simulated function RequestFullPawnContent()
 
             m_arrCEPawnContentRequests.AddItem(kRequest);
         }
-
-        //AddKitRequests();
 
         NumPawnContentRequestsRemaining = m_arrCEPawnContentRequests.Length;
 
@@ -275,8 +257,6 @@ simulated function MakeAllContentRequests()
         m_arrCEPawnContentRequests[Index].kContent = kContentMgr.GetArchetypeByPath(m_arrCEPawnContentRequests[Index].ArchetypeName);
         ContentLoadedFn = m_arrCEPawnContentRequests[Index].ContentLoadedFn;
 
-        `LWCE_LOG_CLS("Requested content " $ m_arrCEPawnContentRequests[Index].ArchetypeName $ " and loaded object " $ m_arrCEPawnContentRequests[Index].kContent);
-
         if (ContentLoadedFn != none)
         {
             ContentLoadedFn(m_arrCEPawnContentRequests[Index]);
@@ -291,8 +271,6 @@ simulated function PawnContentFullyLoaded()
 
     foreach m_arrCEPawnContentRequests(kRequest)
     {
-        `LWCE_LOG_CLS("PawnContentFullyLoaded: ContentCategory = " $ kRequest.ContentCategory $ ", kContent = " $ kRequest.kContent);
-
         switch (kRequest.ContentCategory)
         {
             case 'Pawn':
@@ -317,7 +295,6 @@ simulated function PawnContentFullyLoaded()
                 break;
             case 'ArmorKit':
                 bLoadedArmorKit = kRequest.kContent != none;
-                `LWCE_LOG_CLS("Armor kit loaded: kRequest.kContent = " $ kRequest.kContent);
                 OnArmorKitLoaded(kRequest.kContent);
                 break;
             case 'Voice':
@@ -383,8 +360,6 @@ simulated function LWCE_SetInventory(const out LWCE_TCharacter inCharacter, cons
     m_nmPrimaryWeapon = class'LWCE_XGTacticalGameCore'.static.LWCE_GetPrimaryWeapon(m_kCEChar.kInventory);
     m_bSetArmorKit = true;
 
-    `LWCE_LOG_CLS("nmArmor = " $ Inv.nmArmor $ "; PawnType = " $ PawnType);
-
     RequestFullPawnContent();
 }
 
@@ -408,7 +383,6 @@ function LWCE_FindPossibleCustomParts(const out LWCE_TCharacter inCharacter)
     }
 
     nmRace = kTemplateMgr.FindRaceTemplate(m_kCEAppearance.nmRace).Race;
-    `LWCE_LOG_CLS("Soldier's race is " $ m_kCEAppearance.nmRace $ " which resolves to " $ nmRace);
 
     m_arrCEArmorKits = kTemplateMgr.FindMatchingArmorKits(inCharacter.kInventory.nmArmor); // TODO get default and set if needed
     m_arrCEFacialHairs = kTemplateMgr.GetFacialHairs();
@@ -459,7 +433,6 @@ function SetLightingChannelsForUnit();
 
 function OnArmorLoaded(Object ArmorArchetype, int ContentId, int SubID)
 {
-    `LWCE_LOG_CLS("OnArmorLoaded: delegating to InHQ. ArmorArchetype = " $ ArmorArchetype $ ", ContentId = " $ ContentId $ ", SubID = " $ SubID);
     InHQ_OnArmorLoaded(ArmorArchetype, ContentId, SubID);
 }
 
@@ -470,8 +443,6 @@ function InHQ_OnArmorLoaded(Object ArmorArchetype, int ContentId, int SubID)
     local ItemAttachment Item;
     local SkeletalMesh BodyMesh, WeaponMesh;
     local XComHumanPawn PawnArchetype;
-
-    `LWCE_LOG_CLS("Loaded armor archetype " $ ArmorArchetype $ ". ContentId = " $ ContentId $ ", SubID = " $ SubID);
 
     PawnArchetype = XComHumanPawn(ArmorArchetype);
     bNeedsFallbackHair = PawnArchetype.bNeedsFallbackHair;
@@ -762,7 +733,6 @@ simulated function UpdateArmorMaterial(MeshComponent MeshComp, MaterialInstanceC
 
     if (kTemplate != none)
     {
-        `LWCE_LOG_CLS("Setting primary color to " $ kTemplate.PrimaryColor.R $ ", " $ kTemplate.PrimaryColor.G $ ", " $ kTemplate.PrimaryColor.B $ " and secondary to " $ kTemplate.SecondaryColor.R $ ", " $ kTemplate.SecondaryColor.G $ ", " $ kTemplate.SecondaryColor.B);
         ParamColor = ColorToLinearColor(kTemplate.PrimaryColor);
         MIC.SetVectorParameterValue('CMOD', ParamColor);
 
@@ -840,13 +810,11 @@ state InHQ
 {
     simulated event BeginState(name PreviousStateName)
     {
-        `LWCE_LOG_CLS("InHQ BeginState: prev = " $ PreviousStateName);
         super.BeginState(PreviousStateName);
     }
 
     simulated event EndState(name NextStateName)
     {
-        `LWCE_LOG_CLS("InHQ EndState: next = " $ NextStateName);
         super.EndState(NextStateName);
     }
 
@@ -867,7 +835,6 @@ state InHQ
 
     function OnArmorLoaded(Object ArmorArchetype, int ContentId, int SubID)
     {
-        `LWCE_LOG_CLS("InHQ state: OnArmorLoaded with ArmorArchetype = " $ ArmorArchetype);
         InHQ_OnArmorLoaded(ArmorArchetype, ContentId, SubID);
     }
 
@@ -891,13 +858,11 @@ state CharacterCustomization
 {
     simulated event BeginState(name PreviousStateName)
     {
-        `LWCE_LOG_CLS("CharacterCustomization BeginState: prev = " $ PreviousStateName);
         super.BeginState(PreviousStateName);
     }
 
     simulated event EndState(name NextStateName)
     {
-        `LWCE_LOG_CLS("CharacterCustomization EndState: next = " $ NextStateName);
         super.EndState(NextStateName);
     }
 
@@ -908,7 +873,6 @@ state CharacterCustomization
 
     simulated function OnVoiceLoaded(Object VoiceArchetype)
     {
-        `LWCE_LOG_CLS("Loaded voice archetype " $ VoiceArchetype);
         super.OnVoiceLoaded(VoiceArchetype);
     }
 
