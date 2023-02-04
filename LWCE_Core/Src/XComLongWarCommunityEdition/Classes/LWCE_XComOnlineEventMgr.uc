@@ -69,3 +69,108 @@ function HideSaveIndicator()
         Presentation.GetAnchoredMessenger().RemoveMessage("SaveIndicator");
     }
 }
+
+function SortSavedGameListByTimestamp(out array<OnlineSaveGame> SaveGameList)
+{
+    // LWCE issue #72: the native implementation of this function has some sort of bug that causes it to fail around
+    // the start of each month. Save games on the first of the month will end up being placed in the middle of the previous
+    // month's saves. We just reimplement the sort completely to fix this.
+    SaveGameList.Sort(SortOnlineSaveGames);
+}
+
+protected function int SortOnlineSaveGames(OnlineSaveGame SaveA, OnlineSaveGame SaveB)
+{
+    local array<string> Parts;
+    local string strDatePartA, strDatePartB;
+    local string strTimePartA, strTimePartB;
+    local int iYearA, iMonthA, iDayA, iYearB, iMonthB, iDayB, iTimeA, iTimeB;
+
+    if (SaveA.SaveGames[0].SaveGameHeader.Time == "")
+    {
+        if (SaveB.SaveGames[0].SaveGameHeader.Time == "")
+        {
+            `LWCE_LOG_CLS("Neither save has time set");
+            return 0;
+        }
+
+        `LWCE_LOG_CLS("Save A has no time set");
+        return -1;
+    }
+    else if (SaveB.SaveGames[0].SaveGameHeader.Time == "")
+    {
+        `LWCE_LOG_CLS("Save B has no time set");
+        return 0;
+    }
+
+    // Example timestamp string: "1/29/2023 - 23:38"
+    `LWCE_LOG_CLS("Starting sort. SaveA time is " $ SaveA.SaveGames[0].SaveGameHeader.Time $ ", SaveB time is " $ SaveB.SaveGames[0].SaveGameHeader.Time );
+    ParseStringIntoArray(SaveA.SaveGames[0].SaveGameHeader.Time, Parts, " - ", true);
+    `LWCE_LOG_CLS("SaveA: String " $ SaveA.SaveGames[0].SaveGameHeader.Time $ " split into " $ Parts[0] $ " and " $ Parts[1]);
+    strDatePartA = Parts[0];
+    strTimePartA = Parts[1];
+
+    ParseStringIntoArray(SaveB.SaveGames[0].SaveGameHeader.Time, Parts, " - ", true);
+    `LWCE_LOG_CLS("SaveB: String " $ SaveB.SaveGames[0].SaveGameHeader.Time $ " split into " $ Parts[0] $ " and " $ Parts[1]);
+    strDatePartB = Parts[0];
+    strTimePartB = Parts[1];
+
+    ParseStringIntoArray(strDatePartA, Parts, "/", true);
+    iMonthA = int(Parts[0]);
+    iDayA = int(Parts[1]);
+    iYearA = int(Parts[2]);
+    `LWCE_LOG_CLS("SaveA date: String " $ strDatePartA $ " split into " $ iMonthA $ ", " $ iDayA $ ", and " $ iYearA);
+
+    ParseStringIntoArray(strDatePartB, Parts, "/", true);
+    iMonthB = int(Parts[0]);
+    iDayB = int(Parts[1]);
+    iYearB = int(Parts[2]);
+    `LWCE_LOG_CLS("SaveB date: String " $ strDatePartB $ " split into " $ iMonthB $ ", " $ iDayB $ ", and " $ iYearB);
+
+    if (iYearA < iYearB)
+    {
+        `LWCE_LOG_CLS("Year: -1");
+        return -1;
+    }
+    else if (iYearA > iYearB)
+    {
+        `LWCE_LOG_CLS("Year: 0");
+        return 0;
+    }
+
+    if (iMonthA < iMonthB)
+    {
+        `LWCE_LOG_CLS("Month: -1");
+        return -1;
+    }
+    else if (iMonthA > iMonthB)
+    {
+        `LWCE_LOG_CLS("Month: 0");
+        return 0;
+    }
+
+    if (iDayA < iDayB)
+    {
+        `LWCE_LOG_CLS("Day: -1");
+        return -1;
+    }
+    else if (iDayA > iDayB)
+    {
+        `LWCE_LOG_CLS("Day: 0");
+        return 0;
+    }
+
+    ParseStringIntoArray(strTimePartA, Parts, ":", true);
+    iTimeA = 60 * int(Parts[1]) + int(Parts[0]);
+
+    ParseStringIntoArray(strTimePartB, Parts, ":", true);
+    iTimeB = 60 * int(Parts[1]) + int(Parts[0]);
+
+    if (iTimeA < iTimeB)
+    {
+        `LWCE_LOG_CLS("Time: -1");
+        return -1;
+    }
+
+    `LWCE_LOG_CLS("Time: 0");
+    return 0;
+}

@@ -375,7 +375,7 @@ function ShowSaveIndicator(optional bool bProfileSave){}
 function HideSaveIndicator(){}
 event FillInHeaderForSave(out SaveGameHeader Header, out string SaveFriendlyName){}
 native static function FormatTimeStamp(out string TimeStamp, int Year, int Month, int Day, int Hour, int Minute);
-native function SortSavedGameListByTimestamp(const out array<OnlineSaveGame> SaveGameList);
+native function SortSavedGameListByTimestamp(out array<OnlineSaveGame> SaveGameList);
 function bool ArePRIStatsNewerThanCachedVersion(XComPlayerReplicationInfo PRI){}
 static function FillPRIFromLastMatchPlayerInfo(out TMPLastMatchInfo_Player kLastMatchPlayerInfo, XComPlayerReplicationInfo kPRI){}
 static function FillLastMatchPlayerInfoFromPRI(out TMPLastMatchInfo_Player kLastMatchPlayerInfo, XComPlayerReplicationInfo kPRI){}
