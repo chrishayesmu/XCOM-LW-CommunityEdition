@@ -380,7 +380,6 @@ simulated function LWCE_SetInventory(const out LWCE_TCharacter inCharacter, cons
     m_nmArmor = Inv.nmArmor;
     m_kCEAppearance = Appearance;
     m_bHasGeneMods = class'LWCE_XComPerkManager'.static.LWCE_HasAnyGeneMod(inCharacter);
-    //PawnType = class'LWCE_XGBattleDesc'.static.LWCE_MapSoldierToPawn(Inv.nmArmor, Appearance.iGender);
     m_nmPrimaryWeapon = class'LWCE_XGTacticalGameCore'.static.LWCE_GetPrimaryWeapon(m_kCEChar.kInventory);
     m_bSetArmorKit = true;
 
