@@ -675,6 +675,58 @@ function RefundCost(const LWCE_TCost kCost)
     }
 }
 
+function UpdateInterceptorOrders()
+{
+    local LWCE_XGStorage kStorage;
+    local array<int> aiRemove;
+    local int iOrder, iOrderCount, iContinent, iTransfer;
+
+    kStorage = LWCE_XGStorage(STORAGE());
+
+    for (iOrder = 0; iOrder < m_akInterceptorOrders.Length; iOrder++)
+    {
+        m_akInterceptorOrders[iOrder].iHours -= 1;
+
+        if (m_akInterceptorOrders[iOrder].iHours <= 0)
+        {
+            aiRemove.AddItem(iOrder);
+
+            for (iOrderCount = 0; iOrderCount < m_akInterceptorOrders[iOrder].iNumInterceptors; iOrderCount++)
+            {
+                iContinent = m_akInterceptorOrders[iOrder].iDestinationContinent;
+                kStorage.LWCE_AddItem('Item_Interceptor', 1, iContinent);
+            }
+
+            PRES().Notify(eGA_NewInterceptors, m_akInterceptorOrders[iOrder].iNumInterceptors, m_akInterceptorOrders[iOrder].iDestinationContinent);
+        }
+    }
+
+    for (iOrder = aiRemove.Length - 1; iOrder >= 0; iOrder--)
+    {
+        m_akInterceptorOrders.Remove(aiRemove[iOrder], 1);
+    }
+
+    aiRemove.Remove(0, aiRemove.Length);
+
+    for (iTransfer = 0; iTransfer < m_arrShipTransfers.Length; iTransfer++)
+    {
+        m_arrShipTransfers[iTransfer].iHours -= 1;
+
+        if (m_arrShipTransfers[iTransfer].iHours > 0)
+        {
+        }
+        else
+        {
+            aiRemove.AddItem(iTransfer);
+        }
+    }
+
+    for (iOrder = aiRemove.Length - 1; iOrder >= 0; iOrder--)
+    {
+        m_arrShipTransfers.Remove(aiRemove[iOrder], 1);
+    }
+}
+
 state InBase
 {
     event BeginState(name PS)
