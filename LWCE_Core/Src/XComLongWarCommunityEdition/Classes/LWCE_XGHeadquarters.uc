@@ -147,7 +147,7 @@ function AddSatelliteNode(int iCountry, int iType, optional bool bInstant)
     kSatellite.kSatEntity.SetHidden(true);
     kSatellite.kSatEntity.SetBase(none);
     m_arrSatellites.AddItem(kSatellite);
-    STORAGE().RemoveItem(iType);
+    LWCE_XGStorage(STORAGE()).LWCE_RemoveItem('Item_Satellite');
 
     if (bInstant)
     {

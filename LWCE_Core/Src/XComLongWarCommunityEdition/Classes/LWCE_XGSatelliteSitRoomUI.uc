@@ -13,6 +13,55 @@ simulated function LWCE_GetRequestData(out LWCE_TFCRequest kRequestRef)
     // This is added just to meet the interface requirements and avoid log errors
 }
 
+function UpdateCountryHelp()
+{
+    local TSatCursorUI kUI;
+
+    kUI.txtHelp.StrValue = "";
+    kUI.txtHelp.iState = eUIState_Bad;
+
+    if (m_iCountry == -1)
+    {
+        kUI.bEnabled = false;
+    }
+    else
+    {
+        if (Country(m_iCountry).LeftXCom())
+        {
+            kUI.txtHelp.StrValue = m_strLabelLeftXCom;
+            kUI.txtHelp.iState = eUIState_Bad;
+        }
+
+        if (Country(m_iCountry).HasSatelliteCoverage())
+        {
+            kUI.bEnabled = false;
+            kUI.txtHelp.StrValue = m_strLabelHasSatellite;
+            kUI.txtHelp.iState = eUIState_Disabled;
+        }
+        else if (!HasUplinkCapacity())
+        {
+            kUI.bEnabled = false;
+            kUI.txtHelp.StrValue = m_strLabelNoCapacity;
+            kUI.txtHelp.iState = eUIState_Bad;
+        }
+        else if (LWCE_XGStorage(STORAGE()).LWCE_GetNumItemsAvailable('Item_Satellite') == 0)
+        {
+            kUI.bEnabled = false;
+            kUI.txtHelp.StrValue = m_strLabelNoSatellites;
+            kUI.txtHelp.iState = eUIState_Bad;
+        }
+        else
+        {
+            kUI.bEnabled = true;
+            kUI.txtHelp.iButton = 1;
+            kUI.txtHelp.StrValue = m_strLabelLaunchSatellite;
+            kUI.txtHelp.iState = eUIState_Good;
+        }
+    }
+
+    m_kCursorUI = kUI;
+}
+
 function UpdateMain()
 {
     local string strSatellite;
