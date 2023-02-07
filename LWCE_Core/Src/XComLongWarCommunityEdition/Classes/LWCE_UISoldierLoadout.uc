@@ -470,7 +470,7 @@ simulated function UpdateInventoryList()
         kEquipment = LWCEEquipmentTemplate(`LWCE_ITEM(kOption.ItemName));
         imgPath = kOption.imgItem.strPath;
 
-        if (kEquipment.bLoadoutScreenFanoutPerCharge)
+        if (kEquipment != none && kEquipment.bLoadoutScreenFanoutPerCharge)
         {
             iDisplayedCharges = Max(kEquipment.GetClipSize(kSoldier.m_kCEChar), 1);
         }
