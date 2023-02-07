@@ -37,6 +37,11 @@ function EquipWeapon(EItemType eItem)
 
 function LWCE_EquipWeapon(name ItemName, int Index)
 {
+    if (m_arrCEWeapons.Length <= Index)
+    {
+        m_arrCEWeapons.Length = Index + 1;
+    }
+
     if (m_arrCEWeapons[Index] != '')
     {
         LWCE_XGStorage(STORAGE()).LWCE_AddItem(m_arrCEWeapons[0]);

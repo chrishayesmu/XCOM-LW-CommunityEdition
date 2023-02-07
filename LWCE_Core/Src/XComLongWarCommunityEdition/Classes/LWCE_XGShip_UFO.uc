@@ -60,7 +60,6 @@ function Init(TShip kTShip)
 
         if (ItemName != '')
         {
-            `LWCE_LOG_CLS("Giving UFO weapon " $ ItemName);
             m_kCETShip.arrWeapons.AddItem(ItemName);
         }
     }
