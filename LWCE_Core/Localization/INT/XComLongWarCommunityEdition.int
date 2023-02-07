@@ -574,6 +574,7 @@ strTacticalText= "<Bullet/> Confers Sentinel perk, giving SHIV two reaction shot
 strName="Avalanche Missiles"
 strNamePlural="Avalanche Missiles"
 strBriefSummary="A crash program and a couple of lucky experiments led to the Avalanche Missiles, an air-to-air weapon of unprecedented precision. It represents the pinnacle of terrestrial guided-missile technology."
+strTacticalText="<Bullet/> A conventional air-to-air missile upgraded with Earth's best targeting software\n<Bullet/> Warhead's effectiveness against alien armor materials is unknown"
 
 [Item_BansheeArmor LWCEArmorTemplate]
 strName="Banshee Armor"
@@ -843,6 +844,7 @@ strTacticalText= "<Bullet/> Confers +2 Mobility (and no weight penalty)\n<Bullet
 strName="EMP Cannon"
 strNamePlural="EMP Cannons"
 strBriefSummary="The EMP cannon was developed in an effort to increase the chance of recovering functional alien technology from downed UFOs. Although the alien systems will be disabled, the EMP does not inflict physical damage to these components."
+strTacticalText="<Bullet/> Electromagnetic waves do high damage to UFO internal systems but leave other essentials recoverable\n<Bullet/> Alien crew survival much more likely if their craft is downed by EMP"
 
 [Item_EnhancedBeamOptics LWCEWeaponTemplate]
 strName="Enhanced Beam Optics"
@@ -903,6 +905,7 @@ strBriefSummary="This equipment is part of the fusion core recovered from the la
 strName="Fusion Lance"
 strNamePlural="Fusion Lances"
 strBriefSummary="The Fusion Lance is the most powerful anti-aircraft weapon available to XCOM. It should be capable of taking down any UFO."
+strTacticalText="<Bullet/> Developed with technology recovered from an alien capital ship\n<Bullet/> Trades fire rate for massively increased destructive power"
 
 [Item_GatlingLaser LWCEWeaponTemplate]
 strName="Gatling Laser"
@@ -1071,6 +1074,7 @@ strTacticalText= "<Bullet/> A powerful arm upgrade for the MEC, allowing the wie
 strName="Laser Cannon"
 strNamePlural="Laser Cannons"
 strBriefSummary="These super-cooled laser cannons should increase our ability to shoot down alien craft."
+strTacticalText="<Bullet/> Frame-mounted laser cannon\n<Bullet/> Integrated large-scale cooling systems eliminate fire capacity limits found in battlefield laser tech"
 
 [Item_LaserCarbine LWCEWeaponTemplate]
 strName="Laser Carbine"
@@ -1272,11 +1276,13 @@ strTacticalText= "<Bullet/> Medium Armor\n<Bullet/> +2 mobility, +3 HP"
 strName="Phoenix Cannon"
 strNamePlural="Phoenix Cannons"
 strBriefSummary="The Phoenix Cannon is capable of delivering massive burst damage with armor-piercing alloy-based rounds."
+strTacticalText="<Bullet/> Rapid-fire cannon designed to shred highly maneuverable targets with alloy-jacketed, depleted elerium rounds"
 
 [Item_PlasmaCannon LWCEShipWeaponTemplate]
 strName="Plasma Cannon"
 strNamePlural="Plasma Cannons"
 strBriefSummary="The focused plasma cannon is an ideal anti-UFO weapon, combining high damage output with a long effective range."
+strTacticalText="<Bullet/> Plasma projectile's extreme heat can melt almost anything\n<Bullet/> Lack of onboard guidance and unpredictable reaction to terrestrial atmosphere causes some inaccuracy"
 
 [Item_Pistol LWCEWeaponTemplate]
 strName="Pistol"
@@ -1668,7 +1674,7 @@ strTacticalText= "<Bullet/> A long rifle version of the Assault Rifle\n<Bullet/>
 strName="Stingray Missiles"
 strNamePlural="Stingray Missiles"
 strBriefSummary="Stingray Missiles are small, fast air-to-air missiles. They have traded some explosive punch for a shaped warhead that can penetrate airborne hard targets."
-strTacticalText= "<Bullet/> Small guided missiles that don't do as much damage as an Avalanche, but is shaped to penetrate armored airborne targets\n<Bullet/> Weight: 1"
+strTacticalText= "<Bullet/> Small guided missiles that don't do as much damage as an Avalanche, but is shaped to penetrate armored airborne targets"
 
 [Item_SuperheavyLaser LWCEWeaponTemplate]
 strName="Superheavy Laser"
