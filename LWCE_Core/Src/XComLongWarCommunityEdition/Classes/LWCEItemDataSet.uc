@@ -2,7 +2,9 @@ class LWCEItemDataSet extends LWCEDataSet;
 
 static function OnPostTemplatesCreated()
 {
+    local int Index;
     local LWCEItemTemplateManager kItemMgr;
+    local LWCEShipWeaponTemplate kShipWeaponTemplate;
     local array<LWCEItemTemplate> arrTemplates;
 
     kItemMgr = `LWCE_ITEM_TEMPLATE_MGR;
@@ -33,6 +35,22 @@ static function OnPostTemplatesCreated()
     // TODO: stat changes should be handled as a new perk which applies to the character
     kItemMgr.FindEquipmentTemplate('Item_LaserSight').ModifyStatChangesFn = ModifyStatChanges_ScopeUpgrade;
     kItemMgr.FindEquipmentTemplate('Item_SCOPE').ModifyStatChangesFn = ModifyStatChanges_ScopeUpgrade;
+
+    // All ship weapons benefit from base game Foundry projects
+    for (Index = 0; Index < arrTemplates.Length; Index++)
+    {
+        if (!arrTemplates[Index].IsShipWeapon())
+        {
+            continue;
+        }
+
+        kShipWeaponTemplate = LWCEShipWeaponTemplate(arrTemplates[Index]);
+
+        kShipWeaponTemplate.arrArmorPenModifiers.AddItem(ShipWeapon_ArmorPenModifier);
+        kShipWeaponTemplate.arrDamageModifiers.AddItem(ShipWeapon_DamageModifier);
+        kShipWeaponTemplate.arrFiringTimeModifiers.AddItem(ShipWeapon_FiringTimeModifier);
+        kShipWeaponTemplate.arrHitChanceModifiers.AddItem(ShipWeapon_HitChanceModifier);
+    }
 }
 
 protected static function bool IsInfinite_AlienGrenade()
@@ -267,4 +285,92 @@ private static function ModifyStatChanges_ScopeUpgrade(const LWCEEquipmentTempla
             kStatChangesOut.iCriticalChance += 8;
             break;
     }
+}
+
+// TODO: move the stats applied below into configuration
+
+private static function int ShipWeapon_ArmorPenModifier(LWCEShipWeaponTemplate kShipWeapon, XGShip kShip, bool bShipIsXCom, int iCurrentValue)
+{
+    local LWCE_XGFacility_Engineering kEngineering;
+    local int iArmorPenModifier;
+
+    if (bShipIsXCom)
+    {
+        kEngineering = `LWCE_ENGINEERING;
+
+        if (kEngineering.LWCE_IsFoundryTechResearched('Foundry_PenetratorWeapons'))
+        {
+            iArmorPenModifier += 25;
+        }
+
+        if (kShipWeapon.GetItemName() == 'Item_LaserCannon' && kEngineering.LWCE_IsFoundryTechResearched('Foundry_Supercapacitors'))
+        {
+            iArmorPenModifier += 30;
+        }
+        else if (kShipWeapon.GetItemName() == 'Item_PhoenixCannon' && kEngineering.LWCE_IsFoundryTechResearched('Foundry_PhoenixCoilguns'))
+        {
+            iArmorPenModifier += 65;
+        }
+    }
+
+    return iArmorPenModifier;
+}
+
+private static function int ShipWeapon_DamageModifier(LWCEShipWeaponTemplate kShipWeapon, XGShip kShip, bool bShipIsXCom, int iCurrentValue)
+{
+    local LWCE_XGFacility_Engineering kEngineering;
+    local int iDamageModifier;
+
+    if (bShipIsXCom)
+    {
+        kEngineering = `LWCE_ENGINEERING;
+
+        if (kShipWeapon.GetItemName() == 'Item_LaserCannon' && kEngineering.LWCE_IsFoundryTechResearched('Foundry_Supercapacitors'))
+        {
+            iDamageModifier += 10;
+        }
+        else if (kShipWeapon.GetItemName() == 'Item_PhoenixCannon' && kEngineering.LWCE_IsFoundryTechResearched('Foundry_PhoenixCoilguns'))
+        {
+            iDamageModifier += 90;
+        }
+    }
+
+    return iDamageModifier;
+}
+
+private static function float ShipWeapon_FiringTimeModifier(LWCEShipWeaponTemplate kShipWeapon, XGShip kShip, bool bShipIsXCom, float fCurrentValue)
+{
+    local float fFiringTimeModifier;
+
+    if (bShipIsXCom)
+    {
+        if (kShipWeapon.GetItemName() == 'Item_LaserCannon' && `LWCE_ENGINEERING.LWCE_IsFoundryTechResearched('Foundry_Supercapacitors'))
+        {
+            fFiringTimeModifier = -0.25f;
+        }
+    }
+
+    return fFiringTimeModifier;
+}
+
+private static function int ShipWeapon_HitChanceModifier(LWCEShipWeaponTemplate kShipWeapon, XGShip kShip, bool bShipIsXCom, int iCurrentValue)
+{
+    local int iAimModifier;
+
+    if (bShipIsXCom)
+    {
+        if (`LWCE_ENGINEERING.LWCE_IsFoundryTechResearched('Foundry_AdvancedAvionics'))
+        {
+            iAimModifier += 10;
+        }
+    }
+    else
+    {
+        if (`LWCE_ENGINEERING.LWCE_IsFoundryTechResearched('Foundry_UFOCountermeasures'))
+        {
+            iAimModifier -= 15;
+        }
+    }
+
+    return iAimModifier;
 }

@@ -73,7 +73,7 @@ function float LWCE_GetDamageMitigation(LWCEShipWeaponTemplate kShipWeaponTempla
     armorMitigation = 0.050;
     targetShipArmor = LWCE_XGShip(GetShip(comExchange.iTargetShip)).GetShipData().iArmor;
     firingShipArmorPen = LWCE_XGShip(GetShip(comExchange.iSourceShip)).GetShipData().iArmorPen;
-    firingWeaponArmorPen = kShipWeaponTemplate.iArmorPen / 100.0f;
+    firingWeaponArmorPen = kShipWeaponTemplate.GetArmorPen(GetShip(comExchange.iSourceShip), !IsUfo(comExchange.iSourceShip)) / 100.0f;
     Offense = firingWeaponArmorPen + firingShipArmorPen;
     Defense = targetShipArmor;
     finalMitigation = FClamp(armorMitigation * (Defense - Offense), 0.0, 0.950);
@@ -145,20 +145,14 @@ function int GetShipDamage(TShipWeapon SHIPWEAPON, CombatExchange comExchange)
 
 function int LWCE_GetShipDamage(LWCEShipWeaponTemplate kShipWeaponTemplate, CombatExchange comExchange)
 {
-    local int shipDmg;
-    local float mitigation;
+    local int iBaseDmg, iFinalDmg;
+    local float fDamageMitigation;
 
-    if (kShipWeaponTemplate.iDamage == 0)
-    {
-        shipDmg = 0;
-    }
-    else
-    {
-        mitigation = LWCE_GetDamageMitigation(kShipWeaponTemplate, comExchange);
-        shipDmg = kShipWeaponTemplate.iDamage * (1.0f - mitigation);
-    }
+    iBaseDmg = kShipWeaponTemplate.GetDamage(GetShip(comExchange.iSourceShip), !IsUfo(comExchange.iSourceShip));
+    fDamageMitigation = LWCE_GetDamageMitigation(kShipWeaponTemplate, comExchange);
+    iFinalDmg = iBaseDmg * (1.0f - fDamageMitigation);
 
-    return shipDmg;
+    return iFinalDmg;
 }
 
 function float GetShortestWeaponRange(int iShip)
@@ -405,7 +399,7 @@ function UpdateWeapons(float fDeltaT)
                 {
                     if (kShip.m_afWeaponCooldown[iWeapon] <= 0.0)
                     {
-                        kShip.m_afWeaponCooldown[iWeapon] += kShipWeaponTemplate.fFiringTime;
+                        kShip.m_afWeaponCooldown[iWeapon] += kShipWeaponTemplate.GetFiringTime(kShip, !IsUfo(iShip));
                         kCombatExchange.iSourceShip = iShip;
                         kCombatExchange.iWeapon = iWeapon;
 
@@ -425,7 +419,7 @@ function UpdateWeapons(float fDeltaT)
                             kCombatExchange.iTargetShip = 0;
                         }
 
-                        iChanceToHit = kShipWeaponTemplate.iHitChance;
+                        iChanceToHit = kShipWeaponTemplate.GetHitChance(kShip, !IsUfo(iShip));
 
                         // For player ships, add aim per confirmed kill
                         if (iShip != 0)
@@ -446,7 +440,7 @@ function UpdateWeapons(float fDeltaT)
                         kCombatExchange.iDamage = LWCE_GetShipDamage(kShipWeaponTemplate, kCombatExchange);
 
                         // Roll for critical hit
-                        if (Rand(100) <= Clamp((kShipWeaponTemplate.iArmorPen + GetShip(kCombatExchange.iSourceShip).m_kTShip.iAP - GetShip(kCombatExchange.iTargetShip).m_kTShip.iArmor) / 2, 5, 25))
+                        if (Rand(100) <= Clamp((kShipWeaponTemplate.GetArmorPen(GetShip(kCombatExchange.iSourceShip), IsUfo(kCombatExchange.iSourceShip)) + GetShip(kCombatExchange.iSourceShip).m_kTShip.iAP - GetShip(kCombatExchange.iTargetShip).m_kTShip.iArmor) / 2, 5, 25))
                         {
                             kCombatExchange.iDamage *= 2.0f;
                         }
