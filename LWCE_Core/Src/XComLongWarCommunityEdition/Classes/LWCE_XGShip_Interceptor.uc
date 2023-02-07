@@ -1,12 +1,11 @@
-class LWCE_XGShip_Interceptor extends XGShip_Interceptor;
+class LWCE_XGShip_Interceptor extends XGShip_Interceptor implements(LWCE_XGShip);
 
 struct CheckpointRecord_LWCE_XGShip_Interceptor extends CheckpointRecord_XGShip_Interceptor
 {
     var array<name> m_arrCEWeapons;
+    var LWCE_TShip m_kCETShip;
 };
 
-// NOTE: this is an array of weapons for possible future expansion, but for now, only
-// index 0 should be used. Other indices will be ignored.
 var array<name> m_arrCEWeapons;
 var LWCE_TShip m_kCETShip;
 
@@ -18,11 +17,17 @@ function Init(TShip kTShip)
     m_v2Destination = m_v2Coords;
     m_fFlightTime = 43200.0;
 
-    super(XGShip).Init(kTShip);
+    class'LWCE_XGShip_Extensions'.static.Init(self, kTShip);
 
     // TODO: default weapon should be determined by template
-    m_arrCEWeapons.AddItem('Item_AvalancheMissiles');
+    LWCE_EquipWeapon('Item_AvalancheMissiles', 0);
     InitSound();
+
+    if (`LWCE_ENGINEERING.LWCE_IsFoundryTechResearched('Foundry_WingtipSparrowhawks'))
+    {
+        // Sparrowhawks are just Stingrays; their damage is cut in half by logic in the interception code
+        LWCE_EquipWeapon('Item_StingrayMissiles', 1);
+    }
 }
 
 function EquipWeapon(EItemType eItem)
@@ -30,25 +35,14 @@ function EquipWeapon(EItemType eItem)
     `LWCE_LOG_DEPRECATED_CLS(EquipWeapon);
 }
 
-function LWCE_EquipWeapon(name ItemName)
+function LWCE_EquipWeapon(name ItemName, int Index)
 {
-    if (m_arrCEWeapons[0] != '' && ItemName != 'Item_WingtipSparrowhawks')
+    if (m_arrCEWeapons[Index] != '')
     {
         LWCE_XGStorage(STORAGE()).LWCE_AddItem(m_arrCEWeapons[0]);
     }
 
-    m_kCETShip.arrWeapons.Remove(0, m_kCETShip.arrWeapons.Length);
-
-    if (ItemName != 'Item_WingtipSparrowhawks')
-    {
-        m_arrCEWeapons[0] = ItemName;
-        m_kCETShip.arrWeapons.AddItem(ItemName);
-    }
-
-    if (ItemName == 'Item_WingtipSparrowhawks' || `LWCE_ENGINEERING.LWCE_IsFoundryTechResearched('Foundry_WingtipSparrowhawks'))
-    {
-        m_kCETShip.arrWeapons.AddItem('Item_StingrayMissiles'); // TODO confirm that this is the right item and Sparrowhawks aren't separate
-    }
+    m_arrCEWeapons[Index] = ItemName;
 
     if (m_kHangarShip != none)
     {
@@ -64,21 +58,47 @@ function LWCE_EquipWeapon(name ItemName)
     }
 }
 
+function LWCE_TShip GetShipData()
+{
+    return m_kCETShip;
+}
+
 function EItemType GetWeapon()
 {
-    `LWCE_LOG_DEPRECATED_CLS(GetWeapon);
+    `LWCE_LOG_CLS("ERROR: LWCE-incompatible function GetWeapon was called. This needs to be replaced with GetWeaponAtIndex. Stack trace follows.");
+    ScriptTrace();
 
     return eItem_None;
 }
 
-function name LWCE_GetWeapon()
+function name GetWeaponAtIndex(int Index)
 {
-    return m_arrCEWeapons.Length > 0 ? m_arrCEWeapons[0] : '';
+    if (Index >= m_arrCEWeapons.Length)
+    {
+        return '';
+    }
+
+    return m_arrCEWeapons[Index];
+}
+
+function array<TShipWeapon> GetWeapons()
+{
+    local array<TShipWeapon> arrWeapons;
+
+    `LWCE_LOG_DEPRECATED_CLS(GetWeapons);
+
+    arrWeapons.Length = 0;
+    return arrWeapons;
+}
+
+function array<name> LWCE_GetWeapons()
+{
+    return m_arrCEWeapons;
 }
 
 function string GetWeaponString()
 {
-    return `LWCE_ITEM(LWCE_GetWeapon()).strName;
+    return `LWCE_ITEM(GetWeaponAtIndex(0)).strName;
 }
 
 function XGHangarShip GetWeaponViewShip()
@@ -110,6 +130,11 @@ function bool IsFirestorm()
 function bool IsInterceptor()
 {
     return m_kCETShip.eType == eShip_Interceptor;
+}
+
+function int NumWeapons()
+{
+    return m_arrCEWeapons.Length;
 }
 
 // Custom functions for dealing with manually entering callsigns

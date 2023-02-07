@@ -1095,3 +1095,67 @@ function LWCE_RepairItem(name ItemName, optional int iQuantity = 1)
     m_arrCEDamagedItems[iDamagedIndex].iQuantity -= iQuantity;
     m_arrCEDamagedItems[iItemIndex].iQuantity += iQuantity;
 }
+
+function RestoreBackedUpInventory(XGStrategySoldier kSoldier)
+{
+    local LWCE_XGFacility_Lockers kLockers;
+    local LWCE_XGStrategySoldier kCESoldier;
+    local name nmDefaultPrimaryWeapon;
+    local int Index;
+
+    kLockers = LWCE_XGFacility_Lockers(LOCKERS());
+    kCESoldier = LWCE_XGStrategySoldier(kSoldier);
+
+    if (kCESoldier.m_kCEBackedUpLoadout.nmArmor == 'Item_LeatherJacket')
+    {
+        // TODO need a hook for the default infinite armor
+        kCESoldier.m_kCEBackedUpLoadout.nmArmor = 'Item_TacArmor';
+    }
+
+    if (!kLockers.LWCE_EquipArmor(kCESoldier, kCESoldier.m_kCEBackedUpLoadout.nmArmor) && kCESoldier.m_kCEChar.kInventory.nmArmor == 'Item_LeatherJacket')
+    {
+        kLockers.LWCE_EquipArmor(kCESoldier, 'Item_TacArmor');
+    }
+
+    if (kCESoldier.m_kCEBackedUpLoadout.arrLargeItems.Length > 0 && kCESoldier.m_kCEBackedUpLoadout.arrLargeItems[0] == '')
+    {
+        nmDefaultPrimaryWeapon = LWCE_GetInfinitePrimary(kCESoldier);
+        class'LWCEInventoryUtils'.static.SetLargeItem(kCESoldier.m_kCEBackedUpLoadout, 0, nmDefaultPrimaryWeapon);
+    }
+
+    if (kCESoldier.m_kCEBackedUpLoadout.arrLargeItems.Length > 0  && kCESoldier.m_kCEBackedUpLoadout.arrLargeItems[0] != kCESoldier.m_kCEChar.kInventory.arrLargeItems[0])
+    {
+        if (!kLockers.LWCE_EquipLargeItem(kCESoldier, kCESoldier.m_kCEBackedUpLoadout.arrLargeItems[0], 0))
+        {
+            if (kCESoldier.m_kCEChar.kInventory.arrLargeItems[0] == '')
+            {
+                nmDefaultPrimaryWeapon = LWCE_GetInfinitePrimary(kCESoldier);
+                class'LWCEInventoryUtils'.static.SetLargeItem(kCESoldier.m_kCEBackedUpLoadout, 0, nmDefaultPrimaryWeapon);
+            }
+        }
+    }
+
+    for (Index = 1; Index < kCESoldier.m_kCEBackedUpLoadout.arrLargeItems.Length; Index++)
+    {
+        if (kCESoldier.m_kCEBackedUpLoadout.arrLargeItems[Index] != kCESoldier.m_kCEChar.kInventory.arrLargeItems[Index])
+        {
+            kLockers.LWCE_EquipLargeItem(kCESoldier, kCESoldier.m_kCEBackedUpLoadout.arrLargeItems[Index], Index);
+        }
+    }
+
+    for (Index = 0; Index < kCESoldier.m_kCEBackedUpLoadout.arrSmallItems.Length; Index++)
+    {
+        if (kCESoldier.m_kCEBackedUpLoadout.arrSmallItems[Index] != kCESoldier.m_kCEChar.kInventory.arrSmallItems[Index])
+        {
+            kLockers.LWCE_EquipSmallItem(kCESoldier, kCESoldier.m_kCEBackedUpLoadout.arrSmallItems[Index], Index);
+        }
+    }
+
+    if (kCESoldier.m_kCEBackedUpLoadout.nmPistol != kCESoldier.m_kCEChar.kInventory.nmPistol)
+    {
+        if (!kLockers.LWCE_EquipPistol(kCESoldier, kCESoldier.m_kCEBackedUpLoadout.nmPistol))
+        {
+            kLockers.LWCE_EquipPistol(kCESoldier, LWCE_GetInfiniteSecondary(kCESoldier));
+        }
+    }
+}

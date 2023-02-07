@@ -133,7 +133,7 @@ function bool LWCE_CanEquip(name ItemName, LWCE_XGShip_Interceptor kShip, out st
 {
     local LWCEShipWeaponTemplate kShipWeapon;
 
-    if (kShip.LWCE_GetWeapon() == ItemName)
+    if (kShip.GetWeaponAtIndex(0) == ItemName)
     {
         strHelp = m_strCanEquipMessage;
         return false;
@@ -190,21 +190,29 @@ function EquipWeapon(EItemType eItem, XGShip_Interceptor kShip)
 
 function LWCE_EquipWeapon(name ItemName, XGShip_Interceptor kShip)
 {
+    local LWCEShipWeaponTemplate kTemplate;
+
+    kTemplate = `LWCE_SHIP_WEAPON(ItemName);
+
     LWCE_XGStorage(STORAGE()).LWCE_RemoveItem(ItemName, 1);
     Sound().PlaySFX(SNDLIB().SFX_Facility_ConstructItem);
-    LWCE_XGShip_Interceptor(kShip).LWCE_EquipWeapon(ItemName);
-    kShip.m_iStatus = eShipStatus_Rearming;
+    LWCE_XGShip_Interceptor(kShip).LWCE_EquipWeapon(ItemName, 0);
 
-    if (ItemName == 'Item_StingrayMissiles' || ItemName == 'Item_AvalancheMissiles')
+    if (kShip.IsFirestorm())
     {
-        kShip.m_iHoursDown = 12;
+        kShip.m_iHoursDown = kTemplate.iFirestormArmingTimeHours;
     }
     else
     {
-        kShip.m_iHoursDown = class'XGTacticalGameCore'.default.INTERCEPTOR_REARM_HOURS;
+        kShip.m_iHoursDown = kTemplate.iInterceptorArmingTimeHours;
     }
 
-/* TODO implement an analogue for this
+    if (kShip.m_iHoursDown > 0)
+    {
+        kShip.m_iStatus = eShipStatus_Rearming;
+    }
+
+/* TODO implement an analogue for this? it's only used to play one narrative
     if (ItemName > m_iCEBestWeaponEquipped)
     {
         m_iCEBestWeaponEquipped = ItemName;

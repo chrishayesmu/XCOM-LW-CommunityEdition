@@ -1,4 +1,4 @@
-class LWCE_XGShip_UFO extends XGShip_UFO;
+class LWCE_XGShip_UFO extends XGShip_UFO implements(LWCE_XGShip);
 
 struct CheckpointRecord_LWCE_XGShip_UFO extends CheckpointRecord_XGShip_UFO
 {
@@ -13,7 +13,8 @@ function Init(TShip kTShip)
     local int Index;
     local name ItemName;
 
-    super.Init(kTShip);
+    class'LWCE_XGShip_Extensions'.static.Init(self, kTShip);
+    InitSound();
 
     // Copy from the base game struct for now; eventually we'll probably move this to templates too
     m_kCETShip.eType = m_kTShip.eType;
@@ -38,12 +39,64 @@ function Init(TShip kTShip)
 
             m_kCETShip.arrSalvage.AddItem(kItemQuantity);
         }
+    }
 
-        if (m_kTShip.arrWeapons[Index] > 0)
+    for (Index = 0; Index < m_kTShip.arrWeapons.Length; Index++)
+    {
+        switch (m_kTShip.arrWeapons[Index])
         {
-            ItemName = class'LWCE_XGItemTree'.static.ItemNameFromBaseID(Index);
+            case eShipWeapon_UFOPlasmaI:
+                ItemName = 'Item_UFOPlasmaMkI';
+                break;
+            case eShipWeapon_UFOPlasmaII:
+                ItemName = 'Item_UFOPlasmaMkII';
+                break;
+            case eShipWeapon_UFOFusionI:
+                ItemName = 'Item_UFOFusionMkI';
+                break;
+            default:
+                ItemName = '';
+        }
 
+        if (ItemName != '')
+        {
+            `LWCE_LOG_CLS("Giving UFO weapon " $ ItemName);
             m_kCETShip.arrWeapons.AddItem(ItemName);
         }
     }
+}
+
+function LWCE_TShip GetShipData()
+{
+    return m_kCETShip;
+}
+
+function name GetWeaponAtIndex(int Index)
+{
+    if (Index >= m_kCETShip.arrWeapons.Length)
+    {
+        return '';
+    }
+
+    return m_kCETShip.arrWeapons[Index];
+}
+
+function array<TShipWeapon> GetWeapons()
+{
+    local array<TShipWeapon> arrWeapons;
+
+    `LWCE_LOG_DEPRECATED_CLS(GetWeapons);
+
+    arrWeapons.Length = 0;
+    return arrWeapons;
+}
+
+function array<name> LWCE_GetWeapons()
+{
+    return m_kCETShip.arrWeapons;
+}
+
+function int NumWeapons()
+{
+    return m_kCETShip.arrWeapons.Length;
 }

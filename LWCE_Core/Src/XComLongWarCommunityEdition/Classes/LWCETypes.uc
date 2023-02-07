@@ -516,7 +516,7 @@ struct LWCE_TShip
     var int iArmorPen;
     var int iRange;
     var array<LWCE_TItemQuantity> arrSalvage;
-    var array<name> arrWeapons;
+    var array<name> arrWeapons; // not used on player ships, only UFOs
     var int iImage;
 };
 

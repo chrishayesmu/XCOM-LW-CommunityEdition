@@ -1,5 +1,36 @@
 class LWCE_UIShipLoadout extends UIShipLoadout;
 
+simulated function bool OnAccept(optional string Arg = "")
+{
+    local LWCE_XGHangarUI kMgr;
+    local XGParamTag kTag;
+    local TDialogueBoxData kData;
+
+    kMgr = LWCE_XGHangarUI(GetMgr());
+
+    if (kMgr.m_kTable.mnuOptions.arrOptions[m_iCurrentSelection].iState == eUIState_Disabled)
+    {
+        kMgr.PlayBadSound();
+    }
+    else
+    {
+        kMgr.PlayOpenSound();
+        kTag = XGParamTag(XComEngine(class'Engine'.static.GetEngine()).LocalizeContext.FindTag("XGParam"));
+        kTag.StrValue0 = kMgr.m_kTable.mnuOptions.arrOptions[m_iCurrentSelection].arrStrings[0];
+        kTag.IntValue0 = int(kMgr.m_kTable.mnuOptions.arrOptions[m_iCurrentSelection].arrStrings[2]);
+
+        kData.strTitle = m_strConfirmEquipDialogTitle;
+        kData.strText = class'XComLocalizer'.static.ExpandString(m_strConfirmEquipDialogText);
+        kData.strAccept = m_strConfirmEquipDialogAcceptText;
+        kData.strCancel = class'UIDialogueBox'.default.m_strDefaultCancelLabel;
+        kData.fnCallback = OnConfirmDialogComplete;
+
+        `HQPRES.UIRaiseDialog(kData);
+    }
+
+    return true;
+}
+
 simulated function bool OnCancel(optional string Arg = "")
 {
     local LWCE_XGHangarUI kMgr;
@@ -7,7 +38,7 @@ simulated function bool OnCancel(optional string Arg = "")
 
     kMgr = LWCE_XGHangarUI(GetMgr());
 
-    kShipWeapon = LWCEShipWeaponTemplate(`LWCE_ITEM(LWCE_XGShip_Interceptor(m_kShip).LWCE_GetWeapon()));
+    kShipWeapon = LWCEShipWeaponTemplate(`LWCE_ITEM(LWCE_XGShip_Interceptor(m_kShip).GetWeaponAtIndex(0)));
     kMgr.LWCE_UpdateShipWeaponView(m_kShip, kShipWeapon);
     kMgr.OnLeaveTable();
 
@@ -23,7 +54,7 @@ function RealizeSelected()
 
     kMgr = LWCE_XGHangarUI(GetMgr());
 
-    kShipWeapon = LWCEShipWeaponTemplate(kMgr.m_arrCEItems[m_iCurrentSelection]);
+    kShipWeapon = kMgr.m_arrCEItems[m_iCurrentSelection];
     kMgr.LWCE_UpdateShipWeaponView(m_kShip, kShipWeapon);
 
     shipWpnRange = kMgr.GetShipWeaponRangeBin(kShipWeapon.iRange);

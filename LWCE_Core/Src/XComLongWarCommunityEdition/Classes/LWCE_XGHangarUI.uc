@@ -1,7 +1,7 @@
 class LWCE_XGHangarUI extends XGHangarUI
     dependson(LWCETypes);
 
-var array<LWCEItemTemplate> m_arrCEItems;
+var array<LWCEShipWeaponTemplate> m_arrCEItems;
 var UIShipSummary m_kShipSummaryScreen;
 
 function XGHangarUI.TTableItemSummary BuildItemSummary(TItem kItem)
@@ -68,20 +68,24 @@ function TTableMenuOption BuildTableItem(TItem kItem)
     return kOption;
 }
 
-function TTableMenuOption LWCE_BuildTableItem(LWCEItemTemplate kItem)
+function TTableMenuOption LWCE_BuildTableItem(LWCEShipWeaponTemplate kShipWeapon)
 {
     local LWCE_XGStorage kStorage;
     local TTableMenuOption kOption;
 
     kStorage = `LWCE_STORAGE;
 
-    kOption.arrStrings[0] = kItem.strName;
+    kOption.arrStrings[0] = kShipWeapon.strName;
     kOption.arrStates[0] = eUIState_Normal;
 
-    kOption.arrStrings[1] = kItem.IsInfinite() ? "" : ("x" $ kStorage.LWCE_GetNumItemsAvailable(kItem.GetItemName()));
+    kOption.arrStrings[1] = kShipWeapon.IsInfinite() ? "" : ("x" $ kStorage.LWCE_GetNumItemsAvailable(kShipWeapon.GetItemName()));
     kOption.arrStates[1] = eUIState_Normal;
 
-    if (!LWCE_XGFacility_Hangar(HANGAR()).LWCE_CanEquip(kItem.GetItemName(), LWCE_XGShip_Interceptor(m_kShip), kOption.strHelp))
+    // Added param to pass the rearm time, since we don't have access to the template in the UI layer
+    kOption.arrStrings[2] = string(XGShip_Interceptor(m_kShip).IsFirestorm() ? kShipWeapon.iFirestormArmingTimeHours : kShipWeapon.iInterceptorArmingTimeHours);
+    kOption.arrStates[2] = eUIState_Normal;
+
+    if (!LWCE_XGFacility_Hangar(HANGAR()).LWCE_CanEquip(kShipWeapon.GetItemName(), LWCE_XGShip_Interceptor(m_kShip), kOption.strHelp))
     {
         kOption.iState = eUIState_Disabled;
     }
@@ -108,7 +112,7 @@ function LWCE_TItemCard LWCE_HANGARUIGetItemCard(optional int iContinent = 0, op
 
     if (iView == eHangarView_ShipSummary)
     {
-        kItemCard = LWCE_BuildShipWeaponCard(LWCE_XGShip_Interceptor(m_kShip).LWCE_GetWeapon(), XGShip_Interceptor(m_kShip));
+        kItemCard = LWCE_BuildShipWeaponCard(LWCE_XGShip_Interceptor(m_kShip).GetWeaponAtIndex(0), LWCE_XGShip_Interceptor(m_kShip));
     }
     else if (iView == eHangarView_ShipList)
     {
@@ -249,7 +253,7 @@ function UpdateInterceptorSummary()
         kSummary.txtTransferButton.iState = eUIState_Disabled;
     }
 
-    kWeapon = LWCEShipWeaponTemplate(`LWCE_ITEM(LWCE_XGShip_Interceptor(m_kShip).LWCE_GetWeapon()));
+    kWeapon = LWCEShipWeaponTemplate(`LWCE_ITEM(LWCE_XGShip_Interceptor(m_kShip).GetWeaponAtIndex(0)));
 
     kSummary.txtWeaponLabel.StrValue = m_strLabelWeaponsSystem;
     kSummary.txtWeapon.StrValue = kWeapon.strName;

@@ -1,5 +1,15 @@
 class LWCE_UISituationRoom extends UISituationRoom;
 
+simulated function XGSatelliteSitRoomUI GetSatelliteMgr()
+{
+    if (m_kLocalSatelliteMgr == none)
+    {
+        m_kLocalSatelliteMgr = XGSatelliteSitRoomUI(XComHQPresentationLayer(controllerRef.m_Pres).GetMgr(class'LWCE_XGSatelliteSitRoomUI', self, m_iViewSatellite));
+    }
+
+    return m_kLocalSatelliteMgr;
+}
+
 state SatelliteState
 {
     simulated function UpdateHUD()

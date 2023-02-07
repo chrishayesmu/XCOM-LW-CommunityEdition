@@ -10,7 +10,7 @@ function PostInit(XGInterception kXGInterception)
 
     kInterceptor = LWCE_XGShip_Interceptor(m_kInterceptionEngagement.m_kInterception.m_arrInterceptors[0]);
 
-    if (!LWCE_IsShortDistanceWeapon(kInterceptor.LWCE_GetWeapon()))
+    if (!LWCE_IsShortDistanceWeapon(kInterceptor.GetWeaponAtIndex(0)))
     {
         Narrative(`XComNarrativeMoment("InterceptorEnemySighted"));
     }
@@ -28,16 +28,7 @@ function bool IsShortDistanceWeapon(int iWeapon)
 
 function bool LWCE_IsShortDistanceWeapon(name WeaponName)
 {
-    // TODO: base this on the weapon's actual attributes
-    switch (WeaponName)
-    {
-        case 'Item_PhoenixCannon':
-        case 'Item_LaserCannon':
-        case 'Item_EMPCannon':
-            return true;
-        default:
-            return false;
-    }
+    return `LWCE_SHIP_WEAPON(WeaponName).eEngagementDistance == eER_Short;
 }
 
 function VOInRange()
@@ -46,7 +37,7 @@ function VOInRange()
 
     kInterceptor = LWCE_XGShip_Interceptor(m_kInterceptionEngagement.m_kInterception.m_arrInterceptors[0]);
 
-    if (m_bFirstFire && LWCE_IsShortDistanceWeapon(kInterceptor.LWCE_GetWeapon()))
+    if (m_bFirstFire && LWCE_IsShortDistanceWeapon(kInterceptor.GetWeaponAtIndex(0)))
     {
         PRES().UINarrative(`XComNarrativeMoment("InterceptorClosingOnTarget"));
         m_bFirstFire = false;

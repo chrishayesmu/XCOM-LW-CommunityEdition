@@ -159,8 +159,6 @@ function XComUnitPawn CreatePawn(optional name DestState = 'InHQ')
     local class<XComUnitPawn> PawnClass;
     local LWCE_TInventory kInv;
 
-    `LWCE_LOG_CLS("CreatePawn: DestState = " $ DestState);
-
     // TODO override other pawn classes
     if (m_kPawn == none)
     {
@@ -170,7 +168,7 @@ function XComUnitPawn CreatePawn(optional name DestState = 'InHQ')
         }
         else if (IsAugmented() && m_kCEChar.kInventory.nmArmor != 'Item_BaseAugments' && CanWearMecInRoom(ESoldierLocation(m_iHQLocation)))
         {
-            PawnClass = class'XComMecPawn';
+            PawnClass = class'LWCE_XComMecPawn';
         }
         else
         {
@@ -184,24 +182,24 @@ function XComUnitPawn CreatePawn(optional name DestState = 'InHQ')
 
     if (m_kPawn.IsA('XComHumanPawn') && DestState == 'MedalCeremony')
     {
-        XComHumanPawn(m_kPawn).SetMedals(m_arrMedals);
+        LWCE_XComHumanPawn(m_kPawn).SetMedals(m_arrMedals);
     }
 
     if (IsATank())
     {
         LWCE_XComTank(m_kPawn).LWCE_Init(m_kCEChar.kInventory);
     }
-    else if (IsAugmented() && m_kChar.kInventory.iArmor != eItem_MecCivvies)
+    else if (IsAugmented() && m_kCEChar.kInventory.nmArmor != 'Item_BaseAugments')
     {
         if (CanWearMecInRoom(ESoldierLocation(m_iHQLocation)))
         {
-            XComMecPawn(m_kPawn).Init(m_kChar, m_kChar.kInventory, m_kSoldier.kAppearance);
+            LWCE_XComMecPawn(m_kPawn).LWCE_Init(m_kCEChar, m_kCEChar.kInventory, m_kCESoldier.kAppearance);
         }
         else
         {
             kInv = m_kCEChar.kInventory;
             kInv.nmArmor = 'Item_BaseAugments';
-            LWCE_XComHumanPawn(m_kPawn).LWCE_Init(m_kCEChar, kInv, m_kCESoldier.kAppearance);
+            LWCE_XComMecPawn(m_kPawn).LWCE_Init(m_kCEChar, kInv, m_kCESoldier.kAppearance);
         }
     }
     else
@@ -1016,8 +1014,6 @@ function RebuildAfterCombat(TTransferSoldier kTransfer)
 
 function LWCE_RebuildAfterCombat(TTransferSoldier kTransfer, LWCE_TTransferSoldier kCETransfer)
 {
-    `LWCE_LOG_CLS("LWCE_RebuildAfterCombat: kCETransfer.kSoldier name is " $ kCETransfer.kSoldier.strFirstName @ kCETransfer.kSoldier.strLastName $ ", with " $ kCETransfer.kSoldier.iXP $ " XP");
-
     m_kChar = kTransfer.kChar;
     m_kSoldier = kTransfer.kSoldier;
 
@@ -1042,13 +1038,6 @@ function bool RemovePerk(int iPerkId, name nmSourceType, optional name nmSourceI
     }
 
     return false;
-}
-
-function SetHQLocation(int iNewHQLocation, optional bool bForce = false, optional int SlotIdx = -1, optional bool bForceNewPawn = false)
-{
-    `LWCE_LOG_CLS("SetHQLocation: " $ self $ " - iNewHQLocation = " $ ELocation(iNewHQLocation) $ ", bForce = " $ bForce $ ", SlotIdx = " $ SlotIdx $ ", bForceNewPawn = " $ bForceNewPawn);
-
-    super.SetHQLocation(iNewHQLocation, bForce, SlotIdx, bForceNewPawn);
 }
 
 function SetSoldierClass(ESoldierClass eNewClass)
@@ -1438,8 +1427,6 @@ protected function bool ShouldItemBeLost()
 protected function SyncCharacterStatsFromVanilla()
 {
     local int Index;
-
-    `LWCE_LOG_CLS("SyncCharacterStatsFromVanilla for " $ GetName(eNameType_Full) $ ": copying vanilla aim " $ m_kChar.aStats[eStat_Offense] $ "; current is " $ m_kCEChar.aStats[eStat_Offense]);
 
     for (Index = 0; Index < eStat_MAX; Index++)
     {

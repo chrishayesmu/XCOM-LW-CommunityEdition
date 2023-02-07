@@ -27,6 +27,7 @@
 `define LWCE_FTECH(nm) (`LWCE_FOUNDRY_TEMPLATE_MGR.FindProjectTemplate(`nm))
 `define LWCE_ITEM(nm) (`LWCE_ITEM_TEMPLATE_MGR.FindItemTemplate(`nm))
 `define LWCE_TECH(nm) (`LWCE_TECH_TEMPLATE_MGR.FindTechTemplate(`nm))
+`define LWCE_SHIP_WEAPON(nm) (`LWCE_ITEM_TEMPLATE_MGR.FindShipWeaponTemplate(`nm))
 `define LWCE_WEAPON(nm) (`LWCE_ITEM_TEMPLATE_MGR.FindWeaponTemplate(`nm))
 
 // Dynamic loading of objects that are referenced by the base game; since we aren't in the same UPK, we can't reference them the same way

@@ -754,7 +754,7 @@ function UpdateFoundryProjects()
             {
                 for (iWorkDone = 0; iWorkDone < HANGAR().m_arrInts.Length; iWorkDone++)
                 {
-                    LWCE_XGShip_Interceptor(HANGAR().m_arrInts[iWorkDone]).LWCE_EquipWeapon('Item_WingtipSparrowhawks');
+                    LWCE_XGShip_Interceptor(HANGAR().m_arrInts[iWorkDone]).LWCE_EquipWeapon('Item_StingrayMissiles', 1);
                 }
             }
 

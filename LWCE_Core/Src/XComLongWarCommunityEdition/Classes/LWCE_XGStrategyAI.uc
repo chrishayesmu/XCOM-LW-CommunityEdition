@@ -905,7 +905,7 @@ function LWCE_DetermineCrashLoot(LWCE_XGShip_UFO kUFO, LWCE_XGShip_Interceptor k
     local int Index, iSurvived, iTotal, iSurvivalChance;
     local float fAlloySurvival;
 
-    kShipWeapon = LWCEShipWeaponTemplate(`LWCE_ITEM(kInterceptor.LWCE_GetWeapon()));
+    kShipWeapon = LWCEShipWeaponTemplate(`LWCE_ITEM(kInterceptor.GetWeaponAtIndex(0)));
 
     for (Index = 0; Index < kUFO.m_kCETShip.arrSalvage.Length; Index++)
     {
@@ -932,7 +932,7 @@ function LWCE_DetermineCrashLoot(LWCE_XGShip_UFO kUFO, LWCE_XGShip_Interceptor k
                     break;
                 case 'Item_AlienAlloy':
                     fAlloySurvival = RandRange(class'XGTacticalGameCore'.default.MIN_WRECKED_ALLOYS, class'XGTacticalGameCore'.default.MAX_WRECKED_ALLOYS);
-                    fAlloySurvival = fAlloySurvival + (kShipWeapon.fArtifactRecoveryBonus / 100.0);
+                    fAlloySurvival = FClamp(fAlloySurvival + (kShipWeapon.fArtifactRecoveryBonus / 100.0), 0.0f, 1.0f);
 
                     iSurvived = int(float(iTotal) * fAlloySurvival);
                     break;
@@ -944,7 +944,7 @@ function LWCE_DetermineCrashLoot(LWCE_XGShip_UFO kUFO, LWCE_XGShip_Interceptor k
             // Alloys are already handled by a slightly different method above
             if (kUFO.m_kCETShip.arrSalvage[Index].ItemName != 'Item_AlienAlloy')
             {
-                iSurvivalChance = iSurvivalChance + kShipWeapon.fArtifactRecoveryBonus;
+                iSurvivalChance = FClamp(iSurvivalChance + kShipWeapon.fArtifactRecoveryBonus, 0.0f, 1.0f);
 
                 iSurvived = GetSurvivingCollectibles(iTotal, iSurvivalChance);
             }

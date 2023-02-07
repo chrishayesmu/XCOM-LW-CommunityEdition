@@ -235,5 +235,5 @@ function UpdateData()
     AS_SetWeaponName(m_kShip.GetWeaponString());
     AS_SetShipStatus(class'UIUtilities'.static.GetHTMLColoredText(m_kShip.GetStatusString(), shipStatusID), shipStatusID);
     AS_SetKills(m_strKillsLabel @ m_kShip.m_iConfirmedKills);
-    AS_SetWeaponImage(`LWCE_ITEM(kShip.LWCE_GetWeapon()).ImagePath);
+    AS_SetWeaponImage(`LWCE_ITEM(kShip.GetWeaponAtIndex(0)).ImagePath);
 }

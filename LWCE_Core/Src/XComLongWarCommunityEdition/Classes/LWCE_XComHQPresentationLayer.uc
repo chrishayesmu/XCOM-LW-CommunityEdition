@@ -376,6 +376,19 @@ simulated state State_PendingRequests
     }
 }
 
+simulated state State_SitRoom
+{
+    simulated function Activate()
+    {
+        m_kSubMenu = Spawn(class'UIStrategyHUD_FSM_SituationRoom', m_kStrategyHUD);
+        m_kSubMenu.Init(XComPlayerController(Owner), m_kHUD, m_kStrategyHUD, m_iFacilityView);
+        m_kStrategyHUD.m_kMenu.SetSelectedFacility(`HQGAME.GetGameCore().GetHQ().SITROOM());
+        m_kSituationRoom = Spawn(class'LWCE_UISituationRoom', self);
+        m_kSituationRoom.Init(XComPlayerController(Owner), Get3DMovie(), m_iFacilityView);
+        Get3DMovie().ShowDisplay(class'UISituationRoom'.default.DisplayTag);
+    }
+}
+
 simulated state State_StrategyHUD
 {
     simulated function Activate()
