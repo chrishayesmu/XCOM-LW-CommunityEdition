@@ -16,7 +16,7 @@ function Init(TShip kTShip)
     class'LWCE_XGShip_Extensions'.static.Init(self, kTShip);
     InitSound();
 
-    // Copy from the base game struct for now; eventually we'll probably move this to templates too
+    // Copy from the base game struct for now; eventually we'll move this to templates too
     m_kCETShip.eType = m_kTShip.eType;
     m_kCETShip.strName = m_kTShip.strName;
     m_kCETShip.strSize = m_kTShip.strSize;

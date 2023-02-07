@@ -19,6 +19,18 @@ function Init(TShip kTShip)
 
     class'LWCE_XGShip_Extensions'.static.Init(self, kTShip);
 
+    // Copy from the base game struct for now; eventually we'll move this to templates too
+    m_kCETShip.eType = m_kTShip.eType;
+    m_kCETShip.strName = m_kTShip.strName;
+    m_kCETShip.strSize = m_kTShip.strSize;
+    m_kCETShip.iSpeed = m_kTShip.iSpeed;
+    m_kCETShip.iEngagementSpeed = m_kTShip.iEngagementSpeed;
+    m_kCETShip.iHP = m_kTShip.iHP;
+    m_kCETShip.iArmor = m_kTShip.iArmor;
+    m_kCETShip.iArmorPen = m_kTShip.iAP;
+    m_kCETShip.iRange = m_kTShip.iRange;
+    m_kCETShip.iImage = m_kTShip.iImage;
+
     // TODO: default weapon should be determined by template
     LWCE_EquipWeapon('Item_AvalancheMissiles', 0);
     InitSound();
