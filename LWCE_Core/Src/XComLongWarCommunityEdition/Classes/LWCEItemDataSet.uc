@@ -12,6 +12,8 @@ static function OnPostTemplatesCreated()
 
     AdjustBuildTimes(arrTemplates);
 
+    // TODO: need to make alien grenades unsellable until researched to match base game
+
     // TODO: many more functions to OPTC here
     kItemMgr.FindItemTemplate('Item_AlienGrenade').IsInfiniteFn = IsInfinite_AlienGrenade;
     kItemMgr.FindItemTemplate('Item_BaseAugments').IsInfiniteFn = IsInfinite_MecBaseGear;
@@ -36,7 +38,8 @@ static function OnPostTemplatesCreated()
     kItemMgr.FindEquipmentTemplate('Item_LaserSight').ModifyStatChangesFn = ModifyStatChanges_ScopeUpgrade;
     kItemMgr.FindEquipmentTemplate('Item_SCOPE').ModifyStatChangesFn = ModifyStatChanges_ScopeUpgrade;
 
-    // All ship weapons benefit from base game Foundry projects
+    // All ship weapons benefit from base game Foundry projects. Alien-only weapons are included; the stat modifier
+    // functions will filter out alien ships as needed.
     for (Index = 0; Index < arrTemplates.Length; Index++)
     {
         if (!arrTemplates[Index].IsShipWeapon())

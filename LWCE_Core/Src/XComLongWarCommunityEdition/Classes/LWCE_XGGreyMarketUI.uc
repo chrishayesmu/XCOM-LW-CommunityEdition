@@ -229,7 +229,7 @@ function UpdateList()
 
         if (m_arrItemList[iItem].bCanBeSold)
         {
-            m_arrItemList[iItem].txtItemPrice.StrValue = ConvertCashToString(m_arrCEItems[iItem].kCost.iCash);
+            m_arrItemList[iItem].txtItemPrice.StrValue = ConvertCashToString(m_arrCEItems[iItem].GetSalePrice());
             m_arrItemList[iItem].txtItemPrice.iState = eUIState_Cash;
         }
 
@@ -249,7 +249,7 @@ function UpdateList()
         {
             if (m_arrItemList[iItem].iSelling > 0)
             {
-                iCreditTotal = m_arrItemList[iItem].iSelling * m_arrCEItems[iItem].kCost.iCash;
+                iCreditTotal = m_arrItemList[iItem].iSelling * m_arrCEItems[iItem].GetSalePrice();
 
                 m_arrItemList[iItem].txtNumForSale.StrValue = string(m_arrItemList[iItem].iSelling);
                 m_arrItemList[iItem].txtNumForSale.iState = eUIState_Highlight;
