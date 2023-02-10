@@ -921,7 +921,7 @@ function bool LWCE_GetCostSummary(out TCostSummary kCostSummary, LWCE_TProjectCo
     if (kProjectCost.kCost.iMeld > 0 && !bFreeBuild)
     {
         txtCost.StrValue = kProjectCost.kCost.iMeld $ "x" @ `LWCE_ITEM('Item_Meld').strName;
-        txtCost.iState = eUIState_Meld;
+        txtCost.iState = eUIState_Normal;
 
         if (kProjectCost.kCost.iMeld > GetResource(eResource_Meld) && !bFreeBuild)
         {
