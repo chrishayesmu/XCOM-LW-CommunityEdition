@@ -1,6 +1,13 @@
 class LWCE_UIMECInventory extends UIMECInventory
     dependson(LWCE_XGCyberneticsUI);
 
+const REPAIR_ICON = "Repair";
+
+var const localized string m_strRepairingInfoTitle;
+var const localized string m_strRepairingInfoTitlePlural;
+var const localized string m_strRepairingInfoSubtitle;
+var const localized string m_strRepairingInfoSubtitlePlural;
+
 simulated function XGCyberneticsUI GetMgr()
 {
     if (m_kLocalMgr == none)
@@ -241,7 +248,9 @@ protected simulated function LWCE_UpdateInfoPanelData()
 {
     local int iMECIndex;
     local LWCE_TUIDamagedInventoryItem kDamagedItem;
-    local string sName, strCost;
+    local LWCEItemTemplate kItem;
+    local string sName, strCost, strItemInfo, strRepairInfo;
+    local XGParamTag kTag;
 
     if (m_hWidgetHelper.m_iCurrentWidget == 0)
     {
@@ -253,6 +262,7 @@ protected simulated function LWCE_UpdateInfoPanelData()
     }
 
     kDamagedItem = LWCE_XGCyberneticsUI(GetMgr()).m_arrRepairingItems[iMECIndex];
+    kItem = `LWCE_ITEM(kDamagedItem.ItemName);
     sName = class'UIUtilities'.static.CapsCheckForGermanScharfesS(kDamagedItem.strName);
     strCost = LWCE_GetCosts(kDamagedItem);
 
@@ -265,7 +275,22 @@ protected simulated function LWCE_UpdateInfoPanelData()
     }
     else
     {
-        AS_UpdateInfo(sName, strCost, "", "", "");
+        strItemInfo = kItem.strName $ "||" $ kItem.strBriefSummary $ "||" $ REPAIR_ICON;
+
+        // Not being able to repair indicates that the item is already being repaired; show the remaining time
+        if (!kDamagedItem.bCanRepair)
+        {
+            kTag = XGParamTag(XComEngine(class'Engine'.static.GetEngine()).LocalizeContext.FindTag("XGParam"));
+            kTag.IntValue0 = kDamagedItem.iQuantity;
+            strRepairInfo = class'XComLocalizer'.static.ExpandString(kTag.IntValue0 == 1 ? m_strRepairingInfoTitle : m_strRepairingInfoTitlePlural) $ "||";
+
+            kTag.IntValue0 = kDamagedItem.iRepairHoursLeft;
+            strRepairInfo $= class'XComLocalizer'.static.ExpandString(kTag.IntValue0 == 1 ? m_strRepairingInfoSubtitle : m_strRepairingInfoSubtitlePlural) $ "||";
+
+            strRepairInfo $= REPAIR_ICON;
+        }
+
+        AS_UpdateInfo(sName, strCost, strItemInfo, strRepairInfo, "");
         AS_SetSoldier("", m_strMECUnequipped);
     }
 

@@ -242,11 +242,7 @@ function LWCE_UpdateItemDesc(LWCE_TObjectSummary kSummary)
     local TText tTextItem;
     local int iReq, iSelectedItemState;
 
-    `LWCE_LOG_CLS("LWCE_UpdateItemDesc: ItemType = " $ kSummary.ItemType);
     kItem = `LWCE_ITEM(kSummary.ItemType);
-    ItemName = "";
-    infoText = "";
-    Desc = "";
 
     iSelectedItemState = m_arrUIOptions[m_iCurrentSelection].iState;
     ItemName = class'UIUtilities'.static.GetHTMLColoredText(m_arrUIOptions[m_iCurrentSelection].strLabel, iSelectedItemState);

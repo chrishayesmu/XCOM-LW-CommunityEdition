@@ -7,6 +7,12 @@ m_strDevConsoleMiniLabel="MINI DEV CONSOLE"
 m_strToggleGridLabel="TOGGLE GRID"
 m_strOverwatchAllLabel="OVERWATCH ALL"
 
+[LWCE_UIMECInventory]
+m_strRepairingInfoTitle="Repairing <XGParam:IntValue0/> item"
+m_strRepairingInfoTitlePlural="Repairing <XGParam:IntValue0/> items"
+m_strRepairingInfoSubtitle="<XGParam:IntValue0/> hour remaining"
+m_strRepairingInfoSubtitlePlural="<XGParam:IntValue0/> hours remaining"
+
 [LWCE_UIModSettings]
 m_strWindowTitle="Long War: Community Edition Mod Settings"
 

@@ -6,6 +6,8 @@ struct LWCE_TUIDamagedInventoryItem
     var name ItemName;
     var string strName;
     var int iState;
+    var int iRepairHoursLeft;
+    var int iQuantity;
     var bool bCanRepair;
     var string strCostLabel;
     var string strDescription;
@@ -205,6 +207,8 @@ simulated function LWCE_TUIDamagedInventoryItem GenerateRepairingItem(LWCE_TRepa
 
     kUIItem.strName = class'UIUtilities'.static.GetHTMLColoredText(class'XComLocalizer'.static.ExpandString(m_strLabelRepairing), eUIState_Warning);
     kUIItem.iState = eUIState_Normal;
+    kUIItem.iQuantity = kRepairingItem.iQuantity;
+    kUIItem.iRepairHoursLeft = kRepairingItem.iHoursLeft;
     kUIItem.ItemName = kRepairingItem.ItemName;
     kUIItem.bCanRepair = false;
     kUIItem.strDescription = GenerateItemDescription(kItem);
