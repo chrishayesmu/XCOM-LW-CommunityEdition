@@ -234,7 +234,14 @@ function BuildEventOptions()
                 kOption.clrOption = MakeColor(200, 0, 200, byte(175 / 3));
                 break;
             case 'ItemRepair':
-                kTag.StrValue0 = Item(m_kCEEvents.arrEvents[iEvent].arrData[0].iData).strName;
+                kTag.StrValue0 = `LWCE_ITEM(m_kCEEvents.arrEvents[iEvent].arrData[0].nmData).strName;
+
+                // Include the quantity being repaired
+                if (m_kCEEvents.arrEvents[iEvent].arrData[1].iData > 1)
+                {
+                    kTag.StrValue0 $= " (" $ m_kCEEvents.arrEvents[iEvent].arrData[1].iData $ ")";
+                }
+
                 kOption.EventType = 'ItemRepair';
                 kOption.iPriority = 2;
                 kOption.imgOption.iImage = eImage_OldManufacture;

@@ -905,7 +905,7 @@ function bool ReleaseItem(int iItemId, XGStrategySoldier kSoldier)
     return false;
 }
 
-function bool LWCE_ReleaseItem(name ItemName, XGStrategySoldier kSoldier)
+function bool LWCE_ReleaseItem(name ItemName, XGStrategySoldier kSoldier, optional int iQuantity = 1)
 {
     local int Index, iPerkId;
     local LWCE_TItemQuantity kItemQuantity;
@@ -923,17 +923,20 @@ function bool LWCE_ReleaseItem(name ItemName, XGStrategySoldier kSoldier)
     kItem = LWCEEquipmentTemplate(`LWCE_ITEM(ItemName));
 
     // Remove any perks granted by this item
-    for (Index = 0; Index < kItem.arrPerks.Length; Index++)
+    if (kCESoldier != none)
     {
-        iPerkId = class'LWCE_XComPerkManager'.static.BaseIDFromPerkName(kItem.arrPerks[Index]);
-
-        // TODO: just move everything to names once perks are templated
-        if (iPerkId <= 0 || iPerkId >= ePerk_MAX)
+        for (Index = 0; Index < kItem.arrPerks.Length; Index++)
         {
-            continue;
-        }
+            iPerkId = class'LWCE_XComPerkManager'.static.BaseIDFromPerkName(kItem.arrPerks[Index]);
 
-        kCESoldier.RemovePerk(iPerkId, 'Item');
+            // TODO: just move everything to names once perks are templated
+            if (iPerkId <= 0 || iPerkId >= ePerk_MAX)
+            {
+                continue;
+            }
+
+            kCESoldier.RemovePerk(iPerkId, 'Item');
+        }
     }
 
     if (kItem.IsInfinite())
@@ -945,13 +948,13 @@ function bool LWCE_ReleaseItem(name ItemName, XGStrategySoldier kSoldier)
 
     if (Index != INDEX_NONE)
     {
-        m_arrCEItems[Index].iQuantity += 1;
+        m_arrCEItems[Index].iQuantity += iQuantity;
     }
     else
     {
         // This shouldn't really come up, but just in case it does through some weird mod interactions or something
         kItemQuantity.ItemName = ItemName;
-        kItemQuantity.iQuantity = 1;
+        kItemQuantity.iQuantity = iQuantity;
 
         m_arrCEItems.AddItem(kItemQuantity);
     }
@@ -1093,7 +1096,7 @@ function LWCE_RepairItem(name ItemName, optional int iQuantity = 1)
     }
 
     m_arrCEDamagedItems[iDamagedIndex].iQuantity -= iQuantity;
-    m_arrCEDamagedItems[iItemIndex].iQuantity += iQuantity;
+    m_arrCEItems[iItemIndex].iQuantity += iQuantity;
 }
 
 function RestoreBackedUpInventory(XGStrategySoldier kSoldier)

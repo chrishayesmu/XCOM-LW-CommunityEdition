@@ -1,10 +1,16 @@
 class LWCE_XGFacility_CyberneticsLab extends XGFacility_CyberneticsLab
-    dependson(LWCETypes);
+    dependson(LWCETypes, LWCE_XGGeoscape);
 
 struct LWCE_TRepairingItem
 {
     var name ItemName;
     var int iHoursLeft;
+    var int iQuantity;
+};
+
+struct CheckpointRecord_LWCE_XGFacility_CyberneticsLab extends CheckpointRecord_XGFacility_CyberneticsLab
+{
+    var array<LWCE_TRepairingItem> m_arrRepairingItems;
 };
 
 var array<LWCE_TRepairingItem> m_arrRepairingItems;
@@ -12,7 +18,7 @@ var array<LWCE_TRepairingItem> m_arrRepairingItems;
 function Update()
 {
     LWCE_UpdatePatients();
-    UpdateRepairingMecs();
+    UpdateRepairingItems();
 }
 
 function bool AddItemForRepair(name ItemName, optional int iQuantity = 1)
@@ -26,10 +32,14 @@ function bool AddItemForRepair(name ItemName, optional int iQuantity = 1)
     {
         kRepairingItem.ItemName = ItemName;
         kRepairingItem.iHoursLeft = GetHoursToRepairItem(ItemName);
+        kRepairingItem.iQuantity = iQuantity;
         m_arrRepairingItems.AddItem(kRepairingItem);
 
         PayItemRepairCost(ItemName, iQuantity);
 
+        // Repair the item to remove it from the damaged pool, then immediately remove the
+        // items because they aren't actually repaired yet. We use ClaimItem here, and ReleaseItem
+        // when repairs are done, to avoid changing the history of how many have been acquired.
         kStorage.LWCE_RepairItem(ItemName, iQuantity);
         kStorage.LWCE_ClaimItem(ItemName, /* kSoldier */ none, iQuantity);
 
@@ -197,6 +207,10 @@ function LWCE_GetRepairingMecEvents(out array<LWCE_THQEvent> arrEvents)
         kData.nmData = m_arrRepairingItems[iRepairTime].ItemName;
         kEvent.arrData.AddItem(kData);
 
+        kData.eType = eDT_Int;
+        kData.iData = m_arrRepairingItems[iRepairTime].iQuantity;
+        kEvent.arrData.AddItem(kData);
+
         bAdded = false;
 
         for (iEvent = 0; iEvent < arrEvents.Length; iEvent++)
@@ -317,6 +331,39 @@ function LWCE_UpdatePatients()
             {
                 kSoldier.SetStatus(eStatus_Active);
             }
+        }
+    }
+}
+
+function UpdateRepairingItems()
+{
+    local LWCE_XComHQPresentationLayer kPres;
+    local LWCE_XGStorage kStorage;
+    local array<LWCE_TData> arrData;
+    local int Index;
+
+    kPres = LWCE_XComHQPresentationLayer(PRES());
+    kStorage = LWCE_XGStorage(STORAGE());
+
+    arrData.Add(1);
+
+    for (Index = m_arrRepairingItems.Length - 1; Index >= 0; Index--)
+    {
+        m_arrRepairingItems[Index].iHoursLeft = Max(m_arrRepairingItems[Index].iHoursLeft - 1, 0);
+
+        if (m_arrRepairingItems[Index].iHoursLeft <= 0 && !GEOSCAPE().IsBusy())
+        {
+            arrData[0].eType = eDT_Name;
+            arrData[0].nmData = m_arrRepairingItems[Index].ItemName;
+            kPres.LWCE_Notify('ItemRepairsComplete', arrData);
+
+            if (GEOSCAPE().GetNumMissions() > 0)
+            {
+                GEOSCAPE().RestoreNormalTimeFrame();
+            }
+
+            kStorage.LWCE_ReleaseItem(m_arrRepairingItems[Index].ItemName, /* kSoldier */ none, m_arrRepairingItems[Index].iQuantity);
+            m_arrRepairingItems.Remove(Index, 1);
         }
     }
 }

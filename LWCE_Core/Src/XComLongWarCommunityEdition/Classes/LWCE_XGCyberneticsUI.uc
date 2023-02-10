@@ -1,8 +1,6 @@
 class LWCE_XGCyberneticsUI extends XGCyberneticsUI
     dependson(LWCE_XGFacility_CyberneticsLab);
 
-// TODO: remove EItemType from everywhere in this class
-
 struct LWCE_TUIDamagedInventoryItem
 {
     var name ItemName;
@@ -197,6 +195,12 @@ simulated function LWCE_TUIDamagedInventoryItem GenerateRepairingItem(LWCE_TRepa
 
     kTag = XGParamTag(XComEngine(class'Engine'.static.GetEngine()).LocalizeContext.FindTag("XGParam"));
     kTag.StrValue0 = kItem.strName;
+
+    if (kRepairingItem.iQuantity > 1)
+    {
+        kTag.StrValue0 $= " (" $ kRepairingItem.iQuantity $ ")";
+    }
+
     kTag.IntValue0 = kRepairingItem.iHoursLeft / 24;
 
     kUIItem.strName = class'UIUtilities'.static.GetHTMLColoredText(class'XComLocalizer'.static.ExpandString(m_strLabelRepairing), eUIState_Warning);
@@ -333,6 +337,48 @@ function OnChooseSlot(int iSlot)
     }
 }
 
+simulated function bool OnItemAccept(int iTarget)
+{
+    local LWCE_TUIDamagedInventoryItem kRepairingItem;
+
+    m_iSelectedMEC = iTarget;
+    kRepairingItem = m_arrRepairingItems[m_iSelectedMEC];
+
+    if (iTarget == 0)
+    {
+        if (kRepairingItem.iState == eUIState_Normal)
+        {
+            `HQPRES.UIMECUpgradeScreen();
+            return true;
+        }
+        else
+        {
+            PlayBadSound();
+            return false;
+        }
+    }
+    else if (kRepairingItem.bCanRepair)
+    {
+        GoToView(eCyberneticsLabView_Repair);
+        return true;
+    }
+
+    return false;
+}
+
+simulated function bool OnMECInventoryAccept(int iTarget)
+{
+    `LWCE_LOG_CLS("ERROR: LWCE-incompatible function OnMECInventoryAccept was called. This needs to be replaced with OnItemAccept. Stack trace follows.");
+    ScriptTrace();
+
+    return false;
+}
+
+simulated function PutMecOnPlinth(int iMECIndex, optional bool bUsePreviewShader)
+{
+    // Deliberate no-op since this is the repair bay now
+}
+
 simulated function RepairAll()
 {
     local int Index;
@@ -348,4 +394,65 @@ simulated function RepairAll()
     }
 
     UpdateView();
+}
+
+simulated function RepairCallback(EUIAction eAction)
+{
+    if (eAction == eUIAction_Accept)
+    {
+        PlaySound(`SoundCue("SoundUI.MenuSelectCue"));
+        LWCE_XGFacility_CyberneticsLab(CYBERNETICSLAB()).AddItemForRepair(m_arrRepairingItems[m_iSelectedMEC].ItemName);
+    }
+    else if (eAction == eUIAction_Cancel)
+    {
+        PlaySound(`SoundCue("SoundUI.MenuCancelCue"));
+    }
+
+    UpdateInventory();
+    GoToView(eCyberneticsLabView_Inventory);
+}
+
+simulated function RepairPopup()
+{
+    local TDialogueBoxData kDialogData;
+    local LWCE_TUIDamagedInventoryItem kRepairingItem;
+    local int iCost;
+    local string strCost;
+
+    kRepairingItem = m_arrRepairingItems[m_iSelectedMEC];
+
+    kDialogData.eType = 0;
+    kDialogData.strTitle = m_strRepairTitle @ kRepairingItem.strName;
+    kDialogData.strAccept = m_strRepairButtonConfirm;
+    kDialogData.strCancel = m_strRepairButtonWait;
+    kDialogData.fnCallback = RepairCallback;
+
+    for (iCost = 0; iCost < kRepairingItem.arrCost.Length; iCost++)
+    {
+        if (kRepairingItem.arrCost[iCost].strLabel == "")
+        {
+            if (strCost == "")
+            {
+                strCost = m_strRepairCost @ class'UIUtilities'.static.GetHTMLColoredText(kRepairingItem.arrCost[iCost].StrValue, kRepairingItem.arrCost[iCost].iState);
+            }
+            else
+            {
+                strCost = strCost $ ", " $ class'UIUtilities'.static.GetHTMLColoredText(kRepairingItem.arrCost[iCost].StrValue, kRepairingItem.arrCost[iCost].iState);
+            }
+        }
+        else
+        {
+            if (strCost == "")
+            {
+                strCost = m_strRepairCost @ class'UIUtilities'.static.GetHTMLColoredText(kRepairingItem.arrCost[iCost].StrValue @ kRepairingItem.arrCost[iCost].strLabel, kRepairingItem.arrCost[iCost].iState);
+            }
+            else
+            {
+                strCost = strCost $ ", " $ class'UIUtilities'.static.GetHTMLColoredText(kRepairingItem.arrCost[iCost].StrValue @ kRepairingItem.arrCost[iCost].strLabel, kRepairingItem.arrCost[iCost].iState);
+            }
+        }
+    }
+
+    kDialogData.strText = strCost $ "\n" $ class'UIUtilities'.static.GetHTMLColoredText(m_strRepairWarning, eUIState_Bad);
+    PRES().UIRaiseDialog(kDialogData);
 }

@@ -611,10 +611,10 @@ function bool PayCost(const LWCE_TCost kCost)
         return false;
     }
 
-    AddResource(eResource_Money, kCost.iCash);
-    AddResource(eResource_Alloys, kCost.iAlloys);
-    AddResource(eResource_Elerium, kCost.iElerium);
-    AddResource(eResource_Meld, kCost.iMeld);
+    AddResource(eResource_Money, -1 * kCost.iCash);
+    AddResource(eResource_Alloys, -1 * kCost.iAlloys);
+    AddResource(eResource_Elerium, -1 * kCost.iElerium);
+    AddResource(eResource_Meld, -1 * kCost.iMeld);
 
     if (kCost.iWeaponFragments > 0)
     {

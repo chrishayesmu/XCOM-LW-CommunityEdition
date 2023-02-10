@@ -23,8 +23,8 @@ var const localized string m_sKeysToMecDeploymentDescription;
 var XGCyberneticsUI m_kLocalMgr;
 var string m_strCameraTag;
 var name DisplayTag;
-var private int m_iCurrentSelection;
-var private UIWidgetHelper m_hWidgetHelper;
+var int m_iCurrentSelection;
+var UIWidgetHelper m_hWidgetHelper;
 var int m_iView;
 
 simulated function Init(XComPlayerController _controllerRef, UIFxsMovie _manager){}
@@ -34,7 +34,7 @@ simulated function OnReceiveFocus(){}
 simulated function OnLoseFocus(){}
 simulated function bool OnUnrealCommand(int Cmd, int Arg){}
 simulated function bool OnMouseEvent(int Cmd, array<string> args){}
-simulated function UpdateData(){}
+protected simulated function UpdateData(){}
 simulated function ResetSelection(optional bool bSelectMecList){}
 simulated function GoToView(int iView){}
 simulated function OnBuildNewMec(){}
