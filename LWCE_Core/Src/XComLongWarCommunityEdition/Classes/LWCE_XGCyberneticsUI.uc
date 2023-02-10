@@ -14,6 +14,8 @@ struct LWCE_TUIDamagedInventoryItem
     var array<TLabeledText> arrCost;
 };
 
+var const localized string m_strSoldierAlreadyAugmented;
+
 var array<LWCE_TUIDamagedInventoryItem> m_arrRepairingItems;
 
 function TTableMenuOption BuildSoldierOption(XGStrategySoldier kSoldier, array<int> arrCategories, int soldierListIndex)
@@ -43,7 +45,12 @@ function TTableMenuOption BuildSoldierOption(XGStrategySoldier kSoldier, array<i
         switch (arrCategories[iCategory])
         {
             case 7:
-                if (kCESoldier.m_kCEChar.iClassId == 0 || kCESoldier.GetRank() < 2)
+                if (kCESoldier.IsAugmented())
+                {
+                    strCategory = m_strSoldierAlreadyAugmented;
+                    iState = eUIState_Disabled;
+                }
+                else if (kCESoldier.m_kCEChar.iClassId == 0 || kCESoldier.GetRank() < 2)
                 {
                     strCategory = m_strRookieState;
                     iState = eUIState_Disabled;

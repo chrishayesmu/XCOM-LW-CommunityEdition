@@ -44,6 +44,9 @@ m_strGenderMale="Male"
 m_strGenderFemale="Female"
 m_strNoContent="None"
 
+[LWCE_XGCyberneticsUI]
+m_strSoldierAlreadyAugmented="Already Augmented"
+
 [LWCE_XGPendingRequestsUI]
 m_strDefenseIncrease="<XGParam:StrValue0/>: +<XGParam:IntValue0/> Defense"
 m_strDefenseReduction="<XGParam:StrValue0/>: <XGParam:IntValue0/> Defense"
