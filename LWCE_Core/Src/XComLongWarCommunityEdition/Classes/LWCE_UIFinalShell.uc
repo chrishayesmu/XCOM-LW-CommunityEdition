@@ -17,10 +17,6 @@ simulated function SetText()
     myArray.AddItem(myValue);
     m_iSP = iCurrentSel++;
 
-    myValue.S = m_sMultiplayer;
-    myArray.AddItem(myValue);
-    m_iMP = iCurrentSel++;
-
     myValue.S = m_sLoad;
     myArray.AddItem(myValue);
     m_iLoad = iCurrentSel++;

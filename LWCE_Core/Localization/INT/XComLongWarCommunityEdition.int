@@ -1,6 +1,6 @@
 [LWCE_UIFinalShell]
 m_strModSettings="MOD SETTINGS"
-m_sSinglePlayer="LONG WAR: CE"
+m_sSinglePlayer="LONG WAR: COMMUNITY EDITION"
 
 [LWCE_UIItemCards]
 m_strFireRateLabel="Time To Fire (s):"
