@@ -3,6 +3,18 @@ class LWCE_UIItemCards extends UIItemCards
 
 var LWCE_TItemCard m_tCEItemCard;
 
+static function string GetShipHitChanceString(int iBaseHitChance)
+{
+    local int iAggressiveChance, iBalancedChance, iDefensiveChance;
+
+    // TODO make hit chance per stance configurable
+    iAggressiveChance = Clamp(iBaseHitChance + 15, 5, 95);
+    iBalancedChance = Clamp(iBaseHitChance, 5, 95);
+    iDefensiveChance = Clamp(iBaseHitChance - 15, 5, 95);
+
+    return iDefensiveChance $ "/" $ iBalancedChance $ "/" $ iAggressiveChance;
+}
+
 simulated function Init(XComPlayerController _controller, UIFxsMovie _manager, TItemCard cardData)
 {
     `LWCE_LOG_DEPRECATED_CLS(Init);
@@ -206,7 +218,6 @@ simulated function UpdateData()
             break;
         case eItemCard_ShipWeapon:
             AS_SetCardTitle(Caps(m_tCEItemCard.strName));
-            AS_SetStatData(0, m_strHitChanceLabel, string(m_tCEItemCard.shipWpnHitChance) $ "%");
 
             switch (m_tCEItemCard.shipWpnRange)
             {
@@ -221,54 +232,12 @@ simulated function UpdateData()
                     break;
             }
 
+            AS_SetStatData(0, m_strHitChanceLabel, GetShipHitChanceString(m_tCEItemCard.shipWpnHitChance));
             AS_SetStatData(1, m_strRangeLabel, tmpStr);
+            AS_SetStatData(2, m_strFireRateLabel, string(m_tCEItemCard.shipWpnFiringTime));
+            AS_SetStatData(3, m_strDamageLabel, string(m_tCEItemCard.iBaseDamage));
+            AS_SetStatData(4, m_strArmorPenetrationLabel, string(m_tCEItemCard.shipWpnArmorPen));
 
-            switch (m_tCEItemCard.shipWpnFireRate)
-            {
-                case eSFR_Slow:
-                    tmpStr = m_strRateSlow;
-                    break;
-                case eSFR_Medium:
-                    tmpStr = m_strRateMedium;
-                    break;
-                case eSFR_Rapid:
-                    tmpStr = m_strRateRapid;
-                    break;
-            }
-
-            AS_SetStatData(2, m_strFireRateLabel, tmpStr);
-
-            switch (m_tCEItemCard.iBaseDamage)
-            {
-                case eGTS_Low:
-                    tmpStr = m_strGenericScaleLow;
-                    break;
-                case eGTS_Medium:
-                    tmpStr = m_strGenericScaleMedium;
-                    break;
-                case eGTS_High:
-                    tmpStr = m_strGenericScaleHigh;
-                    break;
-            }
-
-            AS_SetStatData(3, m_strDamageLabel, tmpStr);
-
-            switch (m_tCEItemCard.shipWpnArmorPen)
-            {
-                case eGTS_Low:
-                    tmpStr = m_strGenericScaleLow;
-                    break;
-                case eGTS_Medium:
-                    tmpStr = m_strGenericScaleMedium;
-                    break;
-                case eGTS_High:
-                    tmpStr = m_strGenericScaleHigh;
-                    break;
-            }
-
-            AS_SetStatData(4, m_strArmorPenetrationLabel, tmpStr);
-
-            AS_SetStatData(0, m_strHitChanceLabel, string(Min(m_tCEItemCard.shipWpnHitChance - 15, 95)) $ "/" $ string(Min(m_tCEItemCard.shipWpnHitChance, 95)) $ "/" $ string(Min(m_tCEItemCard.shipWpnHitChance + 15, 95)) $ "");
             AS_AddTacticalInfoCardData(m_strTacticalInfoHeader, m_tCEItemCard.strFlavorText);
             AS_SetCardImage(kItem.ImagePath, m_tCEItemCard.iCardType);
             break;

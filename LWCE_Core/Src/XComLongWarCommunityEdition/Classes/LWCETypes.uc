@@ -439,7 +439,7 @@ struct LWCE_TItemCard
     var int shipWpnRange;
     var int shipWpnArmorPen;
     var int shipWpnHitChance;
-    var int shipWpnFireRate;
+    var float shipWpnFiringTime;
     var int iCharacterId;
     var int iHealth;
     var int iWill;

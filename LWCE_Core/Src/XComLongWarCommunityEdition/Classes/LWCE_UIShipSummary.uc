@@ -166,7 +166,7 @@ simulated function OnShipItemCard()
         return;
     }
 
-    kCardData = LWCE_XGHangarUI(GetMgr()).LWCE_HANGARUIGetItemCard(-1, -1, 5);
+    kCardData = LWCE_XGHangarUI(GetMgr()).LWCE_HANGARUIGetItemCard(-1, -1, eHangarView_ShipList);
 
     if (kCardData.iCardType != 0)
     {

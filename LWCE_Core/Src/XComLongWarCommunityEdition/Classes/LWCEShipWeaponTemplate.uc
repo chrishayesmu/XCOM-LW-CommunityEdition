@@ -66,6 +66,15 @@ delegate int HitChanceModifierDel(LWCEShipWeaponTemplate kShipWeapon, XGShip kSh
 
 // TODO: add more hooks to allow for dynamically adjusting the remaining stats
 
+/// <summary>
+/// Gets this weapon's total armor penetration.
+/// </summary>
+/// <remarks>
+/// This should include only effects which are part of the weapon, such as the weapon's base stats, or
+/// stat changes from other sources that are weapon-dependent (e.g. how some Foundry projects only improve
+/// specific ship weapons). Effects which are not weapon-dependent, such as UFO stat increases due to alien
+/// research or Foundry projects that affect all weapons equally, should not be accounted for here.
+/// </remarks>
 function int GetArmorPen(XGShip kShip, bool bShipIsXCom)
 {
     local int iResult;
@@ -81,6 +90,15 @@ function int GetArmorPen(XGShip kShip, bool bShipIsXCom)
     return iResult;
 }
 
+/// <summary>
+/// Gets this weapon's total damage.
+/// </summary>
+/// <remarks>
+/// This should include only effects which are part of the weapon, such as the weapon's base stats, or
+/// stat changes from other sources that are weapon-dependent (e.g. how some Foundry projects only improve
+/// specific ship weapons). Effects which are not weapon-dependent, such as UFO stat increases due to alien
+/// research or Foundry projects that affect all weapons equally, should not be accounted for here.
+/// </remarks>
 function int GetDamage(XGShip kShip, bool bShipIsXCom)
 {
     local int iResult;
@@ -96,6 +114,15 @@ function int GetDamage(XGShip kShip, bool bShipIsXCom)
     return iResult;
 }
 
+/// <summary>
+/// Gets this weapon's total firing time (the time between shots).
+/// </summary>
+/// <remarks>
+/// This should include only effects which are part of the weapon, such as the weapon's base stats, or
+/// stat changes from other sources that are weapon-dependent (e.g. how some Foundry projects only improve
+/// specific ship weapons). Effects which are not weapon-dependent, such as UFO stat increases due to alien
+/// research or Foundry projects that affect all weapons equally, should not be accounted for here.
+/// </remarks>
 function float GetFiringTime(XGShip kShip, bool bShipIsXCom)
 {
     local float fResult;
@@ -111,6 +138,15 @@ function float GetFiringTime(XGShip kShip, bool bShipIsXCom)
     return fResult;
 }
 
+/// <summary>
+/// Gets this weapon's total hit chance (with Balanced tactics).
+/// </summary>
+/// <remarks>
+/// This should include only effects which are part of the weapon, such as the weapon's base stats, or
+/// stat changes from other sources that are weapon-dependent (e.g. how some Foundry projects only improve
+/// specific ship weapons). Effects which are not weapon-dependent, such as UFO stat increases due to alien
+/// research or Foundry projects that affect all weapons equally, should not be accounted for here.
+/// </remarks>
 function int GetHitChance(XGShip kShip, bool bShipIsXCom)
 {
     local int iResult;

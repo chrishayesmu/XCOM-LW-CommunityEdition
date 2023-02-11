@@ -306,11 +306,11 @@ private static function int ShipWeapon_ArmorPenModifier(LWCEShipWeaponTemplate k
             iArmorPenModifier += 25;
         }
 
-        if (kShipWeapon.GetItemName() == 'Item_LaserCannon' && kEngineering.LWCE_IsFoundryTechResearched('Foundry_Supercapacitors'))
+        if (kShipWeapon != none && kShipWeapon.GetItemName() == 'Item_LaserCannon' && kEngineering.LWCE_IsFoundryTechResearched('Foundry_Supercapacitors'))
         {
             iArmorPenModifier += 30;
         }
-        else if (kShipWeapon.GetItemName() == 'Item_PhoenixCannon' && kEngineering.LWCE_IsFoundryTechResearched('Foundry_PhoenixCoilguns'))
+        else if (kShipWeapon != none && kShipWeapon.GetItemName() == 'Item_PhoenixCannon' && kEngineering.LWCE_IsFoundryTechResearched('Foundry_PhoenixCoilguns'))
         {
             iArmorPenModifier += 65;
         }
@@ -328,11 +328,11 @@ private static function int ShipWeapon_DamageModifier(LWCEShipWeaponTemplate kSh
     {
         kEngineering = `LWCE_ENGINEERING;
 
-        if (kShipWeapon.GetItemName() == 'Item_LaserCannon' && kEngineering.LWCE_IsFoundryTechResearched('Foundry_Supercapacitors'))
+        if (kShipWeapon != none && kShipWeapon.GetItemName() == 'Item_LaserCannon' && kEngineering.LWCE_IsFoundryTechResearched('Foundry_Supercapacitors'))
         {
             iDamageModifier += 10;
         }
-        else if (kShipWeapon.GetItemName() == 'Item_PhoenixCannon' && kEngineering.LWCE_IsFoundryTechResearched('Foundry_PhoenixCoilguns'))
+        else if (kShipWeapon != none && kShipWeapon.GetItemName() == 'Item_PhoenixCannon' && kEngineering.LWCE_IsFoundryTechResearched('Foundry_PhoenixCoilguns'))
         {
             iDamageModifier += 90;
         }
@@ -347,7 +347,7 @@ private static function float ShipWeapon_FiringTimeModifier(LWCEShipWeaponTempla
 
     if (bShipIsXCom)
     {
-        if (kShipWeapon.GetItemName() == 'Item_LaserCannon' && `LWCE_ENGINEERING.LWCE_IsFoundryTechResearched('Foundry_Supercapacitors'))
+        if (kShipWeapon != none && kShipWeapon.GetItemName() == 'Item_LaserCannon' && `LWCE_ENGINEERING.LWCE_IsFoundryTechResearched('Foundry_Supercapacitors'))
         {
             fFiringTimeModifier = -0.25f;
         }
@@ -362,7 +362,7 @@ private static function int ShipWeapon_HitChanceModifier(LWCEShipWeaponTemplate 
 
     if (bShipIsXCom)
     {
-        if (`LWCE_ENGINEERING.LWCE_IsFoundryTechResearched('Foundry_AdvancedAvionics'))
+        if (`LWCE_ENGINEERING.LWCE_IsFoundryTechResearched('Foundry_ImprovedAvionics'))
         {
             iAimModifier += 10;
         }

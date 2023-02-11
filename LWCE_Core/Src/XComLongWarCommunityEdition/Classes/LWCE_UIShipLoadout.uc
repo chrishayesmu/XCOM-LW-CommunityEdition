@@ -47,8 +47,9 @@ simulated function bool OnCancel(optional string Arg = "")
 
 function RealizeSelected()
 {
-    local int shipWpnRange, shipWpnFireRate, shipWpnBaseDamage, shipWpnArmorPen;
-    local string tmpStr;
+    local int shipWpnRange, shipWpnBaseDamage, shipWpnHitChance, shipWpnArmorPen;
+    local float shipWpnFireRate;
+    local string strRangeValue;
     local LWCE_XGHangarUI kMgr;
     local LWCEShipWeaponTemplate kShipWeapon;
 
@@ -58,75 +59,33 @@ function RealizeSelected()
     kMgr.LWCE_UpdateShipWeaponView(m_kShip, kShipWeapon);
 
     shipWpnRange = kMgr.GetShipWeaponRangeBin(kShipWeapon.iRange);
-    shipWpnFireRate = kMgr.GetShipWeaponFiringRateBin(kShipWeapon.fFiringTime);
-    shipWpnBaseDamage = kMgr.GetShipWeaponDamageBin(kShipWeapon.iDamage);
-    shipWpnArmorPen = kMgr.GetShipWeaponArmorPenetrationBin(kShipWeapon.iArmorPen);
+    shipWpnArmorPen = kShipWeapon.GetArmorPen(m_kShip, /* bShipIsXCom */ true);
+    shipWpnBaseDamage = kShipWeapon.GetDamage(m_kShip, /* bShipIsXCom */ true) * (1 + m_kShip.m_iConfirmedKills / 100.0f);
+    shipWpnFireRate = kShipWeapon.GetFiringTime(m_kShip, /* bShipIsXCom */ true);
+    shipWpnHitChance = kShipWeapon.GetHitChance(m_kShip, /* bShipIsXCom */ true) + Clamp(3 * m_kShip.m_iConfirmedKills, 0, 30);
 
-    // TODO make hit chance per stance configurable
-    AS_SetStatData(0, class'UIItemCards'.default.m_strHitChanceLabel, Min(kShipWeapon.iHitChance - 15, 95) $ "/" $ Min(kShipWeapon.iHitChance, 95) $ "/" $ Min(kShipWeapon.iHitChance + 15, 95) $ "");
+    AS_SetStatData(0, class'LWCE_UIItemCards'.default.m_strHitChanceLabel, class'LWCE_UIItemCards'.static.GetShipHitChanceString(shipWpnHitChance));
 
     switch (shipWpnRange)
     {
         case eWRC_Short:
-            tmpStr = class'UIItemCards'.default.m_strRangeShort;
+            strRangeValue = class'LWCE_UIItemCards'.default.m_strRangeShort;
             break;
         case eWRC_Medium:
-            tmpStr = class'UIItemCards'.default.m_strRangeMedium;
+            strRangeValue = class'LWCE_UIItemCards'.default.m_strRangeMedium;
             break;
         case eWRC_Long:
-            tmpStr = class'UIItemCards'.default.m_strRangeLong;
+            strRangeValue = class'LWCE_UIItemCards'.default.m_strRangeLong;
             break;
     }
 
-    AS_SetStatData(1, class'UIItemCards'.default.m_strRangeLabel, tmpStr);
-
-    switch (shipWpnFireRate)
-    {
-        case eSFR_Slow:
-            tmpStr = class'UIItemCards'.default.m_strRateSlow;
-            break;
-        case eSFR_Medium:
-            tmpStr = class'UIItemCards'.default.m_strRateMedium;
-            break;
-        case eSFR_Rapid:
-            tmpStr = class'UIItemCards'.default.m_strRateRapid;
-            break;
-    }
-
-    AS_SetStatData(2, class'UIItemCards'.default.m_strFireRateLabel, tmpStr);
-
-    switch (shipWpnBaseDamage)
-    {
-        case eGTS_Low:
-            tmpStr = class'UIItemCards'.default.m_strGenericScaleLow;
-            break;
-        case eGTS_Medium:
-            tmpStr = class'UIItemCards'.default.m_strGenericScaleMedium;
-            break;
-        case eGTS_High:
-            tmpStr = class'UIItemCards'.default.m_strGenericScaleHigh;
-            break;
-    }
-
-    AS_SetStatData(3, class'UIItemCards'.default.m_strDamageLabel, tmpStr);
-
-    switch (shipWpnArmorPen)
-    {
-        case eGTS_Low:
-            tmpStr = class'UIItemCards'.default.m_strGenericScaleLow;
-            break;
-        case eGTS_Medium:
-            tmpStr = class'UIItemCards'.default.m_strGenericScaleMedium;
-            break;
-        case eGTS_High:
-            tmpStr = class'UIItemCards'.default.m_strGenericScaleHigh;
-            break;
-    }
-
-    AS_SetStatData(4, class'UIItemCards'.default.m_strArmorPenetrationLabel, tmpStr);
+    AS_SetStatData(1, class'LWCE_UIItemCards'.default.m_strRangeLabel, strRangeValue);
+    AS_SetStatData(2, class'LWCE_UIItemCards'.default.m_strFireRateLabel, string(shipWpnFireRate));
+    AS_SetStatData(3, class'LWCE_UIItemCards'.default.m_strDamageLabel, string(shipWpnBaseDamage));
+    AS_SetStatData(4, class'LWCE_UIItemCards'.default.m_strArmorPenetrationLabel, string(shipWpnArmorPen));
 
     AS_SetSelected(m_iCurrentSelection);
     AS_SetWeaponName(kShipWeapon.strName);
     AS_SetWeaponImage(kMgr.m_kTable.arrSummaries[m_iCurrentSelection].imgOption.strPath, 0.90);
-    AS_SetWeaponDescription(kMgr.m_kTable.arrSummaries[m_iCurrentSelection].txtSummary.StrValue);
+    AS_SetWeaponDescription(kMgr.m_kTable.arrSummaries[m_iCurrentSelection].txtSummary.StrValue $ class'LWCE_XGHangarUI'.default.m_strShipStatDisclaimer);
 }

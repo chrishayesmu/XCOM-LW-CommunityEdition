@@ -1,5 +1,9 @@
 [LWCE_UIFinalShell]
 m_strModSettings="MOD SETTINGS"
+m_sSinglePlayer="LONG WAR: CE"
+
+[LWCE_UIItemCards]
+m_strFireRateLabel="Time To Fire (s):"
 
 [LWCE_UIKeybindingsPCScreen]
 m_strDevConsoleFullLabel="FULL DEV CONSOLE"
@@ -46,6 +50,9 @@ m_strNoContent="None"
 
 [LWCE_XGCyberneticsUI]
 m_strSoldierAlreadyAugmented="Already Augmented"
+
+[LWCE_XGHangarUI]
+m_strShipStatDisclaimer="\n\nThe stats shown here include bonuses from the ship and its pilot."
 
 [LWCE_XGPendingRequestsUI]
 m_strDefenseIncrease="<XGParam:StrValue0/>: +<XGParam:IntValue0/> Defense"
