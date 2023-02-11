@@ -5,23 +5,23 @@
 simulated event PostBeginPlay()
 {
 	local XComUnitPawn kArchetype;
-    local EPawnType PawnType;
+    local EPawnType e_PawnType; // weird name to avoid warnings in certain classes
 
     if (GetGameUnit() != none && GetGameUnit().GetCharacter() != none)
     {
-        PawnType = GetGameUnit().GetCharacter().m_eType;
+        e_PawnType = GetGameUnit().GetCharacter().m_eType;
     }
     else if (LWCE_XGUnit(Owner) != none && LWCE_XGUnit(Owner).GetCharacter() != none)
     {
-        PawnType = LWCE_XGUnit(Owner).GetCharacter().m_eType;
+        e_PawnType = LWCE_XGUnit(Owner).GetCharacter().m_eType;
 
         // We're supposed to be owned by the unit's Owner; reset that here
         SetOwner(Owner.Owner);
     }
 
-    `LWCE_LOG_CLS("PostBeginPlay: PawnType = " $ PawnType);
+    `LWCE_LOG_CLS("PostBeginPlay: e_PawnType = " $ e_PawnType);
 
-	kArchetype = `CONTENTMGR.GetPawnTemplate(PawnType);
+	kArchetype = `CONTENTMGR.GetPawnTemplate(e_PawnType);
     `LWCE_LOG_CLS("kArchetype = " $ kArchetype);
 	class'LWCEActorUtilities'.static.InitPawnFromArchetype(kArchetype, self);
 
