@@ -8,6 +8,10 @@ struct CheckpointRecord_LWCE_XGUnit extends CheckpointRecord_XGUnit
     var array<int> m_arrCEBonuses;
     var array<int> m_arrCEPassives;
     var array<int> m_arrCEPenalties;
+
+    // LWCE issue #76: this flag is not persisted on save/load, making it possible to lose your
+    // better alien bonus under some circumstances.
+    var bool m_bSeenBetterAlien;
 };
 
 var LWCE_TSoldier m_kCESoldier;
