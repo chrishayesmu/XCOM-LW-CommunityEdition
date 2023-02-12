@@ -36,7 +36,7 @@ event FillInHeaderForSave(out SaveGameHeader Header, out string SaveFriendlyName
         Header.Description @= "-";
     }
 
-    Header.Description @= m_strGameLabel @ string(Header.GameNum) @ "-";
+    Header.Description @= m_strGameLabel @ Header.GameNum @ "-";
     Header.Description @= LocalGameInfo.GetSavedGameDescription();
     Header.MapCommand = LocalGameInfo.GetSavedGameCommand();
     Header.VersionNumber = CURRENT_LWCE_SAVE_VERSION;

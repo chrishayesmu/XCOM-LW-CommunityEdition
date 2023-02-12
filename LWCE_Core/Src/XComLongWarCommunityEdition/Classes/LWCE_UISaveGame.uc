@@ -81,3 +81,43 @@ simulated function BuildMenu()
 
     controllerRef.m_Pres.UILoadAnimation(true);
 }
+
+simulated function OnUAccept()
+{
+    local TDialogueBoxData kDialogData;
+    local TInputDialogData kInputDialogData;
+
+    PlaySound(`SoundCue("SoundUI.MenuSelectCue"), true);
+
+    if (m_iCurrentSelection > 0)
+    {
+        kDialogData.eType = eDialog_Warning;
+        kDialogData.strTitle = m_sOverwriteSaveTitle;
+        kDialogData.strText = m_sOverwriteSaveText;
+        kDialogData.strAccept = class'UIDialogueBox'.default.m_strDefaultAcceptLabel;
+        kDialogData.strCancel = class'UIDialogueBox'.default.m_strDefaultCancelLabel;
+        kDialogData.fnCallback = OverwritingSaveWarningCallback;
+        controllerRef.m_Pres.UIRaiseDialog(kDialogData);
+    }
+    else
+    {
+        kInputDialogData.strTitle = "Enter Save Name";
+        kInputDialogData.iMaxChars = 40;
+        kInputDialogData.fnCallbackAccepted = OnSaveNameInputBoxAccepted;
+        kInputDialogData.fnCallbackCancelled = OnSaveNameInputBoxCanceled;
+
+        controllerRef.m_Pres.UIInputDialog(kInputDialogData);
+
+        // Save();
+    }
+}
+
+function OnSaveNameInputBoxAccepted(string Text)
+{
+
+}
+
+function OnSaveNameInputBoxCanceled(string Text)
+{
+
+}
