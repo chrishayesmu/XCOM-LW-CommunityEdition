@@ -538,6 +538,76 @@ simulated function bool ActiveWeaponHasAmmoForShot(optional int iAbilityType = e
     return true;
 }
 
+simulated event AddArmorAbilities(Vector vLocation, out array<XGAbility> arrAbilities, optional bool bForLocalUseOnly = false)
+{
+    local int Index, iAbilityId;
+    local LWCEArmorTemplate kArmor;
+    local bool bShouldAddMoveAbilities;
+
+    kArmor = `LWCE_ARMOR(LWCE_GetCharacter().GetInventory().nmArmor);
+
+    // Enemies don't actually have armor equipment, so check first
+    if (kArmor == none)
+    {
+        return;
+    }
+
+    bShouldAddMoveAbilities = ShouldAddMoveAbilities();
+
+    for (Index = 0; Index < kArmor.arrAbilities.Length; Index++)
+    {
+        if (kArmor.arrAbilities[Index] == '')
+        {
+            continue;
+        }
+
+        iAbilityId = class'LWCE_XGAbilityTree'.static.AbilityBaseIdFromName(kArmor.arrAbilities[Index]);
+
+        if (iAbilityId == 0)
+        {
+            continue;
+        }
+
+        if (`GAMECORE.m_kAbilities.AbilityHasProperty(iAbilityId, eProp_CostMove) && !bShouldAddMoveAbilities)
+        {
+            continue;
+        }
+
+        GenerateAbilities(iAbilityId, vLocation, arrAbilities,, bForLocalUseOnly);
+    }
+}
+
+simulated event AddCharacterAbilities(Vector vLocation, out array<XGAbility> arrAbilities, optional bool bForLocalUseOnly = false)
+{
+    local array<int> arrAbilityIdsToAdd;
+    local int Index;
+    local LWCE_TCharacter kChar;
+
+    kChar = LWCE_GetCharacter().GetCharacter();
+
+    for (Index = 0; Index < kChar.arrAbilities.Length; Index++)
+    {
+        // Don't add the same ability more than once
+        if (kChar.arrAbilities[Index].Id == 0 || arrAbilityIdsToAdd.Find(kChar.arrAbilities[Index].Id) != INDEX_NONE)
+        {
+            break;
+        }
+
+        if (kChar.arrAbilities[Index].Id == eAbility_TakeCover)
+        {
+            // TODO base game logic seems to skip this ability for MECs?
+        }
+
+        arrAbilityIdsToAdd.AddItem(kChar.arrAbilities[Index].Id);
+    }
+
+    for (Index = 0; Index < arrAbilityIdsToAdd.Length; Index++)
+    {
+        GenerateAbilities(arrAbilityIdsToAdd[Index], vLocation, arrAbilities,, bForLocalUseOnly);
+    }
+}
+
+
 function AddCriticallyWoundedAction(optional bool bStunAlien = false, optional bool bLoading = false)
 {
     local XGAction_CriticallyWounded kAction;
@@ -598,6 +668,55 @@ function AddCriticallyWoundedAction(optional bool bStunAlien = false, optional b
 
     AddAction(kAction);
 }
+
+simulated function AddMoveAbilities(XGTacticalGameCoreNativeBase kGameCore, out array<XGAbility> arrAbilities)
+{
+    local array<XGUnit> arrTargets;
+    local XGAbility kAbility;
+
+    arrTargets.AddItem(self);
+
+    if (ShouldAddMoveAbilities())
+    {
+        kAbility = kGameCore.m_kAbilities.SpawnAbility(eAbility_Move, self, arrTargets, /* kWeapon */ none, /* kMiscActor */ none, /* bForLocalUseOnly */ false, /* bReactionFire */ false);
+        arrAbilities.AddItem(kAbility);
+    }
+
+    if (HasPerk(`LW_PERK_ID(RunAndGun)))
+    {
+        kAbility = kGameCore.m_kAbilities.SpawnAbility(eAbility_RunAndGun, self, arrTargets, /* kWeapon */ none, /* kMiscActor */ none, /* bForLocalUseOnly */ false, /* bReactionFire */ false);
+        arrAbilities.AddItem(kAbility);
+    }
+}
+
+simulated function AddPerkSpecificAbilities(XGTacticalGameCoreNativeBase kGameCore, out array<XGAbility> arrAbilities)
+{
+    local Vector vLocation;
+
+    vLocation = GetLocation();
+
+    // Like AddWeaponAbilities, this is reverse engineered and adapted from the native code
+    if (HasPerk(`LW_PERK_ID(Concealment)))
+    {
+        GenerateAbilities(eAbility_MimeticSkin, vLocation, arrAbilities,, /* bForLocalUseOnly */ false);
+    }
+
+    if (HasPerk(`LW_PERK_ID(AdrenalNeurosympathy)))
+    {
+        GenerateAbilities(eAbility_AdrenalNeurosympathy, vLocation, arrAbilities,, /* bForLocalUseOnly */ false);
+    }
+
+    if (HasPerk(`LW_PERK_ID(JetbootModule)))
+    {
+        GenerateAbilities(eAbility_JetbootModule, vLocation, arrAbilities,, /* bForLocalUseOnly */ false);
+    }
+
+    if (HasPerk(`LW_PERK_ID(OneForAll)))
+    {
+        GenerateAbilities(eAbility_MEC_OneForAll, vLocation, arrAbilities,, /* bForLocalUseOnly */ false);
+    }
+}
+
 
 simulated event AddPsiAbilities(Vector vLocation, out array<XGAbility> arrAbilities, optional bool bForLocalUseOnly = false)
 {
@@ -1133,9 +1252,9 @@ function BuildAbilities(optional bool bUpdateUI = true)
     AddPerkSpecificAbilities(kGameCore, arrAbilities);
 
     // Not entirely sure about the order on these three
-    //AddPsiAbilities(vLocation, arrAbilities);
-    //AddCharacterAbilities(vLocation, arrAbilities);
-    //AddArmorAbilities(vLocation, arrAbilities);
+    AddPsiAbilities(vLocation, arrAbilities);
+    AddCharacterAbilities(vLocation, arrAbilities);
+    AddArmorAbilities(vLocation, arrAbilities);
 
     // Remove any abilities which shouldn't be shown and are unavailable (doesn't matter for AI)
     if (!IsAI())
