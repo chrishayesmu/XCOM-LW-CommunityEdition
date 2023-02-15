@@ -525,7 +525,7 @@ function ApplyActionCost(XGAbility_Targeted kAbility)
 
         if (kAbility.m_kWeapon != none)
         {
-            kAbility.GraduatedOdds(iCost, none, LWCE_XGUnit(kAbility.m_kUnit).HasPerk(`LW_PERK_ID(AmmoConservation)));
+            class'LWCE_XGAbility_Extensions'.static.SpendAmmo(kAbility, iCost);
         }
     }
 

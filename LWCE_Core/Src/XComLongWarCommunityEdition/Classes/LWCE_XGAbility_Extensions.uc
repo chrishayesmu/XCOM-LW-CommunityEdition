@@ -2336,6 +2336,26 @@ static function RollForHit(XGAbility_Targeted kSelf, XGAction_Fire kFireAction)
     }
 }
 
+// TODO: iAmmoCost here is a percentage of the weapon's total ammo, but we should just scrap the percentages
+// everywhere and use simple clip sizes
+static function SpendAmmo(XGAbility_Targeted kSelf, int iAmmoCost)
+{
+    if (iAmmoCost == 0)
+    {
+        return;
+    }
+
+    if (kSelf.m_kWeapon == none)
+    {
+        return;
+    }
+
+    // Long War uses m_iTurnFired for the "real" ammo, and iAmmo is only populated enough to make some native checks work
+    kSelf.m_kWeapon.m_iTurnFired = Clamp(kSelf.m_kWeapon.m_iTurnFired - iAmmoCost, 0, 100);
+
+    // TODO: still need to set iAmmo
+}
+
 protected static function HandleAbilityScatter(XGAbility_Targeted kSelf, XGAction_Fire kFireAction, LWCE_XGUnit kShooter)
 {
     local float fDistanceOffTarget, fCoefficient, fRads, fYaw, fScatter;

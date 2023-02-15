@@ -1039,7 +1039,6 @@ simulated function int LWCE_GetOverheatIncrement(name WeaponName, int iAbility, 
         return 0;
     }
 
-    `LWCE_LOG_CLS("WARNING: LWCE_GetOverheatIncrement needs to be replaced");
     kWeapon = `LWCE_WEAPON(WeaponName);
 
     if (kWeapon.HasWeaponProperty(eWP_UnlimitedAmmo))
