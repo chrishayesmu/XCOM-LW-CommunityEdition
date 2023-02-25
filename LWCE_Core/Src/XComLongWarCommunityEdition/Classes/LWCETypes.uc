@@ -384,6 +384,25 @@ struct LWCE_TWeapon
     }
 };
 
+/// <summary>
+/// </summary>
+struct LWCE_TAppliedEffect
+{
+    var name nmEffect;
+    var int iTurnsRemaining;
+    var LWCE_TCharacterStats kStatChanges;
+};
+
+/// <summary>
+/// Used by the ability framework when determining eligible targets for abilities.
+/// See LWCEAbilityTargetStyle and its children for the main usage of this struct.
+/// </summary>
+struct LWCE_TAvailableTarget
+{
+    var LWCE_XGUnit kPrimaryTarget;              // The ability's main target; may be none for purely AoE abilitiies like grenades/rockets.
+    var array<LWCE_XGUnit> arrAdditionalTargets; // Extra targets, which may be hit by an AoE, or individually targeted (like Greater Mind Merge).
+};
+
 struct TModVersion
 {
     var int Major;

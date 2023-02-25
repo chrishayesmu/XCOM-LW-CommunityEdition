@@ -5,6 +5,9 @@ struct CheckpointRecord_LWCE_XGUnit extends CheckpointRecord_XGUnit
     var LWCE_TSoldier m_kCESoldier;
     var LWCE_TAppearance m_kCESavedAppearance;
 
+    var array<name> m_arrAbilityNames;
+    var array<name> m_arrActionPoints;
+
     var array<int> m_arrCEBonuses;
     var array<int> m_arrCEPassives;
     var array<int> m_arrCEPenalties;
@@ -16,6 +19,9 @@ struct CheckpointRecord_LWCE_XGUnit extends CheckpointRecord_XGUnit
 
 var LWCE_TSoldier m_kCESoldier;
 var LWCE_TAppearance m_kCESavedAppearance;
+
+var array<name> m_arrAbilityNames;
+var array<name> m_arrActionPoints; // The action points currently available to this unit.
 
 var array<int> m_arrCEBonuses;
 var array<int> m_arrCEPassives;
@@ -162,9 +168,9 @@ function GivePerk(int iPerkId, optional name nmSourceTypeId = 'Innate', optional
     LWCE_GetCharacter().AddPerk(kPerkData);
 }
 
-function bool HasAbility(int iAbilityId)
+function bool HasAbility(name nmAbility)
 {
-    return LWCE_GetCharacter().HasAbility(iAbilityId);
+    return m_arrAbilityNames.Find(nmAbility) != INDEX_NONE;
 }
 
 function bool HasCharacterProperty(int iCharPropId)
@@ -181,6 +187,11 @@ function bool HasPerk(int iPerkId)
     }
 
     return LWCE_GetCharacter().HasPerk(iPerkId);
+}
+
+function bool HasSquadsight()
+{
+    return LWCE_GetCharacter().HasPerk(`LW_PERK_ID(Squadsight));
 }
 
 function bool HasTraversal(int iTraversalId)
@@ -1200,6 +1211,16 @@ function ApplyStaticHeightBonusStatModifiers()
 {
     // This doesn't actually do anything in the base game, but it uses XGItem.GameplayType, so it needs to be removed.
     // It doesn't log as deprecated to avoid having to rewrite the function that calls it.
+}
+
+simulated function BeginTurn(optional bool bLoadedFromCheckpoint)
+{
+    super.BeginTurn(bLoadedFromCheckpoint);
+
+    // TODO: configure default action points as part of the character
+    m_arrActionPoints.Length = 0;
+    m_arrActionPoints.AddItem('Standard');
+    m_arrActionPoints.AddItem('Standard');
 }
 
 function BuildAbilities(optional bool bUpdateUI = true)

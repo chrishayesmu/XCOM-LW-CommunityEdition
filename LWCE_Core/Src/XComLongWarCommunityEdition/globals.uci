@@ -15,6 +15,7 @@
 `define LWCE_UTILS class'LWCEUtils'.static
 
 // Retrieve a template manager by class
+`define LWCE_ABILITY_TEMPLATE_MGR (class'LWCEAbilityTemplateManager'.static.GetInstance())
 `define LWCE_CONTENT_TEMPLATE_MGR (class'LWCEContentTemplateManager'.static.GetInstance())
 `define LWCE_COUNCIL_REQUEST_TEMPLATE_MGR (class'LWCECouncilRequestTemplateManager'.static.GetInstance())
 `define LWCE_FOUNDRY_TEMPLATE_MGR (class'LWCEFoundryProjectTemplateManager'.static.GetInstance())
@@ -22,6 +23,7 @@
 `define LWCE_TECH_TEMPLATE_MGR (class'LWCETechTemplateManager'.static.GetInstance())
 
 // Retrieve templates by name
+`define LWCE_ABILITY(nm) (`LWCE_ABILITY_TEMPLATE_MGR.FindAbilityTemplate(`nm))
 `define LWCE_ARMOR(nm) (`LWCE_ITEM_TEMPLATE_MGR.FindArmorTemplate(`nm))
 `define LWCE_EQUIPMENT(nm) (`LWCE_ITEM_TEMPLATE_MGR.FindEquipmentTemplate(`nm))
 `define LWCE_FTECH(nm) (`LWCE_FOUNDRY_TEMPLATE_MGR.FindProjectTemplate(`nm))
@@ -29,6 +31,14 @@
 `define LWCE_TECH(nm) (`LWCE_TECH_TEMPLATE_MGR.FindTechTemplate(`nm))
 `define LWCE_SHIP_WEAPON(nm) (`LWCE_ITEM_TEMPLATE_MGR.FindShipWeaponTemplate(`nm))
 `define LWCE_WEAPON(nm) (`LWCE_ITEM_TEMPLATE_MGR.FindWeaponTemplate(`nm))
+
+// Create new template objects (only to be used in subclasses of LWCEDataSet)
+`define CREATE_TEMPLATE(Class, TemplateObject, TemplateName) \
+	`TemplateObject = new(None, string(`TemplateName)) `Class; \
+    `TemplateObject.SetTemplateName(`TemplateName);
+
+`define CREATE_ABILITY_TEMPLATE(Template, TemplateName) \
+	`CREATE_TEMPLATE(class'LWCEAbilityTemplate', `Template, `TemplateName);
 
 // Dynamic loading of objects that are referenced by the base game; since we aren't in the same UPK, we can't reference them the same way
 `define SoundCue(nm) (SoundCue(DynamicLoadObject(`nm, class'SoundCue')))

@@ -1539,7 +1539,6 @@ static simulated function GetShotSummary(XGAbility_Targeted kSelf, out TShotResu
     local LWCE_XGTacticalGameCore kGameCore;
     local LWCE_XGWeapon kWeapon;
 
-    // TODO: rewrite function to use LWCE_TCharacter
     kShooter = LWCE_XGUnit(kSelf.m_kUnit);
     kTarget = LWCE_XGUnit(kSelf.GetPrimaryTarget());
     kTargetChar = kTarget.LWCE_GetCharacter().GetCharacter();

@@ -1,0 +1,1 @@
+class LWCEAbilityCooldown extends Object;
