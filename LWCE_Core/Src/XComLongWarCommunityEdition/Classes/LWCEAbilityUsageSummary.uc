@@ -119,6 +119,30 @@ function int GetUncappedHitChance()
     return Clamp(iHitChance, iMinHitChance, iMaxHitChance);
 }
 
+function RemoveCritChanceMod(name Source)
+{
+    local int Index;
+
+    Index = arrCritChanceModifiers.Find('Source', Source);
+
+    if (Index != INDEX_NONE)
+    {
+        arrCritChanceModifiers.Remove(Index, 1);
+    }
+}
+
+function RemoveHitChanceMod(name Source)
+{
+    local int Index;
+
+    Index = arrHitChanceModifiers.Find('Source', Source);
+
+    if (Index != INDEX_NONE)
+    {
+        arrHitChanceModifiers.Remove(Index, 1);
+    }
+}
+
 defaultproperties
 {
     iMaxCritChance=100

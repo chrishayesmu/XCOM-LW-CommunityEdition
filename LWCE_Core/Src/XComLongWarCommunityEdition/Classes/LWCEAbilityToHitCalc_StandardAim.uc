@@ -12,6 +12,7 @@ function ApplyToAbilityBreakdown(LWCE_XGAbility kAbility, LWCE_TAvailableTarget 
     local LWCE_XGUnit kAttackingUnit, kTargetUnit;
     local LWCEArmorTemplate kArmor;
     local LWCEEquipmentTemplate kEquipment;
+    local LWCEAppliedEffect kEffect;
     local LWCE_XGWeapon kWeapon;
     local LWCE_TCharacterStats kStatChanges;
     local LWCE_XComPerkManager kPerksMgr;
@@ -182,7 +183,16 @@ function ApplyToAbilityBreakdown(LWCE_XGAbility kAbility, LWCE_TAvailableTarget 
 
     // TODO: for civilians, add an effect that modifiers their chance to be hit based on config eCivilianHitChanceCalcStyle
 
-    // TODO: go through source/target effects and give them a chance to modify the hit chance
+    // Go through source/target effects and give them a chance to modify the hit chance
+    foreach kAttackingUnit.m_arrAppliedEffects(kEffect)
+    {
+        kEffect.m_kEffect.GetToHitModifiersAsAttacker(kAttackingUnit, kTargetUnit, kAbility, kAbilityPreview);
+    }
+
+    foreach kTargetUnit.m_arrAppliedEffects(kEffect)
+    {
+        kEffect.m_kEffect.GetToHitModifiersAsDefender(kAttackingUnit, kTargetUnit, kAbility, kAbilityPreview);
+    }
 
     // Reaction fire logic is split between this and RollForHit for some reason. It would be nice to consolidate, but
     // since we clamp the hit chance in this function, that could technically result in a behavior change.

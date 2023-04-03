@@ -42,7 +42,7 @@ function float GetModifiedDamageModifierAsDefender(LWCE_XGUnit kAttacker, LWCE_X
 function float GetDamageReductionModifierAsAttacker(LWCE_XGUnit kAttacker, LWCE_XGUnit kTarget, LWCE_XGAbility kAbility, bool bIsHit, bool bIsCrit, LWCEEffect kAbilityEffect, float fDamage, float fCurrentDR) { return 0.0f; }
 function float GetDamageReductionModifierAsDefender(LWCE_XGUnit kAttacker, LWCE_XGUnit kTarget, LWCE_XGAbility kAbility, bool bIsHit, bool bIsCrit, LWCEEffect kAbilityEffect, float fDamage, float fCurrentDR) { return 0.0f; }
 function GetToHitModifiersAsAttacker(LWCE_XGUnit kAttacker, LWCE_XGUnit kTarget, LWCE_XGAbility kAbility, out LWCEAbilityUsageSummary kBreakdown) { }
-function GetToHitModifiersAsTarget(LWCE_XGUnit kAttacker, LWCE_XGUnit kTarget, LWCE_XGAbility kAbility, out LWCEAbilityUsageSummary kBreakdown) { }
+function GetToHitModifiersAsDefender(LWCE_XGUnit kAttacker, LWCE_XGUnit kTarget, LWCE_XGAbility kAbility, out LWCEAbilityUsageSummary kBreakdown) { }
 function bool ForceBleedout(LWCE_XGUnit kAttacker, LWCE_XGUnit kTarget, LWCE_XGAbility kAbility, const out LWCEAbilityUsageSummary kBreakdown) { return false; }
 function bool PreventBleedout(LWCE_XGUnit kAttacker, LWCE_XGUnit kTarget, LWCE_XGAbility kAbility, const out LWCEAbilityUsageSummary kBreakdown) { return false; }
 
