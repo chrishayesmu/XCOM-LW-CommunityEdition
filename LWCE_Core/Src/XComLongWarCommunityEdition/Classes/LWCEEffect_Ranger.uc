@@ -44,7 +44,6 @@ function GetToHitModifiersAsAttacker(LWCE_XGUnit kAttacker, LWCE_XGUnit kTarget,
     local LWCEWeaponTemplate kWeaponTemplate;
 
     kWeaponTemplate = kAbility.GetWeaponTemplate();
-    `LWCE_LOG_CLS("GetToHitModifiersAsAttacker called");
 
     if (kWeaponTemplate == none)
     {

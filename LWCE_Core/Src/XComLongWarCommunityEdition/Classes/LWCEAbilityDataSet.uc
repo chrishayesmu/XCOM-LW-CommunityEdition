@@ -19,10 +19,33 @@ static function array<LWCEDataTemplate> CreateTemplates()
 {
     local array<LWCEDataTemplate> arrTemplates;
 
+    arrTemplates.AddItem(LowProfile());
     arrTemplates.AddItem(Ranger());
     arrTemplates.AddItem(StandardShot());
 
     return arrTemplates;
+}
+
+static function LWCEAbilityTemplate LowProfile()
+{
+	local LWCEAbilityTemplate Template;
+	local LWCEEffect_LowProfile PersistentEffect;
+
+	`CREATE_ABILITY_TEMPLATE(Template, 'LowProfile');
+
+	Template.AbilityIcon = "LowProfile";
+
+	Template.AbilityToHitCalc = default.DeadEye;
+	Template.AbilityTargetStyle = default.SelfTarget;
+	Template.AbilityTriggers.AddItem(default.UnitPostBeginPlayTrigger);
+
+	PersistentEffect = new class'LWCEEffect_LowProfile';
+	PersistentEffect.BuildPersistentEffect(1, /* bIsInfinite */ true);
+	PersistentEffect.SetDisplayInfo(ePerkBuff_Passive, Template.strFriendlyName, Template.strDescription, Template.AbilityIcon, /* bDisplayInHUD */ true);
+
+	Template.AbilityTargetEffects.AddItem(PersistentEffect);
+
+	return Template;
 }
 
 static function LWCEAbilityTemplate Ranger()
