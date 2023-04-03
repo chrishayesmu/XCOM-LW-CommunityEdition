@@ -26,7 +26,7 @@ function Init(LWCEEffect_Persistent kEffect, LWCE_XGAbility kAppliedByAbility, L
     m_kAppliedByUnit = kAppliedByUnit;
     m_kAppliedToUnit = kAppliedToUnit;
 
-    m_bIsInfinite = kEffect.bIsInfinite;
+    m_bIsInfinite = kEffect.bInfiniteDuration;
     m_iTicksRemaining = kEffect.iNumTurns;
     m_iShedChance = kEffect.iInitialShedChance;
 }

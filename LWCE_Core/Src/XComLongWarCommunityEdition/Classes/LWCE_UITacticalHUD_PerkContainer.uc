@@ -23,7 +23,7 @@ simulated function UpdatePerks()
         kChar = kActiveUnit.LWCE_GetCharacter().GetCharacter();
         kPerksMgr = LWCE_XComPerkManager(XComTacticalController(controllerRef).PERKS());
 
-        // TODO: iterate these in order of perk ID, to match vanilla behavior
+        // TODO: delete this loop and deprecate arrPerks in favor of effects
         for (I = 0; I < kChar.arrPerks.Length; I++)
         {
             iPerkId = kChar.arrPerks[I].Id;
@@ -59,6 +59,23 @@ simulated function UpdatePerks()
             }
 
             // TODO: need a mod hook to pull perk charges
+
+            m_arrPerkData.AddItem(kUIPerkInfo);
+        }
+
+        // Display effects on the unit; for now, only passives, but maybe expand to buffs/penalties
+        for (I = 0; I < kActiveUnit.m_arrAppliedEffects.Length; I++)
+        {
+            if (!kActiveUnit.m_arrAppliedEffects[I].m_kEffect.bDisplayInHUD || kActiveUnit.m_arrAppliedEffects[I].m_kEffect.BuffCategory != ePerkBuff_Passive)
+            {
+                continue;
+            }
+
+            kUIPerkInfo.strPerkImage = kActiveUnit.m_arrAppliedEffects[I].m_kEffect.IconImage;
+            kUIPerkInfo.strPerkName = kActiveUnit.m_arrAppliedEffects[I].m_kEffect.FriendlyName;
+            kUIPerkInfo.strCharges = "";
+
+            // TODO: add a hook for effects to display charges
 
             m_arrPerkData.AddItem(kUIPerkInfo);
         }

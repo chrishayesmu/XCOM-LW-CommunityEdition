@@ -23,7 +23,8 @@ var LWCEAbilityTargetStyle AbilityTargetStyle;
 var string AbilityIcon;
 
 var const localized string strFriendlyName;
-var const localized string strHelp;
+var const localized string strHelp; // Short help message for activated abilities in the shot HUD
+var const localized string strDescription; // Longer description of the ability, shown in the tactical details HUD (F1)
 var const localized string strPerformerMessage;
 var const localized string strTargetMessage;
 

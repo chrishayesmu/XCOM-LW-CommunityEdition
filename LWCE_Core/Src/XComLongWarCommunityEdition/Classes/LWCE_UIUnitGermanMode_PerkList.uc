@@ -6,7 +6,9 @@ simulated function PrepareData(EPerkBuffCategory eBuffCategory, string listTitle
     local LWCE_TPerk kPerk;
     local LWCE_XComPerkManager kPerksMgr;
     local UIPerkData perkData;
+    local LWCE_XGUnit kCEUnit;
 
+    kCEUnit =  LWCE_XGUnit(kUnit);
     kPerksMgr = LWCE_XComPerkManager(XComTacticalController(controllerRef).PERKS());
     m_strTitle = listTitle;
     m_arrPerkData.Length = 0;
@@ -23,6 +25,21 @@ simulated function PrepareData(EPerkBuffCategory eBuffCategory, string listTitle
         perkData.strName = kPerksMgr.GetPerkName(kPerk.iPerkId, eBuffCategory);
         perkData.strDescription = kPerksMgr.GetDynamicPerkDescription(kPerk.iPerkId, LWCE_XGUnit(kUnit), eBuffCategory);
         perkData.strIcon = kPerk.Icon;
+        perkData.buffCategory = eBuffCategory;
+
+        m_arrPerkData.AddItem(perkData);
+    }
+
+    for (I = 0; I < kCEUnit.m_arrAppliedEffects.Length; I++)
+    {
+        if (!kCEUnit.m_arrAppliedEffects[I].m_kEffect.bDisplayInDetails || kCEUnit.m_arrAppliedEffects[I].m_kEffect.BuffCategory != eBuffCategory)
+        {
+            continue;
+        }
+
+        perkData.strName = kCEUnit.m_arrAppliedEffects[I].m_kEffect.FriendlyName;
+        perkData.strDescription = kCEUnit.m_arrAppliedEffects[I].m_kEffect.FriendlyDescription;
+        perkData.strIcon = kCEUnit.m_arrAppliedEffects[I].m_kEffect.IconImage;
         perkData.buffCategory = eBuffCategory;
 
         m_arrPerkData.AddItem(perkData);

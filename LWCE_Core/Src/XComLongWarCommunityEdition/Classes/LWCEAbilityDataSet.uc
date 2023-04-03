@@ -32,12 +32,16 @@ static function LWCEAbilityTemplate Ranger()
 
 	`CREATE_ABILITY_TEMPLATE(Template, 'Ranger');
 
+	Template.AbilityIcon = "Gunslinger";
+
 	Template.AbilityToHitCalc = default.DeadEye;
 	Template.AbilityTargetStyle = default.SelfTarget;
 	Template.AbilityTriggers.AddItem(default.UnitPostBeginPlayTrigger);
 
 	RangerEffect = new class'LWCEEffect_Ranger';
 	RangerEffect.BuildPersistentEffect(1, /* bIsInfinite */ true);
+	RangerEffect.SetDisplayInfo(ePerkBuff_Passive, Template.strFriendlyName, Template.strDescription, Template.AbilityIcon, /* bDisplayInHUD */ true);
+
 	Template.AbilityTargetEffects.AddItem(RangerEffect);
 
 	return Template;

@@ -328,6 +328,10 @@ PilotNames="\"Blender\" Iyengar"
 PilotNames="\"Blinker\" Kamala"
 PilotNames="\"Stuntman\" Silva"
 
+[Ranger LWCEAbilityTemplate]
+strFriendlyName="Ranger"
+strDescription="Confers +1 damage with primary weapons, rocket launchers, MEC secondary weapons and sidearms. Negates the long-range accuracy penalty with sidearms when shooting beyond 14 meters."
+
 [StandardShot LWCEAbilityTemplate]
 strFriendlyName="Fire"
 strHelp="Does <XGAbility:PossibleDamage/> damage."
