@@ -1,4 +1,4 @@
-class LWCEAbilityCondition_UnitProperty extends LWCEAbilityCondition;
+class LWCECondition_UnitProperty extends LWCECondition;
 
 var bool bExcludeLiving;
 var bool bExcludeDead;

@@ -13,7 +13,7 @@ var array<name> AllowedTypes; // Which types of action points can be used to pay
 var array<name> DoNotConsumeAllAbilities; // If the ability owner has any of these abilities, the ability will not consume all points,
                                           // regardless of the value of bConsumeAllPoints.
 
-function name CanAfford(LWCE_XGAbility kAbility)
+function name CanAfford(LWCE_XGAbility kAbility, const LWCE_TAvailableTarget kTarget)
 {
     local LWCE_XGUnit kUnit;
     local int Index, iUsableActionPoints;
@@ -32,7 +32,7 @@ function name CanAfford(LWCE_XGAbility kAbility)
     return iUsableActionPoints >= iNumPoints ? 'AA_Success' : 'AA_CannotAfford_ActionPoints';
 }
 
-function ApplyCost(LWCE_XGAbility kAbility)
+function ApplyCost(LWCE_XGAbility kAbility, const LWCE_TAvailableTarget kTarget)
 {
     local int I, J, iFinalCost, iPointsConsumed;
     local LWCE_XGUnit kUnit;

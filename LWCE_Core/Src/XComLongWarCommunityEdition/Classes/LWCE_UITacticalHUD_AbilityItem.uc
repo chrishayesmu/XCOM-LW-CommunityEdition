@@ -1,5 +1,6 @@
 class LWCE_UITacticalHUD_AbilityItem extends UITacticalHUD_AbilityItem;
 
+var private name m_nmAbility;
 var private name m_nmWeapon;
 
 simulated function UpdateData(int Index, XGAbility kAbility, out array<ASValue> arrData)
@@ -8,7 +9,7 @@ simulated function UpdateData(int Index, XGAbility kAbility, out array<ASValue> 
     local UITacticalHUD_AbilityItem.eBGColor eColor;
     local ASValue kASVal;
     local int iPrevDataLen, iType, iTargetIndex, iCooldown, iCharge, iTmp;
-    local name nmWeapon;
+    local name nmAbility, nmWeapon;
     local bool bAvailable, bShowConsoleButtonHelp;
     local string strTemp;
 
@@ -56,6 +57,11 @@ simulated function UpdateData(int Index, XGAbility kAbility, out array<ASValue> 
 
     iType = kAbility.GetType();
 
+    if (LWCE_XGAbility(kAbility) != none)
+    {
+        nmAbility = LWCE_XGAbility(kAbility).m_TemplateName;
+    }
+
     if (kTargettedAbility.m_kWeapon != none)
     {
         nmWeapon = LWCE_XGWeapon(kTargettedAbility.m_kWeapon).m_TemplateName;
@@ -65,11 +71,20 @@ simulated function UpdateData(int Index, XGAbility kAbility, out array<ASValue> 
         nmWeapon = '';
     }
 
-    if (m_iType != iType || m_nmWeapon != nmWeapon)
+    if (m_iType != iType || m_nmAbility != nmAbility || m_nmWeapon != nmWeapon)
     {
         m_iType = iType;
+        m_nmAbility = nmAbility;
         m_nmWeapon = nmWeapon;
-        QueueFunctionString("SetIconLabel", class'UIUtilities'.static.GetAbilityIconLabel(iType), arrData);
+
+        if (LWCE_XGAbility(kAbility) != none)
+        {
+            QueueFunctionString("SetIconLabel", LWCE_XGAbility(kAbility).m_kTemplate.AbilityIcon, arrData);
+        }
+        else
+        {
+            QueueFunctionString("SetIconLabel", class'UIUtilities'.static.GetAbilityIconLabel(iType), arrData);
+        }
 
         if (m_kMovieMgr.IsMouseActive())
         {

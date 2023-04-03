@@ -1,4 +1,4 @@
-`define BATTLE (XComTacticalGRI(class'Engine'.static.GetCurrentWorldInfo().GRI).m_kBattle)
+`define BATTLE (`TACTICALGRI.m_kBattle)
 `define ISDEBUG (`BATTLE.IsA('XGBattle_SPDebug'))
 
 `define SYNC_FRAND (class'XComEngine'.static.SyncFRand(string(Name) @ string(GetStateName()) @ string(GetFuncName())))
@@ -15,9 +15,11 @@
 `define ONLINEEVENTMGR (XComOnlineEventMgr(GameEngine(class'Engine'.static.GetEngine()).OnlineEventManager))
 `define PRES (XComPresentationLayer(XComPlayerController(class'Engine'.static.GetCurrentWorldInfo().GetALocalPlayerController()).m_Pres))
 `define PROFILESETTINGS XComOnlineProfileSettings(class'Engine'.static.GetEngine().GetProfileSettings())
-`define TRACEMGR (XComTacticalGRI(class'Engine'.static.GetCurrentWorldInfo().GRI).m_kTraceMgr)
-`define SHAPEMGR (XComTacticalGRI(class'Engine'.static.GetCurrentWorldInfo().GRI).mSimpleShapeManager)
+`define TRACEMGR (`TACTICALGRI.m_kTraceMgr)
+`define SHAPEMGR (`TACTICALGRI.mSimpleShapeManager)
 `define WORLDINFO (class'Engine'.static.GetCurrentWorldInfo())
+`define XCOMGRI XComGameReplicationInfo(class'Engine'.static.GetCurrentWorldInfo().GRI)
+`define TACTICALGRI XComTacticalGRI(`XCOMGRI)
 
 `define METERSTOUNITS(x) ( (`x) * 64 )
 `define UNITSTOMETERS(x) ( (`x) / 64 )

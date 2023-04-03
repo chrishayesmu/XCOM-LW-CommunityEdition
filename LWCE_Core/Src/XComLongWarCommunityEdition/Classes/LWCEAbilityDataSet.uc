@@ -6,19 +6,41 @@ class LWCEAbilityDataSet extends LWCEDataSet;
 // be modified in any way.
 //---------------------------------------------------------------------------------------
 
+var LWCEAbilityToHitCalc_DeadEye DeadEye;
 var LWCEAbilityToHitCalc_StandardAim SimpleStandardAim;
-var LWCEAbilityCondition_UnitProperty LivingShooterProperty;
-var LWCEAbilityCondition_UnitProperty LivingHostileTargetProperty;
+var LWCECondition_UnitProperty LivingShooterProperty;
+var LWCECondition_UnitProperty LivingHostileTargetProperty;
+var LWCEAbilityTrigger_UnitPostBeginPlay UnitPostBeginPlayTrigger;
+var LWCEAbilityTargetStyle_Self SelfTarget;
 var LWCEAbilityTargetStyle_Single SimpleSingleTarget;
-var LWCEAbilityCondition_Visibility VisibleToSourceCondition;
+var LWCECondition_Visibility VisibleToSourceCondition;
 
 static function array<LWCEDataTemplate> CreateTemplates()
 {
     local array<LWCEDataTemplate> arrTemplates;
 
+    arrTemplates.AddItem(Ranger());
     arrTemplates.AddItem(StandardShot());
 
     return arrTemplates;
+}
+
+static function LWCEAbilityTemplate Ranger()
+{
+	local LWCEAbilityTemplate Template;
+	local LWCEEffect_Ranger RangerEffect;
+
+	`CREATE_ABILITY_TEMPLATE(Template, 'Ranger');
+
+	Template.AbilityToHitCalc = default.DeadEye;
+	Template.AbilityTargetStyle = default.SelfTarget;
+	Template.AbilityTriggers.AddItem(default.UnitPostBeginPlayTrigger);
+
+	RangerEffect = new class'LWCEEffect_Ranger';
+	RangerEffect.BuildPersistentEffect(1, /* bIsInfinite */ true);
+	Template.AbilityTargetEffects.AddItem(RangerEffect);
+
+	return Template;
 }
 
 static function LWCEAbilityTemplate StandardShot()
@@ -26,9 +48,12 @@ static function LWCEAbilityTemplate StandardShot()
 	local LWCEAbilityTemplate Template;
     local LWCEAbilityCost_ActionPoints kActionPointsCost;
     local LWCEAbilityCost_Ammo kAmmoCost;
-    local LWCEAbilityCondition_Visibility kVisCondition;
+    local LWCECondition_Visibility kVisCondition;
+	local LWCEEffect_ApplyWeaponDamage kEffect;
 
 	`CREATE_ABILITY_TEMPLATE(Template, 'StandardShot');
+
+    Template.AbilityIcon = "Standard";
 
     kActionPointsCost = new class'LWCEAbilityCost_ActionPoints';
     kActionPointsCost.iNumPoints = 1;
@@ -44,10 +69,15 @@ static function LWCEAbilityTemplate StandardShot()
 	Template.AbilityShooterConditions.AddItem(default.LivingShooterProperty);
 	Template.AbilityTargetConditions.AddItem(default.LivingHostileTargetProperty);
 
-    kVisCondition = new class'LWCEAbilityCondition_Visibility';
+    kVisCondition = new class'LWCECondition_Visibility';
     kVisCondition.bRequireLineOfSight = true;
     kVisCondition.bAllowSquadsight = true;
     Template.AbilityTargetConditions.AddItem(kVisCondition);
+
+	kEffect = new class'LWCEEffect_ApplyWeaponDamage';
+	kEffect.bDealEnvironmentalDamage = true;
+	kEffect.bDealUnitDamage = true;
+	Template.AbilityTargetEffects.AddItem(kEffect);
 
 	Template.AbilityToHitCalc = default.SimpleStandardAim;
 
@@ -56,11 +86,16 @@ static function LWCEAbilityTemplate StandardShot()
 
 defaultproperties
 {
+	Begin Object Class=LWCEAbilityToHitCalc_DeadEye Name=DefaultDeadEye
+	End Object
+	DeadEye = DefaultDeadEye;
+
     Begin Object Class=LWCEAbilityToHitCalc_StandardAim Name=DefaultSimpleStandardAim
+        bCanCrit=true
 	End Object
 	SimpleStandardAim = DefaultSimpleStandardAim;
 
-	Begin Object Class=LWCEAbilityCondition_UnitProperty Name=DefaultLivingShooterProperty
+	Begin Object Class=LWCECondition_UnitProperty Name=DefaultLivingShooterProperty
 		bExcludeLiving=false
 		bExcludeDead=true
 		bExcludeFriendlyToSource=false
@@ -68,7 +103,7 @@ defaultproperties
 	End Object
 	LivingShooterProperty = DefaultLivingShooterProperty;
 
-	Begin Object Class=LWCEAbilityCondition_UnitProperty Name=DefaultLivingHostileTargetProperty
+	Begin Object Class=LWCECondition_UnitProperty Name=DefaultLivingHostileTargetProperty
 		bExcludeLiving=false
 		bExcludeDead=true
 		bExcludeFriendlyToSource=true
@@ -77,7 +112,7 @@ defaultproperties
 	End Object
 	LivingHostileTargetProperty = DefaultLivingHostileTargetProperty;
 
-    Begin Object Class=LWCEAbilityCondition_Visibility Name=DefaultVisibleToSourceCondition
+    Begin Object Class=LWCECondition_Visibility Name=DefaultVisibleToSourceCondition
 		bRequireLineOfSight=true
 		bAllowSquadsight=false
 	End Object
@@ -86,4 +121,12 @@ defaultproperties
     Begin Object Class=LWCEAbilityTargetStyle_Single Name=DefaultSimpleSingleTarget
 	End Object
 	SimpleSingleTarget = DefaultSimpleSingleTarget;
+
+	Begin Object Class=LWCEAbilityTargetStyle_Self Name=DefaultSelfTarget
+	End Object
+	SelfTarget = DefaultSelfTarget;
+
+	Begin Object Class=LWCEAbilityTrigger_UnitPostBeginPlay Name=DefaultUnitPostBeginPlayTrigger
+	End Object
+	UnitPostBeginPlayTrigger = DefaultUnitPostBeginPlayTrigger;
 }

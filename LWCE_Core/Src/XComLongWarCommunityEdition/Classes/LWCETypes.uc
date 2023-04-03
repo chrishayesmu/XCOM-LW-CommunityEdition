@@ -168,6 +168,7 @@ struct LWCE_TCharacterStats
     var int iCriticalChance;
     var int iDamage;
     var float fDamageReduction;
+    var float fDamageReductionPenetration;
     var int iDefense;
     var int iFlightFuel;
     var int iHP;
@@ -224,6 +225,15 @@ struct LWCE_TPrereqs
 
     var bool bRequiresAutopsy;       // If true, any autopsy research must be completed.
     var bool bRequiresInterrogation; // If true, any interrogation research must be completed.
+};
+
+struct LWCE_TAbilityResult
+{
+    var bool bIsHit;
+    var bool bIsCrit;
+    var int iUnmitigatedDamage;
+    var int iDamageReduction;
+    var int iFinalDamage;
 };
 
 /// <summary>
@@ -385,6 +395,7 @@ struct LWCE_TWeapon
 };
 
 /// <summary>
+/// TODO
 /// </summary>
 struct LWCE_TAppliedEffect
 {

@@ -111,6 +111,38 @@ exec function DropMan(optional bool bAddToHumanTeam = false)
     }
 }
 
+exec function GiveAbility(string strName)
+{
+    local array<XGAbility> unusedOutVar;
+    local LWCEAbilityTemplate kAbilityTemplate;
+    local LWCE_XGAbility kAbility;
+    local LWCE_XGUnit kUnit;
+
+    kUnit = LWCE_XGUnit(Outer.GetActiveUnit());
+
+    if (kUnit == none)
+    {
+        return;
+    }
+
+    kAbilityTemplate = `LWCE_ABILITY(name(strName));
+
+    if (kAbilityTemplate == none)
+    {
+        GetConsole().OutputTextLine("Couldn't find ability template with name " $ strName);
+        return;
+    }
+
+    // TODO add a separate hook for this, figure out what to do with kWeapon argument
+    kAbility = kUnit.GenerateAbilityFromTemplate(kAbilityTemplate.GetAbilityName(), unusedOutVar, /* kWeapon */ none);
+
+    if (kAbility.IsTriggeredOnUnitPostBeginPlay())
+    {
+        GetConsole().OutputTextLine("Ability " $ kAbilityTemplate.GetAbilityName() $ " should be activated on PostBeginPlay; activating now");
+        kAbility.Activate();
+    }
+}
+
 exec function GiveBonus(string strName)
 {
     local int iBonus;

@@ -39,7 +39,7 @@ static function bool CanHitAoETarget(XGAIBehavior kSelf, out aoe_target kTarget)
 
                 if (kSelf.UpdateAoETargetLocation(kTarget, vStartTrace) && kSelf.PrecomputeGrenadePath(kAbility, kTarget.vLocation))
                 {
-                    if (kSelf.TestPotentialGrenadeDestination(XComTacticalGRI(class'Engine'.static.GetCurrentWorldInfo().GRI).m_kPrecomputedPath.GetEndPosition(), kAbility.m_kWeapon.GetOverallDamageRadius()))
+                    if (kSelf.TestPotentialGrenadeDestination(`TACTICALGRI.m_kPrecomputedPath.GetEndPosition(), kAbility.m_kWeapon.GetOverallDamageRadius()))
                     {
                         return true;
                     }

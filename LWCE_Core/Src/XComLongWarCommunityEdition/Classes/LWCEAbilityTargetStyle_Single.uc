@@ -31,8 +31,3 @@ function GatherTargets(const LWCE_XGAbility kAbility, out array<LWCE_TAvailableT
         arrTargets.AddItem(kLWCE_TAvailableTarget);
     }
 }
-
-function bool IsFreeAiming(const LWCE_XGAbility kAbility)
-{
-    return false;
-}

@@ -328,6 +328,10 @@ PilotNames="\"Blender\" Iyengar"
 PilotNames="\"Blinker\" Kamala"
 PilotNames="\"Stuntman\" Silva"
 
+[StandardShot LWCEAbilityTemplate]
+strFriendlyName="Fire"
+strHelp="Does <XGAbility:PossibleDamage/> damage."
+
 [Item_AcidSpit LWCEWeaponTemplate]
 strName="Acid Spit"
 strNamePlural="Acid Spit"

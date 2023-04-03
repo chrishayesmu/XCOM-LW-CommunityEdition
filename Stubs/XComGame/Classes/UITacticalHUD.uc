@@ -1,5 +1,4 @@
 class UITacticalHUD extends UI_FxsScreen;
-//complete stub
 
 enum eUI_ReticleMode
 {
@@ -22,7 +21,7 @@ var UITacticalHUD_ObjectivesList m_kObjectives;
 var UITacticalHUD_MouseControls m_kMouseControls;
 var UIStrategyTutorialBox m_kTutorialHelpBox;
 var bool m_isMenuRaised;
-var private bool m_bForceOverheadView;
+var bool m_bForceOverheadView;
 var bool m_bHelpTipsDisabled;
 var string m_strReticleMsg;
 var float m_fReticleAimPercentage;

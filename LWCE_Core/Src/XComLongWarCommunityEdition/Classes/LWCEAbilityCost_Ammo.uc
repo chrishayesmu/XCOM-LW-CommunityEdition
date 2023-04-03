@@ -2,7 +2,7 @@ class LWCEAbilityCost_Ammo extends LWCEAbilityCost;
 
 var int iAmmo;
 
-function name CanAfford(LWCE_XGAbility kAbility)
+function name CanAfford(LWCE_XGAbility kAbility, const LWCE_TAvailableTarget kTarget)
 {
     local LWCE_XGWeapon kWeapon;
 
@@ -21,7 +21,7 @@ function name CanAfford(LWCE_XGAbility kAbility)
     return 'AA_Success';
 }
 
-function ApplyCost(LWCE_XGAbility kAbility)
+function ApplyCost(LWCE_XGAbility kAbility, const LWCE_TAvailableTarget kTarget)
 {
     local LWCE_XGWeapon kWeapon;
 

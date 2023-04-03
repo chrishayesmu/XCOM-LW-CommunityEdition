@@ -1,4 +1,4 @@
-class LWCEAbilityCondition_Visibility extends LWCEAbilityCondition;
+class LWCECondition_Visibility extends LWCECondition;
 
 // Visibility from the source unit to targets. If squadsight is not enabled, then the target must be within the source's
 // own sight radius; otherwise it must be visible to any unit on the same team as the source unit.

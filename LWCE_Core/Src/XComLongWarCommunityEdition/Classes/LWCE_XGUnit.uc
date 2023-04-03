@@ -5,7 +5,6 @@ struct CheckpointRecord_LWCE_XGUnit extends CheckpointRecord_XGUnit
     var LWCE_TSoldier m_kCESoldier;
     var LWCE_TAppearance m_kCESavedAppearance;
 
-    var array<name> m_arrAbilityNames;
     var array<name> m_arrActionPoints;
 
     var array<int> m_arrCEBonuses;
@@ -20,9 +19,11 @@ struct CheckpointRecord_LWCE_XGUnit extends CheckpointRecord_XGUnit
 var LWCE_TSoldier m_kCESoldier;
 var LWCE_TAppearance m_kCESavedAppearance;
 
-var array<name> m_arrAbilityNames;
 var array<name> m_arrActionPoints; // The action points currently available to this unit.
+var array<LWCE_XGAbility> m_arrAbilities;
+var array<LWCEAppliedEffect> m_arrAppliedEffects; // The persistent effects currently applied to this unit.
 
+// TODO: delete these; replaced by effects
 var array<int> m_arrCEBonuses;
 var array<int> m_arrCEPassives;
 var array<int> m_arrCEPenalties;
@@ -33,6 +34,44 @@ var array<int> m_arrCEPenalties;
 // Use these functions instead of accessing data directly!
 // There's a lot of weird stuff going on under the hood.
 // -------------------------------------------------
+
+function AddPersistentEffect(LWCEAppliedEffect kEffect)
+{
+    local bool bAdded;
+    local int Index;
+
+    `LWCE_LOG_CLS("AddPersistentEffect: effect name is " $ kEffect.m_kEffect.EffectName);
+
+    for (Index = 0; Index < m_arrAppliedEffects.Length; Index++)
+    {
+        if (m_arrAppliedEffects[Index].m_kEffect.iPriority >= kEffect.m_kEffect.iPriority)
+        {
+            m_arrAppliedEffects.InsertItem(Index, kEffect);
+            bAdded = true;
+            break;
+        }
+    }
+
+    if (!bAdded)
+    {
+        m_arrAppliedEffects.AddItem(kEffect);
+    }
+}
+
+function LWCEAppliedEffect FindEffect(name EffectName)
+{
+    local LWCEAppliedEffect kEffect;
+
+    foreach m_arrAppliedEffects(kEffect)
+    {
+        if (kEffect.m_kEffect.EffectName == EffectName)
+        {
+            return kEffect;
+        }
+    }
+
+    return none;
+}
 
 function LWCE_XGCharacter LWCE_GetCharacter()
 {
@@ -170,7 +209,17 @@ function GivePerk(int iPerkId, optional name nmSourceTypeId = 'Innate', optional
 
 function bool HasAbility(name nmAbility)
 {
-    return m_arrAbilityNames.Find(nmAbility) != INDEX_NONE;
+    local LWCE_XGAbility kAbility;
+
+    foreach m_arrAbilities(kAbility)
+    {
+        if (kAbility.m_TemplateName == nmAbility)
+        {
+            return true;
+        }
+    }
+
+    return false;
 }
 
 function bool HasCharacterProperty(int iCharPropId)
@@ -1231,7 +1280,8 @@ function BuildAbilities(optional bool bUpdateUI = true)
     local array<XGAbility> arrAbilities;
     local XGTacticalGameCore kGameCore;
 
-    //`LWCE_LOG_CLS("BuildAbilities: begin - char type " $ m_kCharacter.m_kChar.iType);
+    `LWCE_LOG_CLS("BuildAbilities: begin - char type " $ m_kCharacter.m_kChar.iType);
+    ScriptTrace();
 
     bShouldBuild = true;
     kGameCore = `GAMECORE;
@@ -1840,6 +1890,12 @@ simulated function GenerateAbilities(int iAbility, Vector vLocation, out array<X
         return;
     }
 
+    if (iAbility == eAbility_ShotStandard)
+    {
+        GenerateAbilityFromTemplate('StandardShot', arrAbilities, kWeapon);
+        return;
+    }
+
     bIsPsionic = kAbilityTree.AbilityHasProperty(iAbility, eProp_Psionic);
     bHasCustomRange = kAbilityTree.AbilityHasProperty(iAbility, eProp_CustomRange);
     bTargetNonRobotic = kAbilityTree.AbilityHasProperty(iAbility, eProp_TargetNonRobotic);
@@ -2006,6 +2062,27 @@ simulated function bool GenerateAbilities_CheckForFlyAbility(int iAbility, out a
     arrAbilities.AddItem(kAbility);
 
     return true;
+}
+
+function LWCE_XGAbility GenerateAbilityFromTemplate(name nmAbility, out array<XGAbility> arrAbilities, XGWeapon kWeapon)
+{
+    local LWCE_XGAbility kAbility;
+
+    `LWCE_LOG_CLS("Generating template ability with name " $ nmAbility);
+
+    kAbility = Spawn(class'LWCE_XGAbility', self);
+    kAbility.m_kUnit = self;
+    kAbility.LWCE_Init(nmAbility, kWeapon);
+
+    arrAbilities.AddItem(kAbility);
+
+    // TODO: temporary way to get abilities into the right array permanently
+    if (!HasAbility(nmAbility))
+    {
+        m_arrAbilities.AddItem(kAbility);
+    }
+
+    return kAbility;
 }
 
 simulated function int GetAggressionBonus()
@@ -3730,7 +3807,7 @@ simulated event OnUpdatedVisibility(bool bVisibilityChanged)
     super(XGUnitNativeBase).OnUpdatedVisibility(bVisibilityChanged);
 
     FlankCheck();
-    m_bBuildAbilityDataDirty = true;
+    m_bBuildAbilityDataDirty = bVisibilityChanged || m_bBuildAbilityDataDirty;
     kBattle = XGBattle_SP(`BATTLE);
 
     if (kBattle != none)
@@ -3754,12 +3831,33 @@ simulated event OnUpdatedVisibility(bool bVisibilityChanged)
             return;
         }
 
-        m_bBuildAbilitiesTriggeredFromVisibilityChange = bVisibilityChanged;
-        BuildAbilities(bVisibilityChanged);
+        // TODO: experimenting with not triggering BuildAbilities here, for efficiency; clean up the code eventually
+        // m_bBuildAbilitiesTriggeredFromVisibilityChange = bVisibilityChanged;
+        // BuildAbilities(bVisibilityChanged);
     }
     else
     {
         m_bBuildAbilitiesTriggeredFromVisibilityChange = false;
+    }
+}
+
+simulated event PostBeginPlay()
+{
+    local LWCE_XGAbility kAbility;
+
+    super.PostBeginPlay();
+
+    // Check for any abilities which trigger when we begin play
+    BuildAbilities();
+
+    `LWCE_LOG_CLS("Unit " $ self $ " looking for abilities that trigger on PostBeginPlay. There are " $ m_arrAbilities.Length $ " abilities to iterate.");
+    foreach m_arrAbilities(kAbility)
+    {
+        if (kAbility.IsTriggeredOnUnitPostBeginPlay())
+        {
+            `LWCE_LOG_CLS("Ability " $ kAbility $ "(" $ kAbility.m_TemplateName $ ") is triggered on PostBeginPlay. Activating now.");
+            kAbility.Activate();
+        }
     }
 }
 
