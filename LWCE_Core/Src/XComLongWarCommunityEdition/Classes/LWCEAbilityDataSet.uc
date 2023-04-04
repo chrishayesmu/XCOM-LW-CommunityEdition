@@ -10,6 +10,7 @@ var LWCEAbilityToHitCalc_DeadEye DeadEye;
 var LWCEAbilityToHitCalc_StandardAim SimpleStandardAim;
 var LWCECondition_UnitProperty LivingShooterProperty;
 var LWCECondition_UnitProperty LivingHostileTargetProperty;
+var LWCEAbilityTrigger_PlayerInput PlayerInputTrigger;
 var LWCEAbilityTrigger_UnitPostBeginPlay UnitPostBeginPlayTrigger;
 var LWCEAbilityTargetStyle_Self SelfTarget;
 var LWCEAbilityTargetStyle_Single SimpleSingleTarget;
@@ -19,11 +20,35 @@ static function array<LWCEDataTemplate> CreateTemplates()
 {
     local array<LWCEDataTemplate> arrTemplates;
 
+    arrTemplates.AddItem(Executioner());
     arrTemplates.AddItem(LowProfile());
     arrTemplates.AddItem(Ranger());
     arrTemplates.AddItem(StandardShot());
 
     return arrTemplates;
+}
+
+static function LWCEAbilityTemplate Executioner()
+{
+	local LWCEAbilityTemplate Template;
+	local LWCEEffect_Executioner PersistentEffect;
+
+	`CREATE_ABILITY_TEMPLATE(Template, 'Executioner');
+
+	Template.AbilityIcon = "Executioner";
+	Template.Hostility = eHostility_Neutral;
+
+	Template.AbilityToHitCalc = default.DeadEye;
+	Template.AbilityTargetStyle = default.SelfTarget;
+	Template.AbilityTriggers.AddItem(default.UnitPostBeginPlayTrigger);
+
+	PersistentEffect = new class'LWCEEffect_Executioner';
+	PersistentEffect.BuildPersistentEffect(1, /* bIsInfinite */ true);
+	PersistentEffect.SetDisplayInfo(ePerkBuff_Passive, Template.strFriendlyName, Template.strDescription, Template.AbilityIcon, /* bDisplayInHUD */ true);
+
+	Template.AbilityTargetEffects.AddItem(PersistentEffect);
+
+	return Template;
 }
 
 static function LWCEAbilityTemplate LowProfile()
@@ -34,6 +59,7 @@ static function LWCEAbilityTemplate LowProfile()
 	`CREATE_ABILITY_TEMPLATE(Template, 'LowProfile');
 
 	Template.AbilityIcon = "LowProfile";
+	Template.Hostility = eHostility_Neutral;
 
 	Template.AbilityToHitCalc = default.DeadEye;
 	Template.AbilityTargetStyle = default.SelfTarget;
@@ -56,6 +82,7 @@ static function LWCEAbilityTemplate Ranger()
 	`CREATE_ABILITY_TEMPLATE(Template, 'Ranger');
 
 	Template.AbilityIcon = "Gunslinger";
+	Template.Hostility = eHostility_Neutral;
 
 	Template.AbilityToHitCalc = default.DeadEye;
 	Template.AbilityTargetStyle = default.SelfTarget;
@@ -93,6 +120,7 @@ static function LWCEAbilityTemplate StandardShot()
     Template.AbilityCosts.AddItem(kAmmoCost);
 
 	Template.AbilityTargetStyle = default.SimpleSingleTarget;
+	Template.AbilityTriggers.AddItem(default.PlayerInputTrigger);
 	Template.AbilityShooterConditions.AddItem(default.LivingShooterProperty);
 	Template.AbilityTargetConditions.AddItem(default.LivingHostileTargetProperty);
 
@@ -152,6 +180,10 @@ defaultproperties
 	Begin Object Class=LWCEAbilityTargetStyle_Self Name=DefaultSelfTarget
 	End Object
 	SelfTarget = DefaultSelfTarget;
+
+	Begin Object Class=LWCEAbilityTrigger_PlayerInput Name=DefaultPlayerInputTrigger
+	End Object
+	PlayerInputTrigger = DefaultPlayerInputTrigger;
 
 	Begin Object Class=LWCEAbilityTrigger_UnitPostBeginPlay Name=DefaultUnitPostBeginPlayTrigger
 	End Object

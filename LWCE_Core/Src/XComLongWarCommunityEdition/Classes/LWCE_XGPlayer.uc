@@ -160,6 +160,16 @@ simulated event ReplicatedEvent(name VarName)
     super.ReplicatedEvent(VarName);
 }
 
+simulated function SetActiveUnit(XGUnit kNewActive, optional int iBindToClientProxyID = -1)
+{
+    super.SetActiveUnit(kNewActive, iBindToClientProxyID);
+
+    if (kNewActive != none)
+    {
+        LWCE_XGUnit(kNewActive).UpdateAbilityBreakdowns();
+    }
+}
+
 function LWCE_XGUnit LWCE_SpawnUnit(PlayerController kPlayerController, Vector kLocation, Rotator kRotation, XGCharacter kCharacter, LWCE_TCharacter kCEChar, LWCE_TSoldier kCESoldier, XGSquad kSquad, optional bool bDestroyOnBadLocation = false, optional XComSpawnPoint kSpawnPoint, optional bool bSnapToGround = true, optional bool bBattleScanner = false)
 {
     local LWCE_XGUnit kUnit;

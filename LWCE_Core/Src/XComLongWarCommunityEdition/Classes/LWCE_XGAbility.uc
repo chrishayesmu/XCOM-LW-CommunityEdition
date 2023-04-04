@@ -146,6 +146,44 @@ function name Activate(optional out LWCE_TAbilityResult kOutResult)
     return 'AA_Success';
 }
 
+function ApplyCost()
+{
+    `LWCE_LOG_NOT_IMPLEMENTED(ApplyCost);
+}
+
+simulated function bool CanFireWeapon()
+{
+    `LWCE_LOG_NOT_IMPLEMENTED(CanFireWeapon);
+    return true;
+}
+
+simulated function bool CanFreeAim()
+{
+    `LWCE_LOG_NOT_IMPLEMENTED(CanFreeAim);
+    return false;
+}
+
+simulated event bool CanTargetUnit(XGUnit kUnit)
+{
+    `LWCE_LOG_NOT_IMPLEMENTED(CanTargetUnit);
+    return true;
+}
+
+simulated function int FindTargetIndex(XGUnit kTarget)
+{
+    local int iTarget;
+
+    for (iTarget = 0; iTarget < arrTargetOptions.Length; iTarget++)
+    {
+        if (arrTargetOptions[iTarget].kTarget.kPrimaryTarget == kTarget)
+        {
+            return iTarget;
+        }
+    }
+
+    return INDEX_NONE;
+}
+
 function GatherTargets()
 {
     local LWCEAbilityUsageSummary kPreview;
@@ -188,64 +226,6 @@ simulated function int GetCriticalChance()
     return m_kTemplate.AbilityToHitCalc.GetFinalCritChance(self, arrTargetOptions[m_iCurrentTargetIndex].kPreview);
 }
 
-simulated function int GetHitChance()
-{
-    if (m_iCurrentTargetIndex < 0 || m_iCurrentTargetIndex >= arrTargetOptions.Length)
-    {
-        return 0;
-    }
-
-    return m_kTemplate.AbilityToHitCalc.GetFinalHitChance(self, arrTargetOptions[m_iCurrentTargetIndex].kPreview);
-}
-
-function LWCEWeaponTemplate GetWeaponTemplate()
-{
-    if (m_kWeapon == none)
-    {
-        return none;
-    }
-
-    return LWCE_XGWeapon(m_kWeapon).m_kTemplate;
-}
-
-function ApplyCost()
-{
-    `LWCE_LOG_NOT_IMPLEMENTED(ApplyCost);
-}
-
-simulated function bool CanFireWeapon()
-{
-    `LWCE_LOG_NOT_IMPLEMENTED(CanFireWeapon);
-    return true;
-}
-
-simulated function bool CanFreeAim()
-{
-    `LWCE_LOG_NOT_IMPLEMENTED(CanFreeAim);
-    return false;
-}
-
-simulated event bool CanTargetUnit(XGUnit kUnit)
-{
-    `LWCE_LOG_NOT_IMPLEMENTED(CanTargetUnit);
-    return true;
-}
-
-simulated function int FindTargetIndex(XGUnit kTarget)
-{
-    local int iTarget;
-
-    for (iTarget = 0; iTarget < arrTargetOptions.Length; iTarget++)
-    {
-        if (arrTargetOptions[iTarget].kTarget.kPrimaryTarget == kTarget)
-        {
-            return iTarget;
-        }
-    }
-
-    return INDEX_NONE;
-}
-
 function LWCE_TDamagePreview GetDamagePreview(LWCE_XGUnit kTarget, bool bIsHit, bool bIsCrit)
 {
     local LWCE_TDamagePreview kCurrentPreview, kFinalPreview;
@@ -273,6 +253,16 @@ simulated function int GetEmptyTargetIndex()
     `LWCE_LOG_DEPRECATED_NOREPLACE_CLS(GetEmptyTargetIndex);
 
     return INDEX_NONE;
+}
+
+simulated function int GetHitChance()
+{
+    if (m_iCurrentTargetIndex < 0 || m_iCurrentTargetIndex >= arrTargetOptions.Length)
+    {
+        return 0;
+    }
+
+    return m_kTemplate.AbilityToHitCalc.GetFinalHitChance(self, arrTargetOptions[m_iCurrentTargetIndex].kPreview);
 }
 
 simulated function int GetNumTargets()
@@ -306,6 +296,16 @@ simulated function bool GetTargets(out array<XGUnit> arrTargets)
     return arrTargets.Length > 0;
 }
 
+function LWCEWeaponTemplate GetWeaponTemplate()
+{
+    if (m_kWeapon == none)
+    {
+        return none;
+    }
+
+    return LWCE_XGWeapon(m_kWeapon).m_kTemplate;
+}
+
 simulated function bool IsBlasterLauncherShot()
 {
     `LWCE_LOG_NOT_IMPLEMENTED(IsBlasterLauncherShot);
@@ -316,6 +316,11 @@ simulated function bool IsRocketShot()
 {
     `LWCE_LOG_NOT_IMPLEMENTED(IsRocketShot);
     return false;
+}
+
+function bool IsTriggeredByInput()
+{
+    return m_kTemplate.IsAbilityInputTriggered();
 }
 
 function bool IsTriggeredOnUnitPostBeginPlay()

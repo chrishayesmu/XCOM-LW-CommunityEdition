@@ -328,6 +328,10 @@ PilotNames="\"Blender\" Iyengar"
 PilotNames="\"Blinker\" Kamala"
 PilotNames="\"Stuntman\" Silva"
 
+[Executioner LWCEAbilityTemplate]
+strFriendlyName="Executioner"
+strDescription="Confers +<XGAbility:ExecutionerAimBonus/> Aim and +<XGAbility:ExecutionerAimBonus/> critical chance against targets at or below <XGAbility:ExecutionerHealthThreshold/>% health."
+
 [LowProfile LWCEAbilityTemplate]
 strFriendlyName="Low Profile"
 strDescription="Makes partial cover grant the defense bonus of full cover."

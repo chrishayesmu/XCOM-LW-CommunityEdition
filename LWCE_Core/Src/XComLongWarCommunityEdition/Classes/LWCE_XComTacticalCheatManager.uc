@@ -141,6 +141,9 @@ exec function GiveAbility(string strName)
         GetConsole().OutputTextLine("Ability " $ kAbilityTemplate.GetAbilityName() $ " should be activated on PostBeginPlay; activating now");
         kAbility.Activate();
     }
+
+    // Update all ability breakdowns in case this ability has an effect on them
+    kUnit.UpdateAbilityBreakdowns();
 }
 
 exec function GiveBonus(string strName)

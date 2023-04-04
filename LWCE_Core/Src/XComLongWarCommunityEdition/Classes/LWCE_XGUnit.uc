@@ -258,6 +258,32 @@ function bool IsPsionic()
     return LWCE_GetCharacter().IsPsionic();
 }
 
+/// <summary>
+/// Causes all ability breakdowns (their cached hit/crit chances) to update.
+///
+/// WARNING: This is an expensive operation, and it's very unlikely for mods to need to call this.
+/// </summary>
+function UpdateAbilityBreakdowns(optional bool bHostileOnly = true)
+{
+    local LWCE_XGAbility kAbility;
+
+    foreach m_arrAbilities(kAbility)
+    {
+        if (bHostileOnly && kAbility.m_kTemplate.Hostility != eHostility_Offensive)
+        {
+            continue;
+        }
+
+        // Shouldn't be any need to do this for non-input abilities
+        if (!kAbility.IsTriggeredByInput())
+        {
+            continue;
+        }
+
+        kAbility.GatherTargets();
+    }
+}
+
 // -------------------------------------------------
 // Overrides/additions to base game functions below
 // -------------------------------------------------
@@ -1360,6 +1386,7 @@ function BuildAbilities(optional bool bUpdateUI = true)
         UpdateAbilitiesUI();
     }
 
+    UpdateAbilityBreakdowns();
     //`LWCE_LOG_CLS("BuildAbilities: end - char type " $ m_kCharacter.m_kChar.iType);
 }
 

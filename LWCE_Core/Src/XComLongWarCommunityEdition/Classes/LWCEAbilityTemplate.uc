@@ -6,8 +6,10 @@ enum EAbilityHostility
 	eHostility_Offensive,
 	eHostility_Defensive,
 	eHostility_Neutral,
-	eHostility_Movement,
+	eHostility_Movement
 };
+
+var EAbilityHostility Hostility;
 
 var LWCEAbilityCharges AbilityCharges;
 var array<LWCEAbilityCost> AbilityCosts;
@@ -150,6 +152,21 @@ function LWCEAbilityUsageSummary GenerateAbilityPreview(LWCE_XGAbility kAbility,
 	return kBreakdown;
 }
 
+function bool IsAbilityInputTriggered()
+{
+	local LWCEAbilityTrigger kTrigger;
+
+	foreach AbilityTriggers(kTrigger)
+	{
+		if (kTrigger.IsA('LWCEAbilityTrigger_PlayerInput'))
+		{
+			return true;
+		}
+	}
+
+	return false;
+}
+
 function bool IsTriggeredOnUnitPostBeginPlay()
 {
 	local LWCEAbilityTrigger kTrigger;
@@ -163,4 +180,9 @@ function bool IsTriggeredOnUnitPostBeginPlay()
 	}
 
 	return false;
+}
+
+defaultproperties
+{
+	Hostility=eHostility_Offensive
 }
