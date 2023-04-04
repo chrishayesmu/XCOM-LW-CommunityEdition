@@ -20,12 +20,36 @@ static function array<LWCEDataTemplate> CreateTemplates()
 {
     local array<LWCEDataTemplate> arrTemplates;
 
+    arrTemplates.AddItem(DamnGoodGround());
     arrTemplates.AddItem(Executioner());
     arrTemplates.AddItem(LowProfile());
     arrTemplates.AddItem(Ranger());
     arrTemplates.AddItem(StandardShot());
 
     return arrTemplates;
+}
+
+static function LWCEAbilityTemplate DamnGoodGround()
+{
+	local LWCEAbilityTemplate Template;
+	local LWCEEffect_DamnGoodGround PersistentEffect;
+
+	`CREATE_ABILITY_TEMPLATE(Template, 'DamnGoodGround');
+
+	Template.AbilityIcon = "DamnGoodGround";
+	Template.Hostility = eHostility_Neutral;
+
+	Template.AbilityToHitCalc = default.DeadEye;
+	Template.AbilityTargetStyle = default.SelfTarget;
+	Template.AbilityTriggers.AddItem(default.UnitPostBeginPlayTrigger);
+
+	PersistentEffect = new class'LWCEEffect_DamnGoodGround';
+	PersistentEffect.BuildPersistentEffect(1, /* bIsInfinite */ true);
+	PersistentEffect.SetDisplayInfo(ePerkBuff_Passive, Template.strFriendlyName, Template.strDescription, Template.AbilityIcon, /* bDisplayInHUD */ true);
+
+	Template.AbilityTargetEffects.AddItem(PersistentEffect);
+
+	return Template;
 }
 
 static function LWCEAbilityTemplate Executioner()

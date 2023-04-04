@@ -1,8 +1,8 @@
 class LWCEEffect_Executioner extends LWCEEffect_Persistent;
 
-var config int iExecutionerAimBonus;
-var config int iExecutionerCritChanceBonus;
-var config int iExecutionerHealthPercentageThreshold;
+var config int iAimBonus;
+var config int iCritChanceBonus;
+var config int iHealthPercentageThreshold;
 
 function GetToHitModifiersAsAttacker(LWCE_XGUnit kAttacker, LWCE_XGUnit kTarget, LWCE_XGAbility kAbility, out LWCEAbilityUsageSummary kBreakdown)
 {
@@ -16,10 +16,10 @@ function GetToHitModifiersAsAttacker(LWCE_XGUnit kAttacker, LWCE_XGUnit kTarget,
 
     fHealthPercent = kTarget.m_aCurrentStats[eStat_HP] / float(kTarget.LWCE_GetCharacter().GetCharacter().aStats[eStat_HP] + kTarget.m_aInventoryStats[eStat_HP]);
 
-    if (fHealthPercent <= (iExecutionerHealthPercentageThreshold / 100.0))
+    if (fHealthPercent <= (iHealthPercentageThreshold / 100.0))
     {
-        kBreakdown.AddHitChanceMod(EffectName, FriendlyName, iExecutionerAimBonus);
-        kBreakdown.AddCritChanceMod(EffectName, FriendlyName, iExecutionerCritChanceBonus);
+        kBreakdown.AddHitChanceMod(EffectName, FriendlyName, iAimBonus);
+        kBreakdown.AddCritChanceMod(EffectName, FriendlyName, iCritChanceBonus);
     }
 }
 

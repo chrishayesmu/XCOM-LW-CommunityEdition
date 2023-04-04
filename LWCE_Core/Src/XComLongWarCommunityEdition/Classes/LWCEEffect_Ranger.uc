@@ -1,7 +1,7 @@
 class LWCEEffect_Ranger extends LWCEEffect_Persistent;
 
-var config float fRangerDamageBonusPrimary;
-var config float fRangerDamageBonusSidearm;
+var config float fDamageBonusPrimary;
+var config float fDamageBonusSidearm;
 
 function float GetModifiedDamageModifierAsAttacker(LWCE_XGUnit kAttacker, LWCE_XGUnit kTarget, LWCE_XGAbility kAbility, bool bIsHit, bool bIsCrit, LWCEEffect kAbilityEffect, float fBaseDamage, float fCurrentDamage)
 {
@@ -26,12 +26,12 @@ function float GetModifiedDamageModifierAsAttacker(LWCE_XGUnit kAttacker, LWCE_X
     {
         if (kWeaponTemplate.IsLarge())
         {
-            return fRangerDamageBonusPrimary;
+            return fDamageBonusPrimary;
         }
 
         if (kWeaponTemplate.HasWeaponProperty(eWP_Pistol))
         {
-            return fRangerDamageBonusSidearm;
+            return fDamageBonusSidearm;
         }
     }
 

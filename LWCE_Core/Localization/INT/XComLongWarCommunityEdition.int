@@ -328,6 +328,10 @@ PilotNames="\"Blender\" Iyengar"
 PilotNames="\"Blinker\" Kamala"
 PilotNames="\"Stuntman\" Silva"
 
+[DamnGoodGround LWCEAbilityTemplate]
+strFriendlyName="Damn Good Ground"
+strDescription="Confers +<XGAbility:DamnGoodGroundAimBonus/> Aim and +<XGAbility:DamnGoodGroundDefenseBonus/> Defense against enemies at lower elevation, in addition to the usual elevation bonuses."
+
 [Executioner LWCEAbilityTemplate]
 strFriendlyName="Executioner"
 strDescription="Confers +<XGAbility:ExecutionerAimBonus/> Aim and +<XGAbility:ExecutionerAimBonus/> critical chance against targets at or below <XGAbility:ExecutionerHealthThreshold/>% health."
