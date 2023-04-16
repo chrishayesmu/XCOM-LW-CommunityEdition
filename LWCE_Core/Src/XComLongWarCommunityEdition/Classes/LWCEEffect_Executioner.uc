@@ -4,7 +4,7 @@ var config int iAimBonus;
 var config int iCritChanceBonus;
 var config int iHealthPercentageThreshold;
 
-function GetToHitModifiersAsAttacker(LWCE_XGUnit kAttacker, LWCE_XGUnit kTarget, LWCE_XGAbility kAbility, out LWCEAbilityUsageSummary kBreakdown)
+function GetToHitModifiersAsAttacker(LWCE_XGUnit kAttacker, LWCE_XGUnit kTarget, LWCE_XGAbility kAbility, LWCEAbilityUsageSummary kBreakdown)
 {
     local float fHealthPercent;
 

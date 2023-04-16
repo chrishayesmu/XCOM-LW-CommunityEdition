@@ -20,7 +20,7 @@ function ApplyToAbilityBreakdown(LWCE_XGAbility kAbility, LWCE_TAvailableTarget 
 /// <summary>
 /// Get a preview for the damage this effect will do if used on the given target.
 /// </summary>
-function LWCE_TDamagePreview GetDamagePreview(LWCE_XGAbility kAbility, LWCE_XGUnit kSource, LWCE_XGUnit kTarget, bool bIsHit, bool bIsCrit);
+function LWCE_TDamagePreview GetDamagePreview(LWCE_XGAbility kAbility, LWCE_XGUnit kSource, LWCE_XGUnit kTarget, out LWCE_TAbilityResult kAbilityResult);
 
 defaultproperties
 {

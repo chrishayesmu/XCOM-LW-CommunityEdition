@@ -26,10 +26,10 @@ function name ApplyEffect(LWCE_XGUnit kSource, LWCE_XGUnit kTarget, LWCE_XGAbili
 
 function ApplyToAbilityBreakdown(LWCE_XGAbility kAbility, LWCE_TAvailableTarget kTarget, bool bIsHit, optional out LWCEAbilityUsageSummary kAbilityBreakdown)
 {
-
+    // TODO
 }
 
-function LWCE_TDamagePreview GetDamagePreview(LWCE_XGAbility kAbility, LWCE_XGUnit kSource, LWCE_XGUnit kTarget, bool bIsHit, bool bIsCrit)
+function LWCE_TDamagePreview GetDamagePreview(LWCE_XGAbility kAbility, LWCE_XGUnit kSource, LWCE_XGUnit kTarget, out LWCE_TAbilityResult kAbilityResult)
 {
     local LWCE_TDamagePreview kPreview;
     local delegate<LWCEWeaponTemplate.CalcBonusWeaponDamage> CalcBonusWeaponDamageFn;
@@ -59,13 +59,13 @@ function LWCE_TDamagePreview GetDamagePreview(LWCE_XGAbility kAbility, LWCE_XGUn
     // Incorporate source unit effects to base damage
     foreach kSource.m_arrAppliedEffects(kAppliedEffect)
     {
-        fBaseDamage += kAppliedEffect.m_kEffect.GetBaseDamageModifierAsAttacker(kSource, kTarget, kAbility, bIsHit, bIsCrit, self, fBaseDamage);
+        fBaseDamage += kAppliedEffect.m_kEffect.GetBaseDamageModifierAsAttacker(kSource, kTarget, kAbility, kAbilityResult, self, fBaseDamage);
     }
 
     // Incorporate target unit effects to base damage
     foreach kTarget.m_arrAppliedEffects(kAppliedEffect)
     {
-        fBaseDamage += kAppliedEffect.m_kEffect.GetBaseDamageModifierAsDefender(kSource, kTarget, kAbility, bIsHit, bIsCrit, self, fBaseDamage);
+        fBaseDamage += kAppliedEffect.m_kEffect.GetBaseDamageModifierAsDefender(kSource, kTarget, kAbility, kAbilityResult, self, fBaseDamage);
     }
 
     `LWCE_LOG_CLS("ApplyWeaponDamage: GetDamagePreview: fBaseDamage final = " $ fBaseDamage);
@@ -88,13 +88,13 @@ function LWCE_TDamagePreview GetDamagePreview(LWCE_XGAbility kAbility, LWCE_XGUn
     // Incorporate source unit effects to modified damage
     foreach kSource.m_arrAppliedEffects(kAppliedEffect)
     {
-        fModifiedDamage += kAppliedEffect.m_kEffect.GetModifiedDamageModifierAsAttacker(kSource, kTarget, kAbility, bIsHit, bIsCrit, self, fBaseDamage, fModifiedDamage);
+        fModifiedDamage += kAppliedEffect.m_kEffect.GetModifiedDamageModifierAsAttacker(kSource, kTarget, kAbility, kAbilityResult, self, fBaseDamage, fModifiedDamage);
     }
 
     // Incorporate target unit effects to modified damage
     foreach kTarget.m_arrAppliedEffects(kAppliedEffect)
     {
-        fModifiedDamage += kAppliedEffect.m_kEffect.GetModifiedDamageModifierAsDefender(kSource, kTarget, kAbility, bIsHit, bIsCrit, self, fBaseDamage, fModifiedDamage);
+        fModifiedDamage += kAppliedEffect.m_kEffect.GetModifiedDamageModifierAsDefender(kSource, kTarget, kAbility, kAbilityResult, self, fBaseDamage, fModifiedDamage);
     }
 
     `LWCE_LOG_CLS("ApplyWeaponDamage: GetDamagePreview: fModifiedDamage final = " $ fModifiedDamage);
@@ -108,7 +108,7 @@ function LWCE_TDamagePreview GetDamagePreview(LWCE_XGAbility kAbility, LWCE_XGUn
     // Calculate the damage range based on what we have right now. Base damage can't be negative,
     // but modified damage can.
     fBaseDamage = Max(0, fBaseDamage);
-    class'LWCEStandardDamageCalculator'.static.GetDamageRollRange(bIsCrit, fBaseDamage, fModifiedDamage, kPreview.iMinDamage, kPreview.iMaxDamage);
+    class'LWCEStandardDamageCalculator'.static.GetDamageRollRange(class'LWCE_XGAbility'.static.HitResultIsCritical(kAbilityResult), fBaseDamage, fModifiedDamage, kPreview.iMinDamage, kPreview.iMaxDamage);
 
     `LWCE_LOG_CLS("ApplyWeaponDamage: GetDamagePreview: damage roll range = " $ kPreview.iMinDamage $ ", " $ kPreview.iMaxDamage);
 
@@ -125,15 +125,15 @@ function LWCE_TDamagePreview GetDamagePreview(LWCE_XGAbility kAbility, LWCE_XGUn
     // Incorporate source unit effects to damage reduction
     foreach kSource.m_arrAppliedEffects(kAppliedEffect)
     {
-        fMinDR += kAppliedEffect.m_kEffect.GetDamageReductionModifierAsAttacker(kSource, kTarget, kAbility, bIsHit, bIsCrit, self, kPreview.iMinDamage, fMinDR);
-        fMaxDR += kAppliedEffect.m_kEffect.GetDamageReductionModifierAsAttacker(kSource, kTarget, kAbility, bIsHit, bIsCrit, self, kPreview.iMaxDamage, fMaxDR);
+        fMinDR += kAppliedEffect.m_kEffect.GetDamageReductionModifierAsAttacker(kSource, kTarget, kAbility, kAbilityResult, self, kPreview.iMinDamage, fMinDR);
+        fMaxDR += kAppliedEffect.m_kEffect.GetDamageReductionModifierAsAttacker(kSource, kTarget, kAbility, kAbilityResult, self, kPreview.iMaxDamage, fMaxDR);
     }
 
     // Incorporate target unit effects to damage reduction
     foreach kTarget.m_arrAppliedEffects(kAppliedEffect)
     {
-        fMinDR += kAppliedEffect.m_kEffect.GetDamageReductionModifierAsDefender(kSource, kTarget, kAbility, bIsHit, bIsCrit, self, kPreview.iMinDamage, fMinDR);
-        fMaxDR += kAppliedEffect.m_kEffect.GetDamageReductionModifierAsDefender(kSource, kTarget, kAbility, bIsHit, bIsCrit, self, kPreview.iMaxDamage, fMaxDR);
+        fMinDR += kAppliedEffect.m_kEffect.GetDamageReductionModifierAsDefender(kSource, kTarget, kAbility, kAbilityResult, self, kPreview.iMinDamage, fMinDR);
+        fMaxDR += kAppliedEffect.m_kEffect.GetDamageReductionModifierAsDefender(kSource, kTarget, kAbility, kAbilityResult, self, kPreview.iMaxDamage, fMaxDR);
     }
 
     fMinDR = FClamp(fMinDR, 0, kPreview.iMinDamage);

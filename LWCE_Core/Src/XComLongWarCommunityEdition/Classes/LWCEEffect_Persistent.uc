@@ -35,16 +35,16 @@ var string FriendlyName;            // Used in the F1 view.
 var string FriendlyDescription;     // Used in the F1 view.
 var string IconImage;               // Image to use for the icon; currently restricted to a limited set defined in Flash.
 
-function float GetBaseDamageModifierAsAttacker(LWCE_XGUnit kAttacker, LWCE_XGUnit kTarget, LWCE_XGAbility kAbility, bool bIsHit, bool bIsCrit, LWCEEffect kAbilityEffect, float fCurrentDamage) { return 0.0f; }
-function float GetBaseDamageModifierAsDefender(LWCE_XGUnit kAttacker, LWCE_XGUnit kTarget, LWCE_XGAbility kAbility, bool bIsHit, bool bIsCrit, LWCEEffect kAbilityEffect, float fCurrentDamage) { return 0.0f; }
-function float GetModifiedDamageModifierAsAttacker(LWCE_XGUnit kAttacker, LWCE_XGUnit kTarget, LWCE_XGAbility kAbility, bool bIsHit, bool bIsCrit, LWCEEffect kAbilityEffect, float fBaseDamage, float fCurrentDamage) { return 0.0f; }
-function float GetModifiedDamageModifierAsDefender(LWCE_XGUnit kAttacker, LWCE_XGUnit kTarget, LWCE_XGAbility kAbility, bool bIsHit, bool bIsCrit, LWCEEffect kAbilityEffect, float fBaseDamage, float fCurrentDamage) { return 0.0f; }
-function float GetDamageReductionModifierAsAttacker(LWCE_XGUnit kAttacker, LWCE_XGUnit kTarget, LWCE_XGAbility kAbility, bool bIsHit, bool bIsCrit, LWCEEffect kAbilityEffect, float fDamage, float fCurrentDR) { return 0.0f; }
-function float GetDamageReductionModifierAsDefender(LWCE_XGUnit kAttacker, LWCE_XGUnit kTarget, LWCE_XGAbility kAbility, bool bIsHit, bool bIsCrit, LWCEEffect kAbilityEffect, float fDamage, float fCurrentDR) { return 0.0f; }
-function GetToHitModifiersAsAttacker(LWCE_XGUnit kAttacker, LWCE_XGUnit kTarget, LWCE_XGAbility kAbility, out LWCEAbilityUsageSummary kBreakdown) { }
-function GetToHitModifiersAsDefender(LWCE_XGUnit kAttacker, LWCE_XGUnit kTarget, LWCE_XGAbility kAbility, out LWCEAbilityUsageSummary kBreakdown) { }
-function bool ForceBleedout(LWCE_XGUnit kAttacker, LWCE_XGUnit kTarget, LWCE_XGAbility kAbility, const out LWCEAbilityUsageSummary kBreakdown) { return false; }
-function bool PreventBleedout(LWCE_XGUnit kAttacker, LWCE_XGUnit kTarget, LWCE_XGAbility kAbility, const out LWCEAbilityUsageSummary kBreakdown) { return false; }
+function float GetBaseDamageModifierAsAttacker(LWCE_XGUnit kAttacker, LWCE_XGUnit kTarget, LWCE_XGAbility kAbility, const out LWCE_TAbilityResult kResult, LWCEEffect kAbilityEffect, float fCurrentDamage) { return 0.0f; }
+function float GetBaseDamageModifierAsDefender(LWCE_XGUnit kAttacker, LWCE_XGUnit kTarget, LWCE_XGAbility kAbility, const out LWCE_TAbilityResult kResult, LWCEEffect kAbilityEffect, float fCurrentDamage) { return 0.0f; }
+function float GetModifiedDamageModifierAsAttacker(LWCE_XGUnit kAttacker, LWCE_XGUnit kTarget, LWCE_XGAbility kAbility, const out LWCE_TAbilityResult kResult, LWCEEffect kAbilityEffect, float fBaseDamage, float fCurrentDamage) { return 0.0f; }
+function float GetModifiedDamageModifierAsDefender(LWCE_XGUnit kAttacker, LWCE_XGUnit kTarget, LWCE_XGAbility kAbility, const out LWCE_TAbilityResult kResult, LWCEEffect kAbilityEffect, float fBaseDamage, float fCurrentDamage) { return 0.0f; }
+function float GetDamageReductionModifierAsAttacker(LWCE_XGUnit kAttacker, LWCE_XGUnit kTarget, LWCE_XGAbility kAbility, const out LWCE_TAbilityResult kResult, LWCEEffect kAbilityEffect, float fDamage, float fCurrentDR) { return 0.0f; }
+function float GetDamageReductionModifierAsDefender(LWCE_XGUnit kAttacker, LWCE_XGUnit kTarget, LWCE_XGAbility kAbility, const out LWCE_TAbilityResult kResult, LWCEEffect kAbilityEffect, float fDamage, float fCurrentDR) { return 0.0f; }
+function GetToHitModifiersAsAttacker(LWCE_XGUnit kAttacker, LWCE_XGUnit kTarget, LWCE_XGAbility kAbility, LWCEAbilityUsageSummary kBreakdown) { }
+function GetToHitModifiersAsDefender(LWCE_XGUnit kAttacker, LWCE_XGUnit kTarget, LWCE_XGAbility kAbility, LWCEAbilityUsageSummary kBreakdown) { }
+function bool ForceBleedout(LWCE_XGUnit kAttacker, LWCE_XGUnit kTarget, LWCE_XGAbility kAbility, LWCEAbilityUsageSummary kBreakdown) { return false; }
+function bool PreventBleedout(LWCE_XGUnit kAttacker, LWCE_XGUnit kTarget, LWCE_XGAbility kAbility, LWCEAbilityUsageSummary kBreakdown) { return false; }
 
 simulated function BuildPersistentEffect(int _iNumTurns, optional bool _bInfiniteDuration = false, optional bool _bRemoveWhenSourceDies = true)
 {

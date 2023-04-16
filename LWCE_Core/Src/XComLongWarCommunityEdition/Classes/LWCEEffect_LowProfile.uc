@@ -2,7 +2,7 @@ class LWCEEffect_LowProfile extends LWCEEffect_Persistent;
 
 // TODO: using this hook won't make the Low Profile bonus show up in a unit's defense stat in the F1 view; we need
 // some sort of expanded functionality if we want to support that
-function GetToHitModifiersAsDefender(LWCE_XGUnit kAttacker, LWCE_XGUnit kTarget, LWCE_XGAbility kAbility, out LWCEAbilityUsageSummary kBreakdown)
+function GetToHitModifiersAsDefender(LWCE_XGUnit kAttacker, LWCE_XGUnit kTarget, LWCE_XGAbility kAbility, LWCEAbilityUsageSummary kBreakdown)
 {
     local int Index, iHitChanceModifier;
 

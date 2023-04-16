@@ -3,7 +3,7 @@ class LWCEEffect_Ranger extends LWCEEffect_Persistent;
 var config float fDamageBonusPrimary;
 var config float fDamageBonusSidearm;
 
-function float GetModifiedDamageModifierAsAttacker(LWCE_XGUnit kAttacker, LWCE_XGUnit kTarget, LWCE_XGAbility kAbility, bool bIsHit, bool bIsCrit, LWCEEffect kAbilityEffect, float fBaseDamage, float fCurrentDamage)
+function float GetModifiedDamageModifierAsAttacker(LWCE_XGUnit kAttacker, LWCE_XGUnit kTarget, LWCE_XGAbility kAbility, const out LWCE_TAbilityResult kResult, LWCEEffect kAbilityEffect, float fBaseDamage, float fCurrentDamage)
 {
     local LWCEWeaponTemplate kWeaponTemplate;
 
@@ -39,18 +39,13 @@ function float GetModifiedDamageModifierAsAttacker(LWCE_XGUnit kAttacker, LWCE_X
 }
 
 // When firing a pistol, look for the RangePenalty mod and remove it if present
-function GetToHitModifiersAsAttacker(LWCE_XGUnit kAttacker, LWCE_XGUnit kTarget, LWCE_XGAbility kAbility, out LWCEAbilityUsageSummary kBreakdown)
+function GetToHitModifiersAsAttacker(LWCE_XGUnit kAttacker, LWCE_XGUnit kTarget, LWCE_XGAbility kAbility, LWCEAbilityUsageSummary kBreakdown)
 {
     local LWCEWeaponTemplate kWeaponTemplate;
 
     kWeaponTemplate = kAbility.GetWeaponTemplate();
 
-    if (kWeaponTemplate == none)
-    {
-        return;
-    }
-
-    if (!kWeaponTemplate.HasWeaponProperty(eWP_Pistol))
+    if (kWeaponTemplate == none || !kWeaponTemplate.HasWeaponProperty(eWP_Pistol))
     {
         return;
     }

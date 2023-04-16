@@ -49,6 +49,16 @@ var LWCEAbilityTemplate m_kTemplate;
 var array<LWCE_TTargetOption> arrTargetOptions;
 var int m_iCurrentTargetIndex;
 
+static function bool HitResultIsCritical(const out LWCE_TAbilityResult kResult)
+{
+    return kResult.HitResult == eHit_HitCrit;
+}
+
+static function bool HitResultIsHit(const out LWCE_TAbilityResult kResult)
+{
+    return kResult.HitResult == eHit_HitCrit || kResult.HitResult == eHit_HitNoCrit;
+}
+
 function Init(int iAbility)
 {
     `LWCE_LOG_DEPRECATED_CLS(Init);
@@ -228,16 +238,30 @@ simulated function int GetCriticalChance()
 
 function LWCE_TDamagePreview GetDamagePreview(LWCE_XGUnit kTarget, bool bIsHit, bool bIsCrit)
 {
+    local LWCE_TAbilityResult kFakeResult;
     local LWCE_TDamagePreview kCurrentPreview, kFinalPreview;
     local LWCEEffect kEffect;
 
     kFinalPreview.kPrimaryTarget = kTarget;
 
+    if (bIsHit && bIsCrit)
+    {
+        kFakeResult.HitResult = eHit_HitCrit;
+    }
+    else if (bIsHit)
+    {
+        kFakeResult.HitResult = eHit_HitNoCrit;
+    }
+    else
+    {
+        kFakeResult.HitResult = eHit_Miss;
+    }
+
     `LWCE_LOG_CLS("LWCE_XGAbility: GetDamagePreview: " $ m_kTemplate.AbilityTargetEffects.Length $ " effects to process");
 
     foreach m_kTemplate.AbilityTargetEffects(kEffect)
     {
-        kCurrentPreview = kEffect.GetDamagePreview(self, LWCE_XGUnit(m_kUnit), kTarget, bIsHit, bIsCrit);
+        kCurrentPreview = kEffect.GetDamagePreview(self, LWCE_XGUnit(m_kUnit), kTarget, kFakeResult);
 
         kFinalPreview.iMinDamage += kCurrentPreview.iMinDamage;
         kFinalPreview.iMaxDamage += kCurrentPreview.iMaxDamage;
