@@ -68,6 +68,9 @@ function Init(bool bLoadingFromSave)
     {
         InitDifficulty(m_iDifficulty);
     }
+
+    class'LWCEEventListenerTemplateManager'.static.RegisterStrategyListeners();
+    `LWCE_EVENT_MGR.TriggerEvent('StrategyGameStart');
 }
 
 function BeginCombat(XGMission kMission)
@@ -205,8 +208,7 @@ function int GetAct()
 
 function PostLoadSaveGame()
 {
-    // The original version of this has some unnecessary debug code using deprecated functions;
-    // we just replace it with nothing
+    class'LWCEEventListenerTemplateManager'.static.RegisterStrategyListeners();
 }
 
 function bool UnlockFacility(EFacilityType eFacility, out TItemUnlock kUnlock)
