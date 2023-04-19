@@ -208,7 +208,8 @@ function int GetAct()
 
 function PostLoadSaveGame()
 {
-    class'LWCEEventListenerTemplateManager'.static.RegisterStrategyListeners();
+    // The original version of this has some unnecessary debug code using deprecated functions;
+    // we just replace it with nothing
 }
 
 function bool UnlockFacility(EFacilityType eFacility, out TItemUnlock kUnlock)

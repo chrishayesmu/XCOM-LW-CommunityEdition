@@ -1,4 +1,5 @@
 class LWCEEventListenerTemplate extends LWCEDataTemplate
+    config(Unused) // required because parent has PerObjectConfig set, else game crashes
     dependson(LWCEEventManager);
 
 /// <summary>
