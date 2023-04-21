@@ -1021,9 +1021,8 @@ function LaunchBlitz(array<ECityType> arrTargetCities, optional bool bFirstBlitz
     local array<EMissionRewardType> arrRewards;
     local EMissionRewardType eReward;
     local EMissionDifficulty eDiff;
+    local LWCEAlertBuilder kAlertBuilder;
     local LWCE_TMissionReward kBlankReward, kReward;
-    local LWCE_TGeoscapeAlert kAlert;
-    local LWCE_TData kData;
     local bool bMissionAdded;
     local int I, iIndex;
 
@@ -1043,6 +1042,8 @@ function LaunchBlitz(array<ECityType> arrTargetCities, optional bool bFirstBlitz
 
     // This loop is written for the vanilla behavior where you pick from multiple abductions;
     // for Long War it can just be read as not being a loop.
+    kAlertBuilder = `LWCE_ALERT('Abduction');
+
     for (I = 0; I < arrTargetCities.Length; I++)
     {
         kReward = kBlankReward;
@@ -1074,18 +1075,13 @@ function LaunchBlitz(array<ECityType> arrTargetCities, optional bool bFirstBlitz
         {
             bMissionAdded = true;
 
-            kData.eType = eDT_Int;
-            kData.iData = kMission.m_iID;
-
-            kAlert.arrData.AddItem(kData);
+            kAlertBuilder.AddInt(kMission.m_iID);
         }
     }
 
-    kAlert.AlertType = 'Abduction';
-
     if (bMissionAdded)
     {
-        LWCE_XGGeoscape(GEOSCAPE()).LWCE_Alert(kAlert);
+        LWCE_XGGeoscape(GEOSCAPE()).LWCE_Alert(kAlertBuilder.Build());
     }
 }
 

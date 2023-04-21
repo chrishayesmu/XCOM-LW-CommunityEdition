@@ -8,7 +8,6 @@ struct LWCE_TItemUnlock
     var bool bGeneMod;
     var bool bMecArmor;
     var SoundCue sndFanfare;
-    var array<LWCE_TData> arrUnlockData;
     var string ImagePath;
     var string strTitle;
     var string strName;

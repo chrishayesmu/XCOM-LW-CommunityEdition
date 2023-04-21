@@ -125,21 +125,6 @@ struct LWCE_TClassDefinition
     var array<string> NicknamesMale;   // Nicknames that can be randomly assigned to male soldiers of this class.
 };
 
-/// <summary>
-/// A single piece of data which can be used in situations where the type and/or quantity of data is not known in
-/// advance, such as Geoscape alerts. The ID field can be used to communicate what the data represents, but this is
-/// optional, and generally only needed for mod-to-mod communication.
-/// </summary>
-struct LWCE_TData
-{
-    var name ID;
-    var EDataType eType;
-    var bool bData;
-    var int iData;
-    var name nmData;
-    var string strData;
-};
-
 struct LWCE_TSoldier
 {
     var int iID;
@@ -437,7 +422,7 @@ struct LWCE_THQEvent
 {
     var name EventType;
     var int iHours;
-    var array<LWCE_TData> arrData;
+    var LWCEDataContainer kData;
 };
 
 struct LWCE_TMCEvent
@@ -448,7 +433,7 @@ struct LWCE_TMCEvent
     var TText txtDays;
     var int iPriority;
     var Color clrOption;
-    var array<LWCE_TData> arrData;
+    var LWCEDataContainer kData;
 };
 
 struct LWCE_TMCEventMenu

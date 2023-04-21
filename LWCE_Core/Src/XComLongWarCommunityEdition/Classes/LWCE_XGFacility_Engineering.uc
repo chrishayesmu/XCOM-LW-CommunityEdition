@@ -1059,7 +1059,6 @@ function GetFacilityEvents(out array<THQEvent> arrEvents)
 function LWCE_GetFacilityEvents(out array<LWCE_THQEvent> arrEvents)
 {
     local int iFacilityProject, iEvent;
-    local LWCE_TData kData;
     local LWCE_THQEvent kBlankEvent, kEvent;
     local bool bAdded;
 
@@ -1074,9 +1073,7 @@ function LWCE_GetFacilityEvents(out array<LWCE_THQEvent> arrEvents)
             kEvent.iHours *= 0.50;
         }
 
-        kData.eType = eDT_Int;
-        kData.iData = m_arrFacilityProjects[iFacilityProject].eFacility;
-        kEvent.arrData.AddItem(kData);
+        kEvent.kData = class'LWCEDataContainer'.static.NewInt('THQEventData', m_arrFacilityProjects[iFacilityProject].eFacility);
 
         bAdded = false;
 
@@ -1105,7 +1102,6 @@ function GetFoundryEvents(out array<THQEvent> arrEvents)
 function LWCE_GetFoundryEvents(out array<LWCE_THQEvent> arrEvents)
 {
     local int iFoundryProject, iEvent;
-    local LWCE_TData kData;
     local LWCE_THQEvent kBlankEvent, kEvent;
     local bool bAdded;
     local int iWorkDone;
@@ -1128,9 +1124,7 @@ function LWCE_GetFoundryEvents(out array<LWCE_THQEvent> arrEvents)
             kEvent.iHours += 1;
         }
 
-        kData.eType = eDT_Name;
-        kData.nmData = m_arrCEFoundryProjects[iFoundryProject].ProjectName;
-        kEvent.arrData.AddItem(kData);
+        kEvent.kData = class'LWCEDataContainer'.static.NewName('THQEventData', m_arrCEFoundryProjects[iFoundryProject].ProjectName);
 
         bAdded = false;
 
@@ -1188,7 +1182,6 @@ function GetItemEvents(out array<THQEvent> arrEvents)
 function LWCE_GetItemEvents(out array<LWCE_THQEvent> arrEvents)
 {
     local int iItemProject, iEvent;
-    local LWCE_TData kData;
     local LWCE_THQEvent kBlankEvent, kEvent;
     local bool bAdded;
 
@@ -1203,13 +1196,9 @@ function LWCE_GetItemEvents(out array<LWCE_THQEvent> arrEvents)
         kEvent.EventType = 'ItemProject';
         kEvent.iHours = LWCE_GetItemProjectHoursRemaining(m_arrCEItemProjects[iItemProject]);
 
-        kData.eType = eDT_Name;
-        kData.nmData = m_arrCEItemProjects[iItemProject].ItemName;
-        kEvent.arrData.AddItem(kData);
-
-        kData.eType = eDT_Int;
-        kData.iData = m_arrCEItemProjects[iItemProject].iQuantity;
-        kEvent.arrData.AddItem(kData);
+        kEvent.kData = class'LWCEDataContainer'.static.New('THQEventData');
+        kEvent.kData.AddName(m_arrCEItemProjects[iItemProject].ItemName);
+        kEvent.kData.AddInt(m_arrCEItemProjects[iItemProject].iQuantity);
 
         bAdded = false;
 
@@ -1430,7 +1419,7 @@ function OnItemCompleted(int iItemProject, int iQuantity, optional bool bInstant
     local LWCEItemTemplate kItem;
     local LWCE_TProjectCost kRebate, kOrigCost;
     local XcomNarrativeMoment kNarrativeMoment;
-    local array<LWCE_TData> arrData;
+    local LWCEDataContainer kData;
 
     kOrigCost = LWCE_GetItemProjectCost(m_arrCEItemProjects[iItemProject].ItemName, 1);
 
@@ -1445,15 +1434,11 @@ function OnItemCompleted(int iItemProject, int iQuantity, optional bool bInstant
 
     if (!bInstant)
     {
-        arrData.Add(2);
+        kData = class'LWCEDataContainer'.static.New('NotifyData');
+        kData.AddName(m_arrCEItemProjects[iItemProject].ItemName);
+        kData.AddInt(iQuantity);
 
-        arrData[0].eType = eDT_Name;
-        arrData[0].nmData = m_arrCEItemProjects[iItemProject].ItemName;
-
-        arrData[1].eType = eDT_Int;
-        arrData[1].iData = iQuantity;
-
-        LWCE_XComHQPresentationLayer(PRES()).LWCE_Notify('NewItemBuilt', arrData);
+        LWCE_XComHQPresentationLayer(PRES()).LWCE_Notify('NewItemBuilt', kData);
     }
 
     LWCE_XGStorage(STORAGE()).LWCE_AddItem(m_arrCEItemProjects[iItemProject].ItemName, iQuantity);

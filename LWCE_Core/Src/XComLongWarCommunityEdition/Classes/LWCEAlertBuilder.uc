@@ -9,54 +9,35 @@ static function LWCEAlertBuilder NewAlert(name AlertType)
 
     kBuilder = new (none) class'LWCEAlertBuilder';
     kBuilder.Data.AlertType = AlertType;
+    kBuilder.Data.kData = class'LWCEDataContainer'.static.New(AlertType);
 
     return kBuilder;
 }
 
 function LWCEAlertBuilder AddBool(bool Value)
 {
-    local LWCE_TData kAlertData;
-
-    kAlertData.eType = eDT_Bool;
-    kAlertData.bData = Value;
-
-    Data.arrData.AddItem(kAlertData);
+    Data.kData.AddBool(Value);
 
     return self;
 }
 
 function LWCEAlertBuilder AddInt(int Value)
 {
-    local LWCE_TData kAlertData;
-
-    kAlertData.eType = eDT_Int;
-    kAlertData.iData = Value;
-
-    Data.arrData.AddItem(kAlertData);
+    Data.kData.AddInt(Value);
 
     return self;
 }
 
 function LWCEAlertBuilder AddName(name Value)
 {
-    local LWCE_TData kAlertData;
-
-    kAlertData.eType = eDT_Name;
-    kAlertData.nmData = Value;
-
-    Data.arrData.AddItem(kAlertData);
+    Data.kData.AddName(Value);
 
     return self;
 }
 
 function LWCEAlertBuilder AddString(string Value)
 {
-    local LWCE_TData kAlertData;
-
-    kAlertData.eType = eDT_String;
-    kAlertData.strData = Value;
-
-    Data.arrData.AddItem(kAlertData);
+    Data.kData.AddString(Value);
 
     return self;
 }

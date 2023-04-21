@@ -656,7 +656,6 @@ function GetEvents(out array<THQEvent> arrEvents)
 function LWCE_GetEvents(out array<LWCE_THQEvent> arrEvents)
 {
     local int iEvent;
-    local LWCE_TData kData;
     local LWCE_THQEvent kEvent;
 
     if (!HasProject())
@@ -664,12 +663,9 @@ function LWCE_GetEvents(out array<LWCE_THQEvent> arrEvents)
         return;
     }
 
-    kData.eType = eDT_Name;
-    kData.nmData = m_kCEProject.TechName;
-
     kEvent.EventType = 'Research';
     kEvent.iHours = GetHoursLeftOnProject();
-    kEvent.arrData.AddItem(kData);
+    kEvent.kData = class'LWCEDataContainer'.static.NewName('THQEventData', m_kCEProject.TechName);
 
     for (iEvent = 0; iEvent < arrEvents.Length; iEvent++)
     {
