@@ -9,6 +9,49 @@ enum EAbilityHostility
 	eHostility_Movement
 };
 
+enum EAbilityHitResult
+{
+	eHit_HitNoCrit,
+	eHit_HitCrit,
+	eHit_Miss,
+	eHit_Prevented,
+	eHit_Reflect
+};
+
+struct LWCE_TEffectResults
+{
+	var array<LWCEEffect> Effects;
+	var array<name> ApplyResults;
+};
+
+struct LWCE_TAbilityInputContext
+{
+    var name AbilityTemplateName;       // The name of the ability's template
+    var LWCE_XGAbility Ability;         // Instance of the ability being used
+
+    var Actor PrimaryTarget;            // The main target of the ability; may be none
+    var array<Actor> AdditionalTargets; // Additional targets of the ability, if any
+    var array<Vector> TargetLocations;  // If one or more locations is being targeted, they will be here
+
+    var Actor Source; // The source of the ability
+};
+
+struct LWCE_TAbilityResult
+{
+    var EAbilityHitResult HitResult;
+	var LWCE_TEffectResults SourceEffectResults;
+	var LWCE_TEffectResults TargetEffectResults;
+};
+
+struct LWCE_TDamagePreview
+{
+    var LWCE_XGUnit kPrimaryTarget; // The main target of the ability; can be none.
+    var int iMaxDamage; // Max damage that this ability could roll. Should already include mitigation by DR.
+    var int iMinDamage; // Min damage that this ability could roll. Should already include mitigation by DR.
+    var int iMaxDamageReduction; // Damage reduction that will apply if the max damage is rolled.
+    var int iMinDamageReduction; // Damage reduction that will apply if the min damage is rolled.
+};
+
 var EAbilityHostility Hostility;
 
 var LWCEAbilityCharges AbilityCharges;
@@ -22,6 +65,8 @@ var array<LWCECondition> AbilityShooterConditions;
 var array<LWCECondition> AbilityTargetConditions;
 var LWCEAbilityTargetStyle AbilityTargetStyle;
 
+var delegate<BuildVisualizationDelegate> BuildVisualizationFn;
+
 var string AbilityIcon;
 
 var const localized string strFriendlyName;
@@ -29,6 +74,8 @@ var const localized string strHelp; // Short help message for activated abilitie
 var const localized string strDescription; // Longer description of the ability, shown in the tactical details HUD (F1)
 var const localized string strPerformerMessage;
 var const localized string strTargetMessage;
+
+delegate BuildVisualizationDelegate(const out LWCE_TAbilityInputContext kInputContext, const out LWCE_TAbilityResult kResult);
 
 function name GetAbilityName()
 {
@@ -72,7 +119,7 @@ function name CheckAvailable(LWCE_XGAbility kAbility, const LWCE_TAvailableTarge
 
 	foreach AbilityShooterConditions(kCondition)
 	{
-		nmAvailableCode = kCondition.MeetsCondition(kSourceUnit, kTarget.kPrimaryTarget);
+		nmAvailableCode = kCondition.MeetsCondition(kSourceUnit, none);
 
 		if (nmAvailableCode != 'AA_Success')
 		{

@@ -160,8 +160,24 @@ static function LWCEAbilityTemplate StandardShot()
 
 	Template.AbilityToHitCalc = default.SimpleStandardAim;
 
+	Template.BuildVisualizationFn = TypicalAbility_BuildVisualization;
+
     return Template;
 }
+
+static function TypicalAbility_BuildVisualization(const out LWCE_TAbilityInputContext kInputContext, const out LWCE_TAbilityResult kResult)
+{
+	local LWCEAction_Fire FireAction;
+	local VisualizationActionMetadata BlankMetadata, ActionMetadata;
+
+	`LWCE_LOG_CLS("Building typical ability visualization for ability name " $ kInputContext.AbilityTemplateName);
+	ActionMetadata.VisualizeActor = kInputContext.Source;
+
+	// For now this is just the Fire action
+	FireAction = LWCEAction_Fire(class'LWCEAction_Fire'.static.CreateInVisualizationTree(ActionMetadata));
+	FireAction.ForAbilityContext(kInputContext, kResult);
+}
+
 
 defaultproperties
 {

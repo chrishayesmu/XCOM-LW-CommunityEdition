@@ -1,36 +1,5 @@
 class LWCE_XGAbility extends XGAbility_GameCore;
 
-enum EAbilityHitResult
-{
-	eHit_HitNoCrit,
-	eHit_HitCrit,
-	eHit_Miss,
-	eHit_Prevented,
-	eHit_Reflect
-};
-
-struct LWCE_TEffectResults
-{
-	var array<LWCEEffect> Effects;
-	var array<name> ApplyResults;
-};
-
-struct LWCE_TAbilityResult
-{
-    var EAbilityHitResult HitResult;
-	var LWCE_TEffectResults SourceEffectResults;
-	var LWCE_TEffectResults TargetEffectResults;
-};
-
-struct LWCE_TDamagePreview
-{
-    var LWCE_XGUnit kPrimaryTarget; // The main target of the ability; can be none.
-    var int iMaxDamage; // Max damage that this ability could roll. Should already include mitigation by DR.
-    var int iMinDamage; // Min damage that this ability could roll. Should already include mitigation by DR.
-    var int iMaxDamageReduction; // Damage reduction that will apply if the max damage is rolled.
-    var int iMinDamageReduction; // Damage reduction that will apply if the min damage is rolled.
-};
-
 // TODO: this struct doesn't allow for hit chance/damage for each additional target, only primary
 struct LWCE_TTargetOption
 {
@@ -94,10 +63,13 @@ simulated function name LWCE_CheckAvailable()
 function name Activate(optional out LWCE_TAbilityResult kOutResult)
 {
     local LWCEEffect kEffect;
+    local LWCE_TAbilityInputContext kInputContext;
     local LWCE_TAbilityResult kResult;
     local name nmAvailableCode, nmApplyResult;
     local bool bIsHit, bIsCrit;
     local LWCE_XGUnit kSource, kTarget;
+
+    `LWCE_LOG_CLS("Activating ability " $ m_TemplateName);
 
     kSource = LWCE_XGUnit(m_kUnit);
     kTarget = LWCE_XGUnit(GetPrimaryTarget());
@@ -128,6 +100,12 @@ function name Activate(optional out LWCE_TAbilityResult kOutResult)
 
     `LWCE_LOG_CLS("Ability result is " $ kResult.HitResult);
 
+    // TODO: much more to do with input context here
+    kInputContext.AbilityTemplateName = m_TemplateName;
+    kInputContext.Ability = self;
+    kInputContext.Source = kSource;
+    kInputContext.PrimaryTarget = kTarget;
+
     // Apply source effects
     foreach m_kTemplate.AbilitySourceEffects(kEffect)
     {
@@ -150,6 +128,11 @@ function name Activate(optional out LWCE_TAbilityResult kOutResult)
             kResult.TargetEffectResults.Effects.AddItem(kEffect);
             kResult.TargetEffectResults.ApplyResults.AddItem(nmApplyResult);
         }
+    }
+
+    if (m_kTemplate.BuildVisualizationFn != none)
+    {
+        m_kTemplate.BuildVisualizationFn(kInputContext, kResult);
     }
 
     kOutResult = kResult;

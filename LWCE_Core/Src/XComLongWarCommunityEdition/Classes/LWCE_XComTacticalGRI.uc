@@ -1,5 +1,7 @@
 class LWCE_XComTacticalGRI extends XComTacticalGRI;
 
+var privatewrite LWCEVisualizationManager m_kVisMgr;
+
 simulated function StartMatch()
 {
     super(GameReplicationInfo).StartMatch();
@@ -162,6 +164,11 @@ simulated function ReceivedGameClass()
     {
         m_kCameraManager = Spawn(class'LWCE_XComCameraManager', self);
         m_kCameraManager.Init();
+    }
+
+    if (m_kVisMgr == none)
+    {
+        m_kVisMgr = Spawn(class'LWCEVisualizationManager', self);
     }
 
     class'LWCEEventListenerTemplateManager'.static.RegisterTacticalListeners();

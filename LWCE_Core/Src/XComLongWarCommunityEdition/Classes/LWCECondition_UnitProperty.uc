@@ -23,6 +23,11 @@ function name MeetsCondition(LWCE_XGUnit kSource, LWCE_XGUnit kTarget)
 {
     local LWCE_XGCharacter kChar;
 
+    if (kTarget == none)
+    {
+        kTarget = kSource;
+    }
+
     kChar = kTarget.LWCE_GetCharacter();
 
     if (bExcludeLiving && kTarget.IsAlive())

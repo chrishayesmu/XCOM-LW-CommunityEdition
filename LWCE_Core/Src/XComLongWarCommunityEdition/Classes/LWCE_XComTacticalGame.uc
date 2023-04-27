@@ -56,15 +56,9 @@ event InitGame(string Options, out string ErrorMessage)
 
 event GameEnding()
 {
-    `LWCE_LOG_CLS("GameEnding");
-    ScriptTrace();
-
-    if (class'Engine'.static.IsSonOfFacemelt())
-    {
-        XComPresentationLayer(XComPlayerController(class'Engine'.static.GetCurrentWorldInfo().GetALocalPlayerController()).m_Pres).UIPlayMovie("XEW_ShieldLogo.bik", true, true);
-    }
-
     super.GameEnding();
+
+    `LWCE_EVENT_MGR.TriggerEvent('TacticalGameEnding', self, self);
 }
 
 defaultproperties

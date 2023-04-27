@@ -107,3 +107,4 @@
 `define LWCE_TACPRES (LWCE_XComPresentationLayer(`PRES))
 `define LWCE_UNITFLAGMGR (LWCE_UIUnitFlagManager(`LWCE_TACPRES.m_kUnitFlagManager))
 `define LWCE_VISHELPER (class'LWCETacticalVisibilityHelper'.static.GetInstance())
+`define LWCE_VIS_MGR (LWCE_XComTacticalGRI(class'LWCE_XComEngine'.static.GetCurrentWorldInfo().GRI).m_kVisMgr)

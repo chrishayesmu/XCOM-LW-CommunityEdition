@@ -1,12 +1,5 @@
 class LWCE_UITargetingReticle extends UITargetingReticle;
 
-simulated function UpdateLocation()
-{
-    `LWCE_LOG_CLS("UpdateLocation: m_kTargetedUnit = " $ m_kTargetedUnit);
-
-    super.UpdateLocation();
-}
-
 simulated function UpdateShotData()
 {
     local XGAction_Targeting kTargetingAction;
