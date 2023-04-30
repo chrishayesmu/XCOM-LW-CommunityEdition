@@ -125,21 +125,6 @@ struct LWCE_TClassDefinition
     var array<string> NicknamesMale;   // Nicknames that can be randomly assigned to male soldiers of this class.
 };
 
-/// <summary>
-/// A single piece of data which can be used in situations where the type and/or quantity of data is not known in
-/// advance, such as Geoscape alerts. The ID field can be used to communicate what the data represents, but this is
-/// optional, and generally only needed for mod-to-mod communication.
-/// </summary>
-struct LWCE_TData
-{
-    var name ID;
-    var EDataType eType;
-    var bool bData;
-    var int iData;
-    var name nmData;
-    var string strData;
-};
-
 struct LWCE_TSoldier
 {
     var int iID;
@@ -168,6 +153,7 @@ struct LWCE_TCharacterStats
     var int iCriticalChance;
     var int iDamage;
     var float fDamageReduction;
+    var float fDamageReductionPenetration;
     var int iDefense;
     var int iFlightFuel;
     var int iHP;
@@ -224,6 +210,15 @@ struct LWCE_TPrereqs
 
     var bool bRequiresAutopsy;       // If true, any autopsy research must be completed.
     var bool bRequiresInterrogation; // If true, any interrogation research must be completed.
+};
+
+struct LWCE_TAbilityResult
+{
+    var bool bIsHit;
+    var bool bIsCrit;
+    var int iUnmitigatedDamage;
+    var int iDamageReduction;
+    var int iFinalDamage;
 };
 
 /// <summary>
@@ -384,6 +379,26 @@ struct LWCE_TWeapon
     }
 };
 
+/// <summary>
+/// TODO
+/// </summary>
+struct LWCE_TAppliedEffect
+{
+    var name nmEffect;
+    var int iTurnsRemaining;
+    var LWCE_TCharacterStats kStatChanges;
+};
+
+/// <summary>
+/// Used by the ability framework when determining eligible targets for abilities.
+/// See LWCEAbilityTargetStyle and its children for the main usage of this struct.
+/// </summary>
+struct LWCE_TAvailableTarget
+{
+    var LWCE_XGUnit kPrimaryTarget;              // The ability's main target; may be none for purely AoE abilitiies like grenades/rockets.
+    var array<LWCE_XGUnit> arrAdditionalTargets; // Extra targets, which may be hit by an AoE, or individually targeted (like Greater Mind Merge).
+};
+
 struct TModVersion
 {
     var int Major;
@@ -407,7 +422,7 @@ struct LWCE_THQEvent
 {
     var name EventType;
     var int iHours;
-    var array<LWCE_TData> arrData;
+    var LWCEDataContainer kData;
 };
 
 struct LWCE_TMCEvent
@@ -418,7 +433,7 @@ struct LWCE_TMCEvent
     var TText txtDays;
     var int iPriority;
     var Color clrOption;
-    var array<LWCE_TData> arrData;
+    var LWCEDataContainer kData;
 };
 
 struct LWCE_TMCEventMenu

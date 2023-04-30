@@ -32,7 +32,7 @@ function XGVolume CreateVolumeByType(EVolumeType kType, Vector vCenter, optional
     local XGVolume kVolume;
     local TVolume kTVolume;
 
-    kTVolume = XComTacticalGRI(class'Engine'.static.GetCurrentWorldInfo().GRI).m_kBattle.m_kVolumeMgr.GetTVolume(kType);
+    kTVolume = `TACTICALGRI.m_kBattle.m_kVolumeMgr.GetTVolume(kType);
 
     if (fRadius >= 0)
     {

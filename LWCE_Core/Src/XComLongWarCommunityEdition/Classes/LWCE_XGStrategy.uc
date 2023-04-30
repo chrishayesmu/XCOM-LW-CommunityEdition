@@ -68,6 +68,9 @@ function Init(bool bLoadingFromSave)
     {
         InitDifficulty(m_iDifficulty);
     }
+
+    class'LWCEEventListenerTemplateManager'.static.RegisterStrategyListeners();
+    `LWCE_EVENT_MGR.TriggerEvent('StrategyGameStart');
 }
 
 function BeginCombat(XGMission kMission)
@@ -219,7 +222,6 @@ function bool UnlockFacility(EFacilityType eFacility, out TItemUnlock kUnlock)
 function bool LWCE_UnlockFacility(int iFacilityId, out LWCE_TItemUnlock kUnlock)
 {
     local TFacility kFacility;
-    local LWCE_TData kData;
 
     if (m_arrCEFacilityUnlocks.Find(iFacilityId) != INDEX_NONE || HQ().HasFacility(iFacilityId))
     {
@@ -241,10 +243,6 @@ function bool LWCE_UnlockFacility(int iFacilityId, out LWCE_TItemUnlock kUnlock)
         kUnlock.strHelp = m_strNewFacilityHelp;
     }
 
-    kData.eType = eDT_Int;
-    kData.iData = iFacilityId;
-    kUnlock.arrUnlockData.AddItem(kData);
-
     m_arrCEFacilityUnlocks.AddItem(iFacilityId);
 
     ENGINEERING().m_bCanBuildFacilities = true;
@@ -262,7 +260,6 @@ function bool UnlockFoundryProject(EFoundryTech eProject, out TItemUnlock kUnloc
 
 function bool LWCE_UnlockFoundryProject(name ProjectName, out LWCE_TItemUnlock kUnlock)
 {
-    local LWCE_TData kData;
     local LWCEFoundryProjectTemplate kTemplate;
 
     if (m_arrCEFoundryUnlocks.Find(ProjectName) != INDEX_NONE)
@@ -281,10 +278,6 @@ function bool LWCE_UnlockFoundryProject(name ProjectName, out LWCE_TItemUnlock k
     kUnlock.strTitle = m_strNewFoundryAvailable;
     kUnlock.strHelp = m_strNewFoundryHelp;
 
-    kData.eType = eDT_Name;
-    kData.nmData = ProjectName;
-    kUnlock.arrUnlockData.AddItem(kData);
-
     m_arrCEFoundryUnlocks.AddItem(ProjectName);
 
     return true;
@@ -300,7 +293,6 @@ function bool UnlockItem(EItemType eItem, out TItemUnlock kUnlock)
 function bool LWCE_UnlockItem(name ItemName, out LWCE_TItemUnlock kUnlock)
 {
     local LWCEItemTemplate kItem;
-    local LWCE_TData kData;
 
     if (m_arrCEItemUnlocks.Find(ItemName) != INDEX_NONE)
     {
@@ -315,10 +307,6 @@ function bool LWCE_UnlockItem(name ItemName, out LWCE_TItemUnlock kUnlock)
     kUnlock.strDescription = kItem.strBriefSummary;
     kUnlock.strTitle = m_strNewItemAvailable;
     kUnlock.strHelp = m_strNewItemHelp;
-
-    kData.eType = eDT_Name;
-    kData.nmData = ItemName;
-    kUnlock.arrUnlockData.AddItem(kData);
 
     m_arrCEItemUnlocks.AddItem(ItemName);
 

@@ -1,7 +1,6 @@
 class XGAbility_Targeted extends XGAbility
     native(Core)
     notplaceable;
-//complete stub
 
 enum EXGAbilityNumTargets
 {
@@ -61,17 +60,30 @@ struct native TShotHUDStat
     var int m_iPerk;
     var init string m_strTitle;
 };
+
 struct native TUnitTargetInfo
 {
     var XGUnit m_aTarget;
     var bool m_bTargetNone;
 };
+
 struct native TUnitTarget
 {
     var XGUnit m_kTarget;
     var bool m_bClearedAffectingAbility;
     var bool m_bClearedAffectingEffect;
 };
+
+struct CheckpointRecord_XGAbility_Targeted extends CheckpointRecord
+{
+    var bool m_bTargetUpkeep;
+    var XComProjectile m_kProjectile;
+    var XGVolume m_kVolume;
+    var XGWeapon m_kWeapon;
+    var TUnitTarget m_aTargets[EXGAbilityNumTargets];
+    var bool m_bSave;
+};
+
 struct native InitialReplicationData_XGAbility_Targeted
 {
     var TUnitTargetInfo m_aTargets[EXGAbilityNumTargets];

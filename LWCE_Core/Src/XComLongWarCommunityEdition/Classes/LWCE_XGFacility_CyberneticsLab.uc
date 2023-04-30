@@ -185,7 +185,7 @@ function LWCE_GetRepairingMecEvents(out array<LWCE_THQEvent> arrEvents)
     local int iRepairTime, iEvent;
     local bool bAdded;
     local array<int> arrEventTimes;
-    local LWCE_TData kData;
+    local LWCEDataContainer kData;
     local LWCE_THQEvent kBlankEvent, kEvent;
     local LWCE_TRepairingItem kRepairingItem;
 
@@ -203,13 +203,11 @@ function LWCE_GetRepairingMecEvents(out array<LWCE_THQEvent> arrEvents)
         kEvent.EventType = 'ItemRepair';
         kEvent.iHours = m_arrRepairingItems[iRepairTime].iHoursLeft;
 
-        kData.eType = eDT_Name;
-        kData.nmData = m_arrRepairingItems[iRepairTime].ItemName;
-        kEvent.arrData.AddItem(kData);
+        kData = class'LWCEDataContainer'.static.New('ItemRepair');
+        kData.AddName(m_arrRepairingItems[iRepairTime].ItemName);
+        kData.AddInt(m_arrRepairingItems[iRepairTime].iQuantity);
 
-        kData.eType = eDT_Int;
-        kData.iData = m_arrRepairingItems[iRepairTime].iQuantity;
-        kEvent.arrData.AddItem(kData);
+        kEvent.kData = kData;
 
         bAdded = false;
 
@@ -257,8 +255,7 @@ function bool PayItemRepairCost(name ItemName, int iQuantity)
 
 function LWCE_UpdatePatients()
 {
-    local LWCE_TData kData;
-    local LWCE_TGeoscapeAlert kAlert, kBlankAlert;
+    local LWCEDataContainer kData;
     local int iPatient;
     local bool bPatientsCompleted, bIsTraining;
     local XGStrategySoldier kSoldier;
@@ -273,9 +270,6 @@ function LWCE_UpdatePatients()
 
     while (iPatient >= 0)
     {
-        kAlert = kBlankAlert;
-        kAlert.AlertType = 'Augmentation';
-
         m_arrPatients[iPatient].m_iHoursLeft = Max(m_arrPatients[iPatient].m_iHoursLeft - 1, 0);
 
         if (m_arrPatients[iPatient].m_iHoursLeft == 0 && !GEOSCAPE().IsBusy())
@@ -295,11 +289,8 @@ function LWCE_UpdatePatients()
             kCESoldier = LWCE_XGStrategySoldier(m_arrPatients[iPatient].m_kSoldier);
             kCESoldier.LWCE_SetSoldierClass(eSC_Mec);
 
-            kData.eType = eDT_Int;
-            kData.iData = kCESoldier.m_kCESoldier.iID;
-            kAlert.arrData.AddItem(kData);
-
-            LWCE_XGGeoscape(GEOSCAPE()).LWCE_Alert(kAlert);
+            kData = class'LWCEDataContainer'.static.NewInt('SoldierAugmentationComplete', kCESoldier.m_kCESoldier.iID);
+            `LWCE_EVENT_MGR.TriggerEvent('SoldierAugmentationComplete', kData, self);
 
             m_arrPatients.Remove(iPatient, 1);
         }
@@ -339,13 +330,10 @@ function UpdateRepairingItems()
 {
     local LWCE_XComHQPresentationLayer kPres;
     local LWCE_XGStorage kStorage;
-    local array<LWCE_TData> arrData;
     local int Index;
 
     kPres = LWCE_XComHQPresentationLayer(PRES());
     kStorage = LWCE_XGStorage(STORAGE());
-
-    arrData.Add(1);
 
     for (Index = m_arrRepairingItems.Length - 1; Index >= 0; Index--)
     {
@@ -353,9 +341,7 @@ function UpdateRepairingItems()
 
         if (m_arrRepairingItems[Index].iHoursLeft <= 0 && !GEOSCAPE().IsBusy())
         {
-            arrData[0].eType = eDT_Name;
-            arrData[0].nmData = m_arrRepairingItems[Index].ItemName;
-            kPres.LWCE_Notify('ItemRepairsComplete', arrData);
+            kPres.LWCE_Notify('ItemRepairsComplete', class'LWCEDataContainer'.static.NewName('NotifyData', m_arrRepairingItems[Index].ItemName));
 
             if (GEOSCAPE().GetNumMissions() > 0)
             {

@@ -328,6 +328,26 @@ PilotNames="\"Blender\" Iyengar"
 PilotNames="\"Blinker\" Kamala"
 PilotNames="\"Stuntman\" Silva"
 
+[DamnGoodGround LWCEAbilityTemplate]
+strFriendlyName="Damn Good Ground"
+strDescription="Confers +<XGAbility:DamnGoodGroundAimBonus/> Aim and +<XGAbility:DamnGoodGroundDefenseBonus/> Defense against enemies at lower elevation, in addition to the usual elevation bonuses."
+
+[Executioner LWCEAbilityTemplate]
+strFriendlyName="Executioner"
+strDescription="Confers +<XGAbility:ExecutionerAimBonus/> Aim and +<XGAbility:ExecutionerAimBonus/> critical chance against targets at or below <XGAbility:ExecutionerHealthThreshold/>% health."
+
+[LowProfile LWCEAbilityTemplate]
+strFriendlyName="Low Profile"
+strDescription="Makes partial cover grant the defense bonus of full cover."
+
+[Ranger LWCEAbilityTemplate]
+strFriendlyName="Ranger"
+strDescription="Confers +1 damage with primary weapons, rocket launchers, MEC secondary weapons and sidearms. Negates the long-range accuracy penalty with sidearms when shooting beyond 14 meters."
+
+[StandardShot LWCEAbilityTemplate]
+strFriendlyName="Fire"
+strHelp="Does <XGAbility:PossibleDamage/> damage."
+
 [Item_AcidSpit LWCEWeaponTemplate]
 strName="Acid Spit"
 strNamePlural="Acid Spit"

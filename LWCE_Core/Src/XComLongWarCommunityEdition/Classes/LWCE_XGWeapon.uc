@@ -16,6 +16,7 @@ static simulated function EItemType ItemType()
     return eItem_None;
 }
 
+// TODO name this properly
 static simulated function EItemType ZZGameplayType()
 {
     `LWCE_LOG_DEPRECATED_NOREPLACE_CLS(GameplayType);

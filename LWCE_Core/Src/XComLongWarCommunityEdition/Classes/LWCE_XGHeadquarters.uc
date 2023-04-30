@@ -387,7 +387,6 @@ function GetEvents(out array<THQEvent> arrEvents)
 function LWCE_GetEvents(out array<LWCE_THQEvent> arrEvents)
 {
     local LWCE_XGFundingCouncil kFundingCouncil;
-    local LWCE_TData kData;
     local LWCE_THQEvent kBlankEvent, kEvent;
     local int Index, iEvent;
     local bool bAdded;
@@ -396,17 +395,13 @@ function LWCE_GetEvents(out array<LWCE_THQEvent> arrEvents)
 
     for (Index = 0; Index < m_arrHiringOrders.Length; Index++)
     {
-        kEvent =  kBlankEvent;
+        kEvent = kBlankEvent;
         kEvent.EventType = 'Hiring';
         kEvent.iHours = m_arrHiringOrders[Index].iHours;
 
-        kData.eType = eDT_Int;
-        kData.iData = m_arrHiringOrders[Index].iStaffType;
-        kEvent.arrData.AddItem(kData);
-
-        kData.eType = eDT_Int;
-        kData.iData = m_arrHiringOrders[Index].iNumStaff;
-        kEvent.arrData.AddItem(kData);
+        kEvent.kData = class'LWCEDataContainer'.static.New('THQEventData');
+        kEvent.kData.AddInt(m_arrHiringOrders[Index].iStaffType);
+        kEvent.kData.AddInt(m_arrHiringOrders[Index].iNumStaff);
 
         bAdded = false;
 
@@ -432,13 +427,9 @@ function LWCE_GetEvents(out array<LWCE_THQEvent> arrEvents)
         kEvent.EventType = 'InterceptorOrdering';
         kEvent.iHours = m_akInterceptorOrders[Index].iHours;
 
-        kData.eType = eDT_Int;
-        kData.iData = m_akInterceptorOrders[Index].iDestinationContinent;
-        kEvent.arrData.AddItem(kData);
-
-        kData.eType = eDT_Int;
-        kData.iData = m_akInterceptorOrders[Index].iNumInterceptors;
-        kEvent.arrData.AddItem(kData);
+        kEvent.kData = class'LWCEDataContainer'.static.New('THQEventData');
+        kEvent.kData.AddInt(m_akInterceptorOrders[Index].iDestinationContinent);
+        kEvent.kData.AddInt(m_akInterceptorOrders[Index].iNumInterceptors);
 
         bAdded = false;
 
@@ -464,13 +455,9 @@ function LWCE_GetEvents(out array<LWCE_THQEvent> arrEvents)
         kEvent.EventType = 'ShipTransfers';
         kEvent.iHours = m_arrShipTransfers[Index].iHours;
 
-        kData.eType = eDT_Int;
-        kData.iData = m_arrShipTransfers[Index].iDestination;
-        kEvent.arrData.AddItem(kData);
-
-        kData.eType = eDT_Int;
-        kData.iData = m_arrShipTransfers[Index].iNumShips;
-        kEvent.arrData.AddItem(kData);
+        kEvent.kData = class'LWCEDataContainer'.static.New('THQEventData');
+        kEvent.kData.AddInt(m_arrShipTransfers[Index].iDestination);
+        kEvent.kData.AddInt(m_arrShipTransfers[Index].iNumShips);
 
         bAdded = false;
 
@@ -492,13 +479,12 @@ function LWCE_GetEvents(out array<LWCE_THQEvent> arrEvents)
 
     for (Index = 0; Index < kFundingCouncil.m_arrCECurrentRequests.Length; Index++)
     {
-        kEvent =  kBlankEvent;
+        kEvent = kBlankEvent;
         kEvent.EventType = 'FCRequest';
         kEvent.iHours = kFundingCouncil.m_arrCECurrentRequests[Index].iHoursToRespond;
 
-        kData.eType = eDT_Int;
-        kData.iData = Country(kFundingCouncil.m_arrCECurrentRequests[Index].eRequestingCountry).GetContinent();
-        kEvent.arrData.AddItem(kData);
+        kEvent.kData = class'LWCEDataContainer'.static.New('THQEventData');
+        kEvent.kData.AddInt(Country(kFundingCouncil.m_arrCECurrentRequests[Index].eRequestingCountry).GetContinent());
 
         bAdded = false;
 
@@ -522,13 +508,12 @@ function LWCE_GetEvents(out array<LWCE_THQEvent> arrEvents)
     {
         if (m_arrSatellites[Index].iTravelTime > 0)
         {
-        kEvent =  kBlankEvent;
+            kEvent =  kBlankEvent;
             kEvent.EventType = 'SatOperational';
             kEvent.iHours = m_arrSatellites[Index].iTravelTime;
 
-            kData.eType = eDT_Int;
-            kData.iData = m_arrSatellites[Index].iCountry;
-            kEvent.arrData.AddItem(kData);
+            kEvent.kData = class'LWCEDataContainer'.static.New('THQEventData');
+            kEvent.kData.AddInt(m_arrSatellites[Index].iCountry);
 
             bAdded = false;
 

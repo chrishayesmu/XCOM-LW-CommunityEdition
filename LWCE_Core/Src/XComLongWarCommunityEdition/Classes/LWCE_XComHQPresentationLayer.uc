@@ -20,11 +20,11 @@ function XGScreenMgr GetMgr(class<Actor> kMgrClass, optional IScreenMgrInterface
     return super.GetMgr(kMgrClass, kInterface, iView, bIgnoreIfDoesNotExist);
 }
 
-function LWCE_Notify(name AlertType, array<LWCE_TData> arrData)
+function LWCE_Notify(name AlertType, LWCEDataContainer kData)
 {
     if (m_kUIMissionControl != none)
     {
-        LWCE_XGMissionControlUI(m_kUIMissionControl.GetMgr()).LWCE_AddNotice(AlertType, arrData);
+        LWCE_XGMissionControlUI(m_kUIMissionControl.GetMgr()).LWCE_AddNotice(AlertType, kData);
     }
 }
 

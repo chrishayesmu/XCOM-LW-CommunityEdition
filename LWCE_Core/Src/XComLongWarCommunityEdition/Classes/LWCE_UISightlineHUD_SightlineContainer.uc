@@ -1,0 +1,1 @@
+class LWCE_UISightlineHUD_SightlineContainer extends UISightlineHUD_SightlineContainer;
