@@ -58,17 +58,9 @@ For an example of the types of configuration now possible, take a look at [Defau
 
 ## Modding hooks
 
-Documentation for mod hooks not yet completed. For now, see [LWCETacticalListener](Src/XComLongWarCommunityEdition/Classes/LWCETacticalListener.uc) and [LWCEStrategyListener](Src/XComLongWarCommunityEdition/Classes/LWCEStrategyListener.uc).
+Documentation for mod hooks is not yet completed, but will use a similar system as XCOM 2: data templates and events. As much as possible has been made to match the equivalent system in XCOM 2, so that modders who are familiar with those will be more comforatble with LWCE mods.
 
-Mutator-based mods are still supported, as in Long War 1.0; however if these mods conflict with LWCE (e.g. by overriding the same class as LWCE does) their interaction may be unpredictable. Authors of mutator-based mods are encouraged to migrate to LWCE, especially if any conflicts occur.
-
-### **Adding items, perks, and technologies**
-
-(Note that not all of these are supported fully yet. Currently you can freely add new research and Foundry techs, perks, soldier classes, and limited aspects of new items.)
-
-In the base game, there are a number of systems that use enums for unique identifiers. Since UnrealScript enums are a single byte, this limits these identifiers to 256 different values, greatly limiting modding potential. In LWCE, we've rewritten these systems to replace their identifiers with 32-bit signed integers, vastly increasing the value space to 2,147,483,647 distinct values (negative values are not allowed).
-
-Aside from obviously increasing the total amount of content the game can support, this also makes it much simpler to have multiple mods that add content without them conflicting with each other.
+Mutator-based mods, which were widely used for Enemy Within and Long War 1.0, are **not** supported in LWCE. The sheer scale of how much has been rewritten to make LWCE work means that old mods are very unlikely to be compatible.
 
 # Building LWCE locally
 
@@ -145,7 +137,7 @@ If you're using VS Code, you can also create [a custom build task](https://code.
 
 The steps for building LWCE are quite similar to the setup for the stub files.
 
-1. Create a symlink in `UDK_PATH/Development/Src` which points to the LWCE source code (`LWCE_DIR/LWCE_Core/Src`).
+1. Create a symlink in `UDK_PATH/Development/Src` which points to the LWCE source code (`LWCE_DIR/LWCE_Core/Src/XComLongWarCommunityEdition`).
 2. Modify `UDK_PATH/UDKGame/Config/DefaultEngine.ini` and add the line `+EditPackages=XComLongWarCommunityEdition` to the end of the `EditPackages` block from before. (It must be at the end!)
 3. Repeat these steps for each mod folder located in `LWCE_DIR/LWCE_BundledMods`.
 4. Build using `UDK_PATH/Binaries/Win32/UDK.exe make` and verify that the build succeeds.
