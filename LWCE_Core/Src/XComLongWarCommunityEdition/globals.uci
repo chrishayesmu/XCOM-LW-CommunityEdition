@@ -17,6 +17,7 @@
 // Retrieve a template manager by class
 `define LWCE_CONTENT_TEMPLATE_MGR (class'LWCEContentTemplateManager'.static.GetInstance())
 `define LWCE_COUNCIL_REQUEST_TEMPLATE_MGR (class'LWCECouncilRequestTemplateManager'.static.GetInstance())
+`define LWCE_FACILITY_TEMPLATE_MGR (class'LWCEFacilityTemplateManager'.static.GetInstance())
 `define LWCE_FOUNDRY_TEMPLATE_MGR (class'LWCEFoundryProjectTemplateManager'.static.GetInstance())
 `define LWCE_ITEM_TEMPLATE_MGR (class'LWCEItemTemplateManager'.static.GetInstance())
 `define LWCE_TECH_TEMPLATE_MGR (class'LWCETechTemplateManager'.static.GetInstance())
@@ -24,6 +25,7 @@
 // Retrieve templates by name
 `define LWCE_ARMOR(nm) (`LWCE_ITEM_TEMPLATE_MGR.FindArmorTemplate(`nm))
 `define LWCE_EQUIPMENT(nm) (`LWCE_ITEM_TEMPLATE_MGR.FindEquipmentTemplate(`nm))
+`define LWCE_FACILITY(nm) (`LWCE_FACILITY_TEMPLATE_MGR.FindFacilityTemplate(`nm))
 `define LWCE_FTECH(nm) (`LWCE_FOUNDRY_TEMPLATE_MGR.FindProjectTemplate(`nm))
 `define LWCE_ITEM(nm) (`LWCE_ITEM_TEMPLATE_MGR.FindItemTemplate(`nm))
 `define LWCE_TECH(nm) (`LWCE_TECH_TEMPLATE_MGR.FindTechTemplate(`nm))
