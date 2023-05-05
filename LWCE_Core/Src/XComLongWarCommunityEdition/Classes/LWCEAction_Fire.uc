@@ -8,6 +8,7 @@ var XGCameraView m_kAimingView;
 var LWCECameraView_Firing m_kFiringView;
 var XGCameraView_Midpoint m_kMidpointView;
 var LWCE_XGAbility m_kShot;
+var LWCE_XComPresentationLayer m_kPres;
 
 var protected Vector m_vTarget;
 var protected bool m_bCameraIsReady;
@@ -18,7 +19,7 @@ function Init()
 {
     super.Init();
 
-
+    m_kPres = `LWCE_TACPRES;
 }
 
 function Vector GetTargetLoc()
@@ -123,19 +124,29 @@ Begin:
     if (!`BATTLE.m_kGlamMgr.m_bGlamBusy)
     {
         SetupFiringPanToEnemy();
+        Sleep(0.0);
 
         if (XComGameReplicationInfo(class'Engine'.static.GetCurrentWorldInfo().GRI).m_kCameraManager.IsTrackingFiringUnit(m_kUnit))
         {
+            `LWCE_LOG_CLS("Firing unit " $ m_kUnit $ " is being tracked; setting wait flag");
             XComGameReplicationInfo(class'Engine'.static.GetCurrentWorldInfo().GRI).m_kCameraManager.SetCameraWaitFlag();
         }
 
         while (XComGameReplicationInfo(class'Engine'.static.GetCurrentWorldInfo().GRI).m_kCameraManager.WaitForCamera())
         {
+            `LWCE_LOG_CLS("Waiting for camera");
             Sleep(0.050);
         }
     }
 
-    m_kTargetedEnemy.SetDiscState(eDS_AttackTarget);
+    if (m_kTargetedEnemy != none)
+    {
+        m_kTargetedEnemy.SetDiscState(eDS_AttackTarget);
+    }
+
+    // Hide the tactical HUD while visualizing
+    m_kPres.HUDHide();
+
 
     CompleteAction();
 }

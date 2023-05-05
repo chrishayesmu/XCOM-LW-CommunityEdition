@@ -287,8 +287,8 @@ static event PostInitAnimTree(XComUnitPawn kSelf, SkeletalMeshComponent SkelComp
 
         if (kSelf.ActionNode != none)
         {
-            kSelf.fStopDistanceNoCover = kSelf.ComputeAnimationRMADistance(XComGameReplicationInfo(class'Engine'.static.GetCurrentWorldInfo().GRI).AnimMapping[1]);
-            kSelf.fStopDistanceCover = kSelf.ComputeAnimationRMADistance(XComGameReplicationInfo(class'Engine'.static.GetCurrentWorldInfo().GRI).AnimMapping[3]);
+            kSelf.fStopDistanceNoCover = kSelf.ComputeAnimationRMADistance('MV_RunFwd_StopA');
+            kSelf.fStopDistanceCover = kSelf.ComputeAnimationRMADistance('AC_HR_Run2CoverStartA');
         }
 
         kSelf.BuildFootIKData();
