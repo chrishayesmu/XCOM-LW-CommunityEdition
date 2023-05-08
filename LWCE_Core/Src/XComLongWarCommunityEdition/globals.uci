@@ -43,6 +43,9 @@
 `define CREATE_ABILITY_TEMPLATE(Template, TemplateName) \
 	`CREATE_TEMPLATE(class'LWCEAbilityTemplate', `Template, `TemplateName);
 
+`define CREATE_EVENT_LISTENER_TEMPLATE(Template, TemplateName) \
+	`CREATE_TEMPLATE(class'LWCEEventListenerTemplate', `Template, `TemplateName);
+
 // Dynamic loading of objects that are referenced by the base game; since we aren't in the same UPK, we can't reference them the same way
 `define SoundCue(nm) (SoundCue(DynamicLoadObject(`nm, class'SoundCue')))
 `define XComNarrativeMoment(nm) (XComNarrativeMoment(DynamicLoadObject("NarrativeMoment." $ `nm, class'XComNarrativeMoment')))

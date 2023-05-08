@@ -102,6 +102,15 @@ function CompleteAction()
 		GotoState('Finished');
 
 		`LWCE_EVENT_MGR.UnregisterObjectFromAllEvents(self);
+
+        // EVENT: LWCEAction_Completed
+        //
+        // SUMMARY: This event is used by the visualization system to coordinate LWCEAction instances. It should
+        //          generally not be used outside of this.
+        //
+        // DATA: LWCEAction - The action which is now completed.
+        //
+        // SOURCE: LWCEAction - The action which is now completed.
 		`LWCE_EVENT_MGR.TriggerEvent('LWCEAction_Completed', self, self);
     }
     else

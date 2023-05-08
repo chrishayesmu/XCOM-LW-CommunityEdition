@@ -39,7 +39,6 @@ function NewGame()
 
     m_arrItemUnlocks.Add(255);
     m_arrGeneModUnlocks.Add(11);
-    m_arrFacilityUnlocks.Add(24);
     m_arrSecondWave.Add(36);
 
     Init(false);
@@ -70,6 +69,10 @@ function Init(bool bLoadingFromSave)
     }
 
     class'LWCEEventListenerTemplateManager'.static.RegisterStrategyListeners();
+
+    // EVENT: StrategyGameStart
+    //
+    // TODO: document
     `LWCE_EVENT_MGR.TriggerEvent('StrategyGameStart');
 }
 
@@ -411,4 +414,79 @@ protected function ValidateNewGameState()
     {
         `LWCE_LOG_CLS("Any XGStrategy member which is already set will be overridden by LWCE. This was most likely done by a mutator-based mod, and that mod will not function properly.");
     }
+}
+
+state StartingNewGame
+{
+Begin:
+    CheckForSecondWave();
+    m_kHQ.InitNewGame();
+    m_kGeoscape.InitNewGame();
+    m_kWorld.StartGame();
+    m_kAI.InitNewGame();
+    `PROFILESETTINGS.Data.IncGamesPlayed();
+
+    if (m_bDebugStart)
+    {
+        DebugStuff();
+    }
+
+    if (!m_bControlledStart && !m_bDebugStart)
+    {
+        Sleep(0.10);
+        GEOSCAPE().PreloadSquadIntoSkyranger(eGA_Abduction, false);
+
+        while (AreDropshipSoldiersStillLoading())
+        {
+            Sleep(0.10);
+        }
+
+        // Following block is in the base class, but IsAsyncLoadingWrapper appears to be a no-op,
+        // so we omit it in LWCE
+        /*
+        while (IsAsyncLoadingWrapper())
+        {
+            Sleep(0.10);
+        }
+        */
+    }
+
+    while (PRES().IsBusy())
+    {
+        Sleep(0.0);
+    }
+
+    `ONLINEEVENTMGR.ResetAchievementState();
+
+    // EVENT: OnNewCampaignStarted
+    //
+    // SUMMARY: Triggered at the start of a new campaign. At this point, the default base has been set up,
+    //          with the facilities, items, etc that are common to all campaigns. Bonuses specific to a starting
+    //          country or continent, or due to Second Wave bonuses, are *not* set up yet; they are applied in response
+    //          to the OnNewCampaignStarted event, much like mods. This event occurs prior to the intro mission beginning.
+    //
+    // DATA: LWCE_XGStrategy
+    //
+    // SOURCE: LWCE_XGStrategy
+    `LWCE_EVENT_MGR.TriggerEvent('OnNewCampaignStarted', self, self);
+
+    if (m_bDebugStart)
+    {
+        GoToHQ();
+    }
+    else if (m_bControlledStart)
+    {
+        m_kSetupPhaseManager = Spawn(class'XGSetupPhaseManager', self);
+        m_kSetupPhaseManager.StartNewGame();
+    }
+    else if (m_bTutorial)
+    {
+        GoToTutorial();
+    }
+    else
+    {
+        GEOSCAPE().TakeFirstMission();
+    }
+
+    stop;    
 }

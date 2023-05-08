@@ -29,42 +29,31 @@ function InitNewGame()
     LWCE_CreateSoldier(0, 0, HQ().GetHomeCountry());
 
     AddNewSoldiers(class'XGTacticalGameCore'.default.NUM_STARTING_SOLDIERS - 1, false);
-
-    if (HQ().HasBonus(`LW_HQ_BONUS_ID(ForeignLegion)) > 0)
-    {
-        AddNewSoldiers(HQ().HasBonus(`LW_HQ_BONUS_ID(ForeignLegion)));
-    }
-
-    if (HQ().HasBonus(`LW_HQ_BONUS_ID(KiryuKaiCommander)) > 0) // Kiryu-Kai Commander
-    {
-        LWCE_CreateSoldier(SelectRandomBaseClassId(), HQ().HasBonus(`LW_HQ_BONUS_ID(KiryuKaiCommander)), eCountry_Japan);
-    }
-
-    if (HQ().HasBonus(`LW_HQ_BONUS_ID(Cadre)) > 0) // Cadre
-    {
-        // TODO: how to handle Cadre with class mods?
-        LWCE_CreateSoldier(1, HQ().HasBonus(`LW_HQ_BONUS_ID(Cadre)), Rand(36));
-        LWCE_CreateSoldier(2, HQ().HasBonus(`LW_HQ_BONUS_ID(Cadre)), Rand(36));
-        LWCE_CreateSoldier(3, HQ().HasBonus(`LW_HQ_BONUS_ID(Cadre)), Rand(36));
-        LWCE_CreateSoldier(4, HQ().HasBonus(`LW_HQ_BONUS_ID(Cadre)), Rand(36));
-    }
-
-    if (IsOptionEnabled(`LW_SECOND_WAVE_ID(WeAreLegion)))
-    {
-        m_arrOTSUpgrades[1] = 1;
-        m_arrOTSUpgrades[2] = 1;
-    }
-
     bInitingNewGame = false;
 }
 
 function AddNewSoldier(XGStrategySoldier kSoldier, optional bool bSkipReorder = false, optional bool bBlueshirt = false)
 {
+    local LWCEDataContainer kData;
+
     LWCE_XGStrategySoldier(kSoldier).m_kCESoldier.iID = m_iSoldierCounter++;
 
     UpdateOTSPerksForSoldier(kSoldier);
     UpdateFoundryPerksForSoldier(kSoldier);
     NameCheck(kSoldier);
+
+    // EVENT: BeforeAddMissionToGeoscape
+    //
+    // SUMMARY: Emitted right before a soldier is added to the barracks. This includes SHIVs. At this point, all base game
+    //          soldier generation (stats, class, country, name, etc) is complete and can be overridden by listeners.
+    //
+    // DATA: LWCEDataContainer
+    //       Data[0]: LWCE_XGStrategySoldier - The soldier who is about to be added. Can be modified freely.
+    //
+    // SOURCE: LWCE_XGFacility_Barracks
+    kData = class'LWCEDataContainer'.static.NewObject('AddNewSoldier', kSoldier);
+    `LWCE_EVENT_MGR.TriggerEvent('AddNewSoldier', kData, self);
+
     m_arrSoldiers.AddItem(kSoldier);
 
     if (!bSkipReorder)

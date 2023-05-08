@@ -58,6 +58,9 @@ event GameEnding()
 {
     super.GameEnding();
 
+    // EVENT: TacticalGameEnding
+    //
+    // TODO: document
     `LWCE_EVENT_MGR.TriggerEvent('TacticalGameEnding', self, self);
 }
 

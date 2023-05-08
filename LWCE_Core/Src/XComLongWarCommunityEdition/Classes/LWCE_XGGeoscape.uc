@@ -269,11 +269,14 @@ function int AddMission(XGMission kMission, optional bool bFirst)
     //          rewards, location, enemy squad, etc. Can also prevent the mission from being added in the first place.
     //          Note that the mission's XGBattleDesc may not be generated yet.
     //
-    // DATA: Data[0]: LWCE_XGMission - The mission object which is about to be added. Can be modified or even replaced
+    // DATA: LWCEDataContainer
+    //       Data[0]: LWCE_XGMission - The mission object which is about to be added. Can be modified or even replaced
     //                                 with a mission of a different type.
     //       Data[1]: boolean - Return parameter for event handlers. If an event handler sets this field to false, the
     //                          mission will not be added to the Geoscape. Currently, the first mission of the campaign
     //                          cannot be prevented in this way.
+    //
+    // SOURCE: LWCE_XGGeoscape
     kEventData = class'LWCEDataContainer'.static.New('BeforeAddMissionToGeoscape');
     kEventData.AddObject(kMission);
     kEventData.AddBool(true);
@@ -397,7 +400,8 @@ function int AddMission(XGMission kMission, optional bool bFirst)
     //          type generates alerts). Use this hook to modify the mission's XGBattleDesc, or other fields which weren't
     //          available during BeforeAddMissionToGeoscape.
     //
-    // DATA: Data[0]: LWCE_XGMission - The mission object which is about to be added. Can be modified, but not replaced.
+    // DATA: LWCEDataContainer
+    //       Data[0]: LWCE_XGMission - The mission object which is about to be added. Can be modified, but not replaced.
     //       Data[1]: name - The name of the one-time Geoscape alert to show for this mission. If an event handler sets this field
     //                       to empty, no alert will be shown to the player for this new mission. Generally you should only do this
     //                       if you're planning to alert the player in some other way.
@@ -405,6 +409,8 @@ function int AddMission(XGMission kMission, optional bool bFirst)
     //                      A negative value will show no image on the Geoscape.
     //       Data[3]: XComNarrativeMoment - The narrative moment to play before alerting the player. If an event handler sets this
     //                                      field to None, no narrative moment will play.
+    //
+    // SOURCE: LWCE_XGGeoscape
     kEventData = class'LWCEDataContainer'.static.New('AfterAddMissionToGeoscape');
     kEventData.AddObject(kMission);
     kEventData.AddName(nmGeoscapeAlert);

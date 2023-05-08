@@ -169,6 +169,9 @@ auto state Idle
             SetUpBuildVisTree();
         }
 
+        // EVENT: VisualizationIdle
+        //
+        // SUMMARY: TODO: document
         `LWCE_EVENT_MGR.TriggerEvent('VisualizationIdle', self, self);
     }
 

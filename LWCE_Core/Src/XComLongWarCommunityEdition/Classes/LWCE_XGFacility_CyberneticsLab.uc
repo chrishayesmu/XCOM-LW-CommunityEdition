@@ -289,6 +289,9 @@ function LWCE_UpdatePatients()
             kCESoldier = LWCE_XGStrategySoldier(m_arrPatients[iPatient].m_kSoldier);
             kCESoldier.LWCE_SetSoldierClass(eSC_Mec);
 
+            // EVENT: SoldierAugmentationComplete
+            //
+            // SUMMARY: TODO: document
             kData = class'LWCEDataContainer'.static.NewInt('SoldierAugmentationComplete', kCESoldier.m_kCESoldier.iID);
             `LWCE_EVENT_MGR.TriggerEvent('SoldierAugmentationComplete', kData, self);
 

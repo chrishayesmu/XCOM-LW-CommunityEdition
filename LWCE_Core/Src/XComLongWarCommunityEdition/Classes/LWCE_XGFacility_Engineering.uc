@@ -53,38 +53,6 @@ function InitNewGame()
     m_kStorage.Init();
     GrantInitialStores();
 
-    // TODO: move everything here to macros, or even better, make starting bonuses template-based
-    if (HQ().HasBonus(`LW_HQ_BONUS_ID(Resourceful)) > 0)
-    {
-        m_arrCEFoundryHistory.AddItem('Foundry_AlienMetallurgy');
-        m_arrCEFoundryHistory.AddItem('Foundry_ImprovedSalvage');
-    }
-
-    if (HQ().HasBonus(`LW_HQ_BONUS_ID(JaiJawan)) > 0)
-    {
-        m_arrCEFoundryHistory.AddItem('Foundry_EleriumAfterburners');
-    }
-
-    if (HQ().HasBonus(`LW_HQ_BONUS_ID(SukhoiCompany)) > 0)
-    {
-        m_arrCEFoundryHistory.AddItem('Foundry_ImprovedAvionics');
-    }
-
-    if (HQ().HasBonus(`LW_HQ_BONUS_ID(JungleScoutsOld)) > 0)
-    {
-        m_arrCEFoundryHistory.AddItem('Foundry_TacticalRigging');
-    }
-
-    if (HQ().HasBonus(`LW_HQ_BONUS_ID(TheirFinestHour)) > 0)
-    {
-        m_arrCEFoundryHistory.AddItem('Foundry_PenetratorWeapons');
-    }
-
-    if (HQ().HasBonus(`LW_HQ_BONUS_ID(ForTheSakeOfGlory)) > 0)
-    {
-        m_arrCEFoundryHistory.AddItem('Foundry_AdvancedRepair');
-    }
-
     m_bRequiresAttention = true;
     m_bCanBuildFacilities = true;
     m_bCanBuildItems = true;
@@ -1343,21 +1311,6 @@ function GrantInitialStores()
 
     kStorage.LWCE_AddItem('Item_Interceptor', 4);
     kStorage.LWCE_AddItem('Item_Skyranger');
-
-    if (HQ().HasBonus(`LW_HQ_BONUS_ID(AncientArtifact)) > 0)
-    {
-        kStorage.LWCE_AddItem('Item_IlluminatorGunsight');
-    }
-
-    if (HQ().HasBonus(`LW_HQ_BONUS_ID(JaiJawan)) > 0)
-    {
-        kStorage.LWCE_AddItem('Item_Interceptor', 2);
-    }
-
-    if (HQ().HasBonus(`LW_HQ_BONUS_ID(GhostInTheMachine)) > 0)
-    {
-        kStorage.LWCE_AddItem('Item_SHIV', 2);
-    }
 }
 
 function bool IsBuildingItem(EItemType eItem)

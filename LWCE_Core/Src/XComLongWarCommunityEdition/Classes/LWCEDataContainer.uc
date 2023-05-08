@@ -26,7 +26,8 @@ enum LWCEDataType
     eDT_ArrayNames,
     eDT_ArrayVectors,
     eDT_ArrayRotators,
-    eDT_ArrayTiles
+    eDT_ArrayTiles,
+    eDT_ItemQuantities
 };
 
 /// <summary>
@@ -54,6 +55,7 @@ struct LWCEDataValue
     var array<Vector> arrVecs;
     var array<Rotator> arrRots;
     var array<TTile> arrTiles;
+    var array<LWCE_TItemQuantity> arrItemQuantities;
 
     var LWCEDataType Type;
 };
@@ -185,6 +187,16 @@ static function LWCEDataContainer NewVector(name NewId, vector Value)
 //
 // These functions provide a simple way to add more data to the container. Like the static helpers, using them is not mandatory.
 
+function AddArray(array<Object> Value)
+{
+    local LWCEDataValue DataValue;
+
+    DataValue.Type = eDT_ArrayObjects;
+    DataValue.arrObjs = Value;
+
+    Data.AddItem(DataValue);
+}
+
 function AddBool(bool Value)
 {
     local LWCEDataValue DataValue;
@@ -211,6 +223,16 @@ function AddInt(int Value)
 
     DataValue.Type = eDT_Int;
     DataValue.I = Value;
+
+    Data.AddItem(DataValue);
+}
+
+function AddItemQuantities(array<LWCE_TItemQuantity> Value)
+{
+    local LWCEDataValue DataValue;
+
+    DataValue.Type = eDT_ItemQuantities;
+    DataValue.arrItemQuantities = Value;
 
     Data.AddItem(DataValue);
 }
