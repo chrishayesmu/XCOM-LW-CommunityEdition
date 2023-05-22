@@ -73,6 +73,18 @@ function ConnectAction(LWCEAction ActionToConnect, LWCEAction UseTree, LWCEActio
     }
 }
 
+simulated function DrawDebugLabel(Canvas kCanvas)
+{
+    if (`LWCE_CHEATMGR_TAC.bDebugVanillaAnims)
+    {
+        DebugDrawVanillaAnims(kCanvas);
+    }
+
+    if (`LWCE_CHEATMGR_TAC.bDebugVisualization)
+    {
+        DebugDrawVisualization(kCanvas);
+    }
+}
 
 private function ConnectNodes(LWCEAction Parent, LWCEAction Child, bool ReparentChildren)
 {
@@ -104,6 +116,62 @@ private function ConnectNodes(LWCEAction Parent, LWCEAction Child, bool Reparent
     {
         Child.ParentActions.AddItem(Parent);
     }
+}
+
+private function DebugDrawVanillaAnims(Canvas kCanvas)
+{
+    local int Index;
+    local AnimNodeSequence kAnim;
+    local XGAction kAction;
+    local LWCE_XGUnit kActiveUnit;
+    local Vector vDrawPos;
+
+    kActiveUnit = LWCE_XGUnit(XComTacticalController(class'Engine'.static.GetCurrentWorldInfo().GetALocalPlayerController()).GetActiveUnit());
+    vDrawPos = vect(25.0f, 25.0f, 0.0f);
+
+    // If LWCE vis debug is also occurring, shift this debug to the side to make room
+    if (`LWCE_CHEATMGR_TAC.bDebugVisualization)
+    {
+        vDrawPos.X += 125.0f;
+    }
+
+    kCanvas.SetPos(vDrawPos.X, vDrawPos.Y += 15);
+    kCanvas.SetDrawColor(255, 255, 255);
+    kCanvas.DrawText("[Vanilla Animations]");
+
+    if (kActiveUnit != none)
+    {
+        kAnim = AnimNodeSequence(kActiveUnit.m_kPawn.MovementNode.Children[eMoveType_Anim].Anim);
+
+        kCanvas.SetPos(vDrawPos.X, vDrawPos.Y += 15);
+        kCanvas.DrawText("Active unit: " $ kActiveUnit.m_kCharacter.GetFullName());
+
+        // Movement anim name: color green if playing
+        if (kActiveUnit.m_kPawn.MovementNode.ActiveChildIndex == eMoveType_Anim)
+        {
+            kCanvas.SetDrawColor(0, 255, 0);
+            kCanvas.SetPos(vDrawPos.X, vDrawPos.Y += 15);
+            kCanvas.DrawText("Movement anim: " $ kAnim.AnimSeqName);
+
+            kCanvas.SetDrawColor(255, 255, 255); // restore color
+        }
+
+        kCanvas.SetPos(vDrawPos.X, vDrawPos.Y += 15);
+        kCanvas.DrawText(kActiveUnit.m_kActionQueue.m_arrActions.Length $ " action(s) queued");
+
+        vDrawPos.X += 25;
+
+        for (Index = 0; Index < kActiveUnit.m_kActionQueue.m_arrActions.Length; Index++)
+        {
+            kCanvas.SetPos(vDrawPos.X, vDrawPos.Y += 15);
+            kCanvas.DrawText("[" $ Index $ "]: " $ kActiveUnit.m_kActionQueue.m_arrActions[Index].Class);
+        }
+    }
+}
+
+private function DebugDrawVisualization(Canvas kCanvas)
+{
+
 }
 
 private function DestroyVisTree(LWCEAction TreeRoot)
@@ -172,7 +240,7 @@ auto state Idle
         `LWCE_EVENT_MGR.TriggerEvent('VisualizationIdle', self, self);
     }
 
-    event Tick(float fDeltaTime)
+    event Tick(float fDeltaT)
     {
         // If a tree has built and we're not visualizing right now, use that tree. We can
         // trust that it's not still building because none of our logic is multi-threaded.
@@ -192,6 +260,8 @@ auto state Idle
             `LWCE_LOG_CLS("Found an active tree to visualize, moving to state ExecutingVisualization");
 			GotoState('ExecutingVisualization');
 		}
+
+        super.Tick(fDeltaT);
     }
 }
 
@@ -220,5 +290,7 @@ state ExecutingVisualization
             ActiveVisTree = none;
             GotoState('Idle');
         }
+
+        super.Tick(fDeltaT);
     }
 }

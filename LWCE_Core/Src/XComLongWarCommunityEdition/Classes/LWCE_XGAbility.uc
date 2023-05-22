@@ -16,6 +16,7 @@ var name m_TemplateName;
 
 var LWCEAbilityTemplate m_kTemplate;
 var array<LWCE_TTargetOption> arrTargetOptions;
+var LWCE_TAbilityResult m_kResult;
 var int m_iCurrentTargetIndex;
 
 static function bool HitResultIsCritical(const out LWCE_TAbilityResult kResult)
@@ -136,6 +137,8 @@ function name Activate(optional out LWCE_TAbilityResult kOutResult)
     }
 
     kOutResult = kResult;
+    m_kResult = kResult;
+
     return 'AA_Success';
 }
 
