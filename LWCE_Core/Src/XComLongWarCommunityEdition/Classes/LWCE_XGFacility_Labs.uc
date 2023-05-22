@@ -26,6 +26,7 @@ struct CheckpointRecord_LWCE_XGFacility_Labs extends CheckpointRecord_XGFacility
     var array<LWCE_TResearchProgress> m_arrCEProgress;
     var array<name> m_arrEarnedResearchCredits;
     var array<LWCE_TTechState> m_arrCEMissionResults;
+    var array<name> m_arrCEUnlockedFacilities;
     var array<name> m_arrCEUnlockedFoundryProjects;
     var array<int> m_arrCEUnlockedItems;
 };
@@ -37,6 +38,7 @@ var array<LWCE_TResearchProgress> m_arrCEProgress;
 var array<name> m_arrEarnedResearchCredits;
 
 var array<LWCE_TTechState> m_arrCEMissionResults;
+var array<name> m_arrCEUnlockedFacilities;
 var array<name> m_arrCEUnlockedFoundryProjects;
 var array<name> m_arrCEUnlockedItems;
 
@@ -1012,9 +1014,9 @@ function OnResearchCompleted()
 
     STAT_AddAvgStat(eRecap_AvgTechDaysCount, eRecap_AvgTechDaysSum, int(float(m_arrCEProgress[iProgressIndex].iHoursSpent) / 24.0));
 
-    m_arrUnlockedItems.Remove(0, m_arrUnlockedItems.Length);
+    m_arrCEUnlockedItems.Remove(0, m_arrCEUnlockedItems.Length);
     m_arrUnlockedGeneMods.Remove(0, m_arrUnlockedGeneMods.Length);
-    m_arrUnlockedFacilities.Remove(0, m_arrUnlockedFacilities.Length);
+    m_arrCEUnlockedFacilities.Remove(0, m_arrCEUnlockedFacilities.Length);
     m_arrCEUnlockedFoundryProjects.Remove(0, m_arrCEUnlockedFoundryProjects.Length);
 
     if (ENGINEERING().IsDisabled())

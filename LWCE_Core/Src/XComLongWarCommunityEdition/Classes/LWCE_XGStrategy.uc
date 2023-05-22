@@ -6,7 +6,7 @@ struct CheckpointRecord_LWCE_XGStrategy extends CheckpointRecord
 };
 
 var array<name> m_arrCEItemUnlocks;
-var array<int> m_arrCEFacilityUnlocks;
+var array<name> m_arrCEFacilityUnlocks;
 var array<name> m_arrCEFoundryUnlocks;
 
 function NewGame()
@@ -222,31 +222,31 @@ function bool UnlockFacility(EFacilityType eFacility, out TItemUnlock kUnlock)
     return false;
 }
 
-function bool LWCE_UnlockFacility(int iFacilityId, out LWCE_TItemUnlock kUnlock)
+function bool LWCE_UnlockFacility(name FacilityName, out LWCE_TItemUnlock kUnlock)
 {
-    local TFacility kFacility;
+    local LWCEFacilityTemplate kFacility;
 
-    if (m_arrCEFacilityUnlocks.Find(iFacilityId) != INDEX_NONE || HQ().HasFacility(iFacilityId))
+    if (m_arrCEFacilityUnlocks.Find(FacilityName) != INDEX_NONE || LWCE_XGHeadquarters(HQ()).LWCE_HasFacility(FacilityName))
     {
         return false;
     }
 
-    kFacility = Facility(iFacilityId);
+    kFacility = `LWCE_FACILITY(FacilityName);
 
     kUnlock.bFacility = true;
     kUnlock.sndFanfare = SNDLIB().SFX_Unlock_Facility;
 
-    kUnlock.ImagePath = class'UIUtilities'.static.GetStrategyImagePath(kFacility.iImage);
+    kUnlock.ImagePath = kFacility.ImagePath;
     kUnlock.strName = kFacility.strName;
     kUnlock.strDescription = kFacility.strBriefSummary;
     kUnlock.strTitle = m_strNewFacilityAvailable;
 
-    if (kFacility.iCash != -1)
+    if (kFacility.kCost.iCash != -1)
     {
         kUnlock.strHelp = m_strNewFacilityHelp;
     }
 
-    m_arrCEFacilityUnlocks.AddItem(iFacilityId);
+    m_arrCEFacilityUnlocks.AddItem(FacilityName);
 
     ENGINEERING().m_bCanBuildFacilities = true;
     ENGINEERING().SetDisabled(false);

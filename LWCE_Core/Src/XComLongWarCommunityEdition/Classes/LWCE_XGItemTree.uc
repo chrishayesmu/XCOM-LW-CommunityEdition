@@ -550,14 +550,12 @@ function Init()
 
     m_kItemTemplateMgr = `LWCE_ITEM_TEMPLATE_MGR;
 
-    m_arrFacilities.Add(24);
     m_arrStaff.Add(4);
     m_arrShips.Add(16);
     m_arrShipWeapons.Add(11);
 
     BuildShips();
     BuildShipWeapons();
-    BuildFacilities();
     BuildStaffTypes();
 }
 
@@ -618,6 +616,48 @@ function bool CanBeSold(int iItemId)
     ScriptTrace();
 
     return false;
+}
+
+function bool CanFacilityBeBuilt(int iFacility)
+{
+    `LWCE_LOG_DEPRECATED_CLS(CanFacilityBeBuilt);
+
+    return false;
+}
+
+function bool LWCE_CanFacilityBeBuilt(name FacilityName)
+{
+    local array<LWCE_TStaffRequirement> arrStaffRequirements;
+    local LWCEFacilityTemplate kTemplate;
+    local LWCE_XGHeadquarters kHQ;
+
+    kTemplate = `LWCE_FACILITY(FacilityName);
+    kHQ = LWCE_XGHeadquarters(HQ());
+
+    // Access lifts aren't built through the normal UI, which uses this function
+    if (FacilityName == 'Facility_AccessLift')
+    {
+        return false;
+    }
+
+    if (!kHQ.ArePrereqsFulfilled(kTemplate.kPrereqs))
+    {
+        return false;
+    }
+
+    arrStaffRequirements = kTemplate.GetStaffRequirements();
+
+    if (!kHQ.AreStaffPresent(arrStaffRequirements))
+    {
+        return false;
+    }
+
+    if (kTemplate.iMaxInstances > 0 && kHQ.LWCE_GetNumFacilities(FacilityName, /* bIncludeBuilding */ true) >= kTemplate.iMaxInstances)
+    {
+        return false;
+    }
+
+    return true;
 }
 
 function EItemType CaptiveToCorpse(EItemType eCaptive)

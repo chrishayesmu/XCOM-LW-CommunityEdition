@@ -99,7 +99,6 @@ function TTechSummary LWCE_BuildTechSummary(LWCETechTemplate kTech)
     kSummary.txtRequirementsLabel.StrValue = m_strCostLabel;
     kSummary.txtRequirementsLabel.iState = eUIState_Warning;
 
-    kProjectCost.iStaffTypeReq = eStaff_Scientist;
     kProjectCost.kCost = kTech.GetCost();
     kSummary.bCanAfford = kLabs.LWCE_GetCostSummary(kSummary.kCost, kProjectCost);
 
@@ -154,12 +153,12 @@ function OnLeaveReport(bool bJumpToChooseTech)
 
         kLabs.m_arrCEUnlockedItems.Remove(0, kLabs.m_arrCEUnlockedItems.Length);
 
-        for (iUnlock = 0; iUnlock < kLabs.m_arrUnlockedFacilities.Length; iUnlock++)
+        for (iUnlock = 0; iUnlock < kLabs.m_arrCEUnlockedFacilities.Length; iUnlock++)
         {
-            class'LWCE_XGScreenMgr_Extensions'.static.UnlockFacility(kLabs.m_arrUnlockedFacilities[iUnlock]);
+            class'LWCE_XGScreenMgr_Extensions'.static.UnlockFacility(kLabs.m_arrCEUnlockedFacilities[iUnlock]);
         }
 
-        kLabs.m_arrUnlockedFacilities.Remove(0, kLabs.m_arrUnlockedFacilities.Length);
+        kLabs.m_arrCEUnlockedFacilities.Remove(0, kLabs.m_arrCEUnlockedFacilities.Length);
 
         for (iUnlock = 0; iUnlock < kLabs.m_arrCEUnlockedFoundryProjects.Length; iUnlock++)
         {
@@ -511,18 +510,18 @@ function UpdateReport()
         kReport.txtResults[0].iState = eUIState_Warning;
     }
 
-    arrResults = kTechTree.LWCE_GetFacilityResults(m_nmCEReportTech);
+    arrNameResults = kTechTree.LWCE_GetFacilityResults(m_nmCEReportTech);
 
-    if (arrResults.Length > 0)
+    if (arrNameResults.Length > 0)
     {
-        for (Index = 0; Index < arrResults.Length; Index++)
+        for (Index = 0; Index < arrNameResults.Length; Index++)
         {
-            kTag.StrValue0 = Facility(arrResults[Index]).strName;
+            kTag.StrValue0 = `LWCE_FACILITY(arrNameResults[Index]).strName;
             kReport.txtResults.Add(1);
             kReport.txtResults[kReport.txtResults.Length - 1].StrValue = class'XComLocalizer'.static.ExpandString(m_strFacilityBuildAvailable);
             kReport.txtResults[kReport.txtResults.Length - 1].iState = eUIState_Warning;
 
-            kLabs.m_arrUnlockedFacilities.AddItem(EFacilityType(arrResults[Index]));
+            kLabs.m_arrCEUnlockedFacilities.AddItem(arrNameResults[Index]);
         }
     }
 

@@ -17,11 +17,11 @@ static function bool UnlockItem(name ItemName)
     return true;
 }
 
-static function bool UnlockFacility(int iFacilityId)
+static function bool UnlockFacility(name FacilityName)
 {
     local LWCE_TItemUnlock kUnlock;
 
-    if (!Game().LWCE_UnlockFacility(iFacilityId, kUnlock))
+    if (!Game().LWCE_UnlockFacility(FacilityName, kUnlock))
     {
         return false;
     }

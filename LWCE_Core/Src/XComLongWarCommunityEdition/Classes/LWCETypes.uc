@@ -14,10 +14,10 @@ struct LWCE_Vector3Int
     var int X, Y, Z;
 };
 
-/// <summary>A simple key-value pair where both are integers.</summary>
-struct LWCE_IntKVP
+/// <summary>A simple key-value pair where the key is a name and the value is an integer.</summary>
+struct LWCE_NameIntKVP
 {
-    var int Key;
+    var name Key;
     var int Value;
 };
 
@@ -199,7 +199,7 @@ struct LWCE_TCost
 /// </summary>
 struct LWCE_TPrereqs
 {
-    var array<int> arrFacilityReqs; // A list of facility IDs that must be built. For non-unique facilities, only one needs to be built.
+    var array<name> arrFacilityReqs; // A list of facility names that must be built. For non-unique facilities, only one needs to be built.
     var array<name> arrFoundryReqs; // A list of foundry project names that must be complete.
     var array<name> arrItemReqs;    // A list of item names. The player must have possessed these at one time, but doesn't necessarily need to still have them now.
     var array<name> arrTechReqs;    // A list of research tech names that must be complete.
@@ -480,11 +480,16 @@ struct LWCE_TItemCard
     }
 };
 
+struct LWCE_TStaffRequirement
+{
+    var name StaffType;
+    var int NumRequired;
+};
+
 struct LWCE_TProjectCost
 {
     var LWCE_TCost kCost;
-    var int iStaffTypeReq; // What type of staff are needed to work on this project.
-    var int iStaffNumReq;  // How many of that staff type are needed.
+    var array<LWCE_TStaffRequirement> arrStaffRequirements; // The necessary staff to work on this project.
     var int iBarracksReq;  // How much open barracks space is required to complete this project.
 };
 

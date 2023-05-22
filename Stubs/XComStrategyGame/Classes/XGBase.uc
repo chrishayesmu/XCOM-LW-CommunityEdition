@@ -38,6 +38,14 @@ struct TBaseCost
     var int iHours;
 };
 
+struct CheckpointRecord
+{
+    var array<TFacilityTile> m_arrFacilities;
+    var array<TTerrainTile> m_arrTiles;
+    var array<int> m_arrSteamTiles;
+    var bool m_bInterrogationQueued;
+};
+
 var array<TFacilityTile> m_arrFacilities;
 var array<TTerrainTile> m_arrTiles;
 var array<int> m_arrSteamTiles;

@@ -1,12 +1,20 @@
 class LWCE_XGHeadquarters extends XGHeadQuarters
     dependson(LWCETypes);
 
+struct LWCE_TFacilityCount
+{
+    var name Facility;
+    var int Count;
+};
+
 struct CheckpointRecord_LWCE_XGHeadquarters extends XGHeadQuarters.CheckpointRecord
 {
+    var array<LWCE_TFacilityCount> m_arrCEBaseFacilities;
     var array<name> m_arrCELastCaptives;
     var LWCEItemContainer m_kCELastCargoArtifacts;
 };
 
+var array<LWCE_TFacilityCount> m_arrCEBaseFacilities;
 var array<name> m_arrCELastCaptives;
 var LWCEItemContainer m_kCELastCargoArtifacts;
 
@@ -75,7 +83,6 @@ function InitNewGame()
     local XGFacility kFacility;
     local int I;
 
-    m_arrBaseFacilities.Add(24);
     CreateFacilities();
 
     foreach m_arrFacilities(kFacility)
@@ -84,7 +91,7 @@ function InitNewGame()
     }
 
     m_kBase = Spawn(class'LWCE_XGBase');
-    m_kBase.Init();
+    LWCE_XGBase(m_kBase).LWCE_Init(/* IsPrimaryBase */ true, /* Width */ 7, /* Height */ 5, GetCoords());
     m_kActiveFacility = m_arrFacilities[0];
     m_fAnnounceTimer = 10.0;
 
@@ -110,6 +117,7 @@ function AddOutpost(int iContinent)
 {
     local XGOutpost kOutpost;
 
+    // TODO: deprecate and replace outposts with LWCE_XGBase
     kOutpost = Spawn(class'LWCE_XGOutpost');
     kOutpost.Init(iContinent);
     m_arrOutposts.AddItem(kOutpost);
@@ -182,57 +190,86 @@ function AddSatelliteNode(int iCountry, int iType, optional bool bInstant)
 
 function AddFacility(int iFacility)
 {
-    // Replace all facilities with LWCE subclasses
-    m_arrBaseFacilities[iFacility] += 1;
+    `LWCE_LOG_DEPRECATED_CLS(AddFacility);
+}
 
-    if (iFacility == eFacility_PsiLabs)
+function LWCE_AddFacility(name nmFacility)
+{
+    local LWCEFacilityTemplate kTemplate;
+    local XGFacility kFacility;
+
+    kTemplate = `LWCE_FACILITY(nmFacility);
+
+    // TODO: handle any special initialization or other logic in either the facility template or an event handler
+    if (kTemplate.FacilityClass != "")
     {
-        BARRACKS().m_kPsiLabs = Spawn(class'LWCE_XGFacility_PsiLabs');
+        kFacility = Spawn(class<XGFacility>(DynamicLoadObject(kTemplate.FacilityClass, class'Class')));
+
+        if (kFacility.IsA('XGFacility_PsiLabs'))
+        {
+            BARRACKS().m_kPsiLabs = XGFacility_PsiLabs(kFacility);
+        }
+        else if (kFacility.IsA('XGFacility_GeneLabs'))
+        {
+            BARRACKS().m_kGeneLabs = XGFacility_GeneLabs(kFacility);
+        }
+        else if (kFacility.IsA('XGFacility_CyberneticsLab'))
+        {
+            BARRACKS().m_kCyberneticsLab = XGFacility_CyberneticsLab(kFacility);
+            `LWCE_STORAGE.LWCE_AddItem('Item_Minigun', 1000);
+            `LWCE_STORAGE.LWCE_AddItem('Item_BaseAugments', 1000);
+        }
+        else if (kFacility.IsA('XGFacility_GollopChamber'))
+        {
+            m_kGollop = XGFacility_GollopChamber(kFacility);
+        }
+
+        if (kTemplate.bIsTopLevel)
+        {
+            m_arrFacilities.AddItem(kFacility);
+        }
     }
-    else if (iFacility == eFacility_GeneticsLab)
-    {
-        BARRACKS().m_kGeneLabs = Spawn(class'LWCE_XGFacility_GeneLabs');
-    }
-    else if (iFacility == eFacility_CyberneticsLab)
-    {
-        BARRACKS().m_kCyberneticsLab = Spawn(class'LWCE_XGFacility_CyberneticsLab');
-        `LWCE_STORAGE.LWCE_AddItem('Item_Minigun', 1000);
-        `LWCE_STORAGE.LWCE_AddItem('Item_BaseAugments', 1000);
-    }
-    else if (iFacility == eFacility_DeusEx)
-    {
-        m_kGollop = Spawn(class'LWCE_XGFacility_GollopChamber');
-        m_arrFacilities.AddItem(m_kGollop);
-    }
-    else if (iFacility == eFacility_OTS)
+
+    if (nmFacility == 'Facility_OTS')
     {
         BARRACKS().UpdateOTSPerks();
     }
-    else if (iFacility == eFacility_Foundry)
+    else if (nmFacility == 'Facility_Foundry')
     {
         BARRACKS().UpdateFoundryPerks();
     }
+
+    // Replace all facilities with LWCE subclasses
+    ModifyFacilityCount(nmFacility, 1);
 }
 
-function bool ArePrereqsFulfilled(LWCE_TPrereqs kPrereqs)
+/// <summary>
+/// Checks if the provided prerequisites are currently fulfilled. Optional parameters allow for
+/// "what-if" checks, e.g. "will these prereqs be fulfilled if the given Foundry project is completed".
+/// </summary>
+function bool ArePrereqsFulfilled(LWCE_TPrereqs kPrereqs,
+                                  optional name TechName,
+                                  optional name FacilityName,
+                                  optional name FoundryName,
+                                  optional name ItemName)
 {
     local name PrereqName;
     local int iPrereqId;
     local LWCE_XGFacility_Barracks kBarracks;
     local LWCE_XGFacility_Engineering kEngineering;
     local LWCE_XGFacility_Labs kLabs;
-    local XGGeoscape kGeoscape;
     local LWCE_XGStorage kStorage;
+    local LWCE_XGGeoscape kGeoscape;
 
     kBarracks = `LWCE_BARRACKS;
     kEngineering = `LWCE_ENGINEERING;
-    kGeoscape = GEOSCAPE();
+    kGeoscape = LWCE_XGGeoscape(GEOSCAPE());
     kLabs = `LWCE_LABS;
     kStorage = LWCE_XGStorage(STORAGE());
 
-    foreach kPrereqs.arrFacilityReqs(iPrereqId)
+    foreach kPrereqs.arrFacilityReqs(PrereqName)
     {
-        if (!HasFacility(iPrereqId))
+        if (!LWCE_HasFacility(PrereqName) && PrereqName != FacilityName)
         {
             return false;
         }
@@ -240,7 +277,7 @@ function bool ArePrereqsFulfilled(LWCE_TPrereqs kPrereqs)
 
     foreach kPrereqs.arrFoundryReqs(PrereqName)
     {
-        if (!kEngineering.LWCE_IsFoundryTechResearched(PrereqName))
+        if (!kEngineering.LWCE_IsFoundryTechResearched(PrereqName) && PrereqName != FoundryName)
         {
             return false;
         }
@@ -248,7 +285,7 @@ function bool ArePrereqsFulfilled(LWCE_TPrereqs kPrereqs)
 
     foreach kPrereqs.arrItemReqs(PrereqName)
     {
-        if (!kStorage.LWCE_EverHadItem(PrereqName))
+        if (!kStorage.LWCE_EverHadItem(PrereqName) && PrereqName != ItemName)
         {
             return false;
         }
@@ -256,7 +293,7 @@ function bool ArePrereqsFulfilled(LWCE_TPrereqs kPrereqs)
 
     foreach kPrereqs.arrTechReqs(PrereqName)
     {
-        if (!kLabs.LWCE_IsResearched(PrereqName))
+        if (!kLabs.LWCE_IsResearched(PrereqName) && PrereqName != TechName)
         {
             return false;
         }
@@ -280,14 +317,48 @@ function bool ArePrereqsFulfilled(LWCE_TPrereqs kPrereqs)
         return false;
     }
 
-    if (kPrereqs.bRequiresAutopsy && kLabs.GetNumAutopsiesPerformed() == 0)
+    if (kPrereqs.bRequiresAutopsy && kLabs.GetNumAutopsiesPerformed() == 0 && (TechName == '' || !`LWCE_TECH(TechName).bIsAutopsy))
     {
         return false;
     }
 
-    if (kPrereqs.bRequiresInterrogation && !kLabs.HasInterrogatedCaptive())
+    if (kPrereqs.bRequiresInterrogation && !kLabs.HasInterrogatedCaptive() && (TechName == '' || !`LWCE_TECH(TechName).bIsInterrogation))
     {
         return false;
+    }
+
+    return true;
+}
+
+/// <summary>
+/// Checks if the staff listed in the requirements are present in XCOM HQ.
+/// </summary>
+function bool AreStaffPresent(array<LWCE_TStaffRequirement> arrStaffRequirements)
+{
+    local int Index;
+
+    for (Index = 0; Index < arrStaffRequirements.Length; Index++)
+    {
+        switch (arrStaffRequirements[Index].StaffType)
+        {
+            case 'Engineer':
+                if (GetResource(eResource_Engineers) < arrStaffRequirements[Index].NumRequired)
+                {
+                    return false;
+                }
+
+                break;
+            case 'Scientist':
+                if (GetResource(eResource_Scientists) < arrStaffRequirements[Index].NumRequired)
+                {
+                    return false;
+                }
+
+                break;
+            default:
+                `LWCE_LOG_CLS("Unrecognized staff type '" $ arrStaffRequirements[Index].StaffType $ "' in AreStaffPresent");
+                break;
+        }
     }
 
     return true;
@@ -535,6 +606,159 @@ function LWCE_GetEvents(out array<LWCE_THQEvent> arrEvents)
     }
 }
 
+function int GetFacilityMaintenanceCost()
+{
+    local LWCEFacilityTemplateManager kTemplateMgr;
+    local LWCEFacilityTemplate kTemplate;
+    local int Index, iMaintenance;
+
+    kTemplateMgr = `LWCE_FACILITY_TEMPLATE_MGR;
+    
+    for (Index = 0; Index < m_arrCEBaseFacilities.Length; Index++)
+    {
+        if (m_arrCEBaseFacilities[Index].Count > 0)
+        {
+            kTemplate = kTemplateMgr.FindFacilityTemplate(m_arrCEBaseFacilities[Index].Facility);
+    
+            iMaintenance += kTemplate.GetMonthlyCost() * m_arrCEBaseFacilities[Index].Count;
+        }
+    }
+
+    return -iMaintenance;
+}
+
+function int GetNumFacilities(EFacilityType eFacility)
+{
+    `LWCE_LOG_DEPRECATED_CLS(GetNumFacilities);
+
+    return -1;
+}
+
+function int LWCE_GetNumFacilities(name nmFacility, optional bool bIncludeBuilding = false)
+{
+    local int Count, Index;
+
+    Index = m_arrCEBaseFacilities.Find('Facility', nmFacility);
+
+    if (Index != INDEX_NONE)
+    {
+        Count = m_arrCEBaseFacilities[Index].Count;
+    }
+
+    if (bIncludeBuilding)
+    {
+        Count += LWCE_XGFacility_Engineering(ENGINEERING()).LWCE_GetNumFacilitiesBuilding(nmFacility);
+    }
+
+    return Count;
+}
+
+// TODO: move this method to LWCE_XGBase
+function int GetPowerCapacity()
+{
+    local LWCEFacilityTemplateManager kTemplateMgr;
+    local LWCEFacilityTemplate kTemplate;
+    local int Index, iPower, iPowerGenerated;
+
+    kTemplateMgr = `LWCE_FACILITY_TEMPLATE_MGR;
+
+    iPowerGenerated = class'XGTacticalGameCore'.default.HQ_BASE_POWER[Game().GetDifficulty()];
+    
+    for (Index = 0; Index < m_arrCEBaseFacilities.Length; Index++)
+    {
+        if (m_arrCEBaseFacilities[Index].Count > 0)
+        {
+            kTemplate = kTemplateMgr.FindFacilityTemplate(m_arrCEBaseFacilities[Index].Facility);
+            iPower = kTemplate.iPowerConsumed * m_arrCEBaseFacilities[Index].Count;
+
+            if (iPower < 0)
+            {
+                iPowerGenerated += -iPower;
+            }
+        }
+    }
+
+    iPowerGenerated += LWCE_XGBase(Base()).LWCE_GetAdjacencies('Power') * class'XGTacticalGameCore'.default.POWER_ADJACENCY_BONUS;
+    return iPowerGenerated;
+}
+
+// TODO: move this method to LWCE_XGBase
+function int GetPowerUsed()
+{
+    local LWCE_XGFacility_Engineering kEngineering;
+    local LWCEFacilityTemplateManager kTemplateMgr;
+    local LWCEFacilityTemplate kTemplate;
+    local int Index, iPower, iPowerUsed;
+
+    kEngineering = LWCE_XGFacility_Engineering(ENGINEERING());
+    kTemplateMgr = `LWCE_FACILITY_TEMPLATE_MGR;
+
+    for (Index = 0; Index < m_arrCEBaseFacilities.Length; Index++)
+    {
+        if (m_arrCEBaseFacilities[Index].Count > 0)
+        {
+            kTemplate = kTemplateMgr.FindFacilityTemplate(m_arrCEBaseFacilities[Index].Facility);
+            iPower = kTemplate.iPowerConsumed * m_arrCEBaseFacilities[Index].Count;
+
+            if (iPower > 0)
+            {
+                iPowerUsed += iPower;
+            }
+        }
+    }
+
+    // Add in power consumption for any facilities currently being built
+    for (Index = 0; Index < kEngineering.m_arrCEFacilityProjects.Length; Index++)
+    {
+        kTemplate = kTemplateMgr.FindFacilityTemplate(kEngineering.m_arrCEFacilityProjects[Index].FacilityName);
+
+        if (kTemplate.iPowerConsumed > 0)
+        {
+            iPowerUsed += kTemplate.iPowerConsumed;
+        }
+    }
+
+    return iPowerUsed;
+}
+
+function int GetSatelliteLimit()
+{
+    local LWCEFacilityTemplateManager kTemplateMgr;
+    local LWCEFacilityTemplate kTemplate;
+    local int Index, iSatelliteLimit;
+
+    kTemplateMgr = `LWCE_FACILITY_TEMPLATE_MGR;
+
+    for (Index = 0; Index < m_arrCEBaseFacilities.Length; Index++)
+    {
+        if (m_arrCEBaseFacilities[Index].Count > 0)
+        {
+            kTemplate = kTemplateMgr.FindFacilityTemplate(m_arrCEBaseFacilities[Index].Facility);
+            iSatelliteLimit += kTemplate.GetSatelliteCapacity() * m_arrCEBaseFacilities[Index].Count;
+        }
+    }
+
+    iSatelliteLimit += class'XGTacticalGameCore'.default.UPLINK_ADJACENCY_BONUS * LWCE_XGBase(Base()).LWCE_GetAdjacencies('Satellite');
+
+    return iSatelliteLimit;
+}
+
+function bool HasFacility(int iFacility)
+{
+    `LWCE_LOG_DEPRECATED_CLS(HasFacility);
+
+    return false;
+}
+
+function bool LWCE_HasFacility(name nmFacility)
+{
+    local int Index;
+
+    Index = m_arrCEBaseFacilities.Find('Facility', nmFacility);
+
+    return Index == INDEX_NONE ? false : m_arrCEBaseFacilities[Index].Count > 0;
+}
+
 function OrderInterceptors(int iContinent, int iQuantity)
 {
     local TShipOrder kOrder;
@@ -660,6 +884,26 @@ function RefundCost(const LWCE_TCost kCost)
     }
 }
 
+function RemoveFacility(int iFacility)
+{
+    `LWCE_LOG_DEPRECATED_CLS(RemoveFacility);
+}
+
+function LWCE_RemoveFacility(name nmFacility)
+{
+    ModifyFacilityCount(nmFacility, -1);
+
+    // TODO move to event handler or facility template
+    if (nmFacility == 'Facility_OTS')
+    {
+        BARRACKS().UpdateOTSPerks();
+    }
+    else if (nmFacility == 'Facility_Foundry')
+    {
+        BARRACKS().UpdateFoundryPerks();
+    }
+}
+
 function UpdateInterceptorOrders()
 {
     local LWCE_XGStorage kStorage;
@@ -709,6 +953,37 @@ function UpdateInterceptorOrders()
     for (iOrder = aiRemove.Length - 1; iOrder >= 0; iOrder--)
     {
         m_arrShipTransfers.Remove(aiRemove[iOrder], 1);
+    }
+}
+
+protected function ModifyFacilityCount(name nmFacility, int Delta)
+{
+    local LWCE_TFacilityCount kFacilityCount;
+    local int Index;
+
+    Index = m_arrCEBaseFacilities.Find('Facility', nmFacility);
+
+    if (Index == INDEX_NONE)
+    {
+        if (Delta < 0)
+        {
+            `LWCE_LOG_CLS("ERROR: asked to change facility count for " $ nmFacility $ " by " $ Delta $ ", but no such facilities are in HQ");
+            return;
+        }
+
+        kFacilityCount.Facility = nmFacility;
+        kFacilityCount.Count = Delta;
+        m_arrCEBaseFacilities.AddItem(kFacilityCount);
+    }
+    else
+    {
+        if (Delta + m_arrCEBaseFacilities[Index].Count < 0)
+        {
+            `LWCE_LOG_CLS("ERROR: asked to change facility count for " $ nmFacility $ " by " $ Delta $ ", but this would result in a negative number of facilities of this type");
+            return;
+        }
+
+        m_arrCEBaseFacilities[Index].Count += Delta;
     }
 }
 

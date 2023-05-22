@@ -407,7 +407,7 @@ function int AddMission(XGMission kMission, optional bool bFirst)
     //                       if you're planning to alert the player in some other way.
     //       Data[2]: int - Integer value of the EEntityGraphic enum. The graphic selected here will be shown on the Geoscape.
     //                      A negative value will show no image on the Geoscape.
-    //       Data[3]: XComNarrativeMoment - The narrative moment to play before alerting the player. If an event handler sets this
+    //       Data[3]: XComNarrativeMoment - Out parameter. The narrative moment to play before alerting the player. If an event handler sets this
     //                                      field to None, no narrative moment will play.
     //
     // SOURCE: LWCE_XGGeoscape

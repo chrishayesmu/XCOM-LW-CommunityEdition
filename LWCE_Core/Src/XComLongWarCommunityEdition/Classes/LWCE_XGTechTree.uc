@@ -2,12 +2,16 @@ class LWCE_XGTechTree extends XGTechTree
     dependson(LWCETypes)
     config(LWCEBaseStrategyGame);
 
+var private LWCEFacilityTemplateManager m_kFacilityTemplateMgr;
 var private LWCEFoundryProjectTemplateManager m_kFoundryTemplateMgr;
+var private LWCEItemTemplateManager m_kItemTemplateMgr;
 var private LWCETechTemplateManager m_kTechTemplateMgr;
 
 function Init()
 {
+    m_kFacilityTemplateMgr = `LWCE_FACILITY_TEMPLATE_MGR;
     m_kFoundryTemplateMgr = `LWCE_FOUNDRY_TEMPLATE_MGR;
+    m_kItemTemplateMgr = `LWCE_ITEM_TEMPLATE_MGR;
     m_kTechTemplateMgr = `LWCE_TECH_TEMPLATE_MGR;
 
     BuildTechs();
@@ -201,34 +205,44 @@ function array<int> GetFacilityResults(int iTech)
     return arrFacilities;
 }
 
-function array<int> LWCE_GetFacilityResults(name TechName)
+function array<name> LWCE_GetFacilityResults(name CompletedTechName)
 {
-    local array<int> arrResults;
+    local array<name> arrResults;
+    local array<LWCEFacilityTemplate> arrTemplates;
+    local LWCEFacilityTemplate kTemplate;
+    local LWCE_XGHeadquarters kHQ;
 
-    // TODO: these shouldn't be hardcoded, but facilities aren't converted to LWCE yet
-    switch (TechName)
+    kHQ = LWCE_XGHeadquarters(HQ());
+
+    if (CompletedTechName == '')
     {
-        case 'Tech_AlienCommandAndControl':
-            arrResults.AddItem(eFacility_DeusEx);
-            break;
-        case 'Tech_AlienCommunications':
-            arrResults.AddItem(eFacility_HyperwaveRadar);
-            break;
-        case 'Tech_AlienComputers':
-            arrResults.AddItem(eFacility_LargeRadar);
-            break;
-        case 'Tech_AlienPowerSystems':
-            arrResults.AddItem(eFacility_EleriumGenerator);
-            break;
-        case 'Tech_Xenobiology':
-            arrResults.AddItem(eFacility_AlienContain);
-            break;
-        case 'Tech_Xenogenetics':
-            arrResults.AddItem(eFacility_GeneticsLab);
-            break;
-        case 'Tech_Xenopsionics':
-            arrResults.AddItem(eFacility_PsiLabs);
-            break;
+        return arrResults;
+    }
+
+    arrTemplates = m_kFacilityTemplateMgr.GetAllFacilityTemplates();
+
+    // Iterate all facilities to find ones that will be available if CompletedTechName is done
+    foreach arrTemplates(kTemplate)
+    {
+        // We only want newly-available facilities, so anything that doesn't rely on the new research is out
+        if (kTemplate.kPrereqs.arrTechReqs.Find(CompletedTechName) == INDEX_NONE)
+        {
+            continue;
+        }
+
+        // Skip anything which is already unlocked
+        if (kHQ.ArePrereqsFulfilled(kTemplate.kPrereqs))
+        {
+            continue;
+        }
+
+        // .. and anything which won't be unlocked with the new tech
+        if (!kHQ.ArePrereqsFulfilled(kTemplate.kPrereqs, CompletedTechName))
+        {
+            continue;
+        }
+
+        arrResults.AddItem(kTemplate.GetFacilityName());
     }
 
     return arrResults;
@@ -269,59 +283,40 @@ function array<name> LWCE_GetFoundryResults(name CompletedTechName)
 {
     local array<LWCEFoundryProjectTemplate> arrTemplates;
     local array<name> arrResults;
-    local bool bIsValid;
-    local name nmItemReq, nmTechReq;
     local LWCEFoundryProjectTemplate kTemplate;
-    local LWCE_XGFacility_Labs kLabs;
-    local LWCE_XGStorage kStorage;
+    local LWCE_XGHeadquarters kHQ;
 
-    if (CompletedTechName == '' || !HQ().HasFacility(eFacility_Foundry))
+    kHQ = LWCE_XGHeadquarters(HQ());
+
+    if (CompletedTechName == '' || !kHQ.LWCE_HasFacility('Facility_Foundry'))
     {
         return arrResults;
     }
 
-    kLabs = LWCE_XGFacility_Labs(LABS());
-    kStorage = LWCE_XGStorage(STORAGE());
     arrTemplates = m_kFoundryTemplateMgr.GetAllProjectTemplates();
 
-    // Iterate all Foundry techs to find ones that will be available if iCompletedTechId is done
+    // Iterate all Foundry techs to find ones that will be available if CompletedTechName is done
     foreach arrTemplates(kTemplate)
     {
-        bIsValid = true;
-
         // We only want newly-available techs, so anything that doesn't rely on the new research is out
         if (kTemplate.kPrereqs.arrTechReqs.Find(CompletedTechName) == INDEX_NONE)
         {
             continue;
         }
 
-        // TODO: need to rewrite this to use LWCE_TPrereqs somehow. This logic works for all base game Foundry techs,
-        // but it will throw off any modded projects using other prereq fields
-
-        // Validate item requirements
-        foreach kTemplate.kPrereqs.arrItemReqs(nmItemReq)
+        // Skip anything which is already unlocked
+        if (kHQ.ArePrereqsFulfilled(kTemplate.kPrereqs))
         {
-            if (!kStorage.LWCE_EverHadItem(nmItemReq))
-            {
-                bIsValid = false;
-                break;
-            }
+            continue;
         }
 
-        // If there are other research requirements, check them
-        foreach kTemplate.kPrereqs.arrTechReqs(nmTechReq)
+        // .. and anything which won't be unlocked with the new tech
+        if (!kHQ.ArePrereqsFulfilled(kTemplate.kPrereqs, CompletedTechName))
         {
-            if (nmTechReq != CompletedTechName && !kLabs.LWCE_IsResearched(nmTechReq))
-            {
-                bIsValid = false;
-                break;
-            }
+            continue;
         }
 
-        if (bIsValid)
-        {
-            arrResults.AddItem(kTemplate.GetProjectName());
-        }
+        arrResults.AddItem(kTemplate.GetProjectName());
     }
 
     return arrResults;
@@ -347,25 +342,43 @@ function array<int> GetItemResults(int iTech)
     return arrResults;
 }
 
-function array<name> LWCE_GetItemResults(name TechName)
+function array<name> LWCE_GetItemResults(name CompletedTechName)
 {
     local array<name> arrResults;
     local array<LWCEItemTemplate> arrTemplates;
-    local LWCEItemTemplate kItem;
+    local LWCEItemTemplate kTemplate;
+    local LWCE_XGHeadquarters kHQ;
 
-    if (TechName == '')
+    kHQ = LWCE_XGHeadquarters(HQ());
+
+    if (CompletedTechName == '')
     {
         return arrResults;
     }
 
-    arrTemplates = `LWCE_ITEM_TEMPLATE_MGR.GetAllItemTemplates();
+    arrTemplates = m_kItemTemplateMgr.GetAllItemTemplates();
 
-    foreach arrTemplates(kItem)
+    // Iterate all items to find ones that will be available if CompletedTechName is done
+    foreach arrTemplates(kTemplate)
     {
-        if (kItem.kPrereqs.arrTechReqs.Find(TechName) != INDEX_NONE)
+        if (kTemplate.kPrereqs.arrTechReqs.Find(CompletedTechName) == INDEX_NONE)
         {
-            arrResults.AddItem(kItem.GetItemName());
+            continue;
         }
+
+        // Skip anything which is already unlocked
+        if (kHQ.ArePrereqsFulfilled(kTemplate.kPrereqs))
+        {
+            continue;
+        }
+
+        // .. and anything which won't be unlocked with the new tech
+        if (!kHQ.ArePrereqsFulfilled(kTemplate.kPrereqs, CompletedTechName))
+        {
+            continue;
+        }
+
+        arrResults.AddItem(kTemplate.GetItemName());
     }
 
     return arrResults;

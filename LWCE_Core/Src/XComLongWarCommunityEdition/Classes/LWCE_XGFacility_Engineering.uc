@@ -1,6 +1,19 @@
 class LWCE_XGFacility_Engineering extends XGFacility_Engineering
     dependson(LWCETypes, LWCE_XGMissionControlUI);
 
+struct LWCE_TFacilityProject
+{
+    var name FacilityName;
+    var int iHoursLeft;
+    var bool bNotify;
+    var bool bRush;
+    var int X;
+    var int Y;
+    var int iIndex;
+    var LWCE_TProjectCost kRebate;
+    var LWCE_TProjectCost kOriginalCost;
+};
+
 struct LWCE_TFoundryProject
 {
     var name ProjectName;
@@ -17,12 +30,14 @@ struct LWCE_TFoundryProject
 
 struct CheckpointRecord_LWCE_XGFacility_Engineering extends CheckpointRecord_XGFacility_Engineering
 {
+    var array<LWCE_TFacilityProject> m_arrCEFacilityProjects;
     var array<LWCE_TFoundryProject> m_arrCEFoundryProjects;
     var array<LWCE_TItemProject> m_arrCEItemProjects;
     var array<name> m_arrCEFoundryHistory;
     var array<LWCE_TProjectCost> m_arrCEOldRebates;
 };
 
+var array<LWCE_TFacilityProject> m_arrCEFacilityProjects;
 var array<LWCE_TFoundryProject> m_arrCEFoundryProjects;
 var array<LWCE_TItemProject> m_arrCEItemProjects;
 var array<name> m_arrCEFoundryHistory;
@@ -60,9 +75,14 @@ function InitNewGame()
     m_iEleriumHalfLife = int(class'XGTacticalGameCore'.default.SW_ELERIUM_HALFLIFE);
 }
 
-// #region Functions related to facilities
+// #region Functions related to facilities and construction
 
 function AddFacilityProject(out TFacilityProject kProject)
+{
+    `LWCE_LOG_DEPRECATED_CLS(AddFacilityProject);
+}
+
+function LWCE_AddFacilityProject(out LWCE_TFacilityProject kProject)
 {
     local bool bInstaBuild, bFreeBuild;
 
@@ -75,17 +95,16 @@ function AddFacilityProject(out TFacilityProject kProject)
         bFreeBuild = XComCheatManager(GetALocalPlayerController().CheatManager).m_bStrategyAllFacilitiesFree;
     }
 
-    // TODO: currently broken; fix when moving facilities to LWCE
-    kProject.iIndex = m_arrFacilityProjects.Length;
-    kProject.kOriginalCost = GetFacilityProjectCost(kProject.eFacility, kProject.X, kProject.Y, kProject.Brush);
-    m_arrFacilityProjects.AddItem(kProject);
+    kProject.iIndex = m_arrCEFacilityProjects.Length;
+    kProject.kOriginalCost = LWCE_GetFacilityProjectCost(kProject.FacilityName, kProject.X, kProject.Y, kProject.bRush);
+    m_arrCEFacilityProjects.AddItem(kProject);
 
     if (!bFreeBuild)
     {
-        PayCost(kProject.kOriginalCost);
+        LWCE_PayCost(kProject.kOriginalCost);
     }
 
-    Base().PerformAction(eBCS_BeginConstruction, kProject.X, kProject.Y, kProject.eFacility);
+    LWCE_XGBase(Base()).LWCE_PerformAction(eBCS_BeginConstruction, kProject.X, kProject.Y, kProject.FacilityName);
 
     if (bInstaBuild)
     {
@@ -95,11 +114,19 @@ function AddFacilityProject(out TFacilityProject kProject)
 
 function bool GetFacilityCostSummary(out TCostSummary kCostSummary, EFacilityType eFacility, int X, int Y, bool Brush)
 {
+    `LWCE_LOG_DEPRECATED_CLS(GetFacilityCostSummary);
+
+    return false;
+}
+
+function bool LWCE_GetFacilityCostSummary(out TCostSummary kCostSummary, name FacilityName, int X, int Y, bool bRush)
+{
+    local LWCEFacilityTemplate kTemplate;
     local LWCE_TProjectCost kCost;
     local TText txtCost;
     local XGParamTag kTag;
     local bool bCanAfford, bFreeBuild;
-    local int iPower;
+    local int iPower, Index;
 
     kTag = XGParamTag(XComEngine(class'Engine'.static.GetEngine()).LocalizeContext.FindTag("XGParam"));
     bFreeBuild = false;
@@ -109,18 +136,19 @@ function bool GetFacilityCostSummary(out TCostSummary kCostSummary, EFacilityTyp
         bFreeBuild = XComCheatManager(GetALocalPlayerController().CheatManager).m_bStrategyAllFacilitiesFree;
     }
 
-    kCost = LWCE_GetFacilityProjectCost(eFacility, X, Y, bRush);
-    iPower = Facility(eFacility).iPower;
+    kTemplate = `LWCE_FACILITY(FacilityName);
+    kCost = LWCE_GetFacilityProjectCost(FacilityName, X, Y, bRush);
+    iPower = kTemplate.GetPower();
     bCanAfford = true;
 
-    if (iPower < 0 && !bFreeBuild)
+    if (iPower > 0 && !bFreeBuild)
     {
-        kTag.IntValue0 = -iPower;
+        kTag.IntValue0 = iPower;
         kTag.StrValue0 = m_strCostPower;
         txtCost.StrValue = class'XComLocalizer'.static.ExpandString(m_strCostLabel);
         txtCost.iState = eUIState_Warning;
 
-        if (-iPower > GetResource(eResource_Power) && !bFreeBuild)
+        if (iPower > GetResource(eResource_Power) && !bFreeBuild)
         {
             bCanAfford = false;
             txtCost.iState = eUIState_Bad;
@@ -130,54 +158,124 @@ function bool GetFacilityCostSummary(out TCostSummary kCostSummary, EFacilityTyp
         kCostSummary.arrRequirements.AddItem(txtCost);
     }
 
-    if (kCost.iStaffTypeReq != eStaff_None && !bFreeBuild)
+    if (!bFreeBuild)
     {
-        txtCost.StrValue = m_strLabelRequires;
-        txtCost.iState = eUIState_Warning;
-
-        if (kCost.iStaffTypeReq == eStaff_Soldier)
+        for (Index = 0; Index < kCost.arrStaffRequirements.Length; Index++)
         {
-            kTag.IntValue0 = kCost.iStaffNumReq;
-            txtCost.StrValue = class'XComLocalizer'.static.ExpandString(m_strCostSoldier);
+            txtCost.StrValue = m_strLabelRequires;
+            txtCost.iState = eUIState_Warning;
 
-            if (BARRACKS().m_iHighestRank < kCost.iStaffNumReq)
+            if (kCost.arrStaffRequirements[Index].StaffType == 'Soldier')
             {
-                bCanAfford = false;
-                txtCost.iState = eUIState_Bad;
-                kCostSummary.strHelp = m_strErrInsufficientExperience;
-            }
-        }
-        else if (kCost.iStaffTypeReq == eStaff_Scientist)
-        {
-            kTag.IntValue0 = kCost.iStaffNumReq;
-            kTag.StrValue0 = m_strCostScientists;
-            txtCost.StrValue = class'XComLocalizer'.static.ExpandString(m_strCostLabel);
+                kTag.IntValue0 = kCost.arrStaffRequirements[Index].NumRequired;
+                txtCost.StrValue = class'XComLocalizer'.static.ExpandString(m_strCostSoldier);
 
-            if (GetResource(eResource_Scientists) < kCost.iStaffNumReq)
+                // TODO: using this to represent highest rank instead of number of soldiers is inconsistent
+                // and confusing with how engineers and scientists are used
+                if (BARRACKS().m_iHighestRank < kCost.arrStaffRequirements[Index].NumRequired)
+                {
+                    bCanAfford = false;
+                    txtCost.iState = eUIState_Bad;
+                    kCostSummary.strHelp = m_strErrInsufficientExperience;
+                }
+            }
+            else if (kCost.arrStaffRequirements[Index].StaffType == 'Scientist')
             {
-                bCanAfford = false;
-                txtCost.iState = eUIState_Bad;
-                kCostSummary.strHelp = m_strErrInsufficientScientists;
-            }
-        }
-        else if (kCost.iStaffTypeReq == eStaff_Engineer)
-        {
-            kTag.IntValue0 = kCost.iStaffNumReq;
-            kTag.StrValue0 = m_strCostEngineers;
-            txtCost.StrValue = class'XComLocalizer'.static.ExpandString(m_strCostLabel);
+                kTag.IntValue0 = kCost.arrStaffRequirements[Index].NumRequired;
+                kTag.StrValue0 = m_strCostScientists;
+                txtCost.StrValue = class'XComLocalizer'.static.ExpandString(m_strCostLabel);
 
-            if (m_iNumEngineers < kCost.iStaffNumReq)
+                if (GetResource(eResource_Scientists) < kCost.arrStaffRequirements[Index].NumRequired)
+                {
+                    bCanAfford = false;
+                    txtCost.iState = eUIState_Bad;
+                    kCostSummary.strHelp = m_strErrInsufficientScientists;
+                }
+            }
+            else if (kCost.arrStaffRequirements[Index].StaffType == 'Engineer')
             {
-                bCanAfford = false;
-                txtCost.iState = eUIState_Bad;
-                kCostSummary.strHelp = m_strErrInsufficientEngineers;
-            }
-        }
+                kTag.IntValue0 = kCost.arrStaffRequirements[Index].NumRequired;
+                kTag.StrValue0 = m_strCostEngineers;
+                txtCost.StrValue = class'XComLocalizer'.static.ExpandString(m_strCostLabel);
 
-        kCostSummary.arrRequirements.AddItem(txtCost);
+                if (m_iNumEngineers < kCost.arrStaffRequirements[Index].NumRequired)
+                {
+                    bCanAfford = false;
+                    txtCost.iState = eUIState_Bad;
+                    kCostSummary.strHelp = m_strErrInsufficientEngineers;
+                }
+            }
+
+            kCostSummary.arrRequirements.AddItem(txtCost);
+        }
     }
 
     return LWCE_GetCostSummary(kCostSummary, kCost, true) && bCanAfford;
+}
+
+function GetFacilityEvents(out array<THQEvent> arrEvents)
+{
+    `LWCE_LOG_DEPRECATED_CLS(GetFacilityEvents);
+}
+
+function LWCE_GetFacilityEvents(out array<LWCE_THQEvent> arrEvents)
+{
+    local int iFacilityProject, iEvent;
+    local LWCE_THQEvent kBlankEvent, kEvent;
+    local bool bAdded;
+
+    for (iFacilityProject = 0; iFacilityProject < m_arrCEFacilityProjects.Length; iFacilityProject++)
+    {
+        kEvent = kBlankEvent;
+        kEvent.EventType = 'Facility';
+        kEvent.iHours = m_arrCEFacilityProjects[iFacilityProject].iHoursLeft;
+
+        if (m_arrCEFacilityProjects[iFacilityProject].bRush)
+        {
+            kEvent.iHours *= 0.50;
+        }
+
+        kEvent.kData = class'LWCEDataContainer'.static.NewName('THQEventData', m_arrCEFacilityProjects[iFacilityProject].FacilityName);
+
+        bAdded = false;
+
+        for (iEvent = 0; iEvent < arrEvents.Length; iEvent++)
+        {
+            if (arrEvents[iEvent].iHours > kEvent.iHours)
+            {
+                arrEvents.InsertItem(iEvent, kEvent);
+                bAdded = true;
+                break;
+            }
+        }
+
+        if (!bAdded)
+        {
+            arrEvents.AddItem(kEvent);
+        }
+    }
+}
+
+function TFacilityProject GetFacilityProject(int X, int Y)
+{
+    local TFacilityProject kProject;
+
+    `LWCE_LOG_DEPRECATED_CLS(GetFacilityProject);
+
+    return kProject;
+}
+
+function LWCE_TFacilityProject LWCE_GetFacilityProject(int X, int Y)
+{
+    local int iProject;
+
+    for (iProject = 0; iProject < m_arrCEFacilityProjects.Length; iProject++)
+    {
+        if (m_arrCEFacilityProjects[iProject].X == X && m_arrCEFacilityProjects[iProject].Y == Y)
+        {
+            return m_arrCEFacilityProjects[iProject];
+        }
+    }
 }
 
 function TProjectCost GetFacilityProjectCost(EFacilityType eFacility, int X, int Y, bool bRushFacility)
@@ -189,48 +287,17 @@ function TProjectCost GetFacilityProjectCost(EFacilityType eFacility, int X, int
     return kCost;
 }
 
-function LWCE_TProjectCost LWCE_GetFacilityProjectCost(EFacilityType eFacility, int X, int Y, bool bRushFacility)
+function LWCE_TProjectCost LWCE_GetFacilityProjectCost(name FacilityName, int X, int Y, bool bRushFacility)
 {
     local LWCE_TProjectCost kProjectCost;
-    local LWCE_TItemQuantity kItemQuantity;
-    local TFacility kFacility;
+    local LWCEFacilityTemplate kFacility;
 
-    kFacility = Facility(eFacility);
-    kProjectCost.kCost.iCash = kFacility.iCash;
-    kProjectCost.kCost.iElerium = kFacility.iElerium;
-    kProjectCost.kCost.iAlloys = kFacility.iAlloys;
+    kFacility = `LWCE_FACILITY(FacilityName);
+    kProjectCost.kCost = kFacility.GetCost(bRushFacility);
+    kProjectCost.arrStaffRequirements = kFacility.GetStaffRequirements();
 
-    if (eFacility == eFacility_EleriumGenerator)
-    {
-        kItemQuantity.ItemName = 'Item_UFOPowerSource';
-        kItemQuantity.iQuantity = ItemAmount(2);
-        kProjectCost.kCost.arrItems.AddItem(kItemQuantity);
-    }
-    else if (eFacility == eFacility_LargeRadar)
-    {
-        kItemQuantity.ItemName = 'Item_UFOFlightComputer';
-        kItemQuantity.iQuantity = ItemAmount(2);
-        kProjectCost.kCost.arrItems.AddItem(kItemQuantity);
-    }
-    else if (kFacility.iItemReq == eItem_HyperwaveBeacon)
-    {
-        kItemQuantity.ItemName = 'Item_HyperwaveBeacon';
-        kItemQuantity.iQuantity = 1;
-        kProjectCost.kCost.arrItems.AddItem(kItemQuantity);
-    }
-    else if (kFacility.iItemReq == eItem_PsiLink)
-    {
-        kItemQuantity.ItemName = 'Item_EtherealDevice';
-        kItemQuantity.iQuantity = 1;
-        kProjectCost.kCost.arrItems.AddItem(kItemQuantity);
-    }
-    else if (kFacility.iItemReq != 0)
-    {
-        kItemQuantity.ItemName = class'LWCE_XGItemTree'.static.ItemNameFromBaseID(kFacility.iItemReq);
-        kItemQuantity.iQuantity = ItemAmount(1);
-        kProjectCost.kCost.arrItems.AddItem(kItemQuantity);
-    }
-
+// TODO move this into facility dataset and delete
+/*
     if (eFacility == eFacility_Workshop)
     {
         kProjectCost.iStaffTypeReq = eStaff_Engineer;
@@ -246,63 +313,92 @@ function LWCE_TProjectCost LWCE_GetFacilityProjectCost(EFacilityType eFacility, 
         kProjectCost.iStaffTypeReq = eStaff_Engineer;
         kProjectCost.iStaffNumReq = ITEMTREE().GetEngineersRequiredForNextUplink(eFacility);
     }
-
-    if (bRushFacility)
-    {
-        kProjectCost.kCost.iCash *= 1.50;
-        kProjectCost.kCost.iElerium *= 1.50;
-        kProjectCost.kCost.iAlloys *= 1.50;
-        kProjectCost.kCost.iMeld += 20;
-    }
+ */
 
     return kProjectCost;
 }
 
-function OnFacilityCompleted(int iProject)
+function int GetNumFacilitiesBuilding(EFacilityType eFacility)
 {
-    if (m_arrFacilityProjects[iProject].bNotify)
-    {
-        m_arrOldRebates.AddItem(m_arrFacilityProjects[iProject].kRebate);
-        LWCE_XGGeoscape(GEOSCAPE()).LWCE_Alert(`LWCE_ALERT('NewFacilityBuilt').AddInt(m_arrFacilityProjects[iProject].eFacility).AddInt(m_arrOldRebates.Length - 1).Build());
-    }
-    else
-    {
-        PRES().Notify(eGA_NewFacilityBuilt, m_arrFacilityProjects[iProject].eFacility);
+    `LWCE_LOG_DEPRECATED_CLS(GetNumFacilitiesBuilding);
 
-        if (HasRebate())
+    return -1;
+}
+
+function int LWCE_GetNumFacilitiesBuilding(name FacilityName)
+{
+    local int iProject, iNumFacilities;
+
+    for (iProject = 0; iProject < m_arrCEFacilityProjects.Length; iProject++)
+    {
+        if (m_arrCEFacilityProjects[iProject].FacilityName == FacilityName)
         {
-            PRES().Notify(eGA_WorkshopRebate, m_arrFacilityProjects[iProject].kRebate.iCash, m_arrFacilityProjects[iProject].kRebate.iAlloys, m_arrFacilityProjects[iProject].kRebate.iElerium);
+            iNumFacilities++;
         }
     }
 
-    Base().PerformAction(eBCS_BuildFacility, m_arrFacilityProjects[iProject].X, m_arrFacilityProjects[iProject].Y, m_arrFacilityProjects[iProject].eFacility);
+    return iNumFacilities;
+}
 
-    switch (m_arrFacilityProjects[iProject].eFacility)
+function ModifyFacilityProject(TFacilityProject kProject)
+{
+    `LWCE_LOG_DEPRECATED_CLS(ModifyFacilityProject);
+}
+
+function LWCE_ModifyFacilityProject(LWCE_TFacilityProject kProject)
+{
+    m_arrCEFacilityProjects[kProject.iIndex].bRush = kProject.bRush;
+    LWCE_PayCost(LWCE_GetFacilityProjectCost(m_arrCEFacilityProjects[kProject.iIndex].FacilityName, m_arrCEFacilityProjects[kProject.iIndex].X, m_arrCEFacilityProjects[kProject.iIndex].Y, kProject.bRush));
+}
+
+function OnFacilityCompleted(int iProject)
+{
+    local LWCEDataContainer kData;
+
+    if (m_arrCEFacilityProjects[iProject].bNotify)
     {
-        case eFacility_ScienceLab:
+        m_arrCEOldRebates.AddItem(m_arrCEFacilityProjects[iProject].kRebate);
+        LWCE_XGGeoscape(GEOSCAPE()).LWCE_Alert(`LWCE_ALERT('NewFacilityBuilt').AddName(m_arrCEFacilityProjects[iProject].FacilityName).AddInt(m_arrCEOldRebates.Length - 1).Build());
+    }
+    else
+    {
+        kData = class'LWCEDataContainer'.static.NewName('NotifyData', m_arrCEFacilityProjects[iProject].FacilityName);
+        LWCE_XComHQPresentationLayer(PRES()).LWCE_Notify('NewFacilityBuilt', kData);
+
+        if (HasRebate())
+        {
+            PRES().Notify(eGA_WorkshopRebate, m_arrCEFacilityProjects[iProject].kRebate.kCost.iCash, m_arrCEFacilityProjects[iProject].kRebate.kCost.iAlloys, m_arrCEFacilityProjects[iProject].kRebate.kCost.iElerium);
+        }
+    }
+
+    LWCE_XGBase(Base()).LWCE_PerformAction(eBCS_BuildFacility, m_arrCEFacilityProjects[iProject].X, m_arrCEFacilityProjects[iProject].Y, m_arrCEFacilityProjects[iProject].FacilityName);
+
+    switch (m_arrCEFacilityProjects[iProject].FacilityName)
+    {
+        case 'Facility_Laboratory':
             STAT_AddStat(eRecap_LabsBuilt, 1);
             Achieve(AT_Theory);
             LABS().UpdateLabBonus();
             break;
-        case eFacility_PsiLabs:
-        case eFacility_GeneticsLab:
+        case 'Facility_PsiLabs':
+        case 'Facility_GeneticsLab':
             LABS().UpdateLabBonus();
             break;
-        case eFacility_Workshop:
+        case 'Facility_Workshop':
             STAT_AddStat(eRecap_WorkshopsBuilt, 1);
             Achieve(AT_AndPractice);
             break;
-        case eFacility_DeusEx:
+        case 'Facility_GollopChamber':
             STAT_SetStat(eRecap_ObjBuildGollop, Game().GetDays());
             Achieve(AT_OnTheShoulders);
             break;
-        case eFacility_HyperwaveRadar:
+        case 'Facility_HyperwaveRelay':
             STAT_SetStat(eRecap_ObjBuildHyperwave, Game().GetDays());
             Achieve(AT_SeeAllKnowAll);
             break;
     }
 
-    if (m_arrFacilityProjects[iProject].Y >= 4)
+    if (m_arrCEFacilityProjects[iProject].Y >= 4)
     {
         Achieve(AT_DrumsInTheDeep);
     }
@@ -316,6 +412,53 @@ function string RecordFacilityBuilt(EFacilityType FacilityValue)
     `LWCE_LOG_DEPRECATED_NOREPLACE_CLS(RecordFacilityBuilt);
 
     return "";
+}
+
+function RestoreFacilityFunds(int iIndex)
+{
+    local LWCE_TProjectCost kOrigCost;
+
+    if (IsCostPopulated(m_arrCEFacilityProjects[iIndex].kOriginalCost))
+    {
+        kOrigCost = m_arrCEFacilityProjects[iIndex].kOriginalCost;
+    }
+    else
+    {
+        kOrigCost = LWCE_GetFacilityProjectCost(m_arrCEFacilityProjects[iIndex].FacilityName, m_arrCEFacilityProjects[iIndex].X, m_arrCEFacilityProjects[iIndex].Y, m_arrCEFacilityProjects[iIndex].bRush);
+    }
+    
+    LWCE_PayCost(kOrigCost);
+}
+
+function UpdateFacilityProjects()
+{
+    local int iProject, iWorkDone;
+
+    for (iProject = 0; iProject < m_arrCEFacilityProjects.Length; iProject++)
+    {
+        iWorkDone = 1;
+
+        if (m_arrCEFacilityProjects[iProject].bRush)
+        {
+            iWorkDone *= 2;
+        }
+
+        if (m_arrCEFacilityProjects[iProject].iHoursLeft <= 0)
+        {
+            if (GEOSCAPE().IsBusy())
+            {
+                continue;
+            }
+
+            m_arrCEFacilityProjects[iProject].iHoursLeft = 0;
+            OnFacilityCompleted(iProject);
+            RemoveFacilityProject(iProject);
+        }
+        else
+        {
+            m_arrCEFacilityProjects[iProject].iHoursLeft -= iWorkDone;
+        }
+    }
 }
 
 // #endregion
@@ -358,7 +501,9 @@ function LWCE_AddFoundryProjectToQueue(out LWCE_TFoundryProject kProject)
 
 function bool CanAddFoundryProject()
 {
-    return HQ().m_arrBaseFacilities[eFacility_Foundry] > 0;
+    `LWCE_LOG_DEPRECATED_NOREPLACE_CLS(CanAddFoundryProject);
+
+    return false;
 }
 
 function CancelFoundryProject(int iIndex)
@@ -508,8 +653,7 @@ function LWCE_TProjectCost LWCE_GetFoundryProjectCost(name ProjectName, bool bRu
     }
 
     kProjectCost.kCost = kTemplate.GetCost(bRushFoundry);
-    kProjectCost.iStaffTypeReq = eStaff_Engineer;
-    kProjectCost.iStaffNumReq = kTemplate.iEngineers;
+    kProjectCost.arrStaffRequirements.AddItem(`LWCE_UTILS.StaffRequirement('Engineer', kTemplate.iEngineers));
 
     return kProjectCost;
 }
@@ -934,14 +1078,15 @@ function bool LWCE_GetCostSummary(out TCostSummary kCostSummary, LWCE_TProjectCo
         }
     }
 
-    if (!bOmitStaff && kProjectCost.iStaffNumReq > 0 && !bFreeBuild)
+    if (!bOmitStaff && kProjectCost.arrStaffRequirements.Length > 0 && !bFreeBuild)
     {
-        kTag.IntValue0 = kProjectCost.iStaffNumReq;
+        // TODO: this assumes the requirement is always engineers and they're always in the first index
+        kTag.IntValue0 = kProjectCost.arrStaffRequirements[0].NumRequired;
         kTag.StrValue0 = m_strCostEngineers;
         txtCost.StrValue = class'XComLocalizer'.static.ExpandString(m_strCostLabel);
         txtCost.iState = eUIState_Normal;
 
-        if (GetNumEngineersAvailable() < kProjectCost.iStaffNumReq)
+        if (GetNumEngineersAvailable() < kProjectCost.arrStaffRequirements[0].NumRequired)
         {
             bCanAfford = false;
             txtCost.iState = eUIState_Bad;
@@ -1017,49 +1162,6 @@ function LWCE_GetEvents(out array<LWCE_THQEvent> arrEvents)
     LWCE_GetItemEvents(arrEvents);
     LWCE_GetFacilityEvents(arrEvents);
     LWCE_GetFoundryEvents(arrEvents);
-}
-
-function GetFacilityEvents(out array<THQEvent> arrEvents)
-{
-    `LWCE_LOG_DEPRECATED_CLS(GetFacilityEvents);
-}
-
-function LWCE_GetFacilityEvents(out array<LWCE_THQEvent> arrEvents)
-{
-    local int iFacilityProject, iEvent;
-    local LWCE_THQEvent kBlankEvent, kEvent;
-    local bool bAdded;
-
-    for (iFacilityProject = 0; iFacilityProject < m_arrFacilityProjects.Length; iFacilityProject++)
-    {
-        kEvent = kBlankEvent;
-        kEvent.EventType = 'Facility';
-        kEvent.iHours = m_arrFacilityProjects[iFacilityProject].iHoursLeft;
-
-        if (m_arrFacilityProjects[iFacilityProject].bRush)
-        {
-            kEvent.iHours *= 0.50;
-        }
-
-        kEvent.kData = class'LWCEDataContainer'.static.NewInt('THQEventData', m_arrFacilityProjects[iFacilityProject].eFacility);
-
-        bAdded = false;
-
-        for (iEvent = 0; iEvent < arrEvents.Length; iEvent++)
-        {
-            if (arrEvents[iEvent].iHours > kEvent.iHours)
-            {
-                arrEvents.InsertItem(iEvent, kEvent);
-                bAdded = true;
-                break;
-            }
-        }
-
-        if (!bAdded)
-        {
-            arrEvents.AddItem(kEvent);
-        }
-    }
 }
 
 function GetFoundryEvents(out array<THQEvent> arrEvents)
@@ -1245,8 +1347,7 @@ function LWCE_TProjectCost LWCE_GetItemProjectCost(name ItemName, int iQuantity,
     kItem = `LWCE_ITEM(ItemName);
 
     kProjectCost.kCost = kItem.kCost;
-    kProjectCost.iStaffTypeReq = eStaff_Engineer;
-    kProjectCost.iStaffNumReq = kItem.iEngineers;
+    kProjectCost.arrStaffRequirements.AddItem(`LWCE_UTILS.StaffRequirement('Engineer', kItem.iEngineers));
 
     for (Index = 0; Index < kProjectCost.kCost.arrItems.Length; Index++)
     {
@@ -1265,7 +1366,7 @@ function LWCE_TProjectCost LWCE_GetItemProjectCost(name ItemName, int iQuantity,
         kProjectCost.kCost.iAlloys  *= 1.5;
     }
 
-    // TODO move to template
+    // TODO move to template (and is iBarracksReq ever actually used?)
     switch (ItemName)
     {
         case 'Item_SHIV':
@@ -1301,6 +1402,26 @@ function array<LWCEItemTemplate> LWCE_GetItemsByCategory(name nmCategory, int iT
     {
         return LWCE_XGStorage(STORAGE()).LWCE_GetItemsInCategory(nmCategory, iTransactionType);
     }
+}
+
+function int GetNumShivsOrdered()
+{
+    local LWCE_TItemProject kProject;
+    local int iShivs;
+
+    foreach m_arrCEItemProjects(kProject)
+    {
+        switch (kProject.ItemName)
+        {
+            case 'Item_SHIV':
+            case 'Item_SHIVAlloy':
+            case 'Item_SHIVHover':
+                iShivs += kProject.iQuantityLeft;
+                break;
+        }
+    }
+
+    return iShivs;
 }
 
 function GrantInitialStores()

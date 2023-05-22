@@ -9,6 +9,7 @@ static function array<LWCEDataTemplate> CreateTemplates()
 
     Templates.AddItem(AncientArtifact());
     Templates.AddItem(Cadre());
+    Templates.AddItem(CheyenneMountain());
     Templates.AddItem(ForeignLegion());
     Templates.AddItem(ForTheSakeOfGlory());
     Templates.AddItem(GhostInTheMachine());
@@ -77,6 +78,38 @@ static function Cadre_OnCampaignStart(Object EventData, Object EventSource, Name
         kBarracks.LWCE_CreateSoldier(2, CadreBonus, Rand(36));
         kBarracks.LWCE_CreateSoldier(3, CadreBonus, Rand(36));
         kBarracks.LWCE_CreateSoldier(4, CadreBonus, Rand(36));
+    }
+}
+
+static function LWCEEventListenerTemplate CheyenneMountain()
+{
+    local LWCEEventListenerTemplate Template;
+
+    `CREATE_EVENT_LISTENER_TEMPLATE(Template, 'CheyenneMountain');
+
+    Template.bRegisterInStrategy = true;
+    Template.AddEvent('AfterGenerateBaseTiles', CheyenneMountain_AfterGenerateBaseTiles);
+
+    return Template;
+}
+
+static function CheyenneMountain_AfterGenerateBaseTiles(Object EventData, Object EventSource, Name EventID, Object CallbackData)
+{
+    local int iAccessX, Index;
+    local LWCE_XGBase kBase;
+
+    kBase = LWCE_XGBase(EventSource);
+
+    if (kBase.m_bIsPrimaryBase && kBase.HQ().HasBonus(`LW_HQ_BONUS_ID(CheyenneMountain)) > 0)
+    {
+        iAccessX = kBase.GetAccessX();
+
+        // Set all levels to have an access lift; level 1 is already handled
+        for (Index = 2; Index < kBase.m_iNumTilesHigh; Index++)
+        {
+            kBase.LWCE_SetFacility('Facility_AccessLift', iAccessX, Index);
+            kBase.m_arrCETiles[kBase.TileIndex(iAccessX, Index)].eState = eTileState_Accessible;
+        }
     }
 }
 
