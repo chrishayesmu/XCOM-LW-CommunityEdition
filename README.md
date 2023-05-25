@@ -5,11 +5,11 @@
 * Provide a version of Long War 1.0 with as many bugs fixed as possible.
 * Roll some Quality of Life (QOL) changes into the game without requiring additional mods.
 * Open up Long War's gameplay to configuration via ini files.
-* Expose modding hooks for modders to use when ini changes aren't sufficient.
+* Bring a form of XCOM 2's excellent modding capabilities to XCOM: Enemy Within.
 
 Each of these is explored individually in more depth [below](#project-goals).
 
-Due to this mod's extensive overriding of base game classes, it is unlikely to be compatible with other mods that perform significant modifications. This limitation is why part of the goal of LWCE is to expose modding APIs, allowing fully-featured mods to be built on top of LWCE without conflicting.
+Due to this mod's extensive overriding of base game classes, it is unlikely to be compatible with other mods that perform significant modifications. This limitation is why part of the goal of LWCE is to expose new modding APIs, allowing fully-featured mods to be built on top of LWCE without conflicting.
 
 Want to know more? Check out [the project wiki](https://github.com/chrishayesmu/XCOM-LW-CommunityEdition/wiki/) for developers, or [some screenshots](https://github.com/chrishayesmu/XCOM-LW-CommunityEdition/wiki/Screenshots) to get a glimpse of what we're all about.
 
@@ -56,11 +56,13 @@ Long War has sophisticated logic throughout its various systems, but due to the 
 
 For an example of the types of configuration now possible, take a look at [DefaultLWCEStrategyAI.ini](Config/DefaultLWCEStrategyAI.ini).
 
-## Modding hooks
+## Modding capabilities
 
 Documentation for mod hooks is not yet completed, but will use a similar system as XCOM 2: data templates and events. As much as possible has been made to match the equivalent system in XCOM 2, so that modders who are familiar with those will be more comforatble with LWCE mods.
 
 Mutator-based mods, which were widely used for Enemy Within and Long War 1.0, are **not** supported in LWCE. The sheer scale of how much has been rewritten to make LWCE work means that old mods are very unlikely to be compatible.
+
+In addition to making mods easier to create, they're also much, much easier to install with LWCE. We've managed to make them simply drag-and-drop into a pre-created Mods folder! Someday, we'd even like to extend this to a one-click-install experience similar to XCOM 2's Steam Workshop integration.
 
 # Building LWCE locally
 
