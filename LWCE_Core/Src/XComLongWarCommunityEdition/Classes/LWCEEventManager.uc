@@ -61,6 +61,23 @@ function TriggerEvent(Name EventID, optional Object EventData, optional Object E
         EventDelFn = arrEligibleListeners[Index].EventDelegate;
         EventDelFn(EventData, EventSource, EventID, arrEligibleListeners[Index].CallbackData);
     }
+
+    // When the game world is about to change, unregister everything
+    if (EventID == 'TacticalGameEnding')
+    {
+        UnregisterAllListeners();
+    }
+}
+
+/// <summary>
+/// Immediately unregisters all listeners from the event manager. Should be called when transitioning game worlds,
+/// or else the event manager may hold references to stale Actors and cause the game to crash.
+/// </summary>
+function UnregisterAllListeners()
+{
+    `LWCE_LOG_CLS("Unregistering all event listeners..");
+
+    m_arrListeners.Length = 0;
 }
 
 function UnregisterObjectFromAllEvents(Object SourceObj)

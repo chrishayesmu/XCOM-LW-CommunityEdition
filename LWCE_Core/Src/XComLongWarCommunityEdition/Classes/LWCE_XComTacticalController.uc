@@ -1,5 +1,12 @@
 class LWCE_XComTacticalController extends XComTacticalController;
 
+function DrawDebugLabels(Canvas kCanvas)
+{
+    super.DrawDebugLabels(kCanvas);
+
+    `LWCE_VIS_MGR.DrawDebugLabel(kCanvas);
+}
+
 function InitInputSystem()
 {
     super.InitInputSystem();

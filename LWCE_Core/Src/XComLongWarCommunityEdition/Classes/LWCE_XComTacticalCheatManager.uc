@@ -1,5 +1,7 @@
 class LWCE_XComTacticalCheatManager extends XComTacticalCheatManager;
 
+var bool bDebugVanillaAnims;
+var bool bDebugVisualization;
 var bool bDisplayMovementGrid;
 var bool bUnlimitedMoves;
 
@@ -89,6 +91,16 @@ exec function DebugShotAgainstTarget(optional int iAbilityId = eAbility_ShotStan
     {
         kConsole.OutputTextLine("  Penalty #" $ Index $ ": " $ kInfo.arrCritPenaltyValues[Index] $ " from " $ kInfo.arrCritPenaltyStrings[Index]);
     }
+}
+
+exec function DebugVanillaAnims()
+{
+    bDebugVanillaAnims = !bDebugVanillaAnims;
+}
+
+exec function DebugVisualization()
+{
+    bDebugVisualization = !bDebugVisualization;
 }
 
 exec function DropMan(optional bool bAddToHumanTeam = false)
@@ -184,6 +196,17 @@ exec function GivePenalty(string strName)
     {
         kUnit.AddPenalty(iPenalty);
     }
+}
+
+exec function PlayMovementAnim(name AnimName)
+{
+    local LWCE_XGUnit kUnit;
+
+    kUnit = LWCE_XGUnit(Outer.GetActiveUnit());
+
+    `LWCE_LOG_CLS("Setting movement node anim by name: " $ AnimName);
+    kUnit.m_kPawn.MovementNode.SetActiveChild(6, 0.10);
+    kUnit.m_kPawn.MovementNode.SetAnimByName(AnimName);
 }
 
 exec function PrintCoverInfo()

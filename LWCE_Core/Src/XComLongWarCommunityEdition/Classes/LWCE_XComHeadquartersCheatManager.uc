@@ -245,6 +245,19 @@ exec function ShowAlienStats()
     kConsole.OutputTextLine("XCOM Threat Level: " $ kStrategy.STAT_GetStat(21));
 }
 
+exec function ToggleStrategyHUD()
+{
+    `LWCE_LOG_CLS("ToggleStrategyHUD: b_IsVisible = " $ `LWCE_HQPRES.m_kStrategyHUD.b_IsVisible);
+    if (`LWCE_HQPRES.m_kStrategyHUD.b_IsVisible)
+    {
+        `LWCE_HQPRES.m_kStrategyHUD.Hide();
+    }
+    else
+    {
+        `LWCE_HQPRES.m_kStrategyHUD.Show();
+    }
+}
+
 protected function GiveFoundryTemplate(LWCEFoundryProjectTemplate kTemplate, LWCE_XGFacility_Engineering kEngineering)
 {
     local LWCE_TFoundryProject kProject;
