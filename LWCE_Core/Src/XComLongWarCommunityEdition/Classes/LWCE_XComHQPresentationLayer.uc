@@ -111,8 +111,13 @@ reliable client simulated function LWCE_UIItemUnlock(LWCE_TItemUnlock kUnlock)
 
 reliable client simulated function UIManufactureFacility(EFacilityType eFacility, int X, int Y)
 {
+    `LWCE_LOG_DEPRECATED_CLS(UIManufactureFacility);
+}
+
+reliable client simulated function LWCE_UIManufactureFacility(name FacilityName, int iBaseId, int X, int Y)
+{
     m_kManufacturing = Spawn(class'LWCE_UIManufacturing', self);
-    m_kManufacturing.InitFacility(XComPlayerController(Owner), Get3DMovie(), eFacility, X, Y);
+    LWCE_UIManufacturing(m_kManufacturing).LWCE_InitFacility(XComPlayerController(Owner), Get3DMovie(), FacilityName, iBaseId, X, Y);
     PushState('State_Manufacture');
     CAMLookAtNamedLocation(class'UIManufacturing'.default.m_strCameraTag, 0.0);
 }

@@ -3,7 +3,6 @@ class LWCE_XGObjectiveManager extends XGObjectiveManager;
 function TSubObjective BuildSubObjective(ESubObjective eSubObj)
 {
     local name SubName;
-    local int iSubId;
     local TSubObjective kSub;
     local LWCE_XGStorage kStorage;
 
@@ -11,21 +10,20 @@ function TSubObjective BuildSubObjective(ESubObjective eSubObj)
 
     kSub = TECHTREE().GetSubObjective(eSubObj);
     kSub.eStatus = eObjStatus_NotStarted;
-    iSubId = 0; // Stores a facility, item, or tech ID depending on the objective
 
     switch (eSubObj)
     {
         case eSubObj_BuildAlienContainment:
-            iSubId = 13; // Facility ID
+            SubName = 'Facility_AlienContainment';
             break;
         case eSubObj_BuildHyperwaveUplink:
-            iSubId = 18; // Facility ID
+            SubName = 'Facility_HyperwaveRelay';
             break;
         case eSubObj_BuildPsiLabs:
-            iSubId = 17; // Facility ID
+            SubName = 'Facility_PsionicLabs';
             break;
         case eSubObj_BuildGollopChamber:
-            iSubId = 19; // Facility ID
+            SubName = 'Facility_GollopChamber';
             break;
         case eSubObj_BuildArcThrower:
             SubName = 'Tech_Xenogenetics';
@@ -65,11 +63,11 @@ function TSubObjective BuildSubObjective(ESubObjective eSubObj)
         case eSubObj_BuildHyperwaveUplink:
         case eSubObj_BuildPsiLabs:
         case eSubObj_BuildGollopChamber:
-            if (HQ().HasFacility(iSubId))
+            if (LWCE_XGHeadquarters(HQ()).LWCE_HasFacility(SubName))
             {
                 kSub.eStatus = eObjStatus_Complete;
             }
-            else if (ENGINEERING().IsBuildingFacility(EFacilityType(iSubId)))
+            else if (LWCE_XGFacility_Engineering(ENGINEERING()).LWCE_IsBuildingFacility(SubName))
             {
                 kSub.eStatus = eObjStatus_InProgress;
             }
@@ -124,7 +122,7 @@ function TSubObjective BuildSubObjective(ESubObjective eSubObj)
 
             break;
         case eSubObj_CaptureLiveAlien:
-            if (STORAGE().HasAlienCaptive() || `LWCE_LABS.HasInterrogatedCaptive())
+            if (kStorage.HasAlienCaptive() || `LWCE_LABS.HasInterrogatedCaptive())
             {
                 kSub.eStatus = eObjStatus_Complete;
             }
@@ -149,7 +147,7 @@ function TSubObjective BuildSubObjective(ESubObjective eSubObj)
 
             break;
         case eSubObj_AssaultAlienBase:
-            if (STORAGE().EverHadItem(eItem_HyperwaveBeacon))
+            if (kStorage.LWCE_EverHadItem('Item_HyperwaveBeacon'))
             {
                 kSub.eStatus = eObjStatus_Complete;
             }
@@ -167,7 +165,7 @@ function TSubObjective BuildSubObjective(ESubObjective eSubObj)
 
             break;
         case eSubObj_ShootDownOverseer:
-            if (GEOSCAPE().HasOverseerCrash() || STORAGE().EverHadItem(eItem_PsiLink))
+            if (GEOSCAPE().HasOverseerCrash() || kStorage.LWCE_EverHadItem('Item_EtherealDevice'))
             {
                 kSub.eStatus = eObjStatus_Complete;
             }

@@ -1,8 +1,10 @@
 class LWCE_XGManufacturingUI extends XGManufacturingUI
     dependson(LWCETypes);
 
-var LWCE_TItemProject m_kCEItemProject;
+var int m_iTargetBaseId;
+var LWCE_TFacilityProject m_kCEFacilityProject;
 var LWCE_TFoundryProject m_kCEFoundryProject;
+var LWCE_TItemProject m_kCEItemProject;
 
 function DirectInitialize()
 {
@@ -76,9 +78,9 @@ function DirectInitialize()
     }
     else
     {
-        if (m_kFProject.iIndex != -1)
+        if (m_kCEFacilityProject.iIndex != -1)
         {
-            m_kFProject = kEngineering.GetFacilityProject(m_kFProject.X, m_kFProject.Y);
+            m_kCEFacilityProject = kEngineering.LWCE_GetFacilityProject(m_iTargetBaseId, m_kCEFacilityProject.X, m_kCEFacilityProject.Y);
             m_bCanCancel = true;
             m_bCanRush = false;
             ReleaseFacilityFunds();
@@ -94,14 +96,14 @@ function DirectInitialize()
 
             if (bInstaBuild)
             {
-                m_kFProject.iHoursLeft = 0;
+                m_kCEFacilityProject.iHoursLeft = 0;
             }
             else
             {
-                m_kFProject.iHoursLeft = Facility(m_kFProject.eFacility).iTime;
+                m_kCEFacilityProject.iHoursLeft = `LWCE_FACILITY(m_kCEFacilityProject.FacilityName).GetBuildTimeInHours(/* bRush */ false);
             }
 
-            m_kFProject.bNotify = true;
+            m_kCEFacilityProject.bNotify = true;
         }
 
         iView = eManView_Facility;
@@ -118,7 +120,7 @@ function bool IsNewProject()
         case eManView_Item:
             return m_kCEItemProject.iIndex == INDEX_NONE;
         case eManView_Facility:
-            return m_kFProject.iIndex == INDEX_NONE;
+            return m_kCEFacilityProject.iIndex == INDEX_NONE;
         case eManView_Foundry:
             return m_kCEFoundryProject.iIndex == INDEX_NONE;
         default:
@@ -142,7 +144,7 @@ function OnCancelOrder()
             if (!IsNewProject())
             {
                 RestoreFacilityFunds();
-                ENGINEERING().CancelFacilityProject(m_kFProject.X, m_kFProject.Y);
+                ENGINEERING().CancelFacilityProject(m_kCEFacilityProject.X, m_kCEFacilityProject.Y);
             }
 
             break;
@@ -238,12 +240,12 @@ function OnSubmitOrder()
             case eManView_Facility:
                 if (IsNewProject())
                 {
-                    kEngineering.AddFacilityProject(m_kFProject);
+                    kEngineering.LWCE_AddFacilityProject(m_kCEFacilityProject);
                     kEngineering.m_bFacilityBuilt = true;
                 }
                 else
                 {
-                    kEngineering.ModifyFacilityProject(m_kFProject);
+                    kEngineering.LWCE_ModifyFacilityProject(m_kCEFacilityProject);
                 }
 
                 Sound().PlaySFX(SNDLIB().SFX_UI_FacilityStarted);
@@ -280,7 +282,7 @@ function OnToggleNotify()
             m_kCEItemProject.bNotify = !m_kCEItemProject.bNotify;
             break;
         case eManView_Facility:
-            m_kFProject.bNotify = !m_kFProject.bNotify;
+            m_kCEFacilityProject.bNotify = !m_kCEFacilityProject.bNotify;
             break;
         case eManView_Foundry:
             m_kCEFoundryProject.bNotify = !m_kCEFoundryProject.bNotify;
@@ -310,9 +312,9 @@ function OnToggleRush()
 
                 break;
             case eManView_Facility:
-                m_kFProject.bRush = !m_kFProject.bRush;
+                m_kCEFacilityProject.bRush = !m_kCEFacilityProject.bRush;
 
-                if (m_kFProject.bRush)
+                if (m_kCEFacilityProject.bRush)
                 {
                     PlaySmallOpenSound();
                 }
@@ -345,6 +347,11 @@ function OnToggleRush()
     }
 }
 
+function ReleaseFacilityFunds()
+{
+    LWCE_XGFacility_Engineering(ENGINEERING()).LWCE_RefundCost(m_kCEFacilityProject.kOriginalCost);
+}
+
 function ReleaseFoundryFunds()
 {
     local LWCE_XGFacility_Engineering kEngineering;
@@ -374,6 +381,14 @@ function ReleaseItemFunds()
     else
     {
         kEngineering.LWCE_RefundCost(kEngineering.LWCE_GetItemProjectCost(m_kCEItemProject.ItemName, m_kCEItemProject.iQuantityLeft, m_kCEItemProject.bRush));
+    }
+}
+
+function RestoreFacilityFunds()
+{
+    if (m_kCEFacilityProject.iIndex != -1)
+    {
+        ENGINEERING().RestoreFacilityFunds(m_kCEFacilityProject.iIndex);
     }
 }
 
@@ -435,6 +450,81 @@ function UpdateHeader()
 
     strLabel = GetResourceLabel(eResource_Power) $ ":" @ GetResourceString(eResource_Power);
     kHUD.AddResource(class'UIUtilities'.static.GetHTMLColoredText(strLabel, GetResourceUIState(eResource_Power)));
+}
+
+function UpdateManufactureFacility()
+{
+    local TManWidget kWidget;
+    local LWCE_XGFacility_Engineering kEngineering;
+    local LWCEFacilityTemplate kFacility;
+    local XGParamTag kTag;
+
+    if (m_kCEFacilityProject.FacilityName == '')
+    {
+        return;
+    }
+
+    kEngineering = LWCE_XGFacility_Engineering(ENGINEERING());
+    kFacility = `LWCE_FACILITY(m_kCEFacilityProject.FacilityName);
+    kTag = XGParamTag(XComEngine(class'Engine'.static.GetEngine()).LocalizeContext.FindTag("XGParam"));
+
+    kWidget.txtTitle.StrValue = kFacility.strName;
+    kWidget.txtTitle.iState = eUIState_Warning;
+
+    kWidget.imgItem.strPath = kFacility.ImagePath;
+
+    kWidget.txtItemInfoButton.iButton = 6;
+    kWidget.txtItemInfoButton.StrValue = m_strLabelFacilityInfo;
+
+    kTag.IntValue0 = kEngineering.LWCE_GetFacilityCounter(m_kCEFacilityProject);
+    kWidget.txtProjDuration.strLabel = m_strLabelTimeToBuild;
+    kWidget.txtProjDuration.StrValue = class'XComLocalizer'.static.ExpandStringByTag(m_strETADays, kTag);
+    kWidget.txtProjDuration.iState = eUIState_Warning;
+
+    kWidget.txtResourcesLabel.StrValue = m_strLabelProjectCost;
+    kWidget.txtResourcesLabel.iState = eUIState_Warning;
+
+    m_bCanAfford = kEngineering.LWCE_GetFacilityCostSummary(kWidget.kCost, m_kCEFacilityProject.FacilityName, m_kCEFacilityProject.X, m_kCEFacilityProject.Y, m_kCEFacilityProject.bRush);
+
+    if (!m_bCanAfford)
+    {
+        if (m_kCEFacilityProject.FacilityName != 'Facility_AccessLift')
+        {
+            kWidget.txtProblem.StrValue = kWidget.kCost.strHelp;
+        }
+
+        kWidget.txtProblem.iState = eUIState_Bad;
+        kWidget.txtProjDuration.iState = eUIState_Bad;
+        kWidget.txtResourcesLabel.iState = eUIState_Bad;
+    }
+
+    if (m_bCanRush)
+    {
+        kWidget.txtNotifyButton.iButton = 3;
+        kWidget.txtNotifyButton.StrValue = m_strLabelRushBuild;
+
+        if (m_kCEFacilityProject.bRush)
+        {
+            kWidget.txtNotifyButton.StrValue @= m_strLabelYES;
+            kWidget.txtNotifyButton.iState = eUIState_Warning;
+        }
+        else
+        {
+            kWidget.txtNotifyButton.StrValue @= m_strLabelNO;
+            kWidget.txtNotifyButton.iState = eUIState_Normal;
+        }
+    }
+
+    kWidget.txtNotesLabel.StrValue = m_strLabelNotes;
+    kWidget.txtNotesLabel.iState = eUIState_Normal;
+
+    kTag.StrValue0 = ConvertCashToString(kFacility.GetMonthlyCost());
+    kWidget.txtNotes.StrValue @= class'XComLocalizer'.static.ExpandStringByTag(m_strNoteMaintenanceCost, kTag);
+    kWidget.txtNotes.iState = eUIState_Normal;
+
+    kWidget.arrButtons.Add(4);
+    UpdateManButtons(kWidget);
+    m_kWidget = kWidget;
 }
 
 function UpdateManufactureFoundry()

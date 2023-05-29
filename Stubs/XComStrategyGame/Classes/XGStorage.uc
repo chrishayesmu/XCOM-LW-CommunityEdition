@@ -38,6 +38,7 @@ function DamageItem(EItemType eItem, optional int iQuantity){}
 function RepairItem(EItemType eItem, optional int iQuantity){}
 function int GetNumDamagedItems(EItemType eItem){}
 function array<EItemType> GetCaptives(){}
+function int GetNumCaptives(){}
 function KillTheCaptives(){}
 function RemoveLoadout(XGStrategySoldier kSoldier){}
 function ReleaseLoadout(XGStrategySoldier kSoldier){}

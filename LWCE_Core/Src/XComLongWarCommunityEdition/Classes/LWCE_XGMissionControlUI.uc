@@ -133,7 +133,7 @@ function BuildEventOptions()
                 kOption.EventType = 'Facility';
                 kOption.iPriority = 3;
                 kOption.imgOption.iImage = eImage_OldManufacture;
-                kOption.txtOption.StrValue = Facility(m_kCEEvents.arrEvents[iEvent].kData.Data[0].I).strName;
+                kOption.txtOption.StrValue = `LWCE_FACILITY(m_kCEEvents.arrEvents[iEvent].kData.Data[0].Nm).strName;
                 kOption.txtDays.StrValue = string(iDays);
                 kOption.clrOption = MakeColor(100, 100, 100, byte(175 / 3));
                 break;
@@ -878,9 +878,11 @@ event Tick(float fDeltaT)
 
 function UpdateAlert()
 {
+    local LWCEFacilityTemplate kFacility;
     local LWCEFoundryProjectTemplate kFoundryTech;
     local LWCEItemTemplate kItem;
     local LWCETechTemplate kTech;
+    local LWCE_XGHeadquarters kHQ;
     local LWCE_TGeoscapeAlert kGeoAlert;
     local LWCE_TMCAlert kAlert;
     local TLabeledText txtLabel;
@@ -893,12 +895,14 @@ function UpdateAlert()
     local XGParamTag kTag;
     local XGCountryTag kCountryTag;
     local XGStrategySoldier kSoldier;
+    local string strNarrative;
 
     if (!GEOSCAPE().HasAlerts())
     {
         return;
     }
 
+    kHQ = LWCE_XGHeadquarters(HQ());
     kGeoAlert = LWCE_XGGeoscape(GEOSCAPE()).LWCE_GetTopAlert();
     kTag = XGParamTag(XComEngine(class'Engine'.static.GetEngine()).LocalizeContext.FindTag("XGParam"));
     kCountryTag = new class'XGCountryTag';
@@ -1343,7 +1347,7 @@ function UpdateAlert()
             {
                 txtLabel.StrValue = string(kGeoAlert.kData.Data[2].I);
 
-                if ((GetLanguage() == "KOR") || GetLanguage() == "JPN")
+                if (GetLanguage() == "KOR" || GetLanguage() == "JPN")
                 {
                     txtLabel.StrValue $= class'UIUtilities'.static.GetHoursString(kGeoAlert.kData.Data[2].I + kGeoAlert.kData.Data[3].I);
                 }
@@ -1785,23 +1789,27 @@ function UpdateAlert()
 
             break;
         case 'NewFacilityBuilt':
-            Sound().PlaySFX(SNDLIB().SFX_Alert_FacilityComplete);
-            FacilityNarrative(EFacilityType(kGeoAlert.kData.Data[0].I));
+            kFacility = `LWCE_FACILITY(kGeoAlert.kData.Data[0].Nm);
 
-            if (kGeoAlert.kData.Data[0].I != eFacility_AccessLift)
+            Sound().PlaySFX(SNDLIB().SFX_Alert_FacilityComplete);
+
+            strNarrative = kFacility.strPostBuildNarrative != "" ? kFacility.strPostBuildNarrative : "NarrativeMoment.RoboHQ_NewFacility";
+            Narrative(XComNarrativeMoment(DynamicLoadObject(strNarrative, class'XComNarrativeMoment')));
+
+            if (kFacility.strBinkReveal != "")
             {
-                if (HQ().m_arrFacilityBinks[kGeoAlert.kData.Data[0].I] == 0)
+                if (kHQ.m_arrCEFacilityBinksPlayed.Find(kFacility.GetFacilityName()) == INDEX_NONE)
                 {
-                    HQ().m_arrFacilityBinks[kGeoAlert.kData.Data[0].I] = 1;
-                    PRES().PlayCinematic(eCinematic_FacilityReward, kGeoAlert.kData.Data[0].I);
+                    kHQ.m_arrCEFacilityBinksPlayed.AddItem(kFacility.GetFacilityName());
+                    PRES().UIPlayMovie(kFacility.strBinkReveal, /* bWait */ true);
                 }
             }
 
-            kAlert.txtTitle.StrValue = Facility(kGeoAlert.kData.Data[0].I).strName;
+            kAlert.txtTitle.StrValue = kFacility.strName;
             kAlert.txtTitle.iState = eUIState_Good;
-            kAlert.imgAlert.iImage = Facility(kGeoAlert.kData.Data[0].I).iImage;
+            kAlert.imgAlert.strPath = kFacility.ImageLabel;
 
-            kTag.StrValue0 = Facility(kGeoAlert.kData.Data[0].I).strName;
+            kTag.StrValue0 = kFacility.strName;
             txtTemp.StrValue = class'XComLocalizer'.static.ExpandString(m_strLabelConstructItemFacilityComplete);
             txtTemp.iState = eUIState_Highlight;
             kAlert.arrText.AddItem(txtTemp);
@@ -2076,6 +2084,7 @@ function UpdateView()
 {
     local XGShip_UFO kUFO;
     local XGMission kMission;
+    local LWCE_XGBase kBase;
     local LWCE_XGGeoscape kGeoscape;
     local LWCE_TGeoscapeAlert kGeoAlert;
 
@@ -2172,7 +2181,8 @@ function UpdateView()
                         case eShip_UFOEthereal:
                             if (!HQ().m_kMC.m_bDetectedOverseer)
                             {
-                                PRES().UINarrative(`XComNarrativeMoment("MCOverseer"), none, PostOverseerMatinee,, HQ().m_kBase.GetFacility3DLocation(eFacility_HyperwaveRadar));
+                                kBase = LWCE_XGBase(HQ().m_kBase);
+                                PRES().UINarrative(`XComNarrativeMoment("MCOverseer"), none, PostOverseerMatinee,, kBase.LWCE_GetFacility3DLocation('Facility_HyperwaveRelay'));
                                 Narrative(`XComNarrativeMoment("HyperwaveBeaconActivated_LeadOut_CE"));
                                 Narrative(`XComNarrativeMoment("HyperwaveBeaconActivated_LeadOut_CS"));
                                 HQ().m_kMC.m_bDetectedOverseer = true;

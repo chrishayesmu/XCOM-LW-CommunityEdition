@@ -1,10 +1,22 @@
 class LWCE_XGFacility_Engineering extends XGFacility_Engineering
     dependson(LWCETypes, LWCE_XGMissionControlUI);
 
+struct LWCE_TConstructionProject
+{
+    var int iProjectType;
+    var int iHoursLeft;
+    var int iBaseId; // Which base this project is being built in
+    var int iIndex;
+    var int X;
+    var int Y;
+    var LWCE_TProjectCost kOriginalCost;
+};
+
 struct LWCE_TFacilityProject
 {
     var name FacilityName;
     var int iHoursLeft;
+    var int iBaseId; // Which base this facility is being built in
     var bool bNotify;
     var bool bRush;
     var int X;
@@ -30,6 +42,7 @@ struct LWCE_TFoundryProject
 
 struct CheckpointRecord_LWCE_XGFacility_Engineering extends CheckpointRecord_XGFacility_Engineering
 {
+    var array<LWCE_TConstructionProject> m_arrCEConstructionProjects;
     var array<LWCE_TFacilityProject> m_arrCEFacilityProjects;
     var array<LWCE_TFoundryProject> m_arrCEFoundryProjects;
     var array<LWCE_TItemProject> m_arrCEItemProjects;
@@ -37,6 +50,7 @@ struct CheckpointRecord_LWCE_XGFacility_Engineering extends CheckpointRecord_XGF
     var array<LWCE_TProjectCost> m_arrCEOldRebates;
 };
 
+var array<LWCE_TConstructionProject> m_arrCEConstructionProjects;
 var array<LWCE_TFacilityProject> m_arrCEFacilityProjects;
 var array<LWCE_TFoundryProject> m_arrCEFoundryProjects;
 var array<LWCE_TItemProject> m_arrCEItemProjects;
@@ -77,6 +91,61 @@ function InitNewGame()
 
 // #region Functions related to facilities and construction
 
+function AddConstructionProject(int iProject, int X, int Y)
+{
+    `LWCE_LOG_DEPRECATED_CLS(AddConstructionProject);
+}
+
+function LWCE_AddConstructionProject(int iProject, int iBaseId, int X, int Y)
+{
+    local LWCE_TConstructionProject kProject;
+    local LWCE_TProjectCost kProjectCost;
+    local bool bInstaBuild, bFreeBuild;
+
+    bInstaBuild = false;
+    bFreeBuild = false;
+
+    if (XComCheatManager(GetALocalPlayerController().CheatManager) != none)
+    {
+        bInstaBuild = XComCheatManager(GetALocalPlayerController().CheatManager).m_bStrategyAllFacilitiesInstaBuild;
+        bFreeBuild = XComCheatManager(GetALocalPlayerController().CheatManager).m_bStrategyAllFacilitiesFree;
+    }
+
+    if (bInstaBuild)
+    {
+        kProject.iHoursLeft = 0;
+    }
+    else if (iProject == eBCS_Excavate)
+    {
+        kProject.iHoursLeft = 24 * class'XGTacticalGameCore'.default.BASE_EXCAVATE_DAYS;
+    }
+    else if (iProject == eBCS_RemoveFacility)
+    {
+        kProject.iHoursLeft = 0;
+    }
+
+    kProject.iProjectType = iProject;
+    kProject.iBaseId = iBaseId;
+    kProject.iIndex = m_arrCEConstructionProjects.Length;
+    kProject.X = X;
+    kProject.Y = Y;
+
+    if (!bFreeBuild)
+    {
+        kProjectCost = LWCE_GetConstructionProjectCost(kProject.iProjectType, iBaseId, kProject.X, kProject.Y);
+        kProject.kOriginalCost = kProjectCost;
+
+        LWCE_PayCost(kProjectCost);
+    }
+
+    m_arrCEConstructionProjects.AddItem(kProject);
+
+    if (bInstaBuild || kProject.iHoursLeft == 0)
+    {
+        UpdateConstructionProjects();
+    }
+}
+
 function AddFacilityProject(out TFacilityProject kProject)
 {
     `LWCE_LOG_DEPRECATED_CLS(AddFacilityProject);
@@ -84,6 +153,7 @@ function AddFacilityProject(out TFacilityProject kProject)
 
 function LWCE_AddFacilityProject(out LWCE_TFacilityProject kProject)
 {
+    local LWCE_XGBase kBase;
     local bool bInstaBuild, bFreeBuild;
 
     bInstaBuild = false;
@@ -96,20 +166,160 @@ function LWCE_AddFacilityProject(out LWCE_TFacilityProject kProject)
     }
 
     kProject.iIndex = m_arrCEFacilityProjects.Length;
-    kProject.kOriginalCost = LWCE_GetFacilityProjectCost(kProject.FacilityName, kProject.X, kProject.Y, kProject.bRush);
-    m_arrCEFacilityProjects.AddItem(kProject);
 
     if (!bFreeBuild)
     {
+        kProject.kOriginalCost = LWCE_GetFacilityProjectCost(kProject.FacilityName, kProject.X, kProject.Y, kProject.bRush);
         LWCE_PayCost(kProject.kOriginalCost);
     }
 
-    LWCE_XGBase(Base()).LWCE_PerformAction(eBCS_BeginConstruction, kProject.X, kProject.Y, kProject.FacilityName);
+    m_arrCEFacilityProjects.AddItem(kProject);
+
+    kBase = LWCE_XGHeadquarters(HQ()).GetBaseById(kProject.iBaseId);
+    kBase.LWCE_PerformAction(eBCS_BeginConstruction, kProject.X, kProject.Y, kProject.FacilityName);
 
     if (bInstaBuild)
     {
         UpdateFacilityProjects();
     }
+}
+
+function CancelConstructionProject(int X, int Y)
+{
+    `LWCE_LOG_DEPRECATED_CLS(CancelConstructionProject);
+}
+
+function LWCE_CancelConstructionProject(int iBaseId, int X, int Y)
+{
+    local int iProject;
+
+    for (iProject = 0; iProject < m_arrCEConstructionProjects.Length; iProject++)
+    {
+        if (m_arrCEConstructionProjects[iProject].iBaseId == iBaseId && m_arrCEConstructionProjects[iProject].X == X && m_arrCEConstructionProjects[iProject].Y == Y)
+        {
+            LWCE_RefundCost(m_arrCEConstructionProjects[iProject].kOriginalCost);
+            m_arrCEConstructionProjects.Remove(iProject, 1);
+            return;
+        }
+    }
+
+    LWCE_CancelFacilityProject(iBaseId, X, Y);
+}
+
+function CancelFacilityProject(int X, int Y)
+{
+    `LWCE_LOG_DEPRECATED_CLS(CancelFacilityProject);
+}
+
+function LWCE_CancelFacilityProject(int iBaseId, int X, int Y)
+{
+    local LWCE_TFacilityProject kProject;
+
+    kProject = LWCE_GetFacilityProject(iBaseId, X, Y);
+    LWCE_RefundCost(kProject.kOriginalCost);
+    RemoveFacilityProject(kProject.iIndex);
+}
+
+function int GetConstructionCounter(out TConstructionProject kProject)
+{
+    `LWCE_LOG_DEPRECATED_CLS(GetConstructionCounter);
+
+    return -100;
+}
+
+function int LWCE_GetConstructionCounter(out LWCE_TConstructionProject kProject)
+{
+    local int iDays;
+
+    iDays = kProject.iHoursLeft / 24;
+
+    if ((kProject.iHoursLeft % 24) > 0)
+    {
+        iDays += 1;
+    }
+
+    return iDays;
+}
+
+function TConstructionProject GetConstructionProject(int X, int Y)
+{
+    local TConstructionProject kProject;
+
+    `LWCE_LOG_DEPRECATED_CLS(GetConstructionProject);
+
+    return kProject;
+}
+
+function LWCE_TConstructionProject LWCE_GetConstructionProject(int iBaseId, int X, int Y)
+{
+    local int iProject;
+
+    for (iProject = 0; iProject < m_arrCEConstructionProjects.Length; iProject++)
+    {
+        if (m_arrCEConstructionProjects[iProject].iBaseId == iBaseId && m_arrCEConstructionProjects[iProject].X == X && m_arrCEConstructionProjects[iProject].Y == Y)
+        {
+            return m_arrCEConstructionProjects[iProject];
+        }
+    }
+}
+
+function TProjectCost GetConstructionProjectCost(int iConstructionType, int X, int Y)
+{
+    local TProjectCost kCost;
+
+    `LWCE_LOG_DEPRECATED_CLS(GetConstructionProjectCost);
+
+    return kCost;
+}
+
+function LWCE_TProjectCost LWCE_GetConstructionProjectCost(int iConstructionType, int iBaseId, int X, int Y)
+{
+    local LWCEDataContainer kEventData;
+    local LWCE_TProjectCost kCost;
+    local LWCECost kCostObj;
+
+    if (iConstructionType == eBCS_RemoveFacility)
+    {
+        kCost.kCost.iCash = class'XGTacticalGameCore'.default.BASE_REMOVE_CASH_COST;
+    }
+    else if (iConstructionType == eBCS_Excavate)
+    {
+        kCost.kCost.iCash = class'XGTacticalGameCore'.default.BASE_EXCAVATE_CASH_COST * (2 ** (Y - 1));
+
+        if (HQ().HasBonus(/* Cheyenne Mountain */ 24) > 0)
+        {
+            kCost.kCost.iCash *= (1.0f - (float(HQ().HasBonus(24)) / 100.0f));
+        }
+    }
+
+    // EVENT: GetConstructionProjectCost
+    //
+    // SUMMARY: Emitted when a construction project is either about to be queued, or is being shown to the player for consideration.
+    //          Can be used to override the cost of projects.
+    //
+    // DATA: LWCEDataContainer
+    //       Data[0]: int - The type of construction project, where 0 is excavation and 3 is removing an existing facility.
+    //                      (Corresponds to values in the enum EBuildCursorState.)
+    //       Data[1]: int - The ID of the base this project will be done in.
+    //       Data[2]: int - The X coordinate of the base the project will be in.
+    //       Data[3]: int - The Y coordinate of the base the project will be in.
+    //       Data[4]: LWCECost - Out parameter. The cost required to perform this construction project.
+    //
+    // SOURCE: LWCE_XGFacility_Engineering
+    kCostObj = class'LWCECost'.static.FromTCost(kCost.kCost);
+
+    kEventData = class'LWCEDataContainer'.static.New('GetConstructionProjectCost');
+    kEventData.AddInt(iConstructionType);
+    kEventData.AddInt(iBaseId);
+    kEventData.AddInt(X);
+    kEventData.AddInt(Y);
+    kEventData.AddObject(kCostObj);
+
+    `LWCE_EVENT_MGR.TriggerEvent('GetConstructionProjectCost', kEventData, self);
+
+    kCost.kCost = LWCECost(kEventData.Data[4].Obj).ToTCost();
+
+    return kCost;
 }
 
 function bool GetFacilityCostSummary(out TCostSummary kCostSummary, EFacilityType eFacility, int X, int Y, bool Brush)
@@ -213,6 +423,34 @@ function bool LWCE_GetFacilityCostSummary(out TCostSummary kCostSummary, name Fa
     return LWCE_GetCostSummary(kCostSummary, kCost, true) && bCanAfford;
 }
 
+function int GetFacilityCounter(out TFacilityProject kProject)
+{
+    `LWCE_LOG_DEPRECATED_CLS(GetFacilityCounter);
+
+    return -100;
+}
+
+function int LWCE_GetFacilityCounter(out LWCE_TFacilityProject kProject)
+{
+    local int iDays, iWorkPerDay;
+
+    iWorkPerDay = 24;
+
+    if (kProject.bRush)
+    {
+        iWorkPerDay *= 2;
+    }
+
+    iDays = kProject.iHoursLeft / iWorkPerDay;
+
+    if ((kProject.iHoursLeft % iWorkPerDay) > 0)
+    {
+        iDays += 1;
+    }
+
+    return iDays;
+}
+
 function GetFacilityEvents(out array<THQEvent> arrEvents)
 {
     `LWCE_LOG_DEPRECATED_CLS(GetFacilityEvents);
@@ -265,13 +503,13 @@ function TFacilityProject GetFacilityProject(int X, int Y)
     return kProject;
 }
 
-function LWCE_TFacilityProject LWCE_GetFacilityProject(int X, int Y)
+function LWCE_TFacilityProject LWCE_GetFacilityProject(int iBaseId, int X, int Y)
 {
     local int iProject;
 
     for (iProject = 0; iProject < m_arrCEFacilityProjects.Length; iProject++)
     {
-        if (m_arrCEFacilityProjects[iProject].X == X && m_arrCEFacilityProjects[iProject].Y == Y)
+        if (m_arrCEFacilityProjects[iProject].iBaseId == iBaseId && m_arrCEFacilityProjects[iProject].X == X && m_arrCEFacilityProjects[iProject].Y == Y)
         {
             return m_arrCEFacilityProjects[iProject];
         }
@@ -340,6 +578,28 @@ function int LWCE_GetNumFacilitiesBuilding(name FacilityName)
     return iNumFacilities;
 }
 
+function bool IsBuildingFacility(EFacilityType eFacility)
+{
+    `LWCE_LOG_DEPRECATED_CLS(IsBuildingFacility);
+
+    return false;
+}
+
+function bool LWCE_IsBuildingFacility(name FacilityName)
+{
+    local int iProject;
+
+    for (iProject = 0; iProject < m_arrCEFacilityProjects.Length; iProject++)
+    {
+        if (m_arrCEFacilityProjects[iProject].FacilityName == FacilityName)
+        {
+            return true;
+        }
+    }
+
+    return false;
+}
+
 function ModifyFacilityProject(TFacilityProject kProject)
 {
     `LWCE_LOG_DEPRECATED_CLS(ModifyFacilityProject);
@@ -349,6 +609,48 @@ function LWCE_ModifyFacilityProject(LWCE_TFacilityProject kProject)
 {
     m_arrCEFacilityProjects[kProject.iIndex].bRush = kProject.bRush;
     LWCE_PayCost(LWCE_GetFacilityProjectCost(m_arrCEFacilityProjects[kProject.iIndex].FacilityName, m_arrCEFacilityProjects[kProject.iIndex].X, m_arrCEFacilityProjects[kProject.iIndex].Y, kProject.bRush));
+}
+
+function OnConstructionCompleted(int iProject)
+{
+    local LWCE_XGBase kBase;
+    local LWCE_XGHeadquarters kHQ;
+    local int iProjectType, X, Y;
+
+    kHQ = LWCE_XGHeadquarters(HQ());
+    kBase = kHQ.GetBaseById(m_arrCEConstructionProjects[iProject].iBaseId);
+
+    iProjectType = m_arrCEConstructionProjects[iProject].iProjectType;
+    X = m_arrCEConstructionProjects[iProject].X;
+    Y = m_arrCEConstructionProjects[iProject].Y;
+
+    if (Y >= NUM_TERRAIN_HIGH - 1 && (iProjectType == eBCS_Excavate || iProjectType == eBCS_BuildFacility || iProjectType == eBCS_BuildAccessLift))
+    {
+        Achieve(AT_DrumsInTheDeep);
+    }
+
+    kBase.LWCE_PerformAction(EBuildCursorState(iProjectType), X, Y);
+
+    if (iProjectType == eBCS_Excavate)
+    {
+        PRES().Notify(eGA_ExcavationComplete);
+        GEOSCAPE().RestoreNormalTimeFrame();
+    }
+    else if (iProjectType == eBCS_RemoveFacility)
+    {
+        PRES().Notify(eGA_FacilityRemoved);
+        STAT_AddStat(eRecap_FacilitiesRemoved, 1);
+
+        LABS().UpdateLabBonus();
+
+        if (kBase.LWCE_GetFacilityAt(X, Y) == 'Facility_AlienContainment')
+        {
+            if (STORAGE().GetNumCaptives() > 0)
+            {
+                STORAGE().KillTheCaptives();
+            }
+        }
+    }
 }
 
 function OnFacilityCompleted(int iProject)
@@ -414,20 +716,53 @@ function string RecordFacilityBuilt(EFacilityType FacilityValue)
     return "";
 }
 
+function RemoveConstructionProject(int iIndex)
+{
+    local int iProject;
+
+    m_arrCEConstructionProjects.Remove(iIndex, 1);
+
+    for (iProject = 0; iProject < m_arrCEConstructionProjects.Length; iProject++)
+    {
+        m_arrCEConstructionProjects[iProject].iIndex = iProject;
+    }
+}
+
+function RemoveFacilityProject(int iIndex)
+{
+    local int iProject;
+
+    m_arrCEFacilityProjects.Remove(iIndex, 1);
+
+    for (iProject = 0; iProject < m_arrCEFacilityProjects.Length; iProject++)
+    {
+        m_arrCEFacilityProjects[iProject].iIndex = iProject;
+    }
+}
+
 function RestoreFacilityFunds(int iIndex)
 {
-    local LWCE_TProjectCost kOrigCost;
+    LWCE_PayCost(m_arrCEFacilityProjects[iIndex].kOriginalCost);
+}
 
-    if (IsCostPopulated(m_arrCEFacilityProjects[iIndex].kOriginalCost))
+function UpdateConstructionProjects()
+{
+    local int iProject;
+
+    for (iProject = 0; iProject < m_arrCEConstructionProjects.Length; iProject++)
     {
-        kOrigCost = m_arrCEFacilityProjects[iIndex].kOriginalCost;
+        if (m_arrCEConstructionProjects[iProject].iHoursLeft <= 0)
+        {
+            m_arrCEConstructionProjects[iProject].iHoursLeft = 0;
+            OnConstructionCompleted(iProject);
+            RemoveConstructionProject(iProject);
+            return;
+        }
+        else
+        {
+            m_arrCEConstructionProjects[iProject].iHoursLeft -= 1;
+        }
     }
-    else
-    {
-        kOrigCost = LWCE_GetFacilityProjectCost(m_arrCEFacilityProjects[iIndex].FacilityName, m_arrCEFacilityProjects[iIndex].X, m_arrCEFacilityProjects[iIndex].Y, m_arrCEFacilityProjects[iIndex].bRush);
-    }
-    
-    LWCE_PayCost(kOrigCost);
 }
 
 function UpdateFacilityProjects()

@@ -516,7 +516,10 @@ function ClearTopAlert(optional bool bDoNotResume = false)
 
 function int DetectUFO(XGShip_UFO kUFO)
 {
+    local LWCE_XGHeadquarters kHQ;
     local int iChance, Index;
+
+    kHQ = LWCE_XGHeadquarters(HQ());
 
     if (kUFO.m_kObjective == none || kUFO.m_kObjective.m_bComplete)
     {
@@ -524,7 +527,7 @@ function int DetectUFO(XGShip_UFO kUFO)
     }
 
     // Can't see Overseer UFOs without a Hyperwave facility
-    if (kUFO.GetType() == eShip_UFOEthereal && HQ().GetNumFacilities(eFacility_HyperwaveRadar) == 0)
+    if (kUFO.GetType() == eShip_UFOEthereal && kHQ.LWCE_GetNumFacilities('Facility_HyperwaveRelay') == 0)
     {
         return -1;
     }
@@ -538,11 +541,11 @@ function int DetectUFO(XGShip_UFO kUFO)
     if (kUFO.IsInCountry())
     {
         // If there's a satellite in the country, the UFO is always spotted
-        for (Index = 0; Index < HQ().m_arrSatellites.Length; Index++)
+        for (Index = 0; Index < kHQ.m_arrSatellites.Length; Index++)
         {
-            if (HQ().m_arrSatellites[Index].iTravelTime <= 0)
+            if (kHQ.m_arrSatellites[Index].iTravelTime <= 0)
             {
-                if (HQ().m_arrSatellites[Index].iCountry == kUFO.GetCountry())
+                if (kHQ.m_arrSatellites[Index].iCountry == kUFO.GetCountry())
                 {
                     return Index;
                 }

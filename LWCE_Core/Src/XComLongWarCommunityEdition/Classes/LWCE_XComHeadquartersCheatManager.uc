@@ -195,6 +195,36 @@ exec function LevelUpPsi(optional int iTimes = 1)
     }
 }
 
+exec function PlayFacilityBuiltNarrative(name FacilityName)
+{
+    local LWCEFacilityTemplate kTemplate;
+
+    kTemplate = `LWCE_FACILITY(FacilityName);
+
+    if (kTemplate == none)
+    {
+        GetConsole().OutputTextLine("Couldn't find facility with name " $ FacilityName);
+        return;
+    }
+
+    PlayNarrative(kTemplate.strPostBuildNarrative);
+}
+
+exec function PlayNarrative(string strNarrative)
+{
+    local XComNarrativeMoment kNarrative;
+
+    kNarrative = XComNarrativeMoment(DynamicLoadObject(strNarrative, class'XComNarrativeMoment'));
+
+    if (kNarrative == none)
+    {
+        GetConsole().OutputTextLine("Couldn't find narrative moment at path " $ strNarrative);
+        return;
+    }
+
+    `LWCE_HQPRES.UINarrative(kNarrative);
+}
+
 /// <summary>
 /// Sets the alien research to the given level. Since the alien baseline research will always be
 /// set according to how many days have passed, this command instead modifies the alien bonus research
@@ -223,6 +253,57 @@ exec function SetAlienResearch(int TotalResearch)
     `HQGAME.GetGameCore().STAT_SetStat(2, iBonusResearch);
 
     GetConsole().OutputTextLine("Alien base research is " $ iBaseResearch $ " and bonus research is now " $ iBonusResearch);
+}
+
+
+/// <summary>
+/// Sets a specific base tile to the given facility type. Note that X and Y start at 1, such that (1, 1)
+/// is the upper-left corner of the base.
+///
+/// Very little validation is performed as part of this command. Use at your own risk.
+///
+/// TODO: using this to remove facilities is pretty buggy still.
+/// </summary>
+exec function SetFacility(int X, int Y, optional name FacilityName = '', optional int iBaseId = -1)
+{
+    local LWCE_XGBase kBase;
+    local LWCE_XGHeadquarters kHQ;
+    local LWCE_XComHQPresentationLayer kPres;
+
+    kHQ = `LWCE_HQ;
+    kPres = `LWCE_HQPRES;
+
+    if (iBaseId < 0)
+    {
+        kBase = LWCE_XGBase(kHQ.m_kBase);
+    }
+    else
+    {
+        kBase = kHQ.GetBaseById(iBaseId);
+    }
+
+    // User-provided X starts at 1, but the real X starts at 0. We don't do the same for Y,
+    // because bases have a hidden row at Y=0, so the user's idea of Y matches the reality.
+    X--;
+
+    if (X == kBase.GetAccessX() && FacilityName != 'Facility_AccessLift' && FacilityName != '')
+    {
+        GetConsole().OutputTextLine("Can't put a non-access-lift facility at X = " $ (X + 1));
+        return;
+    }
+    else if (X != kBase.GetAccessX() && FacilityName == 'Facility_AccessLift')
+    {
+        GetConsole().OutputTextLine("Can't put an access lift at X = " $ (X + 1) $ "; X must be " $ (kBase.GetAccessX() + 1));
+        return;
+    }
+
+    kBase.LWCE_PerformAction(FacilityName != '' ? eBCS_BuildFacility : eBCS_RemoveFacility, X, Y, FacilityName);
+
+    // Update the UI if we're on the facilities screen
+    if (kPres.m_kBuildFacilities != none)
+    {
+        kPres.m_kBuildFacilities.OnReceiveFocus();
+    }
 }
 
 exec function ShowAlienStats()

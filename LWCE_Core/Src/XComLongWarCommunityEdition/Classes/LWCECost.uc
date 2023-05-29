@@ -4,7 +4,7 @@
 /// add a new resource type. The struct should generally be used for config variables, as it is
 /// far easier to write the struct values inline.
 /// </summary>
-class LWCEProjectCost extends Object;
+class LWCECost extends Object;
 
 var int iCash;
 var int iAlloys;
@@ -13,11 +13,11 @@ var int iMeld;
 var int iWeaponFragments;
 var array<LWCE_TItemQuantity> arrItems;
 
-static function LWCEProjectCost FromTCost(const out LWCE_TCost kCost)
+static function LWCECost FromTCost(const out LWCE_TCost kCost)
 {
-    local LWCEProjectCost kProjectCost;
+    local LWCECost kProjectCost;
 
-    kProjectCost = new class'LWCEProjectCost';
+    kProjectCost = new class'LWCECost';
 
     kProjectCost.iCash = kCost.iCash;
     kProjectCost.iAlloys = kCost.iAlloys;
@@ -40,5 +40,5 @@ function LWCE_TCost ToTCost()
     kCost.iWeaponFragments = iWeaponFragments;
     kCost.arrItems = arrItems;
 
-    return kCost;    
+    return kCost;
 }

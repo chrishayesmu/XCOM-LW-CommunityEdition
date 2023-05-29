@@ -370,7 +370,7 @@ function UpdateMainMenu()
     m_kMainMenu.arrViews.AddItem(eLabView_ChooseTech);
     m_kMainMenu.arrViews.AddItem(eLabView_Archives);
 
-    if (HQ().HasFacility(eFacility_GeneticsLab))
+    if (LWCE_XGHeadquarters(HQ()).LWCE_HasFacility('Facility_GeneticsLab'))
     {
         m_kMainMenu.arrViews.AddItem(eLabView_GeneLab);
     }
@@ -650,9 +650,11 @@ function UpdateTechTable()
 
 function UpdateView()
 {
+    local LWCE_XGHeadquarters kHQ;
     local LWCE_XGFacility_Labs kLabs;
     local LWCE_XGStorage kStorage;
 
+    kHQ = LWCE_XGHeadquarters(HQ());
     kLabs = LWCE_XGFacility_Labs(LABS());
     kStorage = LWCE_XGStorage(STORAGE());
 
@@ -693,7 +695,7 @@ function UpdateView()
             return;
         }
 
-        if (!HQ().HasFacility(eFacility_AlienContain) && kLabs.LWCE_IsResearched('Tech_Xenoneurology') && kLabs.m_nmLastResearchedTech != 'Tech_Xenoneurology' && !ENGINEERING().IsBuildingFacility(eFacility_AlienContain))
+        if (!kHQ.LWCE_HasFacility('Facility_AlienContainment') && kLabs.LWCE_IsResearched('Tech_Xenoneurology') && kLabs.m_nmLastResearchedTech != 'Tech_Xenoneurology' && !ENGINEERING().IsBuildingFacility(eFacility_AlienContain))
         {
             if (Narrative(`XComNarrativeMoment("UrgeContainment")))
             {
@@ -709,7 +711,7 @@ function UpdateView()
             }
         }
 
-        if (HQ().HasFacility(eFacility_AlienContain) && kStorage.LWCE_GetNumItemsAvailable('Item_ArcThrower') > 0 && !kStorage.HasAlienCaptive())
+        if (kHQ.LWCE_HasFacility('Facility_AlienContainment') && kStorage.LWCE_GetNumItemsAvailable('Item_ArcThrower') > 0 && !kStorage.HasAlienCaptive())
         {
             if (Narrative(`XComNarrativeMoment("UrgeCaptive")))
             {
@@ -733,7 +735,7 @@ function UpdateView()
             }
         }
 
-        if (HQ().HasFacility(eFacility_HyperwaveRadar) && !HQ().m_kMC.m_bDetectedOverseer)
+        if (kHQ.LWCE_HasFacility('Facility_HyperwaveRelay') && !HQ().m_kMC.m_bDetectedOverseer)
         {
             if (Narrative(`XComNarrativeMoment("HyperwaveBeaconConstructed")))
             {
@@ -790,7 +792,7 @@ function UpdateView()
 
         if (kStorage.GetResource(eResource_Meld) > 150 && !HQ().m_bUrgedEWFacility)
         {
-            if (!HQ().HasFacility(eFacility_CyberneticsLab) && !HQ().HasFacility(eFacility_GeneticsLab) && !ENGINEERING().IsBuildingFacility(eFacility_CyberneticsLab) && !ENGINEERING().IsBuildingFacility(eFacility_GeneticsLab))
+            if (!kHQ.LWCE_HasFacility('Facility_RepairBay') && !kHQ.LWCE_HasFacility('Facility_GeneticsLab') && !ENGINEERING().IsBuildingFacility(eFacility_CyberneticsLab) && !ENGINEERING().IsBuildingFacility(eFacility_GeneticsLab))
             {
                 if (Narrative(`XComNarrativeMomentEW("Urge_LabFacility")))
                 {

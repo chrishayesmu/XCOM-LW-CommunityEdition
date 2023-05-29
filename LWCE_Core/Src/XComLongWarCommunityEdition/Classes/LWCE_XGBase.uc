@@ -5,17 +5,18 @@ struct LWCE_TFacilityTile
 {
     var int X;
     var int Y;
-    var name nmFacility;
+    var name FacilityName;
     var bool bIsBeingRemoved;
 };
 
 struct LWCE_TTerrainTile
-{   
+{
     var int X;
     var int Y;
     var name nmType;  // As per XGGameData.ETerrainTypes, but made into a name type for flexibility with mods. Unlike the parent type,
                       // this field is not used to mark whether a tile has a facility; use bHasFacility for that instead. That way, nmType
-                      // always reflects the underlying terrain, not what is built on it, making facility destruction simpler.
+                      // always reflects the underlying terrain, not what is built on it, making facility destruction simpler. (Note: the 'Open'
+                      // terrain type was functionally identical to 'Excavated' and is not used in LWCE.)
     var int iParentX; // For multi-tile facilities, all tiles other than the main one should have iParentX and iParentY set.
     var int iParentY;
     var ETileState eState;
@@ -37,7 +38,7 @@ struct LWCE_TTerrainTypeConfig
     var string ImageName;
 };
 
-struct LWCE_XGBase_CheckpointRecord extends CheckpointRecord
+struct CheckpointRecord_LWCE_XGBase extends XGBase.CheckpointRecord
 {
     var array<LWCE_TFacilityTile> m_arrCEFacilities;
     var array<LWCE_TTerrainTile> m_arrCETiles;
@@ -47,10 +48,14 @@ struct LWCE_XGBase_CheckpointRecord extends CheckpointRecord
     var int m_iNumTilesWide;
     var int m_iContinent;
     var int m_iCountry;
+    var int m_iId;
     var bool m_bIsPrimaryBase;
 };
 
 var config array<LWCE_TTerrainTypeConfig> m_arrTerrainTypeConfig;
+
+var config array<int> BaselinePowerForPrimaryBase;
+var config array<int> BaselinePowerForNonPrimaryBases;
 
 var array<LWCE_TFacilityTile> m_arrCEFacilities;
 var array<LWCE_TTerrainTile> m_arrCETiles;
@@ -60,6 +65,7 @@ var int m_iNumTilesHigh;
 var int m_iNumTilesWide;
 var int m_iContinent;
 var int m_iCountry;
+var int m_iId;
 var bool m_bIsPrimaryBase;
 
 function Init()
@@ -73,12 +79,13 @@ function Init()
 ///
 /// TODO: the base needs to know where in the world it is (country + coordinates)
 /// </summary>
-function LWCE_Init(bool IsPrimaryBase, int Width, int Height, Vector2D Coords)
+function LWCE_Init(bool IsPrimaryBase, int Id, int Width, int Height, Vector2D Coords)
 {
-    self.m_bIsPrimaryBase = IsPrimaryBase;
-    self.m_iNumTilesWide = Width;
-    self.m_iNumTilesHigh = Height;
-    self.m_vBaseCoords = Coords;
+    m_bIsPrimaryBase = IsPrimaryBase;
+    m_iId = Id;
+    m_iNumTilesWide = Width;
+    m_iNumTilesHigh = Height;
+    m_vBaseCoords = Coords;
 
     GenerateTiles();
 }
@@ -86,6 +93,34 @@ function LWCE_Init(bool IsPrimaryBase, int Width, int Height, Vector2D Coords)
 function BeginAlienContainment(EItemType kCaptive)
 {
     `LWCE_LOG_DEPRECATED_NOREPLACE_CLS(BeginAlienContainment);
+}
+
+function bool CanAfford(int iProjectType, TProjectCost kCost, out TText txtHelp)
+{
+    `LWCE_LOG_DEPRECATED_CLS(CanAfford);
+
+    return false;
+}
+
+function bool LWCE_CanAfford(int iProjectType, LWCE_TProjectCost kCost, out TText txtHelp)
+{
+    local bool bFreeBuild;
+
+    bFreeBuild = false;
+
+    if (XComCheatManager(GetALocalPlayerController().CheatManager) != none)
+    {
+        bFreeBuild = XComCheatManager(GetALocalPlayerController().CheatManager).m_bStrategyAllFacilitiesFree;
+    }
+
+    if (!bFreeBuild && ! LWCE_XGHeadquarters(HQ()).CanAffordCost(kCost.kCost))
+    {
+        txtHelp.StrValue = m_strLabelInsufficientFunds;
+        txtHelp.iState = eUIState_Bad;
+        return false;
+    }
+
+    return true;
 }
 
 function CaptureAlienMapStreamFinished(name LevelPackageName)
@@ -105,8 +140,6 @@ function GenerateTiles()
     local array<int> arrDeepRockTiles;
     local int iNumSteamVents, iTile, I;
     local int iAccessX;
-
-    `LWCE_LOG_CLS("WARNING: GenerateTiles has not yet been converted to LWCE logic");
 
     iNumSteamVents = class'XGTacticalGameCore'.default.NUM_STARTING_STEAM_VENTS;
 
@@ -133,9 +166,11 @@ function GenerateTiles()
         iNumSteamVents += HQ().HasBonus(13);
     }
 
+    `LWCE_LOG_CLS("GenerateTiles: base is " $ m_iNumTilesHigh $ " tiles high and " $ m_iNumTilesWide $ " tiles wide");
+
     m_arrCETiles.Add(m_iNumTilesHigh * m_iNumTilesWide);
     m_arrCEFacilities.Add(m_iNumTilesHigh * m_iNumTilesWide);
-    
+
     for (Y = 0; Y < m_iNumTilesHigh; Y++)
     {
         for (X = 0; X < m_iNumTilesWide; X++)
@@ -159,7 +194,7 @@ function GenerateTiles()
             }
             else if (Roll(20))
             {
-                m_arrCETiles[TileIndex(X, Y)].nmType = 'Open';
+                m_arrCETiles[TileIndex(X, Y)].nmType = 'Excavated';
             }
             else
             {
@@ -264,9 +299,7 @@ function int LWCE_GetAdjacencies(name nmAdjType)
     {
         for (X = 0; X < m_iNumTilesWide; X++)
         {
-            `LWCE_UTILS.ModifyKeyValuePair(arrAdjs, LWCE_GetAdjacency(X - 1, Y,     X, Y), 1);
             `LWCE_UTILS.ModifyKeyValuePair(arrAdjs, LWCE_GetAdjacency(X + 1, Y,     X, Y), 1);
-            `LWCE_UTILS.ModifyKeyValuePair(arrAdjs, LWCE_GetAdjacency(X,     Y - 1, X, Y), 1);
             `LWCE_UTILS.ModifyKeyValuePair(arrAdjs, LWCE_GetAdjacency(X,     Y + 1, X, Y), 1);
         }
     }
@@ -307,8 +340,8 @@ function name LWCE_GetAdjacency(int X1, int Y1, int X2, int Y2)
         return '';
     }
 
-    nmFacility1 = m_arrCEFacilities[TileIndex(X1, Y1)].nmFacility;
-    nmFacility2 = m_arrCEFacilities[TileIndex(X2, Y2)].nmFacility;
+    nmFacility1 = m_arrCEFacilities[TileIndex(X1, Y1)].FacilityName;
+    nmFacility2 = m_arrCEFacilities[TileIndex(X2, Y2)].FacilityName;
 
     if (nmFacility1 == '' || nmFacility2 == '')
     {
@@ -337,7 +370,7 @@ function int GetFacilityAt(int X, int Y)
 
 function name LWCE_GetFacilityAt(int X, int Y)
 {
-    return m_arrCEFacilities[TileIndex(X, Y)].nmFacility;
+    return m_arrCEFacilities[TileIndex(X, Y)].FacilityName;
 }
 
 function Vector GetFacilityLocation(int iFacility)
@@ -353,7 +386,7 @@ function Vector LWCE_GetFacilityLocation(name nmFacility)
 
     for (Index = 0; Index < m_arrCEFacilities.Length; Index++)
     {
-        if (m_arrCEFacilities[Index].nmFacility == nmFacility)
+        if (m_arrCEFacilities[Index].FacilityName == nmFacility)
         {
             locVec.X = float(m_arrCEFacilities[Index].X);
             locVec.Y = float(m_arrCEFacilities[Index].Y);
@@ -376,7 +409,7 @@ function Vector LWCE_GetFacility3DLocation(name nmFacility)
 
     for (Index = 0; Index < m_arrCEFacilities.Length; Index++)
     {
-        if (m_arrCEFacilities[Index].nmFacility == nmFacility)
+        if (m_arrCEFacilities[Index].FacilityName == nmFacility)
         {
             return GetRoomLocation(m_arrCEFacilities[Index].Y, m_arrCEFacilities[Index].X);
         }
@@ -410,7 +443,7 @@ function string LWCE_GetMapName(name nmTerrainType, name nmFacility)
     {
         return `LWCE_FACILITY(nmFacility).MapName;
     }
-    
+
     for (Index = 0; Index < m_arrTerrainTypeConfig.Length; Index++)
     {
         if (m_arrTerrainTypeConfig[Index].nmTerrainType == nmTerrainType)
@@ -420,6 +453,92 @@ function string LWCE_GetMapName(name nmTerrainType, name nmFacility)
     }
 
     return "";
+}
+
+function int GetPowerAvailable()
+{
+    return GetPowerCapacity() - GetPowerUsed();
+}
+
+function int GetPowerCapacity()
+{
+    local LWCEFacilityTemplateManager kTemplateMgr;
+    local int iPower, iTotalPower, Index;
+
+    kTemplateMgr = `LWCE_FACILITY_TEMPLATE_MGR;
+
+    if (m_bIsPrimaryBase)
+    {
+        iTotalPower += BaselinePowerForPrimaryBase[Game().GetDifficulty()];
+    }
+    else
+    {
+        iTotalPower += BaselinePowerForNonPrimaryBases[Game().GetDifficulty()];
+    }
+
+    for (Index = 0; Index < m_arrCEFacilities.Length; Index++)
+    {
+        if (m_arrCEFacilities[Index].FacilityName == '')
+        {
+            continue;
+        }
+
+        iPower = kTemplateMgr.FindFacilityTemplate(m_arrCEFacilities[Index].FacilityName).GetPower();
+
+        // Negative value means power is being generated
+        if (iPower < 0)
+        {
+            iTotalPower += -iPower;
+        }
+    }
+
+    // TODO: adjacencies are being double counted
+    iTotalPower += LWCE_GetAdjacencies('Power') * class'XGTacticalGameCore'.default.POWER_ADJACENCY_BONUS;
+
+    return iTotalPower;
+}
+
+function int GetPowerUsed()
+{
+    local LWCE_XGFacility_Engineering kEngineering;
+    local LWCEFacilityTemplateManager kTemplateMgr;
+    local int iPower, iTotalPower, Index;
+
+    kEngineering = LWCE_XGFacility_Engineering(ENGINEERING());
+    kTemplateMgr = `LWCE_FACILITY_TEMPLATE_MGR;
+
+    for (Index = 0; Index < m_arrCEFacilities.Length; Index++)
+    {
+        if (m_arrCEFacilities[Index].FacilityName == '')
+        {
+            continue;
+        }
+
+        iPower = kTemplateMgr.FindFacilityTemplate(m_arrCEFacilities[Index].FacilityName).GetPower();
+
+        if (iPower > 0)
+        {
+            iTotalPower += iPower;
+        }
+    }
+
+    // Check any facilities being built in this base
+    for (Index = 0; Index < kEngineering.m_arrCEFacilityProjects.Length; Index++)
+    {
+        if (kEngineering.m_arrCEFacilityProjects[Index].iBaseId != m_iId)
+        {
+            continue;
+        }
+
+        iPower = kTemplateMgr.FindFacilityTemplate(kEngineering.m_arrCEFacilityProjects[Index].FacilityName).GetPower();
+
+        if (iPower > 0)
+        {
+            iTotalPower += iPower;
+        }
+    }
+
+    return iTotalPower;
 }
 
 function int GetSurroundingAdjacencies(int X, int Y, EAdjacencyType eAdjType)
@@ -508,7 +627,7 @@ function bool HasExcavation(int X, int Y)
         {
             nmType = m_arrCETiles[TileIndex(iTileX, Y)].nmType;
 
-            if (nmType != 'Excavated' && nmType != 'ExcavatedSteam' && nmType != 'Open')
+            if (nmType != 'Excavated' && nmType != 'ExcavatedSteam')
             {
                 return false;
             }
@@ -520,7 +639,7 @@ function bool HasExcavation(int X, int Y)
         {
             nmType = m_arrCETiles[TileIndex(iTileX, Y)].nmType;
 
-            if (nmType != 'Excavated' && nmType != 'ExcavatedSteam' && nmType != 'Open')
+            if (nmType != 'Excavated' && nmType != 'ExcavatedSteam')
             {
                 return false;
             }
@@ -551,7 +670,7 @@ function bool IsPrimaryTile(int X, int Y)
 
 function bool IsValidTile(int X, int Y)
 {
-    return X >= 0 && Y >= 0 && X < m_iNumTilesWide || Y < m_iNumTilesHigh;
+    return X >= 0 && Y >= 0 && X < m_iNumTilesWide && Y < m_iNumTilesHigh;
 }
 
 function bool IsEngineeringFacility(EFacilityType eFacility)
@@ -631,7 +750,7 @@ function PerformAction(int iCursorState, int X, int Y, optional int iFacility, o
 
 function LWCE_PerformAction(EBuildCursorState eCursorState, int X, int Y, optional name nmFacility)
 {
-    local int TargetTileIndex;
+    local int TargetTileIndex, iNumAdjacencies;
 
     TargetTileIndex = TileIndex(X, Y);
 
@@ -654,7 +773,7 @@ function LWCE_PerformAction(EBuildCursorState eCursorState, int X, int Y, option
     }
     else if (eCursorState == eBCS_RemoveFacility)
     {
-        if (m_arrCEFacilities[TargetTileIndex].nmFacility == 'Facility_AlienContainment')
+        if (m_arrCEFacilities[TargetTileIndex].FacilityName == 'Facility_AlienContainment')
         {
             // TODO rewrite captive stuff
             if (m_currAlienCaptive != 0)
@@ -665,10 +784,11 @@ function LWCE_PerformAction(EBuildCursorState eCursorState, int X, int Y, option
             class'XComMapManager'.static.RemoveStreamingMapByName(ALIENCONTAINMENT_ANIMMAP);
         }
 
-        LWCE_XGHeadquarters(HQ()).LWCE_RemoveFacility(m_arrCEFacilities[TargetTileIndex].nmFacility);
+        LWCE_XGHeadquarters(HQ()).LWCE_RemoveFacility(m_arrCEFacilities[TargetTileIndex].FacilityName);
 
+        m_arrCETiles[TargetTileIndex].bHasFacility = false;
         m_arrCEFacilities[TargetTileIndex].bIsBeingRemoved = false;
-        m_arrCEFacilities[TargetTileIndex].nmFacility = '';
+        m_arrCEFacilities[TargetTileIndex].FacilityName = '';
 
         Sound().PlaySFX(SNDLIB().SFX_Facility_DisassembleItem);
     }
@@ -684,9 +804,10 @@ function LWCE_PerformAction(EBuildCursorState eCursorState, int X, int Y, option
         STAT_SetStat(eRecap_MaxPower, HQ().GetPowerCapacity());
     }
 
-    if (STAT_GetStat(eRecap_MaxAdjacencies) < GetAdjacencies(eAdj_All))
+    iNumAdjacencies = LWCE_GetAdjacencies('All');
+    if (STAT_GetStat(eRecap_MaxAdjacencies) < iNumAdjacencies)
     {
-        STAT_SetStat(eRecap_MaxAdjacencies, GetAdjacencies(eAdj_All));
+        STAT_SetStat(eRecap_MaxAdjacencies, iNumAdjacencies);
     }
 
     RemoveRoom(Y, X);
@@ -714,7 +835,7 @@ function LWCE_SetFacility(name nmFacility, int X, int Y)
 
     m_arrCETiles[TargetTileIndex].bHasFacility = true;
 
-    m_arrCEFacilities[TargetTileIndex].nmFacility = nmFacility;
+    m_arrCEFacilities[TargetTileIndex].FacilityName = nmFacility;
     m_arrCEFacilities[TargetTileIndex].X = X;
     m_arrCEFacilities[TargetTileIndex].Y = Y;
 
@@ -768,7 +889,7 @@ function LWCE_StreamInRoom(int iRow, int iCol, name nmTerrainType, name nmFacili
 
 function int TileIndex(int X, int Y)
 {
-    return X + Y * m_iNumTilesHigh;
+    return X + Y * m_iNumTilesWide;
 }
 
 function UnstreamRooms()

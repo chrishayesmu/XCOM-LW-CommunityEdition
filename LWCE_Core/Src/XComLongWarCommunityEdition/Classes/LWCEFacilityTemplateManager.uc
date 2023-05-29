@@ -5,7 +5,7 @@ static function LWCEFacilityTemplateManager GetInstance()
     return LWCEFacilityTemplateManager(class'LWCE_XComEngine'.static.GetTemplateManager(class'LWCEFacilityTemplateManager'));
 }
 
-function bool AddItemTemplate(LWCEFacilityTemplate Data, bool ReplaceDuplicate = false)
+function bool AddFacilityTemplate(LWCEFacilityTemplate Data, bool ReplaceDuplicate = false)
 {
     return AddDataTemplate(Data, ReplaceDuplicate);
 }

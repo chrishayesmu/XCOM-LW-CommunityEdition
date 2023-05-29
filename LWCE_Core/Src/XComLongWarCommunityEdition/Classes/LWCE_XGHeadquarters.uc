@@ -9,14 +9,19 @@ struct LWCE_TFacilityCount
 
 struct CheckpointRecord_LWCE_XGHeadquarters extends XGHeadQuarters.CheckpointRecord
 {
+    var array<LWCE_XGBase> m_arrBases;
     var array<LWCE_TFacilityCount> m_arrCEBaseFacilities;
     var array<name> m_arrCELastCaptives;
     var LWCEItemContainer m_kCELastCargoArtifacts;
+    var int m_iNextBaseId;
 };
 
-var array<LWCE_TFacilityCount> m_arrCEBaseFacilities;
+var array<LWCE_XGBase> m_arrBases;
+var array<LWCE_TFacilityCount> m_arrCEBaseFacilities; // A count of each facility type XCOM has, across all bases.
+var array<name> m_arrCEFacilityBinksPlayed;
 var array<name> m_arrCELastCaptives;
 var LWCEItemContainer m_kCELastCargoArtifacts;
+var int m_iNextBaseId;
 
 function Init(bool bLoadingFromSave)
 {
@@ -91,7 +96,9 @@ function InitNewGame()
     }
 
     m_kBase = Spawn(class'LWCE_XGBase');
-    LWCE_XGBase(m_kBase).LWCE_Init(/* IsPrimaryBase */ true, /* Width */ 7, /* Height */ 5, GetCoords());
+    m_arrBases.AddItem(LWCE_XGBase(m_kBase));
+    LWCE_XGBase(m_kBase).LWCE_Init(/* IsPrimaryBase */ true, /* ID */ m_iNextBaseId, /* Width */ 7, /* Height */ 5, GetCoords());
+
     m_kActiveFacility = m_arrFacilities[0];
     m_fAnnounceTimer = 10.0;
 
@@ -102,12 +109,6 @@ function InitNewGame()
             AddOutpost(I);
         }
     }
-
-    // Normally there's a Mutate call with "XGHeadQuarters.InitNewGame" here. We try not to remove those calls,
-    // but if it's left in, the XComFCMutator mod (which is included in Long War) will spawn its own XGFundingCouncil_Mod
-    // class, which we inherit from for our own.
-
-    // TODO: add our own mod hook here to replace the Mutate call
 
     World().m_kFundingCouncil = Spawn(class'LWCE_XGFundingCouncil');
     World().m_kFundingCouncil.InitNewGame();
@@ -415,10 +416,6 @@ function CreateFacilities()
 {
     local XGFacility kFacility;
 
-    // Replace all facilities with our own subclasses. We do this even for facilities we currently
-    // don't have any changes to, since if we change our minds about a facility later, it's not easy
-    // to insert a new class into existing save games.
-
     kFacility = Spawn(class'LWCE_XGFacility_MissionControl');
     kFacility.Init(false);
     m_arrFacilities.AddItem(kFacility);
@@ -448,6 +445,21 @@ function CreateFacilities()
     kFacility.Init(false);
     m_arrFacilities.AddItem(kFacility);
     m_kSitRoom = XGFacility_SituationRoom(kFacility);
+}
+
+function LWCE_XGBase GetBaseById(int Id)
+{
+    local LWCE_XGBase kBase;
+
+    foreach m_arrBases(kBase)
+    {
+        if (kBase.m_iId == Id)
+        {
+            return kBase;
+        }
+    }
+
+    return none;
 }
 
 function GetEvents(out array<THQEvent> arrEvents)
@@ -613,13 +625,13 @@ function int GetFacilityMaintenanceCost()
     local int Index, iMaintenance;
 
     kTemplateMgr = `LWCE_FACILITY_TEMPLATE_MGR;
-    
+
     for (Index = 0; Index < m_arrCEBaseFacilities.Length; Index++)
     {
         if (m_arrCEBaseFacilities[Index].Count > 0)
         {
             kTemplate = kTemplateMgr.FindFacilityTemplate(m_arrCEBaseFacilities[Index].Facility);
-    
+
             iMaintenance += kTemplate.GetMonthlyCost() * m_arrCEBaseFacilities[Index].Count;
         }
     }
@@ -653,72 +665,20 @@ function int LWCE_GetNumFacilities(name nmFacility, optional bool bIncludeBuildi
     return Count;
 }
 
-// TODO: move this method to LWCE_XGBase
+/// <summary>
+/// Returns the power capacity of XCOM's main base.
+/// </summary>
 function int GetPowerCapacity()
 {
-    local LWCEFacilityTemplateManager kTemplateMgr;
-    local LWCEFacilityTemplate kTemplate;
-    local int Index, iPower, iPowerGenerated;
-
-    kTemplateMgr = `LWCE_FACILITY_TEMPLATE_MGR;
-
-    iPowerGenerated = class'XGTacticalGameCore'.default.HQ_BASE_POWER[Game().GetDifficulty()];
-    
-    for (Index = 0; Index < m_arrCEBaseFacilities.Length; Index++)
-    {
-        if (m_arrCEBaseFacilities[Index].Count > 0)
-        {
-            kTemplate = kTemplateMgr.FindFacilityTemplate(m_arrCEBaseFacilities[Index].Facility);
-            iPower = kTemplate.iPowerConsumed * m_arrCEBaseFacilities[Index].Count;
-
-            if (iPower < 0)
-            {
-                iPowerGenerated += -iPower;
-            }
-        }
-    }
-
-    iPowerGenerated += LWCE_XGBase(Base()).LWCE_GetAdjacencies('Power') * class'XGTacticalGameCore'.default.POWER_ADJACENCY_BONUS;
-    return iPowerGenerated;
+    return LWCE_XGBase(m_kBase).GetPowerCapacity();
 }
 
-// TODO: move this method to LWCE_XGBase
+/// <summary>
+/// Returns how much power is being used by XCOM's main base.
+/// </summary>
 function int GetPowerUsed()
 {
-    local LWCE_XGFacility_Engineering kEngineering;
-    local LWCEFacilityTemplateManager kTemplateMgr;
-    local LWCEFacilityTemplate kTemplate;
-    local int Index, iPower, iPowerUsed;
-
-    kEngineering = LWCE_XGFacility_Engineering(ENGINEERING());
-    kTemplateMgr = `LWCE_FACILITY_TEMPLATE_MGR;
-
-    for (Index = 0; Index < m_arrCEBaseFacilities.Length; Index++)
-    {
-        if (m_arrCEBaseFacilities[Index].Count > 0)
-        {
-            kTemplate = kTemplateMgr.FindFacilityTemplate(m_arrCEBaseFacilities[Index].Facility);
-            iPower = kTemplate.iPowerConsumed * m_arrCEBaseFacilities[Index].Count;
-
-            if (iPower > 0)
-            {
-                iPowerUsed += iPower;
-            }
-        }
-    }
-
-    // Add in power consumption for any facilities currently being built
-    for (Index = 0; Index < kEngineering.m_arrCEFacilityProjects.Length; Index++)
-    {
-        kTemplate = kTemplateMgr.FindFacilityTemplate(kEngineering.m_arrCEFacilityProjects[Index].FacilityName);
-
-        if (kTemplate.iPowerConsumed > 0)
-        {
-            iPowerUsed += kTemplate.iPowerConsumed;
-        }
-    }
-
-    return iPowerUsed;
+    return LWCE_XGBase(m_kBase).GetPowerUsed();
 }
 
 function int GetSatelliteLimit()
@@ -757,6 +717,11 @@ function bool LWCE_HasFacility(name nmFacility)
     Index = m_arrCEBaseFacilities.Find('Facility', nmFacility);
 
     return Index == INDEX_NONE ? false : m_arrCEBaseFacilities[Index].Count > 0;
+}
+
+function bool IsHyperwaveActive()
+{
+    return LWCE_HasFacility('Facility_HyperwaveRadar') && m_bHyperwaveActivated;
 }
 
 function OrderInterceptors(int iContinent, int iQuantity)

@@ -24,7 +24,7 @@ simulated function UpdateData()
     AS_SetSubTitle(class'UIMissionControl_EngineeringAlert'.default.m_strProjectCompleteSubTitle);
     AS_SetText(kAlertData.arrText[0].StrValue);
     UpdateButtonText();
-    AS_SetFacilityImageLabel(class'UIUtilities'.static.GetFacilityLabel(kAlertData.imgAlert.iImage));
+    AS_SetFacilityImageLabel(kAlertData.imgAlert.strLabel);
 
     class'LWCE_UIMissionControl_AlertBase_Extensions'.static.ProjectCompleteAlert_UpdateData(self);
 }

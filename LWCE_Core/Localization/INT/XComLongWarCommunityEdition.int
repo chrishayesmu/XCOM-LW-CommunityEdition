@@ -1,3 +1,111 @@
+[Facility_AccessLift LWCEFacilityTemplate]
+strName="Access Lift"
+strNameInMenu="ACCESS LIFT"
+strBriefSummary="Access Lifts enable XCOM's subterranean base to expand deeper into the earth."
+
+[Facility_AlienContainment LWCEFacilityTemplate]
+strName="Alien Containment"
+strNameInMenu="ALIEN CONTAINMENT"
+strBriefSummary="This facility will provide a secure environment to house the alien captives, allowing you to interrogate them in the Labs."
+
+[Facility_Barracks LWCEFacilityTemplate]
+strName="Barracks"
+strNameInMenu="BARRACKS"
+
+[Facility_EleriumGenerator LWCEFacilityTemplate]
+strName="Elerium Generator"
+strNameInMenu="ELERIUM GENERATOR"
+strBriefSummary="Elerium Power Generators supply +<XGStrategyActor:POWER_ELERIUM/> power. \nAdjacency Bonus: +<XGStrategyActor:POWER_ADJACENCY_BONUS/> power for every adjacent power facility."
+
+[Facility_Engineering LWCEFacilityTemplate]
+strName="Engineering"
+strNameInMenu="ENGINEERING"
+
+[Facility_FissionGenerator LWCEFacilityTemplate]
+strName="Fission Generator"
+strNameInMenu="FISSION GENERATOR"
+strBriefSummary="Power Generators supply the power needed to run new facilities. Each generator supplies +<XGStrategyActor:POWER_NORMAL/> power. \nAdjacency Bonus: +<XGStrategyActor:POWER_ADJACENCY_BONUS/> power for every adjacent power facility."
+
+[Facility_Foundry LWCEFacilityTemplate]
+strName="Foundry"
+strNameInMenu="FOUNDRY"
+strBriefSummary="Develop new combat items or improve current items in the Foundry. This facility counts as a Workshop for adjacency benefits. Cannot be torn down once built."
+
+[Facility_GeneticsLab LWCEFacilityTemplate]
+strName="Genetics Lab"
+strNameInMenu="GENETICS LAB"
+strBriefSummary="This annex to the Research Labs will allow us to genetically modify our soldiers. This facility counts as a Laboratory for adjacency benefits."
+
+[Facility_GollopChamber LWCEFacilityTemplate]
+strName="Gollop Chamber"
+strNameInMenu="GOLLOP CHAMBER"
+strBriefSummary="Once we build this facility, a psionically powerful soldier will be able to access the Ethereals' psychic net."
+
+[Facility_GreyMarket LWCEFacilityTemplate]
+strName="Gray Market"
+strNameInMenu="GRAY MARKET"
+
+[Facility_Hangar LWCEFacilityTemplate]
+strName="Hangar"
+strNameInMenu="HANGAR"
+
+[Facility_HyperwaveRelay LWCEFacilityTemplate]
+strName="Hyperwave Relay"
+strNameInMenu="HYPERWAVE RELAY"
+strBriefSummary="Alien communications rely on a supra-dimensional wave which travels almost instantaneously. This relay should allow us to trace the source of these communications."
+
+[Facility_Laboratory LWCEFacilityTemplate]
+strName="Laboratory"
+strNameInMenu="RESEARCH"
+strBriefSummary="Each laboratory increases research speed by 20%. \nAdjacency Bonus: 10% increase to research speed for every adjacent laboratory."
+
+[Facility_MissionControl LWCEFacilityTemplate]
+strName="Mission Control"
+strNameInMenu="MISSION CONTROL"
+
+[Facility_OfficerTrainingSchool LWCEFacilityTemplate]
+strName="Officer Training School"
+strNameInMenu="OFFICER TRAINING SCHOOL"
+strBriefSummary="Increase XCOM squad size and unlock officers, a special class of soldiers with abilities that help the entire squad. Cannot be torn down once built."
+
+[Facility_PsionicLabs LWCEFacilityTemplate]
+strName="Psionic Labs"
+strNameInMenu="PSIONIC LABS"
+strength. \nAdjacency Bonus: 10% increase to research speed for every adjacent laboratory."
+
+[Facility_RepairBay LWCEFacilityTemplate]
+strName="Repair Bay"
+strNameInMenu="REPAIR BAY"
+strBriefSummary="This facility will allow us to repair items built in Engineering that are damaged in combat. This facility counts as a Workshop for adjacency benefits."
+
+[Facility_Research LWCEFacilityTemplate]
+strName="Research"
+strNameInMenu="RESEARCH"
+
+[Facility_SatelliteNexus LWCEFacilityTemplate]
+strName="Satellite Nexus"
+strNameInMenu="SATELLITE NEXUS"
+strBriefSummary="With the signal monitored by a team of engineers, each Satellite Nexus is capable of receiving transmissions from <XGStrategyActor:NEXUS_CAPACITY/> XCOM satellites. \nAdjacency Bonus: +<XGStrategyActor:NEXUS_ADJACENCY_BONUS/> satellite capacity for every adjacent uplink."
+
+[Facility_SatelliteUplink LWCEFacilityTemplate]
+strName="Satellite Uplink"
+strNameInMenu="SATELLITE UPLINK"
+strBriefSummary="With the signal monitored by a team of engineers, each Satellite Uplink is capable of receiving transmissions from <XGStrategyActor:UPLINK_CAPACITY/> XCOM satellites. \nAdjacency Bonus: +<XGStrategyActor:UPLINK_ADJACENCY_BONUS/> satellite capacity for every two uplinks constructed adjacent to one another."
+
+[Facility_SituationRoom LWCEFacilityTemplate]
+strName="Situation Room"
+strNameInMenu="SITUATION ROOM"
+
+[Facility_ThermoGenerator LWCEFacilityTemplate]
+strName="Thermo Generator"
+strNameInMenu="THERMO GENERATOR"
+strBriefSummary="Thermal Power Generators supply +<XGStrategyActor:POWER_THERMAL/> power, but must be built over steam vents. \nAdjacency Bonus: +<XGStrategyActor:POWER_ADJACENCY_BONUS/> power for every adjacent power facility."
+
+[Facility_Workshop LWCEFacilityTemplate]
+strName="Workshop"
+strNameInMenu="WORKSHOP"
+strBriefSummary="Reduces item cost by <XGStrategyActor:WORKSHOP_ENG_BONUS/>% and gives a <XGStrategyActor:WORKSHOP_ADJACENCY_BONUS_PERCENT/> refund on materials. \nMultiple workshops have diminishing returns and discounts and refunds cannot exceed 50%.\nAdjacency Bonus: Each adjacency counts as half an additional workshop."
+
 [LWCE_UIFinalShell]
 m_strModSettings="MOD SETTINGS"
 m_sSinglePlayer="LONG WAR: COMMUNITY EDITION"

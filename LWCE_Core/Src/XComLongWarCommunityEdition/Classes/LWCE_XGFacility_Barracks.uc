@@ -777,6 +777,16 @@ function XGStrategySoldier GetSoldierByID(int iID)
     return none;
 }
 
+function bool HasOTSUpgrade(EOTSTech eUpgrade)
+{
+    if (`HQGAME.GetGameCore() == none)
+    {
+        return false;
+    }
+
+    return LWCE_XGHeadquarters(HQ()).LWCE_HasFacility('Facility_OfficerTrainingSchool') && eUpgrade != eOTS_None && m_arrOTSUpgrades[eUpgrade] > 0;
+}
+
 function bool HasSoldierOfRankOrHigher(int iRank)
 {
     local XGStrategySoldier kSoldier;
@@ -1415,7 +1425,7 @@ function UpdateFoundryPerksForSoldier(XGStrategySoldier kSoldier)
     kCESoldier = LWCE_XGStrategySoldier(kSoldier);
 
     // TODO: Foundry templates could just specify what perks they give instead
-    if (HQ().HasFacility(eFacility_Foundry))
+    if (LWCE_XGHeadquarters(HQ()).LWCE_HasFacility('Facility_Foundry'))
     {
         if (kEngineering.LWCE_IsFoundryTechResearched('Foundry_SCOPEUpgrade'))
         {
@@ -1524,8 +1534,6 @@ function UpdateFoundryPerksForSoldier(XGStrategySoldier kSoldier)
             }
         }
     }
-
-    `LWCE_MOD_LOADER.UpdateFoundryPerksForSoldier(kSoldier, kEngineering);
 }
 
 function UpdateGrenades(EItemType eWeapon)

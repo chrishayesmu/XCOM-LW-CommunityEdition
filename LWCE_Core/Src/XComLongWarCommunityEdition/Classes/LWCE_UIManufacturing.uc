@@ -5,11 +5,9 @@ simulated function string GetImage()
     switch (m_iView)
     {
         case eManView_Foundry:
-            return GetMgr().m_kWidget.imgItem.strPath;
         case eManView_Item:
-            return GetMgr().m_kWidget.imgItem.strPath;
         case eManView_Facility:
-            return class'UIUtilities'.static.GetStrategyImagePath(GetMgr().m_kWidget.imgItem.iImage);
+            return GetMgr().m_kWidget.imgItem.strPath;
     }
 
     return "";
@@ -18,6 +16,27 @@ simulated function string GetImage()
 simulated function XGManufacturingUI GetMgr()
 {
     return XGManufacturingUI(XComHQPresentationLayer(controllerRef.m_Pres).GetMgr(class'LWCE_XGManufacturingUI', self, m_iView));
+}
+
+simulated function InitFacility(XComPlayerController _controllerRef, UIFxsMovie _manager, EFacilityType eFacility, int X, int Y, optional int iIndex = -1)
+{
+    `LWCE_LOG_DEPRECATED_CLS(InitFacility);
+}
+
+simulated function LWCE_InitFacility(XComPlayerController _controllerRef, UIFxsMovie _manager, name FacilityName, int iBaseId, int X, int Y, optional int iIndex = -1)
+{
+    local LWCE_XGManufacturingUI kMgr;
+
+    Init(_controllerRef, _manager, eManView_Facility);
+
+    kMgr = LWCE_XGManufacturingUI(GetMgr());
+
+    kMgr.m_iTargetBaseId = iBaseId;
+    kMgr.m_kCEFacilityProject.FacilityName = FacilityName;
+    kMgr.m_kCEFacilityProject.X = X;
+    kMgr.m_kCEFacilityProject.Y = Y;
+    kMgr.m_kCEFacilityProject.iIndex = iIndex;
+    kMgr.DirectInitialize();
 }
 
 simulated function InitFoundry(XComPlayerController _controllerRef, UIFxsMovie _manager, int iTech, int iIndex)

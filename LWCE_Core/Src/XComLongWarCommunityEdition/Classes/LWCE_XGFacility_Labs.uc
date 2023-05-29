@@ -1239,15 +1239,15 @@ function LWCE_SetNewProject(name TechName)
 
 function UpdateLabBonus()
 {
-    m_fLabBonus = class'XGTacticalGameCore'.default.LAB_BONUS * HQ().GetNumFacilities(eFacility_ScienceLab);
+    m_fLabBonus = class'XGTacticalGameCore'.default.LAB_BONUS * LWCE_XGHeadquarters(HQ()).LWCE_GetNumFacilities('Facility_Laboratory');
 
     if (HQ().HasBonus(`LW_HQ_BONUS_ID(JaiVidwan)) > 0)
     {
-        m_fAdjLabBonus = ((HQ().HasBonus(`LW_HQ_BONUS_ID(JaiVidwan)) / 100.0f) + class'XGTacticalGameCore'.default.LAB_ADJACENCY_BONUS) * Base().GetAdjacencies(eAdj_Science);
+        m_fAdjLabBonus = ((HQ().HasBonus(`LW_HQ_BONUS_ID(JaiVidwan)) / 100.0f) + class'XGTacticalGameCore'.default.LAB_ADJACENCY_BONUS) * LWCE_XGBase(Base()).LWCE_GetAdjacencies('Laboratory');
     }
     else
     {
-        m_fAdjLabBonus = class'XGTacticalGameCore'.default.LAB_ADJACENCY_BONUS * Base().GetAdjacencies(eAdj_Science);
+        m_fAdjLabBonus = class'XGTacticalGameCore'.default.LAB_ADJACENCY_BONUS * LWCE_XGBase(Base()).LWCE_GetAdjacencies('Laboratory');
     }
 
     if (HasProject())

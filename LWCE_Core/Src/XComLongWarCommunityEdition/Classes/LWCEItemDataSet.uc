@@ -65,7 +65,7 @@ protected static function bool IsInfinite_AlienGrenade()
 
 protected static function bool IsInfinite_MecBaseGear()
 {
-    return `LWCE_HQ.HasFacility(eFacility_CyberneticsLab);
+    return `LWCE_HQ.LWCE_HasFacility('Facility_RepairBay');
 }
 
 private static function AdjustBuildTimes(array<LWCEItemTemplate> arrTemplates)

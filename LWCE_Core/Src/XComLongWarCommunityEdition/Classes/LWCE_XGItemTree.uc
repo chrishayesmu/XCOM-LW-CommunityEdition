@@ -2,6 +2,7 @@ class LWCE_XGItemTree extends XGItemTree
     dependson(LWCETypes)
     config(LWCEBaseStrategyGame);
 
+var private LWCEFacilityTemplateManager m_kFacilityTemplateMgr;
 var private LWCEItemTemplateManager m_kItemTemplateMgr;
 
 /// <summary>
@@ -548,6 +549,7 @@ function Init()
 {
     m_kStrategyActorTag = new class'XGStrategyActorTag';
 
+    m_kFacilityTemplateMgr = `LWCE_FACILITY_TEMPLATE_MGR;
     m_kItemTemplateMgr = `LWCE_ITEM_TEMPLATE_MGR;
 
     m_arrStaff.Add(4);
@@ -706,6 +708,49 @@ function int GetAlloySalePrice()
     return -1;
 }
 
+function array<TFacility> GetBuildFacilities()
+{
+    local array<TFacility> arrFacilities;
+
+    arrFacilities.Length = 0;
+
+    `LWCE_LOG_DEPRECATED_CLS(GetBuildFacilities);
+
+    return arrFacilities;
+}
+
+function array<LWCEFacilityTemplate> LWCE_GetBuildFacilities()
+{
+    local LWCEFacilityTemplate kFacility;
+    local array<LWCEFacilityTemplate> arrAllTemplates, arrFacilities;
+    local bool bAllFacilitiesAvailable;
+
+    arrAllTemplates = m_kFacilityTemplateMgr.GetAllFacilityTemplates();
+    bAllFacilitiesAvailable = false;
+
+    if (XComCheatManager(GetALocalPlayerController().CheatManager) != none)
+    {
+        bAllFacilitiesAvailable = XComCheatManager(GetALocalPlayerController().CheatManager).m_bStrategyAllFacilitiesAvailable;
+    }
+
+    // The vanilla code inserts priority facilities in front, but the list gets sorted anyway,
+    // so we don't bother with that
+    foreach arrAllTemplates(kFacility)
+    {
+        if (!kFacility.bIsBuildable)
+        {
+            continue;
+        }
+
+        if (bAllFacilitiesAvailable || LWCE_CanFacilityBeBuilt(kFacility.GetFacilityName()))
+        {
+            arrFacilities.AddItem(kFacility);
+        }
+    }
+
+    return arrFacilities;
+}
+
 function array<TItem> GetBuildItems(int iCategory)
 {
     local array<TItem> arrItems;
@@ -752,6 +797,16 @@ function int GetEleriumSalePrice()
     `LWCE_LOG_DEPRECATED_NOREPLACE_CLS(GetEleriumSalePrice);
 
     return -1;
+}
+
+function TFacility GetFacility(int iFacility, optional bool bRushConstruction)
+{
+    local TFacility kFacility;
+
+    `LWCE_LOG_CLS("ERROR: LWCE-incompatible function GetFacility was called. This needs to be replaced with the macro LWCE_FACILITY. Stack trace follows.");
+    ScriptTrace();
+
+    return kFacility;
 }
 
 function TItem GetItem(int iItem, optional int iTransactionType = eTransaction_Build)
