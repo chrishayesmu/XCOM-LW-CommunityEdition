@@ -43,6 +43,7 @@ struct CheckpointRecord_LWCE_XGBase extends XGBase.CheckpointRecord
     var array<LWCE_TFacilityTile> m_arrCEFacilities;
     var array<LWCE_TTerrainTile> m_arrCETiles;
 
+    var string m_strName;
     var Vector2D m_vBaseCoords;
     var int m_iNumTilesHigh;
     var int m_iNumTilesWide;
@@ -50,6 +51,7 @@ struct CheckpointRecord_LWCE_XGBase extends XGBase.CheckpointRecord
     var int m_iCountry;
     var int m_iId;
     var bool m_bIsPrimaryBase;
+    var bool m_bUsesAccessLifts;
 };
 
 var config array<LWCE_TTerrainTypeConfig> m_arrTerrainTypeConfig;
@@ -60,6 +62,7 @@ var config array<int> BaselinePowerForNonPrimaryBases;
 var array<LWCE_TFacilityTile> m_arrCEFacilities;
 var array<LWCE_TTerrainTile> m_arrCETiles;
 
+var string m_strName;
 var Vector2D m_vBaseCoords;
 var int m_iNumTilesHigh;
 var int m_iNumTilesWide;
@@ -67,6 +70,7 @@ var int m_iContinent;
 var int m_iCountry;
 var int m_iId;
 var bool m_bIsPrimaryBase;
+var bool m_bUsesAccessLifts;
 
 function Init()
 {
@@ -74,14 +78,21 @@ function Init()
 }
 
 /// <summary>
-/// Initializes this base to have the given width and height, in tiles. While this is dynamic unlike the vanilla game,
-/// it is not changeable after the base is created.
-///
-/// TODO: the base needs to know where in the world it is (country + coordinates)
+/// Initializes this base with the given parameters. Aside from the base's name, other attributes should be considered immutable.
 /// </summary>
-function LWCE_Init(bool IsPrimaryBase, int Id, int Width, int Height, Vector2D Coords)
+/// <param name="strName">The player-visible name of this base.</param>
+/// <param name="bIsPrimaryBase">Whether this is XCOM's main HQ.</param>
+/// <param name="bUsesAccessLifts">Whether this facility requires access lifts. If not, access lifts won't be available to build here,
+/// and all levels can be built at simultaneously. Excavation cost also will not scale based on Y coordinate.</param>
+/// <param name="Id">A unique identifier for this base, used for tracking construction projects.</param>
+/// <param name="Width">How many tiles wide the base is. If more than 7, the Build Facilities UI will get buggy.</param>
+/// <param name="Height">How many tiles tall the base is. All bases have an invisible "0" row of tiles, which should be included in the height.</param>
+/// <param name="Coords">The coordinates on the Geoscape where this base is located.</param>
+function LWCE_Init(string strName, bool bIsPrimaryBase, bool bUsesAccessLifts, int Id, int Width, int Height, Vector2D Coords)
 {
-    m_bIsPrimaryBase = IsPrimaryBase;
+    m_strName = strName;
+    m_bIsPrimaryBase = bIsPrimaryBase;
+    m_bUsesAccessLifts = bUsesAccessLifts;
     m_iId = Id;
     m_iNumTilesWide = Width;
     m_iNumTilesHigh = Height;
@@ -141,7 +152,7 @@ function GenerateTiles()
     local int iNumSteamVents, iTile, I;
     local int iAccessX;
 
-    iNumSteamVents = class'XGTacticalGameCore'.default.NUM_STARTING_STEAM_VENTS;
+    iNumSteamVents = m_bUsesAccessLifts ? class'XGTacticalGameCore'.default.NUM_STARTING_STEAM_VENTS : 0;
 
     // EVENT: BeforeGenerateBaseTiles
     //
@@ -161,12 +172,12 @@ function GenerateTiles()
     iAccessX = GetAccessX(); // after event, in case base size is changed
     iNumSteamVents = kEventData.Data[0].I;
 
-    if (HQ().HasBonus(/* Ring of Fire */ 13) > 0)
+    if (m_bIsPrimaryBase && HQ().HasBonus(/* Ring of Fire */ 13) > 0)
     {
         iNumSteamVents += HQ().HasBonus(13);
     }
 
-    `LWCE_LOG_CLS("GenerateTiles: base is " $ m_iNumTilesHigh $ " tiles high and " $ m_iNumTilesWide $ " tiles wide");
+    `LWCE_LOG_CLS("GenerateTiles: base is " $ m_iNumTilesHigh $ " tiles high and " $ m_iNumTilesWide $ " tiles wide. Is primary base: " $ m_bIsPrimaryBase);
 
     m_arrCETiles.Add(m_iNumTilesHigh * m_iNumTilesWide);
     m_arrCEFacilities.Add(m_iNumTilesHigh * m_iNumTilesWide);
@@ -214,53 +225,64 @@ function GenerateTiles()
         arrDeepRockTiles.Remove(iTile, 1);
     }
 
-    LWCE_SetFacility('Facility_Hangar', 0, 0);
-    LWCE_SetFacility('Facility_Barracks', 2, 0);
-    LWCE_SetFacility('Facility_MissionControl', 4, 0);
-    LWCE_SetFacility('Facility_Research', 6, 0);
-    LWCE_SetFacility('Facility_AccessLift', iAccessX, 1);
-    m_arrCETiles[TileIndex(iAccessX, 1)].eState = eTileState_Accessible;
-    LWCE_SetFacility('Facility_SatelliteUplink', 2, 1);
-
-    if (HQ().HasBonus(/* Skunkworks */ 17) > 0)
+    if (m_bIsPrimaryBase)
     {
-        LWCE_SetFacility('Facility_Foundry', 4, 1);
-        LWCE_XGStrategy(Game()).m_arrCEFacilityUnlocks.AddItem('Facility_Foundry');
+        LWCE_SetFacility('Facility_Hangar', 0, 0);
+        LWCE_SetFacility('Facility_Barracks', 2, 0);
+        LWCE_SetFacility('Facility_MissionControl', 4, 0);
+        LWCE_SetFacility('Facility_Research', 6, 0);
+        LWCE_SetFacility('Facility_SatelliteUplink', 2, 1);
     }
 
-    if (HQ().HasBonus(/* Advanced Preparations */ 20) > 0)
+    if (m_bUsesAccessLifts)
     {
-        LWCE_SetFacility('Facility_Laboratory', 4, 1);
-        LWCE_SetFacility('Facility_Workshop', 5, 1);
-        LWCE_XGStrategy(Game()).m_arrCEFacilityUnlocks.AddItem('Facility_Laboratory');
-        LWCE_XGStrategy(Game()).m_arrCEFacilityUnlocks.AddItem('Facility_Workshop');
+        LWCE_SetFacility('Facility_AccessLift', iAccessX, 1);
+        m_arrCETiles[TileIndex(iAccessX, 1)].eState = eTileState_Accessible;
     }
 
-    if (HQ().HasBonus(/* Research Focus */ 33) > 0)
-    {
-        LWCE_SetFacility('Facility_Laboratory', 4, 1);
-        LWCE_SetFacility('Facility_Laboratory', 5, 1);
-        LWCE_XGStrategy(Game()).m_arrCEFacilityUnlocks.AddItem('Facility_Laboratory');
-    }
 
-    if (HQ().HasBonus(/* Assembly Line */ 34) > 0)
+    if (m_bIsPrimaryBase)
     {
-        LWCE_SetFacility('Facility_Laboratory', 4, 1);
-        LWCE_SetFacility('Facility_Laboratory', 5, 1);
-        LWCE_XGStrategy(Game()).m_arrCEFacilityUnlocks.AddItem('Facility_Laboratory');
-    }
+        if (HQ().HasBonus(/* Skunkworks */ 17) > 0)
+        {
+            LWCE_SetFacility('Facility_Foundry', 4, 1);
+            LWCE_XGStrategy(Game()).m_arrCEFacilityUnlocks.AddItem('Facility_Foundry');
+        }
 
-    if (HQ().HasBonus(/* Roscosmos */ 29) > 0)
-    {
-        LWCE_SetFacility('Facility_SatelliteUplink', 1, 1);
-    }
+        if (HQ().HasBonus(/* Advanced Preparations */ 20) > 0)
+        {
+            LWCE_SetFacility('Facility_Laboratory', 4, 1);
+            LWCE_SetFacility('Facility_Workshop', 5, 1);
+            LWCE_XGStrategy(Game()).m_arrCEFacilityUnlocks.AddItem('Facility_Laboratory');
+            LWCE_XGStrategy(Game()).m_arrCEFacilityUnlocks.AddItem('Facility_Workshop');
+        }
 
-    if (HQ().HasBonus(/* Wei Renmin Fuwu */ 30) > 0)
-    {
-        LWCE_SetFacility('Facility_RepairBay', 4, 1);
-        LWCE_SetFacility('Facility_Workshop', 5, 1);
-        LWCE_XGStrategy(Game()).m_arrCEFacilityUnlocks.AddItem('Facility_RepairBay');
-        LWCE_XGStrategy(Game()).m_arrCEFacilityUnlocks.AddItem('Facility_Workshop');
+        if (HQ().HasBonus(/* Research Focus */ 33) > 0)
+        {
+            LWCE_SetFacility('Facility_Laboratory', 4, 1);
+            LWCE_SetFacility('Facility_Laboratory', 5, 1);
+            LWCE_XGStrategy(Game()).m_arrCEFacilityUnlocks.AddItem('Facility_Laboratory');
+        }
+
+        if (HQ().HasBonus(/* Assembly Line */ 34) > 0)
+        {
+            LWCE_SetFacility('Facility_Laboratory', 4, 1);
+            LWCE_SetFacility('Facility_Laboratory', 5, 1);
+            LWCE_XGStrategy(Game()).m_arrCEFacilityUnlocks.AddItem('Facility_Laboratory');
+        }
+
+        if (HQ().HasBonus(/* Roscosmos */ 29) > 0)
+        {
+            LWCE_SetFacility('Facility_SatelliteUplink', 1, 1);
+        }
+
+        if (HQ().HasBonus(/* Wei Renmin Fuwu */ 30) > 0)
+        {
+            LWCE_SetFacility('Facility_RepairBay', 4, 1);
+            LWCE_SetFacility('Facility_Workshop', 5, 1);
+            LWCE_XGStrategy(Game()).m_arrCEFacilityUnlocks.AddItem('Facility_RepairBay');
+            LWCE_XGStrategy(Game()).m_arrCEFacilityUnlocks.AddItem('Facility_Workshop');
+        }
     }
 
     // EVENT: AfterGenerateBaseTiles
@@ -279,6 +301,11 @@ function GenerateTiles()
 
 function int GetAccessX()
 {
+    if (!m_bUsesAccessLifts)
+    {
+        return -1;
+    }
+
     return m_iNumTilesWide / 2;
 }
 
@@ -606,7 +633,11 @@ function bool HasAccess(int X, int Y)
         return true;
     }
 
-    if (IsAccessLocation(X, Y))
+    if (!m_bUsesAccessLifts)
+    {
+        return true;
+    }
+    else if (IsAccessLocation(X, Y))
     {
         return LWCE_GetFacilityAt(X, Y - 1) == 'Facility_AccessLift';
     }
@@ -620,6 +651,11 @@ function bool HasExcavation(int X, int Y)
 {
     local int iTileX;
     local name nmType;
+
+    if (!m_bUsesAccessLifts)
+    {
+        return true;
+    }
 
     if (X > GetAccessX())
     {

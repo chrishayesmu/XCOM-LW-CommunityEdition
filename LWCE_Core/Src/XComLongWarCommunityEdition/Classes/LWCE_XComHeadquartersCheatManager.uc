@@ -5,6 +5,16 @@ class LWCE_XComHeadquartersCheatManager extends XComHeadquartersCheatManager
 
 `LWCE_GENERATOR_XCOMCHEATMANAGER
 
+exec function BaseNext()
+{
+    ChangeFocusedBase(1);
+}
+
+exec function BasePrevious()
+{
+    ChangeFocusedBase(-1);
+}
+
 exec function CreateAlienBaseAlert()
 {
     local XGMission_AlienBase kMission;
@@ -371,4 +381,49 @@ protected function GiveTechTemplate(LWCETechTemplate kTech, LWCE_XGFacility_Labs
     {
         kLabs.m_arrCEResearched.AddItem(kTech.GetTechName());
     }
+}
+
+protected function ChangeFocusedBase(int iDirection)
+{
+    local LWCE_XGHeadquarters kHQ;
+    local LWCE_XComHQPresentationLayer kPres;
+    local LWCE_XGBuildUI kBuildUI;
+    local int Index;
+
+    kHQ = `LWCE_HQ;
+    kPres = `LWCE_HQPRES;
+
+    if (kPres.m_kBuildFacilities == none)
+    {
+        GetConsole().OutputTextLine("This command can only be used on the build facilities screen.");
+        return;
+    }
+
+    kBuildUI = LWCE_XGBuildUI(kPres.m_kBuildFacilities.GetMgr());
+
+    Index = kHQ.m_arrBases.Find(kBuildUI.GetTargetBase());
+
+    if (Index == INDEX_NONE)
+    {
+        GetConsole().OutputTextLine("ERROR: current base could not be found. This indicates a coding or game data error.");
+        return;
+    }
+
+    Index += iDirection;
+
+    if (Index < 0)
+    {
+        Index = kHQ.m_arrBases.Length - 1;
+    }
+    else
+    {
+        Index = Index % kHQ.m_arrBases.Length;
+    }
+
+    GetConsole().OutputTextLine("Changing UI's base index to " $ Index $ ". Base ID will be " $ kHQ.m_arrBases[Index].m_iId);
+    kBuildUI.SetTargetBaseId(kHQ.m_arrBases[Index].m_iId);
+
+    kPres.PopState();
+    kPres.LWCE_UIBuildBase(kHQ.m_arrBases[Index].m_iId);
+    kPres.m_kBuildFacilities.OnReceiveFocus();
 }

@@ -23,6 +23,8 @@ var array<name> m_arrCELastCaptives;
 var LWCEItemContainer m_kCELastCargoArtifacts;
 var int m_iNextBaseId;
 
+var const localized string m_strHQBaseName;
+
 function Init(bool bLoadingFromSave)
 {
     local XGFacility kFacility;
@@ -95,9 +97,7 @@ function InitNewGame()
         kFacility.InitNewGame();
     }
 
-    m_kBase = Spawn(class'LWCE_XGBase');
-    m_arrBases.AddItem(LWCE_XGBase(m_kBase));
-    LWCE_XGBase(m_kBase).LWCE_Init(/* IsPrimaryBase */ true, /* ID */ m_iNextBaseId, /* Width */ 7, /* Height */ 5, GetCoords());
+    m_kBase = AddBase(m_strHQBaseName, /* bIsPrimaryBase */ true, /* bUsesAccessLifts */ true, /* Width */ 7, /* Height */ 5, GetCoords());
 
     m_kActiveFacility = m_arrFacilities[0];
     m_fAnnounceTimer = 10.0;
@@ -114,11 +114,32 @@ function InitNewGame()
     World().m_kFundingCouncil.InitNewGame();
 }
 
+/// <summary>
+/// Adds a new XCOM base with the given parameters. Aside from the base's name, other attributes should be considered immutable.
+/// </summary>
+/// <param name="strName">The player-visible name of this base.</param>
+/// <param name="bIsPrimaryBase">Whether this is XCOM's main HQ. Only one base should have this set per campaign.</param>
+/// <param name="bUsesAccessLifts">Whether this facility requires access lifts. If not, access lifts won't be available to build here,
+/// and all levels can be built at simultaneously. Excavation cost also will not scale based on Y coordinate.</param>
+/// <param name="Width">How many tiles wide the base is. If more than 7, the Build Facilities UI will get buggy.</param>
+/// <param name="Height">How many tiles tall the base is. All bases have an invisible "0" row of tiles, which should be included in the height.</param>
+/// <param name="Coords">The coordinates on the Geoscape where this base is located.</param>
+function LWCE_XGBase AddBase(string strName, bool bIsPrimaryBase, bool bUsesAccessLifts, int Width, int Height, Vector2D Coords)
+{
+    local LWCE_XGBase kBase;
+
+    kBase = Spawn(class'LWCE_XGBase');
+    kBase.LWCE_Init(strName, bIsPrimaryBase, bUsesAccessLifts, ++m_iNextBaseId, Width, Height, Coords);
+
+    m_arrBases.AddItem(kBase);
+
+    return kBase;
+}
+
 function AddOutpost(int iContinent)
 {
     local XGOutpost kOutpost;
 
-    // TODO: deprecate and replace outposts with LWCE_XGBase
     kOutpost = Spawn(class'LWCE_XGOutpost');
     kOutpost.Init(iContinent);
     m_arrOutposts.AddItem(kOutpost);

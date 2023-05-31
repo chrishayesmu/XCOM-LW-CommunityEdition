@@ -32,6 +32,7 @@ simulated function LWCE_InitFacility(XComPlayerController _controllerRef, UIFxsM
     kMgr = LWCE_XGManufacturingUI(GetMgr());
 
     kMgr.m_iTargetBaseId = iBaseId;
+    kMgr.m_kCEFacilityProject.iBaseId = iBaseId;
     kMgr.m_kCEFacilityProject.FacilityName = FacilityName;
     kMgr.m_kCEFacilityProject.X = X;
     kMgr.m_kCEFacilityProject.Y = Y;

@@ -28,17 +28,28 @@ struct LWCE_TUIFacilityTile
     var bool bAdjacencyBonusTop;
 };
 
-var int m_iBaseId; // ID of the base which this UI is looking at
+var int m_iBaseId; // ID of the base which this UI is looking at. Do not change directly; use SetTargetBaseId.
 var array<LWCE_TUIFacilityTile> m_arrCEFacilityTiles;
 var LWCE_TFacilityTable m_kCETable;
 var array<LWCE_TUIBaseTile> m_arrCETiles;
 
 var private LWCE_XGHeadquarters m_kHQ; // just to save casting constantly
+var private LWCE_XGBase m_kBase; // which base we're looking at
+
+// Coordinate bounds: build cursor isn't allowed outside of these bounds,
+// which are based on the target base's size compared to what the UI's designed for
+var private int m_iMinX;
+var private int m_iMaxX;
+var private int m_iMinY;
+var private int m_iMaxY;
 
 function Init(int iView)
 {
     m_kHQ = LWCE_XGHeadquarters(HQ());
-    m_iBaseId = m_kHQ.m_arrBases[0].m_iId; // TODO: add hooks for mods to let us pick other bases somehow
+    m_iBaseId = m_kHQ.m_arrBases[0].m_iId;
+    m_kBase = GetTargetBase();
+
+    UpdateCoordinateBounds();
 
     super.Init(iView);
 }
@@ -54,7 +65,6 @@ function TUIBaseTile BuildBaseTile(int iTileIndex)
 
 function LWCE_TUIBaseTile LWCE_BuildBaseTile(int iTileIndex)
 {
-    local LWCE_XGBase kBase;
     local LWCE_XGFacility_Engineering kEngineering;
     local LWCE_TUIBaseTile kUITile;
     local LWCE_TFacilityProject kFacilityProject;
@@ -62,15 +72,14 @@ function LWCE_TUIBaseTile LWCE_BuildBaseTile(int iTileIndex)
     local XGParamTag kTag;
     local int Index;
 
-    kBase = GetTargetBase();
     kEngineering = LWCE_XGFacility_Engineering(ENGINEERING());
 
-    kUITile.kTile = kBase.m_arrCETiles[iTileIndex];
-    Index = kBase.m_arrTerrainTypeConfig.Find('nmTerrainType', kUITile.kTile.nmType);
+    kUITile.kTile = m_kBase.m_arrCETiles[iTileIndex];
+    Index = m_kBase.m_arrTerrainTypeConfig.Find('nmTerrainType', kUITile.kTile.nmType);
 
     if (Index != INDEX_NONE)
     {
-        kUITile.imgTile.strLabel = kBase.m_arrTerrainTypeConfig[Index].ImageName;
+        kUITile.imgTile.strLabel = m_kBase.m_arrTerrainTypeConfig[Index].ImageName;
     }
 
     if (kUITile.kTile.nmType == 'RockSteam' || kUITile.kTile.nmType == 'ExcavatedSteam')
@@ -86,7 +95,7 @@ function LWCE_TUIBaseTile LWCE_BuildBaseTile(int iTileIndex)
     if (kUITile.kTile.bConstruction)
     {
         kUITile.imgTile.strLabel = "Construction";
-        kFacilityProject = kEngineering.LWCE_GetFacilityProject(kBase.m_iId, kUITile.kTile.X, kUITile.kTile.Y);
+        kFacilityProject = kEngineering.LWCE_GetFacilityProject(m_kBase.m_iId, kUITile.kTile.X, kUITile.kTile.Y);
         kTag.IntValue0 = kEngineering.LWCE_GetFacilityCounter(kFacilityProject);
         kUITile.txtLabel.StrValue = `LWCE_FACILITY(kFacilityProject.FacilityName).strName;
         kUITile.txtCounter.StrValue = class'XComLocalizer'.static.ExpandStringByTag(m_strLabelDays, kTag);
@@ -94,7 +103,7 @@ function LWCE_TUIBaseTile LWCE_BuildBaseTile(int iTileIndex)
     else if (kUITile.kTile.bExcavation)
     {
         kUITile.imgTile.strLabel = "BeingExcavated";
-        kConstructionProject = kEngineering.LWCE_GetConstructionProject(kBase.m_iId, kUITile.kTile.X, kUITile.kTile.Y);
+        kConstructionProject = kEngineering.LWCE_GetConstructionProject(m_kBase.m_iId, kUITile.kTile.X, kUITile.kTile.Y);
         kTag.IntValue0 = kEngineering.LWCE_GetConstructionCounter(kConstructionProject);
         kUITile.txtLabel.StrValue = m_strLabelExcavating;
         kUITile.txtCounter.StrValue = class'XComLocalizer'.static.ExpandStringByTag(m_strLabelDays, kTag);
@@ -174,7 +183,7 @@ function TTableMenuOption LWCE_BuildFacilityOption(LWCEFacilityTemplate kFacilit
                 break;
         }
 
-        if (kFacility.nmRequiredTerrainType != '' && kFacility.nmRequiredTerrainType != LWCE_XGBase(Base()).LWCE_GetTileAt(m_kCursor.X, m_kCursor.Y).nmType)
+        if (kFacility.nmRequiredTerrainType != '' && kFacility.nmRequiredTerrainType != GetTargetBase().LWCE_GetTileAt(TileXFromUI(m_kCursor.X), TileYFromUI(m_kCursor.Y)).nmType)
         {
             kOption.iState = eUIState_Disabled;
             kOption.strHelp = m_strErrNeedSteam; // TODO update this error message
@@ -198,7 +207,6 @@ function TUIFacilityTile BuildFacilityTile(int iTileIndex)
 
 function LWCE_TUIFacilityTile LWCE_BuildFacilityTile(int iTileIndex)
 {
-    local LWCE_XGBase kBase;
     local LWCE_XGFacility_Engineering kEngineering;
     local LWCE_TUIFacilityTile kUITile;
     local LWCEFacilityTemplate kFacility;
@@ -206,20 +214,19 @@ function LWCE_TUIFacilityTile LWCE_BuildFacilityTile(int iTileIndex)
     local XGParamTag kTag;
 
     kEngineering = LWCE_XGFacility_Engineering(ENGINEERING());
-    kBase = GetTargetBase();
-    kFacility = `LWCE_FACILITY(kBase.m_arrCEFacilities[iTileIndex].FacilityName);
+    kFacility = `LWCE_FACILITY(m_kBase.m_arrCEFacilities[iTileIndex].FacilityName);
 
-    kUITile.kTile = kBase.m_arrCEFacilities[iTileIndex];
+    kUITile.kTile = m_kBase.m_arrCEFacilities[iTileIndex];
     kUITile.txtLabel.StrValue = kFacility.strName;
     kUITile.bDoubleSize = false; // TODO: rewrite the size system to be more flexible
     kUITile.imgTile.strLabel = kFacility.ImageLabel;
-    kUITile.bAdjacencyBonusLeft = kBase.LWCE_GetAdjacency(kUITile.kTile.X, kUITile.kTile.Y, kUITile.kTile.X - 1, kUITile.kTile.Y) != '';
-    kUITile.bAdjacencyBonusTop = kBase.LWCE_GetAdjacency(kUITile.kTile.X, kUITile.kTile.Y, kUITile.kTile.X, kUITile.kTile.Y - 1) != '';
+    kUITile.bAdjacencyBonusLeft = m_kBase.LWCE_GetAdjacency(kUITile.kTile.X, kUITile.kTile.Y, kUITile.kTile.X - 1, kUITile.kTile.Y) != '';
+    kUITile.bAdjacencyBonusTop = m_kBase.LWCE_GetAdjacency(kUITile.kTile.X, kUITile.kTile.Y, kUITile.kTile.X, kUITile.kTile.Y - 1) != '';
 
     if (kUITile.kTile.bIsBeingRemoved)
     {
         kTag = new class'XGParamTag';
-        kConstructionProject = kEngineering.LWCE_GetConstructionProject(kBase.m_iId, kUITile.kTile.X, kUITile.kTile.Y);
+        kConstructionProject = kEngineering.LWCE_GetConstructionProject(m_kBase.m_iId, kUITile.kTile.X, kUITile.kTile.Y);
         kTag.IntValue0 = kEngineering.LWCE_GetConstructionCounter(kConstructionProject);
         kUITile.txtLabel.StrValue @= m_strLabelRemoving;
         kUITile.txtCounter.StrValue = class'XComLocalizer'.static.ExpandStringByTag(m_strLabelDays, kTag);
@@ -244,28 +251,29 @@ function TObjectSummary LWCE_BuildSummary(LWCEFacilityTemplate kFacility)
     kSummary.imgObject.strPath = kFacility.ImagePath;
     kSummary.txtSummary.StrValue = kFacility.strBriefSummary;
     kSummary.txtRequirementsLabel.StrValue = m_strLabelRequiredBuild;
-    kSummary.bCanAfford = LWCE_XGFacility_Engineering(ENGINEERING()).LWCE_GetFacilityCostSummary(kSummary.kCost, kFacility.GetFacilityName(), m_kCursor.X, m_kCursor.Y, false);
+    kSummary.bCanAfford = LWCE_XGFacility_Engineering(ENGINEERING()).LWCE_GetFacilityCostSummary(kSummary.kCost, kFacility.GetFacilityName(), TileXFromUI(m_kCursor.X), TileYFromUI(m_kCursor.Y), false);
 
     return kSummary;
 }
 
 simulated function ConfirmCancelConstructionDialogueCallback(EUIAction eAction)
 {
-    local LWCE_XGBase kBase;
+    local int TileX, TileY;
+
+    TileX = TileXFromUI(m_kCursor.X);
+    TileY = TileYFromUI(m_kCursor.Y);
 
     if (eAction == eUIAction_Accept)
     {
-        kBase = GetTargetBase();
+        m_kBase.m_arrCETiles[m_kBase.TileIndex(TileX, TileY)].bConstruction = false;
+        m_kBase.m_arrCETiles[m_kBase.TileIndex(TileX, TileY)].bExcavation = false;
 
-        kBase.m_arrCETiles[kBase.TileIndex(m_kCursor.X, m_kCursor.Y)].bConstruction = false;
-        kBase.m_arrCETiles[kBase.TileIndex(m_kCursor.X, m_kCursor.Y)].bExcavation = false;
-
-        if (kBase.LWCE_GetFacilityAt(m_kCursor.X, m_kCursor.Y) != '')
+        if (m_kBase.LWCE_GetFacilityAt(TileX, TileY) != '')
         {
-            kBase.m_arrCEFacilities[kBase.TileIndex(m_kCursor.X, m_kCursor.Y)].bIsBeingRemoved = false;
+            m_kBase.m_arrCEFacilities[m_kBase.TileIndex(TileX, TileY)].bIsBeingRemoved = false;
         }
 
-        LWCE_XGFacility_Engineering(ENGINEERING()).LWCE_CancelConstructionProject(kBase.m_iId, m_kCursor.X, m_kCursor.Y);
+        LWCE_XGFacility_Engineering(ENGINEERING()).LWCE_CancelConstructionProject(m_kBase.m_iId, TileX, TileY);
         Sound().PlaySFX(SNDLIB().SFX_UI_FacilityRemoved);
     }
 
@@ -293,6 +301,11 @@ function string LWCE_GetCostString(LWCE_TProjectCost kCost)
     return strReturn;
 }
 
+function LWCE_XGBase GetTargetBase()
+{
+    return m_kHQ.GetBaseById(m_iBaseId);
+}
+
 function int GetTilesHigh()
 {
     return GetTargetBase().m_iNumTilesHigh;
@@ -305,9 +318,10 @@ function int GetTilesWide()
 
 function OnChooseTile()
 {
-    local LWCE_XGBase kBase;
+    local int TileX, TileY;
 
-    kBase = GetTargetBase();
+    TileX = TileXFromUI(m_kCursor.X);
+    TileY = TileYFromUI(m_kCursor.Y);
 
     if (m_kCursor.iCursorState == eBCS_CantDo)
     {
@@ -316,11 +330,11 @@ function OnChooseTile()
     else if (m_kCursor.iCursorState == eBCS_BuildFacility)
     {
         GoToView(eBuildView_Menu);
-        PRES().CAMLookAtHQTile(m_kCursor.X, m_kCursor.Y, 1.0);
+        PRES().CAMLookAtHQTile(TileX, TileY, 1.0);
     }
     else if (m_kCursor.iCursorState == eBCS_BuildAccessLift)
     {
-        LWCE_XComHQPresentationLayer(PRES()).LWCE_UIManufactureFacility('Facility_AccessLift', kBase.m_iId, m_kCursor.X, m_kCursor.Y);
+        LWCE_XComHQPresentationLayer(PRES()).LWCE_UIManufactureFacility('Facility_AccessLift', m_kBase.m_iId, TileX, TileY);
     }
     else if (m_kCursor.iCursorState == eBCS_Cancel)
     {
@@ -328,20 +342,42 @@ function OnChooseTile()
     }
     else if (m_kCursor.iCursorState == eBCS_Excavate)
     {
-        kBase.m_arrCETiles[Base().TileIndex(m_kCursor.X, m_kCursor.Y)].bExcavation = true;
-        LWCE_XGFacility_Engineering(ENGINEERING()).LWCE_AddConstructionProject(eBCS_Excavate, kBase.m_iId, m_kCursor.X, m_kCursor.Y);
+        m_kBase.m_arrCETiles[m_kBase.TileIndex(TileX, TileY)].bExcavation = true;
+        LWCE_XGFacility_Engineering(ENGINEERING()).LWCE_AddConstructionProject(eBCS_Excavate, m_kBase.m_iId, TileX, TileY);
         UpdateView();
         Sound().PlaySFX(SNDLIB().SFX_UI_ExcavationStarted);
     }
     else if (m_kCursor.iCursorState == eBCS_RemoveFacility)
     {
-        LWCE_ConfirmRemovalDialogue(m_kCursor.X, m_kCursor.Y);
+        LWCE_ConfirmRemovalDialogue(TileX, TileY);
     }
+}
+
+function OnCursorDown()
+{
+    if (m_kCursor.Y == m_iMaxY)
+    {
+        PlayBadSound();
+        return;
+    }
+
+    m_kCursor.Y += 1;
+
+    // TODO support facility sizes
+    /*
+    if (Base().GetTileAt(m_kCursor.X, m_kCursor.Y).bSecondTile)
+    {
+        m_kCursor.X -= 1;
+    }
+    */
+
+    PlayScrollSound();
+    UpdateView();
 }
 
 function OnCursorLeft()
 {
-    if (m_kCursor.X == 0)
+    if (m_kCursor.X == m_iMinX)
     {
         PlayBadSound();
         return;
@@ -367,7 +403,7 @@ function OnCursorLeft()
 
 function OnCursorRight()
 {
-    if (m_kCursor.X == LWCE_XGBase(Base()).m_iNumTilesWide - 1)
+    if (m_kCursor.X == m_iMaxX)
     {
         PlayBadSound();
         return;
@@ -380,7 +416,7 @@ function OnCursorRight()
 
 function OnCursorUp()
 {
-    if (m_kCursor.Y == 1)
+    if (m_kCursor.Y == m_iMinY)
     {
         PlayBadSound();
         return;
@@ -400,30 +436,13 @@ function OnCursorUp()
     UpdateView();
 }
 
-function OnCursorDown()
-{
-    if (m_kCursor.Y == LWCE_XGBase(Base()).m_iNumTilesHigh - 1)
-    {
-        PlayBadSound();
-        return;
-    }
-
-    m_kCursor.Y += 1;
-
-    // TODO support facility sizes
-    /*
-    if (Base().GetTileAt(m_kCursor.X, m_kCursor.Y).bSecondTile)
-    {
-        m_kCursor.X -= 1;
-    }
-    */
-
-    PlayScrollSound();
-    UpdateView();
-}
-
 function OnChooseFacility(int iOption)
 {
+    local int TileX, TileY;
+
+    TileX = TileXFromUI(m_kCursor.X);
+    TileY = TileYFromUI(m_kCursor.Y);
+
     if (m_kCETable.mnuOptions.arrOptions[iOption].iState == eUIState_Disabled)
     {
         PlayBadSound();
@@ -431,23 +450,41 @@ function OnChooseFacility(int iOption)
     }
     else
     {
-        LWCE_XComHQPresentationLayer(PRES()).LWCE_UIManufactureFacility(m_kCETable.arrFacilities[iOption], m_iBaseId, m_kCursor.X, m_kCursor.Y);
+        LWCE_XComHQPresentationLayer(PRES()).LWCE_UIManufactureFacility(m_kCETable.arrFacilities[iOption], m_iBaseId, TileX, TileY);
     }
+}
+
+function SetTargetBaseId(int iBaseId)
+{
+    m_iBaseId = iBaseId;
+    m_kBase = GetTargetBase();
+
+    m_arrCETiles.Length = 0;
+    m_arrCEFacilityTiles.Length = 0;
+
+    UpdateCoordinateBounds();
+    UpdateView();
 }
 
 function UpdateCursor()
 {
-    local LWCE_XGBase kBase;
     local LWCE_TTerrainTile kTile;
     local LWCE_TProjectCost kCost;
     local TText txtCost, txtHelp;
     local TButtonText txtLabel;
     local name FacilityName;
+    local int TileX, TileY;
+
+    // Clamp cursor position to ensure it's in-bounds when switching between bases
+    m_kCursor.X = Clamp(m_kCursor.X, m_iMinX, m_iMaxX);
+    m_kCursor.Y = Clamp(m_kCursor.Y, m_iMinY, m_iMaxY);
+
+    TileX = TileXFromUI(m_kCursor.X);
+    TileY = TileYFromUI(m_kCursor.Y);
 
     m_kCursor.iSize = 1;
     m_kCursor.iCursorState = eBCS_CantDo;
-    kBase = GetTargetBase();
-    kTile = kBase.LWCE_GetTileAt(m_kCursor.X, m_kCursor.Y);
+    kTile = m_kBase.LWCE_GetTileAt(TileX, TileY);
 
     if ( kTile.eState == eTileState_Accessible && (kTile.bConstruction || kTile.bExcavation) )
     {
@@ -459,11 +496,11 @@ function UpdateCursor()
     {
         if (kTile.bHasFacility)
         {
-                FacilityName = kBase.LWCE_GetFacilityAt(m_kCursor.X, m_kCursor.Y);
+                FacilityName = m_kBase.LWCE_GetFacilityAt(TileX, TileY);
                 // TODO implement variable facility sizes later
                 // m_kCursor.iSize = `LWCE_FACILITY(FacilityName).iSize;
 
-                if (kBase.m_arrCEFacilities[kBase.TileIndex(m_kCursor.X, m_kCursor.Y)].bIsBeingRemoved)
+                if (m_kBase.m_arrCEFacilities[m_kBase.TileIndex(TileX, TileY)].bIsBeingRemoved)
                 {
                     m_kCursor.iCursorState = eBCS_Cancel;
                     txtLabel.StrValue = m_strLabelCancel;
@@ -482,10 +519,9 @@ function UpdateCursor()
         {
             switch (kTile.nmType)
             {
-                case 'Open':
                 case 'Excavated':
                 case 'ExcavatedSteam':
-                    if (kBase.IsAccessLocation(m_kCursor.X, m_kCursor.Y))
+                    if (m_kBase.IsAccessLocation(TileX, TileY))
                     {
                         m_kCursor.iCursorState = eBCS_BuildAccessLift;
                         txtLabel.StrValue = m_strLabelBuildLift;
@@ -500,7 +536,7 @@ function UpdateCursor()
 
                     if (kTile.nmType == 'ExcavatedSteam')
                     {
-                        RemoveTerrainTileLabelAtIndex(kBase.TileIndex(m_kCursor.X, m_kCursor.Y));
+                        RemoveTerrainTileLabelAtIndex(m_kBase.TileIndex(TileX, TileY));
                     }
                     else
                     {
@@ -516,12 +552,13 @@ function UpdateCursor()
 
                     if (kTile.nmType == 'RockSteam')
                     {
-                        RemoveTerrainTileLabelAtIndex(kBase.TileIndex(m_kCursor.X, m_kCursor.Y));
+                        RemoveTerrainTileLabelAtIndex(m_kBase.TileIndex(TileX, TileY));
                     }
                     else
                     {
                         m_iLastTileIndex = -1;
                     }
+
                     break;
                 default:
                     break;
@@ -544,14 +581,14 @@ function UpdateCursor()
 
     if (m_kCursor.iCursorState != eBCS_CantDo && m_kCursor.iCursorState != eBCS_BuildFacility && m_kCursor.iCursorState != eBCS_BuildAccessLift)
     {
-        kCost = LWCE_XGFacility_Engineering(ENGINEERING()).LWCE_GetConstructionProjectCost(m_kCursor.iCursorState, kBase.m_iId, m_kCursor.X, m_kCursor.Y);
+        kCost = LWCE_XGFacility_Engineering(ENGINEERING()).LWCE_GetConstructionProjectCost(m_kCursor.iCursorState, m_kBase.m_iId, TileX, TileY);
 
         if (kCost.kCost.iCash != 0)
         {
             txtCost.StrValue = LWCE_GetCostString(kCost);
         }
 
-        if (!kBase.LWCE_CanAfford(m_kCursor.iCursorState, kCost, txtHelp))
+        if (!m_kBase.LWCE_CanAfford(m_kCursor.iCursorState, kCost, txtHelp))
         {
             m_kCursor.iCursorState = eBCS_CantDo;
         }
@@ -619,7 +656,7 @@ function UpdateFacilityTable()
 function UpdateHeader()
 {
     m_kHeader.txtCash = GetResourceText(eResource_Money);
-    m_kHeader.txtPower = GetResourceText(eResource_Power);
+    m_kHeader.txtPower = GetPowerResourceText();
 
     if (LWCE_XGStorage(STORAGE()).LWCE_EverHadItem('Item_Elerium'))
     {
@@ -635,18 +672,15 @@ function UpdateHeader()
 function UpdateTiles()
 {
     local int iTile, iTerrain, iFacility;
-    local LWCE_XGBase kBase;
 
-    kBase = GetTargetBase();
-
-    for (iTile = 0; iTile < kBase.m_arrCETiles.Length; iTile++)
+    for (iTile = 0; iTile < m_kBase.m_arrCETiles.Length; iTile++)
     {
-        if (kBase.m_arrCETiles[iTile].Y == 0)
+        if (m_kBase.m_arrCETiles[iTile].Y == 0)
         {
             continue;
         }
 
-        if (!kBase.m_arrCETiles[iTile].bHasFacility)
+        if (!m_kBase.m_arrCETiles[iTile].bHasFacility)
         {
             m_arrCETiles[iTerrain++] = LWCE_BuildBaseTile(iTile);
         }
@@ -654,18 +688,29 @@ function UpdateTiles()
 
     m_arrCEFacilityTiles.Length = 0;
 
-    for (iTile = 0; iTile < kBase.m_arrCEFacilities.Length; iTile++)
+    for (iTile = 0; iTile < m_kBase.m_arrCEFacilities.Length; iTile++)
     {
-        if (kBase.m_arrCETiles[iTile].Y == 0)
+        if (m_kBase.m_arrCETiles[iTile].Y == 0)
         {
             continue;
         }
 
-        if (kBase.m_arrCEFacilities[iTile].FacilityName != '')
+        if (m_kBase.m_arrCEFacilities[iTile].FacilityName != '')
         {
             m_arrCEFacilityTiles[iFacility++] = LWCE_BuildFacilityTile(iTile);
         }
     }
+}
+
+protected function TLabeledText GetPowerResourceText()
+{
+    local TLabeledText kResource;
+
+    kResource.StrValue = m_kBase.GetPowerUsed() $ "/" $ m_kBase.GetPowerCapacity();
+    kResource.strLabel = GetResourceLabel(eResource_Power);
+    kResource.iState = m_kBase.GetPowerAvailable() > 0 ? eUIState_Warning : eUIState_Bad;
+    kResource.bNumber = true;
+    return kResource;
 }
 
 function int SortFacilities(TFacility kFacility1, TFacility kFacility2)
@@ -675,7 +720,7 @@ function int SortFacilities(TFacility kFacility1, TFacility kFacility2)
     return 0;
 }
 
-function int LWCE_SortFacilities(LWCEFacilityTemplate kFacility1, LWCEFacilityTemplate kFacility2)
+protected function int LWCE_SortFacilities(LWCEFacilityTemplate kFacility1, LWCEFacilityTemplate kFacility2)
 {
     local bool bIsPriority1, bIsPriority2;
     local name nmTargetTileType;
@@ -693,7 +738,7 @@ function int LWCE_SortFacilities(LWCEFacilityTemplate kFacility1, LWCEFacilityTe
         return -1;
     }
 
-    nmTargetTileType = LWCE_XGBase(BASE()).LWCE_GetTileAt(m_kCursor.X, m_kCursor.Y).nmType;
+    nmTargetTileType = GetTargetBase().LWCE_GetTileAt(TileXFromUI(m_kCursor.X), TileYFromUI(m_kCursor.Y)).nmType;
 
     // If the target tile is capable of hosting special facilities (e.g. steam for Thermo Generators), those facilities should
     // be hoisted to the top of the list
@@ -717,7 +762,6 @@ function int LWCE_SortFacilities(LWCEFacilityTemplate kFacility1, LWCEFacilityTe
 
 protected function LWCE_ConfirmRemovalDialogue(int X, int Y)
 {
-    local LWCE_XGBase kBase;
     local LWCE_XGFacility_Engineering kEngineering;
     local LWCEFacilityTemplate kFacility;
     local TDialogueBoxData kDialogData;
@@ -725,8 +769,7 @@ protected function LWCE_ConfirmRemovalDialogue(int X, int Y)
     local int iPower, iSatCap;
 
     kEngineering = LWCE_XGFacility_Engineering(ENGINEERING());
-    kBase = GetTargetBase();
-    FacilityName = kBase.LWCE_GetFacilityAt(X, Y);
+    FacilityName = m_kBase.LWCE_GetFacilityAt(X, Y);
     kFacility = `LWCE_FACILITY(FacilityName);
 
     kDialogData.eType = eDialog_Normal;
@@ -748,10 +791,10 @@ protected function LWCE_ConfirmRemovalDialogue(int X, int Y)
     {
         if (kFacility.arrAdjacencies.Find('Power') != INDEX_NONE)
         {
-            iPower += kBase.LWCE_GetSurroundingAdjacencies(X, Y, 'Power') * class'XGTacticalGameCore'.default.POWER_ADJACENCY_BONUS;
+            iPower += m_kBase.LWCE_GetSurroundingAdjacencies(X, Y, 'Power') * class'XGTacticalGameCore'.default.POWER_ADJACENCY_BONUS;
         }
 
-        if (kBase.GetPowerAvailable() < iPower)
+        if (m_kBase.GetPowerAvailable() < iPower)
         {
             kDialogData.strText = m_strPowerCantRemoveBody;
             m_bCantRemove = true;
@@ -851,16 +894,17 @@ protected function LWCE_ConfirmRemovalDialogue(int X, int Y)
 
 simulated function ConfirmRemovalDialogueCallback(EUIAction eAction)
 {
-    local LWCE_XGBase kBase;
+    local int TileX, TileY;
 
-    kBase = GetTargetBase();
+    TileX = TileXFromUI(m_kCursor.X);
+    TileY = TileYFromUI(m_kCursor.Y);
 
     if (eAction == eUIAction_Accept)
     {
         if (!m_bCantRemove)
         {
-            kBase.m_arrCEFacilities[kBase.TileIndex(m_kCursor.X, m_kCursor.Y)].bIsBeingRemoved = true;
-            LWCE_XGFacility_Engineering(ENGINEERING()).LWCE_AddConstructionProject(eBCS_RemoveFacility, kBase.m_iId, m_kCursor.X, m_kCursor.Y);
+            m_kBase.m_arrCEFacilities[m_kBase.TileIndex(TileX, TileY)].bIsBeingRemoved = true;
+            LWCE_XGFacility_Engineering(ENGINEERING()).LWCE_AddConstructionProject(eBCS_RemoveFacility, m_kBase.m_iId, TileX, TileY);
             Sound().PlaySFX(SNDLIB().SFX_UI_FacilityRemoved);
         }
     }
@@ -868,7 +912,27 @@ simulated function ConfirmRemovalDialogueCallback(EUIAction eAction)
     UpdateView();
 }
 
-protected function LWCE_XGBase GetTargetBase()
+protected function int TileXFromUI(int X)
 {
-    return m_kHQ.GetBaseById(m_iBaseId);
+    return X - (NUM_TERRAIN_WIDE - m_kBase.m_iNumTilesWide) / 2;
+}
+
+protected function int TileYFromUI(int Y)
+{
+    return Y - (NUM_TERRAIN_HIGH - m_kBase.m_iNumTilesHigh) / 2;
+}
+
+protected function UpdateCoordinateBounds()
+{
+    local float fOffsetX, fOffsetY;
+
+    fOffsetX = (NUM_TERRAIN_WIDE - m_kBase.m_iNumTilesWide) / 2.0f;
+    m_iMinX = FCeil(fOffsetX);
+    m_iMaxX = NUM_TERRAIN_WIDE - FFloor(fOffsetX) - 1;
+
+    fOffsetY = (NUM_TERRAIN_HIGH - m_kBase.m_iNumTilesHigh) / 2.0f;
+    m_iMinY = FFloor(fOffsetY) + 1;
+    m_iMaxY = NUM_TERRAIN_HIGH - FCeil(fOffsetY) - 1;
+
+    `LWCE_LOG_CLS("Coordinate bounds: [" $ m_iMinX $ ", " $ m_iMinY $ "] to [" $ m_iMaxX $ ", " $ m_iMaxY $ "]");
 }

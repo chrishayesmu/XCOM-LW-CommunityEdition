@@ -52,6 +52,23 @@ function ReplaceClassWithLWCEEquivalent(out class<Actor> kClass)
     }
 }
 
+reliable client simulated function UIBuildBase()
+{
+    `LWCE_LOG_DEPRECATED_CLS(UIBuildBase);
+}
+
+reliable client simulated function LWCE_UIBuildBase(optional int iBaseId = -1)
+{
+    if (iBaseId == -1)
+    {
+        iBaseId = LWCE_XGBase(`LWCE_HQ.m_kBase).m_iId;
+    }
+
+    m_kBuildFacilities = Spawn(class'LWCE_UIBuildFacilities', self);
+    LWCE_UIBuildFacilities(m_kBuildFacilities).LWCE_Init(XComPlayerController(Owner), GetHUD(), iBaseId);
+    PushState('State_BaseBuild');
+}
+
 reliable client simulated function UIChooseSquad(XGMission kMission)
 {
     m_kSquadSelect = Spawn(class'LWCE_UISquadSelect', self);
@@ -250,8 +267,6 @@ simulated state State_BaseBuild
     simulated function Activate()
     {
         GetCamera().StartRoomViewNamed('Expansion', 1.0);
-        m_kBuildFacilities = Spawn(class'LWCE_UIBuildFacilities', self);
-        m_kBuildFacilities.Init(XComPlayerController(Owner), GetHUD());
         GetStrategyHUD().m_kBuildQueue.Hide();
     }
 }

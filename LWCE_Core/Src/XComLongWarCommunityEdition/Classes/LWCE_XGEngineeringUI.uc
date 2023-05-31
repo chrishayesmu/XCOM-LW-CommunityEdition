@@ -316,6 +316,38 @@ function OnItemTableOption(int iOption)
     }
 }
 
+function OnMainMenuOption(int iOption)
+{
+    local int iNewView;
+
+    if (m_kMainMenu.mnuOptions.arrOptions[iOption].iState == eUIState_Disabled)
+    {
+        PlayBadSound();
+        return;
+    }
+    else
+    {
+        PlaySound(`SoundCue("SoundUI.MenuSelectCue"), true);
+        iNewView = m_arrMenuOptions[iOption];
+
+        if (iNewView == eEngView_BaseBuilding)
+        {
+            LWCE_XComHQPresentationLayer(PRES()).LWCE_UIBuildBase();
+        }
+        else if (iNewView == eEngView_Foundry)
+        {
+            PRES().UIFoundry();
+            PRES().GetStrategyHUD().m_kBuildQueue.RealizeNavigation();
+        }
+        else
+        {
+            GoToView(iNewView);
+        }
+
+        PlayOpenSound();
+    }
+}
+
 function OnNextTab()
 {
     local int iTab, iNextTab;

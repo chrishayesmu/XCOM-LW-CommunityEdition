@@ -144,7 +144,7 @@ function OnCancelOrder()
             if (!IsNewProject())
             {
                 RestoreFacilityFunds();
-                ENGINEERING().CancelFacilityProject(m_kCEFacilityProject.X, m_kCEFacilityProject.Y);
+                LWCE_XGFacility_Engineering(ENGINEERING()).LWCE_CancelFacilityProject(m_iTargetBaseId, m_kCEFacilityProject.X, m_kCEFacilityProject.Y);
             }
 
             break;

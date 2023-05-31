@@ -274,6 +274,7 @@ function TProjectCost GetConstructionProjectCost(int iConstructionType, int X, i
 
 function LWCE_TProjectCost LWCE_GetConstructionProjectCost(int iConstructionType, int iBaseId, int X, int Y)
 {
+    local LWCE_XGBase kBase;
     local LWCEDataContainer kEventData;
     local LWCE_TProjectCost kCost;
     local LWCECost kCostObj;
@@ -284,7 +285,13 @@ function LWCE_TProjectCost LWCE_GetConstructionProjectCost(int iConstructionType
     }
     else if (iConstructionType == eBCS_Excavate)
     {
-        kCost.kCost.iCash = class'XGTacticalGameCore'.default.BASE_EXCAVATE_CASH_COST * (2 ** (Y - 1));
+        kBase = LWCE_XGHeadquarters(HQ()).GetBaseById(iBaseId);
+        kCost.kCost.iCash = class'XGTacticalGameCore'.default.BASE_EXCAVATE_CASH_COST;
+
+        if (kBase.m_bUsesAccessLifts)
+        {
+            kCost.kCost.iCash *=  2 ** (Y - 1);
+        }
 
         if (HQ().HasBonus(/* Cheyenne Mountain */ 24) > 0)
         {
@@ -505,6 +512,7 @@ function TFacilityProject GetFacilityProject(int X, int Y)
 
 function LWCE_TFacilityProject LWCE_GetFacilityProject(int iBaseId, int X, int Y)
 {
+    local LWCE_TFacilityProject kEmptyProject;
     local int iProject;
 
     for (iProject = 0; iProject < m_arrCEFacilityProjects.Length; iProject++)
@@ -514,6 +522,8 @@ function LWCE_TFacilityProject LWCE_GetFacilityProject(int iBaseId, int X, int Y
             return m_arrCEFacilityProjects[iProject];
         }
     }
+
+    return kEmptyProject;
 }
 
 function TProjectCost GetFacilityProjectCost(EFacilityType eFacility, int X, int Y, bool bRushFacility)
@@ -655,7 +665,10 @@ function OnConstructionCompleted(int iProject)
 
 function OnFacilityCompleted(int iProject)
 {
+    local LWCE_XGBase kBase;
     local LWCEDataContainer kData;
+
+    kBase = LWCE_XGHeadquarters(HQ()).GetBaseById(m_arrCEFacilityProjects[iProject].iBaseId);
 
     if (m_arrCEFacilityProjects[iProject].bNotify)
     {
@@ -673,7 +686,7 @@ function OnFacilityCompleted(int iProject)
         }
     }
 
-    LWCE_XGBase(Base()).LWCE_PerformAction(eBCS_BuildFacility, m_arrCEFacilityProjects[iProject].X, m_arrCEFacilityProjects[iProject].Y, m_arrCEFacilityProjects[iProject].FacilityName);
+    kBase.LWCE_PerformAction(eBCS_BuildFacility, m_arrCEFacilityProjects[iProject].X, m_arrCEFacilityProjects[iProject].Y, m_arrCEFacilityProjects[iProject].FacilityName);
 
     switch (m_arrCEFacilityProjects[iProject].FacilityName)
     {
@@ -2153,7 +2166,8 @@ function bool LWCE_CalcWorkshopRebate(LWCE_TProjectCost kProjectCost, out LWCE_T
         return false;
     }
 
-    iAdjs = 2 * HQ().GetNumFacilities(eFacility_Workshop) + Base().GetAdjacencies(eAdj_Engineering);
+    // TODO: this only counts adjacencies in one base; need a way to handle this with multiple bases
+    iAdjs = 2 * HQ().GetNumFacilities(eFacility_Workshop) + LWCE_XGBase(Base()).LWCE_GetAdjacencies('Workshop');
     fExp = iAdjs / 2.0f;
     fBase = 1.0f - FMin(99.0f, 2.0f * class'XGTacticalGameCore'.default.WORKSHOP_REBATE_PCT) / 100.0f;
     fRebatePercent = 0.5f - 0.5f * (fBase ** fExp); // asymptotically approaches 50% rebate
