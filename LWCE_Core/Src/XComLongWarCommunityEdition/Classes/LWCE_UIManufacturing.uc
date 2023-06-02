@@ -74,6 +74,59 @@ simulated function LWCE_InitItem(XComPlayerController _controllerRef, UIFxsMovie
     kManufacturing.DirectInitialize();
 }
 
+simulated function string GetCost()
+{
+    local TManWidget tWidget;
+    local int iReq;
+    local string infoText, descText, prereqs;
+
+    tWidget = GetMgr().m_kWidget;
+    prereqs = "";
+
+    if (tWidget.kCost.arrRequirements.Length > 0)
+    {
+        prereqs = class'UIUtilities'.static.GetHTMLColoredText(GetMgr().m_kWidget.txtResourcesLabel.StrValue, GetMgr().m_kWidget.txtResourcesLabel.iState);
+
+        for (iReq = 0; iReq < tWidget.kCost.arrRequirements.Length; iReq++)
+        {
+            prereqs @= class'UIUtilities'.static.GetHTMLColoredText(tWidget.kCost.arrRequirements[iReq].StrValue, tWidget.kCost.arrRequirements[iReq].iState);
+
+            if (iReq != tWidget.kCost.arrRequirements.Length - 1)
+            {
+                prereqs $= ",";
+            }
+        }
+    }
+
+    if (tWidget.kCost.strHelp != "")
+    {
+        descText = class'UIUtilities'.static.GetHTMLColoredText(tWidget.kCost.strHelp, eUIState_Bad) $ "\n";
+    }
+
+    infoText = prereqs $ "\n" $ descText;
+    return infoText;
+}
+
+simulated function string GetNotes()
+{
+    local string strNotes;
+
+    strNotes = "";
+
+    if (GetMgr().m_kWidget.txtProblem.StrValue != "")
+    {
+        strNotes $= class'UIUtilities'.static.GetHTMLColoredText(GetMgr().m_kWidget.txtProblem.StrValue, GetMgr().m_kWidget.txtProblem.iState) $ "\n";
+    }
+
+    if (GetMgr().m_kWidget.txtNotes.StrValue != "")
+    {
+        strNotes $= class'UIUtilities'.static.GetHTMLColoredText(GetMgr().m_kWidget.txtNotesLabel.StrValue, GetMgr().m_kWidget.txtNotesLabel.iState);
+        strNotes @= class'UIUtilities'.static.GetHTMLColoredText(GetMgr().m_kWidget.txtNotes.StrValue, GetMgr().m_kWidget.txtNotes.iState);
+    }
+
+    return strNotes;
+}
+
 simulated function Remove()
 {
     XComHQPresentationLayer(controllerRef.m_Pres).RemoveMgr(class'LWCE_XGManufacturingUI');

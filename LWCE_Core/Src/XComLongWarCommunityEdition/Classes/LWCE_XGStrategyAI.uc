@@ -977,6 +977,72 @@ function LWCE_DetermineCrashLoot(LWCE_XGShip_UFO kUFO, LWCE_XGShip_Interceptor k
     }
 }
 
+function GetEvents(out array<THQEvent> arrEvents)
+{
+    local int iObjective, iLastMission;
+    local EMissionType eMission;
+
+    if (m_iCouncilCounter > 0)
+    {
+        AddAIEvent(eMission_Special, m_iCouncilCounter / 2, 0, arrEvents);
+    }
+
+    for (iObjective = 0; iObjective < m_arrObjectives.Length; iObjective++)
+    {
+        if (m_arrObjectives[iObjective].m_bComplete)
+        {
+            continue;
+        }
+
+        eMission = eMission_None;
+
+        switch (m_arrObjectives[iObjective].m_kTObjective.eType)
+        {
+            case eObjective_Recon: // Research
+            case eObjective_Harvest:
+                eMission = eMission_LandedUFO;
+                break;
+            case eObjective_Flyby:
+                if (!LWCE_XGHeadquarters(HQ()).LWCE_HasFacility('Facility_HyperwaveRelay'))
+                {
+                    eMission = eMission_None;
+                }
+                else
+                {
+                    eMission = 12;
+                }
+
+                break;
+            case eObjective_Hunt:
+                eMission = 7; // eMission_HQAssault??
+                break;
+            case eObjective_Scout:
+                eMission = eMission_Crash;
+                break;
+            case eObjective_Abduct:
+                eMission = eMission_Abduction;
+                break;
+            case eObjective_Terrorize:
+                eMission = eMission_TerrorSite;
+                break;
+        }
+
+        if (eMission != eMission_None)
+        {
+            iLastMission = m_arrObjectives[iObjective].m_kTObjective.arrMissions.Length - 1;
+
+            if (iLastMission == -1)
+            {
+                AddAIEvent(eMission, 0, ECountry(m_arrObjectives[iObjective].m_iCountryTarget), arrEvents);
+            }
+            else
+            {
+                AddAIEvent(eMission, (m_arrObjectives[iObjective].m_iNextMissionTimer - m_iCounter) / 2, ECountry(m_arrObjectives[iObjective].m_iCountryTarget), arrEvents);
+            }
+        }
+    }
+}
+
 /**
  * Penalizes XCOM for losing a base defense mission.
  */

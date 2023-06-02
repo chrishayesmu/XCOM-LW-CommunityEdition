@@ -490,7 +490,9 @@ function UpdateManufactureFacility()
     {
         if (m_kCEFacilityProject.FacilityName != 'Facility_AccessLift')
         {
+            // Issue #85: clear strHelp so the error isn't displayed twice
             kWidget.txtProblem.StrValue = kWidget.kCost.strHelp;
+            kWidget.kCost.strHelp = "";
         }
 
         kWidget.txtProblem.iState = eUIState_Bad;
@@ -570,6 +572,9 @@ function UpdateManufactureFoundry()
         kWidget.txtProblem.StrValue = kWidget.kCost.strHelp;
         kWidget.txtProjDuration.iState = eUIState_Bad;
         kWidget.txtResourcesLabel.iState = eUIState_Bad;
+
+        // Issue #85: clear strHelp so the error isn't displayed twice
+        kWidget.kCost.strHelp = "";
     }
 
     if (m_bCanRush)
@@ -673,6 +678,9 @@ function UpdateManufactureItem()
         kWidget.txtProblem.StrValue = kWidget.kCost.strHelp;
         kWidget.txtQuantity.iState = eUIState_Bad;
         kWidget.txtResourcesLabel.iState = eUIState_Bad;
+
+        // Issue #85: clear strHelp so the error isn't displayed twice
+        kWidget.kCost.strHelp = "";
     }
 
     if (IsNewProject() && kEngineering.GetNumEngineersAvailable() < m_kCEItemProject.iMaxEngineers)

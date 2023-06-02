@@ -260,7 +260,7 @@ function array<int> LWCE_GetGeneResults(name TechName)
         return arrResults;
     }
 
-    if (!HQ().HasFacility(eFacility_GeneticsLab))
+    if (!LWCE_XGHeadquarters(HQ()).LWCE_HasFacility('Facility_GeneticsLab'))
     {
         return arrResults;
     }

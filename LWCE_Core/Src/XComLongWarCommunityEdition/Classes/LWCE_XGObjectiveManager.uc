@@ -158,7 +158,7 @@ function TSubObjective BuildSubObjective(ESubObjective eSubObj)
 
             break;
         case eSubObj_DetectAnOverseer:
-            if (HQ().HasFacility(eFacility_HyperwaveRadar))
+            if (LWCE_XGHeadquarters(HQ()).LWCE_HasFacility('Facility_HyperwaveRelay'))
             {
                 kSub.eStatus = eObjStatus_InProgress;
             }

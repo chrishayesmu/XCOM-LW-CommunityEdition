@@ -1,5 +1,14 @@
 class LWCESecondWaveEventListeners extends LWCEDataSet;
 
+static function array<LWCEDataTemplate> CreateTemplates()
+{
+    local array<LWCEDataTemplate> Templates;
+
+    Templates.AddItem(WeAreLegion());
+
+    return Templates;
+}
+
 static function LWCEEventListenerTemplate WeAreLegion()
 {
     local LWCEEventListenerTemplate Template;

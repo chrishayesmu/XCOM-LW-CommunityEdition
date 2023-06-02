@@ -252,7 +252,7 @@ function LWCE_AddFacility(name nmFacility)
         }
     }
 
-    if (nmFacility == 'Facility_OTS')
+    if (nmFacility == 'Facility_OfficerTrainingSchool')
     {
         BARRACKS().UpdateOTSPerks();
     }

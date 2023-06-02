@@ -31,3 +31,39 @@ function TFinanceSection BuildCraftUI()
 
     return kUI;
 }
+
+function TFinanceSection BuildFacilityUI()
+{
+    local LWCEFacilityTemplate kFacilityTemplate;
+    local LWCEFacilityTemplateManager kTemplateMgr;
+    local LWCE_XGHeadquarters kHQ;
+    local TFinanceSection kUI;
+    local TLabeledText ltxtItem;
+    local int iFacility, iMonthlyCost, iNumFacilities;
+
+    kHQ = LWCE_XGHeadquarters(HQ());
+    kTemplateMgr = `LWCE_FACILITY_TEMPLATE_MGR;
+
+    kUI.ltxtTitle.StrValue = ConvertCashToString(kHQ.GetFacilityMaintenanceCost());
+    kUI.ltxtTitle.strLabel = m_strFacilityMaintenance;
+
+    for (iFacility = 0; iFacility < kHQ.m_arrCEBaseFacilities.Length; iFacility++)
+    {
+        iNumFacilities = kHQ.m_arrCEBaseFacilities[iFacility].Count;
+
+        if (iNumFacilities > 0)
+        {
+            kFacilityTemplate = kTemplateMgr.FindFacilityTemplate(kHQ.m_arrCEBaseFacilities[iFacility].Facility);
+            iMonthlyCost = kFacilityTemplate.GetMonthlyCost();
+
+            if (iMonthlyCost != 0)
+            {
+                ltxtItem.strLabel = iNumFacilities $ "x" @ kFacilityTemplate.strName;
+                ltxtItem.StrValue = ConvertCashToString(-iMonthlyCost * iNumFacilities);
+                kUI.arrItems.AddItem(ltxtItem);
+            }
+        }
+    }
+
+    return kUI;
+}

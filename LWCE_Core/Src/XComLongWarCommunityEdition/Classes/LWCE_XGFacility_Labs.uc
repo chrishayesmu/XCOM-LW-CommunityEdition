@@ -278,7 +278,7 @@ function LWCE_CompilePostMissionReport(array<LWCE_TTechState> arrPreLandTechs, a
                 kTechState.eAvailabilityState = eTechState_Available;
 
                 // Make sure we can do interrogations if relevant (captives may not be converted to corpses at this point)
-                if (LWCE_IsInterrogationTech(kTechState.TechName) && !HQ().HasFacility(eFacility_AlienContain))
+                if (LWCE_IsInterrogationTech(kTechState.TechName) && !LWCE_XGHeadquarters(HQ()).LWCE_HasFacility('Facility_AlienContainment'))
                 {
                     kTechState.eAvailabilityState = eTechState_Unavailable;
                 }
@@ -917,7 +917,7 @@ function bool LWCE_IsTechAvailable(name TechName)
         return false;
     }
 
-    if (LWCE_IsInterrogationTech(TechName) && !HQ().HasFacility(eFacility_AlienContain))
+    if (LWCE_IsInterrogationTech(TechName) && !LWCE_XGHeadquarters(HQ()).LWCE_HasFacility('Facility_AlienContainment'))
     {
         return false;
     }

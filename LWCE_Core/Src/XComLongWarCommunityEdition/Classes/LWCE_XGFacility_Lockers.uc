@@ -318,7 +318,7 @@ function bool LWCE_EquipSmallItem(XGStrategySoldier kSoldier, name ItemName, int
         class'LWCEInventoryUtils'.static.SetSmallItem(kCESoldier.m_kCEBackedUpLoadout, iSlot, ItemName);
     }
 
-    if (ItemName == 'Item_ArcThrower' && !HQ().HasFacility(eFacility_AlienContain))
+    if (ItemName == 'Item_ArcThrower' && !LWCE_XGHeadquarters(HQ()).LWCE_HasFacility('Facility_AlienContainment'))
     {
         m_bNarrArcWarning = true;
     }

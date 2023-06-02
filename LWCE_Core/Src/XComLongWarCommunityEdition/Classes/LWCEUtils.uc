@@ -1,6 +1,11 @@
 class LWCEUtils extends Object
     dependson(LWCETypes);
 
+static function bool AreVectorsSame(const Vector2D v1, const Vector2D v2, optional float fTolerance = 1.0f)
+{
+    return Abs(v1.x - v2.x) <= fTolerance && Abs(v1.y - v2.y) <= fTolerance;
+}
+
 static function AdjustItemQuantity(out array<LWCE_TItemQuantity> arrItemQuantities, name ItemName, int iQuantity, optional bool bDeleteIfAllRemoved = true)
 {
     local int Index;

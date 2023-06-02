@@ -53,40 +53,72 @@ function name GetFacilityName()
 /// of reasons, such as if it is providing power the base needs, or if the facility has active projects which
 /// the player hasn't canceled.
 /// /<summary>
-function bool CanBeRemoved(const LWCE_XGBase kBase, int X, int Y, out string strError)
+function bool CanBeRemoved(const LWCE_XGBase kBase, int X, int Y, out string strInfo)
 {
+    local LWCEDataContainer kDataContainer;
     local bool bCanRemove;
-    local int iPower;
+    local int iPower, iSatCapacity;
 
     bCanRemove = true;
 
     if (!bCanDestroy)
     {
-        strError = "<< ERROR: not-removeable facility should have been caught before this point >>";
+        strInfo = "<< ERROR: not-removeable facility should have been caught before this point >>";
         return false;
     }
 
-    iPower = GetPower();
+    iPower = -1 * GetPower();
+
+    if (arrAdjacencies.Find('Power') != INDEX_NONE)
+    {
+        iPower += kBase.LWCE_GetSurroundingAdjacencies(X, Y, 'Power') * class'XGTacticalGameCore'.default.POWER_ADJACENCY_BONUS;
+    }
 
     // Don't allow removing the facility if it's providing power we need for other facilities
-    if (iPower < 0)
+    if (iPower > 0 && kBase.GetPowerAvailable() < iPower)
     {
-        if (arrAdjacencies.Find('Power') != INDEX_NONE)
-        {
-            iPower += kBase.LWCE_GetSurroundingAdjacencies(X, Y, 'Power') * class'XGTacticalGameCore'.default.POWER_ADJACENCY_BONUS;
-        }
-
-        if (kBase.GetPowerAvailable() < iPower)
-        {
-            strError = "TODO not enough power"; // class'XGBuildUI'.const.m_strPowerCantRemoveBody;
-            bCanRemove = false;
-        }
+        strInfo = class'XGBuildUI'.default.m_strPowerCantRemoveBody;
+        bCanRemove = false;
     }
 
-    // TODO introduce a delegate or event handler for this
-    if (DataName == 'Facility_AlienContainment')
+    // Similarly, check if this facility provides satellite capacity that's currently in use
+    iSatCapacity = GetSatelliteCapacity();
+
+    if (arrAdjacencies.Find('Satellite') != INDEX_NONE)
     {
+        iSatCapacity += kBase.LWCE_GetSurroundingAdjacencies(X, Y, 'Satellite') * class'XGTacticalGameCore'.default.UPLINK_ADJACENCY_BONUS;
     }
+
+    if (kBase.HQ().GetSatelliteLimit() - kBase.HQ().m_arrSatellites.Length < iSatCapacity)
+    {
+        strInfo = class'XGBuildUI'.default.m_strUplinkCantRemoveBody;
+        bCanRemove = false;
+    }
+
+    // EVENT: LWCEFacilityTemplate_CanBeRemoved
+    //
+    // SUMMARY: Emitted when determining whether an existing facility can be removed.
+    //
+    // DATA: LWCEDataContainer
+    //       Data[0]: LWCE_XGBase - The base which the facility is in.
+    //       Data[1]: int - The X coordinate of the facility in the base.
+    //       Data[2]: int - The Y coordinate of the facility in the base.
+    //       Data[3]: bool - Out parameter. The current decision on whether the facility can be removed.
+    //       Data[4]: string - Out parameter. A string shown to the player, either telling why the facility can't be removed (if it can't),
+    //                         or providing supplementary info if it can. (E.g., Alien Containment warns the player that captives will be killed.)
+    //
+    // SOURCE: LWCEFacilityTemplate
+    kDataContainer = class'LWCEDataContainer'.static.New('LWCEFacilityTemplate_CanBeRemoved');
+    kDataContainer.AddObject(kBase);
+    kDataContainer.AddInt(X);
+    kDataContainer.AddInt(Y);
+    kDataContainer.AddBool(bCanRemove);
+    kDataContainer.AddString(strInfo);
+
+    `LWCE_EVENT_MGR.TriggerEvent('LWCEFacilityTemplate_CanBeRemoved', kDataContainer, self);
+
+    bCanRemove = kDataContainer.Data[3].B;
+    strInfo = kDataContainer.Data[4].S;
 
     return bCanRemove;
 }
@@ -118,9 +150,9 @@ function int GetBuildTimeInHours(bool bRush)
 
     iTimeInHours = kDataContainer.Data[0].I;
 
-    if (bRush)
+    if (bRush && class'LWCEFacilityConfig'.default.fRushBuildTimeDivisor > 0)
     {
-        iTimeInHours /= 2; // TODO config this bonus
+        iTimeInHours /= class'LWCEFacilityConfig'.default.fRushBuildTimeDivisor;
     }
 
     return iTimeInHours;
@@ -166,11 +198,17 @@ function LWCE_TCost GetCost(bool bRush)
 
     if (bRush)
     {
-        // TODO move to config
-        kAdjustedCost.iCash *= 1.5;
-        kAdjustedCost.iAlloys *= 1.5;
-        kAdjustedCost.iElerium *= 1.5;
-        kAdjustedCost.iMeld += 20;
+        kAdjustedCost.iCash *= class'LWCEFacilityConfig'.default.kRushBuildCashCostModifier.fMultiplier;
+        kAdjustedCost.iCash += class'LWCEFacilityConfig'.default.kRushBuildCashCostModifier.iFlatAdded;
+
+        kAdjustedCost.iAlloys *= class'LWCEFacilityConfig'.default.kRushBuildAlloysCostModifier.fMultiplier;
+        kAdjustedCost.iAlloys += class'LWCEFacilityConfig'.default.kRushBuildAlloysCostModifier.iFlatAdded;
+
+        kAdjustedCost.iElerium *= class'LWCEFacilityConfig'.default.kRushBuildEleriumCostModifier.fMultiplier;
+        kAdjustedCost.iElerium += class'LWCEFacilityConfig'.default.kRushBuildEleriumCostModifier.iFlatAdded;
+
+        kAdjustedCost.iMeld *= class'LWCEFacilityConfig'.default.kRushBuildMeldCostModifier.fMultiplier;
+        kAdjustedCost.iMeld += class'LWCEFacilityConfig'.default.kRushBuildMeldCostModifier.iFlatAdded;
     }
 
     return kAdjustedCost;

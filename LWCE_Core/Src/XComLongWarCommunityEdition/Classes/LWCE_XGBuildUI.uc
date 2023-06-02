@@ -630,8 +630,6 @@ function UpdateFacilityTable()
     arrFacilities = LWCE_XGItemTree(ITEMTREE()).LWCE_GetBuildFacilities();
     arrFacilities.Sort(LWCE_SortFacilities);
 
-    `LWCE_LOG_CLS("UpdateFacilityTable: " $ arrFacilities.Length $ " facilities to build");
-
     for (iFacility = 0; iFacility < arrFacilities.Length; iFacility++)
     {
         kOption = LWCE_BuildFacilityOption(arrFacilities[iFacility], kMenu.arrCategories);
@@ -762,123 +760,25 @@ protected function int LWCE_SortFacilities(LWCEFacilityTemplate kFacility1, LWCE
 
 protected function LWCE_ConfirmRemovalDialogue(int X, int Y)
 {
-    local LWCE_XGFacility_Engineering kEngineering;
     local LWCEFacilityTemplate kFacility;
     local TDialogueBoxData kDialogData;
     local name FacilityName;
-    local int iPower, iSatCap;
 
-    kEngineering = LWCE_XGFacility_Engineering(ENGINEERING());
     FacilityName = m_kBase.LWCE_GetFacilityAt(X, Y);
     kFacility = `LWCE_FACILITY(FacilityName);
 
     kDialogData.eType = eDialog_Normal;
     kDialogData.strTitle = m_strRemoveTitle;
-    kDialogData.strText = m_strRemoveBody;
     kDialogData.strAccept = m_strRemoveOK;
     kDialogData.strCancel = m_strRemoveCancel;
     kDialogData.fnCallback = ConfirmRemovalDialogueCallback;
 
+    kDialogData.strText = m_strRemoveBody;
     m_bCantRemove = false;
 
     PlaySmallOpenSound();
 
-    iPower = kFacility.GetPower();
-
-    // Don't allow removing the facility if it's providing power we need for other facilities
-    // TODO let the template dictate when a facility can be removed
-    if (iPower < 0)
-    {
-        if (kFacility.arrAdjacencies.Find('Power') != INDEX_NONE)
-        {
-            iPower += m_kBase.LWCE_GetSurroundingAdjacencies(X, Y, 'Power') * class'XGTacticalGameCore'.default.POWER_ADJACENCY_BONUS;
-        }
-
-        if (m_kBase.GetPowerAvailable() < iPower)
-        {
-            kDialogData.strText = m_strPowerCantRemoveBody;
-            m_bCantRemove = true;
-        }
-    }
-
-/*
-    if (FacilityName == 'Facility_AlienContainment')
-    {
-        if (`LWCE_LABS.LWCE_IsInterrogationTech(`LWCE_LABS.LWCE_GetCurrentTech().GetTechName()))
-        {
-            kDialogData.strText = m_strCaptiveCantRemoveBody;
-            m_bCantRemove = true;
-        }
-        else
-        {
-            kDialogData.strText = m_strCaptiveRemoveBody;
-        }
-    }
-    else if (FacilityName == eFacility_Workshop)
-    {
-        if (ITEMTREE().GetEngineersRequiredForNextUplink(eFacility_SmallRadar, true) > ENGINEERING().GetNumEngineersAvailable())
-        {
-            kDialogData.strText = m_strWorkshopCantRemoveBody;
-            m_bCantRemove = true;
-        }
-    }
-    else if (FacilityName == eFacility_SmallRadar || FacilityName == eFacility_LargeRadar)
-    {
-        if (FacilityName == eFacility_SmallRadar)
-        {
-            iSatCap = class'XGTacticalGameCore'.default.UPLINK_CAPACITY;
-        }
-        else if (FacilityName == eFacility_LargeRadar)
-        {
-            iSatCap = class'XGTacticalGameCore'.default.NEXUS_CAPACITY;
-        }
-
-        iSatCap += (Base().GetSurroundingAdjacencies(X, Y, eAdj_Satellites) * class'XGTacticalGameCore'.default.UPLINK_ADJACENCY_BONUS);
-
-        if ( (HQ().GetSatelliteLimit() - HQ().m_arrSatellites.Length) < iSatCap )
-        {
-            kDialogData.strText = m_strUplinkCantRemoveBody;
-            m_bCantRemove = true;
-        }
-    }
-    else if (FacilityName == eFacility_Foundry)
-    {
-        if (ENGINEERING().m_arrFoundryProjects.Length > 0)
-        {
-            kDialogData.strText = m_strFoundryCantRemoveBody;
-            m_bCantRemove = true;
-        }
-    }
-    else if (FacilityName == eFacility_PsiLabs)
-    {
-        if (`LWCE_PSILABS.m_arrCETraining.Length > 0)
-        {
-            kDialogData.strText = m_strPsiLabsCantRemoveBody;
-            m_bCantRemove = true;
-        }
-    }
-    else if (FacilityName == eFacility_GeneticsLab)
-    {
-        if (GENELABS().m_arrPatients.Length > 0)
-        {
-            kDialogData.strText = m_strGeneLabsCantRemoveBody;
-            m_bCantRemove = true;
-        }
-    }
-    else if (FacilityName == eFacility_CyberneticsLab)
-    {
-        if (CYBERNETICSLAB().m_arrPatients.Length > 0)
-        {
-            kDialogData.strText = m_strCyberneticsLabsCantRemoveBody;
-            m_bCantRemove = true;
-        }
-        else if (CYBERNETICSLAB().m_arrRepairingMecs.Length > 0)
-        {
-            kDialogData.strText = m_strCyberneticsLabsCantRemoveMecs;
-            m_bCantRemove = true;
-        }
-    }
- */
+    m_bCantRemove = !kFacility.CanBeRemoved(m_kBase, X, Y, kDialogData.strText);
 
     if (m_bCantRemove)
     {

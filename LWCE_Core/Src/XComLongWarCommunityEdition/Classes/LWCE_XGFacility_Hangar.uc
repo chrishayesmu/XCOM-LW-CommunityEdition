@@ -471,7 +471,7 @@ function UnloadArtifacts(XGShip_Dropship kSkyranger)
         {
             if (kItem.IsCaptive())
             {
-                if (!kHQ.HasFacility(eFacility_AlienContain))
+                if (!kHQ.LWCE_HasFacility('Facility_AlienContainment'))
                 {
                     // Delete the captive from the cargo report
                     kHQ.m_kCELastCargoArtifacts.Delete(ItemName);

@@ -274,7 +274,7 @@ exec function SetAlienResearch(int TotalResearch)
 ///
 /// TODO: using this to remove facilities is pretty buggy still.
 /// </summary>
-exec function SetFacility(int X, int Y, optional name FacilityName = '', optional int iBaseId = -1)
+exec function SetFacility(int X, int Y, optional name FacilityName = '', optional int iBaseId)
 {
     local LWCE_XGBase kBase;
     local LWCE_XGHeadquarters kHQ;
@@ -283,7 +283,7 @@ exec function SetFacility(int X, int Y, optional name FacilityName = '', optiona
     kHQ = `LWCE_HQ;
     kPres = `LWCE_HQPRES;
 
-    if (iBaseId < 0)
+    if (iBaseId == 0)
     {
         kBase = LWCE_XGBase(kHQ.m_kBase);
     }
