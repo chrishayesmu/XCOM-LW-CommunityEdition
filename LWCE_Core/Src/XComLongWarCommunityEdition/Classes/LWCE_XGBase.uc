@@ -809,24 +809,7 @@ function LWCE_PerformAction(EBuildCursorState eCursorState, int X, int Y, option
     }
     else if (eCursorState == eBCS_RemoveFacility)
     {
-        if (m_arrCEFacilities[TargetTileIndex].FacilityName == 'Facility_AlienContainment')
-        {
-            // TODO rewrite captive stuff
-            if (m_currAlienCaptive != 0)
-            {
-                class'XComMapManager'.static.RemoveStreamingMapByName(class'XComMapManager'.static.GetAlienContainmentMatineeFromType(m_currAlienCaptive));
-            }
-
-            class'XComMapManager'.static.RemoveStreamingMapByName(ALIENCONTAINMENT_ANIMMAP);
-        }
-
-        LWCE_XGHeadquarters(HQ()).LWCE_RemoveFacility(m_arrCEFacilities[TargetTileIndex].FacilityName);
-
-        m_arrCETiles[TargetTileIndex].bHasFacility = false;
-        m_arrCEFacilities[TargetTileIndex].bIsBeingRemoved = false;
-        m_arrCEFacilities[TargetTileIndex].FacilityName = '';
-
-        Sound().PlaySFX(SNDLIB().SFX_Facility_DisassembleItem);
+        LWCE_RemoveFacility(X, Y);
     }
     else if (eCursorState == eBCS_BuildFacility)
     {
@@ -835,7 +818,7 @@ function LWCE_PerformAction(EBuildCursorState eCursorState, int X, int Y, option
         Sound().PlaySFX(SNDLIB().SFX_Facility_ConstructItem);
     }
 
-    if (STAT_GetStat(eRecap_MaxPower) < HQ().GetPowerCapacity())
+    if (STAT_GetStat(eRecap_MaxPower) < GetPowerCapacity())
     {
         STAT_SetStat(eRecap_MaxPower, HQ().GetPowerCapacity());
     }
@@ -851,13 +834,69 @@ function LWCE_PerformAction(EBuildCursorState eCursorState, int X, int Y, option
     UpdateTiles();
 }
 
+function LWCE_RemoveFacility(int X, int Y, optional bool bPlaySound = true)
+{
+    local LWCEDataContainer kDataContainer;
+    local int TargetTileIndex;
+    local name FacilityName;
+
+    TargetTileIndex = TileIndex(X, Y);
+    FacilityName = m_arrCEFacilities[TargetTileIndex].FacilityName;
+
+    if (FacilityName == '')
+    {
+        return;
+    }
+
+    if (FacilityName == 'Facility_AlienContainment')
+    {
+        // TODO rewrite captive stuff
+        if (m_currAlienCaptive != 0)
+        {
+            class'XComMapManager'.static.RemoveStreamingMapByName(class'XComMapManager'.static.GetAlienContainmentMatineeFromType(m_currAlienCaptive));
+        }
+
+        class'XComMapManager'.static.RemoveStreamingMapByName(ALIENCONTAINMENT_ANIMMAP);
+    }
+
+    LWCE_XGHeadquarters(HQ()).LWCE_RemoveFacility(FacilityName);
+
+    m_arrCETiles[TargetTileIndex].bHasFacility = false;
+    m_arrCEFacilities[TargetTileIndex].bIsBeingRemoved = false;
+    m_arrCEFacilities[TargetTileIndex].FacilityName = '';
+
+    if (bPlaySound)
+    {
+        Sound().PlaySFX(SNDLIB().SFX_Facility_DisassembleItem);
+    }
+
+    // EVENT: FacilityRemovedFromBase
+    //
+    // SUMMARY: Triggered when a facility is removed from a base. In an unmodded game, this only occurs
+    //          when the player chooses to remove a facility.
+    //
+    // DATA: LWCEDataContainer
+    //       Data[0]: name - The name of the facility which was removed, as in its LWCEFacilityTemplate.
+    //       Data[1]: int - The X coordinate of the facility in the base.
+    //       Data[2]: int - The Y coordinate of the facility in the base. Remember that Y = 0 is a special player-inaccessible row.
+    //
+    // SOURCE: LWCE_XGBase - The base which the facility has been removed from.
+    kDataContainer = class'LWCEDataContainer'.static.New('FacilityRemovedFromBase');
+    kDataContainer.AddName(FacilityName);
+    kDataContainer.AddInt(X);
+    kDataContainer.AddInt(Y);
+
+    `LWCE_EVENT_MGR.TriggerEvent('FacilityRemovedFromBase', kDataContainer, self);
+}
+
 function SetFacility(int iFacility, int X, int Y)
 {
     `LWCE_LOG_DEPRECATED_CLS(SetFacility);
 }
 
-function LWCE_SetFacility(name nmFacility, int X, int Y)
+function LWCE_SetFacility(name FacilityName, int X, int Y)
 {
+    local LWCEDataContainer kDataContainer;
     local int TargetTileIndex;
 
     TargetTileIndex = TileIndex(X, Y);
@@ -871,11 +910,31 @@ function LWCE_SetFacility(name nmFacility, int X, int Y)
 
     m_arrCETiles[TargetTileIndex].bHasFacility = true;
 
-    m_arrCEFacilities[TargetTileIndex].FacilityName = nmFacility;
+    m_arrCEFacilities[TargetTileIndex].FacilityName = FacilityName;
     m_arrCEFacilities[TargetTileIndex].X = X;
     m_arrCEFacilities[TargetTileIndex].Y = Y;
 
-    LWCE_XGHeadquarters(HQ()).LWCE_AddFacility(nmFacility);
+    LWCE_XGHeadquarters(HQ()).LWCE_AddFacility(FacilityName);
+
+    // EVENT: FacilityAddedToBase
+    //
+    // SUMMARY: Triggered when a facility is added in a base. Most commonly this is due to a facility being built by the player,
+    //          but it will also trigger when populating the initial base at the start of a new campaign, including any facilities
+    //          which are added by the starting country choice. Because of this, event listeners should be careful not to assume
+    //          that all of the usual strategy layer components will be present.
+    //
+    // DATA: LWCEDataContainer
+    //       Data[0]: name - The name of the facility, as in its LWCEFacilityTemplate.
+    //       Data[1]: int - The X coordinate of the facility in the base.
+    //       Data[2]: int - The Y coordinate of the facility in the base. Remember that Y = 0 is a special player-inaccessible row.
+    //
+    // SOURCE: LWCE_XGBase - The base which the facility has been added in.
+    kDataContainer = class'LWCEDataContainer'.static.New('FacilityAddedToBase');
+    kDataContainer.AddName(FacilityName);
+    kDataContainer.AddInt(X);
+    kDataContainer.AddInt(Y);
+
+    `LWCE_EVENT_MGR.TriggerEvent('FacilityAddedToBase', kDataContainer, self);
 }
 
 function StreamInBaseRooms(optional bool bImmediate = true)

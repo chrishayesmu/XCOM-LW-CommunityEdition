@@ -41,7 +41,7 @@ var const localized string strName;       // The player-viewable name of the fac
 var const localized string strNameInMenu; // The player-viewable name of the facility when it's in the menu at the top of the strategy HUD.
 var const localized string strBriefSummary;
 
-delegate array<LWCE_TStaffRequirement> StaffRequirementsDel();
+delegate array<LWCE_TStaffRequirement> StaffRequirementsDel(LWCEFacilityTemplate kFacility);
 
 function name GetFacilityName()
 {
@@ -289,7 +289,7 @@ function array<LWCE_TStaffRequirement> GetStaffRequirements()
 {
     if (StaffRequirementsFn != none)
     {
-        return StaffRequirementsFn();
+        return StaffRequirementsFn(self);
     }
 
     return arrStaffRequirements;

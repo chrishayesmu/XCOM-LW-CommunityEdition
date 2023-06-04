@@ -222,7 +222,6 @@ function LWCE_AddFacility(name nmFacility)
 
     kTemplate = `LWCE_FACILITY(nmFacility);
 
-    // TODO: handle any special initialization or other logic in either the facility template or an event handler
     if (kTemplate.FacilityClass != "")
     {
         kFacility = Spawn(class<XGFacility>(DynamicLoadObject(kTemplate.FacilityClass, class'Class')));
@@ -238,8 +237,6 @@ function LWCE_AddFacility(name nmFacility)
         else if (kFacility.IsA('XGFacility_CyberneticsLab'))
         {
             BARRACKS().m_kCyberneticsLab = XGFacility_CyberneticsLab(kFacility);
-            `LWCE_STORAGE.LWCE_AddItem('Item_Minigun', 1000);
-            `LWCE_STORAGE.LWCE_AddItem('Item_BaseAugments', 1000);
         }
         else if (kFacility.IsA('XGFacility_GollopChamber'))
         {
@@ -252,16 +249,6 @@ function LWCE_AddFacility(name nmFacility)
         }
     }
 
-    if (nmFacility == 'Facility_OfficerTrainingSchool')
-    {
-        BARRACKS().UpdateOTSPerks();
-    }
-    else if (nmFacility == 'Facility_Foundry')
-    {
-        BARRACKS().UpdateFoundryPerks();
-    }
-
-    // Replace all facilities with LWCE subclasses
     ModifyFacilityCount(nmFacility, 1);
 }
 
@@ -878,16 +865,6 @@ function RemoveFacility(int iFacility)
 function LWCE_RemoveFacility(name nmFacility)
 {
     ModifyFacilityCount(nmFacility, -1);
-
-    // TODO move to event handler or facility template
-    if (nmFacility == 'Facility_OTS')
-    {
-        BARRACKS().UpdateOTSPerks();
-    }
-    else if (nmFacility == 'Facility_Foundry')
-    {
-        BARRACKS().UpdateFoundryPerks();
-    }
 }
 
 function UpdateInterceptorOrders()

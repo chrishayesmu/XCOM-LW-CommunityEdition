@@ -544,25 +544,6 @@ function LWCE_TProjectCost LWCE_GetFacilityProjectCost(name FacilityName, int X,
     kProjectCost.kCost = kFacility.GetCost(bRushFacility);
     kProjectCost.arrStaffRequirements = kFacility.GetStaffRequirements();
 
-// TODO move this into facility dataset and delete
-/*
-    if (eFacility == eFacility_Workshop)
-    {
-        kProjectCost.iStaffTypeReq = eStaff_Engineer;
-        kProjectCost.iStaffNumReq = ITEMTREE().GetEngineersRequiredForNextWorkshop();
-    }
-    else if (eFacility == eFacility_ScienceLab)
-    {
-        kProjectCost.iStaffTypeReq = eStaff_Scientist;
-        kProjectCost.iStaffNumReq = ITEMTREE().GetScientistsRequiredForNextLab();
-    }
-    else if (eFacility == eFacility_SmallRadar || eFacility == eFacility_LargeRadar)
-    {
-        kProjectCost.iStaffTypeReq = eStaff_Engineer;
-        kProjectCost.iStaffNumReq = ITEMTREE().GetEngineersRequiredForNextUplink(eFacility);
-    }
- */
-
     return kProjectCost;
 }
 

@@ -627,7 +627,7 @@ function bool CanFacilityBeBuilt(int iFacility)
     return false;
 }
 
-function bool LWCE_CanFacilityBeBuilt(name FacilityName)
+function bool LWCE_CanFacilityBeBuilt(name FacilityName, optional bool bCheckStaffRequirements = true)
 {
     local array<LWCE_TStaffRequirement> arrStaffRequirements;
     local LWCEFacilityTemplate kTemplate;
@@ -647,12 +647,18 @@ function bool LWCE_CanFacilityBeBuilt(name FacilityName)
         return false;
     }
 
-    arrStaffRequirements = kTemplate.GetStaffRequirements();
-
-    if (!kHQ.AreStaffPresent(arrStaffRequirements))
+    // Checking staff requirements is optional because they shouldn't prevent facilities from showing in the build list,
+    // otherwise you'd never know how many staff you need, but they should prevent you from actually building
+    if (bCheckStaffRequirements)
     {
-        return false;
+        arrStaffRequirements = kTemplate.GetStaffRequirements();
+
+        if (!kHQ.AreStaffPresent(arrStaffRequirements))
+        {
+            return false;
+        }
     }
+
 
     if (kTemplate.iMaxInstances > 0 && kHQ.LWCE_GetNumFacilities(FacilityName, /* bIncludeBuilding */ true) >= kTemplate.iMaxInstances)
     {
@@ -742,7 +748,7 @@ function array<LWCEFacilityTemplate> LWCE_GetBuildFacilities()
             continue;
         }
 
-        if (bAllFacilitiesAvailable || LWCE_CanFacilityBeBuilt(kFacility.GetFacilityName()))
+        if (bAllFacilitiesAvailable || LWCE_CanFacilityBeBuilt(kFacility.GetFacilityName(), /* bCheckStaffRequirements */ false))
         {
             arrFacilities.AddItem(kFacility);
         }
