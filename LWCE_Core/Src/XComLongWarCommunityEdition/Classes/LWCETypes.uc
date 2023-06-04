@@ -8,6 +8,12 @@ enum EDataType
     eDT_String
 };
 
+/// <summary>A two-dimensional vector of integers.</summary>
+struct LWCE_Vector2Int
+{
+    var int X, Y;
+};
+
 /// <summary>A three-dimensional vector of integers.</summary>
 struct LWCE_Vector3Int
 {

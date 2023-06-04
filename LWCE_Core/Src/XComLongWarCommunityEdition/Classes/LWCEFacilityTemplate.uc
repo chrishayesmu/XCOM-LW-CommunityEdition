@@ -27,8 +27,9 @@ var config array<LWCE_TStaffRequirement> arrStaffRequirements; // A static list 
                                                                // template must express that using StaffRequirementsFn.
 var delegate<StaffRequirementsDel> StaffRequirementsFn;
 
-var config string ImageLabel; // The image to display for this facility in the build UI; hardcoded in Flash.
-var config string ImagePath;  // The image to display for this facility.
+var config LWCE_Vector2Int Size; // How much space this facility needs.
+var config string ImageLabel;    // The image to display for this facility in the build UI; hardcoded in Flash.
+var config string ImagePath;     // The image to display for this facility.
 
 var config string FacilityClass;   // The full class name of the XGFacility subclass that should be instantiated when this
                                    // facility is built. Not all facilities have one of these.
@@ -321,4 +322,21 @@ function bool IsBuildPriority()
     IsPriority = kDataContainer.Data[0].B;
 
     return IsPriority;
+}
+
+function bool ValidateTemplate(out string strError)
+{
+    if (Size.X <= 0 || Size.Y <= 0)
+    {
+        strError = "Invalid size: X = " $ Size.X $ ", Y = " $ Size.Y;
+        return false;
+    }
+
+    if (bIsTopLevel && FacilityClass == "")
+    {
+        strError = "bIsTopLevel is true but no FacilityClass has been set";
+        return false;
+    }
+
+	return true;
 }

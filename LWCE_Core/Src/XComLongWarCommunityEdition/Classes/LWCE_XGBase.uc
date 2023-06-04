@@ -836,8 +836,9 @@ function LWCE_PerformAction(EBuildCursorState eCursorState, int X, int Y, option
 
 function LWCE_RemoveFacility(int X, int Y, optional bool bPlaySound = true)
 {
+    local LWCEFacilityTemplate kFacility;
     local LWCEDataContainer kDataContainer;
-    local int TargetTileIndex;
+    local int I, J, TargetTileIndex;
     local name FacilityName;
 
     TargetTileIndex = TileIndex(X, Y);
@@ -861,6 +862,22 @@ function LWCE_RemoveFacility(int X, int Y, optional bool bPlaySound = true)
 
     LWCE_XGHeadquarters(HQ()).LWCE_RemoveFacility(FacilityName);
 
+    kFacility = `LWCE_FACILITY(FacilityName);
+
+    for (I = 0; I < kFacility.Size.X; I++)
+    {
+        for (J = 0; J < kFacility.Size.Y; J++)
+        {
+            TargetTileIndex = TileIndex(X + I, Y + J);
+
+            m_arrCETiles[TargetTileIndex].bHasFacility = false;
+            m_arrCETiles[TargetTileIndex].iParentX = -1;
+            m_arrCETiles[TargetTileIndex].iParentY = -1;
+            m_arrCEFacilities[TargetTileIndex].bIsBeingRemoved = false;
+            m_arrCEFacilities[TargetTileIndex].FacilityName = '';
+        }
+    }
+
     m_arrCETiles[TargetTileIndex].bHasFacility = false;
     m_arrCEFacilities[TargetTileIndex].bIsBeingRemoved = false;
     m_arrCEFacilities[TargetTileIndex].FacilityName = '';
@@ -877,8 +894,8 @@ function LWCE_RemoveFacility(int X, int Y, optional bool bPlaySound = true)
     //
     // DATA: LWCEDataContainer
     //       Data[0]: name - The name of the facility which was removed, as in its LWCEFacilityTemplate.
-    //       Data[1]: int - The X coordinate of the facility in the base.
-    //       Data[2]: int - The Y coordinate of the facility in the base. Remember that Y = 0 is a special player-inaccessible row.
+    //       Data[1]: int - The X coordinate of the facility in the base. For multi-tile facilities, this marks the top-left corner.
+    //       Data[2]: int - The Y coordinate of the facility in the base. For multi-tile facilities, this marks the top-left corner. Remember that Y = 0 is a special player-inaccessible row.
     //
     // SOURCE: LWCE_XGBase - The base which the facility has been removed from.
     kDataContainer = class'LWCEDataContainer'.static.New('FacilityRemovedFromBase');
@@ -896,20 +913,32 @@ function SetFacility(int iFacility, int X, int Y)
 
 function LWCE_SetFacility(name FacilityName, int X, int Y)
 {
+    local LWCEFacilityTemplate kFacility;
     local LWCEDataContainer kDataContainer;
-    local int TargetTileIndex;
+    local int I, J, TargetTileIndex;
+
+    kFacility = `LWCE_FACILITY(FacilityName);
+
+    for (I = 0; I < kFacility.Size.X; I++)
+    {
+        for (J = 0; J < kFacility.Size.Y; J++)
+        {
+            TargetTileIndex = TileIndex(X + I, Y + J);
+
+            m_arrCETiles[TargetTileIndex].bHasFacility = true;
+            m_arrCEFacilities[TargetTileIndex].FacilityName = FacilityName;
+            m_arrCEFacilities[TargetTileIndex].X = X;
+            m_arrCEFacilities[TargetTileIndex].Y = Y;
+
+            if (I != 0 || J != 0)
+            {
+                m_arrCETiles[TargetTileIndex].iParentX = X;
+                m_arrCETiles[TargetTileIndex].iParentY = Y;
+            }
+        }
+    }
 
     TargetTileIndex = TileIndex(X, Y);
-
-    // TODO: use a better method that can accommodate multiple sizes
-    // if (Facility(iFacility).iSize == 2)
-    // {
-    //     m_arrCETiles[TileIndex(X + 1, Y)].iType = eTerrain_Facility;
-    //     m_arrCETiles[TileIndex(X + 1, Y)].bSecondTile = true;
-    // }
-
-    m_arrCETiles[TargetTileIndex].bHasFacility = true;
-
     m_arrCEFacilities[TargetTileIndex].FacilityName = FacilityName;
     m_arrCEFacilities[TargetTileIndex].X = X;
     m_arrCEFacilities[TargetTileIndex].Y = Y;
@@ -925,8 +954,9 @@ function LWCE_SetFacility(name FacilityName, int X, int Y)
     //
     // DATA: LWCEDataContainer
     //       Data[0]: name - The name of the facility, as in its LWCEFacilityTemplate.
-    //       Data[1]: int - The X coordinate of the facility in the base.
-    //       Data[2]: int - The Y coordinate of the facility in the base. Remember that Y = 0 is a special player-inaccessible row.
+    //       Data[1]: int - The X coordinate of the facility in the base. For multi-tile facilities, this marks the top-left corner.
+    //       Data[2]: int - The Y coordinate of the facility in the base. For multi-tile facilities, this marks the top-left corner. 
+    //                      Remember that Y = 0 is a special player-inaccessible row.
     //
     // SOURCE: LWCE_XGBase - The base which the facility has been added in.
     kDataContainer = class'LWCEDataContainer'.static.New('FacilityAddedToBase');
