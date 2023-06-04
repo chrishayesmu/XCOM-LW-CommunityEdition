@@ -977,6 +977,72 @@ function LWCE_DetermineCrashLoot(LWCE_XGShip_UFO kUFO, LWCE_XGShip_Interceptor k
     }
 }
 
+function GetEvents(out array<THQEvent> arrEvents)
+{
+    local int iObjective, iLastMission;
+    local EMissionType eMission;
+
+    if (m_iCouncilCounter > 0)
+    {
+        AddAIEvent(eMission_Special, m_iCouncilCounter / 2, 0, arrEvents);
+    }
+
+    for (iObjective = 0; iObjective < m_arrObjectives.Length; iObjective++)
+    {
+        if (m_arrObjectives[iObjective].m_bComplete)
+        {
+            continue;
+        }
+
+        eMission = eMission_None;
+
+        switch (m_arrObjectives[iObjective].m_kTObjective.eType)
+        {
+            case eObjective_Recon: // Research
+            case eObjective_Harvest:
+                eMission = eMission_LandedUFO;
+                break;
+            case eObjective_Flyby:
+                if (!LWCE_XGHeadquarters(HQ()).LWCE_HasFacility('Facility_HyperwaveRelay'))
+                {
+                    eMission = eMission_None;
+                }
+                else
+                {
+                    eMission = 12;
+                }
+
+                break;
+            case eObjective_Hunt:
+                eMission = 7; // eMission_HQAssault??
+                break;
+            case eObjective_Scout:
+                eMission = eMission_Crash;
+                break;
+            case eObjective_Abduct:
+                eMission = eMission_Abduction;
+                break;
+            case eObjective_Terrorize:
+                eMission = eMission_TerrorSite;
+                break;
+        }
+
+        if (eMission != eMission_None)
+        {
+            iLastMission = m_arrObjectives[iObjective].m_kTObjective.arrMissions.Length - 1;
+
+            if (iLastMission == -1)
+            {
+                AddAIEvent(eMission, 0, ECountry(m_arrObjectives[iObjective].m_iCountryTarget), arrEvents);
+            }
+            else
+            {
+                AddAIEvent(eMission, (m_arrObjectives[iObjective].m_iNextMissionTimer - m_iCounter) / 2, ECountry(m_arrObjectives[iObjective].m_iCountryTarget), arrEvents);
+            }
+        }
+    }
+}
+
 /**
  * Penalizes XCOM for losing a base defense mission.
  */
@@ -1021,9 +1087,8 @@ function LaunchBlitz(array<ECityType> arrTargetCities, optional bool bFirstBlitz
     local array<EMissionRewardType> arrRewards;
     local EMissionRewardType eReward;
     local EMissionDifficulty eDiff;
+    local LWCEAlertBuilder kAlertBuilder;
     local LWCE_TMissionReward kBlankReward, kReward;
-    local LWCE_TGeoscapeAlert kAlert;
-    local LWCE_TData kData;
     local bool bMissionAdded;
     local int I, iIndex;
 
@@ -1043,6 +1108,8 @@ function LaunchBlitz(array<ECityType> arrTargetCities, optional bool bFirstBlitz
 
     // This loop is written for the vanilla behavior where you pick from multiple abductions;
     // for Long War it can just be read as not being a loop.
+    kAlertBuilder = `LWCE_ALERT('Abduction');
+
     for (I = 0; I < arrTargetCities.Length; I++)
     {
         kReward = kBlankReward;
@@ -1074,18 +1141,13 @@ function LaunchBlitz(array<ECityType> arrTargetCities, optional bool bFirstBlitz
         {
             bMissionAdded = true;
 
-            kData.eType = eDT_Int;
-            kData.iData = kMission.m_iID;
-
-            kAlert.arrData.AddItem(kData);
+            kAlertBuilder.AddInt(kMission.m_iID);
         }
     }
 
-    kAlert.AlertType = 'Abduction';
-
     if (bMissionAdded)
     {
-        LWCE_XGGeoscape(GEOSCAPE()).LWCE_Alert(kAlert);
+        LWCE_XGGeoscape(GEOSCAPE()).LWCE_Alert(kAlertBuilder.Build());
     }
 }
 

@@ -1,6 +1,6 @@
 class LWCE_XGAbility_Extensions extends Object
     abstract
-    dependson(LWCE_XGUnit);
+    dependson(LWCE_XGAbility, LWCE_XGUnit);
 
 static function AddCritChanceStat(XGAbility_Targeted kSelf, out int iCritChance, int iDelta, optional int iPerkId, optional string strForceTitle)
 {
@@ -1164,12 +1164,19 @@ static simulated function string GetHelpText(XGAbility kSelf)
 {
     local int iAbilityId;
     local string strText;
+    local LWCE_TDamagePreview kDamagePreview;
     local XGAbility_Targeted kTargeted;
+    local LWCE_XGAbility kCEAbility;
 
     iAbilityId = kSelf.GetType();
     kTargeted = XGAbility_Targeted(kSelf);
+    kCEAbility = LWCE_XGAbility(kSelf);
 
-    if (iAbilityId <= 255)
+    if (kCEAbility != none)
+    {
+        strText = kCEAbility.m_kTemplate.strHelp;
+    }
+    else if (iAbilityId <= 255)
     {
         strText = class'XGAbilityTree'.default.HelpMessages[iAbilityId];
     }
@@ -1183,7 +1190,15 @@ static simulated function string GetHelpText(XGAbility kSelf)
 
         if (kTargeted != none)
         {
-            strText = Repl(strText, "<XGAbility:PossibleDamage/>", GetPossibleDamage(kTargeted));
+            if (kCEAbility != none)
+            {
+                kDamagePreview = kCEAbility.GetDamagePreview(LWCE_XGUnit(kCEAbility.GetPrimaryTarget()), /* bIsHit */ true, /* bIsCrit */ false);
+                strText = Repl(strText, "<XGAbility:PossibleDamage/>", kDamagePreview.iMinDamage $ "-" $ kDamagePreview.iMaxDamage $ " (after " $ kDamagePreview.iMinDamageReduction $ "-" $ kDamagePreview.iMaxDamageReduction $ " DR)");
+            }
+            else
+            {
+                strText = Repl(strText, "<XGAbility:PossibleDamage/>", GetPossibleDamage(kTargeted));
+            }
 
             if (kTargeted.m_kWeapon != none)
             {
@@ -1539,11 +1554,9 @@ static simulated function GetShotSummary(XGAbility_Targeted kSelf, out TShotResu
     local LWCE_XGTacticalGameCore kGameCore;
     local LWCE_XGWeapon kWeapon;
 
-    // TODO: rewrite function to use LWCE_TCharacter
     kShooter = LWCE_XGUnit(kSelf.m_kUnit);
     kTarget = LWCE_XGUnit(kSelf.GetPrimaryTarget());
     kTargetChar = kTarget.LWCE_GetCharacter().GetCharacter();
-    kArmor = `LWCE_ARMOR(kTarget.LWCE_GetCharacter().GetInventory().nmArmor);
     kWeapon = LWCE_XGWeapon(kSelf.m_kWeapon);
     kPerksMgr = `LWCE_PERKS_TAC;
     iType = kSelf.iType;
@@ -1566,6 +1579,7 @@ static simulated function GetShotSummary(XGAbility_Targeted kSelf, out TShotResu
         return;
     }
 
+    kArmor = `LWCE_ARMOR(kTarget.LWCE_GetCharacter().GetInventory().nmArmor);
     kTarget.UpdateUnitBuffs();
 
     kResult.strTargetName = kTarget.SafeGetCharacterName();

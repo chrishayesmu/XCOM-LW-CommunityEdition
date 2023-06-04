@@ -4,7 +4,7 @@ class LWCE_XGGeoscape extends XGGeoscape
 struct LWCE_TGeoscapeAlert
 {
     var name AlertType;
-    var array<LWCE_TData> arrData;
+    var LWCEDataContainer kData;
 };
 
 var array<LWCE_TGeoscapeAlert> m_arrCEAlerts;
@@ -256,18 +256,45 @@ function InitNewGame()
 
 function int AddMission(XGMission kMission, optional bool bFirst)
 {
+    local name nmGeoscapeAlert;
+    local EEntityGraphic eGraphic;
     local XGMissionControlUI kMissionControlUI;
+    local LWCEDataContainer kEventData;
+    local LWCE_TGeoscapeAlert kAlert;
+    local XComNarrativeMoment kNarrativeMoment;
 
-    if (!`LWCE_MOD_LOADER.OnMissionCreated(kMission) && !bFirst)
+    // EVENT: BeforeAddMissionToGeoscape
+    //
+    // SUMMARY: Emitted right before a mission will be added to the Geoscape. Can be used to modify the mission's
+    //          rewards, location, enemy squad, etc. Can also prevent the mission from being added in the first place.
+    //          Note that the mission's XGBattleDesc may not be generated yet.
+    //
+    // DATA: LWCEDataContainer
+    //       Data[0]: LWCE_XGMission - The mission object which is about to be added. Can be modified or even replaced
+    //                                 with a mission of a different type.
+    //       Data[1]: boolean - Return parameter for event handlers. If an event handler sets this field to false, the
+    //                          mission will not be added to the Geoscape. Currently, the first mission of the campaign
+    //                          cannot be prevented in this way.
+    //
+    // SOURCE: LWCE_XGGeoscape
+    kEventData = class'LWCEDataContainer'.static.New('BeforeAddMissionToGeoscape');
+    kEventData.AddObject(kMission);
+    kEventData.AddBool(true);
+
+    `LWCE_EVENT_MGR.TriggerEvent('BeforeAddMissionToGeoscape', kEventData, self);
+
+    if (!kEventData.Data[1].B && !bFirst)
     {
         return -1;
     }
 
+    kMission = XGMission(kEventData.Data[0].Obj); // in case a mod replaced the mission object
     kMission.m_iID = ++m_iNumMissions;
     m_arrMissions.AddItem(kMission);
 
     kMission.GenerateBattleDescription();
 
+    // Don't add the first mission to the Geoscape UI, we're going to launch straight into it
     if (bFirst)
     {
         return -1;
@@ -278,79 +305,83 @@ function int AddMission(XGMission kMission, optional bool bFirst)
         return -1;
     }
 
+    // Once the final mission has spawned, ignore all other missions that occur
     if (GetFinalMission() != none && GetFinalMission() != kMission)
     {
         return -1;
     }
 
+    eGraphic = eEntityGraphic_MAX;
+
     if (kMission.m_iMissionType == eMission_Crash)
     {
-        PRES().UINarrative(`XComNarrativeMoment("FirstUFOShotDown"));
+        kNarrativeMoment = `XComNarrativeMoment("FirstUFOShotDown");
 
         if (XGMission_UFOCrash(kMission).m_iUFOType == eShip_UFOEthereal)
         {
-            kMission.SetEntity(Spawn(class'LWCE_XGMissionEntity'), eEntityGraphic_Mission_UFO_Crash_Overseer);
+            eGraphic = eEntityGraphic_Mission_UFO_Crash_Overseer;
         }
         else
         {
-            kMission.SetEntity(Spawn(class'LWCE_XGMissionEntity'), eEntityGraphic_Mission_UFO_Crash);
+            eGraphic = eEntityGraphic_Mission_UFO_Crash;
         }
 
-        LWCE_Alert(`LWCE_ALERT('UFOCrash').AddInt(kMission.m_iID).Build());
+        nmGeoscapeAlert = 'UFOCrash';
     }
     else if (kMission.m_iMissionType == eMission_Abduction)
     {
-        kMission.SetEntity(Spawn(class'LWCE_XGMissionEntity'), eEntityGraphic_Mission_Abduction);
+        eGraphic = eEntityGraphic_Mission_Abduction;
+        // TODO: right now alerts for abductions are handled elsewhere, but it should move here
+        // nmGeoscapeAlert = 'Abduction';
+
     }
     else if (kMission.m_iMissionType == eMission_TerrorSite)
     {
         if (Game().GetNumMissionsTaken(eMission_TerrorSite) == 0)
         {
-            PRES().UINarrative(`XComNarrativeMoment("Terror"));
+            kNarrativeMoment = `XComNarrativeMoment("Terror");
         }
 
-        kMission.SetEntity(Spawn(class'LWCE_XGMissionEntity'), eEntityGraphic_Mission_Terror);
-        LWCE_Alert(`LWCE_ALERT('Terror').AddInt(kMission.m_iID).Build());
+        eGraphic = eEntityGraphic_Mission_Terror;
+        nmGeoscapeAlert = 'Terror';
     }
     else if (kMission.m_iMissionType == eMission_CovertOpsExtraction)
     {
-        kMission.SetEntity(Spawn(class'LWCE_XGMissionEntity'), eEntityGraphic_Mission_Covert_Ops);
-        LWCE_Alert(`LWCE_ALERT('ExaltAlert').AddInt(kMission.m_iID).Build());
+        eGraphic = eEntityGraphic_Mission_Covert_Ops;
+        nmGeoscapeAlert = 'ExaltAlert';
     }
     else if (kMission.m_iMissionType == eMission_CaptureAndHold)
     {
-        kMission.SetEntity(Spawn(class'LWCE_XGMissionEntity'), eEntityGraphic_Mission_Covert_Ops);
-        LWCE_Alert(`LWCE_ALERT('ExaltAlert').AddInt(kMission.m_iID).Build());
+        eGraphic = eEntityGraphic_Mission_Covert_Ops;
+        nmGeoscapeAlert = 'ExaltAlert';
     }
     else if (kMission.m_iMissionType == eMission_HQAssault)
     {
-        StartHQAssault();
+        StartHQAssault(); // TODO: make this work with events
     }
     else if (kMission.m_iMissionType == eMission_AlienBase)
     {
-        kMission.SetEntity(Spawn(class'LWCE_XGMissionEntity'), eEntityGraphic_Mission_Alien_Base);
-        LWCE_Alert(`LWCE_ALERT('AlienBase').AddInt(kMission.m_iID).Build());
+        eGraphic = eEntityGraphic_Mission_Alien_Base;
+        nmGeoscapeAlert = 'AlienBase';
     }
     else if (kMission.m_iMissionType == eMission_LandedUFO)
     {
         if (kMission.m_kDesc.m_strMapName == "EWI_HQAssault_MP (Airbase Defense)")
         {
-            kMission.SetEntity(Spawn(class'LWCE_XGMissionEntity'), eEntityGraphic_Interceptor);
+            eGraphic = eEntityGraphic_Interceptor;
         }
         else
         {
-            kMission.SetEntity(Spawn(class'LWCE_XGMissionEntity'), eEntityGraphic_Mission_UFO_Landed);
+            eGraphic = eEntityGraphic_Mission_UFO_Landed;
         }
-
-        LWCE_Alert(`LWCE_ALERT('UFOLanded').AddInt(kMission.m_iID).Build());
     }
     else if (kMission.m_iMissionType == eMission_Special)
     {
-        kMission.SetEntity(Spawn(class'LWCE_XGMissionEntity'), eEntityGraphic_Mission_Council);
+        eGraphic = eEntityGraphic_Mission_Council;
     }
     else if (kMission.m_iMissionType == eMission_ExaltRaid)
     {
-        kMission.SetEntity(Spawn(class'LWCE_XGMissionEntity'), eEntityGraphic_Mission_Exalt_HQ);
+        eGraphic = eEntityGraphic_Mission_Exalt_HQ;
     }
     else if (kMission.m_iMissionType == eMission_Final)
     {
@@ -359,10 +390,62 @@ function int AddMission(XGMission kMission, optional bool bFirst)
         kMissionControlUI.UpdateView();
     }
 
-    UpdateUI(0.0);
     DetermineMap(kMission);
 
-    `LWCE_MOD_LOADER.OnMissionAddedToGeoscape(kMission);
+    // TODO: move all the alerting logic out of this function and into an event handler
+
+    // EVENT: AfterAddMissionToGeoscape
+    //
+    // SUMMARY: Emitted right after a mission has been added to the Geoscape, but before alerting the player (if the mission
+    //          type generates alerts). Use this hook to modify the mission's XGBattleDesc, or other fields which weren't
+    //          available during BeforeAddMissionToGeoscape.
+    //
+    // DATA: LWCEDataContainer
+    //       Data[0]: LWCE_XGMission - The mission object which is about to be added. Can be modified, but not replaced.
+    //       Data[1]: name - The name of the one-time Geoscape alert to show for this mission. If an event handler sets this field
+    //                       to empty, no alert will be shown to the player for this new mission. Generally you should only do this
+    //                       if you're planning to alert the player in some other way.
+    //       Data[2]: int - Integer value of the EEntityGraphic enum. The graphic selected here will be shown on the Geoscape.
+    //                      A negative value will show no image on the Geoscape.
+    //       Data[3]: XComNarrativeMoment - Out parameter. The narrative moment to play before alerting the player. If an event handler sets this
+    //                                      field to None, no narrative moment will play.
+    //
+    // SOURCE: LWCE_XGGeoscape
+    kEventData = class'LWCEDataContainer'.static.New('AfterAddMissionToGeoscape');
+    kEventData.AddObject(kMission);
+    kEventData.AddName(nmGeoscapeAlert);
+    kEventData.AddInt(eGraphic < eEntityGraphic_MAX ? int(eGraphic) : -1);
+    kEventData.AddObject(kNarrativeMoment);
+
+    `LWCE_EVENT_MGR.TriggerEvent('AfterAddMissionToGeoscape', kEventData, self);
+
+    // Sync back data in case an event listener changed it
+    kMission = XGMission(kEventData.Data[0].Obj);
+    nmGeoscapeAlert = kEventData.Data[1].Nm;
+    kNarrativeMoment = XComNarrativeMoment(kEventData.Data[3].Obj);
+
+    if (kEventData.Data[2].I >= 0 && kEventData.Data[2].I < eEntityGraphic_MAX)
+    {
+        eGraphic = EEntityGraphic(kEventData.Data[2].I);
+        kMission.SetEntity(Spawn(class'LWCE_XGMissionEntity'), eGraphic);
+    }
+
+    if (kNarrativeMoment != none)
+    {
+        PRES().UINarrative(kNarrativeMoment);
+    }
+
+    if (nmGeoscapeAlert != '')
+    {
+        kEventData = class'LWCEDataContainer'.static.New('GeoscapeAlert');
+        kEventData.AddInt(kMission.m_iID);
+
+        kAlert.AlertType = nmGeoscapeAlert;
+        kAlert.kData = kEventData;
+        LWCE_Alert(kAlert);
+    }
+
+    UpdateUI(0.0);
 
     return kMission.m_iID;
 }
@@ -376,6 +459,7 @@ function LWCE_Alert(LWCE_TGeoscapeAlert kAlert)
 {
     LWCE_PreloadSquadIntoSkyranger(kAlert.AlertType, false);
 
+    // Make sure that if there's an end-of-month alert queued up, new alerts come before it
     if (m_arrCEAlerts.Length > 0 && m_arrCEAlerts[m_arrCEAlerts.Length - 1].AlertType == 'PayDay')
     {
         m_arrCEAlerts.InsertItem(0, kAlert);
@@ -432,7 +516,10 @@ function ClearTopAlert(optional bool bDoNotResume = false)
 
 function int DetectUFO(XGShip_UFO kUFO)
 {
+    local LWCE_XGHeadquarters kHQ;
     local int iChance, Index;
+
+    kHQ = LWCE_XGHeadquarters(HQ());
 
     if (kUFO.m_kObjective == none || kUFO.m_kObjective.m_bComplete)
     {
@@ -440,7 +527,7 @@ function int DetectUFO(XGShip_UFO kUFO)
     }
 
     // Can't see Overseer UFOs without a Hyperwave facility
-    if (kUFO.GetType() == eShip_UFOEthereal && HQ().GetNumFacilities(eFacility_HyperwaveRadar) == 0)
+    if (kUFO.GetType() == eShip_UFOEthereal && kHQ.LWCE_GetNumFacilities('Facility_HyperwaveRelay') == 0)
     {
         return -1;
     }
@@ -454,11 +541,11 @@ function int DetectUFO(XGShip_UFO kUFO)
     if (kUFO.IsInCountry())
     {
         // If there's a satellite in the country, the UFO is always spotted
-        for (Index = 0; Index < HQ().m_arrSatellites.Length; Index++)
+        for (Index = 0; Index < kHQ.m_arrSatellites.Length; Index++)
         {
-            if (HQ().m_arrSatellites[Index].iTravelTime <= 0)
+            if (kHQ.m_arrSatellites[Index].iTravelTime <= 0)
             {
-                if (HQ().m_arrSatellites[Index].iCountry == kUFO.GetCountry())
+                if (kHQ.m_arrSatellites[Index].iCountry == kUFO.GetCountry())
                 {
                     return Index;
                 }

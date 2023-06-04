@@ -1,6 +1,9 @@
 class LWCE_XComTacticalCheatManager extends XComTacticalCheatManager;
 
+var bool bDebugVanillaAnims;
+var bool bDebugVisualization;
 var bool bDisplayMovementGrid;
+var bool bUnlimitedMoves;
 
 `include(generators.uci)
 
@@ -15,63 +18,6 @@ exec function ForceResetLightingEnvironments()
         `LWCE_LOG_CLS("Resetting pawn " $ kPawn $ ", environment " $ kPawn.LightEnvironment);
         kPawn.LightEnvironment.ResetEnvironment();
     }
-}
-
-exec function DumpVoicePacks(int iGender, bool bIsMec) // TODO delete
-{
-    local array<ECharacterVoice> PossibleVoices;
-    local array<int> Languages;
-    local int LanguageIndex, VoiceIndex;
-
-    Languages.AddItem(0);
-    Languages.AddItem(1);
-    Languages.AddItem(2);
-    Languages.AddItem(3);
-    Languages.AddItem(4);
-    Languages.AddItem(5);
-    Languages.AddItem(6);
-    Languages.AddItem(7);
-    Languages.AddItem(8);
-    Languages.AddItem(9);
-    Languages.AddItem(10);
-    Languages.AddItem(11);
-    Languages.AddItem(12);
-    Languages.AddItem(13);
-    Languages.AddItem(14);
-    Languages.AddItem(16);
-    Languages.AddItem(17);
-    Languages.AddItem(18);
-    Languages.AddItem(19);
-    Languages.AddItem(20);
-    Languages.AddItem(21);
-    Languages.AddItem(22);
-    Languages.AddItem(23);
-    Languages.AddItem(24);
-    Languages.AddItem(25);
-    Languages.AddItem(26);
-    Languages.AddItem(27);
-    Languages.AddItem(28);
-    Languages.AddItem(29);
-
-
-    for (LanguageIndex = 0; LanguageIndex < Languages.Length; LanguageIndex++)
-    {
-        PossibleVoices.Length = 0;
-        `CONTENTMGR.GetPossibleVoices(EGender(iGender), Languages[LanguageIndex], bIsMec, PossibleVoices);
-
-        `LWCE_LOG_CLS("----------- " $ PossibleVoices.Length $ " voices for iGender = " $ iGender $ ", bIsMec = " $ bIsMec $ ", iLanguageIdx = " $ Languages[LanguageIndex] $ ", language name = " $ class'LWCE_XGCharacterGenerator'.static.LanguageNameByBaseID(Languages[LanguageIndex]) $ " ------------");
-        for (VoiceIndex = 0; VoiceIndex < PossibleVoices.Length; VoiceIndex++)
-        {
-            `CONTENTMGR.RequestContentArchetype(eContent_Voice, PossibleVoices[VoiceIndex], Languages[LanguageIndex], self, OnVoiceLoaded, /* bAsync */ false);
-        }
-    }
-
-
-}
-
-function OnVoiceLoaded(Object Archetype, int ContentId, int SubID)
-{
-    `LWCE_LOG_CLS("Voice ID " $ ContentID $ " with language index " $ SubID $ " maps to voice " $ Archetype $ ". Pathname: " $ PathName(Archetype));
 }
 
 exec function DebugShotAgainstTarget(optional int iAbilityId = eAbility_ShotStandard)
@@ -147,6 +93,16 @@ exec function DebugShotAgainstTarget(optional int iAbilityId = eAbility_ShotStan
     }
 }
 
+exec function DebugVanillaAnims()
+{
+    bDebugVanillaAnims = !bDebugVanillaAnims;
+}
+
+exec function DebugVisualization()
+{
+    bDebugVisualization = !bDebugVisualization;
+}
+
 exec function DropMan(optional bool bAddToHumanTeam = false)
 {
     local XGCharacter kChar;
@@ -165,6 +121,41 @@ exec function DropMan(optional bool bAddToHumanTeam = false)
     {
         XGAIPlayer_Animal(XGBattle_SP(`BATTLE).GetAnimalPlayer()).SpawnCivilian(kSpawnPt);
     }
+}
+
+exec function GiveAbility(string strName)
+{
+    local array<XGAbility> unusedOutVar;
+    local LWCEAbilityTemplate kAbilityTemplate;
+    local LWCE_XGAbility kAbility;
+    local LWCE_XGUnit kUnit;
+
+    kUnit = LWCE_XGUnit(Outer.GetActiveUnit());
+
+    if (kUnit == none)
+    {
+        return;
+    }
+
+    kAbilityTemplate = `LWCE_ABILITY(name(strName));
+
+    if (kAbilityTemplate == none)
+    {
+        GetConsole().OutputTextLine("Couldn't find ability template with name " $ strName);
+        return;
+    }
+
+    // TODO add a separate hook for this, figure out what to do with kWeapon argument
+    kAbility = kUnit.GenerateAbilityFromTemplate(kAbilityTemplate.GetAbilityName(), unusedOutVar, /* kWeapon */ none);
+
+    if (kAbility.IsTriggeredOnUnitPostBeginPlay())
+    {
+        GetConsole().OutputTextLine("Ability " $ kAbilityTemplate.GetAbilityName() $ " should be activated on PostBeginPlay; activating now");
+        kAbility.Activate();
+    }
+
+    // Update all ability breakdowns in case this ability has an effect on them
+    kUnit.UpdateAbilityBreakdowns();
 }
 
 exec function GiveBonus(string strName)
@@ -205,6 +196,17 @@ exec function GivePenalty(string strName)
     {
         kUnit.AddPenalty(iPenalty);
     }
+}
+
+exec function PlayMovementAnim(name AnimName)
+{
+    local LWCE_XGUnit kUnit;
+
+    kUnit = LWCE_XGUnit(Outer.GetActiveUnit());
+
+    `LWCE_LOG_CLS("Setting movement node anim by name: " $ AnimName);
+    kUnit.m_kPawn.MovementNode.SetActiveChild(6, 0.10);
+    kUnit.m_kPawn.MovementNode.SetAnimByName(AnimName);
 }
 
 exec function PrintCoverInfo()
@@ -433,6 +435,11 @@ exec function ToggleTacticalHUD()
     {
         kTacHud.Show();
     }
+}
+
+exec function UnlimitedMoves()
+{
+    bUnlimitedMoves = !bUnlimitedMoves;
 }
 
 function Do_AddUnitAtCursor(int iLoadout, optional Vector vOffset)

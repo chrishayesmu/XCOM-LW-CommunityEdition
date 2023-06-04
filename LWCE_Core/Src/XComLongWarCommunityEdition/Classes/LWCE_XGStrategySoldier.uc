@@ -781,7 +781,7 @@ function bool IsReadyToLevelUp()
 
 function bool IsReadyToPsiLevelUp()
 {
-    if (!HQ().HasFacility(eFacility_PsiLabs))
+    if (!LWCE_XGHeadquarters(HQ()).LWCE_HasFacility('Facility_PsionicLabs'))
     {
         return false;
     }

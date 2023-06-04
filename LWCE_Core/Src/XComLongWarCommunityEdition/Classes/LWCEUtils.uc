@@ -1,6 +1,11 @@
 class LWCEUtils extends Object
     dependson(LWCETypes);
 
+static function bool AreVectorsSame(const Vector2D v1, const Vector2D v2, optional float fTolerance = 1.0f)
+{
+    return Abs(v1.x - v2.x) <= fTolerance && Abs(v1.y - v2.y) <= fTolerance;
+}
+
 static function AdjustItemQuantity(out array<LWCE_TItemQuantity> arrItemQuantities, name ItemName, int iQuantity, optional bool bDeleteIfAllRemoved = true)
 {
     local int Index;
@@ -177,7 +182,7 @@ static function int RandInRange(LWCE_TRange kRange)
 }
 
 /// <summary>
-/// Scales the given cost to be appropriated for Dynamic War. Scaling does not apply to cash, alloy,
+/// Scales the given cost to be appropriate for Dynamic War. Scaling does not apply to cash, alloy,
 /// elerium, or meld costs.
 /// </summary>
 static function ScaleCostForDynamicWar(out LWCE_TCost kCost)
@@ -218,23 +223,56 @@ static function SetItemQuantity(out array<LWCE_TItemQuantity> arrItemQuantities,
     }
 }
 
+static function LWCE_TStaffRequirement StaffRequirement(name StaffName, int iQuantity)
+{
+    local LWCE_TStaffRequirement kReq;
+
+    kReq.StaffType = StaffName;
+    kReq.NumRequired = iQuantity;
+
+    return kReq;
+}
+
 // #region Helper functions related to key-value pairs
 
 /// <summary>
-/// Looks for a key in the given array and retrieves the corresponding value.
+/// Looks for a key in the given data, and if found, adds iModifier to it. If not found,
+/// a new pair is added to the data, and iModifier is its value.
+/// </summary>
+static function ModifyKeyValuePair(out array<LWCE_NameIntKVP> arrData, name nmKey, int iModifier)
+{
+    local LWCE_NameIntKVP kPair;
+    local int Index;
+
+    Index = arrData.Find('Key', nmKey);
+
+    if (Index != INDEX_NONE)
+    {
+        arrData[Index].Value += iModifier;
+    }
+    else
+    {
+        kPair.Key = nmKey;
+        kPair.Value = iModifier;
+        arrData.AddItem(kPair);
+    }
+}
+
+/// <summary>
+/// Looks for a key in the given array and retrieves the corresponding value. If the key is
+/// not found, then iValue is unmodified.
 /// </summary>
 /// <returns>True if the key was found, false otherwise.</returns>
-static function bool TryFindValue(array<LWCE_IntKVP> arrData, int iKey, out int iValue)
+static function bool TryFindValue(array<LWCE_NameIntKVP> arrData, name nmKey, out int iValue)
 {
     local int Index;
 
-    for (Index = 0; Index < arrData.Length; Index++)
+    Index = arrData.Find('Key', nmKey);
+
+    if (Index != INDEX_NONE)
     {
-        if (arrData[Index].Key == iKey)
-        {
-            iValue = arrData[Index].Value;
-            return true;
-        }
+        iValue = arrData[Index].Value;
+        return true;
     }
 
     return false;
@@ -244,24 +282,24 @@ static function bool TryFindValue(array<LWCE_IntKVP> arrData, int iKey, out int 
 /// Updates-or-inserts a value into an array of key-value pairs. Note that if a key is present on multiple
 /// entries in the array, the value will only be updated for one of those entries.
 /// </summary>
-static function UpsertKeyValuePair(out array<LWCE_IntKVP> arrData, int iKey, int iValue)
+static function UpsertKeyValuePair(out array<LWCE_NameIntKVP> arrData, name nmKey, int iValue)
 {
-    local LWCE_IntKVP kPair;
+    local LWCE_NameIntKVP kPair;
     local int Index;
 
-    for (Index = 0; Index < arrData.Length; Index++)
+    Index = arrData.Find('Key', nmKey);
+
+    if (Index == INDEX_NONE)
     {
-        if (arrData[Index].Key == iKey)
-        {
-            arrData[Index].Value = iValue;
-            return;
-        }
+        kPair.Key = nmKey;
+        kPair.Value = iValue;
+
+        arrData.AddItem(kPair);
     }
-
-    kPair.Key = iKey;
-    kPair.Value = iValue;
-
-    arrData.AddItem(kPair);
+    else
+    {
+        arrData[Index].Value = iValue;
+    }
 }
 
 // #endregion

@@ -6,7 +6,7 @@ struct CheckpointRecord_LWCE_XGStrategy extends CheckpointRecord
 };
 
 var array<name> m_arrCEItemUnlocks;
-var array<int> m_arrCEFacilityUnlocks;
+var array<name> m_arrCEFacilityUnlocks;
 var array<name> m_arrCEFoundryUnlocks;
 
 function NewGame()
@@ -39,7 +39,6 @@ function NewGame()
 
     m_arrItemUnlocks.Add(255);
     m_arrGeneModUnlocks.Add(11);
-    m_arrFacilityUnlocks.Add(24);
     m_arrSecondWave.Add(36);
 
     Init(false);
@@ -68,6 +67,13 @@ function Init(bool bLoadingFromSave)
     {
         InitDifficulty(m_iDifficulty);
     }
+
+    class'LWCEEventListenerTemplateManager'.static.RegisterStrategyListeners();
+
+    // EVENT: StrategyGameStart
+    //
+    // TODO: document
+    `LWCE_EVENT_MGR.TriggerEvent('StrategyGameStart');
 }
 
 function BeginCombat(XGMission kMission)
@@ -216,36 +222,31 @@ function bool UnlockFacility(EFacilityType eFacility, out TItemUnlock kUnlock)
     return false;
 }
 
-function bool LWCE_UnlockFacility(int iFacilityId, out LWCE_TItemUnlock kUnlock)
+function bool LWCE_UnlockFacility(name FacilityName, out LWCE_TItemUnlock kUnlock)
 {
-    local TFacility kFacility;
-    local LWCE_TData kData;
+    local LWCEFacilityTemplate kFacility;
 
-    if (m_arrCEFacilityUnlocks.Find(iFacilityId) != INDEX_NONE || HQ().HasFacility(iFacilityId))
+    if (m_arrCEFacilityUnlocks.Find(FacilityName) != INDEX_NONE || LWCE_XGHeadquarters(HQ()).LWCE_HasFacility(FacilityName))
     {
         return false;
     }
 
-    kFacility = Facility(iFacilityId);
+    kFacility = `LWCE_FACILITY(FacilityName);
 
     kUnlock.bFacility = true;
     kUnlock.sndFanfare = SNDLIB().SFX_Unlock_Facility;
 
-    kUnlock.ImagePath = class'UIUtilities'.static.GetStrategyImagePath(kFacility.iImage);
+    kUnlock.ImagePath = kFacility.ImagePath;
     kUnlock.strName = kFacility.strName;
     kUnlock.strDescription = kFacility.strBriefSummary;
     kUnlock.strTitle = m_strNewFacilityAvailable;
 
-    if (kFacility.iCash != -1)
+    if (kFacility.kCost.iCash != -1)
     {
         kUnlock.strHelp = m_strNewFacilityHelp;
     }
 
-    kData.eType = eDT_Int;
-    kData.iData = iFacilityId;
-    kUnlock.arrUnlockData.AddItem(kData);
-
-    m_arrCEFacilityUnlocks.AddItem(iFacilityId);
+    m_arrCEFacilityUnlocks.AddItem(FacilityName);
 
     ENGINEERING().m_bCanBuildFacilities = true;
     ENGINEERING().SetDisabled(false);
@@ -262,7 +263,6 @@ function bool UnlockFoundryProject(EFoundryTech eProject, out TItemUnlock kUnloc
 
 function bool LWCE_UnlockFoundryProject(name ProjectName, out LWCE_TItemUnlock kUnlock)
 {
-    local LWCE_TData kData;
     local LWCEFoundryProjectTemplate kTemplate;
 
     if (m_arrCEFoundryUnlocks.Find(ProjectName) != INDEX_NONE)
@@ -281,10 +281,6 @@ function bool LWCE_UnlockFoundryProject(name ProjectName, out LWCE_TItemUnlock k
     kUnlock.strTitle = m_strNewFoundryAvailable;
     kUnlock.strHelp = m_strNewFoundryHelp;
 
-    kData.eType = eDT_Name;
-    kData.nmData = ProjectName;
-    kUnlock.arrUnlockData.AddItem(kData);
-
     m_arrCEFoundryUnlocks.AddItem(ProjectName);
 
     return true;
@@ -300,7 +296,6 @@ function bool UnlockItem(EItemType eItem, out TItemUnlock kUnlock)
 function bool LWCE_UnlockItem(name ItemName, out LWCE_TItemUnlock kUnlock)
 {
     local LWCEItemTemplate kItem;
-    local LWCE_TData kData;
 
     if (m_arrCEItemUnlocks.Find(ItemName) != INDEX_NONE)
     {
@@ -315,10 +310,6 @@ function bool LWCE_UnlockItem(name ItemName, out LWCE_TItemUnlock kUnlock)
     kUnlock.strDescription = kItem.strBriefSummary;
     kUnlock.strTitle = m_strNewItemAvailable;
     kUnlock.strHelp = m_strNewItemHelp;
-
-    kData.eType = eDT_Name;
-    kData.nmData = ItemName;
-    kUnlock.arrUnlockData.AddItem(kData);
 
     m_arrCEItemUnlocks.AddItem(ItemName);
 
@@ -423,4 +414,79 @@ protected function ValidateNewGameState()
     {
         `LWCE_LOG_CLS("Any XGStrategy member which is already set will be overridden by LWCE. This was most likely done by a mutator-based mod, and that mod will not function properly.");
     }
+}
+
+state StartingNewGame
+{
+Begin:
+    CheckForSecondWave();
+    m_kHQ.InitNewGame();
+    m_kGeoscape.InitNewGame();
+    m_kWorld.StartGame();
+    m_kAI.InitNewGame();
+    `PROFILESETTINGS.Data.IncGamesPlayed();
+
+    if (m_bDebugStart)
+    {
+        DebugStuff();
+    }
+
+    if (!m_bControlledStart && !m_bDebugStart)
+    {
+        Sleep(0.10);
+        GEOSCAPE().PreloadSquadIntoSkyranger(eGA_Abduction, false);
+
+        while (AreDropshipSoldiersStillLoading())
+        {
+            Sleep(0.10);
+        }
+
+        // Following block is in the base class, but IsAsyncLoadingWrapper appears to be a no-op,
+        // so we omit it in LWCE
+        /*
+        while (IsAsyncLoadingWrapper())
+        {
+            Sleep(0.10);
+        }
+        */
+    }
+
+    while (PRES().IsBusy())
+    {
+        Sleep(0.0);
+    }
+
+    `ONLINEEVENTMGR.ResetAchievementState();
+
+    // EVENT: OnNewCampaignStarted
+    //
+    // SUMMARY: Triggered at the start of a new campaign. At this point, the default base has been set up,
+    //          with the facilities, items, etc that are common to all campaigns. Bonuses specific to a starting
+    //          country or continent, or due to Second Wave bonuses, are *not* set up yet; they are applied in response
+    //          to the OnNewCampaignStarted event, much like mods. This event occurs prior to the intro mission beginning.
+    //
+    // DATA: LWCE_XGStrategy
+    //
+    // SOURCE: LWCE_XGStrategy
+    `LWCE_EVENT_MGR.TriggerEvent('OnNewCampaignStarted', self, self);
+
+    if (m_bDebugStart)
+    {
+        GoToHQ();
+    }
+    else if (m_bControlledStart)
+    {
+        m_kSetupPhaseManager = Spawn(class'XGSetupPhaseManager', self);
+        m_kSetupPhaseManager.StartNewGame();
+    }
+    else if (m_bTutorial)
+    {
+        GoToTutorial();
+    }
+    else
+    {
+        GEOSCAPE().TakeFirstMission();
+    }
+
+    stop;    
 }

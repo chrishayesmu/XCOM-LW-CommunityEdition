@@ -120,6 +120,108 @@ function TTableMenuOption BuildSoldierOption(XGStrategySoldier kSoldier, array<i
     return kOption;
 }
 
+function UpdateMainMenu()
+{
+    local LWCE_XGHeadquarters kHQ;
+    local TMenuOption kOption;
+    local TMenu kMainMenu;
+    local int iMenuOption;
+
+    kHQ = LWCE_XGHeadquarters(HQ());
+
+    m_arrMenuOptions.Remove(0, m_arrMenuOptions.Length);
+    m_arrMenuOptions.AddItem(eBarracksView_SoldierList);
+
+    if (kHQ.LWCE_HasFacility('Facility_OfficerTrainingSchool'))
+    {
+        m_arrMenuOptions.AddItem(eBarracksView_OTS);
+    }
+
+    if (kHQ.LWCE_HasFacility('Facility_PsionicLabs'))
+    {
+        m_arrMenuOptions.AddItem(eBarracksView_PsiLabs);
+    }
+
+    m_arrMenuOptions.AddItem(eBarracksView_Morgue);
+    m_arrMenuOptions.AddItem(eBarracksView_Hire);
+
+    if (AreAnyMedalsAvailable())
+    {
+        m_arrMenuOptions.AddItem(eBarracksView_Medals);
+    }
+
+    for (iMenuOption = 0; iMenuOption < m_arrMenuOptions.Length; iMenuOption++)
+    {
+        if (m_arrMenuOptions[iMenuOption] == eBarracksView_SoldierList)
+        {
+            kOption.strText = m_strBaseViewNames[1];
+            kOption.iState = eUIState_Normal;
+            kOption.strHelp = m_strBaseViewHelp[1];
+        }
+        else if (m_arrMenuOptions[iMenuOption] == eBarracksView_OTS)
+        {
+            kOption.strText = m_strBaseViewNames[7];
+            kOption.iState = eUIState_Normal;
+            kOption.strHelp = m_strBaseViewHelp[7];
+        }
+        else if (m_arrMenuOptions[iMenuOption] == eBarracksView_Morgue)
+        {
+            kOption.strText = m_strBaseViewNames[5];
+
+            if (BARRACKS().HasDeadSoldiers())
+            {
+                kOption.iState = eUIState_Normal;
+                kOption.strHelp = m_strBaseViewHelp[5];
+            }
+            else
+            {
+                kOption.iState = eUIState_Disabled;
+                kOption.strHelp = m_strNoSoldiersDied;
+            }
+        }
+        else if (m_arrMenuOptions[iMenuOption] == eBarracksView_PsiLabs)
+        {
+            kOption.strText = m_strBaseViewNames[4];
+            kOption.iState = eUIState_Normal;
+            kOption.strHelp = m_strBaseViewHelp[4];
+        }
+        else if (m_arrMenuOptions[iMenuOption] == eBarracksView_Hire)
+        {
+            kOption.strText = m_strBaseViewNames[6];
+
+            if (STAFF(eStaff_Soldier).iCash > (GetResource(eResource_Money)))
+            {
+                kOption.iState = eUIState_Disabled;
+                kOption.strHelp = m_strErrNoMoneyForSoldiers;
+            }
+            else if (HQ().GetSoldierCapacity() <= (BARRACKS().GetNumSoldiers() + HQ().GetStaffOnOrder(eStaff_Soldier) + ENGINEERING().GetNumShivsOrdered()))
+            {
+                kOption.iState = eUIState_Disabled;
+                kOption.strHelp = m_strErrOTRRequired;
+            }
+            else
+            {
+                kOption.iState = eUIState_Normal;
+                kOption.strHelp = m_strBaseViewHelp[6];
+            }
+        }
+        else if (m_arrMenuOptions[iMenuOption] == eBarracksView_Medals)
+        {
+            kOption.strText = m_strBaseViewNames[8];
+            kOption.iState = eUIState_Normal;
+            kOption.strHelp = m_strBaseViewHelp[8];
+        }
+        else
+        {
+            continue;
+        }
+
+        kMainMenu.arrOptions.AddItem(kOption);
+    }
+
+    m_kMainMenu.mnuOptions = kMainMenu;
+}
+
 function UpdateView()
 {
     local LWCE_XGFacility_PsiLabs kPsiLabs;

@@ -26,6 +26,7 @@ struct CheckpointRecord_LWCE_XGFacility_Labs extends CheckpointRecord_XGFacility
     var array<LWCE_TResearchProgress> m_arrCEProgress;
     var array<name> m_arrEarnedResearchCredits;
     var array<LWCE_TTechState> m_arrCEMissionResults;
+    var array<name> m_arrCEUnlockedFacilities;
     var array<name> m_arrCEUnlockedFoundryProjects;
     var array<int> m_arrCEUnlockedItems;
 };
@@ -37,6 +38,7 @@ var array<LWCE_TResearchProgress> m_arrCEProgress;
 var array<name> m_arrEarnedResearchCredits;
 
 var array<LWCE_TTechState> m_arrCEMissionResults;
+var array<name> m_arrCEUnlockedFacilities;
 var array<name> m_arrCEUnlockedFoundryProjects;
 var array<name> m_arrCEUnlockedItems;
 
@@ -276,7 +278,7 @@ function LWCE_CompilePostMissionReport(array<LWCE_TTechState> arrPreLandTechs, a
                 kTechState.eAvailabilityState = eTechState_Available;
 
                 // Make sure we can do interrogations if relevant (captives may not be converted to corpses at this point)
-                if (LWCE_IsInterrogationTech(kTechState.TechName) && !HQ().HasFacility(eFacility_AlienContain))
+                if (LWCE_IsInterrogationTech(kTechState.TechName) && !LWCE_XGHeadquarters(HQ()).LWCE_HasFacility('Facility_AlienContainment'))
                 {
                     kTechState.eAvailabilityState = eTechState_Unavailable;
                 }
@@ -656,7 +658,6 @@ function GetEvents(out array<THQEvent> arrEvents)
 function LWCE_GetEvents(out array<LWCE_THQEvent> arrEvents)
 {
     local int iEvent;
-    local LWCE_TData kData;
     local LWCE_THQEvent kEvent;
 
     if (!HasProject())
@@ -664,12 +665,9 @@ function LWCE_GetEvents(out array<LWCE_THQEvent> arrEvents)
         return;
     }
 
-    kData.eType = eDT_Name;
-    kData.nmData = m_kCEProject.TechName;
-
     kEvent.EventType = 'Research';
     kEvent.iHours = GetHoursLeftOnProject();
-    kEvent.arrData.AddItem(kData);
+    kEvent.kData = class'LWCEDataContainer'.static.NewName('THQEventData', m_kCEProject.TechName);
 
     for (iEvent = 0; iEvent < arrEvents.Length; iEvent++)
     {
@@ -919,7 +917,7 @@ function bool LWCE_IsTechAvailable(name TechName)
         return false;
     }
 
-    if (LWCE_IsInterrogationTech(TechName) && !HQ().HasFacility(eFacility_AlienContain))
+    if (LWCE_IsInterrogationTech(TechName) && !LWCE_XGHeadquarters(HQ()).LWCE_HasFacility('Facility_AlienContainment'))
     {
         return false;
     }
@@ -1016,9 +1014,9 @@ function OnResearchCompleted()
 
     STAT_AddAvgStat(eRecap_AvgTechDaysCount, eRecap_AvgTechDaysSum, int(float(m_arrCEProgress[iProgressIndex].iHoursSpent) / 24.0));
 
-    m_arrUnlockedItems.Remove(0, m_arrUnlockedItems.Length);
+    m_arrCEUnlockedItems.Remove(0, m_arrCEUnlockedItems.Length);
     m_arrUnlockedGeneMods.Remove(0, m_arrUnlockedGeneMods.Length);
-    m_arrUnlockedFacilities.Remove(0, m_arrUnlockedFacilities.Length);
+    m_arrCEUnlockedFacilities.Remove(0, m_arrCEUnlockedFacilities.Length);
     m_arrCEUnlockedFoundryProjects.Remove(0, m_arrCEUnlockedFoundryProjects.Length);
 
     if (ENGINEERING().IsDisabled())
@@ -1241,15 +1239,15 @@ function LWCE_SetNewProject(name TechName)
 
 function UpdateLabBonus()
 {
-    m_fLabBonus = class'XGTacticalGameCore'.default.LAB_BONUS * HQ().GetNumFacilities(eFacility_ScienceLab);
+    m_fLabBonus = class'XGTacticalGameCore'.default.LAB_BONUS * LWCE_XGHeadquarters(HQ()).LWCE_GetNumFacilities('Facility_Laboratory');
 
     if (HQ().HasBonus(`LW_HQ_BONUS_ID(JaiVidwan)) > 0)
     {
-        m_fAdjLabBonus = ((HQ().HasBonus(`LW_HQ_BONUS_ID(JaiVidwan)) / 100.0f) + class'XGTacticalGameCore'.default.LAB_ADJACENCY_BONUS) * Base().GetAdjacencies(eAdj_Science);
+        m_fAdjLabBonus = ((HQ().HasBonus(`LW_HQ_BONUS_ID(JaiVidwan)) / 100.0f) + class'XGTacticalGameCore'.default.LAB_ADJACENCY_BONUS) * LWCE_XGBase(Base()).LWCE_GetAdjacencies('Laboratory');
     }
     else
     {
-        m_fAdjLabBonus = class'XGTacticalGameCore'.default.LAB_ADJACENCY_BONUS * Base().GetAdjacencies(eAdj_Science);
+        m_fAdjLabBonus = class'XGTacticalGameCore'.default.LAB_ADJACENCY_BONUS * LWCE_XGBase(Base()).LWCE_GetAdjacencies('Laboratory');
     }
 
     if (HasProject())

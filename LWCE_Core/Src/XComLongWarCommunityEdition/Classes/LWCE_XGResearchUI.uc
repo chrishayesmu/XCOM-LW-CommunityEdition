@@ -99,7 +99,6 @@ function TTechSummary LWCE_BuildTechSummary(LWCETechTemplate kTech)
     kSummary.txtRequirementsLabel.StrValue = m_strCostLabel;
     kSummary.txtRequirementsLabel.iState = eUIState_Warning;
 
-    kProjectCost.iStaffTypeReq = eStaff_Scientist;
     kProjectCost.kCost = kTech.GetCost();
     kSummary.bCanAfford = kLabs.LWCE_GetCostSummary(kSummary.kCost, kProjectCost);
 
@@ -154,12 +153,12 @@ function OnLeaveReport(bool bJumpToChooseTech)
 
         kLabs.m_arrCEUnlockedItems.Remove(0, kLabs.m_arrCEUnlockedItems.Length);
 
-        for (iUnlock = 0; iUnlock < kLabs.m_arrUnlockedFacilities.Length; iUnlock++)
+        for (iUnlock = 0; iUnlock < kLabs.m_arrCEUnlockedFacilities.Length; iUnlock++)
         {
-            class'LWCE_XGScreenMgr_Extensions'.static.UnlockFacility(kLabs.m_arrUnlockedFacilities[iUnlock]);
+            class'LWCE_XGScreenMgr_Extensions'.static.UnlockFacility(kLabs.m_arrCEUnlockedFacilities[iUnlock]);
         }
 
-        kLabs.m_arrUnlockedFacilities.Remove(0, kLabs.m_arrUnlockedFacilities.Length);
+        kLabs.m_arrCEUnlockedFacilities.Remove(0, kLabs.m_arrCEUnlockedFacilities.Length);
 
         for (iUnlock = 0; iUnlock < kLabs.m_arrCEUnlockedFoundryProjects.Length; iUnlock++)
         {
@@ -371,7 +370,7 @@ function UpdateMainMenu()
     m_kMainMenu.arrViews.AddItem(eLabView_ChooseTech);
     m_kMainMenu.arrViews.AddItem(eLabView_Archives);
 
-    if (HQ().HasFacility(eFacility_GeneticsLab))
+    if (LWCE_XGHeadquarters(HQ()).LWCE_HasFacility('Facility_GeneticsLab'))
     {
         m_kMainMenu.arrViews.AddItem(eLabView_GeneLab);
     }
@@ -511,18 +510,18 @@ function UpdateReport()
         kReport.txtResults[0].iState = eUIState_Warning;
     }
 
-    arrResults = kTechTree.LWCE_GetFacilityResults(m_nmCEReportTech);
+    arrNameResults = kTechTree.LWCE_GetFacilityResults(m_nmCEReportTech);
 
-    if (arrResults.Length > 0)
+    if (arrNameResults.Length > 0)
     {
-        for (Index = 0; Index < arrResults.Length; Index++)
+        for (Index = 0; Index < arrNameResults.Length; Index++)
         {
-            kTag.StrValue0 = Facility(arrResults[Index]).strName;
+            kTag.StrValue0 = `LWCE_FACILITY(arrNameResults[Index]).strName;
             kReport.txtResults.Add(1);
             kReport.txtResults[kReport.txtResults.Length - 1].StrValue = class'XComLocalizer'.static.ExpandString(m_strFacilityBuildAvailable);
             kReport.txtResults[kReport.txtResults.Length - 1].iState = eUIState_Warning;
 
-            kLabs.m_arrUnlockedFacilities.AddItem(EFacilityType(arrResults[Index]));
+            kLabs.m_arrCEUnlockedFacilities.AddItem(arrNameResults[Index]);
         }
     }
 
@@ -651,9 +650,11 @@ function UpdateTechTable()
 
 function UpdateView()
 {
+    local LWCE_XGHeadquarters kHQ;
     local LWCE_XGFacility_Labs kLabs;
     local LWCE_XGStorage kStorage;
 
+    kHQ = LWCE_XGHeadquarters(HQ());
     kLabs = LWCE_XGFacility_Labs(LABS());
     kStorage = LWCE_XGStorage(STORAGE());
 
@@ -694,7 +695,7 @@ function UpdateView()
             return;
         }
 
-        if (!HQ().HasFacility(eFacility_AlienContain) && kLabs.LWCE_IsResearched('Tech_Xenoneurology') && kLabs.m_nmLastResearchedTech != 'Tech_Xenoneurology' && !ENGINEERING().IsBuildingFacility(eFacility_AlienContain))
+        if (!kHQ.LWCE_HasFacility('Facility_AlienContainment') && kLabs.LWCE_IsResearched('Tech_Xenoneurology') && kLabs.m_nmLastResearchedTech != 'Tech_Xenoneurology' && !ENGINEERING().IsBuildingFacility(eFacility_AlienContain))
         {
             if (Narrative(`XComNarrativeMoment("UrgeContainment")))
             {
@@ -710,7 +711,7 @@ function UpdateView()
             }
         }
 
-        if (HQ().HasFacility(eFacility_AlienContain) && kStorage.LWCE_GetNumItemsAvailable('Item_ArcThrower') > 0 && !kStorage.HasAlienCaptive())
+        if (kHQ.LWCE_HasFacility('Facility_AlienContainment') && kStorage.LWCE_GetNumItemsAvailable('Item_ArcThrower') > 0 && !kStorage.HasAlienCaptive())
         {
             if (Narrative(`XComNarrativeMoment("UrgeCaptive")))
             {
@@ -734,7 +735,7 @@ function UpdateView()
             }
         }
 
-        if (HQ().HasFacility(eFacility_HyperwaveRadar) && !HQ().m_kMC.m_bDetectedOverseer)
+        if (kHQ.LWCE_HasFacility('Facility_HyperwaveRelay') && !HQ().m_kMC.m_bDetectedOverseer)
         {
             if (Narrative(`XComNarrativeMoment("HyperwaveBeaconConstructed")))
             {
@@ -791,7 +792,7 @@ function UpdateView()
 
         if (kStorage.GetResource(eResource_Meld) > 150 && !HQ().m_bUrgedEWFacility)
         {
-            if (!HQ().HasFacility(eFacility_CyberneticsLab) && !HQ().HasFacility(eFacility_GeneticsLab) && !ENGINEERING().IsBuildingFacility(eFacility_CyberneticsLab) && !ENGINEERING().IsBuildingFacility(eFacility_GeneticsLab))
+            if (!kHQ.LWCE_HasFacility('Facility_RepairBay') && !kHQ.LWCE_HasFacility('Facility_GeneticsLab') && !ENGINEERING().IsBuildingFacility(eFacility_CyberneticsLab) && !ENGINEERING().IsBuildingFacility(eFacility_GeneticsLab))
             {
                 if (Narrative(`XComNarrativeMomentEW("Urge_LabFacility")))
                 {

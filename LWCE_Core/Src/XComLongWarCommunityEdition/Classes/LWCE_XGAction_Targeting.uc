@@ -65,12 +65,12 @@ simulated function bool CanBePerformed()
         {
             if (`GAMECORE.AbilityRequiresProjectilePreview(m_kShot))
             {
-                if (XComTacticalGRI(class'Engine'.static.GetCurrentWorldInfo().GRI).m_kPrecomputedPath.iNumKeyframes <= 0)
+                if (`TACTICALGRI.m_kPrecomputedPath.iNumKeyframes <= 0)
                 {
                     return false;
                 }
 
-                vCenter = XComTacticalGRI(class'Engine'.static.GetCurrentWorldInfo().GRI).m_kPrecomputedPath.GetEndPosition();
+                vCenter = `TACTICALGRI.m_kPrecomputedPath.GetEndPosition();
             }
             else
             {
@@ -270,6 +270,361 @@ simulated function bool SetChainedDistance(EAbility eInputAbilityType, optional 
     return false;
 }
 
+simulated function SetShot(XGAbility_Targeted kShot, bool bSetViaLocalPlayerInput, optional bool bForceOverride = false)
+{
+    local int I;
+    local XGAbility_Targeted kTempTargetedAbility;
+    local LWCE_XGAbility kCEAbility;
+    local array<XGUnitNativeBase> arrEnemies;
+    local array<float> arrEnemyDistSqs;
+    local XGUnitNativeBase kTempUnit;
+    local float fClosest;
+    local Vector vTempLocation, vTargetDir;
+    local XComUnitPawnNativeBase PrevMyUnit;
+
+    if (m_bShotSetViaLocalPlayerInput && !bSetViaLocalPlayerInput && !bForceOverride)
+    {
+        return;
+    }
+
+    if (bSetViaLocalPlayerInput)
+    {
+        m_bShotSetViaLocalPlayerInput = true;
+    }
+
+    if (kShot == m_kShot || m_bSetShotDisabled)
+    {
+        return;
+    }
+
+    m_bResetTraceValues = false;
+    m_kShot = kShot;
+    m_kReplicatedShot = m_kShot;
+    m_bShotIsBlocked = false;
+
+    if (ExplosionEmitter != none)
+    {
+        ExplosionEmitter.ParticleSystemComponent.DeactivateSystem();
+        ExplosionEmitter = none;
+    }
+
+    ClearTargetedActors();
+    m_fSplashRadiusCache = -1.0;
+
+    if (m_kShot.GetType() == eAbility_ShotDamageCover || m_kShot.GetType() == eAbility_DestroyTerrain || m_kShot.GetType() == eAbility_BullRush)
+    {
+        m_bModal = false;
+    }
+    else
+    {
+        m_bModal = true;
+    }
+
+    if (Owner != none && XComTacticalController(Owner).GetStateName() != 'PlayerDebugCamera')
+    {
+        SetStates();
+    }
+
+    if (m_kShot != none)
+    {
+        `TACTICALGRI.m_kPrecomputedPath.m_bBlasterBomb = false;
+
+        if (m_kShot.m_kWeapon != none)
+        {
+            `TACTICALGRI.m_kPrecomputedPath.m_bBlasterBomb = m_kShot.m_kWeapon.GameplayType() == eItem_BlasterLauncher;
+        }
+
+        if (m_kPawn.IsA('XComSectopod'))
+        {
+            bClusterBombSetup = (m_kShot.iType == eAbility_ClusterBomb) && !XGAbility_ClusterBomb(m_kShot).CanFireWeapon();
+
+            if (bClusterBombSetup)
+            {
+                bClusterBombSetup = m_kShot.CheckAvailable();
+            }
+
+            bClusterBombFiring = (m_kShot.iType == eAbility_ClusterBomb) && XGAbility_ClusterBomb(m_kShot).CanFireWeapon();
+            XComSectopod(m_kPawn).EnableClusterBombTargeting(false);
+        }
+
+        if (m_kShot.iType == eAbility_MEC_ProximityMine)
+        {
+            m_bPleaseHitFriendlies = true;
+        }
+    }
+
+    if (!`GAMECORE.AbilityRequiresProjectilePreview(m_kShot))
+    {
+        `TACTICALGRI.m_kPrecomputedPath.ClearPathGraphics();
+    }
+
+    ClearFlameThrowerUI();
+
+    if (m_bOwnedByLocalPlayer && Role < ROLE_Authority)
+    {
+        ServerSetTargetAbility(kShot);
+    }
+
+    if (m_kShot != none && m_kShot.GetPrimaryTarget() != none && m_kShot.GetPrimaryTarget() != m_kUnit)
+    {
+        if (m_kShot.UtilizeCursorMoving())
+        {
+            if (m_kShot.m_kWeapon == none || (m_kShot.m_kWeapon.GameplayType() != eItem_RocketLauncher && m_kShot.m_kWeapon.GameplayType() != eItem_BlasterLauncher))
+            {
+                m_kTargetedEnemy = none;
+                SetTargetActor(none);
+            }
+
+            SetUnitTarget(m_kShot.GetPrimaryTarget());
+        }
+        else
+        {
+            if (m_kTargetedEnemy != m_kShot.GetPrimaryTarget())
+            {
+                m_kTargetedEnemy = m_kShot.GetPrimaryTarget();
+            }
+
+            SetUnitTarget(m_kTargetedEnemy);
+        }
+
+        UpdateAimingView();
+
+        if (m_kShot.UtilizeCursorMoving())
+        {
+            SetTargetActor(none);
+        }
+    }
+    else
+    {
+        if (m_kShot == none || m_kShot.GetPrimaryTarget() == none || m_kShot.GetPrimaryTarget() == m_kUnit)
+        {
+            m_bResetTraceValues = true;
+            TargetActor = none;
+
+            if (AbilityIgnoresTargetedUnit(EAbility(m_kShot.iType)))
+            {
+                MoveCursor(none, EAbility(m_kShot.iType));
+            }
+            else
+            {
+                MoveCursor(m_kUnit, EAbility(m_kShot.iType));
+            }
+
+            if (m_kShot.iType == eAbility_Grapple)
+            {
+                PrevMyUnit = m_kUnit.GetPathingPawn().MyUnit;
+                m_kUnit.GetPathingPawn().MyUnit = m_kUnit.GetPawn();
+                XGAbility_Grapple(m_kShot).ComputeGrapplePath(m_vTarget);
+                m_kUnit.GetPathingPawn().MyUnit = PrevMyUnit;
+                SetTargetLoc(m_kUnit.GetPathingPawn().GetPathDestination());
+            }
+
+            if (m_kAimingView != none)
+            {
+                SetTargetLoc(m_kUnit.GetPawn().GetNoTargetLocation(m_kAimingView.IsA('XGCameraView_AimingThirdPerson')));
+                m_kCursor.MoveToLocation(m_vTarget, true);
+            }
+
+            if (m_kShot.GetPrimaryTarget() != none)
+            {
+                m_kTargetedEnemy = m_kShot.GetPrimaryTarget();
+                SetUnitTarget(m_kTargetedEnemy);
+            }
+            else
+            {
+                m_kTargetedEnemy = none;
+                SetUnitTarget(m_kTargetedEnemy);
+            }
+            UpdateAimingView();
+        }
+        else
+        {
+            m_kTargetedEnemy = none;
+            SetUnitTarget(m_kTargetedEnemy);
+            UpdateAimingView();
+        }
+    }
+
+    if (m_kShot.m_kWeapon != none && m_kShot.m_kWeapon.GameplayType() == eItem_RocketLauncher)
+    {
+        if (m_kShot.GetPrimaryTarget() == none)
+        {
+            m_kUnit.DetermineEnemiesInSight(arrEnemies, arrEnemyDistSqs, m_kUnit.Location, false);
+
+            if (arrEnemies.Length > 0)
+            {
+                kTempUnit = arrEnemies[0];
+                fClosest = arrEnemyDistSqs[0];
+
+                for (I = 1; I < arrEnemies.Length; I++)
+                {
+                    if (arrEnemyDistSqs[I] < fClosest)
+                    {
+                        kTempUnit = arrEnemies[I];
+                    }
+                }
+            }
+
+            if (kTempUnit == none)
+            {
+                SetUnitTarget(kTempUnit);
+                vTempLocation = m_kUnit.GetPawn().GetNoTargetLocation();
+                vTargetDir = Normal(vTempLocation - m_kUnit.GetLocation());
+                vTempLocation = m_kUnit.GetLocation() + (vTargetDir * (float(15 * 64) * 0.350));
+                m_kCursor.MoveToLocation(vTempLocation, true);
+            }
+            else
+            {
+                MoveCursor(XGUnit(kTempUnit), EAbility(m_kShot.iType));
+                SetUnitTarget(kTempUnit);
+            }
+
+            UpdateAimingView();
+        }
+    }
+
+    m_arrInteractionList_ConstrainedByAbilities.Remove(0, m_arrInteractionList_ConstrainedByAbilities.Length);
+
+    for (I = 0; I < m_kUnit.GetNumAbilities(); I++)
+    {
+        kTempTargetedAbility = XGAbility_Targeted(m_kUnit.m_aAbilities[I]);
+        kCEAbility = LWCE_XGAbility(m_kUnit.m_aAbilities[I]);
+
+        if (kCEAbility != none && LWCE_XGAbility(m_kShot) != none && kCEAbility.m_TemplateName == LWCE_XGAbility(m_kShot).m_TemplateName)
+        {
+            kCEAbility.GetTargets(m_arrInteractionList_ConstrainedByAbilities);
+        }
+        else if (kTempTargetedAbility != none && kTempTargetedAbility.GetType() == m_kShot.GetType() && kTempTargetedAbility.GetPrimaryTarget() != none)
+        {
+            if (m_kShot.GetType() == eAbility_GreaterMindMerge)
+            {
+                m_kShot.GetTargets(m_arrInteractionList_ConstrainedByAbilities);
+            }
+            else
+            {
+                m_arrInteractionList_ConstrainedByAbilities.AddItem(kTempTargetedAbility.GetPrimaryTarget());
+            }
+        }
+    }
+
+    if (m_kInitialUnitTarget != none)
+    {
+        InitializeAbilityToTargetedUnit(m_kInitialUnitTarget);
+        m_kInitialUnitTarget = none;
+    }
+
+    // Vital Point Targeting
+    if (m_kUnit.GetCharacter().HasUpgrade(135))
+    {
+        m_kUnit.DeactivatePerk(135);
+
+        if (m_kShot.GetXenobiologyOverlaysBonusDamage() > 0)
+        {
+            m_kUnit.ActivatePerk(135, m_kShot.GetPrimaryTarget());
+        }
+    }
+}
+
+simulated function SetUnitTarget(XGUnitNativeBase kTarget)
+{
+    if (LWCE_XGAbility(m_kShot) != none)
+    {
+        LWCE_XGAbility(m_kShot).SetCurrentTarget(kTarget);
+    }
+
+    super.SetUnitTarget(kTarget);
+}
+
+simulated function bool TraceToTarget_XComUnitPawn()
+{
+    local bool bProcessEnemy;
+    local XGUnit kTargetUnit;
+    local XGAbility_Targeted kMatchingTargetAbility;
+    local int I;
+    local UITacticalHUD_AbilityContainer kTacticalHUDAbilityContainer;
+    local string strHelpMsg;
+    local LinearColor tempLinearColor;
+    local Vector VSize;
+
+    bProcessEnemy = false;
+
+    if (TargetActor != none && XComUnitPawn(TargetActor) != none)
+    {
+        kTargetUnit = XGUnit(XComUnitPawn(TargetActor).GetGameUnit());
+
+        if (kTargetUnit != none && m_bOwnedByLocalPlayer)
+        {
+            if (kTargetUnit.IsVisible())
+            {
+                if (!kTargetUnit.IsCivilian())
+                {
+                    for (I = 0; I < m_kUnit.m_iNumAbilities; I++)
+                    {
+                        kMatchingTargetAbility = XGAbility_Targeted(m_kUnit.m_aAbilities[I]);
+
+                        if (kMatchingTargetAbility != none && (kMatchingTargetAbility.GetType() == m_kShot.GetType() || LWCE_XGAbility(kMatchingTargetAbility) != none) && kMatchingTargetAbility.GetPrimaryTarget() != none && kMatchingTargetAbility.GetPrimaryTarget() == kTargetUnit)
+                        {
+                            if (kMatchingTargetAbility != m_kShot)
+                            {
+                                m_kShot.SetFreeAim(false);
+                                SetShot(kMatchingTargetAbility, m_bOwnedByLocalPlayer);
+                                m_kShot.SetFreeAim(true);
+                            }
+                            else
+                            {
+                                SetTargetLoc(GetTargetPawn().GetHeadshotLocation());
+                                m_kTargetedEnemy = kTargetUnit;
+                            }
+                        }
+                    }
+
+                    if (kTargetUnit.m_eTeam != m_kUnit.m_eTeam)
+                    {
+                        strHelpMsg = m_strTargetNameEnemy;
+                        tempLinearColor = MakeLinearColor(0.50, 0.0, 0.0, 0.10);
+                    }
+                    else
+                    {
+                        strHelpMsg = m_strTargetNameFriend;
+                        tempLinearColor = MakeLinearColor(0.50, 0.0, 0.0, 0.10);
+                    }
+                }
+                else
+                {
+                    m_kTargetedEnemy = none;
+                    TargetActor = none;
+                    strHelpMsg = m_strTargetNameCivilian;
+                    tempLinearColor = MakeLinearColor(0.50, 0.0, 0.0, 0.10);
+                }
+
+                if (m_kShot.GetType() == /* Psychokinetic Strike */ 14 || m_kShot.GetType() == eAbility_DestroyTerrain || m_kShot.GetType() == eAbility_BullRush)
+                {
+                    kTacticalHUDAbilityContainer = m_kPres.GetTacticalHUD().m_kAbilityHUD;
+
+                    if (kTacticalHUDAbilityContainer != none)
+                    {
+                        kTacticalHUDAbilityContainer.UpdateHelpMessage(strHelpMsg);
+
+                        VSize.X = 15.0;
+                        VSize.Y = 15.0;
+                        VSize.Z = 15.0;
+                        `SHAPEMGR.DrawSphere(m_vTarget, VSize, tempLinearColor, false);
+                    }
+                }
+
+                bProcessEnemy = true;
+            }
+            else
+            {
+                m_kTargetedEnemy = none;
+                TargetActor = none;
+            }
+        }
+    }
+
+    return bProcessEnemy;
+}
+
 simulated state Executing
 {
     simulated event BeginState(name P)
@@ -300,12 +655,12 @@ simulated state Executing
 
         if (`GAMECORE.AbilityRequiresProjectilePreview(m_kShot))
         {
-            if (XComTacticalGRI(class'Engine'.static.GetCurrentWorldInfo().GRI).m_kPrecomputedPath.iNumKeyframes <= 0)
+            if (`TACTICALGRI.m_kPrecomputedPath.iNumKeyframes <= 0)
             {
                 return;
             }
 
-            vCenter = XComTacticalGRI(class'Engine'.static.GetCurrentWorldInfo().GRI).m_kPrecomputedPath.GetEndPosition();
+            vCenter = `TACTICALGRI.m_kPrecomputedPath.GetEndPosition();
         }
         else if (iType == eAbility_DeathBlossom)
         {
@@ -391,6 +746,32 @@ simulated state Executing
         if (iType != eAbility_Rift)
         {
             ExplosionEmitter.ParticleSystemComponent.SetMICVectorParameter(1, 'RadiusColor', CylinderColor);
+        }
+    }
+
+    simulated function RealizeNewTarget()
+    {
+        local XGAbility_Targeted kAbility;
+
+        PlaySound(`SoundCue("TargetLockCue"), true);
+        LookAtTargetedEnemy();
+
+        if (m_kShot.GetPrimaryTarget() != m_kTargetedEnemy)
+        {
+            if (LWCE_XGAbility(m_kShot) != none)
+            {
+                LWCE_XGAbility(m_kShot).SetCurrentTarget(m_kTargetedEnemy);
+            }
+            else
+            {
+                kAbility = XGAbility_Targeted(m_kUnit.FindAbility(m_kShot.iType, m_kTargetedEnemy));
+
+                if (kAbility != none)
+                {
+                    SetShot(kAbility, true);
+                }
+            }
+
         }
     }
 }

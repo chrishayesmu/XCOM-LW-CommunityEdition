@@ -24,7 +24,7 @@ simulated function Init(XComPlayerController _controllerRef, UIFxsMovie _manager
     m_kPenalties.Init(controllerRef, manager, self);
     m_kPenalties.PrepareData(ePerkBuff_Penalty, m_strPenaltiesListTitle, m_kUnit.GetPenaltiesPerkList(), theUnit);
 
-    m_kInfoPanel = Spawn(class'UIUnitGermanMode_ShotInfo', self);
+    m_kInfoPanel = Spawn(class'LWCE_UIUnitGermanMode_ShotInfo', self);
     m_kInfoPanel.Init(controllerRef, manager, self);
 }
 

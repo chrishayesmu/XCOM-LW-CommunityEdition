@@ -15,6 +15,8 @@ static function OnPostTemplatesCreated()
     // TODO: need to make alien grenades unsellable until researched to match base game
 
     // TODO: many more functions to OPTC here
+    kItemMgr.FindWeaponTemplate('Item_PlasmaDragon').arrBonusWeaponDamageFn.AddItem(CalcBonusWeaponDamage_PlasmaDragon);
+
     kItemMgr.FindItemTemplate('Item_AlienGrenade').IsInfiniteFn = IsInfinite_AlienGrenade;
     kItemMgr.FindItemTemplate('Item_BaseAugments').IsInfiniteFn = IsInfinite_MecBaseGear;
     kItemMgr.FindItemTemplate('Item_Minigun').IsInfiniteFn = IsInfinite_MecBaseGear;
@@ -63,7 +65,7 @@ protected static function bool IsInfinite_AlienGrenade()
 
 protected static function bool IsInfinite_MecBaseGear()
 {
-    return `LWCE_HQ.HasFacility(eFacility_CyberneticsLab);
+    return `LWCE_HQ.LWCE_HasFacility('Facility_RepairBay');
 }
 
 private static function AdjustBuildTimes(array<LWCEItemTemplate> arrTemplates)
@@ -74,6 +76,11 @@ private static function AdjustBuildTimes(array<LWCEItemTemplate> arrTemplates)
     {
         arrTemplates[Index].iPointsToComplete *= class'XGTacticalGameCore'.default.ITEM_TIME_BALANCE;
     }
+}
+
+private static function float CalcBonusWeaponDamage_PlasmaDragon(LWCE_XGUnit kSource, LWCE_XGUnit kTarget, LWCE_XGAbility kAbility)
+{
+    return kTarget.IsFlying() ? 1.0f : 0.0f;
 }
 
 private static function int GetBonusWeaponAmmoFn_ArcThrower(const LWCEEquipmentTemplate kEquipment, const LWCE_TCharacter kChar)

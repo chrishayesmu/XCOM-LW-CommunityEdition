@@ -510,7 +510,7 @@ function bool OnEquip(int iInventory, int iLocker)
         bEquippedArmor = bEquipped;
         Sound().PlaySFX(SNDLIB().SFX_UI_EquipArmor);
 
-        if ((!BARRACKS().m_bVolunteerUrged && HQ().HasFacility(/* Gollop Chamber */ eFacility_DeusEx)) && BARRACKS().HasPotentialVolunteer())
+        if ((!BARRACKS().m_bVolunteerUrged && LWCE_XGHeadquarters(HQ()).LWCE_HasFacility('Facility_GollopChamber')) && BARRACKS().HasPotentialVolunteer())
         {
             BARRACKS().m_bVolunteerUrged = true;
             m_bUrgeGollop = true;
@@ -985,6 +985,162 @@ function UpdateLocker()
     {
         m_kCELocker.txtMsg.StrValue = "";
     }
+}
+
+function UpdateMainMenu()
+{
+    local TMenuOption kOption;
+    local TMenu kMainMenu;
+    local int iMenuOption;
+    local XGShip_Dropship kSkyranger;
+
+    m_kMainMenu.arrOptions.Remove(0, m_kMainMenu.arrOptions.Length);
+
+    for (iMenuOption = 0; iMenuOption < eSoldierView_MAX; iMenuOption++)
+    {
+        if (iMenuOption == eSoldierView_Gear)
+        {
+            kOption.strText = m_strLoadout;
+            kSkyranger = HANGAR().GetDropship();
+
+            if (m_kSoldier.IsATank())
+            {
+                kOption.iState = eUIState_Normal;
+                kOption.strHelp = m_strNoEditSHIV;
+            }
+            else if (m_kSoldier.GetStatus() == eStatus_OnMission && `LWCE_UTILS.AreVectorsSame(kSkyranger.m_v2Coords, HQ().GetCoords()))
+            {
+                kOption.iState = eUIState_Disabled;
+                kOption.strHelp = m_strNoEditAwaySoldiers;
+            }
+            else
+            {
+                kOption.iState = eUIState_Normal;
+                kOption.strHelp = m_strChooseEquipGoop;
+            }
+        }
+        else if (iMenuOption == eSoldierView_Promotion)
+        {
+            kOption.strText = m_strLabelAbilities;
+            kOption.iState = m_kSoldier.IsATank() ? eUIState_Disabled : eUIState_Normal;
+
+            if (m_kSoldier.GetRank() == 0 && !m_kSoldier.IsReadyToLevelUp())
+            {
+                kOption.iState = eUIState_Disabled;
+            }
+
+            kOption.strHelp = m_strLabelAbilityHelp;
+        }
+        else if (iMenuOption == eSoldierView_PsiPromotion)
+        {
+            if ( !IsInCovertOperativeMode() && (m_kSoldier.HasPsiGift() || m_kSoldier.IsReadyToPsiLevelUp()) )
+            {
+                kOption.strText = m_strLabelPsiAbilities;
+                kOption.iState = eUIState_Normal;
+                kOption.strHelp = m_strLabelPsiAbilityHelp;
+            }
+            else
+            {
+                continue;
+            }
+        }
+        else if (iMenuOption == eSoldierView_Customize)
+        {
+            kOption.strText = m_strLabelCustomize;
+            kOption.iState = (m_kSoldier.IsASuperSoldier() || m_kSoldier.IsASuperSoldier() || IsInCovertOperativeMode()) ? eUIState_Disabled : eUIState_Normal;
+            kOption.strHelp = m_strLabelCustomizeHelp;
+        }
+        else if (iMenuOption == eSoldierView_GeneMods)
+        {
+            if (!m_kSoldier.IsAugmented() && !m_kSoldier.IsATank() && (`LWCE_HQ.LWCE_HasFacility('Facility_GeneticsLab') || `HQGAME.GetGameCore().m_bDebugStart))
+            {
+                kOption.strText = m_strLabelGeneView;
+                kOption.iState = eUIState_Normal;
+                kOption.strHelp = m_strLabelGeneViewHelp;
+            }
+            else
+            {
+                continue;
+            }
+        }
+        else if (iMenuOption == eSoldierView_Medals)
+        {
+            if (m_kSoldier.HasAnyMedal())
+            {
+                kOption.strText = m_strLabelMedals;
+                kOption.iState = eUIState_Normal;
+                kOption.strHelp = m_strLabelMedalsHelp;
+            }
+            else
+            {
+                continue;
+            }
+        }
+        else if (iMenuOption == eSoldierView_Dismiss)
+        {
+            if (IsInCovertOperativeMode())
+            {
+                continue;
+            }
+
+            if (m_kSoldier.IsATank())
+            {
+                kOption.strText = m_strLabelTankDismiss;
+                kOption.iState = eUIState_Normal;
+                kOption.strHelp = m_strLabelTankDismissHelp;
+            }
+            else
+            {
+                kOption.strText = m_strLabelDismiss;
+                kOption.iState = eUIState_Normal;
+                kOption.strHelp = m_strLabelDismissHelp;
+            }
+
+            if (m_kSoldier.IsInjured() && !m_kSoldier.IsATank())
+            {
+                kOption.iState = eUIState_Disabled;
+                kOption.strHelp = m_strNoDismissWoundedSoldiers;
+            }
+            else if (m_kSoldier.GetStatus() == eStatus_OnMission && `LWCE_UTILS.AreVectorsSame(kSkyranger.m_v2Coords, HQ().GetCoords()))
+            {
+                kOption.iState = eUIState_Disabled;
+            }
+            else if (m_kSoldier.IsInPsiTesting())
+            {
+                kOption.iState = eUIState_Disabled;
+                kOption.strHelp = m_strNoDismissWhilePsiTesting;
+            }
+            else if (m_kSoldier.IsBeingAugmented())
+            {
+                kOption.iState = eUIState_Disabled;
+                kOption.strHelp = m_strNoDismissWhileAugmenting;
+            }
+            else if (m_kSoldier.IsInGeneticsLab())
+            {
+                kOption.iState = eUIState_Disabled;
+                kOption.strHelp = m_strNoDismissWhileGeneModding;
+            }
+            else if (m_kSoldier.GetStatus() == eStatus_CovertOps)
+            {
+                kOption.iState = eUIState_Disabled;
+                kOption.strHelp = m_strNoDismissCovertOperative;
+            }
+            else if (BARRACKS().m_kVolunteer != none && BARRACKS().m_kVolunteer == m_kSoldier)
+            {
+                kOption.iState = eUIState_Disabled;
+                kOption.strHelp = m_strNoDismissVolunteer;
+            }
+        }
+        else
+        {
+            continue;
+        }
+
+        m_kMainMenu.arrOptions.AddItem(iMenuOption);
+        kMainMenu.arrOptions.AddItem(kOption);
+    }
+
+    m_kMainMenu.mnuOptions = kMainMenu;
 }
 
 function UpdateView()

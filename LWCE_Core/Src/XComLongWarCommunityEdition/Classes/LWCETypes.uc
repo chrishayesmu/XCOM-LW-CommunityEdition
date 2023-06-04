@@ -8,16 +8,22 @@ enum EDataType
     eDT_String
 };
 
+/// <summary>A two-dimensional vector of integers.</summary>
+struct LWCE_Vector2Int
+{
+    var int X, Y;
+};
+
 /// <summary>A three-dimensional vector of integers.</summary>
 struct LWCE_Vector3Int
 {
     var int X, Y, Z;
 };
 
-/// <summary>A simple key-value pair where both are integers.</summary>
-struct LWCE_IntKVP
+/// <summary>A simple key-value pair where the key is a name and the value is an integer.</summary>
+struct LWCE_NameIntKVP
 {
-    var int Key;
+    var name Key;
     var int Value;
 };
 
@@ -125,21 +131,6 @@ struct LWCE_TClassDefinition
     var array<string> NicknamesMale;   // Nicknames that can be randomly assigned to male soldiers of this class.
 };
 
-/// <summary>
-/// A single piece of data which can be used in situations where the type and/or quantity of data is not known in
-/// advance, such as Geoscape alerts. The ID field can be used to communicate what the data represents, but this is
-/// optional, and generally only needed for mod-to-mod communication.
-/// </summary>
-struct LWCE_TData
-{
-    var name ID;
-    var EDataType eType;
-    var bool bData;
-    var int iData;
-    var name nmData;
-    var string strData;
-};
-
 struct LWCE_TSoldier
 {
     var int iID;
@@ -168,6 +159,7 @@ struct LWCE_TCharacterStats
     var int iCriticalChance;
     var int iDamage;
     var float fDamageReduction;
+    var float fDamageReductionPenetration;
     var int iDefense;
     var int iFlightFuel;
     var int iHP;
@@ -213,7 +205,7 @@ struct LWCE_TCost
 /// </summary>
 struct LWCE_TPrereqs
 {
-    var array<int> arrFacilityReqs; // A list of facility IDs that must be built. For non-unique facilities, only one needs to be built.
+    var array<name> arrFacilityReqs; // A list of facility names that must be built. For non-unique facilities, only one needs to be built.
     var array<name> arrFoundryReqs; // A list of foundry project names that must be complete.
     var array<name> arrItemReqs;    // A list of item names. The player must have possessed these at one time, but doesn't necessarily need to still have them now.
     var array<name> arrTechReqs;    // A list of research tech names that must be complete.
@@ -224,6 +216,15 @@ struct LWCE_TPrereqs
 
     var bool bRequiresAutopsy;       // If true, any autopsy research must be completed.
     var bool bRequiresInterrogation; // If true, any interrogation research must be completed.
+};
+
+struct LWCE_TAbilityResult
+{
+    var bool bIsHit;
+    var bool bIsCrit;
+    var int iUnmitigatedDamage;
+    var int iDamageReduction;
+    var int iFinalDamage;
 };
 
 /// <summary>
@@ -384,6 +385,26 @@ struct LWCE_TWeapon
     }
 };
 
+/// <summary>
+/// TODO
+/// </summary>
+struct LWCE_TAppliedEffect
+{
+    var name nmEffect;
+    var int iTurnsRemaining;
+    var LWCE_TCharacterStats kStatChanges;
+};
+
+/// <summary>
+/// Used by the ability framework when determining eligible targets for abilities.
+/// See LWCEAbilityTargetStyle and its children for the main usage of this struct.
+/// </summary>
+struct LWCE_TAvailableTarget
+{
+    var LWCE_XGUnit kPrimaryTarget;              // The ability's main target; may be none for purely AoE abilitiies like grenades/rockets.
+    var array<LWCE_XGUnit> arrAdditionalTargets; // Extra targets, which may be hit by an AoE, or individually targeted (like Greater Mind Merge).
+};
+
 struct TModVersion
 {
     var int Major;
@@ -407,7 +428,7 @@ struct LWCE_THQEvent
 {
     var name EventType;
     var int iHours;
-    var array<LWCE_TData> arrData;
+    var LWCEDataContainer kData;
 };
 
 struct LWCE_TMCEvent
@@ -418,7 +439,7 @@ struct LWCE_TMCEvent
     var TText txtDays;
     var int iPriority;
     var Color clrOption;
-    var array<LWCE_TData> arrData;
+    var LWCEDataContainer kData;
 };
 
 struct LWCE_TMCEventMenu
@@ -465,11 +486,16 @@ struct LWCE_TItemCard
     }
 };
 
+struct LWCE_TStaffRequirement
+{
+    var name StaffType;
+    var int NumRequired;
+};
+
 struct LWCE_TProjectCost
 {
     var LWCE_TCost kCost;
-    var int iStaffTypeReq; // What type of staff are needed to work on this project.
-    var int iStaffNumReq;  // How many of that staff type are needed.
+    var array<LWCE_TStaffRequirement> arrStaffRequirements; // The necessary staff to work on this project.
     var int iBarracksReq;  // How much open barracks space is required to complete this project.
 };
 

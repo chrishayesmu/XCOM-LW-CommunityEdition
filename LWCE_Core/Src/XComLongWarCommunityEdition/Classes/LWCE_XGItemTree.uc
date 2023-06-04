@@ -2,6 +2,7 @@ class LWCE_XGItemTree extends XGItemTree
     dependson(LWCETypes)
     config(LWCEBaseStrategyGame);
 
+var private LWCEFacilityTemplateManager m_kFacilityTemplateMgr;
 var private LWCEItemTemplateManager m_kItemTemplateMgr;
 
 /// <summary>
@@ -548,16 +549,15 @@ function Init()
 {
     m_kStrategyActorTag = new class'XGStrategyActorTag';
 
+    m_kFacilityTemplateMgr = `LWCE_FACILITY_TEMPLATE_MGR;
     m_kItemTemplateMgr = `LWCE_ITEM_TEMPLATE_MGR;
 
-    m_arrFacilities.Add(24);
     m_arrStaff.Add(4);
     m_arrShips.Add(16);
     m_arrShipWeapons.Add(11);
 
     BuildShips();
     BuildShipWeapons();
-    BuildFacilities();
     BuildStaffTypes();
 }
 
@@ -620,6 +620,54 @@ function bool CanBeSold(int iItemId)
     return false;
 }
 
+function bool CanFacilityBeBuilt(int iFacility)
+{
+    `LWCE_LOG_DEPRECATED_CLS(CanFacilityBeBuilt);
+
+    return false;
+}
+
+function bool LWCE_CanFacilityBeBuilt(name FacilityName, optional bool bCheckStaffRequirements = true)
+{
+    local array<LWCE_TStaffRequirement> arrStaffRequirements;
+    local LWCEFacilityTemplate kTemplate;
+    local LWCE_XGHeadquarters kHQ;
+
+    kTemplate = `LWCE_FACILITY(FacilityName);
+    kHQ = LWCE_XGHeadquarters(HQ());
+
+    // Access lifts aren't built through the normal UI, which uses this function
+    if (FacilityName == 'Facility_AccessLift')
+    {
+        return false;
+    }
+
+    if (!kHQ.ArePrereqsFulfilled(kTemplate.kPrereqs))
+    {
+        return false;
+    }
+
+    // Checking staff requirements is optional because they shouldn't prevent facilities from showing in the build list,
+    // otherwise you'd never know how many staff you need, but they should prevent you from actually building
+    if (bCheckStaffRequirements)
+    {
+        arrStaffRequirements = kTemplate.GetStaffRequirements();
+
+        if (!kHQ.AreStaffPresent(arrStaffRequirements))
+        {
+            return false;
+        }
+    }
+
+
+    if (kTemplate.iMaxInstances > 0 && kHQ.LWCE_GetNumFacilities(FacilityName, /* bIncludeBuilding */ true) >= kTemplate.iMaxInstances)
+    {
+        return false;
+    }
+
+    return true;
+}
+
 function EItemType CaptiveToCorpse(EItemType eCaptive)
 {
     `LWCE_LOG_CLS("ERROR: LWCE-incompatible function CaptiveToCorpse was called. This needs to be replaced with LWCEItemTemplate.nmCaptiveToCorpseId. Stack trace follows.");
@@ -664,6 +712,49 @@ function int GetAlloySalePrice()
     `LWCE_LOG_DEPRECATED_NOREPLACE_CLS(GetAlloySalePrice);
 
     return -1;
+}
+
+function array<TFacility> GetBuildFacilities()
+{
+    local array<TFacility> arrFacilities;
+
+    arrFacilities.Length = 0;
+
+    `LWCE_LOG_DEPRECATED_CLS(GetBuildFacilities);
+
+    return arrFacilities;
+}
+
+function array<LWCEFacilityTemplate> LWCE_GetBuildFacilities()
+{
+    local LWCEFacilityTemplate kFacility;
+    local array<LWCEFacilityTemplate> arrAllTemplates, arrFacilities;
+    local bool bAllFacilitiesAvailable;
+
+    arrAllTemplates = m_kFacilityTemplateMgr.GetAllFacilityTemplates();
+    bAllFacilitiesAvailable = false;
+
+    if (XComCheatManager(GetALocalPlayerController().CheatManager) != none)
+    {
+        bAllFacilitiesAvailable = XComCheatManager(GetALocalPlayerController().CheatManager).m_bStrategyAllFacilitiesAvailable;
+    }
+
+    // The vanilla code inserts priority facilities in front, but the list gets sorted anyway,
+    // so we don't bother with that
+    foreach arrAllTemplates(kFacility)
+    {
+        if (!kFacility.bIsBuildable)
+        {
+            continue;
+        }
+
+        if (bAllFacilitiesAvailable || LWCE_CanFacilityBeBuilt(kFacility.GetFacilityName(), /* bCheckStaffRequirements */ false))
+        {
+            arrFacilities.AddItem(kFacility);
+        }
+    }
+
+    return arrFacilities;
 }
 
 function array<TItem> GetBuildItems(int iCategory)
@@ -712,6 +803,16 @@ function int GetEleriumSalePrice()
     `LWCE_LOG_DEPRECATED_NOREPLACE_CLS(GetEleriumSalePrice);
 
     return -1;
+}
+
+function TFacility GetFacility(int iFacility, optional bool bRushConstruction)
+{
+    local TFacility kFacility;
+
+    `LWCE_LOG_CLS("ERROR: LWCE-incompatible function GetFacility was called. This needs to be replaced with the macro LWCE_FACILITY. Stack trace follows.");
+    ScriptTrace();
+
+    return kFacility;
 }
 
 function TItem GetItem(int iItem, optional int iTransactionType = eTransaction_Build)

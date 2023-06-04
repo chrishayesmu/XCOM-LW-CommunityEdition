@@ -225,9 +225,9 @@ function BuildSoldierUI()
         m_kCESoldierDebrief.arrItems.AddItem(LWCE_BuildSoldierOption(kBarracks.m_aLastMissionSoldiers[iSoldier]));
     }
 
-    if (ITEMTREE().CanFacilityBeBuilt(eFacility_OTS))
+    if (LWCE_XGItemTree(ITEMTREE()).LWCE_CanFacilityBeBuilt('Facility_OfficerTrainingSchool'))
     {
-        class'LWCE_XGScreenMgr_Extensions'.static.UnlockFacility(eFacility_OTS);
+        class'LWCE_XGScreenMgr_Extensions'.static.UnlockFacility('Facility_OfficerTrainingSchool');
     }
 
     RefreshSoldierUIPerks();

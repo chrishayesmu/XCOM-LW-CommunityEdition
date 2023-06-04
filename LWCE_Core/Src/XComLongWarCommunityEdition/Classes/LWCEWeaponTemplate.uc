@@ -49,8 +49,16 @@ var config string strPerkHUDIcon;             // Name of the icon to use for thi
 
 var config array<name> arrProjectileTrailFx;  // Note: all weapons can apply tracer beam FX without configuration.
 
+var array<LWCEEffect> BonusWeaponEffects;     // Effects which are applied by single target attacks with this weapon, in addition to the ability's normal effects.
+
+
+
 var const localized string strPerkHUDSummary; // A brief description of the item, shown when hovering over the perk list during battle. Items which don't have this set will not
                                               // appear in the perk list.
+
+var array< delegate<CalcBonusWeaponDamage> > arrBonusWeaponDamageFn;
+
+delegate float CalcBonusWeaponDamage(LWCE_XGUnit kSource, LWCE_XGUnit kTarget, LWCE_XGAbility kAbility);
 
 function bool HasProperty(name PropertyName)
 {

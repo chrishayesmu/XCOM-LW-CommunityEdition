@@ -7,6 +7,12 @@ class LWCE_XGStrategyConfig extends Object
  * (such as mission rewards).
  ******************************************************************************/
 
+struct LWCE_TCostModifierConfig
+{
+    var float fMultiplier;
+    var int iFlatAdded;
+};
+
 var config LWCE_TCharacterStats BaseStatsChangeWhenAugmented;
 
 // Config for mission rewards

@@ -8,6 +8,12 @@ class LWCEDataTemplate extends Object
 var protectedwrite name DataName;
 
 /// <summary>
+/// A common delegate type for adjusting the cost of research, Foundry projects, facilities, etc. Not used
+/// in LWCEDataTemplate itself, but common among its subclasses.
+/// </summary>
+delegate AdjustCostDelegate(LWCEDataTemplate kTemplate, out LWCE_TCost kCost);
+
+/// <summary>
 /// Sets the name of this template, which is how the game will refer to it. Should only be set
 /// immediately after template creation, and then never changed. This name may be used when serializing
 /// game saves, so changing the name of existing templates should be done sparingly, if at all.

@@ -5,9 +5,12 @@ var const localized string m_strPromotionAvailable;
 
 simulated function UpdateData()
 {
+    local LWCE_XGChooseSquadUI kMgr;
     local UISquadList_UnitBox kOption;
     local int iSoldier, iOption, iDropShipIdx;
     local LWCE_TSoldierLoadout kLoadout;
+
+    kMgr = LWCE_XGChooseSquadUI(UISquadSelect(screen).GetMgr());
 
     for (iOption = 0;iOption < m_arrUIOptions.Length; iOption++)
     {
@@ -17,26 +20,26 @@ simulated function UpdateData()
         m_arrUIOptions[iOption].bUnavailable = iDropShipIdx >= m_iMaxSlots;
     }
 
-    if (UISquadSelect(screen).GetMgr().ITEMTREE().CanFacilityBeBuilt(eFacility_OTS))
+    if (LWCE_XGItemTree(kMgr.ITEMTREE()).LWCE_CanFacilityBeBuilt('Facility_OfficerTrainingSchool'))
     {
         m_arrUIOptions[m_arrFillOrderIndex[m_iMaxSlots + 1]].bHint = true;
     }
-    else if (UISquadSelect(screen).GetMgr().HQ().HasFacility(eFacility_OTS))
+    else if (LWCE_XGHeadquarters(kMgr.HQ()).LWCE_HasFacility('Facility_OfficerTrainingSchool'))
     {
-        if (!UISquadSelect(screen).GetMgr().BARRACKS().HasOTSUpgrade(eOTS_SquadSize_I))
+        if (!kMgr.BARRACKS().HasOTSUpgrade(eOTS_SquadSize_I))
         {
             m_arrUIOptions[m_arrFillOrderIndex[m_iMaxSlots + 1]].bHint = true;
         }
 
-        if (!UISquadSelect(screen).GetMgr().BARRACKS().HasOTSUpgrade(eOTS_SquadSize_II))
+        if (!kMgr.BARRACKS().HasOTSUpgrade(eOTS_SquadSize_II))
         {
             m_arrUIOptions[m_arrFillOrderIndex[m_iMaxSlots]].bHint = true;
         }
     }
 
-    for (iSoldier = 0; iSoldier < LWCE_XGChooseSquadUI(UISquadSelect(screen).GetMgr()).m_arrCESoldiers.Length; iSoldier++)
+    for (iSoldier = 0; iSoldier < kMgr.m_arrCESoldiers.Length; iSoldier++)
     {
-        kLoadout = LWCE_XGChooseSquadUI(UISquadSelect(screen).GetMgr()).m_arrCESoldiers[iSoldier];
+        kLoadout = kMgr.m_arrCESoldiers[iSoldier];
         m_arrUIOptions[m_arrFillOrderIndex[kLoadout.iDropshipIndex]] = LWCE_CreateSoldierOption(kLoadout);
     }
 
@@ -150,7 +153,7 @@ simulated function UpdateDisplay()
         {
             AS_SetUnitInfo(iSlot, -1, "", "", "", "", "", "", "");
 
-            if (kMgr.HQ().HasFacility(eFacility_OTS))
+            if (LWCE_XGHeadquarters(kMgr.HQ()).LWCE_HasFacility('Facility_OfficerTrainingSchool'))
             {
                 AS_SetAddUnitText(iSlot, kMgr.m_strOTSHelp1, "", "");
             }

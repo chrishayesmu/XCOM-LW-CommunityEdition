@@ -5,6 +5,16 @@ class LWCE_XComHeadquartersCheatManager extends XComHeadquartersCheatManager
 
 `LWCE_GENERATOR_XCOMCHEATMANAGER
 
+exec function BaseNext()
+{
+    ChangeFocusedBase(1);
+}
+
+exec function BasePrevious()
+{
+    ChangeFocusedBase(-1);
+}
+
 exec function CreateAlienBaseAlert()
 {
     local XGMission_AlienBase kMission;
@@ -195,6 +205,36 @@ exec function LevelUpPsi(optional int iTimes = 1)
     }
 }
 
+exec function PlayFacilityBuiltNarrative(name FacilityName)
+{
+    local LWCEFacilityTemplate kTemplate;
+
+    kTemplate = `LWCE_FACILITY(FacilityName);
+
+    if (kTemplate == none)
+    {
+        GetConsole().OutputTextLine("Couldn't find facility with name " $ FacilityName);
+        return;
+    }
+
+    PlayNarrative(kTemplate.strPostBuildNarrative);
+}
+
+exec function PlayNarrative(string strNarrative)
+{
+    local XComNarrativeMoment kNarrative;
+
+    kNarrative = XComNarrativeMoment(DynamicLoadObject(strNarrative, class'XComNarrativeMoment'));
+
+    if (kNarrative == none)
+    {
+        GetConsole().OutputTextLine("Couldn't find narrative moment at path " $ strNarrative);
+        return;
+    }
+
+    `LWCE_HQPRES.UINarrative(kNarrative);
+}
+
 /// <summary>
 /// Sets the alien research to the given level. Since the alien baseline research will always be
 /// set according to how many days have passed, this command instead modifies the alien bonus research
@@ -225,6 +265,57 @@ exec function SetAlienResearch(int TotalResearch)
     GetConsole().OutputTextLine("Alien base research is " $ iBaseResearch $ " and bonus research is now " $ iBonusResearch);
 }
 
+
+/// <summary>
+/// Sets a specific base tile to the given facility type. Note that X and Y start at 1, such that (1, 1)
+/// is the upper-left corner of the base.
+///
+/// Very little validation is performed as part of this command. Use at your own risk.
+///
+/// TODO: using this to remove facilities is pretty buggy still.
+/// </summary>
+exec function SetFacility(int X, int Y, optional name FacilityName = '', optional int iBaseId)
+{
+    local LWCE_XGBase kBase;
+    local LWCE_XGHeadquarters kHQ;
+    local LWCE_XComHQPresentationLayer kPres;
+
+    kHQ = `LWCE_HQ;
+    kPres = `LWCE_HQPRES;
+
+    if (iBaseId == 0)
+    {
+        kBase = LWCE_XGBase(kHQ.m_kBase);
+    }
+    else
+    {
+        kBase = kHQ.GetBaseById(iBaseId);
+    }
+
+    // User-provided X starts at 1, but the real X starts at 0. We don't do the same for Y,
+    // because bases have a hidden row at Y=0, so the user's idea of Y matches the reality.
+    X--;
+
+    if (X == kBase.GetAccessX() && FacilityName != 'Facility_AccessLift' && FacilityName != '')
+    {
+        GetConsole().OutputTextLine("Can't put a non-access-lift facility at X = " $ (X + 1));
+        return;
+    }
+    else if (X != kBase.GetAccessX() && FacilityName == 'Facility_AccessLift')
+    {
+        GetConsole().OutputTextLine("Can't put an access lift at X = " $ (X + 1) $ "; X must be " $ (kBase.GetAccessX() + 1));
+        return;
+    }
+
+    kBase.LWCE_PerformAction(FacilityName != '' ? eBCS_BuildFacility : eBCS_RemoveFacility, X, Y, FacilityName);
+
+    // Update the UI if we're on the facilities screen
+    if (kPres.m_kBuildFacilities != none)
+    {
+        kPres.m_kBuildFacilities.OnReceiveFocus();
+    }
+}
+
 exec function ShowAlienStats()
 {
     local LWCE_Console kConsole;
@@ -243,6 +334,19 @@ exec function ShowAlienStats()
     kConsole.OutputTextLine("Alien Research (Bonus Only): " $ kStrategy.STAT_GetStat(2));
     kConsole.OutputTextLine("Alien Resources: " $ kStrategy.STAT_GetStat(19));
     kConsole.OutputTextLine("XCOM Threat Level: " $ kStrategy.STAT_GetStat(21));
+}
+
+exec function ToggleStrategyHUD()
+{
+    `LWCE_LOG_CLS("ToggleStrategyHUD: b_IsVisible = " $ `LWCE_HQPRES.m_kStrategyHUD.b_IsVisible);
+    if (`LWCE_HQPRES.m_kStrategyHUD.b_IsVisible)
+    {
+        `LWCE_HQPRES.m_kStrategyHUD.Hide();
+    }
+    else
+    {
+        `LWCE_HQPRES.m_kStrategyHUD.Show();
+    }
 }
 
 protected function GiveFoundryTemplate(LWCEFoundryProjectTemplate kTemplate, LWCE_XGFacility_Engineering kEngineering)
@@ -277,4 +381,49 @@ protected function GiveTechTemplate(LWCETechTemplate kTech, LWCE_XGFacility_Labs
     {
         kLabs.m_arrCEResearched.AddItem(kTech.GetTechName());
     }
+}
+
+protected function ChangeFocusedBase(int iDirection)
+{
+    local LWCE_XGHeadquarters kHQ;
+    local LWCE_XComHQPresentationLayer kPres;
+    local LWCE_XGBuildUI kBuildUI;
+    local int Index;
+
+    kHQ = `LWCE_HQ;
+    kPres = `LWCE_HQPRES;
+
+    if (kPres.m_kBuildFacilities == none)
+    {
+        GetConsole().OutputTextLine("This command can only be used on the build facilities screen.");
+        return;
+    }
+
+    kBuildUI = LWCE_XGBuildUI(kPres.m_kBuildFacilities.GetMgr());
+
+    Index = kHQ.m_arrBases.Find(kBuildUI.GetTargetBase());
+
+    if (Index == INDEX_NONE)
+    {
+        GetConsole().OutputTextLine("ERROR: current base could not be found. This indicates a coding or game data error.");
+        return;
+    }
+
+    Index += iDirection;
+
+    if (Index < 0)
+    {
+        Index = kHQ.m_arrBases.Length - 1;
+    }
+    else
+    {
+        Index = Index % kHQ.m_arrBases.Length;
+    }
+
+    GetConsole().OutputTextLine("Changing UI's base index to " $ Index $ ". Base ID will be " $ kHQ.m_arrBases[Index].m_iId);
+    kBuildUI.SetTargetBaseId(kHQ.m_arrBases[Index].m_iId);
+
+    kPres.PopState();
+    kPres.LWCE_UIBuildBase(kHQ.m_arrBases[Index].m_iId);
+    kPres.m_kBuildFacilities.OnReceiveFocus();
 }

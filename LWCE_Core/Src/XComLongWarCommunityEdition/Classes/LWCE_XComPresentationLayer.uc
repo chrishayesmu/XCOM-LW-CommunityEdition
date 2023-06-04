@@ -101,3 +101,13 @@ simulated state State_PauseMenu
         m_kPauseMenu.Init(XComPlayerController(Owner), GetHUD(), m_bIsIronman, bAllowSaving);
     }
 }
+
+simulated state State_SightlineHUD
+{
+    simulated function Activate()
+    {
+        m_kSightlineHUD = Spawn(class'LWCE_UISightlineHUD', self);
+        m_kSightlineHUD.Init(XComTacticalController(Owner), GetHUD());
+        GetHUD().LoadScreen(m_kSightlineHUD);
+    }
+}

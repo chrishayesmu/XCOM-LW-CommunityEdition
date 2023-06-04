@@ -1,14 +1,29 @@
 class LWCE_XGHeadquarters extends XGHeadQuarters
     dependson(LWCETypes);
 
-struct CheckpointRecord_LWCE_XGHeadquarters extends XGHeadQuarters.CheckpointRecord
+struct LWCE_TFacilityCount
 {
-    var array<name> m_arrCELastCaptives;
-    var LWCEItemContainer m_kCELastCargoArtifacts;
+    var name Facility;
+    var int Count;
 };
 
+struct CheckpointRecord_LWCE_XGHeadquarters extends XGHeadQuarters.CheckpointRecord
+{
+    var array<LWCE_XGBase> m_arrBases;
+    var array<LWCE_TFacilityCount> m_arrCEBaseFacilities;
+    var array<name> m_arrCELastCaptives;
+    var LWCEItemContainer m_kCELastCargoArtifacts;
+    var int m_iNextBaseId;
+};
+
+var array<LWCE_XGBase> m_arrBases;
+var array<LWCE_TFacilityCount> m_arrCEBaseFacilities; // A count of each facility type XCOM has, across all bases.
+var array<name> m_arrCEFacilityBinksPlayed;
 var array<name> m_arrCELastCaptives;
 var LWCEItemContainer m_kCELastCargoArtifacts;
+var int m_iNextBaseId;
+
+var const localized string m_strHQBaseName;
 
 function Init(bool bLoadingFromSave)
 {
@@ -75,7 +90,6 @@ function InitNewGame()
     local XGFacility kFacility;
     local int I;
 
-    m_arrBaseFacilities.Add(24);
     CreateFacilities();
 
     foreach m_arrFacilities(kFacility)
@@ -83,8 +97,8 @@ function InitNewGame()
         kFacility.InitNewGame();
     }
 
-    m_kBase = Spawn(class'LWCE_XGBase');
-    m_kBase.Init();
+    m_kBase = AddBase(m_strHQBaseName, /* bIsPrimaryBase */ true, /* bUsesAccessLifts */ true, /* Width */ 7, /* Height */ 5, GetCoords());
+
     m_kActiveFacility = m_arrFacilities[0];
     m_fAnnounceTimer = 10.0;
 
@@ -96,14 +110,30 @@ function InitNewGame()
         }
     }
 
-    // Normally there's a Mutate call with "XGHeadQuarters.InitNewGame" here. We try not to remove those calls,
-    // but if it's left in, the XComFCMutator mod (which is included in Long War) will spawn its own XGFundingCouncil_Mod
-    // class, which we inherit from for our own.
-
-    // TODO: add our own mod hook here to replace the Mutate call
-
     World().m_kFundingCouncil = Spawn(class'LWCE_XGFundingCouncil');
     World().m_kFundingCouncil.InitNewGame();
+}
+
+/// <summary>
+/// Adds a new XCOM base with the given parameters. Aside from the base's name, other attributes should be considered immutable.
+/// </summary>
+/// <param name="strName">The player-visible name of this base.</param>
+/// <param name="bIsPrimaryBase">Whether this is XCOM's main HQ. Only one base should have this set per campaign.</param>
+/// <param name="bUsesAccessLifts">Whether this facility requires access lifts. If not, access lifts won't be available to build here,
+/// and all levels can be built at simultaneously. Excavation cost also will not scale based on Y coordinate.</param>
+/// <param name="Width">How many tiles wide the base is. If more than 7, the Build Facilities UI will get buggy.</param>
+/// <param name="Height">How many tiles tall the base is. All bases have an invisible "0" row of tiles, which should be included in the height.</param>
+/// <param name="Coords">The coordinates on the Geoscape where this base is located.</param>
+function LWCE_XGBase AddBase(string strName, bool bIsPrimaryBase, bool bUsesAccessLifts, int Width, int Height, Vector2D Coords)
+{
+    local LWCE_XGBase kBase;
+
+    kBase = Spawn(class'LWCE_XGBase');
+    kBase.LWCE_Init(strName, bIsPrimaryBase, bUsesAccessLifts, ++m_iNextBaseId, Width, Height, Coords);
+
+    m_arrBases.AddItem(kBase);
+
+    return kBase;
 }
 
 function AddOutpost(int iContinent)
@@ -182,57 +212,73 @@ function AddSatelliteNode(int iCountry, int iType, optional bool bInstant)
 
 function AddFacility(int iFacility)
 {
-    // Replace all facilities with LWCE subclasses
-    m_arrBaseFacilities[iFacility] += 1;
-
-    if (iFacility == eFacility_PsiLabs)
-    {
-        BARRACKS().m_kPsiLabs = Spawn(class'LWCE_XGFacility_PsiLabs');
-    }
-    else if (iFacility == eFacility_GeneticsLab)
-    {
-        BARRACKS().m_kGeneLabs = Spawn(class'LWCE_XGFacility_GeneLabs');
-    }
-    else if (iFacility == eFacility_CyberneticsLab)
-    {
-        BARRACKS().m_kCyberneticsLab = Spawn(class'LWCE_XGFacility_CyberneticsLab');
-        `LWCE_STORAGE.LWCE_AddItem('Item_Minigun', 1000);
-        `LWCE_STORAGE.LWCE_AddItem('Item_BaseAugments', 1000);
-    }
-    else if (iFacility == eFacility_DeusEx)
-    {
-        m_kGollop = Spawn(class'LWCE_XGFacility_GollopChamber');
-        m_arrFacilities.AddItem(m_kGollop);
-    }
-    else if (iFacility == eFacility_OTS)
-    {
-        BARRACKS().UpdateOTSPerks();
-    }
-    else if (iFacility == eFacility_Foundry)
-    {
-        BARRACKS().UpdateFoundryPerks();
-    }
+    `LWCE_LOG_DEPRECATED_CLS(AddFacility);
 }
 
-function bool ArePrereqsFulfilled(LWCE_TPrereqs kPrereqs)
+function LWCE_AddFacility(name nmFacility)
+{
+    local LWCEFacilityTemplate kTemplate;
+    local XGFacility kFacility;
+
+    kTemplate = `LWCE_FACILITY(nmFacility);
+
+    if (kTemplate.FacilityClass != "")
+    {
+        kFacility = Spawn(class<XGFacility>(DynamicLoadObject(kTemplate.FacilityClass, class'Class')));
+
+        if (kFacility.IsA('XGFacility_PsiLabs'))
+        {
+            BARRACKS().m_kPsiLabs = XGFacility_PsiLabs(kFacility);
+        }
+        else if (kFacility.IsA('XGFacility_GeneLabs'))
+        {
+            BARRACKS().m_kGeneLabs = XGFacility_GeneLabs(kFacility);
+        }
+        else if (kFacility.IsA('XGFacility_CyberneticsLab'))
+        {
+            BARRACKS().m_kCyberneticsLab = XGFacility_CyberneticsLab(kFacility);
+        }
+        else if (kFacility.IsA('XGFacility_GollopChamber'))
+        {
+            m_kGollop = XGFacility_GollopChamber(kFacility);
+        }
+
+        if (kTemplate.bIsTopLevel)
+        {
+            m_arrFacilities.AddItem(kFacility);
+        }
+    }
+
+    ModifyFacilityCount(nmFacility, 1);
+}
+
+/// <summary>
+/// Checks if the provided prerequisites are currently fulfilled. Optional parameters allow for
+/// "what-if" checks, e.g. "will these prereqs be fulfilled if the given Foundry project is completed".
+/// </summary>
+function bool ArePrereqsFulfilled(LWCE_TPrereqs kPrereqs,
+                                  optional name TechName,
+                                  optional name FacilityName,
+                                  optional name FoundryName,
+                                  optional name ItemName)
 {
     local name PrereqName;
     local int iPrereqId;
     local LWCE_XGFacility_Barracks kBarracks;
     local LWCE_XGFacility_Engineering kEngineering;
     local LWCE_XGFacility_Labs kLabs;
-    local XGGeoscape kGeoscape;
     local LWCE_XGStorage kStorage;
+    local LWCE_XGGeoscape kGeoscape;
 
     kBarracks = `LWCE_BARRACKS;
     kEngineering = `LWCE_ENGINEERING;
-    kGeoscape = GEOSCAPE();
+    kGeoscape = LWCE_XGGeoscape(GEOSCAPE());
     kLabs = `LWCE_LABS;
     kStorage = LWCE_XGStorage(STORAGE());
 
-    foreach kPrereqs.arrFacilityReqs(iPrereqId)
+    foreach kPrereqs.arrFacilityReqs(PrereqName)
     {
-        if (!HasFacility(iPrereqId))
+        if (!LWCE_HasFacility(PrereqName) && PrereqName != FacilityName)
         {
             return false;
         }
@@ -240,7 +286,7 @@ function bool ArePrereqsFulfilled(LWCE_TPrereqs kPrereqs)
 
     foreach kPrereqs.arrFoundryReqs(PrereqName)
     {
-        if (!kEngineering.LWCE_IsFoundryTechResearched(PrereqName))
+        if (!kEngineering.LWCE_IsFoundryTechResearched(PrereqName) && PrereqName != FoundryName)
         {
             return false;
         }
@@ -248,7 +294,7 @@ function bool ArePrereqsFulfilled(LWCE_TPrereqs kPrereqs)
 
     foreach kPrereqs.arrItemReqs(PrereqName)
     {
-        if (!kStorage.LWCE_EverHadItem(PrereqName))
+        if (!kStorage.LWCE_EverHadItem(PrereqName) && PrereqName != ItemName)
         {
             return false;
         }
@@ -256,7 +302,7 @@ function bool ArePrereqsFulfilled(LWCE_TPrereqs kPrereqs)
 
     foreach kPrereqs.arrTechReqs(PrereqName)
     {
-        if (!kLabs.LWCE_IsResearched(PrereqName))
+        if (!kLabs.LWCE_IsResearched(PrereqName) && PrereqName != TechName)
         {
             return false;
         }
@@ -280,14 +326,48 @@ function bool ArePrereqsFulfilled(LWCE_TPrereqs kPrereqs)
         return false;
     }
 
-    if (kPrereqs.bRequiresAutopsy && kLabs.GetNumAutopsiesPerformed() == 0)
+    if (kPrereqs.bRequiresAutopsy && kLabs.GetNumAutopsiesPerformed() == 0 && (TechName == '' || !`LWCE_TECH(TechName).bIsAutopsy))
     {
         return false;
     }
 
-    if (kPrereqs.bRequiresInterrogation && !kLabs.HasInterrogatedCaptive())
+    if (kPrereqs.bRequiresInterrogation && !kLabs.HasInterrogatedCaptive() && (TechName == '' || !`LWCE_TECH(TechName).bIsInterrogation))
     {
         return false;
+    }
+
+    return true;
+}
+
+/// <summary>
+/// Checks if the staff listed in the requirements are present in XCOM HQ.
+/// </summary>
+function bool AreStaffPresent(array<LWCE_TStaffRequirement> arrStaffRequirements)
+{
+    local int Index;
+
+    for (Index = 0; Index < arrStaffRequirements.Length; Index++)
+    {
+        switch (arrStaffRequirements[Index].StaffType)
+        {
+            case 'Engineer':
+                if (GetResource(eResource_Engineers) < arrStaffRequirements[Index].NumRequired)
+                {
+                    return false;
+                }
+
+                break;
+            case 'Scientist':
+                if (GetResource(eResource_Scientists) < arrStaffRequirements[Index].NumRequired)
+                {
+                    return false;
+                }
+
+                break;
+            default:
+                `LWCE_LOG_CLS("Unrecognized staff type '" $ arrStaffRequirements[Index].StaffType $ "' in AreStaffPresent");
+                break;
+        }
     }
 
     return true;
@@ -344,10 +424,6 @@ function CreateFacilities()
 {
     local XGFacility kFacility;
 
-    // Replace all facilities with our own subclasses. We do this even for facilities we currently
-    // don't have any changes to, since if we change our minds about a facility later, it's not easy
-    // to insert a new class into existing save games.
-
     kFacility = Spawn(class'LWCE_XGFacility_MissionControl');
     kFacility.Init(false);
     m_arrFacilities.AddItem(kFacility);
@@ -379,6 +455,21 @@ function CreateFacilities()
     m_kSitRoom = XGFacility_SituationRoom(kFacility);
 }
 
+function LWCE_XGBase GetBaseById(int Id)
+{
+    local LWCE_XGBase kBase;
+
+    foreach m_arrBases(kBase)
+    {
+        if (kBase.m_iId == Id)
+        {
+            return kBase;
+        }
+    }
+
+    return none;
+}
+
 function GetEvents(out array<THQEvent> arrEvents)
 {
     `LWCE_LOG_DEPRECATED_CLS(GetEvents);
@@ -387,7 +478,6 @@ function GetEvents(out array<THQEvent> arrEvents)
 function LWCE_GetEvents(out array<LWCE_THQEvent> arrEvents)
 {
     local LWCE_XGFundingCouncil kFundingCouncil;
-    local LWCE_TData kData;
     local LWCE_THQEvent kBlankEvent, kEvent;
     local int Index, iEvent;
     local bool bAdded;
@@ -396,17 +486,13 @@ function LWCE_GetEvents(out array<LWCE_THQEvent> arrEvents)
 
     for (Index = 0; Index < m_arrHiringOrders.Length; Index++)
     {
-        kEvent =  kBlankEvent;
+        kEvent = kBlankEvent;
         kEvent.EventType = 'Hiring';
         kEvent.iHours = m_arrHiringOrders[Index].iHours;
 
-        kData.eType = eDT_Int;
-        kData.iData = m_arrHiringOrders[Index].iStaffType;
-        kEvent.arrData.AddItem(kData);
-
-        kData.eType = eDT_Int;
-        kData.iData = m_arrHiringOrders[Index].iNumStaff;
-        kEvent.arrData.AddItem(kData);
+        kEvent.kData = class'LWCEDataContainer'.static.New('THQEventData');
+        kEvent.kData.AddInt(m_arrHiringOrders[Index].iStaffType);
+        kEvent.kData.AddInt(m_arrHiringOrders[Index].iNumStaff);
 
         bAdded = false;
 
@@ -432,13 +518,9 @@ function LWCE_GetEvents(out array<LWCE_THQEvent> arrEvents)
         kEvent.EventType = 'InterceptorOrdering';
         kEvent.iHours = m_akInterceptorOrders[Index].iHours;
 
-        kData.eType = eDT_Int;
-        kData.iData = m_akInterceptorOrders[Index].iDestinationContinent;
-        kEvent.arrData.AddItem(kData);
-
-        kData.eType = eDT_Int;
-        kData.iData = m_akInterceptorOrders[Index].iNumInterceptors;
-        kEvent.arrData.AddItem(kData);
+        kEvent.kData = class'LWCEDataContainer'.static.New('THQEventData');
+        kEvent.kData.AddInt(m_akInterceptorOrders[Index].iDestinationContinent);
+        kEvent.kData.AddInt(m_akInterceptorOrders[Index].iNumInterceptors);
 
         bAdded = false;
 
@@ -464,13 +546,9 @@ function LWCE_GetEvents(out array<LWCE_THQEvent> arrEvents)
         kEvent.EventType = 'ShipTransfers';
         kEvent.iHours = m_arrShipTransfers[Index].iHours;
 
-        kData.eType = eDT_Int;
-        kData.iData = m_arrShipTransfers[Index].iDestination;
-        kEvent.arrData.AddItem(kData);
-
-        kData.eType = eDT_Int;
-        kData.iData = m_arrShipTransfers[Index].iNumShips;
-        kEvent.arrData.AddItem(kData);
+        kEvent.kData = class'LWCEDataContainer'.static.New('THQEventData');
+        kEvent.kData.AddInt(m_arrShipTransfers[Index].iDestination);
+        kEvent.kData.AddInt(m_arrShipTransfers[Index].iNumShips);
 
         bAdded = false;
 
@@ -492,13 +570,12 @@ function LWCE_GetEvents(out array<LWCE_THQEvent> arrEvents)
 
     for (Index = 0; Index < kFundingCouncil.m_arrCECurrentRequests.Length; Index++)
     {
-        kEvent =  kBlankEvent;
+        kEvent = kBlankEvent;
         kEvent.EventType = 'FCRequest';
         kEvent.iHours = kFundingCouncil.m_arrCECurrentRequests[Index].iHoursToRespond;
 
-        kData.eType = eDT_Int;
-        kData.iData = Country(kFundingCouncil.m_arrCECurrentRequests[Index].eRequestingCountry).GetContinent();
-        kEvent.arrData.AddItem(kData);
+        kEvent.kData = class'LWCEDataContainer'.static.New('THQEventData');
+        kEvent.kData.AddInt(Country(kFundingCouncil.m_arrCECurrentRequests[Index].eRequestingCountry).GetContinent());
 
         bAdded = false;
 
@@ -522,13 +599,12 @@ function LWCE_GetEvents(out array<LWCE_THQEvent> arrEvents)
     {
         if (m_arrSatellites[Index].iTravelTime > 0)
         {
-        kEvent =  kBlankEvent;
+            kEvent =  kBlankEvent;
             kEvent.EventType = 'SatOperational';
             kEvent.iHours = m_arrSatellites[Index].iTravelTime;
 
-            kData.eType = eDT_Int;
-            kData.iData = m_arrSatellites[Index].iCountry;
-            kEvent.arrData.AddItem(kData);
+            kEvent.kData = class'LWCEDataContainer'.static.New('THQEventData');
+            kEvent.kData.AddInt(m_arrSatellites[Index].iCountry);
 
             bAdded = false;
 
@@ -548,6 +624,112 @@ function LWCE_GetEvents(out array<LWCE_THQEvent> arrEvents)
             }
         }
     }
+}
+
+function int GetFacilityMaintenanceCost()
+{
+    local LWCEFacilityTemplateManager kTemplateMgr;
+    local LWCEFacilityTemplate kTemplate;
+    local int Index, iMaintenance;
+
+    kTemplateMgr = `LWCE_FACILITY_TEMPLATE_MGR;
+
+    for (Index = 0; Index < m_arrCEBaseFacilities.Length; Index++)
+    {
+        if (m_arrCEBaseFacilities[Index].Count > 0)
+        {
+            kTemplate = kTemplateMgr.FindFacilityTemplate(m_arrCEBaseFacilities[Index].Facility);
+
+            iMaintenance += kTemplate.GetMonthlyCost() * m_arrCEBaseFacilities[Index].Count;
+        }
+    }
+
+    return -iMaintenance;
+}
+
+function int GetNumFacilities(EFacilityType eFacility)
+{
+    `LWCE_LOG_DEPRECATED_CLS(GetNumFacilities);
+
+    return -1;
+}
+
+function int LWCE_GetNumFacilities(name nmFacility, optional bool bIncludeBuilding = false)
+{
+    local int Count, Index;
+
+    Index = m_arrCEBaseFacilities.Find('Facility', nmFacility);
+
+    if (Index != INDEX_NONE)
+    {
+        Count = m_arrCEBaseFacilities[Index].Count;
+    }
+
+    if (bIncludeBuilding)
+    {
+        Count += LWCE_XGFacility_Engineering(ENGINEERING()).LWCE_GetNumFacilitiesBuilding(nmFacility);
+    }
+
+    return Count;
+}
+
+/// <summary>
+/// Returns the power capacity of XCOM's main base.
+/// </summary>
+function int GetPowerCapacity()
+{
+    return LWCE_XGBase(m_kBase).GetPowerCapacity();
+}
+
+/// <summary>
+/// Returns how much power is being used by XCOM's main base.
+/// </summary>
+function int GetPowerUsed()
+{
+    return LWCE_XGBase(m_kBase).GetPowerUsed();
+}
+
+function int GetSatelliteLimit()
+{
+    local LWCEFacilityTemplateManager kTemplateMgr;
+    local LWCEFacilityTemplate kTemplate;
+    local int Index, iSatelliteLimit;
+
+    kTemplateMgr = `LWCE_FACILITY_TEMPLATE_MGR;
+
+    for (Index = 0; Index < m_arrCEBaseFacilities.Length; Index++)
+    {
+        if (m_arrCEBaseFacilities[Index].Count > 0)
+        {
+            kTemplate = kTemplateMgr.FindFacilityTemplate(m_arrCEBaseFacilities[Index].Facility);
+            iSatelliteLimit += kTemplate.GetSatelliteCapacity() * m_arrCEBaseFacilities[Index].Count;
+        }
+    }
+
+    iSatelliteLimit += class'XGTacticalGameCore'.default.UPLINK_ADJACENCY_BONUS * LWCE_XGBase(Base()).LWCE_GetAdjacencies('Satellite');
+
+    return iSatelliteLimit;
+}
+
+function bool HasFacility(int iFacility)
+{
+    `LWCE_LOG_DEPRECATED_CLS(HasFacility);
+
+    return false;
+}
+
+function bool LWCE_HasFacility(name nmFacility)
+{
+    local int Index;
+
+    Index = m_arrCEBaseFacilities.Find('Facility', nmFacility);
+
+    return Index == INDEX_NONE ? false : m_arrCEBaseFacilities[Index].Count > 0;
+}
+
+function bool IsHyperwaveActive()
+{
+    return LWCE_HasFacility('Facility_HyperwaveRadar') && m_bHyperwaveActivated;
 }
 
 function OrderInterceptors(int iContinent, int iQuantity)
@@ -675,6 +857,16 @@ function RefundCost(const LWCE_TCost kCost)
     }
 }
 
+function RemoveFacility(int iFacility)
+{
+    `LWCE_LOG_DEPRECATED_CLS(RemoveFacility);
+}
+
+function LWCE_RemoveFacility(name nmFacility)
+{
+    ModifyFacilityCount(nmFacility, -1);
+}
+
 function UpdateInterceptorOrders()
 {
     local LWCE_XGStorage kStorage;
@@ -724,6 +916,37 @@ function UpdateInterceptorOrders()
     for (iOrder = aiRemove.Length - 1; iOrder >= 0; iOrder--)
     {
         m_arrShipTransfers.Remove(aiRemove[iOrder], 1);
+    }
+}
+
+protected function ModifyFacilityCount(name nmFacility, int Delta)
+{
+    local LWCE_TFacilityCount kFacilityCount;
+    local int Index;
+
+    Index = m_arrCEBaseFacilities.Find('Facility', nmFacility);
+
+    if (Index == INDEX_NONE)
+    {
+        if (Delta < 0)
+        {
+            `LWCE_LOG_CLS("ERROR: asked to change facility count for " $ nmFacility $ " by " $ Delta $ ", but no such facilities are in HQ");
+            return;
+        }
+
+        kFacilityCount.Facility = nmFacility;
+        kFacilityCount.Count = Delta;
+        m_arrCEBaseFacilities.AddItem(kFacilityCount);
+    }
+    else
+    {
+        if (Delta + m_arrCEBaseFacilities[Index].Count < 0)
+        {
+            `LWCE_LOG_CLS("ERROR: asked to change facility count for " $ nmFacility $ " by " $ Delta $ ", but this would result in a negative number of facilities of this type");
+            return;
+        }
+
+        m_arrCEBaseFacilities[Index].Count += Delta;
     }
 }
 

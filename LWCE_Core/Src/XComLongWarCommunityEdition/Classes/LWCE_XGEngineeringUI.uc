@@ -316,6 +316,38 @@ function OnItemTableOption(int iOption)
     }
 }
 
+function OnMainMenuOption(int iOption)
+{
+    local int iNewView;
+
+    if (m_kMainMenu.mnuOptions.arrOptions[iOption].iState == eUIState_Disabled)
+    {
+        PlayBadSound();
+        return;
+    }
+    else
+    {
+        PlaySound(`SoundCue("SoundUI.MenuSelectCue"), true);
+        iNewView = m_arrMenuOptions[iOption];
+
+        if (iNewView == eEngView_BaseBuilding)
+        {
+            LWCE_XComHQPresentationLayer(PRES()).LWCE_UIBuildBase();
+        }
+        else if (iNewView == eEngView_Foundry)
+        {
+            PRES().UIFoundry();
+            PRES().GetStrategyHUD().m_kBuildQueue.RealizeNavigation();
+        }
+        else
+        {
+            GoToView(iNewView);
+        }
+
+        PlayOpenSound();
+    }
+}
+
 function OnNextTab()
 {
     local int iTab, iNextTab;
@@ -513,6 +545,91 @@ function UpdateItemTable()
     }
 }
 
+function UpdateMainMenu()
+{
+    local LWCE_XGHeadquarters kHQ;
+    local TMenuOption kOption;
+    local TMenu kMainMenu;
+    local int iMenuOption;
+
+    kHQ = LWCE_XGHeadquarters(HQ());
+
+    m_arrMenuOptions.Remove(0, m_arrMenuOptions.Length);
+
+    if (Game().m_bDebugStart || ENGINEERING().m_bCanBuildItems)
+    {
+        m_arrMenuOptions.AddItem(eEngView_Build);
+    }
+
+    if (Game().m_bDebugStart || ENGINEERING().m_bCanBuildFacilities)
+    {
+        m_arrMenuOptions.AddItem(eEngView_BaseBuilding);
+    }
+
+    if (kHQ.LWCE_HasFacility('Facility_Foundry'))
+    {
+        m_arrMenuOptions.AddItem(eEngView_Foundry);
+    }
+
+    if (kHQ.LWCE_HasFacility('Facility_RepairBay'))
+    {
+        m_arrMenuOptions.AddItem(eEngView_MecManufacturing);
+
+        if (LWCE_XGFacility_Labs(LABS()).LWCE_IsResearched('Tech_AlienBiocybernetics'))
+        {
+            m_arrMenuOptions.AddItem(eEngView_CyberneticsLab);
+        }
+    }
+
+    for (iMenuOption = 0; iMenuOption < m_arrMenuOptions.Length; iMenuOption++)
+    {
+        if (m_arrMenuOptions[iMenuOption] == eEngView_Build)
+        {
+            kOption.strText = m_strOptBuildBuy;
+            kOption.iState = eUIState_Normal;
+            kOption.strHelp = m_strHelpBuildBuy;
+        }
+        else if (m_arrMenuOptions[iMenuOption] == eEngView_GreyMarket)
+        {
+            kOption.strText = m_strOptGreyMarket;
+            kOption.iState = eUIState_Normal;
+            kOption.strHelp = m_strHelpGreyMarket;
+        }
+        else if (m_arrMenuOptions[iMenuOption] == eEngView_BaseBuilding)
+        {
+            kOption.strText = m_strOptBuildFacilities;
+            kOption.iState = eUIState_Normal;
+            kOption.strHelp = m_strHelpBuildFacilities;
+        }
+        else if (m_arrMenuOptions[iMenuOption] == eEngView_Foundry)
+        {
+            kOption.strText = m_strOptFoundry;
+            kOption.iState = eUIState_Normal;
+            kOption.strHelp = m_strHelpFoundry;
+        }
+        else if (m_arrMenuOptions[iMenuOption] == eEngView_CyberneticsLab)
+        {
+            kOption.strText = m_strOptCyberneticsLab;
+            kOption.iState = eUIState_Normal;
+            kOption.strHelp = m_strHelpCyberneticsLab;
+        }
+        else if (m_arrMenuOptions[iMenuOption] == eEngView_MecManufacturing)
+        {
+            kOption.strText = m_strOptManufactureMec;
+            kOption.iState = eUIState_Normal;
+            kOption.strHelp = m_strHelpMecManufacture;
+        }
+        else
+        {
+            continue;
+        }
+
+        kMainMenu.arrOptions.AddItem(kOption);
+    }
+
+    m_kMainMenu.mnuOptions = kMainMenu;
+}
+
 function UpdateTabs()
 {
     local int iTab;
@@ -562,10 +679,12 @@ function UpdateTabs()
 
 function UpdateView()
 {
+    local LWCE_XGHeadquarters kHQ;
     local LWCE_XGFacility_Engineering kEngineering;
     local LWCE_XGFacility_Labs kLabs;
     local LWCE_XGStorage kStorage;
 
+    kHQ = LWCE_XGHeadquarters(HQ());
     kEngineering = LWCE_XGFacility_Engineering(ENGINEERING());
     kLabs = LWCE_XGFacility_Labs(LABS());
     kStorage = LWCE_XGStorage(STORAGE());
@@ -660,7 +779,7 @@ function UpdateView()
 
         if (kStorage.GetResource(eResource_Meld) > 150 && !HQ().m_bUrgedEWFacility)
         {
-            if (!HQ().HasFacility(eFacility_CyberneticsLab) && !HQ().HasFacility(eFacility_GeneticsLab) && !kEngineering.IsBuildingFacility(eFacility_CyberneticsLab) && !kEngineering.IsBuildingFacility(eFacility_GeneticsLab))
+            if (!kHQ.LWCE_HasFacility('Facility_RepairBay') && !kHQ.LWCE_HasFacility('Facility_GeneticsLab') && !kEngineering.LWCE_IsBuildingFacility('Facility_RepairBay') && !kEngineering.LWCE_IsBuildingFacility('Facility_GeneticsLab'))
             {
                 if (Narrative(`XComNarrativeMomentEW("Urge_LabFacility")))
                 {
@@ -683,7 +802,7 @@ function UpdateView()
             return;
         }
 
-        if (!HQ().HasFacility(eFacility_Foundry) && kLabs.LWCE_IsResearched('Tech_ExperimentalWarfare') && AI().GetMonth() >= 2)
+        if (!kHQ.LWCE_HasFacility('Facility_Foundry') && kLabs.LWCE_IsResearched('Tech_ExperimentalWarfare') && AI().GetMonth() >= 2)
         {
             if (Narrative(`XComNarrativeMoment("UrgeFoundry")))
             {

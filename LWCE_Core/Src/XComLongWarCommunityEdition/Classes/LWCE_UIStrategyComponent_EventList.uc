@@ -242,9 +242,9 @@ simulated function UpdateData()
         kEvent = arrEventData[I];
         iAdditionalData = 0;
 
-        if (kEvent.arrData.Length > 0)
+        if (kEvent.kData != none && kEvent.kData.Data.Length > 0)
         {
-            iAdditionalData = kEvent.arrData[0].iData;
+            iAdditionalData = kEvent.kData.Data[0].I;
         }
 
         AS_AddEvent(kEvent.txtOption.StrValue, class'UIUtilities'.static.GetDaysString(int(kEvent.txtDays.StrValue)), kEvent.txtDays.StrValue, LWCE_GetEventImageLabel(kEvent.EventType, iAdditionalData));

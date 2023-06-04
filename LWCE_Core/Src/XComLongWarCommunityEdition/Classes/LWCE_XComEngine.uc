@@ -8,6 +8,7 @@ var LWCEContentManager m_kCEContentMgr;
 
 var private array< class<LWCEDataSet> > m_arrDataSets;
 var private array<LWCEDataTemplateManager> m_arrDataTemplateManagers;
+var private LWCEEventManager m_kEventManager;
 var private bool m_bInitialized;
 
 static function DownloadableContentEnumerator LWCE_GetDLCEnumerator()
@@ -41,6 +42,11 @@ static function DownloadableContentManager LWCE_GetDLCManager()
     }
 
     return kEngine.DLCManager;
+}
+
+static function LWCEEventManager GetEventManager()
+{
+    return LWCE_XComEngine(GetEngine()).m_kEventManager;
 }
 
 static function LWCEDataTemplateManager GetTemplateManager(class<LWCEDataTemplateManager> TemplateManagerClass)
@@ -100,8 +106,12 @@ function LWCE_Init()
     `LWCE_LOG_CLS("Validating data template managers...");
     ValidateDataTemplateManagers();
 
+    `LWCE_LOG_CLS("Creating content manager...");
     m_kCEContentMgr = new (self) class'LWCEContentManager';
     m_kCEContentMgr.Init();
+
+    `LWCE_LOG_CLS("Creating event manager...");
+    m_kEventManager = new (self) class'LWCEEventManager';
 }
 
 private function AssignTemplateToManager(LWCEDataTemplate kTemplate)

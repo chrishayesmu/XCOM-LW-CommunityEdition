@@ -20,11 +20,11 @@ function XGScreenMgr GetMgr(class<Actor> kMgrClass, optional IScreenMgrInterface
     return super.GetMgr(kMgrClass, kInterface, iView, bIgnoreIfDoesNotExist);
 }
 
-function LWCE_Notify(name AlertType, array<LWCE_TData> arrData)
+function LWCE_Notify(name AlertType, LWCEDataContainer kData)
 {
     if (m_kUIMissionControl != none)
     {
-        LWCE_XGMissionControlUI(m_kUIMissionControl.GetMgr()).LWCE_AddNotice(AlertType, arrData);
+        LWCE_XGMissionControlUI(m_kUIMissionControl.GetMgr()).LWCE_AddNotice(AlertType, kData);
     }
 }
 
@@ -50,6 +50,23 @@ function ReplaceClassWithLWCEEquivalent(out class<Actor> kClass)
     {
         kClass = kCEClass;
     }
+}
+
+reliable client simulated function UIBuildBase()
+{
+    `LWCE_LOG_DEPRECATED_CLS(UIBuildBase);
+}
+
+reliable client simulated function LWCE_UIBuildBase(optional int iBaseId = -1)
+{
+    if (iBaseId == -1)
+    {
+        iBaseId = LWCE_XGBase(`LWCE_HQ.m_kBase).m_iId;
+    }
+
+    m_kBuildFacilities = Spawn(class'LWCE_UIBuildFacilities', self);
+    LWCE_UIBuildFacilities(m_kBuildFacilities).LWCE_Init(XComPlayerController(Owner), GetHUD(), iBaseId);
+    PushState('State_BaseBuild');
 }
 
 reliable client simulated function UIChooseSquad(XGMission kMission)
@@ -111,8 +128,13 @@ reliable client simulated function LWCE_UIItemUnlock(LWCE_TItemUnlock kUnlock)
 
 reliable client simulated function UIManufactureFacility(EFacilityType eFacility, int X, int Y)
 {
+    `LWCE_LOG_DEPRECATED_CLS(UIManufactureFacility);
+}
+
+reliable client simulated function LWCE_UIManufactureFacility(name FacilityName, int iBaseId, int X, int Y)
+{
     m_kManufacturing = Spawn(class'LWCE_UIManufacturing', self);
-    m_kManufacturing.InitFacility(XComPlayerController(Owner), Get3DMovie(), eFacility, X, Y);
+    LWCE_UIManufacturing(m_kManufacturing).LWCE_InitFacility(XComPlayerController(Owner), Get3DMovie(), FacilityName, iBaseId, X, Y);
     PushState('State_Manufacture');
     CAMLookAtNamedLocation(class'UIManufacturing'.default.m_strCameraTag, 0.0);
 }
@@ -245,8 +267,6 @@ simulated state State_BaseBuild
     simulated function Activate()
     {
         GetCamera().StartRoomViewNamed('Expansion', 1.0);
-        m_kBuildFacilities = Spawn(class'LWCE_UIBuildFacilities', self);
-        m_kBuildFacilities.Init(XComPlayerController(Owner), GetHUD());
         GetStrategyHUD().m_kBuildQueue.Hide();
     }
 }
