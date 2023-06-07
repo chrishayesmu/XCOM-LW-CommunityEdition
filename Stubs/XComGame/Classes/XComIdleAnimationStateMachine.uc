@@ -66,6 +66,7 @@ function Initialize(XGUnit OwningUnit){}
 function bool IsStateInterruptible(){}
 function CheckForStanceUpdate(){}
 function CheckForStanceUpdateOnIdle(){}
+function ExitFromCover(optional Vector DesiredFaceDirection){}
 function ForceHeading(Vector DesiredRotationVector){}
 function ForceStance(int ForceCoverIndex, UnitPeekSide ForcePeekSide){}
 function bool IsEvaluatingStance(){}
@@ -121,7 +122,7 @@ state NeuralDampingStunned{
 }
 state EvaluateStance
 {
-	function bool UnitFacingMatchesDesiredDirection(){}    
+	function bool UnitFacingMatchesDesiredDirection(){}
 	function EExitCoverTypeToUse GetExitCoverTypeToUse(const out Vector FaceLocation, out int bSwitchSidesNeeded){}
 	simulated function bool FacingDesiredDirectionForExitCover(){}
     event BeginState(name P){}

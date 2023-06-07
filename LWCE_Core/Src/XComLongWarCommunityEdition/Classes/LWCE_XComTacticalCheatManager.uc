@@ -145,8 +145,8 @@ exec function GiveAbility(string strName)
         return;
     }
 
-    // TODO add a separate hook for this, figure out what to do with kWeapon argument
-    kAbility = kUnit.GenerateAbilityFromTemplate(kAbilityTemplate.GetAbilityName(), unusedOutVar, /* kWeapon */ none);
+    // TODO add a separate hook for this?
+    kAbility = kUnit.GenerateAbilityFromTemplate(kAbilityTemplate.GetAbilityName(), unusedOutVar);
 
     if (kAbility.IsTriggeredOnUnitPostBeginPlay())
     {

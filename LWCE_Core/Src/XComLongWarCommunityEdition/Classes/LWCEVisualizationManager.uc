@@ -11,6 +11,13 @@ struct VisualizationActionMetadata
 	var LWCEAction LastActionAdded; // For convenience, to easily chain together actions while building visualization
 };
 
+struct DebugDrawNode
+{
+    var LWCEAction Action;
+    var int X;
+    var int Y;
+};
+
 var protectedwrite LWCEAction ActiveVisTree; // Action tree which is currently being visualized. Do not modify!
 var LWCEAction BuildVisTree; // Action tree which is being built
 
@@ -171,7 +178,68 @@ private function DebugDrawVanillaAnims(Canvas kCanvas)
 
 private function DebugDrawVisualization(Canvas kCanvas)
 {
+    local int Index;
+    local array<DebugDrawNode> arrNodes;
+    local Vector vDrawPos;
 
+    vDrawPos = vect(25.0f, 25.0f, 0.0f);
+
+    kCanvas.SetPos(vDrawPos.X, vDrawPos.Y += 15);
+    kCanvas.SetDrawColor(255, 255, 255);
+    kCanvas.DrawText("[LWCE Vis Tree]");
+
+    kCanvas.SetPos(vDrawPos.X, vDrawPos.Y += 15);
+
+    if (ActiveVisTree == none)
+    {
+        kCanvas.DrawText("No Vis Executing");
+        return;
+    }
+
+    arrNodes = DebugLayoutDrawNodes();
+
+    for (Index = 0; Index < arrNodes.Length; Index++)
+    {
+        DebugDrawSingleNode(kCanvas, arrNodes[Index]);
+    }
+}
+
+private function DebugDrawSingleNode(Canvas kCanvas, out DebugDrawNode kNode)
+{
+    kCanvas.SetPos(kNode.X, kNode.Y);
+
+	if (kNode.Action.IsTimedOut())
+	{
+		kCanvas.SetDrawColor(255, 0, 0);
+	}
+	else if (kNode.Action.IsInState('WaitingToStart'))
+	{
+		kCanvas.SetDrawColor(155, 155, 155);
+	}
+	else if (kNode.Action.IsInState('Executing'))
+	{
+		kCanvas.SetDrawColor(0, 255, 0);
+	}
+	else if (kNode.Action.IsInState('Finished'))
+	{
+		kCanvas.SetDrawColor(0, 155, 0);
+	}
+
+    kCanvas.DrawText(Repl(string(kNode.Action.Name), "LWCEAction_", ""));
+}
+
+private function array<DebugDrawNode> DebugLayoutDrawNodes()
+{
+    local DebugDrawNode kNode, kEmptyNode;
+    local array<DebugDrawNode> arrNodes;
+
+    kNode.X = 25.0f;
+    kNode.Y = 65.0f;
+    kNode.Action = ActiveVisTree;
+
+    arrNodes.AddItem(kNode);
+
+    return arrNodes;
 }
 
 private function DestroyVisTree(LWCEAction TreeRoot)

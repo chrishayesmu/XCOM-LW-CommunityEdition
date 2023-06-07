@@ -207,7 +207,7 @@ simulated state FollowingProjectiles
 
     simulated function bool CurrentProjectileValid()
     {
-        if (m_kFireAction.m_kShot != none && !m_kFireAction.m_kShot.IsGrenadeAbility() && m_kFireAction.m_kShot.IsBlasterLauncherShot() && (!m_kFireAction.m_kShot.m_bHit || `GAMECORE.m_kAbilities.AbilityHasProperty(m_kFireAction.m_kShot.iType, 2)) || `GAMECORE.m_kAbilities.AbilityHasEffect(m_kFireAction.m_kShot.iType, 5))
+        if (m_kFireAction.m_kAbility != none && !m_kFireAction.m_kAbility.IsGrenadeAbility() && m_kFireAction.m_kAbility.IsBlasterLauncherShot() && (!m_kFireAction.m_kAbility.m_bHit || `GAMECORE.m_kAbilities.AbilityHasProperty(m_kFireAction.m_kAbility.iType, 2)) || `GAMECORE.m_kAbilities.AbilityHasEffect(m_kFireAction.m_kAbility.iType, 5))
         {
             return false;
         }

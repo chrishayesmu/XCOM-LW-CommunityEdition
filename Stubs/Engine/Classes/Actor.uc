@@ -1547,7 +1547,7 @@ native function string ConsoleCommand(string Command, optional bool bWriteToLog 
 
 // Latent functions.
 native(256) final latent function Sleep( float Seconds );
-native(261) final latent function FinishAnim( AnimNodeSequence SeqNode );
+native(261) final latent function FinishAnim(AnimNodeSequence SeqNode, optional bool bReplayAnim = false);
 
 // Collision.
 native(262) final noexport function SetCollision( optional bool bNewColActors, optional bool bNewBlockActors, optional bool bNewIgnoreEncroachers );

@@ -34,11 +34,10 @@ function Init(int iAbility)
     `LWCE_LOG_DEPRECATED_CLS(Init);
 }
 
-function LWCE_Init(name nmAbility, XGWeapon kWeapon)
+function LWCE_Init(name nmAbility)
 {
     m_TemplateName = nmAbility;
     m_kTemplate = `LWCE_ABILITY(nmAbility);
-    m_kWeapon = kWeapon;
     m_iCurrentTargetIndex = INDEX_NONE;
 
     strName = m_kTemplate.strFriendlyName;
@@ -106,6 +105,7 @@ function name Activate(optional out LWCE_TAbilityResult kOutResult)
     kInputContext.Ability = self;
     kInputContext.Source = kSource;
     kInputContext.PrimaryTarget = kTarget;
+    kInputContext.Weapon = GetWeaponToUse();
 
     // Apply source effects
     foreach m_kTemplate.AbilitySourceEffects(kEffect)
@@ -364,4 +364,24 @@ simulated function bool ShouldShowPercentage()
 {
     `LWCE_LOG_NOT_IMPLEMENTED(ShouldShowPercentage);
     return true;
+}
+
+protected function XGWeapon GetWeaponToUse()
+{
+    switch (m_kTemplate.UseWithWeaponSlot)
+    {
+        case eAWS_Primary:
+            return m_kUnit.GetInventory().GetPrimaryWeapon();
+        case eAWS_Secondary:
+            return m_kUnit.GetInventory().GetSecondaryWeapon();
+        case eAWS_Equipped:
+            return m_kUnit.GetInventory().GetActiveWeapon();
+        case eAWS_None:
+            return none;
+        case eAWS_Source:
+            // In this case, we want to find the inventory item which gave this unit the ability
+            // TODO
+        default:
+            return none;
+    }
 }

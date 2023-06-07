@@ -18,6 +18,15 @@ enum EAbilityHitResult
 	eHit_Reflect
 };
 
+enum EAbilityWeaponSlot
+{
+	eAWS_Primary,   // Always use the weapon in the primary equip slot
+	eAWS_Secondary, // Always use the weapon in the secondary equip slot
+	eAWS_Equipped,  // Use whichever weapon the unit has active
+	eAWS_Source,    // Use whichever weapon is the source of the ability
+	eAWS_None       // No weapon should be associated with the ability
+};
+
 struct LWCE_TEffectResults
 {
 	var array<LWCEEffect> Effects;
@@ -33,7 +42,8 @@ struct LWCE_TAbilityInputContext
     var array<Actor> AdditionalTargets; // Additional targets of the ability, if any
     var array<Vector> TargetLocations;  // If one or more locations is being targeted, they will be here
 
-    var Actor Source; // The source of the ability
+    var Actor Source;    // The source of the ability
+	var LWCE_XGWeapon Weapon; // The weapon/item this ability was used with, if any
 };
 
 struct LWCE_TAbilityResult
@@ -53,6 +63,7 @@ struct LWCE_TDamagePreview
 };
 
 var EAbilityHostility Hostility;
+var EAbilityWeaponSlot UseWithWeaponSlot;
 
 var LWCEAbilityCharges AbilityCharges;
 var array<LWCEAbilityCost> AbilityCosts;
@@ -229,7 +240,18 @@ function bool IsTriggeredOnUnitPostBeginPlay()
 	return false;
 }
 
+/// <summary>
+/// Whether this ability should enable inverse kinematics for the unit's left hand. Typically this is false for
+/// grenade abilities and psionics, and true for all other abilities.
+/// </summary>
+function bool UseLeftHandIK()
+{
+	// TODO implement
+	return true;
+}
+
 defaultproperties
 {
 	Hostility=eHostility_Offensive
+	UseWithWeaponSlot=eAWS_None
 }

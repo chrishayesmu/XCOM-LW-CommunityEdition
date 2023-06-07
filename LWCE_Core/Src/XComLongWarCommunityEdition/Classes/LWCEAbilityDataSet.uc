@@ -167,17 +167,27 @@ static function LWCEAbilityTemplate StandardShot()
 
 static function TypicalAbility_BuildVisualization(const out LWCE_TAbilityInputContext kInputContext, const out LWCE_TAbilityResult kResult)
 {
+	local LWCEAction_ExitCover ExitCoverAction;
 	local LWCEAction_Fire FireAction;
+	local LWCEAction_ToggleTacticalHUD HUDAction;
 	local VisualizationActionMetadata BlankMetadata, ActionMetadata;
 
 	`LWCE_LOG_CLS("Building typical ability visualization for ability name " $ kInputContext.AbilityTemplateName);
 	ActionMetadata.VisualizeActor = kInputContext.Source;
 
-	// For now this is just the Fire action
-	FireAction = LWCEAction_Fire(class'LWCEAction_Fire'.static.CreateInVisualizationTree(ActionMetadata));
-	FireAction.ForAbilityContext(kInputContext, kResult);
-}
+	HUDAction = LWCEAction_ToggleTacticalHUD(class'LWCEAction_ToggleTacticalHUD'.static.CreateInVisualizationTree(ActionMetadata));
+	HUDAction.m_bShowHUD = false;
 
+	ExitCoverAction = LWCEAction_ExitCover(class'LWCEAction_ExitCover'.static.CreateInVisualizationTree(ActionMetadata, , ActionMetadata.LastActionAdded));
+	ExitCoverAction.ForAbilityContext(kInputContext, kResult);
+
+	// For now this is just the Fire action
+	FireAction = LWCEAction_Fire(class'LWCEAction_Fire'.static.CreateInVisualizationTree(ActionMetadata, , ActionMetadata.LastActionAdded));
+	FireAction.ForAbilityContext(kInputContext, kResult);
+
+	HUDAction = LWCEAction_ToggleTacticalHUD(class'LWCEAction_ToggleTacticalHUD'.static.CreateInVisualizationTree(ActionMetadata, , ActionMetadata.LastActionAdded));
+	HUDAction.m_bShowHUD = true;
+}
 
 defaultproperties
 {

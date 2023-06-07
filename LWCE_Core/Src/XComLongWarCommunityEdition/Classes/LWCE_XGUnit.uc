@@ -58,6 +58,12 @@ function AddPersistentEffect(LWCEAppliedEffect kEffect)
     }
 }
 
+function bool CanProvideCover()
+{
+    // TODO adjust for LWCE data structures
+    return m_kCharacter.m_eType == ePawnType_Tank2 || m_kCharacter.m_kChar.eClass == eSC_Mec;
+}
+
 function LWCEAppliedEffect FindEffect(name EffectName)
 {
     local LWCEAppliedEffect kEffect;
@@ -1919,7 +1925,7 @@ simulated function GenerateAbilities(int iAbility, Vector vLocation, out array<X
 
     if (iAbility == eAbility_ShotStandard)
     {
-        GenerateAbilityFromTemplate('StandardShot', arrAbilities, kWeapon);
+        GenerateAbilityFromTemplate('StandardShot', arrAbilities);
         return;
     }
 
@@ -2091,7 +2097,7 @@ simulated function bool GenerateAbilities_CheckForFlyAbility(int iAbility, out a
     return true;
 }
 
-function LWCE_XGAbility GenerateAbilityFromTemplate(name nmAbility, out array<XGAbility> arrAbilities, XGWeapon kWeapon)
+function LWCE_XGAbility GenerateAbilityFromTemplate(name nmAbility, out array<XGAbility> arrAbilities)
 {
     local LWCE_XGAbility kAbility;
 
@@ -2099,7 +2105,7 @@ function LWCE_XGAbility GenerateAbilityFromTemplate(name nmAbility, out array<XG
 
     kAbility = Spawn(class'LWCE_XGAbility', self);
     kAbility.m_kUnit = self;
-    kAbility.LWCE_Init(nmAbility, kWeapon);
+    kAbility.LWCE_Init(nmAbility);
 
     arrAbilities.AddItem(kAbility);
 

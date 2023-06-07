@@ -19,27 +19,28 @@ var delegate<OverrideCalc> ModifyBaseWeaponDamageCalcFn;      // If set, this fu
 
 delegate int OverrideCalc(LWCE_XGUnit kSource, LWCE_XGUnit kTarget, LWCE_XGAbility kAbility);
 
-function name ApplyEffect(LWCE_XGUnit kSource, LWCE_XGUnit kTarget, LWCE_XGAbility kAbility, optional out LWCE_TAbilityResult kResult)
+function name ApplyEffect(LWCE_TAbilityInputContext InputContext, LWCE_XGUnit kTarget, optional out LWCE_TAbilityResult kResult)
 {
     return 'AA_Success';
 }
 
-function ApplyToAbilityBreakdown(LWCE_XGAbility kAbility, LWCE_TAvailableTarget kTarget, bool bIsHit, optional out LWCEAbilityUsageSummary kAbilityBreakdown)
+function ApplyToAbilityBreakdown(LWCE_TAbilityInputContext InputContext, bool bIsHit, optional out LWCEAbilityUsageSummary kAbilityBreakdown)
 {
     // TODO
 }
 
-function LWCE_TDamagePreview GetDamagePreview(LWCE_XGAbility kAbility, LWCE_XGUnit kSource, LWCE_XGUnit kTarget, out LWCE_TAbilityResult kAbilityResult)
+function LWCE_TDamagePreview GetDamagePreview(LWCE_TAbilityInputContext InputContext, LWCE_XGUnit kTarget, bool bAsPrimaryTarget, out LWCE_TAbilityResult kAbilityResult)
 {
+    local LWCE_XGUnit kSourceUnit;
     local LWCE_TDamagePreview kPreview;
     local delegate<LWCEWeaponTemplate.CalcBonusWeaponDamage> CalcBonusWeaponDamageFn;
     local LWCEAppliedEffect kAppliedEffect;
-    local LWCE_XGWeapon kWeapon;
     local int Index;
     local float fBaseDamage, fModifiedDamage, fMaxDR, fMinDR;
 
+    kSourceUnit = LWCE_XGUnit(InputContext.Source);
+
     kPreview.kPrimaryTarget = kTarget;
-    kWeapon = LWCE_XGWeapon(kAbility.m_kWeapon);
 
     `LWCE_LOG_CLS("ApplyWeaponDamage: GetDamagePreview");
 
@@ -53,19 +54,19 @@ function LWCE_TDamagePreview GetDamagePreview(LWCE_XGAbility kAbility, LWCE_XGUn
     // Base damage calculations
     // ------------------------------------------------------------
 
-    GetWeaponBaseDamage(kSource, kTarget, kAbility, fBaseDamage);
+    GetWeaponBaseDamage(InputContext, kTarget, bAsPrimaryTarget, fBaseDamage);
     `LWCE_LOG_CLS("ApplyWeaponDamage: GetDamagePreview: fBaseDamage from weapon = " $ fBaseDamage);
 
     // Incorporate source unit effects to base damage
-    foreach kSource.m_arrAppliedEffects(kAppliedEffect)
+    foreach kSourceUnit.m_arrAppliedEffects(kAppliedEffect)
     {
-        fBaseDamage += kAppliedEffect.m_kEffect.GetBaseDamageModifierAsAttacker(kSource, kTarget, kAbility, kAbilityResult, self, fBaseDamage);
+        fBaseDamage += kAppliedEffect.m_kEffect.GetBaseDamageModifierAsAttacker(kSourceUnit, kTarget, InputContext.Ability, kAbilityResult, self, fBaseDamage);
     }
 
     // Incorporate target unit effects to base damage
     foreach kTarget.m_arrAppliedEffects(kAppliedEffect)
     {
-        fBaseDamage += kAppliedEffect.m_kEffect.GetBaseDamageModifierAsDefender(kSource, kTarget, kAbility, kAbilityResult, self, fBaseDamage);
+        fBaseDamage += kAppliedEffect.m_kEffect.GetBaseDamageModifierAsDefender(kSourceUnit, kTarget, InputContext.Ability, kAbilityResult, self, fBaseDamage);
     }
 
     `LWCE_LOG_CLS("ApplyWeaponDamage: GetDamagePreview: fBaseDamage final = " $ fBaseDamage);
@@ -79,22 +80,22 @@ function LWCE_TDamagePreview GetDamagePreview(LWCE_XGAbility kAbility, LWCE_XGUn
 
     // Let the weapon add any modified damage adjustments first
     // TODO let weapons modify their base damage too
-    for (Index = 0; Index < kWeapon.m_kTemplate.arrBonusWeaponDamageFn.Length; Index++)
+    for (Index = 0; Index < InputContext.Weapon.m_kTemplate.arrBonusWeaponDamageFn.Length; Index++)
     {
-        CalcBonusWeaponDamageFn = kWeapon.m_kTemplate.arrBonusWeaponDamageFn[Index];
-        fModifiedDamage += CalcBonusWeaponDamageFn(kSource, kTarget, kAbility);
+        CalcBonusWeaponDamageFn = InputContext.Weapon.m_kTemplate.arrBonusWeaponDamageFn[Index];
+        fModifiedDamage += CalcBonusWeaponDamageFn(kSourceUnit, kTarget, InputContext.Ability);
     }
 
     // Incorporate source unit effects to modified damage
-    foreach kSource.m_arrAppliedEffects(kAppliedEffect)
+    foreach kSourceUnit.m_arrAppliedEffects(kAppliedEffect)
     {
-        fModifiedDamage += kAppliedEffect.m_kEffect.GetModifiedDamageModifierAsAttacker(kSource, kTarget, kAbility, kAbilityResult, self, fBaseDamage, fModifiedDamage);
+        fModifiedDamage += kAppliedEffect.m_kEffect.GetModifiedDamageModifierAsAttacker(kSourceUnit, kTarget, InputContext.Ability, kAbilityResult, self, fBaseDamage, fModifiedDamage);
     }
 
     // Incorporate target unit effects to modified damage
     foreach kTarget.m_arrAppliedEffects(kAppliedEffect)
     {
-        fModifiedDamage += kAppliedEffect.m_kEffect.GetModifiedDamageModifierAsDefender(kSource, kTarget, kAbility, kAbilityResult, self, fBaseDamage, fModifiedDamage);
+        fModifiedDamage += kAppliedEffect.m_kEffect.GetModifiedDamageModifierAsDefender(kSourceUnit, kTarget, InputContext.Ability, kAbilityResult, self, fBaseDamage, fModifiedDamage);
     }
 
     `LWCE_LOG_CLS("ApplyWeaponDamage: GetDamagePreview: fModifiedDamage final = " $ fModifiedDamage);
@@ -117,23 +118,23 @@ function LWCE_TDamagePreview GetDamagePreview(LWCE_XGAbility kAbility, LWCE_XGUn
     // ------------------------------------------------------------
 
     // TODO: need a way that supports fractional DR in character/unit stats
-    fMinDR = CalculateBaseDamageReduction(kSource, kTarget, kWeapon);
+    fMinDR = CalculateBaseDamageReduction(kSourceUnit, kTarget, InputContext.Weapon);
     fMaxDR = fMinDR;
 
     `LWCE_LOG_CLS("ApplyWeaponDamage: GetDamagePreview: base DR = " $ fMinDR);
 
     // Incorporate source unit effects to damage reduction
-    foreach kSource.m_arrAppliedEffects(kAppliedEffect)
+    foreach kSourceUnit.m_arrAppliedEffects(kAppliedEffect)
     {
-        fMinDR += kAppliedEffect.m_kEffect.GetDamageReductionModifierAsAttacker(kSource, kTarget, kAbility, kAbilityResult, self, kPreview.iMinDamage, fMinDR);
-        fMaxDR += kAppliedEffect.m_kEffect.GetDamageReductionModifierAsAttacker(kSource, kTarget, kAbility, kAbilityResult, self, kPreview.iMaxDamage, fMaxDR);
+        fMinDR += kAppliedEffect.m_kEffect.GetDamageReductionModifierAsAttacker(kSourceUnit, kTarget, InputContext.Ability, kAbilityResult, self, kPreview.iMinDamage, fMinDR);
+        fMaxDR += kAppliedEffect.m_kEffect.GetDamageReductionModifierAsAttacker(kSourceUnit, kTarget, InputContext.Ability, kAbilityResult, self, kPreview.iMaxDamage, fMaxDR);
     }
 
     // Incorporate target unit effects to damage reduction
     foreach kTarget.m_arrAppliedEffects(kAppliedEffect)
     {
-        fMinDR += kAppliedEffect.m_kEffect.GetDamageReductionModifierAsDefender(kSource, kTarget, kAbility, kAbilityResult, self, kPreview.iMinDamage, fMinDR);
-        fMaxDR += kAppliedEffect.m_kEffect.GetDamageReductionModifierAsDefender(kSource, kTarget, kAbility, kAbilityResult, self, kPreview.iMaxDamage, fMaxDR);
+        fMinDR += kAppliedEffect.m_kEffect.GetDamageReductionModifierAsDefender(kSourceUnit, kTarget, InputContext.Ability, kAbilityResult, self, kPreview.iMinDamage, fMinDR);
+        fMaxDR += kAppliedEffect.m_kEffect.GetDamageReductionModifierAsDefender(kSourceUnit, kTarget, InputContext.Ability, kAbilityResult, self, kPreview.iMaxDamage, fMaxDR);
     }
 
     fMinDR = FClamp(fMinDR, 0, kPreview.iMinDamage);
@@ -202,14 +203,10 @@ protected function float CalculateBaseDamageReduction(LWCE_XGUnit kSource, LWCE_
     return fDR;
 }
 
-protected function GetWeaponBaseDamage(LWCE_XGUnit kSource, LWCE_XGUnit kTarget, LWCE_XGAbility kAbility, out float fBaseDamage, optional out float fEnvironmentDamage)
+protected function GetWeaponBaseDamage(LWCE_TAbilityInputContext InputContext, LWCE_XGUnit kTarget, bool bAsPrimaryTarget, out float fBaseDamage, optional out float fEnvironmentDamage)
 {
-    local LWCE_XGWeapon kWeapon;
-
-    kWeapon = LWCE_XGWeapon(kAbility.m_kWeapon);
-
-    fBaseDamage = kWeapon.m_kTemplate.iDamage;
-    fEnvironmentDamage = kWeapon.m_kTemplate.iEnvironmentDamage;
+    fBaseDamage = InputContext.Weapon.m_kTemplate.iDamage;
+    fEnvironmentDamage = InputContext.Weapon.m_kTemplate.iEnvironmentDamage;
 
     if (ModifyBaseWeaponDamageCalcFn != none)
     {

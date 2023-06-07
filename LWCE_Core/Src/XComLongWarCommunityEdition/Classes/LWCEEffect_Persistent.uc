@@ -63,7 +63,7 @@ simulated function SetDisplayInfo(EPerkBuffCategory BuffCat, string strName, str
 	bDisplayInDetails = DisplayInHUD || DisplayInDetails; // anything in the HUD should also show in the details
 }
 
-function name ApplyEffect(LWCE_XGUnit kSource, LWCE_XGUnit kTarget, LWCE_XGAbility kAbility, optional out LWCE_TAbilityResult kResult)
+function name ApplyEffect(LWCE_TAbilityInputContext InputContext, LWCE_XGUnit kTarget, optional out LWCE_TAbilityResult kResult)
 {
 	local LWCEAppliedEffect kAppliedEffect;
 
@@ -86,7 +86,7 @@ function name ApplyEffect(LWCE_XGUnit kSource, LWCE_XGUnit kTarget, LWCE_XGAbili
 	}
 
 	kAppliedEffect = new (kTarget) class'LWCEAppliedEffect';
-	kAppliedEffect.Init(self, kAbility, kSource, kTarget);
+	kAppliedEffect.Init(self, kAbility, LWCE_XGUnit(InputContext.Source), kTarget);
 
 	kTarget.AddPersistentEffect(kAppliedEffect);
 

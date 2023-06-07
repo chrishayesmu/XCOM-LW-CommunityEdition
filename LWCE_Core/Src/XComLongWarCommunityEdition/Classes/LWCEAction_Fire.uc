@@ -8,7 +8,7 @@ var LWCE_XGWeapon m_kWeapon;
 var XGCameraView m_kAimingView;
 var LWCECameraView_Firing m_kFiringView;
 var XGCameraView_Midpoint m_kMidpointView;
-var LWCE_XGAbility m_kShot;
+var LWCE_XGAbility m_kAbility;
 var LWCE_XComPresentationLayer m_kPres;
 
 var protected Vector m_vTarget;
@@ -41,20 +41,20 @@ function XComUnitPawn GetTargetPawn()
 
 function ForAbilityContext(const out LWCE_TAbilityInputContext kInputContext, const out LWCE_TAbilityResult kResult)
 {
-    m_kShot = kInputContext.Ability;
+    m_kAbility = kInputContext.Ability;
     m_kUnit = LWCE_XGUnit(kInputContext.Source);
     m_kTargetUnit = LWCE_XGUnit(kInputContext.PrimaryTarget);
 
     if (m_kUnit != none)
     {
         m_kPawn = m_kUnit.GetPawn();
-        m_vTarget = m_kPawn.GetHeadshotLocation(); // TODO: adjust for hit/miss
+        m_vTarget = GetTargetPawn().GetHeadshotLocation(); // TODO: adjust for hit/miss
     }
 }
 
 function bool IsHit()
 {
-    return m_kShot.HitResultIsHit(m_kShot.m_kResult);
+    return m_kAbility.HitResultIsHit(m_kAbility.m_kResult);
 }
 
 function bool IsInLowCover(XGUnit kUnit)
@@ -88,9 +88,9 @@ function Vector NonUnitTargetAdjustedForMiss()
     local int iMinDistance, iDistanceToUse, iAngleToUse;
     local float fAngleInRadians, perkModRadius;
 
-    if (m_kShot != none && (m_kShot.m_kWeapon.GameplayType() == eItem_RocketLauncher) || m_kShot.m_kWeapon.GameplayType() == eItem_BlasterLauncher)
+    if (m_kAbility != none && (m_kAbility.m_kWeapon.GameplayType() == eItem_RocketLauncher) || m_kAbility.m_kWeapon.GameplayType() == eItem_BlasterLauncher)
     {
-        perkModRadius = m_kShot.m_kWeapon.GetDamageRadius();
+        perkModRadius = m_kAbility.m_kWeapon.GetDamageRadius();
 
         iMinDistance = int(perkModRadius * 0.50);
         iDistanceToUse = `SYNC_RAND(int(perkModRadius - iMinDistance)) + iMinDistance;
@@ -212,7 +212,7 @@ state Executing
     {
         m_kPawn.MovementNode.SetActiveChild(eMoveType_Stationary, 0.10);
 
-        if (m_kTargetUnit == none && m_kShot != none && !m_kShot.m_bHit_NonUnitTarget)
+        if (m_kTargetUnit == none && m_kAbility != none && !m_kAbility.m_bHit_NonUnitTarget)
         {
             `LWCE_LOG_CLS("Setting target: NonUnitTargetAdjustedForMiss");
             SetTargetForPawn(NonUnitTargetAdjustedForMiss());
@@ -298,7 +298,6 @@ Begin:
     }
 
     m_kWeapon = LWCE_XGWeapon(m_kUnit.GetInventory().GetActiveWeapon());
-    //m_kUnit.GetFireStateData(CurrentShotIndex, CurrentShotReplicationData);
     m_bUpdateAnimRot = true;
 
     if (!m_bAttackerVisibleToEnemy && m_bProjectileWillBeVisibleToEnemy)
@@ -307,9 +306,6 @@ Begin:
         m_kUnit.m_bForceVisible = true;
         class'XComWorldData'.static.GetWorldData().UpdateVisibility();
     }
-
-    // Hide the tactical HUD while visualizing (but wait for camera first)
-    m_kPres.HUDHide();
 
     if (m_kPawn.AimingNode != none && m_kTargetUnit != m_kUnit)
     {
@@ -334,8 +330,10 @@ Begin:
     m_bUseAimAtTargetMissPercentage = true;
     FireWeapon();
 
-    // TODO find an appropriate place to show HUD again when visualization ends
-    //m_kPres.HUDShow();
+    while (m_kPawn.m_eWeaponState == eAnimWeaponState_Fire)
+    {
+        Sleep(0.0);
+    }
 
     CompleteAction();
 }

@@ -39,6 +39,9 @@ var LWCEAction TreeRoot;			 // Tracks the root of the tree that this node is att
 var array<LWCEAction> ParentActions; // The actions which must provide signals before this action can execute
 var array<LWCEAction> ChildActions;  // The actions which are waiting on this node as a parent
 
+var protectedwrite int ExecutingTime;  // How long the action has been in the 'Executing' state
+var protectedwrite int TimeoutSeconds; // How long this action can spend in 'Executing' state before it is considered to have errored
+
 var protectedwrite LWCEVisualizationManager m_kVisMgr;
 
 var privatewrite bool bCompleted;   // If true, this action is done executing
@@ -145,6 +148,11 @@ function bool IsReadyToExecute()
     return IsInState('WaitingToStart') && ReceivedEvents.Length == ParentActions.Length;
 }
 
+function bool IsTimedOut()
+{
+    return TimeoutSeconds > 0.0f && ExecutingTime >= TimeoutSeconds;
+}
+
 /// <summary>
 /// Checks whether the received event is valid for this action. Subclasses can override this function to
 /// add custom logic when receiving parent action events.
@@ -237,8 +245,22 @@ auto state WaitingToStart
 
 state Executing
 {
+	simulated function BeginState(name PrevStateName)
+    {
+        ExecutingTime = 0.0f;
+    }
+
+    event Tick(float fDeltaT)
+    {
+        ExecutingTime += fDeltaT;
+    }
 }
 
 state Finished
 {
+}
+
+defaultproperties
+{
+    TimeoutSeconds = 10.0f
 }
