@@ -336,6 +336,37 @@ exec function ShowAlienStats()
     kConsole.OutputTextLine("XCOM Threat Level: " $ kStrategy.STAT_GetStat(21));
 }
 
+exec function TestRandomness(int iMax, optional int iNumIterations)
+{
+    local int Index;
+    local array<int> arrResults;
+
+    if (iNumIterations == 0)
+    {
+        iNumIterations = 10000;
+    }
+
+    if (iMax == 0)
+    {
+        return;
+    }
+
+    arrResults.Length = iMax;
+
+    while (iNumIterations > 0)
+    {
+        arrResults[Rand(iMax)]++;
+        iNumIterations--;
+    }
+
+    GetConsole().OutputTextLine("  Value  |  Rolls  ");
+
+    for (Index = 0; Index < iMax; Index++)
+    {
+        GetConsole().OutputTextLine("      " $Index $ "   |   " $ arrResults[Index]);
+    }
+}
+
 exec function ToggleStrategyHUD()
 {
     `LWCE_LOG_CLS("ToggleStrategyHUD: b_IsVisible = " $ `LWCE_HQPRES.m_kStrategyHUD.b_IsVisible);
