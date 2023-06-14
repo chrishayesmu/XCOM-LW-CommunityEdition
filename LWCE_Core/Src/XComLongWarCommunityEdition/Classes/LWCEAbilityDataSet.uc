@@ -132,6 +132,7 @@ static function LWCEAbilityTemplate StandardShot()
 	`CREATE_ABILITY_TEMPLATE(Template, 'StandardShot');
 
     Template.AbilityIcon = "Standard";
+    Template.UseWithWeaponSlot = eAWS_Equipped;
 
     kActionPointsCost = new class'LWCEAbilityCost_ActionPoints';
     kActionPointsCost.iNumPoints = 1;

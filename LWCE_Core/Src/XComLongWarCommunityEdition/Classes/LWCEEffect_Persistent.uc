@@ -86,7 +86,7 @@ function name ApplyEffect(LWCE_TAbilityInputContext InputContext, LWCE_XGUnit kT
 	}
 
 	kAppliedEffect = new (kTarget) class'LWCEAppliedEffect';
-	kAppliedEffect.Init(self, kAbility, LWCE_XGUnit(InputContext.Source), kTarget);
+	kAppliedEffect.Init(self, InputContext.Ability, LWCE_XGUnit(InputContext.Source), kTarget);
 
 	kTarget.AddPersistentEffect(kAppliedEffect);
 

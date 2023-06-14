@@ -42,8 +42,8 @@ struct LWCE_TAbilityInputContext
     var array<Actor> AdditionalTargets; // Additional targets of the ability, if any
     var array<Vector> TargetLocations;  // If one or more locations is being targeted, they will be here
 
-    var Actor Source;    // The source of the ability
-	var LWCE_XGWeapon Weapon; // The weapon/item this ability was used with, if any
+    var Actor Source;         // The source of the ability
+    var LWCE_XGWeapon Weapon; // The weapon/item this ability was used with, if any
 };
 
 struct LWCE_TAbilityResult

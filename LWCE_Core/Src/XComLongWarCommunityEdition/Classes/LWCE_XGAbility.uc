@@ -38,6 +38,7 @@ function LWCE_Init(name nmAbility)
 {
     m_TemplateName = nmAbility;
     m_kTemplate = `LWCE_ABILITY(nmAbility);
+    m_kWeapon = GetWeaponToUse();
     m_iCurrentTargetIndex = INDEX_NONE;
 
     strName = m_kTemplate.strFriendlyName;
@@ -110,7 +111,7 @@ function name Activate(optional out LWCE_TAbilityResult kOutResult)
     // Apply source effects
     foreach m_kTemplate.AbilitySourceEffects(kEffect)
     {
-        nmApplyResult = kEffect.ApplyEffect(kSource, kTarget, self, kResult);
+        nmApplyResult = kEffect.ApplyEffect(kInputContext, kTarget, kResult);
 
         kResult.SourceEffectResults.Effects.AddItem(kEffect);
         kResult.SourceEffectResults.ApplyResults.AddItem(nmApplyResult);
@@ -124,7 +125,7 @@ function name Activate(optional out LWCE_TAbilityResult kOutResult)
         {
             `LWCE_LOG_CLS("Attempting to apply effect " $ kEffect);
 
-            nmApplyResult = kEffect.ApplyEffect(kSource, kTarget, self, kResult);
+            nmApplyResult = kEffect.ApplyEffect(kInputContext, kTarget, kResult);
 
             kResult.TargetEffectResults.Effects.AddItem(kEffect);
             kResult.TargetEffectResults.ApplyResults.AddItem(nmApplyResult);
@@ -226,6 +227,7 @@ function LWCE_TDamagePreview GetDamagePreview(LWCE_XGUnit kTarget, bool bIsHit, 
 {
     local LWCE_TAbilityResult kFakeResult;
     local LWCE_TDamagePreview kCurrentPreview, kFinalPreview;
+    local LWCE_TAbilityInputContext kInputContext;
     local LWCEEffect kEffect;
 
     kFinalPreview.kPrimaryTarget = kTarget;
@@ -245,9 +247,16 @@ function LWCE_TDamagePreview GetDamagePreview(LWCE_XGUnit kTarget, bool bIsHit, 
 
     `LWCE_LOG_CLS("LWCE_XGAbility: GetDamagePreview: " $ m_kTemplate.AbilityTargetEffects.Length $ " effects to process");
 
+    // TODO have a real input context
+    kInputContext.AbilityTemplateName = m_TemplateName;
+    kInputContext.Ability = self;
+    kInputContext.Source = m_kUnit;
+    kInputContext.PrimaryTarget = kTarget;
+    kInputContext.Weapon = GetWeaponToUse();
+
     foreach m_kTemplate.AbilityTargetEffects(kEffect)
     {
-        kCurrentPreview = kEffect.GetDamagePreview(self, LWCE_XGUnit(m_kUnit), kTarget, kFakeResult);
+        kCurrentPreview = kEffect.GetDamagePreview(kInputContext, kTarget, /* bAsPrimaryTarget */ true, kFakeResult);
 
         kFinalPreview.iMinDamage += kCurrentPreview.iMinDamage;
         kFinalPreview.iMaxDamage += kCurrentPreview.iMaxDamage;
@@ -366,16 +375,16 @@ simulated function bool ShouldShowPercentage()
     return true;
 }
 
-protected function XGWeapon GetWeaponToUse()
+protected function LWCE_XGWeapon GetWeaponToUse()
 {
     switch (m_kTemplate.UseWithWeaponSlot)
     {
         case eAWS_Primary:
-            return m_kUnit.GetInventory().GetPrimaryWeapon();
+            return LWCE_XGWeapon(m_kUnit.GetInventory().GetPrimaryWeapon());
         case eAWS_Secondary:
-            return m_kUnit.GetInventory().GetSecondaryWeapon();
+            return LWCE_XGWeapon(m_kUnit.GetInventory().GetSecondaryWeapon());
         case eAWS_Equipped:
-            return m_kUnit.GetInventory().GetActiveWeapon();
+            return LWCE_XGWeapon(m_kUnit.GetInventory().GetActiveWeapon());
         case eAWS_None:
             return none;
         case eAWS_Source:

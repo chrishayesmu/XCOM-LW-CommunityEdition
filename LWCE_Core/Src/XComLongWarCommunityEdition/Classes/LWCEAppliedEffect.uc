@@ -37,14 +37,19 @@ function Init(LWCEEffect_Persistent kEffect, LWCE_XGAbility kAppliedByAbility, L
 /// <returns>True if the effect remains on the unit; false if it should be removed.</returns>
 function bool OnEffectTicked() // TODO: need to track what triggered the tick
 {
+    local LWCE_TAbilityInputContext kInputContext;
     local bool bRemoveEffect;
     local LWCEEffect kTickEffect;
 
     bRemoveEffect = false;
 
+    kInputContext.Ability = m_kAppliedByAbility;
+    kInputContext.Source = m_kAppliedByUnit;
+    kInputContext.PrimaryTarget = m_kAppliedToUnit;
+
     foreach m_kEffect.ApplyOnTick(kTickEffect)
     {
-        kTickEffect.ApplyEffect(m_kAppliedByUnit, m_kAppliedToUnit, m_kAppliedByAbility);
+        kTickEffect.ApplyEffect(kInputContext, m_kAppliedToUnit);
     }
 
     if (!m_bIsInfinite)

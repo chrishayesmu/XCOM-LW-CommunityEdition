@@ -33,22 +33,19 @@ simulated function RealizeTargettingReticules(out XGUnit kUnit)
     local bool isDefensiveMode;
 
     kDisplayedAbility = m_kAbilityHUD.GetDisplayedAbility();
-    isDefensiveMode = kDisplayedAbility.GetCategory() != 1 && kDisplayedAbility.iType != eAbility_Overwatch;
+    isDefensiveMode = LWCE_XGAbility(kDisplayedAbility) == none && kDisplayedAbility.GetCategory() != eAbilityType_Offensive && kDisplayedAbility.iType != eAbility_Overwatch;
 
     if (isDefensiveMode)
     {
         Invoke("ShowDefenseReticule");
     }
+    else if (kDisplayedAbility == none || LWCE_XGAbility(kDisplayedAbility) != none || kDisplayedAbility.IsOverheadCamera() || m_bForceOverheadView)
+    {
+        Invoke("ShowOffenseReticule");
+    }
     else
     {
-        if (kDisplayedAbility == none || kDisplayedAbility.IsOverheadCamera() || m_bForceOverheadView)
-        {
-            Invoke("ShowOffenseReticule");
-        }
-        else
-        {
-            Invoke("ShowOvershoulderReticule");
-        }
+        Invoke("ShowOvershoulderReticule");
     }
 
     ClearReticles();

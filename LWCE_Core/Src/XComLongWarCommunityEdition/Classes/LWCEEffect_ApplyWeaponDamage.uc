@@ -75,7 +75,7 @@ function LWCE_TDamagePreview GetDamagePreview(LWCE_TAbilityInputContext InputCon
     // Modified damage calculations
     // ------------------------------------------------------------
 
-    fModifiedDamage = kAbility.m_kUnit.m_aCurrentStats[eStat_Damage];
+    fModifiedDamage = kSourceUnit.m_aCurrentStats[eStat_Damage];
     `LWCE_LOG_CLS("ApplyWeaponDamage: GetDamagePreview: fModifiedDamage from stats = " $ fModifiedDamage);
 
     // Let the weapon add any modified damage adjustments first
@@ -210,7 +210,7 @@ protected function GetWeaponBaseDamage(LWCE_TAbilityInputContext InputContext, L
 
     if (ModifyBaseWeaponDamageCalcFn != none)
     {
-        fBaseDamage = ModifyBaseWeaponDamageCalcFn(kSource, kTarget, kAbility);
+        fBaseDamage = ModifyBaseWeaponDamageCalcFn(LWCE_XGUnit(InputContext.Source), kTarget, InputContext.Ability);
     }
     else
     {
@@ -219,7 +219,7 @@ protected function GetWeaponBaseDamage(LWCE_TAbilityInputContext InputContext, L
 
     if (ModifyBaseEnvironmentDamageCalcFn != none)
     {
-        fEnvironmentDamage = ModifyBaseEnvironmentDamageCalcFn(kSource, kTarget, kAbility);
+        fEnvironmentDamage = ModifyBaseEnvironmentDamageCalcFn(LWCE_XGUnit(InputContext.Source), kTarget, InputContext.Ability);
     }
     else
     {
