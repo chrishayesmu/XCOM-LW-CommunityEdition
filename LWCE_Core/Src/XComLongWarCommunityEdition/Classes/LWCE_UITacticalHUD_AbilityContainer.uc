@@ -46,7 +46,7 @@ simulated function bool OnAccept(optional string strOption = "")
     {
         `LWCE_LOG_CLS("Ability is not available: " $ kCEAbility.LWCE_CheckAvailable());
 
-        PlaySound(SoundCue'MenuCancelCue', true);
+        PlaySound(`SoundCue("SoundUI.MenuCancelCue"), true);
         return true;
     }
 
@@ -57,7 +57,7 @@ simulated function bool OnAccept(optional string strOption = "")
 
     if (!kAbility.CheckAvailable() && kTargetAbility != none && !kTargetAbility.CanFreeAim())
     {
-        PlaySound(SoundCue'MenuCancelCue', true);
+        PlaySound(`SoundCue("SoundUI.MenuCancelCue"), true);
         return true;
     }
 
@@ -70,7 +70,7 @@ simulated function bool OnAccept(optional string strOption = "")
         {
             if (m_iUseOnlyAbility != -1 && m_iUseOnlyAbility != m_iCurrentIndex)
             {
-                PlaySound(SoundCue'NegativeSelection2Cue', true);
+                PlaySound(`SoundCue("SoundUI.NegativeSelection2Cue"), true);
                 return true;
             }
 
@@ -104,7 +104,7 @@ simulated function bool OnAccept(optional string strOption = "")
 
             if (GetSelectedAbility().GetType() == eAbility_TakeCover || GetSelectedAbility().GetType() == eAbility_CivilianCover)
             {
-                PlaySound(SoundCue'HunkerDownCue', true);
+                PlaySound(`SoundCue("SoundUI.HunkerDownCue"), true);
             }
         }
         else
