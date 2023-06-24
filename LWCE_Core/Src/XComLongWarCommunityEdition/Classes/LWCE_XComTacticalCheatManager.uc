@@ -1,5 +1,17 @@
 class LWCE_XComTacticalCheatManager extends XComTacticalCheatManager;
 
+// TODO delete this, experimental
+struct TClassData
+{
+    var int iData1;
+    var int iData2;
+    var int iData3;
+    var int iData4;
+    var Class kClassOrig;
+    var Class kClassNew;
+    var int iData5;
+};
+
 var bool bDebugVanillaAnims;
 var bool bDebugVisualization;
 var bool bDisplayMovementGrid;
@@ -8,6 +20,35 @@ var bool bUnlimitedMoves;
 `include(generators.uci)
 
 `LWCE_GENERATOR_XCOMCHEATMANAGER
+
+// Temporary console command that just fills a section of memory with easily-recognizable
+// values, plus a couple of class addresses. This is used to easily find the class addresses
+// and play around with the memory layout to try and implement Mod Class Overrides.
+// TODO: delete this command before going live
+exec function ExperimentalClassData()
+{
+    local array<TClassData> arrData;
+    local TClassData kData;
+    local int I;
+
+    kData.iData1 = 0xDEADBEEF;
+    kData.iData2 = 0xDEADBEEF;
+    kData.iData3 = 0xDEADBEEF;
+    kData.iData4 = 0xDEADBEEF;
+    kData.kClassOrig = class'XComIdleAnimationStateMachine';
+    kData.kClassNew = class'LWCE_XComIdleAnimationStateMachine';
+    kData.iData5 = 0;
+
+    for (I = 0; I < 100; I++)
+    {
+        arrData.AddItem(kData);
+    }
+
+    GetConsole().OutputTextLine("kClassOrig.ObjectInternalInteger = " $ kData.kClassOrig.ObjectInternalInteger);
+    GetConsole().OutputTextLine("kClassNew.ObjectInternalInteger = " $ kData.kClassNew.ObjectInternalInteger);
+
+    I = 0; // set breakpoint here
+}
 
 exec function ForceResetLightingEnvironments()
 {
