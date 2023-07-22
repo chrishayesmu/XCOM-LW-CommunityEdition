@@ -1,3 +1,5 @@
+// TODO: get rid of this whole class and consider migrating its functionality into the replacement LWCEAction
+// (but probably don't, it can be its own mod)
 class LWCE_XGAction_Path extends XGAction_Path;
 
 function bool Init(XGUnit kUnit)

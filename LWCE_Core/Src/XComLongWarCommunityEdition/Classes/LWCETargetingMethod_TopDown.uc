@@ -1,0 +1,1 @@
+class LWCETargetingMethod_TopDown extends LWCETargetingMethod;

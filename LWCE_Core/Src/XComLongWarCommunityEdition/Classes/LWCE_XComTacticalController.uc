@@ -62,15 +62,16 @@ reliable server function ServerPerformRaisingTargetWithFireAction(optional XGUni
         return;
     }
 
-    kNewAction = Spawn(class'LWCE_XGAction_Targeting', self);
-    kNewAction.Init(m_kActiveUnit);
-    kNewAction.SetInitialUnitTarget(kTargetedUnit);
-    m_kActiveUnit.AddAction(kNewAction);
+    //kNewAction = Spawn(class'LWCE_XGAction_Targeting', self);
+    //kNewAction.Init(m_kActiveUnit);
+    //kNewAction.SetInitialUnitTarget(kTargetedUnit);
+    //m_kActiveUnit.AddAction(kNewAction);
 }
 
 defaultproperties
 {
     m_kPresentationLayerClass=class'LWCE_XComPresentationLayer'
+    CameraClass=class'LWCE_XComCamera'
     CheatClass=class'LWCE_XComTacticalCheatManager'
     InputClass=class'LWCE_XComTacticalInput'
 }

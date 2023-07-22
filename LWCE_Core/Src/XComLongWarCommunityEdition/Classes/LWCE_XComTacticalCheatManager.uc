@@ -7,8 +7,9 @@ struct TClassData
     var int iData2;
     var int iData3;
     var int iData4;
-    var Class kClassOrig;
-    var Class kClassNew;
+    var Class kClass1;
+    var Class kClass2;
+    var Class kClass3;
     var int iData5;
 };
 
@@ -35,8 +36,9 @@ exec function ExperimentalClassData()
     kData.iData2 = 0xDEADBEEF;
     kData.iData3 = 0xDEADBEEF;
     kData.iData4 = 0xDEADBEEF;
-    kData.kClassOrig = class'XComIdleAnimationStateMachine';
-    kData.kClassNew = class'LWCE_XComIdleAnimationStateMachine';
+    kData.kClass1 = class'XComIdleAnimationStateMachine';
+    kData.kClass2 = class'XComInputBase'; // next class in XComGame, alphabetically, after XComIdleAnimationStateMachine
+    kData.kClass3 = class'LWCE_XComIdleAnimationStateMachine';
     kData.iData5 = 0;
 
     for (I = 0; I < 100; I++)
@@ -44,8 +46,9 @@ exec function ExperimentalClassData()
         arrData.AddItem(kData);
     }
 
-    GetConsole().OutputTextLine("kClassOrig.ObjectInternalInteger = " $ kData.kClassOrig.ObjectInternalInteger);
-    GetConsole().OutputTextLine("kClassNew.ObjectInternalInteger = " $ kData.kClassNew.ObjectInternalInteger);
+    GetConsole().OutputTextLine("kClass1.ObjectInternalInteger = " $ kData.kClass1.ObjectInternalInteger);
+    GetConsole().OutputTextLine("kClass2.ObjectInternalInteger = " $ kData.kClass2.ObjectInternalInteger);
+    GetConsole().OutputTextLine("kClass3.ObjectInternalInteger = " $ kData.kClass3.ObjectInternalInteger);
 
     I = 0; // set breakpoint here
 }

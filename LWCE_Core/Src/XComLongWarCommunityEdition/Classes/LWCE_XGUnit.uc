@@ -4607,11 +4607,12 @@ simulated state Active
 
         GetPathingPawn().MyUnit = none;
 
-        kAction = Spawn(class'LWCE_XGAction_Path', Owner);
-        kAction.Init(self);
-        kAction.SetBoundToClientProxyID(m_iBindNextPathActionToClientProxyActionID);
-        kAction.m_bNoCloseCombat = bNoCloseCombat;
-        AddAction(kAction);
+        // TODO: remove this; no more XGActions
+        // kAction = Spawn(class'LWCE_XGAction_Path', Owner);
+        // kAction.Init(self);
+        // kAction.SetBoundToClientProxyID(m_iBindNextPathActionToClientProxyActionID);
+        // kAction.m_bNoCloseCombat = bNoCloseCombat;
+        // AddAction(kAction);
 
         m_iBindNextPathActionToClientProxyActionID = -1;
     }

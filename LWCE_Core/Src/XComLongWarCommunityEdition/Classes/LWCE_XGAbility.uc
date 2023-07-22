@@ -83,7 +83,7 @@ function name Activate(optional out LWCE_TAbilityResult kOutResult)
     }
 
     bIsHit = `SYNC_RAND(100) < GetHitChance();
-    bIsCrit = bIsHit ? `SYNC_RAND(100) < GetCriticalChance() : false;
+    bIsCrit = bIsHit && `SYNC_RAND(100) < GetCriticalChance();
 
     if (bIsHit && !bIsCrit)
     {

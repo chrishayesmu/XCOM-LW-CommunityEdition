@@ -80,6 +80,8 @@ var delegate<BuildVisualizationDelegate> BuildVisualizationFn;
 
 var string AbilityIcon;
 
+var class<LWCETargetingMethod> TargetingMethod;
+
 var const localized string strFriendlyName;
 var const localized string strHelp; // Short help message for activated abilities in the shot HUD
 var const localized string strDescription; // Longer description of the ability, shown in the tactical details HUD (F1)
@@ -254,4 +256,5 @@ defaultproperties
 {
 	Hostility=eHostility_Offensive
 	UseWithWeaponSlot=eAWS_None
+    TargetingMethod=class'LWCETargetingMethod_OverTheShoulder'
 }

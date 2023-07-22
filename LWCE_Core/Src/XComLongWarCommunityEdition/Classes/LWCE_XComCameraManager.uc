@@ -1,5 +1,6 @@
 class LWCE_XComCameraManager extends XComCameraManager;
 
+`if(`notdefined(FINAL_RELEASE))
 simulated function UpdateVisibilityUnit(XGUnit kUnit)
 {
     if (kUnit == none)
@@ -10,3 +11,4 @@ simulated function UpdateVisibilityUnit(XGUnit kUnit)
 
     super.UpdateVisibilityUnit(kUnit);
 }
+`endif

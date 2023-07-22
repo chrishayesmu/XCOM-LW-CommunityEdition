@@ -67,15 +67,15 @@ struct {QWORD} qword
 // UObject variables.
 
 // Internal variables.
-var native private const editconst noexport		pointer VfTableObject;
-var native private const editconst				pointer HashNext;
-var native private const editconst				qword ObjectFlags;			// This needs to be 8-byte aligned in 32-bit!
-var native private const editconst				pointer HashOuterNext;
-var native private const editconst				pointer StateFrame;
-var native private const editconst noexport		Object Linker;
-var native private const editconst noexport		pointer LinkerIndex;
-var native private const editconst noexport		int ObjectInternalInteger;
-var native private const editconst noexport		int NetIndex;
+var native const editconst noexport		        pointer VfTableObject;
+var native const editconst				        pointer HashNext;
+var native const editconst				        qword ObjectFlags;			// This needs to be 8-byte aligned in 32-bit!
+var native const editconst				        pointer HashOuterNext;
+var native const editconst				        pointer StateFrame;
+var native const editconst noexport		        Object Linker;
+var native const editconst noexport		        pointer LinkerIndex;
+var native const editconst noexport		        int ObjectInternalInteger;
+var native const editconst noexport		        int NetIndex;
 var native const editconst						Object Outer;
 var() native const editconst					name Name;
 var native const editconst						class Class;
