@@ -488,12 +488,6 @@ function bool LWCE_HasFoundryPrereqs(name ProjectName)
         return false;
     }
 
-    // Mod hook for custom prereqs
-    if (!`LWCE_MOD_LOADER.Override_HasFoundryPrereqs(kTech))
-    {
-        return false;
-    }
-
     return true;
 }
 
@@ -511,12 +505,6 @@ function bool LWCE_HasPrereqs(name TechName)
     kTech = m_kTechTemplateMgr.FindTechTemplate(TechName);
 
     if (!`LWCE_HQ.ArePrereqsFulfilled(kTech.kPrereqs))
-    {
-        return false;
-    }
-
-    // Mod hook for custom prereqs
-    if (!`LWCE_MOD_LOADER.Override_HasPrereqs(kTech))
     {
         return false;
     }

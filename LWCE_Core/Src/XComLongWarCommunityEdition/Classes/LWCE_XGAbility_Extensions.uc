@@ -1156,8 +1156,6 @@ static simulated function GetCritSummary(XGAbility_Targeted kSelf, out TShotInfo
         kInfo.arrCritBonusStrings.AddItem(kPerksMgr.GetBonusTitle(`LW_PERK_ID(CombatDrugs)));
         kInfo.arrCritBonusValues.AddItem(`LWCE_TACCFG(iCombatDrugsCritChanceBonus));
     }
-
-    `LWCE_MOD_LOADER.AddCritChanceModifiers(kSelf, kInfo);
 }
 
 static simulated function string GetHelpText(XGAbility kSelf)
@@ -2115,8 +2113,6 @@ static simulated function GetShotSummary(XGAbility_Targeted kSelf, out TShotResu
         kInfo.arrHitPenaltyStrings.AddItem(kPerksMgr.GetPenaltyTitle(`LW_PERK_ID(RangePenalty)));
         kInfo.arrHitPenaltyValues.AddItem(iMod);
     }
-
-    `LWCE_MOD_LOADER.AddHitChanceModifiers(kSelf, kInfo);
 
     if (kSelf.ShouldShowCritPercentage())
     {

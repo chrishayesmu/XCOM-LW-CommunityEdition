@@ -4454,8 +4454,6 @@ function UpdateItemCharges()
             }
         }
     }
-
-    `LWCE_MOD_LOADER.OnUpdateItemCharges(self);
 }
 
 reliable server function UpdateUnitBuffs()
@@ -4483,8 +4481,6 @@ reliable server function UpdateUnitBuffs()
         }
     }
 
-    `LWCE_MOD_LOADER.OnRegenBonusPerks(self, none);
-
     // Passives
     m_arrCEPassives.Remove(0, m_arrCEPassives.Length);
 
@@ -4496,8 +4492,6 @@ reliable server function UpdateUnitBuffs()
         }
     }
 
-    `LWCE_MOD_LOADER.OnRegenPassivePerks(self);
-
     // Penalties
     m_arrCEPenalties.Remove(0, m_arrCEPenalties.Length);
 
@@ -4508,8 +4502,6 @@ reliable server function UpdateUnitBuffs()
             m_arrCEPenalties.AddItem(m_arrPenalties[Index]);
         }
     }
-
-    `LWCE_MOD_LOADER.OnRegenPenaltyPerks(self);
 }
 
 simulated event SetBETemplate()

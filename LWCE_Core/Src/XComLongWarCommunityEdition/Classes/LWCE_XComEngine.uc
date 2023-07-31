@@ -5,6 +5,7 @@ var config array<string> arrDataSets;
 var config array<string> arrDataTemplateManagers;
 
 var LWCEContentManager m_kCEContentMgr;
+var LWCEModLoader m_kModLoader;
 
 var private array< class<LWCEDataSet> > m_arrDataSets;
 var private array<LWCEDataTemplateManager> m_arrDataTemplateManagers;
@@ -47,6 +48,11 @@ static function DownloadableContentManager LWCE_GetDLCManager()
 static function LWCEEventManager GetEventManager()
 {
     return LWCE_XComEngine(GetEngine()).m_kEventManager;
+}
+
+static function LWCEModLoader GetModLoader()
+{
+    return LWCE_XComEngine(GetEngine()).m_kModLoader;
 }
 
 static function LWCEDataTemplateManager GetTemplateManager(class<LWCEDataTemplateManager> TemplateManagerClass)

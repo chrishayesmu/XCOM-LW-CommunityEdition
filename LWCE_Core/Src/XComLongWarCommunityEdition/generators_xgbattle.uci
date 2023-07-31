@@ -37,8 +37,6 @@ simulated state Running \
     event BeginState(name PrevState) \
     { \
         super.BeginState(PrevState); \
-\
-        `LWCE_MOD_LOADER.OnBattleBegin(self); \
     } \
 \
     simulated event Tick(float fDeltaT) \

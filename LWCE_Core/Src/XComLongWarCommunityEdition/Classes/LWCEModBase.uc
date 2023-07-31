@@ -8,12 +8,9 @@ class LWCEModBase extends Object
  * These variables should be set in the defaultproperties block of overriding classes.
  ******************************************************/
 
+// TODO: source these from somewhere else
 var string ModFriendlyName;  // A string that can be shown to the player as the mod's name
 var TModVersion VersionInfo; // Version information for the mod
-var LWCE_TRange ModIDRange;    // See https://github.com/chrishayesmu/XCOM-LW-CommunityEdition/wiki/Choosing-an-ID-range-for-your-mod
-                               // You must set this for your mod to be loaded!
-var Class<LWCEStrategyListener> StrategyListenerClass; // A class to instantiate while in XCOM HQ.
-var Class<LWCETacticalListener> TacticalListenerClass; // A class to instantiate at the beginning of tactical battles.
 
 // END SECTION
 
@@ -29,8 +26,5 @@ function OnModLoaded();
 defaultproperties
 {
     ModFriendlyName=""
-    ModIDRange=(MinInclusive=-1, MaxInclusive=-1)
     VersionInfo=(Major=0, Minor=0, Revision=0)
-    StrategyListenerClass=none
-    TacticalListenerClass=none
 }

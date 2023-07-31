@@ -207,8 +207,6 @@ function BuildClassDefinitions()
                 break;
         }
     }
-
-    `LWCE_MOD_LOADER.OnClassDefinitionsBuilt(arrSoldierClasses);
 }
 
 function int CalcTotalSoldierRanks()

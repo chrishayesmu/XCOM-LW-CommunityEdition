@@ -540,13 +540,6 @@ function ApplyActionCost(XGAbility_Targeted kAbility)
     }
 }
 
-simulated function BuildAbilities()
-{
-    super.BuildAbilities();
-
-    `LWCE_MOD_LOADER.OnAbilitiesBuilt(m_arrAbilities);
-}
-
 simulated event GetVolume(XGAbility_Targeted kAbility, out TVolume kVolume)
 {
     local LWCE_XGUnit kUnit;

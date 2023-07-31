@@ -167,7 +167,6 @@ function bool AreReaperRoundsValid(XGStrategySoldier kSoldier)
 
 function AutoEquip(XGStrategySoldier kSoldier)
 {
-    local name ItemName;
     local LWCE_TInventory kRookieLoadout;
 
     ReleaseLoadout(kSoldier);
@@ -182,14 +181,7 @@ function AutoEquip(XGStrategySoldier kSoldier)
         kRookieLoadout.nmArmor = 'Item_TacVest';
     }
 
-    if (`LWCE_MOD_LOADER.Override_GetInfiniteSecondary(kSoldier, ItemName))
-    {
-        kRookieLoadout.nmPistol = ItemName;
-    }
-    else
-    {
-        kRookieLoadout.nmPistol = 'Item_Pistol';
-    }
+    kRookieLoadout.nmPistol = 'Item_Pistol';
 
     class'LWCEInventoryUtils'.static.SetLargeItem(kRookieLoadout, 0, 'Item_AssaultCarbine');
 
@@ -232,11 +224,6 @@ function AutoEquip(XGStrategySoldier kSoldier)
         case 5:
             class'LWCEInventoryUtils'.static.SetSmallItem(kRookieLoadout, 1, 'Item_Medikit');
             break;
-    }
-
-    if (`LWCE_MOD_LOADER.Override_GetInfinitePrimary(kSoldier, ItemName))
-    {
-        class'LWCEInventoryUtils'.static.SetLargeItem(kRookieLoadout, 0, ItemName);
     }
 
     LWCE_XGFacility_Lockers(LOCKERS()).LWCE_ApplySoldierLoadout(kSoldier, kRookieLoadout);
@@ -482,12 +469,7 @@ function array<LWCEItemTemplate> LWCE_GetCorpses()
 
 function name LWCE_GetInfinitePistol(XGStrategySoldier kSoldier)
 {
-    local name ItemName;
-
-    if (`LWCE_MOD_LOADER.Override_GetInfinitePistol(kSoldier, ItemName))
-    {
-        return ItemName;
-    }
+    // TODO add a mod hook here
 
     return 'Item_Pistol';
 }
@@ -500,13 +482,7 @@ function EItemType GetInfinitePrimary(XGStrategySoldier kSoldier)
 
 function name LWCE_GetInfinitePrimary(LWCE_XGStrategySoldier kSoldier)
 {
-    local name ItemName;
     local LWCE_TClassDefinition kClassDef;
-
-    if (`LWCE_MOD_LOADER.Override_GetInfinitePrimary(kSoldier, ItemName))
-    {
-        return ItemName;
-    }
 
     kClassDef = LWCE_XGFacility_Barracks(BARRACKS()).GetClassDefinition(kSoldier.m_kCESoldier.iSoldierClassId);
 
@@ -535,13 +511,6 @@ function EItemType GetInfiniteSecondary(XGStrategySoldier kSoldier)
 
 function name LWCE_GetInfiniteSecondary(XGStrategySoldier kSoldier)
 {
-    local name ItemName;
-
-    if (`LWCE_MOD_LOADER.Override_GetInfiniteSecondary(kSoldier, ItemName))
-    {
-        return ItemName;
-    }
-
     if (kSoldier.HasPerk(`LW_PERK_ID(FireRocket)))
     {
         return 'Item_RocketLauncher';

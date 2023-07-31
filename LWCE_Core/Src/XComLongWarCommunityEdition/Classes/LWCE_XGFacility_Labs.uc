@@ -1087,8 +1087,6 @@ function OnResearchCompleted()
         }
     }
 
-    `LWCE_MOD_LOADER.OnResearchCompleted(TechName);
-
     kGeoscape.LWCE_Alert(`LWCE_ALERT('ResearchCompleted').AddName(TechName).Build());
 }
 
@@ -1228,8 +1226,6 @@ function LWCE_SetNewProject(name TechName)
             Base().DoAlienInterrogation(EItemType(iCaptiveItemId));
         }
     }
-
-    `LWCE_MOD_LOADER.OnResearchStarted(TechName);
 
     if (m_kCEProject.iActualHoursLeft == 0)
     {

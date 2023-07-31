@@ -53,8 +53,6 @@ function FinishPendingSpawnUnit() \
         } \
 \
         TriggerGlobalEventClass(class'SeqEvent_OnUnitSpawned', SpawnedUnit); \
-\
-        `LWCE_MOD_LOADER.OnUnitSpawned(SpawnedUnit); \
     } \
     `LWCE_LOG_CLS("FinishPendingSpawnUnit end"); \
 } \

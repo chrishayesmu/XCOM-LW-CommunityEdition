@@ -6,7 +6,6 @@ OBJECT = XComGameInfo.InitGame : AUTO
 [REPLACEMENT_CODE]
 1B <AddMutator> 1F <%t "XComMutator.XComMutatorLoader"> 27 16
 1B <AddMutator> 1F <%t "XComLongWarCommunityEdition.LWCEBaseMutator"> 27 16
-1B <AddMutator> 1F <%t "XComLongWarCommunityEdition.LWCEModLoader"> 27 16
 07 [@label_0x0079] 77 01 <Engine.GameInfo.BaseMutator> 2A 16
     19 01 <Engine.GameInfo.BaseMutator> [@] <NullRef> 00 ( 1B <Mutate> 1F <%t "XComGameInfo.InitGame"> 1C <Engine.Actor.GetALocalPlayerController> 16 16 )
 [#label_0x0079]

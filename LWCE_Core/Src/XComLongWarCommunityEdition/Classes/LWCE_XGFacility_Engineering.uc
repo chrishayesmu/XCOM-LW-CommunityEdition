@@ -809,9 +809,6 @@ function LWCE_AddFoundryProject(out LWCE_TFoundryProject kProject)
     LWCE_AddFoundryProjectToQueue(kProject);
     PRES().GetMgr(class'LWCE_XGFoundryUI').UpdateView();
     m_bStartedFoundryProject = true;
-
-    // Notify mods of this project
-    `LWCE_MOD_LOADER.OnFoundryProjectAddedToQueue(kProject, `LWCE_FTECH(kProject.ProjectName));
 }
 
 function AddFoundryProjectToQueue(out TFoundryProject kProject)
@@ -851,9 +848,6 @@ function CancelFoundryProject(int iIndex)
     }
 
     RemoveFoundryProject(kProject.iIndex);
-
-    // Notify mods that a project is canceled
-    `LWCE_MOD_LOADER.OnFoundryProjectCanceled(kProject, `LWCE_FTECH(kProject.ProjectName));
 }
 
 function ChangeFoundryIndex(int iOldIndex, int iNewIndex)
@@ -1110,10 +1104,6 @@ function OnFoundryProjectCompleted(int iProjectIndex)
         Achieve(AT_Skunkworks);
     }
 
-    // Notify mods that a project is complete
-    `LWCE_MOD_LOADER.OnFoundryProjectCompleted(m_arrCEFoundryProjects[iProjectIndex], `LWCE_FTECH(m_arrCEFoundryProjects[iProjectIndex].ProjectName));
-
-    // Do this afterwards because it can also contain a mod hook and this order makes the most sense from a modder's perspective
     BARRACKS().UpdateFoundryPerks();
 }
 
@@ -2012,8 +2002,6 @@ function OnItemProjectCompleted(int iProject, optional bool bInstant)
         kAlert = `LWCE_ALERT('ItemProjectCompleted').AddName(m_arrCEItemProjects[iProject].ItemName).AddInt(m_arrCEItemProjects[iProject].iQuantity).AddInt(m_arrCEOldRebates.Length - 1).Build();
         LWCE_XGGeoscape(GEOSCAPE()).LWCE_Alert(kAlert);
     }
-
-    `LWCE_MOD_LOADER.OnItemCompleted(m_arrCEItemProjects[iProject], m_arrCEItemProjects[iProject].iQuantity, bInstant);
 }
 
 function string RecordCanceledItemConstruction(TItemProject Project)

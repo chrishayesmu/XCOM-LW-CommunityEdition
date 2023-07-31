@@ -911,8 +911,6 @@ simulated function BuildPerkTables()
     LWCE_BuildPerk(169, ePerkCat_Passive, "ElectroPulse",              true,       false,       false);
     LWCE_BuildPerk(170, ePerkCat_Passive, "LeadByExample",             true,       false,       false);
     LWCE_BuildPerk(171, ePerkCat_Passive, "LeadByExample",             true,       false,       false);
-
-    `LWCE_MOD_LOADER.OnPerksBuilt(m_arrCEPerks);
 }
 
 simulated function BuildPerkTrees()
@@ -928,8 +926,6 @@ simulated function BuildPerkTrees()
     {
         arrSoldierClasses.AddItem(kPerkTree);
     }
-
-    `LWCE_MOD_LOADER.OnPerkTreesBuilt(arrSoldierClasses, arrPsionicClasses);
 }
 
 simulated function LWCE_BuildPerk(int iPerkId, int iCategory, string strImage, bool bShowPerk, bool bIsGeneMod, bool bIsPsionic)
@@ -1078,28 +1074,9 @@ simulated function string GetPerkDescription(int iPerkId, optional EPerkBuffCate
 /// </summary>
 simulated function string GetDynamicPerkDescription(int iPerkId, LWCE_XGUnit kUnit, EPerkBuffCategory perkCategory)
 {
-    local string strText;
-
-    switch (perkCategory)
-    {
-        case ePerkBuff_Bonus:
-            strText = `LWCE_MOD_LOADER.GetDynamicBonusDescription(iPerkId, kUnit);
-            break;
-        case ePerkBuff_Penalty:
-            strText = `LWCE_MOD_LOADER.GetDynamicPenaltyDescription(iPerkId, kUnit);
-            break;
-        case ePerkBuff_Passive:
-        default:
-            strText = GetPerkDescription(iPerkId, ePerkBuff_Passive); // Passives are never shown in context-sensitive areas
-            break;
-    }
-
-    if (strText == "")
-    {
-        strText = GetPerkDescription(iPerkId, perkCategory);
-    }
-
-    return strText;
+    // TODO: dynamic logic temporarily removed due to deprecation of old modding system; need to add 
+    // new methods in ability framework overhaul
+    return GetPerkDescription(iPerkId, perkCategory);
 }
 
 static function EPerkType GetMecPerkForClass(ESoldierClass eSoldier)
