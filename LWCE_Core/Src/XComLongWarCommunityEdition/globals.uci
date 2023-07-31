@@ -8,7 +8,7 @@
 `define LWCE_LOG_NOT_IMPLEMENTED(funcname) `LWCE_LOG_CLS("ERROR: function `{funcname} has not yet been implemented");
 
 `define LWCE_EVENT_MGR (class'LWCE_XComEngine'.static.GetEventManager())
-`define LWCE_MOD_LOADER (class'LWCEModLoader'.static.GetModLoader())
+`define LWCE_MOD_LOADER (class'LWCE_XComEngine'.static.GetModLoader())
 
 `define COLORTOSTR(clr) ("(R=" $ `clr.R $ ", G=" $ `clr.G $ ", B=" $ `clr.B $ ", A=" $ `clr.A $ ")")
 
