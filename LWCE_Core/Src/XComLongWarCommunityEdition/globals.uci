@@ -1,7 +1,27 @@
 `include(XComGame\Globals.uci);
 
-`define LWCE_LOG(msg, cond) `LOG(`msg, `cond, 'XComLongWarCommunityEdition')
-`define LWCE_LOG_CLS(msg, cond) `LOG(string(default.Class) $ ": " $ `msg, `cond, 'XComLongWarCommunityEdition')
+`define LWCE_LOG_LEVEL(msg, cond, level)\
+  `if(`cond)\
+	`LOG(string(default.Class) $ ": " $ `msg, `cond && `level >= class'LWCE_XComEngine'.default.LogLevel, 'XComLongWarCommunityEdition')\
+  `else\
+	`LOG(string(default.Class) $ ": " $ `msg, `level >= class'LWCE_XComEngine'.default.LogLevel, 'XComLongWarCommunityEdition')\
+  `endif
+
+// Log macros for various log levels. Prepends the message with a level label.
+`define LWCE_LOG_DEBUG(msg, cond)   `LWCE_LOG_LEVEL("[DEBUG  ] " $ `msg, `cond, 0)
+`define LWCE_LOG_VERBOSE(msg, cond) `LWCE_LOG_LEVEL("[VERBOSE] " $ `msg, `cond, 1)
+`define LWCE_LOG_INFO(msg, cond)    `LWCE_LOG_LEVEL("[INFO   ] " $ `msg, `cond, 2)
+`define LWCE_LOG_WARN(msg, cond)    `LWCE_LOG_LEVEL("[WARN   ] " $ `msg, `cond, 3)
+`define LWCE_LOG_ERROR(msg, cond)   `LWCE_LOG_LEVEL("[ERROR  ] " $ `msg, `cond, 4)
+
+// Alias LWCE_LOG to be LWCE_LOG_INFO as the default log level
+`define LWCE_LOG(msg, cond) `LWCE_LOG_INFO(`msg, `cond)
+
+// TODO: get rid of LWCE_LOG_CLS and just use LWCE_LOG. We can do this in bulk once
+// all outstanding feature branches are merged into master
+`define LWCE_LOG_CLS(msg, cond) `LWCE_LOG(`msg, `cond)
+
+// Special log macros for specific situations
 `define LWCE_LOG_DEPRECATED(funcname) `LWCE_LOG("ERROR: LWCE-incompatible function `{funcname} was called. This needs to be replaced with LWCE_`funcname. Stack trace follows."); ScriptTrace();
 `define LWCE_LOG_DEPRECATED_CLS(funcname) `LWCE_LOG_CLS("ERROR: LWCE-incompatible function `{funcname} was called. This needs to be replaced with LWCE_`funcname. Stack trace follows."); ScriptTrace();
 `define LWCE_LOG_DEPRECATED_NOREPLACE_CLS(funcname) `LWCE_LOG_CLS("ERROR: LWCE-incompatible function `{funcname} was called. This function is deprecated and unavailable. Stack trace follows."); ScriptTrace();

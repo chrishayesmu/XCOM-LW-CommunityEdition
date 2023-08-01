@@ -1,6 +1,14 @@
 class LWCE_XComEngine extends XComEngine
     config(LWCEEngine);
 
+// Current level of logging. Logs are only emitted if they match or exceed the log level.
+//   0 - debug
+//   1 - verbose
+//   2 - info
+//   3 - warn
+//   4 - error
+var config int LogLevel;
+
 var config array<string> arrDataSets;
 var config array<string> arrDataTemplateManagers;
 
@@ -92,31 +100,31 @@ function LWCE_Init()
 
     m_bInitialized = true;
 
-    `LWCE_LOG_CLS("Beginning initialization of LWCE engine...");
+    `LWCE_LOG("Beginning initialization of LWCE engine...");
 
-    `LWCE_LOG_CLS("Searching for mods to install...");
+    `LWCE_LOG("Searching for mods to install...");
     InstallMods();
 
-    `LWCE_LOG_CLS("Initializing data template managers...");
+    `LWCE_LOG("Initializing data template managers...");
     CreateDataTemplateManagers();
 
-    `LWCE_LOG_CLS("Initializing datasets...");
+    `LWCE_LOG("Initializing datasets...");
     LoadDataSetClasses();
 
-    `LWCE_LOG_CLS("Calling CreateTemplates on all datasets...");
+    `LWCE_LOG("Calling CreateTemplates on all datasets...");
     CreateDataSetTemplates();
 
-    `LWCE_LOG_CLS("Calling OnPostTemplatesCreated on all datasets...");
+    `LWCE_LOG("Calling OnPostTemplatesCreated on all datasets...");
     OnPostTemplatesCreated();
 
-    `LWCE_LOG_CLS("Validating data template managers...");
+    `LWCE_LOG("Validating data template managers...");
     ValidateDataTemplateManagers();
 
-    `LWCE_LOG_CLS("Creating content manager...");
+    `LWCE_LOG("Creating content manager...");
     m_kCEContentMgr = new (self) class'LWCEContentManager';
     m_kCEContentMgr.Init();
 
-    `LWCE_LOG_CLS("Creating event manager...");
+    `LWCE_LOG("Creating event manager...");
     m_kEventManager = new (self) class'LWCEEventManager';
 }
 
@@ -137,7 +145,7 @@ private function AssignTemplateToManager(LWCEDataTemplate kTemplate)
 
     if (!bAdded)
     {
-        `LWCE_LOG_CLS("ERROR: could not locate an appropriate template manager for template " $ kTemplate.DataName $ " of class " $ kTemplate.Class.Name $ ". This template will not be usable.");
+        `LWCE_LOG_ERROR("ERROR: could not locate an appropriate template manager for template " $ kTemplate.DataName $ " of class " $ kTemplate.Class.Name $ ". This template will not be usable.");
     }
 }
 
@@ -147,7 +155,7 @@ private function CreateDataTemplateManagers()
     local class<LWCEDataTemplateManager> kClass;
     local LWCEDataTemplateManager kTemplateManager;
 
-    `LWCE_LOG_CLS("Attempting to load " $ arrDataTemplateManagers.Length $ " data template managers");
+    `LWCE_LOG("Attempting to load " $ arrDataTemplateManagers.Length $ " data template managers");
 
     for (Index = 0; Index < arrDataTemplateManagers.Length; Index++)
     {
@@ -155,7 +163,7 @@ private function CreateDataTemplateManagers()
 
         if (kClass == none)
         {
-            `LWCE_LOG_CLS("ERROR: failed to load template manager with class name '" $ arrDataTemplateManagers[Index] $ "'");
+            `LWCE_LOG_ERROR("ERROR: failed to load template manager with class name '" $ arrDataTemplateManagers[Index] $ "'");
             continue;
         }
 
@@ -165,7 +173,7 @@ private function CreateDataTemplateManagers()
         m_arrDataTemplateManagers.AddItem(kTemplateManager);
     }
 
-    `LWCE_LOG_CLS("Finished loading " $ m_arrDataTemplateManagers.Length $ " data template managers");
+    `LWCE_LOG("Finished loading " $ m_arrDataTemplateManagers.Length $ " data template managers");
 }
 
 private function CreateDataSetTemplates()
@@ -177,7 +185,7 @@ private function CreateDataSetTemplates()
     {
         arrTemplates = m_arrDataSets[iDataSet].static.CreateTemplates();
 
-        `LWCE_LOG_CLS("DataSet class " $ m_arrDataSets[iDataSet].Name $ " generated " $ arrTemplates.Length $ " templates");
+        `LWCE_LOG("DataSet class " $ m_arrDataSets[iDataSet].Name $ " generated " $ arrTemplates.Length $ " templates");
 
         for (iTemplate = 0; iTemplate < arrTemplates.Length; iTemplate++)
         {
@@ -223,7 +231,7 @@ private function LoadDataSetClasses()
 
         if (kDataSet == none)
         {
-            `LWCE_LOG_CLS("ERROR: could not load configured LWCEDataSet class " $ arrDataSets[Index]);
+            `LWCE_LOG_ERROR("ERROR: could not load configured LWCEDataSet class " $ arrDataSets[Index]);
             continue;
         }
 
@@ -239,11 +247,11 @@ private function OnFindDLCComplete()
     // We just do a little logging here for user friendliness, the mods are already fully installed at this point
     kDLCEnum = LWCE_GetDLCEnumerator();
 
-    `LWCE_LOG_CLS("Found " $ kDLCEnum.DLCBundles.Length $ " mods to load.");
+    `LWCE_LOG("Found " $ kDLCEnum.DLCBundles.Length $ " mods to load.");
 
     for (Index = 0; Index < kDLCEnum.DLCBundles.Length;  Index++)
     {
-        `LWCE_LOG_CLS("Found mod #" $ (Index + 1) $ ": " $ kDLCEnum.DLCBundles[Index].FriendlyName $ ". Path is " $ kDLCEnum.DLCBundles[Index].ContentPath);
+        `LWCE_LOG_VERBOSE("Found mod #" $ (Index + 1) $ ": " $ kDLCEnum.DLCBundles[Index].FriendlyName $ ". Path is " $ kDLCEnum.DLCBundles[Index].ContentPath);
     }
 
     // Extremely important to clear this delegate; otherwise when we change maps, garbage collection will fail due to
@@ -279,7 +287,7 @@ private function ValidateDataTemplateManagers()
 
         if (bAnyInvalid)
         {
-            `LWCE_LOG_CLS("One or more template managers had invalid templates. Validating all template managers again to check for newly-invalidated dependencies.");
+            `LWCE_LOG_VERBOSE("One or more template managers had invalid templates. Validating all template managers again to check for newly-invalidated dependencies.");
         }
     }
 }
