@@ -200,21 +200,13 @@ private function CreateDataSetTemplates()
 /// </summary>
 private function InstallMods()
 {
-    local DownloadableContentEnumerator kDLCEnum;
-    local DownloadableContentManager kDLCManager;
+    if (m_kModLoader != none)
+    {
+        return;
+    }
 
-    // Add our delegate just for some logging; the actual installation is completely
-    // handled by RefreshDLC below. Eventually we can extend this to only loading mods
-    // we want active, based on some external input.
-    kDLCEnum = LWCE_GetDLCEnumerator();
-    kDLCEnum.AddFindDLCDelegate(OnFindDLCComplete);
-
-    // Start the actual installation. By default, this won't work. The native functions will calculate a
-    // CRC for the "DLC" files, and when it doesn't match, those mods will be ignored and never get installed.
-    // To make this work, you need the corresponding exe modifications performed in the installation process,
-    // which simply make the outcome of the CRC check irrelevant.
-    kDLCManager = LWCE_GetDLCManager();
-    kDLCManager.RefreshDLC();
+    m_kModLoader = new (self) class'LWCEModLoader';
+    m_kModLoader.LoadMods();
 }
 
 /// <summary>
@@ -237,26 +229,6 @@ private function LoadDataSetClasses()
 
         m_arrDataSets.AddItem(kDataSet);
     }
-}
-
-private function OnFindDLCComplete()
-{
-    local int Index;
-    local DownloadableContentEnumerator kDLCEnum;
-
-    // We just do a little logging here for user friendliness, the mods are already fully installed at this point
-    kDLCEnum = LWCE_GetDLCEnumerator();
-
-    `LWCE_LOG("Found " $ kDLCEnum.DLCBundles.Length $ " mods to load.");
-
-    for (Index = 0; Index < kDLCEnum.DLCBundles.Length;  Index++)
-    {
-        `LWCE_LOG_VERBOSE("Found mod #" $ (Index + 1) $ ": " $ kDLCEnum.DLCBundles[Index].FriendlyName $ ". Path is " $ kDLCEnum.DLCBundles[Index].ContentPath);
-    }
-
-    // Extremely important to clear this delegate; otherwise when we change maps, garbage collection will fail due to
-    // lingering references to old map objects, because DLCEnum is owned by the engine
-    kDLCEnum.ClearFindDLCDelegate(OnFindDLCComplete);
 }
 
 private function OnPostTemplatesCreated()
