@@ -82,6 +82,19 @@ XCOM: Enemy Within was built using the 2011-09 version of the UDK, so we use the
 
 After installing the UDK, navigate to `UDK_PATH` and check that you have the folders `Binaries`, `Development`, `Engine`, and `UDKGame`. To check that you are set up properly, execute `UDK_PATH/Binaries/Win32/UDK.exe make` to build the sample game that comes with the installer.
 
+### Installing LWCE
+
+To proceed, you'll need to have LWCE itself installed. We're going to use the same installation process that players use. This will apply binary patches to `XComEW.exe` that are annoying to apply by hand, as well as a few other necessary changes. Head over to [Releases](https://github.com/chrishayesmu/XCOM-LW-CommunityEdition/releases) and grab the most recent release, then install it.
+
+### Setting up your dev environment
+
+With the UDK and LWCE both installed, we still need to configure the dev environment. If you're on Windows, there's a PowerShell script to do this for you. Navigate to [Scripts/setup_lwce_dev.ps1](./Scripts/setup_lwce_dev.ps1) and run it as administrator. Follow the steps of the script to set up your environment.
+
+If for some reason you can't use the setup script, or don't want to, expand the section below to see manual setup steps.
+
+<details>
+<summary>Instructions for manual setup (not recommended)</summary>
+
 ### Adding XCOM stubs to the UDK
 
 To build against XCOM's APIs, we need to know its classes and their functions. We do this using **stubs**, which contain only the classes and function signatures, without including the body of any functions (which would be very difficult to get to build successfully). Note that the stubs are ***incomplete***, and periodically we have to add functions or even entire classes to them. For this reason, we use symlinks rather than just copying them into the UDK directory.
@@ -113,26 +126,6 @@ We're going to replace these with the XCOM packages, like this:
 
 Once you've saved the file, execute `UDK_PATH/Binaries/Win32/UDK.exe make` again. You will likely see a bunch of warnings, since we're only building stubs and not real functions, but you should not receive any errors. If the build succeeds for all packages, your stubs are set up correctly.
 
-### Installing an IDE
-
-You can edit UnrealScript files any way you like, including a basic notepad editor if you want. One setup which works well is using [Visual Studio Code](https://code.visualstudio.com/), which is free and relatively lightweight. You can install the [UnrealScript](https://marketplace.visualstudio.com/items?itemName=EliotVU.uc) extension to get language support, though many of the features may only work sporadically. It still provides syntax highlighting at minimum, which is well worth having.
-
-If you're using VS Code, you can also create [a custom build task](https://code.visualstudio.com/docs/editor/tasks#_custom-tasks) which executes `UDK_PATH/Binaries/Win32/UDK.exe make`, so that you can build by simply pressing <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>B</kbd>. Here's an example of the task JSON, which you can adjust for your own `UDK_PATH`:
-
-```
-{
-    "version": "2.0.0",
-    "tasks": [
-        {
-            "label": "UDK Build (Debug)",
-            "type": "shell",
-            "command": "C:\\UDK\\UDK-2011-09\\Binaries\\Win32\\UDK.exe make",
-            "group": "build"
-        }
-    ]
-}
-```
-
 ## First time setup for LWCE
 
 ### Building through the UDK
@@ -150,9 +143,7 @@ If the build succeeds then you should be good to go as far as building LWCE loca
 
 > :warning: Before following these steps, make sure you have XCOM: Enemy Within installed, with [Long War 1.0](https://www.nexusmods.com/xcom/mods/88/) installed on top. We're using bytecode modification to inject LWCE, so any differences in your environment could cause it to fail. Leaving other small mods installed might be fine, but if you have another Long War version, or you have a similarly large mod installed, things are likely to break.
 
-Now that you've built LWCE, connecting it to the game is straightforward. We're going to start by using the same installation process that players use. This will apply binary patches to `XComEW.exe` that are annoying to apply by hand, as well as a few other changes. Head over to [Releases](https://github.com/chrishayesmu/XCOM-LW-CommunityEdition/releases) and grab the most recent release, then install it.
-
-Now you're running LWCE, but it's the same version as everyone else - it isn't your locally built version. Let's change that. You will need to know the directory that XCOM is installed in, such as `C:\Program Files (x86)\Steam\steamapps\common\XCom-Enemy-Unknown`. This will be referred to as `XCOM_PATH`.
+You're running LWCE, but it's the same version as everyone else - it isn't your locally built version. Let's change that. You will need to know the directory that XCOM is installed in, such as `C:\Program Files (x86)\Steam\steamapps\common\XCom-Enemy-Unknown`. This will be referred to as `XCOM_PATH`.
 
 The steps below will instruct you to create symbolic links for many files. Those files will already exist under `XCOM_PATH` due to running the installer. Any time you're making a symlink, make sure to go delete the existing file in `XCOM_PATH` first. By using a symlink, each time you build LWCE, the latest version will be picked up by the game automatically. If you're only changing `.ini` files, you won't even need to build.
 
@@ -175,6 +166,28 @@ These steps are similar to LWCE Core, but the paths are different.
    * If the mod source contains any code, the mod in `XCOM_PATH` should have a folder called `Script`. Inside of that, make a symlink to the mod's `.u` file from `UDK_PATH/UDKGame/Script`. (For example, `Mods/LWCEGraphicsPack/Script` contains a symlink pointing to `UDK_PATH/UDKGame/Script/LWCEGraphicsPack.u`.)
 
 At this point, if you launch XCOM, you should be running LWCE. The easiest way to confirm this is that the main menu will have a (non-functional) button called "Mod Settings". The next step is to enable the log window while playing, to make debugging much easier.
+
+</details>
+
+### Installing an IDE
+
+You can edit UnrealScript files any way you like, including a basic notepad editor if you want. One setup which works well is using [Visual Studio Code](https://code.visualstudio.com/), which is free and relatively lightweight. You can install the [UnrealScript](https://marketplace.visualstudio.com/items?itemName=EliotVU.uc) extension to get language support, though many of the features may only work sporadically. It still provides syntax highlighting at minimum, which is well worth having.
+
+If you're using VS Code, you can also create [a custom build task](https://code.visualstudio.com/docs/editor/tasks#_custom-tasks) which executes `UDK_PATH/Binaries/Win32/UDK.exe make`, so that you can build by simply pressing <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>B</kbd>. Here's an example of the task JSON, which you can adjust for your own `UDK_PATH`:
+
+```
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "UDK Build (Debug)",
+            "type": "shell",
+            "command": "C:\\UDK\\UDK-2011-09\\Binaries\\Win32\\UDK.exe make",
+            "group": "build"
+        }
+    ]
+}
+```
 
 ### Viewing XCOM logs
 
