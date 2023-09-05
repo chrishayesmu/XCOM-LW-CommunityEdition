@@ -745,6 +745,22 @@ function EResearchProgress LWCE_GetProgress(name TechName)
     }
 }
 
+/// <summary>
+/// Immediately marks the given technology as researched. Does not trigger any of the normal
+/// events when a research is completed (e.g. popping up a Geoscape alert or showing newly-available
+/// items and Foundry projects when visiting the Labs). Importantly, if the tech given is the one
+/// currently being researched, this also will not remove the tech from the research queue!
+/// </summary>
+/// <remarks>
+/// This is mostly meant for use when giving out techs at the start of the campaign.
+/// </remarks>
+function GiveTech(name TechName)
+{
+    if (m_arrCEResearched.Find(TechName) == INDEX_NONE) {
+        m_arrCEResearched.AddItem(TechName);
+    }
+}
+
 function bool HasInterrogatedCaptive()
 {
     local name TechName;

@@ -82,6 +82,8 @@ function InitTemplates()
 
             strTemplateName = arrParts[0];
 
+            // TODO: check that we don't double-create templates if they exist in both config and a dataset
+
             // Create template without validation for now; validate them after all template managers are loaded
             kTemplate = InstantiateTemplate(kTemplateClass, strTemplateName);
 
@@ -91,8 +93,6 @@ function InitTemplates()
             m_arrTemplates.AddItem(kCacheEntry);
         }
     }
-
-    // TODO: add hook for code-based addition of templates
 
     `LWCE_LOG_CLS("Cached " $ m_arrTemplates.Length $ " template(s) across " $ arrManagedTemplateClasses.Length $ " type(s)");
 }

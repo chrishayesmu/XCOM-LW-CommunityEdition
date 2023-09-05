@@ -1,3 +1,223 @@
+[AdvancedPreparations LWCEBonusTemplate]
+strName="Advanced Preparations: "
+strDescription="XCOM HQ starts with a Laboratory and Workshop already built."
+
+[AirSuperiority LWCEBonusTemplate]
+strName="Air Superiority: "
+strDescription="Aircraft and aircraft weapons cost <XGParam:IntValue0/>% less to purchase and maintain."
+
+[AncientArtifact LWCEBonusTemplate]
+strName="Ancient Artifact: "
+strDescription="Start the campaign with an Illuminator Gunsight small item."
+
+[ArchitectsOfTheFuture LWCEBonusTemplate]
+strName="Architects of the Future: "
+strDescription="Laboratories and Workshops cost <XGParam:IntValue0/>% less to build and maintain."
+
+[ArmyOfTheSouthernCross LWCEBonusTemplate]
+strName="Army of the Southern Cross: "
+strDescription="+<XGParam:IntValue0> bonus aim for newly promoted gunners and rocketeers."
+
+[AssemblyLine LWCEBonusTemplate]
+strName="Assembly Line: "
+strDescription="Start with two workshops in your home base."
+
+[Baumeister LWCEBonusTemplate]
+strName="Baumeister: "
+strDescription="Facility construction time reduced by <XGParam:IntValue0>%."
+
+[Bounties LWCEBonusTemplate]
+strName="Bounties: "
+strDescription="<XGParam:IntValue0>% bonus cash from abductions."
+
+[Cadre LWCEBonusTemplate]
+strName="Cadre: "
+strDescription="Start with four corporals in the barracks, one of each supraclass."
+
+[CallToArms LWCEBonusTemplate]
+strName="Call to Arms: "
+strDescription="<XGParam:IntValue0>% reduction in fatigue from genemods."
+
+[CheyenneMountain LWCEBonusTemplate]
+strName="Cheyenne Mountain: "
+strDescription="XCOM HQ starts with all elevators already built, and excavation costs are reduced by <XGParam:IntValue0>%."
+
+[Cyberware LWCEBonusTemplate]
+strName="Cyberware: "
+strDescription="<XGParam:IntValue0>% reduction in meld required for MEC primary weapons and tactical subsystems."
+
+[DeusEx LWCEBonusTemplate]
+strName="Deus Ex: "
+strDescription="<XGParam:IntValue0>% reduction in genemod meld and cash cost and modification time."
+
+[EagerToServe LWCEBonusTemplate]
+strName="Eager to Serve: "
+strDescription="Solders are $<XGParam:IntValue0> cheaper to recruit."
+
+[Expertise LWCEBonusTemplate]
+strName="Expertise: "
+strDescription="+<XGParam:IntValue0>% bonus to research credits from interrogations."
+
+[FirstRecce LWCEBonusTemplate]
+strName="1st Recce: "
+strDescription="+<XGParam:IntValue0> bonus defense for newly promoted snipers and scouts."
+
+[ForeignLegion LWCEBonusTemplate]
+strName="Foreign Legion: "
+strDescription="Start with <XGParam:IntValue0> additional soldiers in the barracks."
+
+[ForTheSakeOfGlory LWCEBonusTemplate]
+strName="For the Sake of Glory: "
+strDescription="Start with Advanced Repair foundry project, which grants faster repair time for aircraft, mechanized units and damaged soldier gear."
+
+[GhostInTheMachine LWCEBonusTemplate]
+strName="Ghost In the Machine: "
+strDescription="SHIVs receive +<XGParam:IntValue0> aim, and you start the campaign with two SHIVs in the barracks."
+
+[GiftOfOsiris LWCEBonusTemplate]
+strName="Gift of Osiris: "
+strDescription="Fatigue from psi powers, genemods and officer ranks reduced by <XGParam:IntValue0>%."
+
+[IndependenceDay LWCEBonusTemplate]
+strName="Independence Day: "
+strDescription="Country panic reduced an additional <XGParam:IntValue0> points when liberated from alien control."
+
+[JaiJawan LWCEBonusTemplate]
+strName="Jai Jawan: "
+strDescription="Start with 2 additional interceptors in your home base and Elerium Afterburners foundry project, granting extended interception time."
+
+[JaiVidwan LWCEBonusTemplate]
+strName="Jai Vidwan: "
+strDescription="+<XGParam:IntValue0>% research bonus for each lab adjacency."
+
+[JungleScouts LWCEBonusTemplate]
+strName="Jungle Scouts: "
+strDescription="Early armors (Tac Vest and Tac, Kestrel, Phalanx and Aurora Armors) receive an additional small item slot until Tactical Rigging is developed."
+
+[JungleScoutsLegacy LWCEBonusTemplate]
+strName="Jungle Scouts: "
+strDescription="Start with Tactical Rigging foundry project, granting all soldiers the ability to carry one additional small item."
+
+[KiryuKaiCommander LWCEBonusTemplate]
+strName="Kiryu-Kai Commander: "
+strDescription="Start with a Master Sergeant of a random class on your roster."
+
+[LegacyOfUxmal LWCEBonusTemplate]
+strName="Legacy of Uxmal: "
+strDescription="<XGParam:IntValue0>% bonus to psionic training chances."
+
+[NeoPanzers LWCEBonusTemplate]
+strName="NeoPanzers: "
+strDescription="<XGParam:IntValue0>% reduction in cash, alloy and elerium required for MEC and SHIV primary weapons."
+
+[NewWarfare LWCEBonusTemplate]
+strName="New Warfare: "
+strDescription="Foundry projects have cash, alloy and elerium cost reduced by <XGParam:IntValue0/>% percent."
+
+[OnOurOwn LWCEBonusTemplate]
+strName="On Our Own: "
+strDescription="No unique bonus."
+
+[TheOldPath LWCEBonusTemplate]
+strName="The Old Path: "
+strDescription="<XGParam:IntValue0>% reduction in psi training time."
+
+[PatriaeSemperVigilis LWCEBonusTemplate]
+strName="Patriae Semper Vigilis: "
+strDescription="All soldiers receive +<XGParam:IntValue0> will."
+
+[PaxNigeriana LWCEBonusTemplate]
+strName="Pax Nigeriana: "
+strDescription="All soldiers receive +<XGParam:IntValue0> mobility."
+
+[PerArduaAdAstra LWCEBonusTemplate]
+strName="Per Ardua Ad Astra: "
+strDescription="All soldiers receive +<XGParam:IntValue0> ability points for stat rolls upon recruitment."
+
+[PowerToThePeople LWCEBonusTemplate]
+strName="Power to the People: "
+strDescription="Power facilities cost <XGParam:IntValue0/>% less to build and maintain."
+
+[QuaidOrsay LWCEBonusTemplate]
+strName="Quai d'Orsay: "
+strDescription="Country item requests occur <XGParam:IntValue0>% faster; fulfilled requests provide <XGParam:IntValue0>% additional defense, and intel scans cost <XGParam:IntValue0>% less."
+
+[ResearchFocus LWCEBonusTemplate]
+strName="Research Focus: "
+strDescription="Start with two laboratories in your home base."
+
+[Resourceful LWCEBonusTemplate]
+strName="Resourceful: "
+strDescription="Start with Alien Metallurgy and Advanced Salvage foundry projects (bonus alloys and weapon fragments)."
+
+[RingOfFire LWCEBonusTemplate]
+strName="Ring of Fire: "
+strDescription="XCOM HQ has <XGParam:IntValue0> additional Steam Vents."
+
+[Robotics LWCEBonusTemplate]
+strName="Robotics: "
+strDescription="+<XGParam:IntValue0> bonus aim for new SHIVs and MEC troopers."
+
+[Roscosmos LWCEBonusTemplate]
+strName="Roscosmos: "
+strDescription="Start with an additional satellite uplink, and all satellites cost <XGParam:IntValue0>% less to build."
+
+[Sandhurst LWCEBonusTemplate]
+strName="Sandhurst: "
+strDescription="<XGParam:IntValue0>% reduction in ranks required to unlock Officer Training School projects."
+
+[Skunkworks LWCEBonusTemplate]
+strName="Skunkworks: "
+strDescription="XCOM HQ starts with the Foundry already built."
+
+[SpecialAirService LWCEBonusTemplate]
+strName="Special Air Service: "
+strDescription="All soldiers receive +<XGParam:IntValue0> aim."
+
+[SpecialWarfareSchool LWCEBonusTemplate]
+strName="Special Warfare School: "
+strDescription="Officer Training School Projects cost <XGParam:IntValue0/>% less."
+
+[Spetznaz LWCEBonusTemplate]
+strName="Spetznaz: "
+strDescription="+<XGParam:IntValue0> bonus HP for new infantry and assault soldiers."
+
+[SukhoiCompany LWCEBonusTemplate]
+strName="Sukhoi Company: "
+strDescription="Start with Enhanced Avionics foundry project, granting +10% to hit during air combat."
+
+[SurvivalTraining LWCEBonusTemplate]
+strName="Survival Training: "
+strDescription="All soldiers receive +<XGParam:IntValue0> hit point."
+
+[TaskForceArrowhead LWCEBonusTemplate]
+strName="Task Force Arrowhead: "
+strDescription="+<XGParam:IntValue0> bonus will for new engineers and medics."
+
+[TheirFinestHour LWCEBonusTemplate]
+strName="Their Finest Hour: "
+strDescription="Start with Penetrator Weapons foundry project, granting interceptor weapons increased armor piercing capabilities."
+
+[WealthOfNations LWCEBonusTemplate]
+strName="Wealth of Nations: "
+strDescription="Monthly XCOM funding increased by <XGParam:IntValue0/>%."
+
+[WealthyBenefactor LWCEBonusTemplate]
+strName="Wealthy Benefactor: "
+strDescription="Start with <XGParam:IntValue0> bonus cash."
+
+[WeHaveWays LWCEBonusTemplate]
+strName="We Have Ways: "
+strDescription="<XGParam:IntValue0>% reduction in time to complete autopsies and interrogations."
+
+[WeiRenminFuwu LWCEBonusTemplate]
+strName="Wei Renmin Fuwu: "
+strDescription="Start with a Workshop and Repair Bay already built."
+
+[XenologicalRemedies LWCEBonusTemplate]
+strName="Xenological Remedies: "
+strDescription="<XGParam:IntValue0>% bonus cash from alien corpse and wreck sales."
+
 [Facility_AccessLift LWCEFacilityTemplate]
 strName="Access Lift"
 strNameInMenu="ACCESS LIFT"

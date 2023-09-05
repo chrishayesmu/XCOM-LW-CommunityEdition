@@ -1039,6 +1039,21 @@ function XComNarrativeMoment GetMusing()
     return none;
 }
 
+/// <summary>
+/// Immediately marks the given Foundry project as completed. Does not trigger any of the normal
+/// events when a project is completed (e.g. popping up a Geoscape alert). Importantly, if the
+/// project given is currently being worked on, this also will not remove the project from the queue!
+/// </summary>
+/// <remarks>
+/// This is mostly meant for use when giving out projects at the start of the campaign.
+/// </remarks>
+function GiveFoundryProject(name ProjectName)
+{
+    if (m_arrCEFoundryHistory.Find(ProjectName) == INDEX_NONE) {
+        m_arrCEFoundryHistory.AddItem(ProjectName);
+    }
+}
+
 function bool LWCE_IsFoundryTechInQueue(name ProjectName)
 {
     local int iProject;
