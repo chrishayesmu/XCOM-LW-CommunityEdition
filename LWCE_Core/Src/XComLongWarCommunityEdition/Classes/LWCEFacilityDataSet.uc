@@ -8,6 +8,8 @@ static function array<LWCEDataTemplate> CreateTemplates()
 {
     local array<LWCEDataTemplate> Templates;
 
+    // Facilities themselves are instantiated based on config; we're just setting up some
+    // extra event listeners for base game facilities
     Templates.AddItem(AlienContainment());
     Templates.AddItem(RepairBay());
     Templates.AddItem(Foundry());

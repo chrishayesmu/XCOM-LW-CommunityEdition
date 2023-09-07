@@ -63,6 +63,9 @@
 `define CREATE_ABILITY_TEMPLATE(Template, TemplateName) \
 	`CREATE_TEMPLATE(class'LWCEAbilityTemplate', `Template, `TemplateName);
 
+`define CREATE_BONUS_TEMPLATE(Template, TemplateName) \
+	`CREATE_TEMPLATE(class'LWCEBonusTemplate', `Template, `TemplateName);
+
 `define CREATE_EVENT_LISTENER_TEMPLATE(Template, TemplateName) \
 	`CREATE_TEMPLATE(class'LWCEEventListenerTemplate', `Template, `TemplateName);
 
