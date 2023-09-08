@@ -82,7 +82,12 @@ function InitTemplates()
 
             strTemplateName = arrParts[0];
 
-            // TODO: check that we don't double-create templates if they exist in both config and a dataset
+            // A template might have ini entries but have been created in code by a dataset. In that case,
+            // we want to avoid creating a second version of it.
+            if (HasTemplateByName(name(strTemplateName)))
+            {
+                continue;
+            }
 
             // Create template without validation for now; validate them after all template managers are loaded
             kTemplate = InstantiateTemplate(kTemplateClass, strTemplateName);
@@ -122,6 +127,7 @@ function bool AddDataTemplate(LWCEDataTemplate kTemplate, bool ReplaceDuplicate 
 
     if (Index != INDEX_NONE)
     {
+        // TODO let the old template know it's being destroyed; might have event listeners to remove
         m_arrTemplates[Index].kTemplate = kTemplate;
         return true;
     }
