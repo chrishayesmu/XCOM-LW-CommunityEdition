@@ -7,7 +7,13 @@ static function LWCEBonusTemplateManager GetInstance()
 
 function bool AddBonusTemplate(LWCEBonusTemplate Data, bool ReplaceDuplicate = false)
 {
-    return AddDataTemplate(Data, ReplaceDuplicate);
+    if (AddDataTemplate(Data, ReplaceDuplicate))
+    {
+        Data.RegisterBonusEvents();
+        return true;
+    }
+
+    return false;
 }
 
 function LWCEBonusTemplate FindBonusTemplate(name DataName)
@@ -28,6 +34,19 @@ function array<LWCEBonusTemplate> GetAllBonusTemplates()
     }
 
     return arrTemplates;
+}
+
+// Overridden so we can give our templates an opportunity to adjust themselves as needed
+function InitTemplates()
+{
+    local int Index;
+
+    super.InitTemplates();
+
+    for (Index = 0; Index < m_arrTemplates.Length; Index++)
+    {
+        LWCEBonusTemplate(m_arrTemplates[Index].kTemplate).RegisterBonusEvents();
+    }
 }
 
 defaultproperties
