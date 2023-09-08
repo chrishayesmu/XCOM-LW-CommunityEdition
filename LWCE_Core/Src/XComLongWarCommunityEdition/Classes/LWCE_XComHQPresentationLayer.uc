@@ -285,9 +285,18 @@ simulated state State_BuildItem
     simulated function Activate()
     {
         m_kBuildItem = Spawn(class'LWCE_UIBuildItem', self);
-        m_kBuildItem.Init(XComPlayerController(Owner), Get3DMovie(), 1);
+        m_kBuildItem.Init(XComPlayerController(Owner), Get3DMovie(), eEngView_Build);
         Get3DMovie().ShowDisplay(class'UIBuildItem'.default.DisplayTag);
         CAMLookAtNamedLocation(class'UIBuildItem'.default.m_strCameraTag, 1.0);
+    }
+}
+
+simulated state State_Continent
+{
+    simulated function Activate()
+    {
+        m_kContinentSelect = Spawn(class'LWCE_UIContinentSelect', self);
+        m_kContinentSelect.Init(XComPlayerController(Owner), GetHUD(), eContView_MainMenu);
     }
 }
 
