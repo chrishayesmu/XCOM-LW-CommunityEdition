@@ -127,7 +127,7 @@ function bool AddDataTemplate(LWCEDataTemplate kTemplate, bool ReplaceDuplicate 
 
     if (Index != INDEX_NONE)
     {
-        // TODO let the old template know it's being destroyed; might have event listeners to remove
+        m_arrTemplates[Index].kTemplate.BeforeDestroy();
         m_arrTemplates[Index].kTemplate = kTemplate;
         return true;
     }

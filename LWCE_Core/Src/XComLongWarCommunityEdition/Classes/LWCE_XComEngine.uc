@@ -99,6 +99,9 @@ function LWCE_Init()
     `LWCE_LOG("Searching for mods to install...");
     InstallMods();
 
+    `LWCE_LOG("Creating event manager...");
+    m_kEventManager = new (self) class'LWCEEventManager';
+    
     `LWCE_LOG("Initializing data template managers...");
     CreateDataTemplateManagers();
 
@@ -117,9 +120,6 @@ function LWCE_Init()
     `LWCE_LOG("Creating content manager...");
     m_kCEContentMgr = new (self) class'LWCEContentManager';
     m_kCEContentMgr.Init();
-
-    `LWCE_LOG("Creating event manager...");
-    m_kEventManager = new (self) class'LWCEEventManager';
 }
 
 private function AssignTemplateToManager(LWCEDataTemplate kTemplate)
@@ -129,6 +129,8 @@ private function AssignTemplateToManager(LWCEDataTemplate kTemplate)
 
     for (Index = 0; Index < m_arrDataTemplateManagers.Length; Index++)
     {
+        // TODO: need to use LWCEDataTemplateManager.arrManagedTemplateClasses, or this will break for
+        // templates which conceivably could be in two managers (ex: bonus templates are also event listeners)
         if (ClassIsChildOf(kTemplate.Class, m_arrDataTemplateManagers[Index].ManagedTemplateClass))
         {
             m_arrDataTemplateManagers[Index].AddDataTemplate(kTemplate);

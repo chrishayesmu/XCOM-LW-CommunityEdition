@@ -8,9 +8,7 @@ class LWCEEventListenerTemplate extends LWCEDataTemplate
 struct EventRegistration
 {
 	var Name EventID;
-
 	var int Priority;
-
 	var delegate<LWCEEventManager.OnEventDelegate> EventDelegate;
 };
 
@@ -46,4 +44,9 @@ function RegisterAllEvents()
 function UnregisterFromAllEvents()
 {
     `LWCE_EVENT_MGR.UnregisterObjectFromAllEvents(self);
+}
+
+function BeforeDestroy()
+{
+    UnregisterFromAllEvents();
 }

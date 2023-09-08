@@ -34,6 +34,15 @@ function bool ValidateTemplate(out string strError)
 	return true;
 }
 
+/// <summary>
+/// Called right before a template is destroyed and removed from its template manager. Generally the only reason
+/// this would happen is if it's being replaced by another template with the same name. Subclasses may override
+/// this function if they need to perform some cleanup.
+/// </summary>
+function BeforeDestroy()
+{
+}
+
 protected function array<name> CopyNameArray(const array<name> InArray)
 {
     local int Index;
