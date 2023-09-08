@@ -43,7 +43,6 @@ var config array<int>  arrWealthOfNationsBonusFunding;
 var config array<int>  arrWeHaveWaysResearchTimeReduction;
 var config array<int>  arrXenologicalRemediesSalePriceBonus;
 
-
 static function array<LWCEDataTemplate> CreateTemplates()
 {
     local array<LWCEDataTemplate> arrTemplates;
@@ -123,9 +122,52 @@ static function LWCEBonusTemplate ArchitectsOfTheFuture()
     `CREATE_BONUS_TEMPLATE(Template, 'ArchitectsOfTheFuture');
 
     Template.bRegisterInStrategy = true;
-    // TODO: hook into events for labs/workshop build and maintenance costs
+    Template.AddEvent('LWCEFacilityTemplate_GetCost', ArchitectsOfTheFuture_AdjustFacilityCost);
+    Template.AddEvent('LWCEFacilityTemplate_GetMonthlyCost', ArchitectsOfTheFuture_AdjustFacilityMaintenance);
 
     return Template;
+}
+
+function ArchitectsOfTheFuture_AdjustFacilityCost(Object EventData, Object EventSource, Name EventID, Object CallbackData)
+{
+    local LWCEFacilityTemplate kFacilityTemplate;
+    local LWCEDataContainer kDataContainer;
+    local LWCECost kCost;
+    local int iBonusLevel;
+    local float fDiscount;
+
+    kFacilityTemplate = LWCEFacilityTemplate(EventSource);
+
+    if (kFacilityTemplate.GetFacilityName() != 'Facility_Laboratory' && kFacilityTemplate.GetFacilityName() != 'Facility_Workshop')
+    {
+        return;
+    }
+
+    iBonusLevel = `LWCE_BONUS_LEVEL('ArchitectsOfTheFuture');
+    fDiscount = GetBonusValueInt(arrArchitectsOfTheFutureDiscount, iBonusLevel) / 100.0f;
+    kDataContainer = LWCEDataContainer(EventData);
+    kCost = LWCECost(kDataContainer.Data[0].Obj);
+    kCost.iCash = kCost.iCash * (1.0f - fDiscount);
+}
+
+function ArchitectsOfTheFuture_AdjustFacilityMaintenance(Object EventData, Object EventSource, Name EventID, Object CallbackData)
+{
+    local LWCEFacilityTemplate kFacilityTemplate;
+    local LWCEDataContainer kDataContainer;
+    local int iBonusLevel;
+    local float fDiscount;
+
+    kFacilityTemplate = LWCEFacilityTemplate(EventSource);
+
+    if (kFacilityTemplate.GetFacilityName() != 'Facility_Laboratory' && kFacilityTemplate.GetFacilityName() != 'Facility_Workshop')
+    {
+        return;
+    }
+
+    iBonusLevel = `LWCE_BONUS_LEVEL('ArchitectsOfTheFuture');
+    fDiscount = GetBonusValueInt(arrArchitectsOfTheFutureDiscount, iBonusLevel) / 100.0f;
+    kDataContainer = LWCEDataContainer(EventData);
+    kDataContainer.Data[0].I = kDataContainer.Data[0].I * (1.0f - fDiscount);
 }
 
 static function LWCEBonusTemplate ArmyOfTheSouthernCross()

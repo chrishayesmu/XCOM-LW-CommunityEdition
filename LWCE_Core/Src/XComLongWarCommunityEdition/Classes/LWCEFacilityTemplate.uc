@@ -178,8 +178,8 @@ function LWCE_TCost GetCost(bool bRush)
     //
     // DATA: LWCEDataContainer
     //       Data[0]: LWCECost - The current cost of the project, adjusted by any event listeners which have already run.
-    //                                  Note that any additional cost due to the project being rushed is applied after this event fires,
-    //                                  so it is not reflected here.
+    //                           Note that any additional cost due to the project being rushed is applied after this event fires,
+    //                           so it is not reflected here.
     //       Data[1]: boolean - Whether this project is being rushed. Changing this will not affect whether the project is actually rushed
     //                          or not, but it will change whether the cost increasing due to rushing is assessed or not. Use this if your
     //                          mod is accounting for the rush costs on its own, and you want to prevent base game logic from running.

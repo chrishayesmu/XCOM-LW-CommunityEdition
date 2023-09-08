@@ -467,6 +467,7 @@ function DetermineTimeOut(XGStrategySoldier kSoldier)
         }
         else
         {
+            // TODO this calculation was reverse engineered incorrectly, redo it
             iBaseTimeOut = class'XGTacticalGameCore'.default.BASE_DAYS_INJURED;
             iRandTimeOut = class'XGTacticalGameCore'.default.RAND_DAYS_INJURED;
             iBaseTimeOut -= ((iBaseTimeOut * (iRandTimeOut / 100)) / (STAT_GetStat(1) + (iRandTimeOut % 100)));
