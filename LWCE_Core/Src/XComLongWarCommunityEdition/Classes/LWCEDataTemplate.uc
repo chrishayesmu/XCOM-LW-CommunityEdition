@@ -48,22 +48,6 @@ protected function array<name> CopyNameArray(const array<name> InArray)
 }
 
 /// <summary>
-/// Creates a clone of the template in a safe way. Using this for cloning is strongly recommended; making a
-/// clone in an incorrect way can cause ALL templates of the same name to become invalidated.
-/// </summary>
-protected function LWCEDataTemplate InstantiateClone()
-{
-    local LWCEDataTemplate kClone;
-
-    // Deliberately do not set the clone's object name. Creating a PerObjectConfig object appears to trigger all
-    // objects with the same name to load from their config, which can invalidate the templates which are cached.
-    kClone = new (none) self.Class;
-    kClone.DataName = self.DataName;
-
-    return kClone;
-}
-
-/// <summary>
 /// Goes through the prereqs object and checks that any templates it references actually exist. If not, validation
 /// is failed and an error with the template name is added. This should only be called after all template managers
 /// have been created by the game engine.
