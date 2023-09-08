@@ -103,6 +103,12 @@
 `define LWCE_SHELLPRES (LWCE_XComShellPresentationLayer(XComPlayerController(class'Engine'.static.GetCurrentWorldInfo().GetALocalPlayerController()).m_Pres))
 
 // ---------------------------
+// Strategy-or-tactical macros
+// ---------------------------
+`define LWCE_BONUS_LEVEL(nmBonus) \
+	(`LWCE_IS_STRAT_GAME ? `LWCE_HQ.GetBonusLevel(`nmBonus) : -1 )
+
+// ---------------------------
 // Strategy layer macros
 // ---------------------------
 

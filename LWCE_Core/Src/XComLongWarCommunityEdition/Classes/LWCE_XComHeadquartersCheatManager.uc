@@ -15,6 +15,11 @@ exec function BasePrevious()
     ChangeFocusedBase(-1);
 }
 
+exec function AdjustBonus(name nmBonus, int Adjustment)
+{
+    `LWCE_HQ.AdjustBonusLevel(nmBonus, Adjustment);
+}
+
 exec function CreateAlienBaseAlert()
 {
     local XGMission_AlienBase kMission;

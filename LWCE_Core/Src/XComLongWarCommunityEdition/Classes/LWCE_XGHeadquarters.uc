@@ -1,6 +1,12 @@
 class LWCE_XGHeadquarters extends XGHeadQuarters
     dependson(LWCETypes);
 
+struct LWCE_TBonus
+{
+    var name BonusName;
+    var int Level;
+};
+
 struct LWCE_TFacilityCount
 {
     var name Facility;
@@ -17,6 +23,7 @@ struct CheckpointRecord_LWCE_XGHeadquarters extends XGHeadQuarters.CheckpointRec
 };
 
 var array<LWCE_XGBase> m_arrBases;
+var array<LWCE_TBonus> m_arrBonuses;
 var array<LWCE_TFacilityCount> m_arrCEBaseFacilities; // A count of each facility type XCOM has, across all bases.
 var array<name> m_arrCEFacilityBinksPlayed;
 var array<name> m_arrCELastCaptives;
@@ -470,6 +477,20 @@ function LWCE_XGBase GetBaseById(int Id)
     return none;
 }
 
+function int GetBonusLevel(name nmBonus)
+{
+    local int Index;
+
+    Index = m_arrBonuses.Find('BonusName', nmBonus);
+
+    if (Index == INDEX_NONE)
+    {
+        return 0;
+    }
+
+    return m_arrBonuses[Index].Level;
+}
+
 function GetEvents(out array<THQEvent> arrEvents)
 {
     `LWCE_LOG_DEPRECATED_CLS(GetEvents);
@@ -725,6 +746,63 @@ function bool LWCE_HasFacility(name nmFacility)
     Index = m_arrCEBaseFacilities.Find('Facility', nmFacility);
 
     return Index == INDEX_NONE ? false : m_arrCEBaseFacilities[Index].Count > 0;
+}
+
+/// <summary>
+/// Increase or decrease the level of a bonus. If increasing a bonus which is not already earned,
+/// it will be newly applied; if decreasing a bonus to level 0 or below, it will be unapplied. Note
+/// that bonuses with negative levels will actually be persisted, not deleted, just in case this is
+/// useful behavior for some mod.
+///
+/// An event, 'BonusLevelChanged', will be emitted before this function returns.
+/// </summary>
+/// <param name="nmBonus">The name of the bonus to modify.</param>
+/// <param name="iAdjustment">How much to change the bonus level by.</param>
+/// <returns>The new level of the bonus after incrementing it.</param>
+function int AdjustBonusLevel(name nmBonus, int iAdjustment)
+{
+    local LWCEDataContainer kEventData;
+    local LWCE_TBonus kBonus;
+    local int Index, iOriginalLevel, iAdjustedLevel;
+
+    Index = m_arrBonuses.Find('BonusName', nmBonus);
+
+    if (Index == INDEX_NONE)
+    {
+        iOriginalLevel = 0;
+        iAdjustedLevel = iAdjustment;
+
+        kBonus.BonusName = nmBonus;
+        kBonus.Level = iAdjustedLevel;
+        m_arrBonuses.AddItem(kBonus);
+    }
+    else
+    {
+        iOriginalLevel = m_arrBonuses[Index].Level;
+        iAdjustedLevel = iOriginalLevel + iAdjustment;
+
+        m_arrBonuses[Index].Level = iAdjustedLevel;
+    }
+
+    // EVENT: BonusLevelChanged
+    //
+    // SUMMARY: Emitted when a bonus (such as a country or continent bonus) has just changed.
+    //          Most bonuses don't need to care when this happens, but it could be relevant to some;
+    //          for example, a bonus granting worldwide vision of all UFOs would want to update the
+    //          geoscape immediately when activated.
+    //
+    // DATA: LWCEDataContainer
+    //       Data[0]: int - The level of the bonus before the change.
+    //       Data[1]: int - The level of the bonus after the change.
+    //
+    // SOURCE: LWCE_XGHeadquarters
+    kEventData = class'LWCEDataContainer'.static.New('BonusLevelChanged');
+    kEventData.AddInt(iOriginalLevel);
+    kEventData.AddInt(iAdjustedLevel);
+
+    `LWCE_EVENT_MGR.TriggerEvent('BonusLevelChanged', kEventData, self);
+
+    return iAdjustedLevel;
 }
 
 function bool IsHyperwaveActive()
