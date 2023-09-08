@@ -1,5 +1,6 @@
 class LWCEBonusDataSet extends LWCEDataSet
-    dependson(LWCEBonusTemplate);
+    config(LWCEBonuses)
+    dependson(LWCEBonusTemplate, LWCETypes);
 
 var config array<int>  arrAirSuperiorityDiscount;
 var config array<int>  arrArchitectsOfTheFutureDiscount;
