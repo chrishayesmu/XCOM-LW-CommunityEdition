@@ -295,6 +295,7 @@ simulated state State_Continent
 {
     simulated function Activate()
     {
+        `LWCE_LOG_CLS("Activating state State_Continent");
         m_kContinentSelect = Spawn(class'LWCE_UIContinentSelect', self);
         m_kContinentSelect.Init(XComPlayerController(Owner), GetHUD(), eContView_MainMenu);
     }
