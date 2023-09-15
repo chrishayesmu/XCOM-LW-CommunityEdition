@@ -11,6 +11,16 @@
 #define MyAppPublisher "SwfDelicious"
 #define MyAppURL "https://github.com/chrishayesmu/XCOM-LW-CommunityEdition/"
 
+; Bytestring replacements in XComEW.exe.
+; All bytes are specified
+
+; PURPOSE: forgotten
+; ORIGINAL:  0xA9 0xCE 0x07 0x00 0x00 0x0F 0x84 0xCC 0x01 0x00 0x00
+; NEW VALUE: 0xA9 0xCE 0x07 0x00 0x00 0x0F 0x89 0xCC 0x01 0x00 0x00
+; #define REPLACE_BYTESTRING_1 [ ]
+
+; ORIGINAL:  0x39 0x7E 0xFC 0x75 0x43 0x8B 0x0D 0xEC 0x7D 
+; NEW VALUE: 0x39 0x7E 0xFC 0xEB 0x43 0x8B 0x0D 0xEC 0x7D
 
 [Setup]
 ; NOTE: The value of AppId uniquely identifies this application. Do not use the same AppId value in installers for other applications.
@@ -80,16 +90,29 @@ begin
   Result := True;
 
   if (CurPageID = XComDirPage.ID) then begin
-   XComDir := XComDirPage.Values[0];
+    XComDir := AddBackslash(XComDirPage.Values[0]);
+
     if not DirExists(XComDir) then begin
       MsgBox('You must select the XCOM installation directory to continue.', mbError, MB_OK);
       Result := False;
-    end else if not DirExists(XComDir + '\XEW') then begin
+    end else if not DirExists(XComDir + 'XEW') then begin
       MsgBox('Directory is invalid, or you do not have the Enemy Within expansion, which is required to install.', mbError, MB_OK);
       Result := False;
-    end else if not FileExists(XComDir + '\XEW\XComGame\CookedPCConsole\LongWar.upk') then begin
+    end else if not FileExists(XComDir + 'XEW\XComGame\CookedPCConsole\LongWar.upk') then begin
       MsgBox('Long War does not appear to be installed. You must install Long War 1.0 from Nexus Mods before installing LWCE.', mbError, MB_OK);
       Result := False;
     end
   end;
+end;
+
+function ModifyGameExecutable(PathToExe: String): Boolean;
+var Contents: string;
+
+begin
+  if not LoadStringFromFile(PathToExe, Contents) then begin
+    MsgBox('Could not load the exe file into memory from the path specified. Please contact the LWCE team.', mbError, MB_OK);
+    Exit (False);
+  end;
+
+  Result := True;
 end;
