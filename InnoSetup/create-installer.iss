@@ -53,12 +53,16 @@ Source: "{#GetEnv('LWCE_UDKGAME_PATH')}\Script\XComLongWarCommunityEdition.u"; D
 ; NOTE: Don't use "Flags: ignoreversion" on any shared system files
 
 [Code]
-var XComDirPage: TInputDirWizardPage;
+var 
+  XComDirPage: TInputDirWizardPage;
 
+function ModifyGameExecutable(PathToExe: String): Boolean; forward;
 
+{ Add our custom page to the install wizard }
 procedure InitializeWizard();
-var RegKey: integer;
-var XComDir: string;
+var 
+  RegKey: integer;
+  XComDir: string;
 begin
   XComDirPage := CreateInputDirPage(wpSelectDir,
     'Select XCOM Game Directory', 'Where is XCOM: Enemy Within installed?',
@@ -78,14 +82,16 @@ begin
   end;
 end;
 
+{ Store the user's input so it can auto-populate if they run install again, e.g. to update }
 procedure RegisterPreviousData(PreviousDataKey: Integer);
 begin
-  { Store the user's input so it can auto-populate if they run install again, e.g. to update }
   SetPreviousData(PreviousDataKey, 'XComDir', XComDirPage.Values[0]); 
 end;
 
+{ Validate that we can move past our custom pages }
 function NextButtonClick(CurPageID: Integer): Boolean;
-var XComDir: string;
+var 
+  XComDir: string;
 begin
   Result := True;
 
@@ -105,13 +111,60 @@ begin
   end;
 end;
 
-function ModifyGameExecutable(PathToExe: String): Boolean;
-var Contents: string;
-
+procedure CurStepChanged(CurStep: TSetupStep);
 begin
-  if not LoadStringFromFile(PathToExe, Contents) then begin
-    MsgBox('Could not load the exe file into memory from the path specified. Please contact the LWCE team.', mbError, MB_OK);
-    Exit (False);
+    if (CurStep = ssInstall) then begin
+      ModifyGameExecutable(AddBackslash(XComDirPage.Values[0]) + 'XEW\Binaries\Win32\XComEW.exe');
+    end;
+end;
+
+{ Copied from https://stackoverflow.com/a/38618255 
+  External function definition to convert a hex string to a byte buffer }
+function CryptStringToBinary(
+  sz: String; cch: LongWord; flags: LongWord; binary: String; var size: LongWord;
+  skip: LongWord; flagsused: LongWord): Integer;
+  external 'CryptStringToBinaryW@crypt32.dll stdcall';
+
+const CRYPT_STRING_HEX = $04; { Pass to CryptStringToBinary as the flags argument }
+
+function HexToBinaryBuffer(Hex: String; var Size: LongWord): String;
+var
+  Buffer: String;
+  BufferSize: Integer;
+begin
+  { Divide hex string by 4 (2 hex characters per byte, 2 bytes per character due to UTF-8 encoding
+    Add one character for null terminator }
+  BufferSize := (Length(Hex) div 4) + 1;
+  SetLength(Buffer, BufferSize);
+
+  Size := Length(Hex) div 2;
+
+  if (CryptStringToBinary(Hex, Length(Hex), CRYPT_STRING_HEX, Buffer, Size, 0, 0) = 0) or (Size <> Length(Hex) div 2) then begin
+    RaiseException('Failed to convert hex string to binary buffer');
+  end;
+
+  Result := Buffer;
+end;
+
+{ Modifies XComEW.exe with the necessary binary changes to support LWCE features }
+function ModifyGameExecutable(PathToExe: String): Boolean;
+var 
+  Stream: TFileStream;
+  Buffer: String;
+  Offset: Integer;
+  Size: LongWord;
+begin
+  Stream := TFileStream.Create(PathToExe, fmOpenReadWrite);
+
+  try
+    { Original hex:              A9CE0700000F84CC010000 }
+    Buffer := HexToBinaryBuffer('A9CE0700000F89CC010000', Size);
+    Offset := $8701AA;
+
+    Stream.Seek(Offset, soFromBeginning);
+    Stream.WriteBuffer(Buffer, Size);
+  finally
+    Stream.Free;
   end;
 
   Result := True;
