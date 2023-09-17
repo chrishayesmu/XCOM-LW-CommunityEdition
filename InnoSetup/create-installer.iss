@@ -46,10 +46,10 @@ WizardStyle=modern
 Name: "english"; MessagesFile: "compiler:Default.isl"
 
 [Files]
-Source: "..\LWCE_Core\Config\*"; DestDir: "{app}\Config"; Flags: ignoreversion 
-Source: "..\LWCE_Core\Localization\*"; DestDir: "{app}\Localization"; Flags: ignoreversion  recursesubdirs createallsubdirs
+Source: "..\LWCE_Core\Config\*"; DestDir: "{code:GetXEWDir}\XComGame\Config"; Flags: ignoreversion 
+Source: "..\LWCE_Core\Localization\*"; DestDir: "{code:GetXEWDir}\XComGame\Localization"; Flags: ignoreversion  recursesubdirs createallsubdirs
 Source: "..\LWCE_Core\Patches\*.upatch"; DestDir: "{app}\UPK patches"; Flags: ignoreversion 
-Source: "{#GetEnv('LWCE_UDKGAME_PATH')}\Script\XComLongWarCommunityEdition.u"; DestDir: "{app}\CookedPCConsole"; Flags: ignoreversion
+Source: "{#GetEnv('LWCE_UDKGAME_PATH')}\Script\XComLongWarCommunityEdition.u"; DestDir: "{code:GetXEWDir}\XComGame\CookedPCConsole"; Flags: ignoreversion
 ; NOTE: Don't use "Flags: ignoreversion" on any shared system files
 
 [Code]
@@ -57,6 +57,11 @@ var
   XComDirPage: TInputDirWizardPage;
 
 function ModifyGameExecutable(PathToExe: String): Boolean; forward;
+
+function GetXEWDir(Param: String): String;
+begin
+  Result := AddBackslash(XComDirPage.Values[0]) + 'XEW';
+end;
 
 { Add our custom page to the install wizard }
 procedure InitializeWizard();
@@ -157,9 +162,50 @@ begin
   Stream := TFileStream.Create(PathToExe, fmOpenReadWrite);
 
   try
+    { Change iteration/recursion limit from 1 million to 0x00FFFFFF 
+      done twice, once for iteration, again at a different offset for recursion }
+    { Original hex:              3D40420F000F8EB1 }
+    Buffer := HexToBinaryBuffer('3DFFFFFF0F0F8EB1', Size);
+    Offset := $89088;
+
+    Stream.Seek(Offset, soFromBeginning);
+    Stream.WriteBuffer(Buffer, Size);
+
+    { Change iteration/recursion limit from 1 million to 0x00FFFFFF }
+    { Original hex:              3D40420F000F8EB1 }
+    Buffer := HexToBinaryBuffer('3DFFFFFF0F0F8EB1', Size);
+    Offset := $1BE8E8;
+
+    Stream.Seek(Offset, soFromBeginning);
+    Stream.WriteBuffer(Buffer, Size);
+
+    { Re-enables runtime compilation of shaders }
     { Original hex:              A9CE0700000F84CC010000 }
     Buffer := HexToBinaryBuffer('A9CE0700000F89CC010000', Size);
     Offset := $8701AA;
+
+    Stream.Seek(Offset, soFromBeginning);
+    Stream.WriteBuffer(Buffer, Size);
+
+    { This patch, plus the one after, disable CRC checking for mods }
+    { Original hex:              397EFC75438B0DEC7D }
+    Buffer := HexToBinaryBuffer('397EFCEB438B0DEC7D', Size);
+    Offset := $91B1C5;
+
+    Stream.Seek(Offset, soFromBeginning);
+    Stream.WriteBuffer(Buffer, Size);
+
+    { Original hex:              7CAD84DB0F8586000000 }
+    Buffer := HexToBinaryBuffer('7CAD84DB0F8986000000', Size);
+    Offset := $91B216;
+
+    Stream.Seek(Offset, soFromBeginning);
+    Stream.WriteBuffer(Buffer, Size);
+
+    { Also needed to re-enable runtime shader compilation }
+    { Original hex:              8D4424388BCF50747A }
+    Buffer := HexToBinaryBuffer('8D4424388BCF50EB7A', Size);
+    Offset := $B22EDE;
 
     Stream.Seek(Offset, soFromBeginning);
     Stream.WriteBuffer(Buffer, Size);
