@@ -9,6 +9,7 @@ Logs/
 Installer/dist
 Installer/node_modules
 Installer/Resources
+InnoSetup/Output
 
 # output directories for Makefile build
 /build

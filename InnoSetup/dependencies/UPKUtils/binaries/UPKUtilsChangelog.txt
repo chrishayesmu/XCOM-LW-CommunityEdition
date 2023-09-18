@@ -1,0 +1,88 @@
+UPK Utils
+
+Wasteland Ghost aka wghost81 (wghost81@gmail.com).
+
+-----------------------------------------------------------------------------------------------------------------
+    Changelist:
+-----------------------------------------------------------------------------------------------------------------
+
+04/09/2015 (v.7.3):
+    - fixed bug with DecompressLZO messing up file header for some of the files.
+    - made all the programs UAC aware.
+
+04/03/2015 (v.7.2):
+    - fixed bug with some reference labels not generated properly by HexToPseudoCode.
+    - added infinite loop detection in PatchUPK.
+
+03/27/2015 (v.7.1):
+    - fixed bug with parsing the last line of the modfile (PatchUPK).
+
+03/23/2015 (v.7.0):
+    - hex to pseudo-code decompiler (HexToPseudoCode) added.
+    - new command [@] added for PatchUPK to auto-calculate memory size.
+
+03/16/2015 (v.6.3):
+    - fixed bug with Level object deserialization (relevant for FindObjectEntry and DeserializeAll).
+
+10/03/2014 (v6.2):
+    - fixed incorrect eof flag problem, added partial deserialization of Level object.
+
+10/03/2014:
+    - problems with path separators fixed, bug with FIND and BEFORE data relative offset calculation fixed.
+
+10/01/2014:
+    - PatchUPK REPLACE_HEX/REPLACE_CODE keys added.
+
+09/24/2014:
+    - PatchUPK UPDATE_REL, UNINSTALL and BULK_DATA/BULK_FILE keys added.
+
+09/13/2014:
+    - fixed value output while deserializing Rotator default property.
+    - fixed crash while deserializing Box default property.
+
+09/09/2014:
+    - fixed bug, caused by fixed bug with resizing State objects.
+
+09/06/2014:
+    - fixed bug with resizing State objects.
+
+09/05/2014:
+    - fixed bug with linking new export entries.
+
+07/30/2014:
+    - fixed bug with global FIND_HEX usage.
+    - '<' and '>' symbols in text strings (pseudo-code) are now allowed, "> combination with any white-spaces in
+      between is still disallowed inside a string (for the sake of backward compatibility).
+    - uninstall script now uses object-oriented approach instead of global offset to ensure compatibility with
+      new objects (for future mods).
+
+04/24/2014:
+    - white-spaces handling improved.
+    - text constant code added (see using pseudo-code section).
+    - added commands for adding new name, import and export entries. WARNING! Highly experimental!!!
+
+04/07/2014:
+    - <NullRef> pseudo code added for generating null object reference (0x00000000) with 4 serial and 8 memory
+      size.
+    - WARNING! Changed behavior of FIND_HEX/FIND_CODE and BEFORE/AFTER_HEX/CODE! See below for details.
+
+03/31/2014:
+    - member variable marker added (see script commands for detailed info).
+    - ALIAS key added (see script commands for detailed info).
+    - FIND_HEX/FIND_CODE sections added.
+
+03/18/2014:
+    - CODE keys and sections added (see script commands for detailed info).
+
+02/19/2014:
+    - C-style comments support added:
+        /* comment */
+        // comment
+    - FIND_HEX operation now sets temporary scope, which limits the next write operation to FIND_HEX boundaries.
+      This allows to auto-expand object (if AUTO or MOVE specifier is set) to fit in replacement data (specified
+      by MODDED_HEX or AFTER_HEX). Also applies to BEFORE_HEX/AFTER_HEX.
+    - MODDED_FILE is now considered a total replacement for current scope: i.e. it should contain full object
+      data. Is also required now to use Full.Object.Name.ext pattern for file name, as program will auto-set
+      scope, based on file name.
+    - EXPAND_FUNCTION key now sets current scope to specified object.
+

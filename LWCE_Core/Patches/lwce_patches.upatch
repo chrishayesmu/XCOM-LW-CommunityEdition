@@ -236,3 +236,46 @@ OBJECT = XComAlienSpawnVolume.Touch : AUTO
 // return;
 04 0B
 53
+
+
+/*******************************************
+ * XComMutator: remove logging calls, which are unnecessarily
+ * verbose and make debugging difficult.
+ *******************************************/
+
+UPK_FILE = XComMutator.u
+OBJECT = XComMutator.Mutate : AUTO
+[REPLACEMENT_CODE]
+07 [@label_0x0070] 7A 00 <.MutateString> 1F <%t "XComGameInfo.InitGame"> 16
+	1B <GameInfoInitGame> 00 <.Sender> 16
+[#label_0x0070]
+07 [@label_0x00D7] 7A 00 <.MutateString> 1F <%t "XGHeadQuarters.InitNewGame"> 16
+	1B <HeadQuartersInitNewGame> 00 <.Sender> 16
+[#label_0x00D7]
+07 [@label_0x013F] 7A 00 <.MutateString> 1F <%t "XGBattle_SP.PostLevelLoaded"> 16
+	1B <PostLevelLoaded> 00 <.Sender> 16
+[#label_0x013F]
+07 [@label_0x01A8] 7A 00 <.MutateString> 1F <%t "XGBattle_SP.PostLoadSaveGame"> 16
+	1B <PostLoadSaveGame> 00 <.Sender> 16
+[#label_0x01A8]
+07 [@label_0x0210] 7A 00 <.MutateString> 1F <%t "XGBattle.DoWorldDataRebuild"> 16
+	1B <DoWorldDataRebuild> 00 <.Sender> 16
+[#label_0x0210]
+07 [@label_0x0280] 7A 00 <.MutateString> 1F <%t "XGBattle.Loading.NotifyKismetOfLoad"> 16
+	1B <MutateNotifyKismetOfLoad> 00 <.Sender> 16
+[#label_0x0280]
+07 [@label_0x02DF] 7A 00 <.MutateString> 1F <%t "XGStrategy.NewGame"> 16
+	1B <MutateStrategyAI> 00 <.Sender> 16
+[#label_0x02DF]
+07 [@label_0x039F] 97 7E 00 <.MutateString> 1F <%t "SeqAct_SpawnAlien.Activated"> 4A 4A 4A 16 41 <%i 798> <%i 33> <%i 100> 40 1D <%i -1> 16
+	1B <MutateSpawnAlien> 1C <Core.Object.Split> 00 <.MutateString> 1F <%t "SeqAct_SpawnAlien.Activated:"> 27 16 41 <%i 886> <%i 35> <%i 100> 40 00 <.Sender> 16
+[#label_0x039F]
+07 [@label_0x0453] 97 7E 00 <.MutateString> 1F <%t "XGPlayer.InitBehavior"> 4A 4A 4A 16 41 <%i 951> <%i 37> <%i 100> 40 1D <%i -1> 16
+	1B <MutateTacticalAI> 1C <Core.Object.Split> 00 <.MutateString> 1F <%t "XGPlayer.InitBehavior:"> 27 16 41 <%i 1033> <%i 39> <%i 100> 40 00 <.Sender> 16
+[#label_0x0453]
+07 [@label_0x0511] 97 7E 00 <.MutateString> 1F <%t "XGUnit.UpdateInteractClaim"> 4A 4A 4A 16 41 <%i 1103> <%i 41> <%i 100> 40 1D <%i -1> 16
+	1B <MutateUpdateInteractClaim> 1C <Core.Object.Split> 00 <.MutateString> 1F <%t "XGUnit.UpdateInteractClaim:"> 27 16 41 <%i 1199> <%i 43> <%i 100> 40 00 <.Sender> 16
+[#label_0x0511]
+1C <Engine.Mutator.Mutate> 00 <.MutateString> 00 <.Sender> 16
+04 0B
+53
