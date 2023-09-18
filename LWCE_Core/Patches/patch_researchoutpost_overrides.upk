@@ -1,5 +1,5 @@
 // TODO: this patch is intended to fix an error on the Research Outpost map which fills the logs with an irrelevant error message,
-// but it won't apply properly in PatcherGUI for some reason
+// but it won't apply properly in PatcherGUI for some reason. It may also be related to why that map loads so slowly.
 
 UPK_FILE = patch_researchoutpost.upk
 OBJECT = XComUDK.SeqAct_GetActorsTouchingVolume.Activated : AUTO

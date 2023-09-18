@@ -11,17 +11,6 @@
 #define MyAppPublisher "SwfDelicious"
 #define MyAppURL "https://github.com/chrishayesmu/XCOM-LW-CommunityEdition/"
 
-; Bytestring replacements in XComEW.exe.
-; All bytes are specified
-
-; PURPOSE: forgotten
-; ORIGINAL:  0xA9 0xCE 0x07 0x00 0x00 0x0F 0x84 0xCC 0x01 0x00 0x00
-; NEW VALUE: 0xA9 0xCE 0x07 0x00 0x00 0x0F 0x89 0xCC 0x01 0x00 0x00
-; #define REPLACE_BYTESTRING_1 [ ]
-
-; ORIGINAL:  0x39 0x7E 0xFC 0x75 0x43 0x8B 0x0D 0xEC 0x7D 
-; NEW VALUE: 0x39 0x7E 0xFC 0xEB 0x43 0x8B 0x0D 0xEC 0x7D
-
 [Setup]
 ; NOTE: The value of AppId uniquely identifies this application. Do not use the same AppId value in installers for other applications.
 ; (To generate a new GUID, click Tools | Generate GUID inside the IDE.)
@@ -48,7 +37,7 @@ Name: "english"; MessagesFile: "compiler:Default.isl"
 [Files]
 Source: "..\LWCE_Core\Config\*"; DestDir: "{code:GetXEWDir}\XComGame\Config"; Flags: ignoreversion 
 Source: "..\LWCE_Core\Localization\*"; DestDir: "{code:GetXEWDir}\XComGame\Localization"; Flags: ignoreversion  recursesubdirs createallsubdirs
-Source: "..\LWCE_Core\Patches\*.upatch"; DestDir: "{app}\UPK patches"; Flags: ignoreversion 
+Source: "..\LWCE_Core\Patches\lwce_patches.upatch"; DestDir: "{code:GetXEWDir}\LWCE Files"; Flags: ignoreversion 
 Source: "{#GetEnv('LWCE_UDKGAME_PATH')}\Script\XComLongWarCommunityEdition.u"; DestDir: "{code:GetXEWDir}\XComGame\CookedPCConsole"; Flags: ignoreversion
 ; NOTE: Don't use "Flags: ignoreversion" on any shared system files
 
@@ -63,7 +52,12 @@ begin
   Result := AddBackslash(XComDirPage.Values[0]) + 'XEW';
 end;
 
-{ Add our custom page to the install wizard }
+{ Add our custom page to the install wizard, for selecting where XCOM is installed
+ 
+  NOTE: right now, the install path chosen in the first step of the wizard isn't even used,
+  and it would make more sense to just use that to select the XCOM directory. However, we will
+  eventually be bundling a mod launcher of some form with LWCE, and I don't feel like redoing all
+  of this work later to handle that.}
 procedure InitializeWizard();
 var 
   RegKey: integer;
