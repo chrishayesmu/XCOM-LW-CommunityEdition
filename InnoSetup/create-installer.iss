@@ -11,6 +11,8 @@
 #define MyAppPublisher "SwfDelicious"
 #define MyAppURL "https://github.com/chrishayesmu/XCOM-LW-CommunityEdition/"
 
+#define UPK_PATCH_FILE "lwce_patches.upatch"
+
 [Setup]
 ; NOTE: The value of AppId uniquely identifies this application. Do not use the same AppId value in installers for other applications.
 ; (To generate a new GUID, click Tools | Generate GUID inside the IDE.)
@@ -36,10 +38,14 @@ Name: "english"; MessagesFile: "compiler:Default.isl"
 
 [Files]
 Source: "..\LWCE_Core\Config\*"; DestDir: "{code:GetXEWDir}\XComGame\Config"; Flags: ignoreversion 
-Source: "..\LWCE_Core\Localization\*"; DestDir: "{code:GetXEWDir}\XComGame\Localization"; Flags: ignoreversion  recursesubdirs createallsubdirs
-Source: "..\LWCE_Core\Patches\lwce_patches.upatch"; DestDir: "{code:GetXEWDir}\LWCE Files"; Flags: ignoreversion 
+Source: "..\LWCE_Core\Localization\*"; DestDir: "{code:GetXEWDir}\XComGame\Localization"; Flags: ignoreversion recursesubdirs createallsubdirs
+Source: "..\LWCE_Core\Patches\{#UPK_PATCH_FILE}"; DestDir: "{code:GetXEWDir}\LWCE Files\Patches"; Flags: ignoreversion 
+Source: "dependencies\UPKUtils\*"; DestDir: "{code:GetXEWDir}\LWCE Files\UPKUtils"; Flags: ignoreversion recursesubdirs createallsubdirs
 Source: "{#GetEnv('LWCE_UDKGAME_PATH')}\Script\XComLongWarCommunityEdition.u"; DestDir: "{code:GetXEWDir}\XComGame\CookedPCConsole"; Flags: ignoreversion
 ; NOTE: Don't use "Flags: ignoreversion" on any shared system files
+
+[Run]
+Filename: "{code:GetXEWDir}\LWCE Files\UPKUtils\binaries\PatchUPK.exe"; Parameters: """{code:GetXEWDir}\LWCE Files\Patches\{#UPK_PATCH_FILE}"" ""{code:GetXEWDir}\XComGame\CookedPCConsole"""
 
 [Code]
 var 
