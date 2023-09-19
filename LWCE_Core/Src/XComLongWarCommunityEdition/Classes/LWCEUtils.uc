@@ -303,3 +303,31 @@ static function UpsertKeyValuePair(out array<LWCE_NameIntKVP> arrData, name nmKe
 }
 
 // #endregion
+
+// #region Functions to help with Rects, Vectors, and other geometric objects
+static function TRect Rect(float fLeft, float fTop, float fRight, float fBottom)
+{
+    local TRect kRect;
+
+    kRect.fLeft = fLeft;
+    kRect.fTop = fTop;
+    kRect.fRight = fRight;
+    kRect.fBottom = fBottom;
+    return kRect;
+}
+
+static function float RectWidth(TRect kRect)
+{
+    return kRect.fRight - kRect.fLeft;
+}
+
+static function float RectHeight(TRect kRect)
+{
+    return kRect.fBottom - kRect.fTop;
+}
+
+static function Vector2D RectCenter(TRect kRect)
+{
+    return vect2d(kRect.fLeft + ((RectWidth(kRect)) / 2.0f), kRect.fTop + ((RectHeight(kRect)) / 2.0f));
+}
+// #endregion

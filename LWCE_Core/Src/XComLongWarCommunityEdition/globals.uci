@@ -37,8 +37,12 @@
 
 // Retrieve a template manager by class
 `define LWCE_ABILITY_TEMPLATE_MGR (class'LWCEAbilityTemplateManager'.static.GetInstance())
+`define LWCE_BONUS_TEMPLATE_MGR (class'LWCEBonusTemplateManager'.static.GetInstance())
+`define LWCE_CITY_TEMPLATE_MGR (class'LWCECityTemplateManager'.static.GetInstance())
 `define LWCE_CONTENT_TEMPLATE_MGR (class'LWCEContentTemplateManager'.static.GetInstance())
+`define LWCE_CONTINENT_TEMPLATE_MGR (class'LWCEContinentTemplateManager'.static.GetInstance())
 `define LWCE_COUNCIL_REQUEST_TEMPLATE_MGR (class'LWCECouncilRequestTemplateManager'.static.GetInstance())
+`define LWCE_COUNTRY_TEMPLATE_MGR (class'LWCECountryTemplateManager'.static.GetInstance())
 `define LWCE_FACILITY_TEMPLATE_MGR (class'LWCEFacilityTemplateManager'.static.GetInstance())
 `define LWCE_FOUNDRY_TEMPLATE_MGR (class'LWCEFoundryProjectTemplateManager'.static.GetInstance())
 `define LWCE_ITEM_TEMPLATE_MGR (class'LWCEItemTemplateManager'.static.GetInstance())

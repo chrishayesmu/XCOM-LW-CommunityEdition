@@ -16,10 +16,14 @@ struct LWCE_TFacilityCount
 struct CheckpointRecord_LWCE_XGHeadquarters extends XGHeadQuarters.CheckpointRecord
 {
     var array<LWCE_XGBase> m_arrBases;
+    var array<LWCE_TBonus> m_arrBonuses;
     var array<LWCE_TFacilityCount> m_arrCEBaseFacilities;
+    var array<name> m_arrCEFacilityBinksPlayed;
     var array<name> m_arrCELastCaptives;
     var LWCEItemContainer m_kCELastCargoArtifacts;
     var int m_iNextBaseId;
+    var name m_nmContinent;
+    var name m_nmCountry;
 };
 
 var array<LWCE_XGBase> m_arrBases;
@@ -29,6 +33,8 @@ var array<name> m_arrCEFacilityBinksPlayed;
 var array<name> m_arrCELastCaptives;
 var LWCEItemContainer m_kCELastCargoArtifacts;
 var int m_iNextBaseId;
+var name m_nmContinent;
+var name m_nmCountry;
 
 var const localized string m_strHQBaseName;
 
@@ -154,6 +160,11 @@ function AddOutpost(int iContinent)
 
 function AddSatelliteNode(int iCountry, int iType, optional bool bInstant)
 {
+    `LWCE_LOG_DEPRECATED_CLS(AddSatelliteNode);
+}
+
+function LWCE_AddSatelliteNode(name nmCountry, optional bool bInstant)
+{
     local LWCE_XGFacility_Labs kLabs;
     local TSatellite kSatellite;
     local XGCountry kCountry;
@@ -161,6 +172,7 @@ function AddSatelliteNode(int iCountry, int iType, optional bool bInstant)
 
     kLabs = LWCE_XGFacility_Labs(LABS());
     kNode = World().GetSatelliteNode(iCountry);
+    
     kSatellite.iType = iType;
     kSatellite.v2Loc = kNode.v2Coords;
     kSatellite.iCountry = iCountry;
@@ -943,6 +955,18 @@ function RemoveFacility(int iFacility)
 function LWCE_RemoveFacility(name nmFacility)
 {
     ModifyFacilityCount(nmFacility, -1);
+}
+
+function SetStartingData(name nmContinent, name nmCountry, name nmStartingBonus)
+{
+    m_nmContinent = nmContinent;
+    m_nmCountry = nmCountry;
+
+    // TODO make starting bonus level a configurable value
+    AdjustBonusLevel(nmStartingBonus, 2);
+
+    LWCE_XGStorage(STORAGE()).LWCE_AddItem('Item_Satellite');
+    LWCE_AddSatelliteNode(nmCountry, true);
 }
 
 function UpdateInterceptorOrders()

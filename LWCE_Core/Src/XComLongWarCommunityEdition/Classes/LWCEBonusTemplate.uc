@@ -33,6 +33,11 @@ var config array<name> arrStartingTechs;
 var const localized string strName;
 var const localized string strDescription;
 
+function name GetBonusName()
+{
+    return DataName;
+}
+
 /// <summary>
 /// DO NOT CALL THIS FUNCTION.
 ///

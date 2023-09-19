@@ -1,3 +1,11 @@
+
+; TODO: temporary localization, to be updated for all languages
+[NorthAmerica LWCEContinentTemplate]
+strName="North America"
+
+[UnitedStates LWCECountryTemplate]
+strName="United States"
+
 [AdvancedPreparations LWCEBonusTemplate]
 strName="Advanced Preparations: "
 strDescription="XCOM HQ starts with a Laboratory and Workshop already built."
