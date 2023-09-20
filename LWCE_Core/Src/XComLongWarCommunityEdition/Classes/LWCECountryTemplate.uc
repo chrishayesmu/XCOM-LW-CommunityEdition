@@ -12,7 +12,7 @@ var config array<name> arrCities;           // The names of the cities which are
 var config array<name> arrStartingBonuses;  // Which bonuses are available when choosing this country as the starting country.
 var config array<name> arrSatelliteBonuses; // Which bonuses are available via satellite coverage. If multiple are specified, one is chosen randomly
                                             // at the start of the campaign.
-
+var config int iSoldierOriginWeight;        // The weighting which assigns the relative likelihood of soldiers to be from this country.
 var const localized string strName;
 var const localized string strNameWithArticle;
 var const localized string strNameWithArticleLower;
