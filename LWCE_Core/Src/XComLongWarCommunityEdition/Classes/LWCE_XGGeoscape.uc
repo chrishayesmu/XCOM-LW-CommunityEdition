@@ -658,6 +658,24 @@ function LWCE_GetEvents(out array<LWCE_THQEvent> arrEvents)
     kPayDay.Destroy();
 }
 
+function int GetSatTravelTime(int iCountry)
+{
+    `LWCE_LOG_DEPRECATED_CLS(GetSatTravelTime);
+
+    return -100;
+}
+
+function int LWCE_GetSatTravelTime(name nmCountry)
+{
+    local XGCountry kDestCountry;
+    local Vector2D v2Dist;
+
+    // TODO: validate that V2DSize gives the correct results here
+    kDestCountry = LWCE_XGWorld(WORLD()).LWCE_GetCountry(nmCountry);
+    v2Dist = GetShortestDist(HQ().GetCoords(), kDestCountry.GetCoords());
+    return int(3.0f + ((V2DSize(v2Dist) / 1.40) * 7.0f));
+}
+
 function TGeoscapeAlert GetTopAlert()
 {
     local TGeoscapeAlert kAlert;

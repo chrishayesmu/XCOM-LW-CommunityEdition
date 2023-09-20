@@ -1056,10 +1056,27 @@ function OnRequestExpired(int iRequestIndex)
     m_arrCECurrentRequests.Remove(iRequestIndex, 1);
 }
 
+function OnSatelliteTransferExecuted(TSatellite kSatellite)
+{
+    `LWCE_LOG_DEPRECATED_CLS(OnSatelliteTransferExecuted);
+}
+
+function LWCE_OnSatelliteTransferExecuted(LWCE_TSatellite kSatellite)
+{
+    LWCE_OnSatelliteSuccessfullyTransferred(kSatellite, false, true);
+}
+
 function OnSatelliteSuccessfullyTransferred(TSatellite kSatellite, optional bool bSitRoomAttention = true, optional bool bTurnInRequest = false)
+{
+    `LWCE_LOG_DEPRECATED_CLS(OnSatelliteSuccessfullyTransferred);
+}
+
+function LWCE_OnSatelliteSuccessfullyTransferred(LWCE_TSatellite kSatellite, optional bool bSitRoomAttention = true, optional bool bTurnInRequest = false)
 {
     local int iRequest;
 
+// TODO: commented until we change countries to names
+/*
     for (iRequest = 0; iRequest < m_arrCECurrentRequests.Length; iRequest++)
     {
         if (m_arrCECurrentRequests[iRequest].eType == eFCRType_SatLaunch)
@@ -1079,6 +1096,7 @@ function OnSatelliteSuccessfullyTransferred(TSatellite kSatellite, optional bool
             }
         }
     }
+ */
 }
 
 function OnShipAdded(EShipType eShip, int iContinent)

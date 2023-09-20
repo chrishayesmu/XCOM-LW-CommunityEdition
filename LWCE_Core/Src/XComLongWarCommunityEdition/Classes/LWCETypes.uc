@@ -530,6 +530,21 @@ struct LWCE_TObjectSummary
     var name ItemType;
 };
 
+struct LWCE_TSatellite
+{
+    var name nmType; // The type of satellite; usually this will be 'Item_Satellite' but maybe some mod wants high-res or thermal sats, etc
+    var Vector2D v2Loc;
+    var XGEntity kSatEntity;
+    var name nmCountry; // Which country the satellite is monitoring
+    var int iTravelTime; // How long until the satellite is in position; if <= 0, it's already arrived
+};
+
+struct LWCE_TSatNode
+{
+    var Vector2D v2Coords;
+    var name nmCountry;
+};
+
 struct LWCE_TShip
 {
     var string strName;

@@ -1,5 +1,8 @@
 class LWCE_XGCountry extends XGCountry;
 
+var name nmCountry;
+var name nmContinent;
+
 function AddPanic(int iPanic, optional bool bSuppressHeadline)
 {
     local int iPrevPanic;

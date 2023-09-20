@@ -18,6 +18,7 @@ struct CheckpointRecord_LWCE_XGHeadquarters extends XGHeadQuarters.CheckpointRec
     var array<LWCE_XGBase> m_arrBases;
     var array<LWCE_TBonus> m_arrBonuses;
     var array<LWCE_TFacilityCount> m_arrCEBaseFacilities;
+    var array<LWCE_TSatellite> m_arrCESatellites;
     var array<name> m_arrCEFacilityBinksPlayed;
     var array<name> m_arrCELastCaptives;
     var LWCEItemContainer m_kCELastCargoArtifacts;
@@ -29,6 +30,7 @@ struct CheckpointRecord_LWCE_XGHeadquarters extends XGHeadQuarters.CheckpointRec
 var array<LWCE_XGBase> m_arrBases;
 var array<LWCE_TBonus> m_arrBonuses;
 var array<LWCE_TFacilityCount> m_arrCEBaseFacilities; // A count of each facility type XCOM has, across all bases.
+var array<LWCE_TSatellite> m_arrCESatellites;
 var array<name> m_arrCEFacilityBinksPlayed;
 var array<name> m_arrCELastCaptives;
 var LWCEItemContainer m_kCELastCargoArtifacts;
@@ -68,15 +70,15 @@ function Init(bool bLoadingFromSave)
         }
     }
 
-    for (iSat = 0; iSat < m_arrSatellites.Length; iSat++)
+    for (iSat = 0; iSat < m_arrCESatellites.Length; iSat++)
     {
-        if (m_arrSatellites[iSat].kSatEntity == none)
+        if (m_arrCESatellites[iSat].kSatEntity == none)
         {
-            m_arrSatellites[iSat].kSatEntity = Spawn(class'LWCE_XGEntity');
-            m_arrSatellites[iSat].kSatEntity.AssignGameActor(self, m_arrSatellites.Length);
-            m_arrSatellites[iSat].kSatEntity.Init(eEntityGraphic_Sat_Persistent);
-            m_arrSatellites[iSat].kSatEntity.SetHidden(true);
-            m_arrSatellites[iSat].kSatEntity.SetBase(none);
+            m_arrCESatellites[iSat].kSatEntity = Spawn(class'LWCE_XGEntity');
+            m_arrCESatellites[iSat].kSatEntity.AssignGameActor(self, m_arrCESatellites.Length);
+            m_arrCESatellites[iSat].kSatEntity.Init(eEntityGraphic_Sat_Persistent);
+            m_arrCESatellites[iSat].kSatEntity.SetHidden(true);
+            m_arrCESatellites[iSat].kSatEntity.SetBase(none);
         }
     }
 
@@ -163,63 +165,68 @@ function AddSatelliteNode(int iCountry, int iType, optional bool bInstant)
     `LWCE_LOG_DEPRECATED_CLS(AddSatelliteNode);
 }
 
-function LWCE_AddSatelliteNode(name nmCountry, optional bool bInstant)
+function LWCE_AddSatelliteNode(name nmCountry, name nmType, optional bool bInstant)
 {
     local LWCE_XGFacility_Labs kLabs;
-    local TSatellite kSatellite;
-    local XGCountry kCountry;
-    local TSatNode kNode;
+    local LWCE_XGWorld kWorld;
+    local LWCE_XGCountry kCountry;
+    local LWCE_TSatellite kSatellite;
+    local LWCE_TSatNode kNode;
 
     kLabs = LWCE_XGFacility_Labs(LABS());
-    kNode = World().GetSatelliteNode(iCountry);
-    
-    kSatellite.iType = iType;
+    kWorld = LWCE_XGWorld(WORLD());
+    kCountry = kWorld.LWCE_GetCountry(nmCountry);
+    kNode = kWorld.LWCE_GetSatelliteNode(nmCountry);
+
+    kSatellite.nmType = nmType;
     kSatellite.v2Loc = kNode.v2Coords;
-    kSatellite.iCountry = iCountry;
+    kSatellite.nmCountry = nmCountry;
 
     if (!bInstant)
     {
-        kSatellite.iTravelTime = GEOSCAPE().GetSatTravelTime(iCountry) * 24;
+        kSatellite.iTravelTime = LWCE_XGGeoscape(GEOSCAPE()).LWCE_GetSatTravelTime(nmCountry) * 24;
     }
 
-    kCountry = Country(iCountry);
+    kCountry = kWorld.LWCE_GetCountry(nmCountry);
     kCountry.SetSatelliteCoverage(true);
 
     if (!bInstant)
     {
-        Continent(kCountry.GetContinent()).m_kMonthly.iSatellitesLaunched += 1;
+        kWorld.LWCE_GetContinent(kCountry.nmContinent).m_kMonthly.iSatellitesLaunched += 1;
     }
 
     kSatellite.kSatEntity = Spawn(class'LWCE_XGEntity');
-    kSatellite.kSatEntity.AssignGameActor(self, m_arrSatellites.Length);
+    kSatellite.kSatEntity.AssignGameActor(self, m_arrCESatellites.Length);
     kSatellite.kSatEntity.Init(eEntityGraphic_Sat_Persistent);
     kSatellite.kSatEntity.SetHidden(true);
     kSatellite.kSatEntity.SetBase(none);
-    m_arrSatellites.AddItem(kSatellite);
-    LWCE_XGStorage(STORAGE()).LWCE_RemoveItem('Item_Satellite');
+
+    m_arrCESatellites.AddItem(kSatellite);
+    LWCE_XGStorage(STORAGE()).LWCE_RemoveItem(nmType);
 
     if (bInstant)
     {
-        ActivateSatellite(m_arrSatellites.Length - 1, false);
+        ActivateSatellite(m_arrCESatellites.Length - 1, false);
     }
     else
     {
-        World().m_kFundingCouncil.OnSatelliteTransferExecuted(m_arrSatellites[m_arrSatellites.Length - 1]);
+        LWCE_XGFundingCouncil(kWorld.m_kFundingCouncil).LWCE_OnSatelliteTransferExecuted(m_arrCESatellites[m_arrCESatellites.Length - 1]);
     }
 
     STAT_AddStat(eRecap_SatellitesLaunched, 1);
 
-    if (STAT_GetStat(eRecap_SecondSatellite) == 0 && m_arrSatellites.Length == 2)
+    if (STAT_GetStat(eRecap_SecondSatellite) == 0 && m_arrCESatellites.Length == 2)
     {
         STAT_SetStat(eRecap_SecondSatellite, Game().GetDays());
     }
-    else if (STAT_GetStat(eRecap_ThirdSatellite) == 0 && m_arrSatellites.Length == 3)
+    else if (STAT_GetStat(eRecap_ThirdSatellite) == 0 && m_arrCESatellites.Length == 3)
     {
         STAT_SetStat(eRecap_ThirdSatellite, Game().GetDays());
     }
 
     // If just now getting the We Have Ways continent bonus, and current research is an autopsy or interrogation,
     // complete the research right away
+    // TODO rewrite this and also make it not do this in Long War, just apply the bonus
     if (Continent(kCountry.GetContinent()).HasBonus() && Continent(kCountry.GetContinent()).m_eBonus == eCB_WeHaveWays)
     {
         if (kLabs.LWCE_IsInterrogationTech(kLabs.m_kCEProject.TechName) || kLabs.LWCE_IsAutopsyTech(kLabs.m_kCEProject.TechName))
@@ -628,16 +635,16 @@ function LWCE_GetEvents(out array<LWCE_THQEvent> arrEvents)
         }
     }
 
-    for (Index = 0; Index < m_arrSatellites.Length; Index++)
+    for (Index = 0; Index < m_arrCESatellites.Length; Index++)
     {
-        if (m_arrSatellites[Index].iTravelTime > 0)
+        if (m_arrCESatellites[Index].iTravelTime > 0)
         {
             kEvent =  kBlankEvent;
             kEvent.EventType = 'SatOperational';
-            kEvent.iHours = m_arrSatellites[Index].iTravelTime;
+            kEvent.iHours = m_arrCESatellites[Index].iTravelTime;
 
             kEvent.kData = class'LWCEDataContainer'.static.New('THQEventData');
-            kEvent.kData.AddInt(m_arrSatellites[Index].iCountry);
+            kEvent.kData.AddName(m_arrCESatellites[Index].nmCountry);
 
             bAdded = false;
 
@@ -966,7 +973,7 @@ function SetStartingData(name nmContinent, name nmCountry, name nmStartingBonus)
     AdjustBonusLevel(nmStartingBonus, 2);
 
     LWCE_XGStorage(STORAGE()).LWCE_AddItem('Item_Satellite');
-    LWCE_AddSatelliteNode(nmCountry, true);
+    LWCE_AddSatelliteNode(nmCountry, 'Item_Satellite', true);
 }
 
 function UpdateInterceptorOrders()

@@ -84,6 +84,11 @@ function UpdateMainMenu()
                 continue;
             }
 
+            if (!kCountryTemplate.bIsCouncilMember)
+            {
+                continue;
+            }
+
             for (iBonus = 0; iBonus < kCountryTemplate.arrStartingBonuses.Length; iBonus++)
             {
                 kStartingBonusTemplate = m_kBonusTemplateMgr.FindBonusTemplate(kCountryTemplate.arrStartingBonuses[iBonus]);

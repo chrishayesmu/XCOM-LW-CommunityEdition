@@ -51,6 +51,9 @@
 // Retrieve templates by name
 `define LWCE_ABILITY(nm) (`LWCE_ABILITY_TEMPLATE_MGR.FindAbilityTemplate(`nm))
 `define LWCE_ARMOR(nm) (`LWCE_ITEM_TEMPLATE_MGR.FindArmorTemplate(`nm))
+`define LWCE_CITY(nm) (`LWCE_CITY_TEMPLATE_MGR.FindCityTemplate(`nm))
+`define LWCE_CONTINENT(nm) (`LWCE_CONTINENT_TEMPLATE_MGR.FindContinentTemplate(`nm))
+`define LWCE_COUNTRY(nm) (`LWCE_COUNTRY_TEMPLATE_MGR.FindCountryTemplate(`nm))
 `define LWCE_EQUIPMENT(nm) (`LWCE_ITEM_TEMPLATE_MGR.FindEquipmentTemplate(`nm))
 `define LWCE_FACILITY(nm) (`LWCE_FACILITY_TEMPLATE_MGR.FindFacilityTemplate(`nm))
 `define LWCE_FTECH(nm) (`LWCE_FOUNDRY_TEMPLATE_MGR.FindProjectTemplate(`nm))

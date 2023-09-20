@@ -1326,6 +1326,8 @@ native      static final operator(34)   vector2d /= (out vector2d A, float B);
 native      static final operator(34)   vector2d += (out vector2d A, vector2d B);
 native	    static final operator(34)   vector2d -= (out vector2d A, vector2d B);
 
+native      static final function float V2DSize(Vector2D A);
+native      static final function float V2DSizeSq(Vector2D A);
 
 /**
  * Returns the value in the Range, relative to Pct.

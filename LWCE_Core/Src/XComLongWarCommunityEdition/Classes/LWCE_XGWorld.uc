@@ -1,4 +1,12 @@
-class LWCE_XGWorld extends XGWorld;
+class LWCE_XGWorld extends XGWorld
+    dependson(LWCETypes);
+
+struct CheckpointRecord_LWCE_XGWorld extends XGWorld.CheckpointRecord
+{
+    var array<LWCE_TSatNode> m_arrCESatNodes;
+};
+
+var array<LWCE_TSatNode> m_arrCESatNodes;
 
 function Init(bool bNewGame)
 {
@@ -114,8 +122,8 @@ function BuildCountry(int iCountry, int iContinent, bool bDeveloped)
 function CreateContinents()
 {
     local int iContinent;
-    local TSatBonus kBonus;
 
+    // TODO: pull from templates
     for (iContinent = 0; iContinent < 5; iContinent++)
     {
         m_arrContinents[iContinent] = Spawn(class'LWCE_XGContinent');
@@ -129,18 +137,6 @@ function CreateContinents()
             m_arrContinents[iContinent].m_v2Coords = vect2d(0.2220, 0.2680);
             m_arrContinents[iContinent].m_arrBounds.AddItem(Rect(0.040, 0.0330, 0.3540, 0.4260));
             m_arrContinents[iContinent].m_eBonus = eCB_AirAndSpace;
-
-            kBonus.iNumScientists = 1;
-            kBonus.iNumEngineers = 1;
-            m_arrContinents[iContinent].m_arrSatBonuses.AddItem(kBonus);
-
-            kBonus.iNumScientists = 2;
-            kBonus.iNumEngineers = 2;
-            m_arrContinents[iContinent].m_arrSatBonuses.AddItem(kBonus);
-
-            kBonus.iNumScientists = 4;
-            kBonus.iNumEngineers = 4;
-            m_arrContinents[iContinent].m_arrSatBonuses.AddItem(kBonus);
         }
         else if (iContinent == eContinent_SouthAmerica)
         {
@@ -148,14 +144,6 @@ function CreateContinents()
             m_arrContinents[iContinent].m_v2Coords = vect2d(0.3370, 0.5910);
             m_arrContinents[iContinent].m_arrBounds.AddItem(Rect(0.2710, 0.430, 0.4050, 0.8130));
             m_arrContinents[iContinent].m_eBonus = 3; // Power to the People
-
-            kBonus.iNumScientists = 1;
-            kBonus.iNumEngineers = 0;
-            m_arrContinents[iContinent].m_arrSatBonuses.AddItem(kBonus);
-
-            kBonus.iNumScientists = 2;
-            kBonus.iNumEngineers = 2;
-            m_arrContinents[iContinent].m_arrSatBonuses.AddItem(kBonus);
         }
         else if (iContinent == eContinent_Europe)
         {
@@ -163,22 +151,6 @@ function CreateContinents()
             m_arrContinents[iContinent].m_v2Coords = vect2d(0.5610, 0.2020);
             m_arrContinents[iContinent].m_arrBounds.AddItem(Rect(0.4720, 0.0920, 0.6120, 0.2950));
             m_arrContinents[iContinent].m_eBonus = 6; // Wealth of Nations
-
-            kBonus.iNumScientists = 2;
-            kBonus.iNumEngineers = 0;
-            m_arrContinents[iContinent].m_arrSatBonuses.AddItem(kBonus);
-
-            kBonus.iNumScientists = 3;
-            kBonus.iNumEngineers = 0;
-            m_arrContinents[iContinent].m_arrSatBonuses.AddItem(kBonus);
-
-            kBonus.iNumScientists = 6;
-            kBonus.iNumEngineers = 0;
-            m_arrContinents[iContinent].m_arrSatBonuses.AddItem(kBonus);
-
-            kBonus.iNumScientists = 8;
-            kBonus.iNumEngineers = 0;
-            m_arrContinents[iContinent].m_arrSatBonuses.AddItem(kBonus);
         }
         else if (iContinent == eContinent_Africa)
         {
@@ -186,18 +158,6 @@ function CreateContinents()
             m_arrContinents[iContinent].m_v2Coords = vect2d(0.5620, 0.4870);
             m_arrContinents[iContinent].m_arrBounds.AddItem(Rect(0.4360, 0.3090, 0.6390, 0.6930));
             m_arrContinents[iContinent].m_eBonus = 5; // Architects of the Future
-
-            kBonus.iNumScientists = 0;
-            kBonus.iNumEngineers = 1;
-            m_arrContinents[iContinent].m_arrSatBonuses.AddItem(kBonus);
-
-            kBonus.iNumScientists = 1;
-            kBonus.iNumEngineers = 2;
-            m_arrContinents[iContinent].m_arrSatBonuses.AddItem(kBonus);
-
-            kBonus.iNumScientists = 2;
-            kBonus.iNumEngineers = 3;
-            m_arrContinents[iContinent].m_arrSatBonuses.AddItem(kBonus);
         }
         else if (iContinent == eContinent_Asia)
         {
@@ -208,26 +168,77 @@ function CreateContinents()
             m_arrContinents[iContinent].m_arrBounds.AddItem(Rect(0.7680, 0.470, 0.950, 0.5630));
             m_arrContinents[iContinent].m_arrBounds.AddItem(Rect(0.8140, 0.5660, 0.930, 0.7380));
             m_arrContinents[iContinent].m_eBonus = 4; // New Warfare
-
-            kBonus.iNumScientists = 0;
-            kBonus.iNumEngineers = 2;
-            m_arrContinents[iContinent].m_arrSatBonuses.AddItem(kBonus);
-
-            kBonus.iNumScientists = 0;
-            kBonus.iNumEngineers = 3;
-            m_arrContinents[iContinent].m_arrSatBonuses.AddItem(kBonus);
-
-            kBonus.iNumScientists = 0;
-            kBonus.iNumEngineers = 6;
-            m_arrContinents[iContinent].m_arrSatBonuses.AddItem(kBonus);
-
-            kBonus.iNumScientists = 0;
-            kBonus.iNumEngineers = 8;
-            m_arrContinents[iContinent].m_arrSatBonuses.AddItem(kBonus);
         }
 
         BalanceContinent(m_arrContinents[iContinent]);
     }
+}
+
+function XGContinent GetContinent(int iContinent)
+{
+    `LWCE_LOG_DEPRECATED_CLS(GetContinent);
+    
+    return none;
+}
+
+function LWCE_XGContinent LWCE_GetContinent(name nmContinent)
+{
+    local int Index;
+
+    for (Index = 0; Index < m_arrContinents.Length; Index++)
+    {
+        if (LWCE_XGContinent(m_arrContinents[Index]).nmContinent == nmContinent)
+        {
+            return LWCE_XGContinent(m_arrContinents[Index]);
+        }
+    }
+
+    return none;
+}
+
+function XGCountry GetCountry(int iCountryID)
+{
+    `LWCE_LOG_DEPRECATED_CLS(GetCountry);
+    return none;
+}
+
+function LWCE_XGCountry LWCE_GetCountry(name nmCountry)
+{
+    local int Index;
+
+    for (Index = 0; Index < m_arrCountries.Length; Index++)
+    {
+        if (LWCE_XGCountry(m_arrCountries[Index]).nmCountry == nmCountry)
+        {
+            return LWCE_XGCountry(m_arrCountries[Index]);
+        }
+    }
+
+    return none;
+}
+
+function TSatNode GetSatelliteNode(int iCountry)
+{
+    local TSatNode kNode;
+
+    `LWCE_LOG_DEPRECATED_CLS(GetSatelliteNode);
+
+    return kNode;
+}
+
+function LWCE_TSatNode LWCE_GetSatelliteNode(name nmCountry)
+{
+    local LWCE_TSatNode kNode;
+
+    foreach m_arrCESatNodes(kNode)
+    {
+        if (kNode.nmCountry == nmCountry)
+        {
+            return kNode;
+        }
+    }
+
+    return kNode;
 }
 
 function OnLoadGame()
