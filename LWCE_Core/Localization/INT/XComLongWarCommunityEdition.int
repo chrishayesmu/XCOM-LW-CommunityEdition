@@ -1,229 +1,488 @@
+[Africa LWCEContinentTemplate]
+strName="Africa"
 
-; TODO: temporary localization, to be updated for all languages
+[Asia LWCEContinentTemplate]
+strName="Asia"
+
+[Europe LWCEContinentTemplate]
+strName="Europe"
+
 [NorthAmerica LWCEContinentTemplate]
 strName="North America"
 
+[SouthAmerica LWCEContinentTemplate]
+strName="South America"
+
+[Argentina LWCECountryTemplate]
+strName="Argentina"
+strNameWithArticle="Argentina"
+strNameWithArticleLower="Argentina"
+strNamePossessive="Argentina's"
+strNameAdjective="Argentinian"
+
+[Australia LWCECountryTemplate]
+strName="Australia"
+strNameWithArticle="Australia"
+strNameWithArticleLower="Australia"
+strNamePossessive="Australia's"
+strNameAdjective="Australian"
+
+[Belgium LWCECountryTemplate]
+strName="Belgium"
+strNameWithArticle="Belgium"
+strNameWithArticleLower="Belgium"
+strNamePossessive="Belgium's"
+strNameAdjective="Belgian"
+
+[Brazil LWCECountryTemplate]
+strName="Brazil"
+strNameWithArticle="Brazil"
+strNameWithArticleLower="Brazil"
+strNamePossessive="Brazil's"
+strNameAdjective="Brazilian"
+
+[Canada LWCECountryTemplate]
+strName="Canada"
+strNameWithArticle="Canada"
+strNameWithArticleLower="Canada"
+strNamePossessive="Canada's"
+strNameAdjective="Canadian"
+
+[China LWCECountryTemplate]
+strName="China"
+strNameWithArticle="China"
+strNameWithArticleLower="China"
+strNamePossessive="China's"
+strNameAdjective="Chinese"
+
+[Columbia LWCECountryTemplate]
+strName="Colombia"
+strNameWithArticle="Honduras"
+strNameWithArticleLower="Honduras"
+strNamePossessive="Honduras'"
+strNameAdjective="Honduran"
+
+[Egypt LWCECountryTemplate]
+strName="Egypt"
+strNameWithArticle="Egypt"
+strNameWithArticleLower="Egypt"
+strNamePossessive="Egypt's"
+strNameAdjective="Egyptian"
+
+[France LWCECountryTemplate]
+strName="France"
+strNameWithArticle="France"
+strNameWithArticleLower="France"
+strNamePossessive="France's"
+strNameAdjective="French"
+
+[Germany LWCECountryTemplate]
+strName="Germany"
+strNameWithArticle="Germany"
+strNameWithArticleLower="Germany"
+strNamePossessive="Germany's"
+strNameAdjective="German"
+
+[Greece LWCECountryTemplate]
+strName="Greece"
+strNameWithArticle="Greece"
+strNameWithArticleLower="Greece"
+strNamePossessive="Greece's"
+strNameAdjective="Greek"
+
+[India LWCECountryTemplate]
+strName="India"
+strNameWithArticle="India"
+strNameWithArticleLower="India"
+strNamePossessive="India's"
+strNameAdjective="Indian"
+
+[Indonesia LWCECountryTemplate]
+strName="Indonesia"
+strNameWithArticle="Indonesia"
+strNameWithArticleLower="Indonesia"
+strNamePossessive="Indonesia's"
+strNameAdjective="Indonesian"
+
+[Iran LWCECountryTemplate]
+strName="Iran"
+strNameWithArticle="Iran"
+strNameWithArticleLower="Iran"
+strNamePossessive="Iran's"
+strNameAdjective="Iranian"
+
+[Ireland LWCECountryTemplate]
+strName="Ireland"
+strNameWithArticle="Ireland"
+strNameWithArticleLower="Ireland"
+strNamePossessive="Ireland's"
+strNameAdjective="Irish"
+
+[Israel LWCECountryTemplate]
+strName="Israel"
+strNameWithArticle="Israel"
+strNameWithArticleLower="Israel"
+strNamePossessive="Israel's"
+strNameAdjective="Israeli"
+
+[Italy LWCECountryTemplate]
+strName="Italy"
+strNameWithArticle="Italy"
+strNameWithArticleLower="Italy"
+strNamePossessive="Italy's"
+strNameAdjective="Italian"
+
+[Japan LWCECountryTemplate]
+strName="Japan"
+strNameWithArticle="Japan"
+strNameWithArticleLower="Japan"
+strNamePossessive="Japan's"
+strNameAdjective="Japanese"
+
+[Mexico LWCECountryTemplate]
+strName="Mexico"
+strNameWithArticle="Mexico"
+strNameWithArticleLower="Mexico"
+strNamePossessive="Mexico's"
+strNameAdjective="Mexican"
+
+[Netherlands LWCECountryTemplate]
+strName="Netherlands"
+strNameWithArticle="The Netherlands"
+strNameWithArticleLower="the Netherlands"
+strNamePossessive="Netherlands'"
+strNameAdjective="Dutch"
+
+[Nigeria LWCECountryTemplate]
+strName="Nigeria"
+strNameWithArticle="Nigeria"
+strNameWithArticleLower="Nigeria"
+strNamePossessive="Nigeria's"
+strNameAdjective="Nigerian"
+
+[Norway LWCECountryTemplate]
+strName="Norway"
+strNameWithArticle="Norway"
+strNameWithArticleLower="Norway"
+strNamePossessive="Norway's"
+strNameAdjective="Norwegian"
+
+[Pakistan LWCECountryTemplate]
+strName="Pakistan"
+strNameWithArticle="Pakistan"
+strNameWithArticleLower="Pakistan"
+strNamePossessive="Pakistan's"
+strNameAdjective="Pakistani"
+
+[Poland LWCECountryTemplate]
+strName="Poland"
+strNameWithArticle="Poland"
+strNameWithArticleLower="Poland"
+strNamePossessive="Poland's"
+strNameAdjective="Polish"
+
+[Portugal LWCECountryTemplate]
+strName="Portugal"
+strNameWithArticle="Portugal"
+strNameWithArticleLower="Portugal"
+strNamePossessive="Portugal's"
+strNameAdjective="Portuguese"
+
+[Russia LWCECountryTemplate]
+strName="Russia"
+strNameWithArticle="Russia"
+strNameWithArticleLower="Russia"
+strNamePossessive="Russia's"
+strNameAdjective="Russian"
+
+[Scotland LWCECountryTemplate]
+strName="Scotland"
+strNameWithArticle="Scotland"
+strNameWithArticleLower="Scotland"
+strNamePossessive="Scotland's"
+strNameAdjective="Scottish"
+
+[SouthAfrica LWCECountryTemplate]
+strName="South Africa"
+strNameWithArticle="South Africa"
+strNameWithArticleLower="South Africa"
+strNamePossessive="South Africa's"
+strNameAdjective="South African"
+
+[SouthKorea LWCECountryTemplate]
+strName="South Korea"
+strNameWithArticle="South Korea"
+strNameWithArticleLower="South Korea"
+strNamePossessive="South Korea's"
+strNameAdjective="South Korean"
+
+[Spain LWCECountryTemplate]
+strName="Spain"
+strNameWithArticle="Spain"
+strNameWithArticleLower="Spain"
+strNamePossessive="Spain's"
+strNameAdjective="Spanish"
+
+[Sweden LWCECountryTemplate]
+strName="Sweden"
+strNameWithArticle="Sweden"
+strNameWithArticleLower="Sweden"
+strNamePossessive="Sweden's"
+strNameAdjective="Swedish"
+
+[Turkey LWCECountryTemplate]
+strName="Turkey"
+strNameWithArticle="Bosnia"
+strNameWithArticleLower="Bosnia"
+strNamePossessive="Bosnia's"
+strNameAdjective="Bosnian"
+
+[Ukraine LWCECountryTemplate]
+strName="Ukraine"
+strNameWithArticle="Ukraine"
+strNameWithArticleLower="Ukraine"
+strNamePossessive="Ukraine's"
+strNameAdjective="Ukrainian"
+
+[UnitedKingdom LWCECountryTemplate]
+strName="United Kingdom"
+strNameWithArticle="The United Kingdom"
+strNameWithArticleLower="the United Kingdom"
+strNamePossessive="Britain's"
+strNameAdjective="British"
+
 [UnitedStates LWCECountryTemplate]
 strName="United States"
+strNameWithArticle="The United States"
+strNameWithArticleLower="the United States"
+strNamePossessive="America's"
+strNameAdjective="American"
+
+[Venezuela LWCECountryTemplate]
+strName="Venezuela"
+strNameWithArticle="Venezuela"
+strNameWithArticleLower="Venezuela"
+strNamePossessive="Venezuela's"
+strNameAdjective="Venezuelan"
 
 [AdvancedPreparations LWCEBonusTemplate]
-strName="Advanced Preparations: "
+strName="Advanced Preparations"
 strDescription="XCOM HQ starts with a Laboratory and Workshop already built."
 
 [AirSuperiority LWCEBonusTemplate]
-strName="Air Superiority: "
+strName="Air Superiority"
 strDescription="Aircraft and aircraft weapons cost <XGParam:IntValue0/>% less to purchase and maintain."
 
 [AncientArtifact LWCEBonusTemplate]
-strName="Ancient Artifact: "
+strName="Ancient Artifact"
 strDescription="Start the campaign with an Illuminator Gunsight small item."
 
 [ArchitectsOfTheFuture LWCEBonusTemplate]
-strName="Architects of the Future: "
+strName="Architects of the Future"
 strDescription="Laboratories and Workshops cost <XGParam:IntValue0/>% less to build and maintain."
 
 [ArmyOfTheSouthernCross LWCEBonusTemplate]
-strName="Army of the Southern Cross: "
+strName="Army of the Southern Cross"
 strDescription="+<XGParam:IntValue0> bonus aim for newly promoted gunners and rocketeers."
 
 [AssemblyLine LWCEBonusTemplate]
-strName="Assembly Line: "
+strName="Assembly Line"
 strDescription="Start with two workshops in your home base."
 
 [Baumeister LWCEBonusTemplate]
-strName="Baumeister: "
+strName="Baumeister"
 strDescription="Facility construction time reduced by <XGParam:IntValue0>%."
 
 [Bounties LWCEBonusTemplate]
-strName="Bounties: "
+strName="Bounties"
 strDescription="<XGParam:IntValue0>% bonus cash from abductions."
 
 [Cadre LWCEBonusTemplate]
-strName="Cadre: "
+strName="Cadre"
 strDescription="Start with four corporals in the barracks, one of each supraclass."
 
 [CallToArms LWCEBonusTemplate]
-strName="Call to Arms: "
+strName="Call to Arms"
 strDescription="<XGParam:IntValue0>% reduction in fatigue from genemods."
 
 [CheyenneMountain LWCEBonusTemplate]
-strName="Cheyenne Mountain: "
+strName="Cheyenne Mountain"
 strDescription="XCOM HQ starts with all elevators already built, and excavation costs are reduced by <XGParam:IntValue0>%."
 
 [Cyberware LWCEBonusTemplate]
-strName="Cyberware: "
+strName="Cyberware"
 strDescription="<XGParam:IntValue0>% reduction in meld required for MEC primary weapons and tactical subsystems."
 
 [DeusEx LWCEBonusTemplate]
-strName="Deus Ex: "
+strName="Deus Ex"
 strDescription="<XGParam:IntValue0>% reduction in genemod meld and cash cost and modification time."
 
 [EagerToServe LWCEBonusTemplate]
-strName="Eager to Serve: "
+strName="Eager to Serve"
 strDescription="Solders are $<XGParam:IntValue0> cheaper to recruit."
 
 [Expertise LWCEBonusTemplate]
-strName="Expertise: "
+strName="Expertise"
 strDescription="+<XGParam:IntValue0>% bonus to research credits from interrogations."
 
 [FirstRecce LWCEBonusTemplate]
-strName="1st Recce: "
+strName="1st Recce"
 strDescription="+<XGParam:IntValue0> bonus defense for newly promoted snipers and scouts."
 
 [ForeignLegion LWCEBonusTemplate]
-strName="Foreign Legion: "
+strName="Foreign Legion"
 strDescription="Start with <XGParam:IntValue0> additional soldiers in the barracks."
 
 [ForTheSakeOfGlory LWCEBonusTemplate]
-strName="For the Sake of Glory: "
+strName="For the Sake of Glory"
 strDescription="Start with Advanced Repair foundry project, which grants faster repair time for aircraft, mechanized units and damaged soldier gear."
 
 [GhostInTheMachine LWCEBonusTemplate]
-strName="Ghost In the Machine: "
+strName="Ghost In the Machine"
 strDescription="SHIVs receive +<XGParam:IntValue0> aim, and you start the campaign with two SHIVs in the barracks."
 
 [GiftOfOsiris LWCEBonusTemplate]
-strName="Gift of Osiris: "
+strName="Gift of Osiris"
 strDescription="Fatigue from psi powers, genemods and officer ranks reduced by <XGParam:IntValue0>%."
 
 [IndependenceDay LWCEBonusTemplate]
-strName="Independence Day: "
+strName="Independence Day"
 strDescription="Country panic reduced an additional <XGParam:IntValue0> points when liberated from alien control."
 
 [JaiJawan LWCEBonusTemplate]
-strName="Jai Jawan: "
+strName="Jai Jawan"
 strDescription="Start with 2 additional interceptors in your home base and Elerium Afterburners foundry project, granting extended interception time."
 
 [JaiVidwan LWCEBonusTemplate]
-strName="Jai Vidwan: "
+strName="Jai Vidwan"
 strDescription="+<XGParam:IntValue0>% research bonus for each lab adjacency."
 
 [JungleScouts LWCEBonusTemplate]
-strName="Jungle Scouts: "
+strName="Jungle Scouts"
 strDescription="Early armors (Tac Vest and Tac, Kestrel, Phalanx and Aurora Armors) receive an additional small item slot until Tactical Rigging is developed."
 
 [JungleScoutsLegacy LWCEBonusTemplate]
-strName="Jungle Scouts: "
+strName="Jungle Scouts"
 strDescription="Start with Tactical Rigging foundry project, granting all soldiers the ability to carry one additional small item."
 
 [KiryuKaiCommander LWCEBonusTemplate]
-strName="Kiryu-Kai Commander: "
+strName="Kiryu-Kai Commander"
 strDescription="Start with a Master Sergeant of a random class on your roster."
 
 [LegacyOfUxmal LWCEBonusTemplate]
-strName="Legacy of Uxmal: "
+strName="Legacy of Uxmal"
 strDescription="<XGParam:IntValue0>% bonus to psionic training chances."
 
 [NeoPanzers LWCEBonusTemplate]
-strName="NeoPanzers: "
+strName="NeoPanzers"
 strDescription="<XGParam:IntValue0>% reduction in cash, alloy and elerium required for MEC and SHIV primary weapons."
 
 [NewWarfare LWCEBonusTemplate]
-strName="New Warfare: "
+strName="New Warfare"
 strDescription="Foundry projects have cash, alloy and elerium cost reduced by <XGParam:IntValue0/>% percent."
 
 [OnOurOwn LWCEBonusTemplate]
-strName="On Our Own: "
+strName="On Our Own"
 strDescription="No unique bonus."
 
-[TheOldPath LWCEBonusTemplate]
-strName="The Old Path: "
-strDescription="<XGParam:IntValue0>% reduction in psi training time."
-
 [PatriaeSemperVigilis LWCEBonusTemplate]
-strName="Patriae Semper Vigilis: "
+strName="Patriae Semper Vigilis"
 strDescription="All soldiers receive +<XGParam:IntValue0> will."
 
 [PaxNigeriana LWCEBonusTemplate]
-strName="Pax Nigeriana: "
+strName="Pax Nigeriana"
 strDescription="All soldiers receive +<XGParam:IntValue0> mobility."
 
 [PerArduaAdAstra LWCEBonusTemplate]
-strName="Per Ardua Ad Astra: "
+strName="Per Ardua Ad Astra"
 strDescription="All soldiers receive +<XGParam:IntValue0> ability points for stat rolls upon recruitment."
 
 [PowerToThePeople LWCEBonusTemplate]
-strName="Power to the People: "
+strName="Power to the People"
 strDescription="Power facilities cost <XGParam:IntValue0/>% less to build and maintain."
 
 [QuaidOrsay LWCEBonusTemplate]
-strName="Quai d'Orsay: "
+strName="Quai d'Orsay"
 strDescription="Country item requests occur <XGParam:IntValue0>% faster; fulfilled requests provide <XGParam:IntValue0>% additional defense, and intel scans cost <XGParam:IntValue0>% less."
 
 [ResearchFocus LWCEBonusTemplate]
-strName="Research Focus: "
+strName="Research Focus"
 strDescription="Start with two laboratories in your home base."
 
 [Resourceful LWCEBonusTemplate]
-strName="Resourceful: "
+strName="Resourceful"
 strDescription="Start with Alien Metallurgy and Advanced Salvage foundry projects (bonus alloys and weapon fragments)."
 
 [RingOfFire LWCEBonusTemplate]
-strName="Ring of Fire: "
+strName="Ring of Fire"
 strDescription="XCOM HQ has <XGParam:IntValue0> additional Steam Vents."
 
 [Robotics LWCEBonusTemplate]
-strName="Robotics: "
+strName="Robotics"
 strDescription="+<XGParam:IntValue0> bonus aim for new SHIVs and MEC troopers."
 
 [Roscosmos LWCEBonusTemplate]
-strName="Roscosmos: "
+strName="Roscosmos"
 strDescription="Start with an additional satellite uplink, and all satellites cost <XGParam:IntValue0>% less to build."
 
 [Sandhurst LWCEBonusTemplate]
-strName="Sandhurst: "
+strName="Sandhurst"
 strDescription="<XGParam:IntValue0>% reduction in ranks required to unlock Officer Training School projects."
 
 [Skunkworks LWCEBonusTemplate]
-strName="Skunkworks: "
+strName="Skunkworks"
 strDescription="XCOM HQ starts with the Foundry already built."
 
 [SpecialAirService LWCEBonusTemplate]
-strName="Special Air Service: "
+strName="Special Air Service"
 strDescription="All soldiers receive +<XGParam:IntValue0> aim."
 
 [SpecialWarfareSchool LWCEBonusTemplate]
-strName="Special Warfare School: "
+strName="Special Warfare School"
 strDescription="Officer Training School Projects cost <XGParam:IntValue0/>% less."
 
 [Spetznaz LWCEBonusTemplate]
-strName="Spetznaz: "
+strName="Spetznaz"
 strDescription="+<XGParam:IntValue0> bonus HP for new infantry and assault soldiers."
 
 [SukhoiCompany LWCEBonusTemplate]
-strName="Sukhoi Company: "
+strName="Sukhoi Company"
 strDescription="Start with Enhanced Avionics foundry project, granting +10% to hit during air combat."
 
 [SurvivalTraining LWCEBonusTemplate]
-strName="Survival Training: "
+strName="Survival Training"
 strDescription="All soldiers receive +<XGParam:IntValue0> hit point."
 
 [TaskForceArrowhead LWCEBonusTemplate]
-strName="Task Force Arrowhead: "
+strName="Task Force Arrowhead"
 strDescription="+<XGParam:IntValue0> bonus will for new engineers and medics."
 
 [TheirFinestHour LWCEBonusTemplate]
-strName="Their Finest Hour: "
+strName="Their Finest Hour"
 strDescription="Start with Penetrator Weapons foundry project, granting interceptor weapons increased armor piercing capabilities."
 
+[TheOldPath LWCEBonusTemplate]
+strName="The Old Path"
+strDescription="<XGParam:IntValue0>% reduction in psi training time."
+
 [WealthOfNations LWCEBonusTemplate]
-strName="Wealth of Nations: "
+strName="Wealth of Nations"
 strDescription="Monthly XCOM funding increased by <XGParam:IntValue0/>%."
 
 [WealthyBenefactor LWCEBonusTemplate]
-strName="Wealthy Benefactor: "
+strName="Wealthy Benefactor"
 strDescription="Start with <XGParam:IntValue0> bonus cash."
 
 [WeHaveWays LWCEBonusTemplate]
-strName="We Have Ways: "
+strName="We Have Ways"
 strDescription="<XGParam:IntValue0>% reduction in time to complete autopsies and interrogations."
 
 [WeiRenminFuwu LWCEBonusTemplate]
-strName="Wei Renmin Fuwu: "
+strName="Wei Renmin Fuwu"
 strDescription="Start with a Workshop and Repair Bay already built."
 
 [XenologicalRemedies LWCEBonusTemplate]
-strName="Xenological Remedies: "
+strName="Xenological Remedies"
 strDescription="<XGParam:IntValue0>% bonus cash from alien corpse and wreck sales."
 
 [Facility_AccessLift LWCEFacilityTemplate]

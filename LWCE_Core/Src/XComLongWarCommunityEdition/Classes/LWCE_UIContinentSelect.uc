@@ -50,7 +50,7 @@ simulated function bool OnAccept(optional string Str = "")
     {
         manager.RaiseInputGate();
     }
-    
+
     return true;
 }
 
@@ -138,7 +138,7 @@ simulated function LWCE_RealizeSelected()
     local array<ASValue> myArray;
 
     LWCE_UpdateInfoPanelData(m_iSelectedOption);
-    
+
     myValue.Type = AS_Number;
     myValue.N = m_iSelectedOption;
     myArray.AddItem(myValue);
@@ -166,14 +166,14 @@ simulated function LWCE_UpdateInfoPanelData(int Index)
     BonusName = kMgr.m_strLabelReturnToContinent $ kMgr.ConvertCashToString(kOption.CountryStartingCash * class'XGTacticalGameCore'.default.FundingBalance[kMgr.Game().GetDifficulty() + 4]);
 
     // Country + continent bonus names and description
-    InfoText  = class'UIUtilities'.static.GetHTMLColoredText(kOption.StartingBonusFriendlyName, eUIState_Warning, 22);
+    InfoText  = class'UIUtilities'.static.GetHTMLColoredText(kOption.StartingBonusFriendlyName $ ": ", eUIState_Warning, 22);
     InfoText $= class'UIUtilities'.static.GetHTMLColoredText(class'XComLocalizer'.static.ExpandString(kOption.StartingBonusFriendlyDescription), eUIState_Highlight, 16);
     InfoText $= "\n\n";
     InfoText $= class'UIUtilities'.static.GetHTMLColoredText(kMgr.m_strLabelBonus, eUIState_Highlight, 26);
     InfoText $= "\n";
-    InfoText $= class'UIUtilities'.static.GetHTMLColoredText(kOption.ContinentBonusFriendlyName, eUIState_Warning, 22);
+    InfoText $= class'UIUtilities'.static.GetHTMLColoredText(kOption.ContinentBonusFriendlyName $ ": ", eUIState_Warning, 22);
     InfoText $= class'UIUtilities'.static.GetHTMLColoredText(class'XComLocalizer'.static.ExpandString(kOption.ContinentBonusFriendlyDescription), eUIState_Highlight, 16);
-    
+
     // TODO implement string formatting here
     AS_UpdateInfo(/* kOption.txtBonusLabel.StrValue */ ContinentName, /* kOption.txtBonusTitle.StrValue */ BonusName, InfoText);
 
