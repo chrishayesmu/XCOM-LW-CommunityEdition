@@ -549,7 +549,7 @@ struct LWCE_TShip
 {
     var string strName;
     var string strSize;
-    var EShipType eType;
+    var name nmTemplate;
     var int iSpeed;
     var int iEngagementSpeed;
     var int iHP;
@@ -559,6 +559,14 @@ struct LWCE_TShip
     var array<LWCE_TItemQuantity> arrSalvage;
     var array<name> arrWeapons; // not used on player ships, only UFOs
     var int iImage;
+};
+
+struct LWCE_TShipOrder
+{
+    var int iNumInterceptors;
+    var name nmDestinationContinent;
+    var name nmShipType;
+    var int iHours;
 };
 
 struct LWCE_TTechState

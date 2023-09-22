@@ -1,6 +1,20 @@
 class LWCE_XGFacility_Hangar extends XGFacility_Hangar
     config(LWCEQualityOfLife);
 
+struct CheckpointRecord_LWCE_XGFacility_Hangar extends CheckpointRecord_XGFacility_Hangar
+{
+    var name m_nmCEBestWeaponEquipped;
+};
+
+struct LWCE_TContinentInfo
+{
+    var name nmContinent;
+    var TText strContinentName;
+    var int iNumShips;
+    var array<XGShip_Interceptor> arrCraft;
+    var array<int> m_arrInterceptorOrderIndexes;
+};
+
 var const localized array<string> PilotNames;
 var const localized array<string> PilotRanks;
 
@@ -21,7 +35,7 @@ function AddDropship()
 function AddFirestorm(int iContinent)
 {
     local int iInterceptorIndex, I;
-    local XGShip_Interceptor kFirestorm;
+    local LWCE_XGShip_Interceptor kFirestorm;
 
     iInterceptorIndex = INDEX_NONE;
     kFirestorm = none;
@@ -39,7 +53,7 @@ function AddFirestorm(int iContinent)
     }
 
     kFirestorm = Spawn(class'LWCE_XGShip_Interceptor');
-    kFirestorm.m_iHomeContinent = HQ().GetContinent();
+    kFirestorm.m_nmContinent = LWCE_XGHeadquarters(HQ()).LWCE_GetContinent();
     kFirestorm.m_iHomeBay = GetAvailableBay();
     kFirestorm.Init(ITEMTREE().GetShip(eShip_Firestorm));
     m_iFirestormCounter += 1;
@@ -83,17 +97,25 @@ function AddFirestorm(int iContinent)
 
 function AddInterceptor(int iContinent)
 {
-    local XGShip_Interceptor kInterceptor;
+    `LWCE_LOG_DEPRECATED_CLS(AddInterceptor);
+}
 
-    if (iContinent == -1)
+function LWCE_AddInterceptor(name nmContinent)
+{
+    local LWCE_XGHeadquarters kHQ;
+    local LWCE_XGShip_Interceptor kInterceptor;
+
+    kHQ = LWCE_XGHeadquarters(HQ());
+
+    if (nmContinent == '')
     {
-        iContinent = HQ().GetContinent();
+        nmContinent = kHQ.LWCE_GetContinent();
     }
 
     kInterceptor = Spawn(class'LWCE_XGShip_Interceptor');
-    kInterceptor.m_iHomeContinent = iContinent;
+    kInterceptor.m_nmContinent = nmContinent;
 
-    if (iContinent == HQ().GetContinent())
+    if (nmContinent == kHQ.LWCE_GetContinent())
     {
         kInterceptor.m_iHomeBay = GetAvailableBay();
     }
@@ -114,7 +136,7 @@ function AddInterceptor(int iContinent)
     kInterceptor.UpdateHangarShip();
     UpdateHangarBays();
 
-    GEOSCAPE().World().m_kFundingCouncil.OnShipAdded(eShip_Interceptor, iContinent);
+    LWCE_XGFundingCouncil(GEOSCAPE().World().m_kFundingCouncil).LWCE_OnShipAdded(kInterceptor);
 }
 
 function AssignRandomCallsign(XGShip_Interceptor kShip)
@@ -222,29 +244,42 @@ function LWCE_EquipWeapon(name ItemName, XGShip_Interceptor kShip)
 
 function TContinentInfo GetContinentInfo(EContinent eCont)
 {
-    local LWCE_XGFacility_Engineering kEngineering;
     local TContinentInfo kInfo;
+
+    `LWCE_LOG_DEPRECATED_CLS(GetContinentInfo);
+
+    return kInfo;
+}
+
+function LWCE_TContinentInfo LWCE_GetContinentInfo(name nmContinent)
+{
+    local LWCE_XGContinent kContinent;
+    local LWCE_XGFacility_Engineering kEngineering;
+    local LWCE_XGHeadquarters kHQ;
+    local LWCE_TContinentInfo kInfo;
     local LWCE_TItemProject kProject;
     local int iOrder;
 
-    kEngineering = `LWCE_ENGINEERING;
+    kContinent = `LWCE_XGCONTINENT(nmContinent);
+    kEngineering = LWCE_XGFacility_Engineering(ENGINEERING());
+    kHQ = LWCE_XGHeadquarters(HQ());
 
-    kInfo.eCont = eCont;
-    kInfo.strContinentName.StrValue = Continent(eCont).GetName();
-    kInfo.arrCraft = GetInterceptorsByContinent(eCont);
+    kInfo.nmContinent = nmContinent;
+    kInfo.strContinentName.StrValue = kContinent.GetName();
+    kInfo.arrCraft = LWCE_GetInterceptorsByContinent(nmContinent);
     kInfo.iNumShips = kInfo.arrCraft.Length;
 
-    for (iOrder = 0; iOrder < HQ().m_akInterceptorOrders.Length; iOrder++)
+    for (iOrder = 0; iOrder < kHQ.m_arrCEInterceptorOrders.Length; iOrder++)
     {
-        if (HQ().m_akInterceptorOrders[iOrder].iDestinationContinent == eCont)
+        if (kHQ.m_arrCEInterceptorOrders[iOrder].nmDestinationContinent == nmContinent)
         {
             kInfo.m_arrInterceptorOrderIndexes.AddItem(iOrder);
-            kInfo.iNumShips += HQ().m_akInterceptorOrders[iOrder].iNumInterceptors;
+            kInfo.iNumShips += kHQ.m_arrCEInterceptorOrders[iOrder].iNumInterceptors;
         }
     }
 
     // For the home continent, check for any Firestorms being built
-    if (eCont == `HQGAME.GetGameCore().GetHQ().GetContinent())
+    if (nmContinent == kHQ.LWCE_GetContinent())
     {
         foreach kEngineering.m_arrCEItemProjects(kProject)
         {
@@ -256,6 +291,33 @@ function TContinentInfo GetContinentInfo(EContinent eCont)
     }
 
     return kInfo;
+}
+
+function array<XGShip_Interceptor> GetInterceptorsByContinent(int iContinent)
+{
+    local array<XGShip_Interceptor> arrInterceptors;
+
+    arrInterceptors.Length = 0;
+
+    `LWCE_LOG_DEPRECATED_CLS(GetInterceptorsByContinent);
+
+    return arrInterceptors;
+}
+
+function array<XGShip_Interceptor> LWCE_GetInterceptorsByContinent(name nmContinent)
+{
+    local array<XGShip_Interceptor> arrInterceptors;
+    local XGShip_Interceptor kInt;
+
+    foreach m_arrInts(kInt)
+    {
+        if (LWCE_XGShip_Interceptor(kInt).GetHomeContinent() == nmContinent)
+        {
+            arrInterceptors.AddItem(kInt);
+        }
+    }
+    
+    return arrInterceptors;
 }
 
 function string GetRankForKills(int iKills)

@@ -18,6 +18,7 @@ struct CheckpointRecord_LWCE_XGHeadquarters extends XGHeadQuarters.CheckpointRec
     var array<LWCE_XGBase> m_arrBases;
     var array<LWCE_TBonus> m_arrBonuses;
     var array<LWCE_TFacilityCount> m_arrCEBaseFacilities;
+    var array<LWCE_TShipOrder> m_arrCEInterceptorOrders;
     var array<LWCE_TSatellite> m_arrCESatellites;
     var array<name> m_arrCEFacilityBinksPlayed;
     var array<name> m_arrCELastCaptives;
@@ -30,6 +31,7 @@ struct CheckpointRecord_LWCE_XGHeadquarters extends XGHeadQuarters.CheckpointRec
 var array<LWCE_XGBase> m_arrBases;
 var array<LWCE_TBonus> m_arrBonuses;
 var array<LWCE_TFacilityCount> m_arrCEBaseFacilities; // A count of each facility type XCOM has, across all bases.
+var array<LWCE_TShipOrder> m_arrCEInterceptorOrders;
 var array<LWCE_TSatellite> m_arrCESatellites;
 var array<name> m_arrCEFacilityBinksPlayed;
 var array<name> m_arrCELastCaptives;
@@ -192,7 +194,7 @@ function LWCE_AddSatelliteNode(name nmCountry, name nmType, optional bool bInsta
 
     if (!bInstant)
     {
-        kWorld.LWCE_GetContinent(kCountry.nmContinent).m_kMonthly.iSatellitesLaunched += 1;
+        kWorld.LWCE_GetContinent(kCountry.m_nmContinent).m_kMonthly.iSatellitesLaunched += 1;
     }
 
     kSatellite.kSatEntity = Spawn(class'LWCE_XGEntity');
@@ -508,6 +510,17 @@ function int GetBonusLevel(name nmBonus)
     }
 
     return m_arrBonuses[Index].Level;
+}
+
+function int GetContinent()
+{
+    `LWCE_LOG_DEPRECATED_CLS(GetContinent);
+    return -100;
+}
+
+function name LWCE_GetContinent()
+{
+    return m_nmContinent;
 }
 
 function GetEvents(out array<THQEvent> arrEvents)

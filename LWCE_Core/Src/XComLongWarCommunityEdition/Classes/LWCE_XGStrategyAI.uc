@@ -70,6 +70,67 @@ var config int MinThreatForHQAssaultCounter;
 var config int CounterValueToSpawnHQAssault;
 var config int MonthToForceSpawnHQAssault;
 
+function AddAirBaseDefenseMission()
+{
+    local LWCE_XGContinent kContinent;
+    local LWCE_XGHeadquarters kHQ;
+    local LWCE_XGWorld kWorld;
+    local array<name> arrContinents;
+    local array<name> arrPossibleTargets;
+    local name nmTargetCountry, nmTargetContinent;
+    local int Index;
+
+    kHQ = LWCE_XGHeadquarters(HQ());
+    kWorld = LWCE_XGWorld(WORLD());
+    
+    arrContinents = kWorld.LWCE_GetContinents();
+
+    // Map each continent to the country containing its air base
+    for (Index = 0; Index < arrContinents.Length; Index++)
+    {
+        if (arrContinents[Index] == kHQ.LWCE_GetContinent())
+        {
+            continue;
+        }
+
+        kContinent = kWorld.LWCE_GetContinent(arrContinents[Index]);
+        
+        if (IsFirestormOnContinent(kContinent.m_nmContinent))
+        {
+            arrPossibleTargets.AddItem(kContinent.GetHQCountry());
+        }
+    }
+
+    if (arrPossibleTargets.Length == 0)
+    {
+        return;
+    }
+
+    nmTargetCountry = arrPossibleTargets[Rand(arrPossibleTargets.Length)];
+    nmTargetContinent = kWorld.LWCE_GetCountry(nmTargetCountry).LWCE_GetContinent();
+
+    if (!IsOptionEnabled(9)) // if not Dynamic War
+    {
+        LWCE_AIAddNewObjective(10, 0, `LWCE_XGCONTINENT(nmTargetContinent).GetHQLocation(), nmTargetCountry);
+    }
+    else
+    {
+        LWCE_AIAddNewObjective(10, 1 + Rand(26), `LWCE_XGCONTINENT(nmTargetContinent).GetHQLocation(), nmTargetCountry);
+    }
+}
+
+/// <summary>
+/// In Long War, this function was repurposed to add an air base defense mission. For LWCE, we've made
+/// a separate function for that and we simply delegate to it for now.
+///
+/// TODO: once LWCE supports Dynamic War mission scheduling, we won't need to delegate and can simply
+/// deprecate this function completely.
+/// </summary>
+function AddLateMission()
+{
+    AddAirBaseDefenseMission();
+}
+
 function int AddNewOverseers()
 {
     local array<ECountry> arrVisible;
@@ -130,10 +191,17 @@ function AddNewTerrors(int iNumTerrors, int StartOfMonthResources)
 
 function XGAlienObjective AIAddNewObjective(EAlienObjective eObjective, int iStartDate, Vector2D v2Target, int iCountry, optional int iCity = -1, optional EShipType eUFO = eShip_None)
 {
-    local XGAlienObjective kObjective;
+    `LWCE_LOG_DEPRECATED_CLS(AIAddNewObjective);
+
+    return none;
+}
+
+function LWCE_XGAlienObjective LWCE_AIAddNewObjective(EAlienObjective eObjective, int iStartDate, Vector2D v2Target, name nmCountry, optional name nmCity = '', optional EShipType eUFO = eShip_None)
+{
+    local LWCE_XGAlienObjective kObjective;
 
     kObjective = Spawn(class'LWCE_XGAlienObjective');
-    kObjective.Init(m_arrTObjectives[eObjective], iStartDate, v2Target, iCountry, iCity, eUFO);
+    kObjective.LWCE_Init(m_arrTObjectives[eObjective], iStartDate, v2Target, nmCountry, nmCity, eUFO);
     m_arrObjectives.AddItem(kObjective);
 
     return kObjective;
@@ -1078,6 +1146,32 @@ function FillUFOPool()
     ChooseUFOMissionType(0);
 
     STAT_AddStat(2, 20); // +20 bonus research
+}
+
+function bool IsGoodOverseerTarget(EContinent eTarget)
+{
+    `LWCE_LOG("ERROR: LWCE-incompatible function IsGoodOverseerTarget was called. This needs to be replaced with IsFirestormOnContinent. Stack trace follows."); 
+    ScriptTrace();
+
+    return false;
+}
+
+function bool IsFirestormOnContinent(name nmContinent)
+{
+    local array<XGShip_Interceptor> arrJets;
+    local int iJet;
+
+    arrJets = LWCE_XGFacility_Hangar(HANGAR()).LWCE_GetInterceptorsByContinent(nmContinent);
+
+    for (iJet = 0; iJet < arrJets.Length; iJet++)
+    {
+        if (arrJets[iJet] != none && arrJets[iJet].IsFirestorm())
+        {
+            return true;
+        }
+    }
+
+    return false;
 }
 
 function LaunchBlitz(array<ECityType> arrTargetCities, optional bool bFirstBlitz)

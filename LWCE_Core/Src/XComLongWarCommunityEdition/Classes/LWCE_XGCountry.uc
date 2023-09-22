@@ -1,7 +1,7 @@
 class LWCE_XGCountry extends XGCountry;
 
-var name nmCountry;
-var name nmContinent;
+var name m_nmCountry;
+var name m_nmContinent;
 
 function AddPanic(int iPanic, optional bool bSuppressHeadline)
 {
@@ -59,6 +59,18 @@ function AddPanic(int iPanic, optional bool bSuppressHeadline)
     }
 
     CalcFunding();
+}
+
+function EContinent GetContinent()
+{
+    `LWCE_LOG_DEPRECATED_CLS(GetContinent);
+
+    return EContinent(-100);
+}
+
+function name LWCE_GetContinent()
+{
+    return m_nmContinent;
 }
 
 function LeaveXComProject()

@@ -31,6 +31,7 @@
 `define LWCE_MOD_LOADER (class'LWCEModLoader'.static.GetModLoader())
 
 `define COLORTOSTR(clr) ("(R=" $ `clr.R $ ", G=" $ `clr.G $ ", B=" $ `clr.B $ ", A=" $ `clr.A $ ")")
+`define V2DTOSTR(v) ("(X=" $ `v.X $ ", Y=" $ `v.Y $")")
 
 // Convenience class of static functions
 `define LWCE_UTILS class'LWCEUtils'.static
@@ -137,7 +138,14 @@
 `define LWCE_PERKS_STRAT (LWCE_XComPerkManager(`LWCE_BARRACKS.m_kPerkManager))
 `define LWCE_PSILABS (LWCE_XGFacility_PsiLabs(`LWCE_BARRACKS.m_kPsiLabs))
 `define LWCE_STORAGE (LWCE_XGStorage(`HQGAME.GetGameCore().GetHQ().m_kEngineering.GetStorage()))
+`define LWCE_STRATEGY (LWCE_XGStrategy(`HQGAME.GetGameCore()))
 `define LWCE_TECHTREE (LWCE_XGTechTree(`HQGAME.GetGameCore().GetHQ().GetLabs().m_kTree))
+`define LWCE_WORLD (LWCE_XGWorld(`LWCE_STRATEGY.m_kWorld))
+
+// These macros look similar to the LWCE_COUNTRY and LWCE_CONTINENT macros, but they're retrieving the
+// XGCountry and XGContinent objects in the strat layer, while the other macros retrieve templates
+`define LWCE_XGCONTINENT(nm) (`LWCE_WORLD.LWCE_GetContinent(`nm))
+`define LWCE_XGCOUNTRY(nm) (`LWCE_WORLD.LWCE_GetCountry(`nm))
 
 // ---------------------------
 // Tactical layer macros

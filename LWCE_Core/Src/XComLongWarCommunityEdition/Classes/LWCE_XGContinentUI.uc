@@ -22,6 +22,9 @@ var private LWCEBonusTemplateManager m_kBonusTemplateMgr;
 var private LWCEContinentTemplateManager m_kContinentTemplateMgr;
 var private LWCECountryTemplateManager m_kCountryTemplateMgr;
 
+var const localized string m_strContinentBonusNameRandom;
+var const localized string m_strContinentBonusDescRandom;
+
 function Init(int iView)
 {
     m_kBonusTemplateMgr = `LWCE_BONUS_TEMPLATE_MGR;
@@ -69,10 +72,18 @@ function UpdateMainMenu()
     
     for (iContinent = 0; iContinent < arrContinents.Length; iContinent++)
     {
-        // Pick a random continent bonus from the ones configured
-        // TODO maybe it would be better gameplay if you didn't get to see which one you were getting in advance
-        nmContinentBonus = arrContinents[iContinent].arrContinentBonuses[Rand(arrContinents[iContinent].arrContinentBonuses.Length)];
-        kContinentBonusTemplate = m_kBonusTemplateMgr.FindBonusTemplate(nmContinentBonus);
+        // If continents have multiple bonuses assigned, one will randomly be picked after starting
+        // the campaign. If only one bonus, go ahead and display it to the player now.
+        if (arrContinents[iContinent].arrContinentBonuses.Length == 1)
+        {
+            nmContinentBonus = arrContinents[iContinent].arrContinentBonuses[0];
+            kContinentBonusTemplate = m_kBonusTemplateMgr.FindBonusTemplate(nmContinentBonus);
+        }
+        else
+        {
+            nmContinentBonus = '';
+            kContinentBonusTemplate = none;
+        }
 
         for (iCountry = 0; iCountry < arrContinents[iContinent].arrCountries.Length; iCountry++)
         {
@@ -107,8 +118,8 @@ function UpdateMainMenu()
 
                 // Localization content
                 kStartingOption.ContinentFriendlyName = arrContinents[iContinent].strName;
-                kStartingOption.ContinentBonusFriendlyName = kContinentBonusTemplate.strName;
-                kStartingOption.ContinentBonusFriendlyDescription = kContinentBonusTemplate.strDescription;
+                kStartingOption.ContinentBonusFriendlyName = nmContinentBonus != '' ? kContinentBonusTemplate.strName : m_strContinentBonusNameRandom;
+                kStartingOption.ContinentBonusFriendlyDescription = nmContinentBonus != '' ? kContinentBonusTemplate.strDescription : m_strContinentBonusDescRandom;
                 kStartingOption.CountryFriendlyName = kCountryTemplate.strName;
                 kStartingOption.CountryStartingCash = kCountryTemplate.iStartingCash;
                 kStartingOption.StartingBonusFriendlyName = kStartingBonusTemplate.strName;

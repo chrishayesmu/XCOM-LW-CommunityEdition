@@ -121,56 +121,19 @@ function BuildCountry(int iCountry, int iContinent, bool bDeveloped)
 
 function CreateContinents()
 {
+    local array<LWCEContinentTemplate> arrContinents;
+    local LWCE_XGContinent kContinent;
     local int iContinent;
 
-    // TODO: pull from templates
-    for (iContinent = 0; iContinent < 5; iContinent++)
+    arrContinents = `LWCE_CONTINENT_TEMPLATE_MGR.GetAllContinentTemplates();
+
+    for (iContinent = 0; iContinent < arrContinents.Length; iContinent++)
     {
-        m_arrContinents[iContinent] = Spawn(class'LWCE_XGContinent');
-        m_arrContinents[iContinent].InitNewGame();
-        m_arrContinents[iContinent].m_eContinent = EContinent(iContinent);
-        m_arrContinents[iContinent].m_strName = m_aContinentNames[iContinent];
+        kContinent = Spawn(class'LWCE_XGContinent');
+        kContinent.m_nmContinent = arrContinents[iContinent].GetContinentName();
+        kContinent.InitNewGame();
 
-        if (iContinent == eContinent_NorthAmerica)
-        {
-            m_arrContinents[iContinent].m_iImage = eImage_NorthAmerica;
-            m_arrContinents[iContinent].m_v2Coords = vect2d(0.2220, 0.2680);
-            m_arrContinents[iContinent].m_arrBounds.AddItem(Rect(0.040, 0.0330, 0.3540, 0.4260));
-            m_arrContinents[iContinent].m_eBonus = eCB_AirAndSpace;
-        }
-        else if (iContinent == eContinent_SouthAmerica)
-        {
-            m_arrContinents[iContinent].m_iImage = eImage_SouthAmerica;
-            m_arrContinents[iContinent].m_v2Coords = vect2d(0.3370, 0.5910);
-            m_arrContinents[iContinent].m_arrBounds.AddItem(Rect(0.2710, 0.430, 0.4050, 0.8130));
-            m_arrContinents[iContinent].m_eBonus = 3; // Power to the People
-        }
-        else if (iContinent == eContinent_Europe)
-        {
-            m_arrContinents[iContinent].m_iImage = eImage_Europe;
-            m_arrContinents[iContinent].m_v2Coords = vect2d(0.5610, 0.2020);
-            m_arrContinents[iContinent].m_arrBounds.AddItem(Rect(0.4720, 0.0920, 0.6120, 0.2950));
-            m_arrContinents[iContinent].m_eBonus = 6; // Wealth of Nations
-        }
-        else if (iContinent == eContinent_Africa)
-        {
-            m_arrContinents[iContinent].m_iImage = eImage_Africa;
-            m_arrContinents[iContinent].m_v2Coords = vect2d(0.5620, 0.4870);
-            m_arrContinents[iContinent].m_arrBounds.AddItem(Rect(0.4360, 0.3090, 0.6390, 0.6930));
-            m_arrContinents[iContinent].m_eBonus = 5; // Architects of the Future
-        }
-        else if (iContinent == eContinent_Asia)
-        {
-            m_arrContinents[iContinent].m_iImage = eImage_Asia;
-            m_arrContinents[iContinent].m_v2Coords = vect2d(0.8380, 0.40);
-            m_arrContinents[iContinent].m_arrBounds.AddItem(Rect(0.6140, 0.0680, 0.9990, 0.3590));
-            m_arrContinents[iContinent].m_arrBounds.AddItem(Rect(0.6840, 0.350, 0.8540, 0.4770));
-            m_arrContinents[iContinent].m_arrBounds.AddItem(Rect(0.7680, 0.470, 0.950, 0.5630));
-            m_arrContinents[iContinent].m_arrBounds.AddItem(Rect(0.8140, 0.5660, 0.930, 0.7380));
-            m_arrContinents[iContinent].m_eBonus = 4; // New Warfare
-        }
-
-        BalanceContinent(m_arrContinents[iContinent]);
+        m_arrContinents.AddItem(kContinent);
     }
 }
 
@@ -187,13 +150,36 @@ function LWCE_XGContinent LWCE_GetContinent(name nmContinent)
 
     for (Index = 0; Index < m_arrContinents.Length; Index++)
     {
-        if (LWCE_XGContinent(m_arrContinents[Index]).nmContinent == nmContinent)
+        if (LWCE_XGContinent(m_arrContinents[Index]).m_nmContinent == nmContinent)
         {
             return LWCE_XGContinent(m_arrContinents[Index]);
         }
     }
 
     return none;
+}
+
+function array<int> GetContinents()
+{
+    local array<int> arrContinents;
+    arrContinents.Length = 0;
+
+    `LWCE_LOG_DEPRECATED_CLS(GetContinents);
+
+    return arrContinents;
+}
+
+function array<name> LWCE_GetContinents()
+{
+    local array<name> arrContinents;
+    local int Index;
+
+    for (Index = 0; Index < m_arrContinents.Length; Index++)
+    {
+        arrContinents.AddItem(LWCE_XGContinent(m_arrContinents[Index]).m_nmContinent);
+    }
+    
+    return arrContinents;
 }
 
 function XGCountry GetCountry(int iCountryID)
@@ -208,13 +194,28 @@ function LWCE_XGCountry LWCE_GetCountry(name nmCountry)
 
     for (Index = 0; Index < m_arrCountries.Length; Index++)
     {
-        if (LWCE_XGCountry(m_arrCountries[Index]).nmCountry == nmCountry)
+        if (LWCE_XGCountry(m_arrCountries[Index]).m_nmCountry == nmCountry)
         {
             return LWCE_XGCountry(m_arrCountries[Index]);
         }
     }
 
     return none;
+}
+
+function EContinent GetRandomContinent()
+{
+    `LWCE_LOG_DEPRECATED_CLS(GetRandomContinent);
+
+    return EContinent(-100);
+}
+
+function name LWCE_GetRandomContinent()
+{
+    local int Index;
+
+    Index = Rand(m_arrContinents.Length);
+    return LWCE_XGContinent(m_arrContinents[Index]).m_nmContinent;
 }
 
 function TSatNode GetSatelliteNode(int iCountry)

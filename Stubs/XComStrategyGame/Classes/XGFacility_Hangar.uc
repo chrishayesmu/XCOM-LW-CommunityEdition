@@ -2,7 +2,17 @@ class XGFacility_Hangar extends XGFacility;
 
 //complete stub
 
-	struct TContinentInfo
+struct CheckpointRecord_XGFacility_Hangar extends CheckpointRecord
+{
+    var XGShip_Dropship m_kSkyranger;
+    var int m_iInterceptorCounter;
+    var int m_iFirestormCounter;
+    var array<XGShip_Interceptor> m_arrInts;
+    var int m_iJetsLost;
+    var EItemType m_eBestWeaponEquipped;
+};
+
+struct TContinentInfo
 {
     var EContinent eCont;
     var TText strContinentName;

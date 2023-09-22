@@ -1,5 +1,44 @@
 class LWCE_XGAlienObjective extends XGAlienObjective;
 
+struct CheckpointRecord_LWCE_XGAlienObjective extends CheckpointRecord
+{
+    var name m_nmCityTarget;
+    var name m_nmCountryTarget;
+};
+
+var name m_nmCityTarget;
+var name m_nmCountryTarget;
+
+function Init(TObjective kObj, int iStartDate, Vector2D v2Target, int iCountry, optional int iCity, optional EShipType eShip)
+{
+    `LWCE_LOG_DEPRECATED_CLS(Init);
+}
+
+function LWCE_Init(TObjective kObj, int iStartDate, Vector2D v2Target, name nmCountry, optional name nmCity, optional EShipType eShip)
+{
+    local int iShip, iDate;
+
+    m_kTObjective = kObj;
+    m_nmCountryTarget = nmCountry;
+    m_nmCityTarget = nmCity;
+    m_v2Target = v2Target;
+
+    if (eShip != eShip_None)
+    {
+        for (iShip = 0; iShip < m_kTObjective.arrUFOs.Length; iShip++)
+        {
+            m_kTObjective.arrUFOs[iShip] = eShip;
+        }
+    }
+
+    for (iDate = 0; iDate < m_kTObjective.arrStartDates.Length; iDate++)
+    {
+        m_kTObjective.arrStartDates[iDate] += iStartDate;
+    }
+
+    m_iNextMissionTimer = ConvertDaysToTimeslices(m_kTObjective.arrStartDates[0], m_kTObjective.arrRandDays[0]);
+}
+
 function bool FoundSatellite()
 {
     if (HQ().GetSatellite(ECountry(m_iCountryTarget)) == -1)
@@ -43,6 +82,18 @@ function bool FoundSatellite()
     }
 
     return false;
+}
+
+function EContinent GetContinent()
+{
+    `LWCE_LOG_DEPRECATED_CLS(GetContinent);
+
+    return EContinent(-100);
+}
+
+function name LWCE_GetContinent()
+{
+    return `LWCE_XGCOUNTRY(m_nmCountryTarget).LWCE_GetContinent();
 }
 
 function XGShip_UFO LaunchUFO(EShipType eShip, array<int> arrFlightPlan, Vector2D v2Target, float fDuration)

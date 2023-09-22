@@ -161,7 +161,7 @@ function int SortTerrorTargets(ECountry eTarget1, ECountry eTarget2){}
 function bool IsTerrorTarget(ECountry eTarget){}
 function bool ClearFromAbductionList(ECountry eTarget){}
 function int SortUFOTargets(ECountry eCountry1, ECountry eCountry2){}
-function bool IsGoodOverseerTarget(ECountry eTarget){}
+function bool IsGoodOverseerTarget(EContinent eTarget){}
 function array<ECountry> DetermineBestOverseerTargets(){}
 function array<ECountry> DetermineBestVisibleTargets(optional bool bUnsorted){}
 function array<int> DetermineBestHuntTargets(){}

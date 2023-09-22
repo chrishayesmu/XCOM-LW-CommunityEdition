@@ -2,17 +2,26 @@ class LWCE_XGShip_Interceptor extends XGShip_Interceptor implements(LWCE_XGShip)
 
 struct CheckpointRecord_LWCE_XGShip_Interceptor extends CheckpointRecord_XGShip_Interceptor
 {
+    var name m_nmContinent;
+    var name m_nmShipTemplate;
     var array<name> m_arrCEWeapons;
     var LWCE_TShip m_kCETShip;
 };
 
+var name m_nmContinent;
+var name m_nmShipTemplate; // TODO: Ship templates aren't implemented yet; this is for future use
 var array<name> m_arrCEWeapons;
 var LWCE_TShip m_kCETShip;
 
 function Init(TShip kTShip)
 {
-    // TODO: deprecate this function and replace with a template-driven LWCE version
+    `LWCE_LOG_DEPRECATED_CLS(Init);
+}
 
+function Init(name nmShipTemplate, TShip kTShip)
+{
+    // TODO: get rid of TShip and replace with a template-driven LWCE version
+    m_nmShipTemplate = nmShipTemplate;
     m_v2Coords = GetHomeCoords();
     m_v2Destination = m_v2Coords;
     m_fFlightTime = 43200.0;
@@ -35,6 +44,7 @@ function Init(TShip kTShip)
     LWCE_EquipWeapon('Item_AvalancheMissiles', 0);
     InitSound();
 
+    // TODO: emit an event which the Foundry template can use instead
     if (`LWCE_ENGINEERING.LWCE_IsFoundryTechResearched('Foundry_WingtipSparrowhawks'))
     {
         // Sparrowhawks are just Stingrays; their damage is cut in half by logic in the interception code
@@ -73,6 +83,23 @@ function LWCE_EquipWeapon(name ItemName, int Index)
             LWCE_XGHangarShip(m_kHangarShip).LWCE_UpdateWeapon(m_arrCEWeapons[0]);
         }
     }
+}
+
+function name GetHomeContinent()
+{
+    return m_nmContinent;
+}
+
+function Vector2D GetHomeCoords()
+{
+    local Vector2D homeCoords;
+
+    if (m_nmContinent != '')
+    {
+        homeCoords = `LWCE_XGCONTINENT(m_nmContinent).GetHQLocation();
+    }
+    
+    return homeCoords;
 }
 
 function LWCE_TShip GetShipData()

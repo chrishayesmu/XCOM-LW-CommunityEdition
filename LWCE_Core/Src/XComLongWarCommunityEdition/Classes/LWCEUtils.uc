@@ -316,9 +316,15 @@ static function TRect Rect(float fLeft, float fTop, float fRight, float fBottom)
     return kRect;
 }
 
-static function float RectWidth(TRect kRect)
+static function Vector2D RectCenter(TRect kRect)
 {
-    return kRect.fRight - kRect.fLeft;
+    return vect2d(kRect.fLeft + ((RectWidth(kRect)) / 2.0f), kRect.fTop + ((RectHeight(kRect)) / 2.0f));
+}
+
+static function bool RectContainsPoint(TRect kRect, Vector2D Point)
+{
+    return (Point.X >= kRect.fLeft && Point.X <= kRect.fRight)
+        && (Point.Y >= kRect.fTop && Point.Y <= kRect.fBottom);
 }
 
 static function float RectHeight(TRect kRect)
@@ -326,8 +332,8 @@ static function float RectHeight(TRect kRect)
     return kRect.fBottom - kRect.fTop;
 }
 
-static function Vector2D RectCenter(TRect kRect)
+static function float RectWidth(TRect kRect)
 {
-    return vect2d(kRect.fLeft + ((RectWidth(kRect)) / 2.0f), kRect.fTop + ((RectHeight(kRect)) / 2.0f));
+    return kRect.fRight - kRect.fLeft;
 }
 // #endregion

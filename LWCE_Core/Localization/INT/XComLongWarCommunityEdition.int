@@ -637,6 +637,10 @@ m_strRenameDialogTitle="Rename Ship"
 [LWCE_UISquadSelect_SquadList]
 m_strPromotionAvailable="Can Promote"
 
+[LWCE_XGContinentUI]
+m_strContinentBonusNameRandom="Random"
+m_strContinentBonusDescRandom="A continent bonus will be randomly assigned after you begin your campaign."
+
 [LWCE_XGCustomizeUI]
 m_strGenderLabel="GENDER"
 m_strGenderMale="Male"
