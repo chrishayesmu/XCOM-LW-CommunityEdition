@@ -1775,7 +1775,7 @@ function GrantInitialStores()
     kStorage = LWCE_XGStorage(STORAGE());
 
     kStorage.LWCE_AddItem('Item_Interceptor', 4);
-    kStorage.LWCE_AddItem('Item_Skyranger');
+    HANGAR().AddDropship();
 }
 
 function bool IsBuildingItem(EItemType eItem)

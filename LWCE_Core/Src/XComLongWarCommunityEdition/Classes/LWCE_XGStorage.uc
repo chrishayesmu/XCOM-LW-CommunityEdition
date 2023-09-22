@@ -77,7 +77,7 @@ function AddItem(int iItemId, optional int iQuantity = -1, optional int iContine
     `LWCE_LOG_DEPRECATED_CLS(AddItem);
 }
 
-function LWCE_AddItem(name ItemName, optional int iQuantity = 1, optional int iContinent = -1)
+function LWCE_AddItem(name ItemName, optional int iQuantity = 1, optional name nmContinent = '')
 {
     local LWCE_XGFacility_Barracks kBarracks;
     local LWCEItemTemplate kItem;
@@ -100,7 +100,19 @@ function LWCE_AddItem(name ItemName, optional int iQuantity = 1, optional int iC
 
     if (kItem.nmReplacementItem != '')
     {
-        LWCE_AddItem(kItem.nmReplacementItem, iQuantity, iContinent);
+        LWCE_AddItem(kItem.nmReplacementItem, iQuantity, nmContinent);
+        return;
+    }
+
+    if (kItem.nmResultingShip != '')
+    {
+        LWCE_XGFacility_Hangar(HANGAR()).AddShip(kItem.nmResultingShip, nmContinent);
+
+        if (kItem.nmResultingShip == 'Firestorm')
+        {
+            STAT_AddStat(eRecap_FirestormsBuilt, 1);
+        }
+
         return;
     }
 
@@ -131,16 +143,6 @@ function LWCE_AddItem(name ItemName, optional int iQuantity = 1, optional int iC
                 LWCE_AddItem('Item_SHIVHoverChassis');
                 kBarracks.LWCE_AddTank('Item_SHIVHoverChassis', 'Item_Autocannon');
                 STAT_AddStat(eRecap_SHIVsBuilt, 1);
-                break;
-            case 'Item_Interceptor':
-                HANGAR().AddInterceptor(iContinent);
-                break;
-            case 'Item_Firestorm':
-                HANGAR().AddFirestorm(iContinent);
-                STAT_AddStat(eRecap_FirestormsBuilt, 1);
-                break;
-            case 'Item_Skyranger':
-                HANGAR().AddDropship();
                 break;
             default:
                 break;

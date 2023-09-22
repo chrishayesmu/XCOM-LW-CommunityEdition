@@ -1,5 +1,5 @@
 class LWCE_XGFundingCouncil extends XGFundingCouncil_Mod
-    config(LWCEBaseStrategyGame)
+    config(LWCECouncilRequests)
     dependson(LWCETypes, LWCECouncilRequestTemplate);
 
 struct LWCE_TRewardSoldier

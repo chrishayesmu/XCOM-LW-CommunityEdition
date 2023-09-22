@@ -1,5 +1,5 @@
 class LWCEItemTemplate extends LWCEDataTemplate
-    config(LWCEBaseStrategyGame);
+    config(LWCEItems);
 
 var config name nmCategory;            // The item's category. Base LWCE categories are 'Armor', 'Weapon', 'Vehicle', 'AlienArtifact', 'Corpse', and 'Captive'.
                                        // The category affects several things, primarily whether the item appears in the Engineering build UI, and if so,
@@ -37,6 +37,11 @@ var config name nmReplacementItem;     // If set, when this item is granted, the
                                        // the name you want to appear in Engineering instead of the replacement item's name. This replacement effect can occur
                                        // multiple times if the specified replacement also has nmReplacementItem set. Take care not to introduce any loops in
                                        // replacement using this, as that will cause the game to hang and crash.
+
+var config name nmResultingShip;       // If set, this item represents a ship which is under construction, such as the Firestorm. When queued up, the player will
+                                       // need to have an open hangar bay on their home continent. That bay will be occupied by the new ship the entire time it is
+                                       // under construction, and once completed, the actual ship will take its place in the hangar. Similar to nmReplacementItem,
+                                       // when this field is set, no item is added to XCOM's storage after building.
 
 var config name nmCaptiveToCorpseId;   // If this item is a captive and the captive is killed, this is the item ID of the corpse to add to the player's storage.
 var config int iCorpseToCharacterId;   // If this item is a corpse, this is the ID of the character type that this is the corpse of.
@@ -95,6 +100,11 @@ function bool CanBeSold()
     }
 
     return kCost.iCash > 0;
+}
+
+function bool CreatesShip()
+{
+    return nmResultingShip != '';
 }
 
 function LWCE_TCost GetCost(bool bRush)

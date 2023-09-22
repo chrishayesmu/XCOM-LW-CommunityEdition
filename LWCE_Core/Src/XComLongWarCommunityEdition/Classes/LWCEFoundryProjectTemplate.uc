@@ -1,5 +1,5 @@
 class LWCEFoundryProjectTemplate extends LWCEDataTemplate
-    config(LWCEBaseStrategyGame);
+    config(LWCEFoundry);
 
 // The total number of engineer-hours required to complete this project. For example, if your project requires 15
 // engineers and should take 48 hours to complete when at 15 engineers, this would be 15 * 48 = 720 hours.

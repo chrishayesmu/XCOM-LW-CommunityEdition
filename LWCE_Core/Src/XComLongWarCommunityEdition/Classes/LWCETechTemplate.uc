@@ -1,5 +1,5 @@
 class LWCETechTemplate extends LWCEDataTemplate
-    config(LWCEBaseStrategyGame);
+    config(LWCEResearch);
 
 // Whether this is an autopsy or interrogation, and which character ID is the subject.
 // This has the following effects:

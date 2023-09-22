@@ -1,6 +1,5 @@
 class LWCE_XGItemTree extends XGItemTree
-    dependson(LWCETypes)
-    config(LWCEBaseStrategyGame);
+    dependson(LWCETypes);
 
 var private LWCEFacilityTemplateManager m_kFacilityTemplateMgr;
 var private LWCEItemTemplateManager m_kItemTemplateMgr;
@@ -241,7 +240,7 @@ static function name ItemNameFromBaseID(int iItemId)
         case 104:
             return 'Item_Firestorm';
         case 105:
-            return 'Item_Skyranger';
+            return 'Item_Skyranger'; // Note: not a real item because it makes no sense
         case 106:
             return 'Item_Satellite';
         case 107:

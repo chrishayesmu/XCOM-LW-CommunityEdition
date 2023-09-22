@@ -5,7 +5,7 @@
 /// mod subclasses can make more custom behavior for requests.
 /// </summary>
 class LWCECouncilRequestTemplate extends LWCEDataTemplate
-    config(LWCEBaseStrategyGame);
+    config(LWCECouncilRequests);
 
 // NOTE: All documentation for templates is assuming the base template is being retrieved from the corresponding template manager,
 // and has not been modified. Some functions return clones of templates which have had changes applied; for example, to factor in
