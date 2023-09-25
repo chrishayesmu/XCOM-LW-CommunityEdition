@@ -1,4 +1,9 @@
-class LWCEShipDataSet extends LWCEDataSet;
+class LWCEShipDataSet extends LWCEDataSet
+    dependson(LWCEShipTemplate, LWCETypes)
+    config(LWCEShips);
+
+/// Scheduled upgrades which apply to all ships, without needing to be repeated for every template.
+var config array<config LWCE_TShipScheduledUpgrade> arrGlobalShipUpgrades;
 
 static function OnPostTemplatesCreated()
 {
