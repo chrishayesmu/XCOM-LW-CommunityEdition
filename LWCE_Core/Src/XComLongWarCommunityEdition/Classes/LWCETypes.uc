@@ -569,6 +569,17 @@ struct LWCE_TShipOrder
     var int iHours;
 };
 
+struct LWCE_TShipStats
+{
+    var int iAim;
+    var int iArmor;
+    var int iArmorPen;
+    var int iHealth;
+    var int iDamage;
+    var int iEngagementSpeed;
+    var int iSpeed;
+};
+
 struct LWCE_TTechState
 {
     var name TechName;

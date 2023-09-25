@@ -47,6 +47,7 @@
 `define LWCE_FACILITY_TEMPLATE_MGR (class'LWCEFacilityTemplateManager'.static.GetInstance())
 `define LWCE_FOUNDRY_TEMPLATE_MGR (class'LWCEFoundryProjectTemplateManager'.static.GetInstance())
 `define LWCE_ITEM_TEMPLATE_MGR (class'LWCEItemTemplateManager'.static.GetInstance())
+`define LWCE_SHIP_TEMPLATE_MGR (class'LWCEItemTemplateManager'.static.GetInstance())
 `define LWCE_TECH_TEMPLATE_MGR (class'LWCETechTemplateManager'.static.GetInstance())
 
 // Retrieve templates by name
@@ -60,6 +61,7 @@
 `define LWCE_FTECH(nm) (`LWCE_FOUNDRY_TEMPLATE_MGR.FindProjectTemplate(`nm))
 `define LWCE_ITEM(nm) (`LWCE_ITEM_TEMPLATE_MGR.FindItemTemplate(`nm))
 `define LWCE_TECH(nm) (`LWCE_TECH_TEMPLATE_MGR.FindTechTemplate(`nm))
+`define LWCE_SHIP(nm) (`LWCE_SHIP_TEMPLATE_MGR.FindShipTemplate(`nm))
 `define LWCE_SHIP_WEAPON(nm) (`LWCE_ITEM_TEMPLATE_MGR.FindShipWeaponTemplate(`nm))
 `define LWCE_WEAPON(nm) (`LWCE_ITEM_TEMPLATE_MGR.FindWeaponTemplate(`nm))
 

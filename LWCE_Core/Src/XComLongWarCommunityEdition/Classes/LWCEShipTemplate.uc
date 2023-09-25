@@ -1,18 +1,26 @@
 class LWCEShipTemplate extends LWCEDataTemplate
+    dependson(LWCETypes)
     config(LWCEShips);
 
 const SHIP_TEAM_ALIEN = 'Alien';
 const SHIP_TEAM_XCOM = 'XCom';
 
+struct LWCE_TShipScheduledUpgrade
+{
+
+};
+
 // Baseline stats: these are the stats a ship has at the very start of the game. For XCOM, these stats
 // may be modified by Foundry projects; for aliens, they're modified by the research level. Both types
 // can of course have their stats further changed conditionally via mods.
 var config int iHealth;
-var config int iSpeed;
-var config int iEngagementSpeed;
-var config int iArmor;
-var config int iArmorPen;
-var config int iRange;
+var config int iAim;
+var config int iDamage;
+var config int iSpeed;           // This ship's speed on the Geoscape. UFOs will intentionally loiter at a fraction of their top speed
+                                 // while conducting missions or preparing to land.
+var config int iEngagementSpeed; // This ship's speed during an interception. Used to calculate how long the interception will last.
+var config int iArmor;           // Armor providing resistance to attacks from other ships.
+var config int iArmorPen;        // This ship's ability to overcome enemy armor; also provided by ship weapons.
 
 var config array<LWCE_TItemQuantity> arrSalvage; // If an XCOM ground mission targets this ship (i.e. it lands or crashes),
                                                  // these are the possible rewards from completing the mission
@@ -20,12 +28,14 @@ var config array<name> arrWeapons;               // Names of the ship's weapon t
                                                  // when the ship is first built. For aliens, this is the default loadout for ships of
                                                  // this type. In both cases, the loadout can be modified from what the template says.
 
+var array< delegate<ModifyStatDel> > arrModifyAimFn;
+var array< delegate<ModifyStatDel> > arrModifyDamageFn;
 var array< delegate<ModifyStatDel> > arrModifyHealthFn;
 var array< delegate<ModifyStatDel> > arrModifySpeedFn;
 var array< delegate<ModifyStatDel> > arrModifyEngagementSpeedFn;
 var array< delegate<ModifyStatDel> > arrModifyArmorFn;
 var array< delegate<ModifyStatDel> > arrModifyArmorPenFn;
-var array< delegate<ModifyStatDel> > arrModifyRangeFn;
+var array< delegate<ModifyWeaponsDel> > arrModifyWeaponsFn;
 
 /// <summary>
 /// A delegate which mods can use to dynamically adjust ship stats.
@@ -37,31 +47,61 @@ var array< delegate<ModifyStatDel> > arrModifyRangeFn;
 /// as you may get surprised by mods that do things like let XCOM take over UFOs and fly them.</param>
 delegate int ModifyStatDel(int iBaseValue, int iValue, name nmShipTeam);
 
+/// <summary>
+/// A delegate to dynamically adjust ship starting loadouts.
+/// </summary>
+delegate ModifyWeaponsDel(out array<name> arrWeapons, name nmShipTeam);
+
 function int GetArmor(name nmShipTeam)
 {
     return GetStat(iHealth, nmShipTeam, arrModifyArmorFn);
 }
 
-function int GetArmorPenetration()
+function int GetArmorPenetration(name nmShipTeam)
 {
     return GetStat(iHealth, nmShipTeam, arrModifyArmorPenFn);
 }
 
-function int GetHealth()
+function int GetEngagementSpeed(name nmShipTeam)
+{
+    return GetStat(iEngagementSpeed, nmShipTeam, arrModifyEngagementSpeedFn);
+}
+
+function int GetHealth(name nmShipTeam)
 {
     return GetStat(iHealth, nmShipTeam, arrModifyHealthFn);
+}
+
+function int GetSpeed(name nmShipTeam)
+{
+    return GetStat(iSpeed, nmShipTeam, arrModifySpeedFn);
+}
+
+function array<name> GetDefaultWeapons(name nmShipTeam)
+{
+    local array<name> arrWpns;
+    local delegate<ModifyWeaponsDel> Del;
+
+    arrWpns = arrWeapons;
+
+    foreach arrModifyWeaponsFn(Del)
+    {
+        Del(arrWpns, nmShipTeam);
+    }
+
+    return arrWpns;
 }
 
 private function int GetStat(int iBaseValue, name nmShipTeam, array< delegate<ModifyStatDel> > arrDelegates)
 {
     local int iCurrentValue;
     local delegate<ModifyStatDel> Del;
-    
+
     iCurrentValue = iBaseValue;
 
     foreach arrDelegates(Del)
     {
-        iCurrentValue = Del(iBaseValue, iCurrentValue, )
+        iCurrentValue = Del(iBaseValue, iCurrentValue, nmShipTeam);
     }
 
     return iCurrentValue;
