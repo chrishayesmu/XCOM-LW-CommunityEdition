@@ -18,7 +18,7 @@ function Init(TShip kTShip)
     `LWCE_LOG_DEPRECATED_CLS(Init);
 }
 
-function Init(name nmShipTemplate, TShip kTShip)
+function LWCE_Init(name nmShipTemplate, TShip kTShip)
 {
     // TODO: get rid of TShip and replace with a template-driven LWCE version
     m_nmShipTemplate = nmShipTemplate;

@@ -264,7 +264,7 @@ function bool CheckForMatinee()
         m_bPlayedMatinee = true;
         return true;
     }
-    else if (kHQ.m_kCELastCargoArtifacts.HasNonzeroEntry('Item_EtherealDevice'))
+    else if (kHQ.m_kCELastCargoArtifacts.HasNonzeroEntry('Item_EtherealDevice') && STAT_GetStat(eRecap_ObjRecoverPsiLink) == 0)
     {
         PRES().UINarrative(`XComNarrativeMoment("PsiLinkRecovered"),, PostPsiLinkMatinee);
         STAT_SetStat(eRecap_ObjRecoverPsiLink, Game().GetDays());

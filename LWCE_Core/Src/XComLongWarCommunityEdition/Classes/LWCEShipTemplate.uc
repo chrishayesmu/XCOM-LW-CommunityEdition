@@ -32,6 +32,10 @@ var config int iEngagementSpeed; // This ship's speed during an interception. Us
 var config int iArmor;           // Armor providing resistance to attacks from other ships.
 var config int iArmorPen;        // This ship's ability to overcome enemy armor; also provided by ship weapons.
 
+var config string strImage;      // Path to the ship's image to use for Geoscape alerts. Unfortunately, the interception image is hardcoded
+                                 // in the Flash layer based on the ship's EShipType value. 
+
+
 var config array<LWCE_TItemQuantity> arrSalvage;          // If an XCOM ground mission targets this ship (i.e. it lands or crashes),
                                                           // these are the possible rewards from completing the mission
 var config array<name> arrWeapons;                        // Names of the ship's weapon templates. For XCOM craft, these are the defaults
@@ -41,6 +45,9 @@ var config array<LWCE_TShipScheduledUpgrade> arrUpgrades; // Scheduled upgrades 
                                                           // global upgrades specified in LWCEShipDataSet.
 
 var array< delegate<ModifyStatsDel> > arrModifyStatsFn;
+
+var const localized string strName;
+var const localized string strDescription; // Only shown in the XCOM hangar screen
 
 /// <summary>
 /// A delegate which mods can use to dynamically adjust ship stats.
@@ -64,10 +71,19 @@ delegate int ModifyStatsDel(out LWCE_TShipStats kStats, name nmShipTeam);
 /// and penalties for aggressive and defensive interception stances, respectively. Those are deliberately
 /// left to be handled by the systems responsible for them.
 /// </summary>
+/// <remarks>
+/// This function involves merging several sources of config, sorting them, and then calling an unbounded
+/// number of mod delegates. It's somewhat heavy for this reason and should be called sparingly, ideally only
+/// when a new ship is being created. After that, the stats should be stored with the ship.
+/// </remarks>
 function LWCE_TShipStats GetStats(name nmShipTeam)
 {
+    local array<LWCE_TShipScheduledUpgrade> arrCurrentUpgrades;
     local LWCE_TShipStats kStats;
     local delegate<ModifyStatsDel> Del;
+    local int iAlienResearch, Index;
+
+    iAlienResearch = `LWCE_WORLD.STAT_GetStat(1);
 
     kStats.iAim = iAim;
     kStats.iArmor = iArmor;
@@ -77,10 +93,41 @@ function LWCE_TShipStats GetStats(name nmShipTeam)
     kStats.iHealth = iHealth;
     kStats.iSpeed = iSpeed;
 
+    arrCurrentUpgrades = class'LWCEShipDataSet'.default.arrGlobalShipUpgrades;
+    arrCurrentUpgrades.Sort(SortUpgrades);
+
     // TODO: apply scheduled upgrades before calling delegates
+    for (Index = 0; Index < arrCurrentUpgrades.Length; Index++)
+    {
+        if (arrCurrentUpgrades[Index].iAlienResearch <= iAlienResearch && arrCurrentUpgrades[Index].nmTeam == nmShipTeam)
+        {
+            ApplyUpgrade(kStats, arrCurrentUpgrades[Index]);
+        }
+    }
 
     foreach arrModifyStatsFn(Del)
     {
         Del(kStats, nmShipTeam);
     }
+}
+
+protected function ApplyUpgrade(out LWCE_TShipStats kStats, out LWCE_TShipScheduledUpgrade kUpgrade)
+{
+    kStats.iAim      += kUpgrade.kStatChanges.iAim;
+    kStats.iArmor    += kUpgrade.kStatChanges.iArmor;
+    kStats.iArmorPen += kUpgrade.kStatChanges.iArmorPen;
+    kStats.iDamage   += kUpgrade.kStatChanges.iDamage;
+    kStats.iEngagementSpeed += kUpgrade.kStatChanges.iEngagementSpeed;
+    kStats.iHealth   += kUpgrade.kStatChanges.iHealth;
+    kStats.iSpeed    += kUpgrade.kStatChanges.iSpeed;
+
+    if (kUpgrade.kStatChanges.arrWeapons.Length > 0)
+    {
+        kStats.arrWeapons = kUpgrade.kStatChanges.arrWeapons;
+    }
+}
+
+private function int SortUpgrades(LWCE_TShipScheduledUpgrade Upgrade1, LWCE_TShipScheduledUpgrade Upgrade2)
+{
+    return Upgrade1.iAlienResearch > Upgrade2.iAlienResearch ? -1 : 0;
 }
