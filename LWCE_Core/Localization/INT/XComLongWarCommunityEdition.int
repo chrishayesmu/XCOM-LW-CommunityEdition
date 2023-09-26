@@ -1,3 +1,588 @@
+[Aba LWCECityTemplate]
+strName="Aba"
+
+[Aberdeen LWCECityTemplate]
+strName="Aberdeen"
+
+[Abuja LWCECityTemplate]
+strName="Abuja"
+
+[Acapulco LWCECityTemplate]
+strName="Acapulco"
+
+[Adelaide LWCECityTemplate]
+strName="Adelaide"
+
+[Ahmedabad LWCECityTemplate]
+strName="Ahmedabad"
+
+[Albuquerque LWCECityTemplate]
+strName="Albuquerque"
+
+[Alexandria LWCECityTemplate]
+strName="Alexandria"
+
+[Anchorage LWCECityTemplate]
+strName="Anchorage"
+
+[Aswan LWCECityTemplate]
+strName="Aswan"
+
+[Asyut LWCECityTemplate]
+strName="Asyut"
+
+[Atlanta LWCECityTemplate]
+strName="Atlanta"
+
+[Baltimore LWCECityTemplate]
+strName="Baltimore"
+
+[Bangalore LWCECityTemplate]
+strName="Bangalore"
+
+[Beijing LWCECityTemplate]
+strName="Beijing"
+
+[BeloHorizonte LWCECityTemplate]
+strName="Belo Horizonte"
+
+[BeninCity LWCECityTemplate]
+strName="Benin City"
+
+[Berlin LWCECityTemplate]
+strName="Berlin"
+
+[Birmingham LWCECityTemplate]
+strName="Birmingham"
+
+[Bloemfontein LWCECityTemplate]
+strName="Bloemfontein"
+
+[Bogota LWCECityTemplate]
+strName="Bogota"
+
+[Bordeaux LWCECityTemplate]
+strName="Bordeaux"
+
+[Boston LWCECityTemplate]
+strName="Boston"
+
+[Brasilia LWCECityTemplate]
+strName="Brasilia"
+
+[Bremen LWCECityTemplate]
+strName="Bremen"
+
+[Brisbane LWCECityTemplate]
+strName="Brisbane"
+
+[BuenosAires LWCECityTemplate]
+strName="Buenos Aires"
+
+[Cairns LWCECityTemplate]
+strName="Cairns"
+
+[Cairo LWCECityTemplate]
+strName="Cairo"
+
+[Calgary LWCECityTemplate]
+strName="Calgary"
+
+[Canberra LWCECityTemplate]
+strName="Canberra"
+
+[CapeTown LWCECityTemplate]
+strName="Cape Town"
+
+[Cardiff LWCECityTemplate]
+strName="Cardiff"
+
+[Chelyabinsk LWCECityTemplate]
+strName="Chelyabinsk"
+
+[Chengdu LWCECityTemplate]
+strName="Chengdu"
+
+[Chennai LWCECityTemplate]
+strName="Chennai"
+
+[Chicago LWCECityTemplate]
+strName="Chicago"
+
+[Chihuahua LWCECityTemplate]
+strName="Chihuahua"
+
+[Chongqing LWCECityTemplate]
+strName="Chongqing"
+
+[Cologne LWCECityTemplate]
+strName="Cologne"
+
+[ComodoroRivadavia LWCECityTemplate]
+strName="Comodoro Rivadavia"
+
+[Cordoba LWCECityTemplate]
+strName="Cordoba"
+
+[Corrientes LWCECityTemplate]
+strName="Corrientes"
+
+[Coventry LWCECityTemplate]
+strName="Coventry"
+
+[Dallas LWCECityTemplate]
+strName="Dallas"
+
+[Darwin LWCECityTemplate]
+strName="Darwin"
+
+[Delhi LWCECityTemplate]
+strName="Delhi"
+
+[Denver LWCECityTemplate]
+strName="Denver"
+
+[Durban LWCECityTemplate]
+strName="Durban"
+
+[Dusseldorf LWCECityTemplate]
+strName="Dusseldorf"
+
+[Edinburgh LWCECityTemplate]
+strName="Edinburgh"
+
+[Edmonton LWCECityTemplate]
+strName="Edmonton"
+
+[Fortaleza LWCECityTemplate]
+strName="Fortaleza"
+
+[Frankfurt LWCECityTemplate]
+strName="Frankfurt"
+
+[Fukuoka LWCECityTemplate]
+strName="Fukuoka"
+
+[Giza LWCECityTemplate]
+strName="Giza"
+
+[Gizeh LWCECityTemplate]
+strName="Gizeh"
+
+[Glasgow LWCECityTemplate]
+strName="Glasgow"
+
+[Guadalajara LWCECityTemplate]
+strName="Guadalajara"
+
+[Guangzhou LWCECityTemplate]
+strName="Guangzhou"
+
+[Halifax LWCECityTemplate]
+strName="Halifax"
+
+[Hamburg LWCECityTemplate]
+strName="Hamburg"
+
+[Hannover LWCECityTemplate]
+strName="Hannover"
+
+[Harbin LWCECityTemplate]
+strName="Harbin"
+
+[HongKong LWCECityTemplate]
+strName="Hong Kong"
+
+[Houston LWCECityTemplate]
+strName="Houston"
+
+[Hyderabad LWCECityTemplate]
+strName="Hyderabad"
+
+[Hyogo LWCECityTemplate]
+strName="Hyogo"
+
+[Ibadan LWCECityTemplate]
+strName="Ibadan"
+
+[Irkutsk LWCECityTemplate]
+strName="Irkutsk"
+
+[Jaipur LWCECityTemplate]
+strName="Jaipur"
+
+[Johannesburg LWCECityTemplate]
+strName="Johannesburg"
+
+[Juarez LWCECityTemplate]
+strName="Juarez"
+
+[Kaduna LWCECityTemplate]
+strName="Kaduna"
+
+[Kano LWCECityTemplate]
+strName="Kano"
+
+[KansasCity LWCECityTemplate]
+strName="Kansas City"
+
+[Katlehong LWCECityTemplate]
+strName="Katlehong"
+
+[Kazan LWCECityTemplate]
+strName="Kazan"
+
+[Khabarovsk LWCECityTemplate]
+strName="Khabarovsk"
+
+[Kobe LWCECityTemplate]
+strName="Kobe"
+
+[Kolkata LWCECityTemplate]
+strName="Kolkata"
+
+[Kunming LWCECityTemplate]
+strName="Kunming"
+
+[Kyoto LWCECityTemplate]
+strName="Kyoto"
+
+[Lagos LWCECityTemplate]
+strName="Lagos"
+
+[LaPaz LWCECityTemplate]
+strName="La Paz"
+
+[LaPlata LWCECityTemplate]
+strName="La Plata"
+
+[LasVegas LWCECityTemplate]
+strName="Las Vegas"
+
+[Leeds LWCECityTemplate]
+strName="Leeds"
+
+[LeHavre LWCECityTemplate]
+strName="Le Havre"
+
+[Leipzig LWCECityTemplate]
+strName="Leipzig"
+
+[Leon LWCECityTemplate]
+strName="Leon"
+
+[Lhasa LWCECityTemplate]
+strName="Lhasa"
+
+[Lille LWCECityTemplate]
+strName="Lille"
+
+[Liverpool LWCECityTemplate]
+strName="Liverpool"
+
+[London LWCECityTemplate]
+strName="London"
+
+[LosAngeles LWCECityTemplate]
+strName="Los Angeles"
+
+[Lucknow LWCECityTemplate]
+strName="Lucknow"
+
+[Luxor LWCECityTemplate]
+strName="Luxor"
+
+[Lyons LWCECityTemplate]
+strName="Lyon"
+
+[Maiduguri LWCECityTemplate]
+strName="Maiduguri"
+
+[Manaus LWCECityTemplate]
+strName="Manaus"
+
+[Manchester LWCECityTemplate]
+strName="Manchester"
+
+[Marseille LWCECityTemplate]
+strName="Marseille"
+
+[Matsuyama LWCECityTemplate]
+strName="Matsuyama"
+
+[Melbourne LWCECityTemplate]
+strName="Melbourne"
+
+[Mendoza LWCECityTemplate]
+strName="Mendoza"
+
+[Merida LWCECityTemplate]
+strName="Merida"
+
+[MexicoCity LWCECityTemplate]
+strName="Mexico City"
+
+[Miami LWCECityTemplate]
+strName="Miami"
+
+[Monterrey LWCECityTemplate]
+strName="Monterrey"
+
+[Montreal LWCECityTemplate]
+strName="Montreal"
+
+[Moscow LWCECityTemplate]
+strName="Moscow"
+
+[Mumbai LWCECityTemplate]
+strName="Mumbai"
+
+[Munich LWCECityTemplate]
+strName="Munich"
+
+[Murmansk LWCECityTemplate]
+strName="Murmansk"
+
+[Nagoya LWCECityTemplate]
+strName="Nagoya"
+
+[Nanjing LWCECityTemplate]
+strName="Nanjing"
+
+[Nantes LWCECityTemplate]
+strName="Nantes"
+
+[Nashville LWCECityTemplate]
+strName="Nashville"
+
+[NewYork LWCECityTemplate]
+strName="New York"
+
+[Nice LWCECityTemplate]
+strName="Nice"
+
+[Norilsk LWCECityTemplate]
+strName="Norilsk"
+
+[Novgorod LWCECityTemplate]
+strName="Novgorod"
+
+[Novosibirsk LWCECityTemplate]
+strName="Novosibirsk"
+
+[Ogbomosho LWCECityTemplate]
+strName="Ogbomosho"
+
+[Omsk LWCECityTemplate]
+strName="Omsk"
+
+[Osaka LWCECityTemplate]
+strName="Osaka"
+
+[Ottowa LWCECityTemplate]
+strName="Ottawa"
+
+[Paris LWCECityTemplate]
+strName="Paris"
+
+[Perth LWCECityTemplate]
+strName="Perth"
+
+[Philadelphia LWCECityTemplate]
+strName="Philadelphia"
+
+[Phoenix LWCECityTemplate]
+strName="Phoenix"
+
+[Pittsburgh LWCECityTemplate]
+strName="Pittsburgh"
+
+[PortElizabeth LWCECityTemplate]
+strName="Port Elizabeth"
+
+[PortHarcourt LWCECityTemplate]
+strName="Port Harcourt"
+
+[PortoAlegre LWCECityTemplate]
+strName="Porto Alegre"
+
+[PortSaid LWCECityTemplate]
+strName="Port Said"
+
+[Pretoria LWCECityTemplate]
+strName="Pretoria"
+
+[Puebla LWCECityTemplate]
+strName="Puebla"
+
+[Qingdao LWCECityTemplate]
+strName="Qingdao"
+
+[QuebecCity LWCECityTemplate]
+strName="Quebec City"
+
+[Rajkot LWCECityTemplate]
+strName="Rajkot"
+
+[Recife LWCECityTemplate]
+strName="Recife"
+
+[RioDeJaneiro LWCECityTemplate]
+strName="Rio de Janeiro"
+
+[RioGallegos LWCECityTemplate]
+strName="Río Gallegos"
+
+[Rosario LWCECityTemplate]
+strName="Rosario"
+
+[RostovOnDon LWCECityTemplate]
+strName="Rostov-on-Don"
+
+[SaintPetersburg LWCECityTemplate]
+strName="Saint Petersburg"
+
+[Salvador LWCECityTemplate]
+strName="Salvador"
+
+[Salvador LWCECityTemplate]
+strName="Salvador"
+
+[Samara LWCECityTemplate]
+strName="Samara"
+
+[SanAntonio LWCECityTemplate]
+strName="San Antonio"
+
+[SanDiego LWCECityTemplate]
+strName="San Diego"
+
+[SanFrancisco LWCECityTemplate]
+strName="San Francisco"
+
+[SanJuan LWCECityTemplate]
+strName="San Juan"
+
+[SaoPaulo LWCECityTemplate]
+strName="Sao Paulo"
+
+[Sapporo LWCECityTemplate]
+strName="Sapporo"
+
+[Saskatoon LWCECityTemplate]
+strName="Saskatoon"
+
+[Seattle LWCECityTemplate]
+strName="Seattle"
+
+[Shanghai LWCECityTemplate]
+strName="Shanghai"
+
+[Sheffield LWCECityTemplate]
+strName="Sheffield"
+
+[Shenzhen LWCECityTemplate]
+strName="Shenzhen"
+
+[Shillong LWCECityTemplate]
+strName="Shillong"
+
+[Sochi LWCECityTemplate]
+strName="Sochi"
+
+[Soweto LWCECityTemplate]
+strName="Soweto"
+
+[Srinagar LWCECityTemplate]
+strName="Srinagar"
+
+[StJohns LWCECityTemplate]
+strName="St. John's"
+
+[StLouis LWCECityTemplate]
+strName="St. Louis"
+
+[Stuttgart LWCECityTemplate]
+strName="Stuttgart"
+
+[Suez LWCECityTemplate]
+strName="Suez"
+
+[Swindon LWCECityTemplate]
+strName="Swindon"
+
+[Sydney LWCECityTemplate]
+strName="Sydney"
+
+[Tembisa LWCECityTemplate]
+strName="Tembisa"
+
+[Tianjin LWCECityTemplate]
+strName="Tianjin"
+
+[Tijuana LWCECityTemplate]
+strName="Tijuana"
+
+[Tokyo LWCECityTemplate]
+strName="Tokyo"
+
+[Toronto LWCECityTemplate]
+strName="Toronto"
+
+[Toulouse LWCECityTemplate]
+strName="Toulouse"
+
+[Tours LWCECityTemplate]
+strName="Tours"
+
+[Townsville LWCECityTemplate]
+strName="Townsville"
+
+[Tucuman LWCECityTemplate]
+strName="Tucuman"
+
+[Umlazi LWCECityTemplate]
+strName="Umlazi"
+
+[Urumqi LWCECityTemplate]
+strName="Urumqi"
+
+[Vancouver LWCECityTemplate]
+strName="Vancouver"
+
+[Visakhapatnam LWCECityTemplate]
+strName="Visakhapatnam"
+
+[Vladivostok LWCECityTemplate]
+strName="Vladivostok"
+
+[Volgograd LWCECityTemplate]
+strName="Volgograd"
+
+[Voronezh LWCECityTemplate]
+strName="Voronezh"
+
+[WashingtonDC LWCECityTemplate]
+strName="Washington, D.C."
+
+[Winnipeg LWCECityTemplate]
+strName="Winnipeg"
+
+[Wuhan LWCECityTemplate]
+strName="Wuhan"
+
+[Xian LWCECityTemplate]
+strName="Xian"
+
+[Yekaterinburg LWCECityTemplate]
+strName="Yekaterinburg"
+
+[Yellowknife LWCECityTemplate]
+strName="Yellowknife"
+
+[Yokohama LWCECityTemplate]
+strName="Yokohama"
+
 [Africa LWCEContinentTemplate]
 strName="Africa"
 
