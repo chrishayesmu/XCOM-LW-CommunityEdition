@@ -1,20 +1,24 @@
 class LWCE_XGShip_Extensions extends Object
     abstract;
 
-static function Init(XGShip kSelf, TShip kTShip)
+static function Init(XGShip kSelf, name nmTeam)
 {
+    local LWCE_XGShip kCESelf;
+    local LWCEShipTemplate kTemplate;
     local array<name> arrShipWeapons;
     local int I;
 
-    kSelf.m_kTShip = kTShip;
+    kCESelf = LWCE_XGShip(kSelf);
+    kCESelf.ReinitCachedStatsFromTemplate(nmTeam);
     kSelf.m_iHP = kSelf.GetHullStrength();
-    arrShipWeapons = LWCE_XGShip(kSelf).LWCE_GetWeapons();
+    arrShipWeapons = kCESelf.LWCE_GetWeapons();
 
     for (I = 0; I < arrShipWeapons.Length; I++)
     {
         kSelf.m_afWeaponCooldown.AddItem(0.0f);
     }
 
+    // TODO drop any reference to m_kTShip; it's unpopulated now
     if (kSelf.IsA('XGShip_UFO'))
     {
         if (kSelf.m_kTShip.eType == 4 || kSelf.m_kTShip.eType == 5) // Scout/Destroyer
@@ -50,4 +54,15 @@ static function Init(XGShip kSelf, TShip kTShip)
     kSelf.m_kGeoscape = kSelf.GEOSCAPE();
     kSelf.InitWatchVariables();
     kSelf.ResetWeapons();
+}
+
+static function ReinitFromTemplate(XGShip kSelf, name nmTeam)
+{
+    local LWCE_XGShip kCESelf;
+    local LWCEShipTemplate kTemplate;
+
+    kCESelf = LWCE_XGShip(kSelf);
+    kTemplate = kCESelf.GetTemplate();
+
+    kCESelf.SetCurrentStats(kTemplate.GetStats(nmTeam));
 }

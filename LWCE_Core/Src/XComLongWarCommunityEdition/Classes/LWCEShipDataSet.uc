@@ -16,40 +16,47 @@ static function OnPostTemplatesCreated()
 
     foreach arrShipTemplates(kShipTemplate)
     {
-        kShipTemplate.arrModifyAimFn.AddItem(ModifyShipAim);
-        kShipTemplate.arrModifyDamageFn.AddItem(ModifyShipDamage);
-        kShipTemplate.arrModifyHealthFn.AddItem(ModifyShipHealth);
+        kShipTemplate.arrModifyStatsFn.AddItem(ModifyShipStats);
     }
 }
 
 // TODO: lots of stuff from this point on should be in config
-static function int ModifyShipAim(int iBaseValue, int iValue, name nmShipTeam)
+static function ModifyShipStats(out LWCE_TShipStats kStats, name nmShipTeam)
 {
-    if (nmShipTeam == class'LWCEShipTemplate'.const.SHIP_TEAM_ALIEN)
-    {
-        return iValue + 2 * GetAlienResearchIncrements();
-    }
-}
+    local LWCE_XGFacility_Engineering kEngineering;
 
-static function int ModifyShipDamage(int iBaseValue, int iValue, name nmShipTeam)
-{
-    if (nmShipTeam == class'LWCEShipTemplate'.const.SHIP_TEAM_ALIEN)
-    {
-        return iValue + 8 * GetAlienResearchIncrements();
-    }
-}
+    kEngineering = `LWCE_ENGINEERING;
 
-static function int ModifyShipHealth(int iBaseValue, int iValue, name nmShipTeam)
-{
-    if (nmShipTeam == class'LWCEShipTemplate'.const.SHIP_TEAM_ALIEN)
+    if (nmShipTeam == class'LWCEShipTemplate'.const.SHIP_TEAM_XCOM)
     {
-        return iValue + 75 * GetAlienResearchIncrements();
-    }
-}
+        if (kEngineering.LWCE_IsFoundryTechResearched('Foundry_ArmoredFighters'))
+        {
+            kStats.iHealth += 1000;
+        }
 
-// UFOs all gain some base stats on a regular cadence. This function just calculates how many
-// intervals have passed, and thus how many upgrades should be applied.
-static protected function int GetAlienResearchIncrements()
-{
-    return Min(32, `LWCE_WORLD.STAT_GetStat(1) / 30);
+        if (kEngineering.LWCE_IsFoundryTechResearched('Foundry_ImprovedAvionics'))
+        {
+            kStats.iAim += 10;
+        }
+
+        if (kEngineering.LWCE_IsFoundryTechResearched('Foundry_PenetratorWeapons'))
+        {
+            kStats.iArmorPen += 25;
+        }
+        
+        // In LW 1.0 this is implemented as a malus to UFO aim, but with the addition of ship's having
+        // a defense stat, we rewrite it to apply to XCOM's crafts instead
+        if (kEngineering.LWCE_IsFoundryTechResearched('Foundry_UFOCountermeasures'))
+        {
+            kStats.iDefense += 15;
+        }
+
+        // TODO: when Sparrowhawks project is done, stingrays need to be added to existing ships
+        if (kEngineering.LWCE_IsFoundryTechResearched('Foundry_WingtipSparrowhawks'))
+        {
+            // TODO: sparrowhawks should be their own special ship weapon instead of relying on special logic
+            // within XGInterceptionEngagement to cut their damage in half
+            kStats.arrWeapons.AddItem('Item_StingrayMissiles');
+        }
+    }
 }

@@ -9,47 +9,31 @@ struct CheckpointRecord_LWCE_XGShip_Interceptor extends CheckpointRecord_XGShip_
 };
 
 var name m_nmContinent;
-var name m_nmShipTemplate; // TODO: Ship templates aren't implemented yet; this is for future use
+var name m_nmShipTemplate;
 var array<name> m_arrCEWeapons;
-var LWCE_TShip m_kCETShip;
+var LWCE_TShipStats m_kTCachedStats; // Cached stats from the template
 
 function Init(TShip kTShip)
 {
     `LWCE_LOG_DEPRECATED_CLS(Init);
 }
 
-function LWCE_Init(name nmShipTemplate, TShip kTShip)
+function LWCE_Init(name nmShipTemplate, name nmContinent)
 {
-    // TODO: get rid of TShip and replace with a template-driven LWCE version
+    m_nmContinent = nmContinent;
     m_nmShipTemplate = nmShipTemplate;
     m_v2Coords = GetHomeCoords();
     m_v2Destination = m_v2Coords;
     m_fFlightTime = 43200.0;
 
-    class'LWCE_XGShip_Extensions'.static.Init(self, kTShip);
+    class'LWCE_XGShip_Extensions'.static.Init(self, class'LWCEShipDataSet'.const.SHIP_TEAM_XCOM);
 
-    // Copy from the base game struct for now; eventually we'll move this to templates too
-    m_kCETShip.eType = m_kTShip.eType;
-    m_kCETShip.strName = m_kTShip.strName;
-    m_kCETShip.strSize = m_kTShip.strSize;
-    m_kCETShip.iSpeed = m_kTShip.iSpeed;
-    m_kCETShip.iEngagementSpeed = m_kTShip.iEngagementSpeed;
-    m_kCETShip.iHP = m_kTShip.iHP;
-    m_kCETShip.iArmor = m_kTShip.iArmor;
-    m_kCETShip.iArmorPen = m_kTShip.iAP;
-    m_kCETShip.iRange = m_kTShip.iRange;
-    m_kCETShip.iImage = m_kTShip.iImage;
-
-    // TODO: default weapon should be determined by template
-    LWCE_EquipWeapon('Item_AvalancheMissiles', 0);
     InitSound();
+}
 
-    // TODO: emit an event which the Foundry template can use instead
-    if (`LWCE_ENGINEERING.LWCE_IsFoundryTechResearched('Foundry_WingtipSparrowhawks'))
-    {
-        // Sparrowhawks are just Stingrays; their damage is cut in half by logic in the interception code
-        LWCE_EquipWeapon('Item_StingrayMissiles', 1);
-    }
+function ReinitFromTemplate(name nmTeam)
+{
+    class'LWCE_XGShip_Extensions'.static.ReinitFromTemplate(self, nmTeam);
 }
 
 function EquipWeapon(EItemType eItem)
@@ -102,9 +86,21 @@ function Vector2D GetHomeCoords()
     return homeCoords;
 }
 
-function LWCE_TShip GetShipData()
+function int GetHullStrength()
 {
-    return m_kCETShip;
+    return m_kTCachedStats.iHealth;
+}
+
+function int GetRange()
+{
+    `LWCE_LOG_DEPRECATED_NOREPLACE_CLS(GetRange);
+
+    return -100;
+}
+
+function int GetSpeed()
+{
+    return m_kTCachedStats.iSpeed;
 }
 
 function EItemType GetWeapon()

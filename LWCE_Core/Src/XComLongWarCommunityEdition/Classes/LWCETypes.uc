@@ -545,22 +545,6 @@ struct LWCE_TSatNode
     var name nmCountry;
 };
 
-struct LWCE_TShip
-{
-    var string strName;
-    var string strSize;
-    var name nmTemplate;
-    var int iSpeed;
-    var int iEngagementSpeed;
-    var int iHP;
-    var int iArmor;
-    var int iArmorPen;
-    var int iRange;
-    var array<LWCE_TItemQuantity> arrSalvage;
-    var array<name> arrWeapons; // not used on player ships, only UFOs
-    var int iImage;
-};
-
 struct LWCE_TShipOrder
 {
     var int iNumInterceptors;
@@ -579,6 +563,7 @@ struct LWCE_TShipStats
     var int iArmorPen;
     var int iHealth;
     var int iDamage;
+    var int iDefense;
     var int iEngagementSpeed;
     var int iSpeed;
     var array<name> arrWeapons;

@@ -419,9 +419,11 @@ function UpdateWeapons(float fDeltaT)
                             kCombatExchange.iTargetShip = 0;
                         }
 
+                        // TODO add aim and defense stats
                         iChanceToHit = kShipWeaponTemplate.GetHitChance(kShip, !IsUfo(iShip));
 
                         // For player ships, add aim per confirmed kill
+                        // TODO put the aim-per-kill into config
                         if (iShip != 0)
                         {
                             iChanceToHit += Clamp(3 * m_kInterception.m_arrInterceptors[0].m_iConfirmedKills, 0, 30);

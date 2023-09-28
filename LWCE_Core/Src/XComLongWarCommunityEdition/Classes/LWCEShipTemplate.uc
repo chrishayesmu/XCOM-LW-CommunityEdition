@@ -26,12 +26,17 @@ struct LWCE_TShipScheduledUpgrade
 var config int iHealth;
 var config int iAim;
 var config int iDamage;
+var config int iDefense;
 var config int iSpeed;           // This ship's speed on the Geoscape. UFOs will intentionally loiter at a fraction of their top speed
                                  // while conducting missions or preparing to land.
 var config int iEngagementSpeed; // This ship's speed during an interception. Used to calculate how long the interception will last.
 var config int iArmor;           // Armor providing resistance to attacks from other ships.
 var config int iArmorPen;        // This ship's ability to overcome enemy armor; also provided by ship weapons.
+var config int iResourceCost;    // Cost in alien resources to replace/repair this ship if destroyed/damaged
+var config int iThreat;          // How much threat is generated with the aliens by shooting down or assaulting this ship.
 
+var config name nmSize;          // How large this ship is (Small, Medium, Large, VeryLarge). Displayed on the Geoscape and also used for
+                                 // some game logic. see DefaultLWCEShips.ini for details.
 var config string strImage;      // Path to the ship's image to use for Geoscape alerts. Unfortunately, the interception image is hardcoded
                                  // in the Flash layer based on the ship's EShipType value. 
 
@@ -56,7 +61,7 @@ var const localized string strDescription; // Only shown in the XCOM hangar scre
 /// <param name="nmShipTeam">Which team this ship is on. Used for e.g. applying Armored Fighters to XCOM
 /// craft without applying it to UFOs. This should always be used instead of depending on the ship's type,
 /// as you may get surprised by mods that do things like let XCOM take over UFOs and fly them.</param>
-delegate int ModifyStatsDel(out LWCE_TShipStats kStats, name nmShipTeam);
+delegate ModifyStatsDel(out LWCE_TShipStats kStats, name nmShipTeam);
 
 /// <summary>
 /// Retrieves the stats for a ship using this template. This is the only way that stats should be
@@ -93,10 +98,22 @@ function LWCE_TShipStats GetStats(name nmShipTeam)
     kStats.iHealth = iHealth;
     kStats.iSpeed = iSpeed;
 
+    // Apply global upgrades in order of required alien research
     arrCurrentUpgrades = class'LWCEShipDataSet'.default.arrGlobalShipUpgrades;
     arrCurrentUpgrades.Sort(SortUpgrades);
 
-    // TODO: apply scheduled upgrades before calling delegates
+    for (Index = 0; Index < arrCurrentUpgrades.Length; Index++)
+    {
+        if (arrCurrentUpgrades[Index].iAlienResearch <= iAlienResearch && arrCurrentUpgrades[Index].nmTeam == nmShipTeam)
+        {
+            ApplyUpgrade(kStats, arrCurrentUpgrades[Index]);
+        }
+    }
+
+    // Then do the same for template-specific upgrades
+    arrCurrentUpgrades = arrUpgrades;
+    arrCurrentUpgrades.Sort(SortUpgrades);
+
     for (Index = 0; Index < arrCurrentUpgrades.Length; Index++)
     {
         if (arrCurrentUpgrades[Index].iAlienResearch <= iAlienResearch && arrCurrentUpgrades[Index].nmTeam == nmShipTeam)
@@ -113,13 +130,14 @@ function LWCE_TShipStats GetStats(name nmShipTeam)
 
 protected function ApplyUpgrade(out LWCE_TShipStats kStats, out LWCE_TShipScheduledUpgrade kUpgrade)
 {
-    kStats.iAim      += kUpgrade.kStatChanges.iAim;
-    kStats.iArmor    += kUpgrade.kStatChanges.iArmor;
-    kStats.iArmorPen += kUpgrade.kStatChanges.iArmorPen;
-    kStats.iDamage   += kUpgrade.kStatChanges.iDamage;
+    kStats.iAim             += kUpgrade.kStatChanges.iAim;
+    kStats.iArmor           += kUpgrade.kStatChanges.iArmor;
+    kStats.iArmorPen        += kUpgrade.kStatChanges.iArmorPen;
+    kStats.iDamage          += kUpgrade.kStatChanges.iDamage;
+    kStats.iDefense         += kUpgrade.kStatChanges.iDefense;
     kStats.iEngagementSpeed += kUpgrade.kStatChanges.iEngagementSpeed;
-    kStats.iHealth   += kUpgrade.kStatChanges.iHealth;
-    kStats.iSpeed    += kUpgrade.kStatChanges.iSpeed;
+    kStats.iHealth          += kUpgrade.kStatChanges.iHealth;
+    kStats.iSpeed           += kUpgrade.kStatChanges.iSpeed;
 
     if (kUpgrade.kStatChanges.arrWeapons.Length > 0)
     {
