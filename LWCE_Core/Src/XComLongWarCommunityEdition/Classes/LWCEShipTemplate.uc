@@ -27,19 +27,19 @@ var config int iHealth;
 var config int iAim;
 var config int iDamage;
 var config int iDefense;
-var config int iSpeed;           // This ship's speed on the Geoscape. UFOs will intentionally loiter at a fraction of their top speed
-                                 // while conducting missions or preparing to land.
-var config int iEngagementSpeed; // This ship's speed during an interception. Used to calculate how long the interception will last.
-var config int iArmor;           // Armor providing resistance to attacks from other ships.
-var config int iArmorPen;        // This ship's ability to overcome enemy armor; also provided by ship weapons.
-var config int iResourceCost;    // Cost in alien resources to replace/repair this ship if destroyed/damaged
-var config int iThreat;          // How much threat is generated with the aliens by shooting down or assaulting this ship.
+var config int iSpeed;            // This ship's speed on the Geoscape. UFOs will intentionally loiter at a fraction of their top speed
+                                  // while conducting missions or preparing to land.
+var config int iEngagementSpeed;  // This ship's speed during an interception. Used to calculate how long the interception will last.
+var config int iArmor;            // Armor providing resistance to attacks from other ships.
+var config int iArmorPen;         // This ship's ability to overcome enemy armor; also provided by ship weapons.
+var config int iResourceCost;     // Cost in alien resources to replace/repair this ship if destroyed/damaged
+var config int iThreat;           // How much threat is generated with the aliens by shooting down or assaulting this ship.
 
-var config name nmSize;          // How large this ship is (Small, Medium, Large, VeryLarge). Displayed on the Geoscape and also used for
-                                 // some game logic. see DefaultLWCEShips.ini for details.
-var config string strImage;      // Path to the ship's image to use for Geoscape alerts. Unfortunately, the interception image is hardcoded
-                                 // in the Flash layer based on the ship's EShipType value. 
-
+var config name nmSize;           // How large this ship is (Small, Medium, Large, VeryLarge). Displayed on the Geoscape and also used for
+                                  // some game logic. see DefaultLWCEShips.ini for details.
+var config string strImage;       // Path to the ship's image to use for Geoscape alerts. Unfortunately, the interception image is hardcoded
+                                  // in the Flash layer based on the ship's EShipType value.
+var config string strEngineSound; // Path to the sound to play for this ship's engine.
 
 var config array<LWCE_TItemQuantity> arrSalvage;          // If an XCOM ground mission targets this ship (i.e. it lands or crashes),
                                                           // these are the possible rewards from completing the mission

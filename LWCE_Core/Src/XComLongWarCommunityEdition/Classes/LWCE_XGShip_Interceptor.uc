@@ -4,12 +4,13 @@ struct CheckpointRecord_LWCE_XGShip_Interceptor extends CheckpointRecord_XGShip_
 {
     var name m_nmContinent;
     var name m_nmShipTemplate;
+    var name m_nmTeam;
     var array<name> m_arrCEWeapons;
-    var LWCE_TShip m_kCETShip;
 };
 
 var name m_nmContinent;
 var name m_nmShipTemplate;
+var name m_nmTeam;
 var array<name> m_arrCEWeapons;
 var LWCE_TShipStats m_kTCachedStats; // Cached stats from the template
 
@@ -18,22 +19,28 @@ function Init(TShip kTShip)
     `LWCE_LOG_DEPRECATED_CLS(Init);
 }
 
-function LWCE_Init(name nmShipTemplate, name nmContinent)
+function LWCE_Init(name nmShipTemplate, name nmContinent, name nmTeam)
 {
     m_nmContinent = nmContinent;
     m_nmShipTemplate = nmShipTemplate;
+    m_nmTeam = nmTeam;
     m_v2Coords = GetHomeCoords();
     m_v2Destination = m_v2Coords;
     m_fFlightTime = 43200.0;
 
-    class'LWCE_XGShip_Extensions'.static.Init(self, class'LWCEShipDataSet'.const.SHIP_TEAM_XCOM);
+    class'LWCE_XGShip_Extensions'.static.Init(self, nmTeam);
 
     InitSound();
 }
 
-function ReinitFromTemplate(name nmTeam)
+function ApplyCheckpointRecord()
 {
-    class'LWCE_XGShip_Extensions'.static.ReinitFromTemplate(self, nmTeam);
+    ReinitFromTemplate();
+}
+
+function ReinitFromTemplate()
+{
+    class'LWCE_XGShip_Extensions'.static.ReinitFromTemplate(self, m_nmTeam);
 }
 
 function EquipWeapon(EItemType eItem)
@@ -82,7 +89,7 @@ function Vector2D GetHomeCoords()
     {
         homeCoords = `LWCE_XGCONTINENT(m_nmContinent).GetHQLocation();
     }
-    
+
     return homeCoords;
 }
 
