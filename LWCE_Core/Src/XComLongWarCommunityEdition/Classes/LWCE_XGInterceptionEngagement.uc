@@ -23,6 +23,95 @@ function Init(XGInterception kInterception)
     m_iUFOTarget = 1;
 }
 
+/// <summary>
+/// Calculates the percentage of armor which the attacker can penetrate on the target. The output is
+/// not capped to the target's actual armor amount, allowing for "over-penetration" mechanics if desired.
+/// </summary>
+/// <param name="kAttacker">The ship which is attacking.</param>
+/// <param name="kTarget">The ship which is being attacked.</param>
+/// <param name="kWeapon">The weapon which the attacking ship is currently firing.</param>
+function int CalculateArmorPen(LWCE_XGShip kAttacker, LWCE_XGShip kTarget, LWCEShipWeaponTemplate kWeapon)
+{
+
+}
+
+/// <summary>
+/// Calculates the base damage of an attack. Does not include any random elements, such as critical hits,
+/// or the random up-to-50% damage bonus which is inherent to all ship attacks.
+/// </summary>
+/// <param name="kAttacker">The ship which is attacking.</param>
+/// <param name="kTarget">The ship which is being attacked.</param>
+/// <param name="kWeapon">The weapon which the attacking ship is currently firing.</param>
+function int CalculateDamage(LWCE_XGShip kAttacker, LWCE_XGShip kTarget, LWCEShipWeaponTemplate kShipWeaponTemplate, CombatExchange comExchange)
+{
+    local int iDamage;
+
+    iDamage = kShipWeaponTemplate.GetDamage(kAttacker, kTarget);
+    iDamage += kAttacker.m_kTCachedStats.iDamage;
+    iDamage -= kTarget.m_kTCachedStats.iDamageReduction;
+    
+    // fDamageMitigation = LWCE_GetDamageMitigation(kShipWeaponTemplate, comExchange);
+    // iFinalDmg = iDamage * (1.0f - fDamageMitigation);
+
+    if (kTarget.nmAnalysisTech != '' && LWCE_XGFacility_Labs(LABS()).LWCE_IsResearched(kTarget.nmAnalysisTech))
+    {
+        iDamage *= 1.1f;
+    }
+
+    // XCOM gets 1% increased damage per confirmed kill
+    if (kAttacker.m_nmTeam == class'LWCEShipTemplate'.const.SHIP_TEAM_XCOM)
+    {
+        iDamage *= (1.0f + (float(kAttacker.m_iConfirmedKills) / 100.0f));
+    }
+
+    return iDamage;
+}
+
+/// <summary>
+/// Calculates the chance for the attacker to hit the target with the given weapon. Should factor in every
+/// aspect of the engagement except for the use of aim/dodge modules.
+/// </summary>
+/// <param name="kAttacker">The ship which is attacking.</param>
+/// <param name="kTarget">The ship which is being attacked.</param>
+/// <param name="kWeapon">The weapon which the attacking ship is currently firing.</param>
+function int CalculateHitChance(LWCE_XGShip kAttacker, LWCE_XGShip kTarget, LWCEShipWeaponTemplate kWeapon)
+{
+    local int iHitChance;
+
+    // TODO move a lot of stuff below to config
+    iHitChance = kWeapon.GetHitChance(kAttacker, kTarget);
+    iHitChance += kAttacker.m_kTCachedStats.iAim;
+    iHitChance -= kTarget.m_kTCachedStats.iDefense;
+
+    // Both the attacker and defender's stance factor into hit chance
+    if (kAttacker.m_nmEngagementStance == 'Aggressive')
+    {
+        iHitChance += 15;
+    }
+    else if (kAttacker.m_nmEngagementStance == 'Defensive')
+    {
+        iHitChance -= 15;
+    }
+
+    if (kTarget.m_nmEngagementStance == 'Aggressive')
+    {
+        iHitChance += 15;
+    }
+    else if (kTarget.m_nmEngagementStance == 'Defensive')
+    {
+        iHitChance -= 15;
+    }
+
+    if (kAttacker.m_nmTeam == class'LWCEShipTemplate'.const.SHIP_TEAM_XCOM)
+    {
+        iHitChance += Clamp(3 * kAttacker.m_iConfirmedKills, 0, 30);
+    }
+
+    iHitChance = Clamp(iHitChance, 5, 95);
+
+    return iHitChance;
+}
+
 function bool CanUseConsumable(int ItemName)
 {
     `LWCE_LOG_DEPRECATED_CLS(CanUseConsumable);
@@ -30,27 +119,57 @@ function bool CanUseConsumable(int ItemName)
     return false;
 }
 
+/// <summary>
+/// Checks if the given consumable can be used in this engagement. By default, each consumable can only
+/// be used once per encounter. In addition, some consumables have stance requirements; e.g., aim modules can
+/// only be used in Balanced or Aggressive stances. Since LWCE supports multiple ships per side, the updated
+/// requirement is that at least one friendly ship must be in a supported stance for a consumable to be usable.
+/// </summary>
 function bool LWCE_CanUseConsumable(name ItemName)
 {
+    local LWCE_XGInterception kCEInterception;
+    local LWCE_XGShip kShip;
+    local bool bIsAnyShipInCorrectStance;
+
+    kCEInterception = LWCE_XGInterception(m_kInterception);
+
     if (!LWCE_IsConsumableAvailable(ItemName))
     {
         return false;
     }
 
+    bIsAnyShipInCorrectStance = false;
+
     if (ItemName == 'Item_UplinkTargeting')
     {
-        if (GetShip(1).m_kTShip.iRange == 2) // Defensive
+        foreach kCEInterception.m_arrFriendlyShips(kShip)
         {
-            return false;
+            if (kShip.m_nmEngagementStance == 'Balanced' || kShip.m_nmEngagementStance == 'Aggressive')
+            {
+                bIsAnyShipInCorrectStance = true;
+                break;
+            }
         }
     }
-
-    if (ItemName == 'Item_DefenseMatrix')
+    else if (ItemName == 'Item_DefenseMatrix')
     {
-        if (GetShip(1).m_kTShip.iRange == 1) // Aggressive
+        foreach kCEInterception.m_arrFriendlyShips(kShip)
         {
-            return false;
+            if (kShip.m_nmEngagementStance == 'Balanced' || kShip.m_nmEngagementStance == 'Defensive')
+            {
+                bIsAnyShipInCorrectStance = true;
+                break;
+            }
         }
+    }
+    else
+    {
+        bIsAnyShipInCorrectStance = true;
+    }
+
+    if (!bIsAnyShipInCorrectStance)
+    {
+        return false;
     }
 
     return !LWCE_HasConsumableBeenUsed(ItemName);
@@ -136,23 +255,38 @@ function int LWCE_GetNumConsumableInEffect(name ItemName)
     return `LWCE_UTILS.GetItemQuantity(m_arrCEConsumableQuantitiesInEffect, ItemName).iQuantity;
 }
 
-function int GetShipDamage(TShipWeapon SHIPWEAPON, CombatExchange comExchange)
+function XGShip GetShip(int iIndex)
 {
-    `LWCE_LOG_DEPRECATED_CLS(GetShipDamage);
+    `LWCE_LOG_DEPRECATED_CLS(GetShip);
 
-    return -100;
+    return none;
 }
 
-function int LWCE_GetShipDamage(LWCEShipWeaponTemplate kShipWeaponTemplate, CombatExchange comExchange)
+/// <summary>
+/// Retrieves a ship in the engagement by its index. By convention, enemy ships occupy indices 0..N-1 (where N
+/// is the number of enemy ships), and friendly ships follow them.
+/// </summary>
+function LWCE_XGShip LWCE_GetShip(int iIndex)
 {
-    local int iBaseDmg, iFinalDmg;
-    local float fDamageMitigation;
+    local LWCE_XGInterception kCEInterception;
 
-    iBaseDmg = kShipWeaponTemplate.GetDamage(GetShip(comExchange.iSourceShip), !IsUfo(comExchange.iSourceShip));
-    fDamageMitigation = LWCE_GetDamageMitigation(kShipWeaponTemplate, comExchange);
-    iFinalDmg = iBaseDmg * (1.0f - fDamageMitigation);
+    kCEInterception = LWCE_XGInterception(m_kInterception);
 
-    return iFinalDmg;
+    if (iIndex < kCEInterception.m_arrEnemyShips.Length)
+    {
+        return kCEInterception.m_arrEnemyShips[iIndex];
+    }
+    else
+    {
+        return kCEInterception.m_arrFriendlyShips[iIndex - kCEInterception.m_arrEnemyShips.Length];
+    }
+}
+
+function int GetShipDamage(TShipWeapon SHIPWEAPON, CombatExchange comExchange)
+{
+    `LWCE_LOG_DEPRECATED_BY(GetShipDamage, CalculateDamage);
+
+    return -100;
 }
 
 function float GetShortestWeaponRange(int iShip)
@@ -202,9 +336,9 @@ function float GetTimeUntilOutrun(int iShip)
     }
     else
     {
-        kUFO = GetShip(0);
+        kUFO = LWCE_GetShip(0);
         iSlowestInterceptorSpeed = 9999;
-        kInterceptor = GetShip(iShip);
+        kInterceptor = LWCE_GetShip(iShip);
         iSlowestInterceptorSpeed = kInterceptor.m_kTShip.iEngagementSpeed;
         iBoostSpeedIncrease = int(float(iSlowestInterceptorSpeed) * 0.50);
         fUFOSpeed = float(kUFO.m_kTShip.iEngagementSpeed);
@@ -250,7 +384,7 @@ function bool IsAnyWeaponInRange(int iShip)
     local array<name> arrShipWeapons;
     local int iWeapon;
 
-    kShip = LWCE_XGShip(GetShip(iShip));
+    kShip = LWCE_GetShip(iShip);
     arrShipWeapons = kShip.LWCE_GetWeapons();
 
     for (iWeapon = 0; iWeapon < arrShipWeapons.Length; iWeapon++)
@@ -347,11 +481,11 @@ function bool LWCE_IsConsumableResearched(name ItemName)
 function StaggerWeaponsForShip(int iShip)
 {
     local int I;
-    local XGShip kShip;
+    local LWCE_XGShip kShip;
     local array<name> arrShipWeapons;
 
-    kShip = GetShip(iShip);
-    arrShipWeapons = LWCE_XGShip(kShip).LWCE_GetWeapons();
+    kShip = LWCE_GetShip(iShip);
+    arrShipWeapons = kShip.LWCE_GetWeapons();
 
     for (I = 0; I < arrShipWeapons.Length; I++)
     {
@@ -367,14 +501,14 @@ function UpdateWeapons(float fDeltaT)
     local name nmAnalysisTech;
     local array<name> arrShipWeapons;
     local array<CombatExchange> akCombatExchange;
-    local XGShip kShip;
+    local LWCE_XGShip kShip;
     local int iChanceToHit, iShip, iWeapon, I;
 
     kTemplateMgr = `LWCE_ITEM_TEMPLATE_MGR;
 
     for (iShip = 0; iShip < GetNumShips(); iShip++)
     {
-        kShip = GetShip(iShip);
+        kShip = LWCE_GetShip(iShip);
         kShip.UpdateWeapons(fDeltaT);
 
         if (AreAllWeaponsInRange(iShip))
@@ -399,7 +533,7 @@ function UpdateWeapons(float fDeltaT)
                 {
                     if (kShip.m_afWeaponCooldown[iWeapon] <= 0.0)
                     {
-                        kShip.m_afWeaponCooldown[iWeapon] += kShipWeaponTemplate.GetFiringTime(kShip, !IsUfo(iShip));
+                        kShip.m_afWeaponCooldown[iWeapon] += kShipWeaponTemplate.GetFiringTime(kShip);
                         kCombatExchange.iSourceShip = iShip;
                         kCombatExchange.iWeapon = iWeapon;
 
@@ -419,27 +553,9 @@ function UpdateWeapons(float fDeltaT)
                             kCombatExchange.iTargetShip = 0;
                         }
 
-                        // TODO add aim and defense stats
-                        iChanceToHit = kShipWeaponTemplate.GetHitChance(kShip, !IsUfo(iShip));
+                        iChanceToHit = CalculateHitChance(kCombatExchange.iSourceShip, kCombatExchange.iTargetShip, kShipWeaponTemplate);
 
-                        // For player ships, add aim per confirmed kill
-                        // TODO put the aim-per-kill into config
-                        if (iShip != 0)
-                        {
-                            iChanceToHit += Clamp(3 * m_kInterception.m_arrInterceptors[0].m_iConfirmedKills, 0, 30);
-                        }
-
-                        if (GetShip(1).m_kTShip.iRange == 1) // aggressive
-                        {
-                            iChanceToHit += 15; // TODO move hit chance adjustment to config
-                        }
-                        else if (GetShip(1).m_kTShip.iRange == 2) // defensive
-                        {
-                            iChanceToHit -= 15;
-                        }
-
-                        iChanceToHit = Clamp(iChanceToHit, 5, 95);
-                        kCombatExchange.iDamage = LWCE_GetShipDamage(kShipWeaponTemplate, kCombatExchange);
+                        kCombatExchange.iDamage = CalculateDamage(kShipWeaponTemplate, kCombatExchange);
 
                         // Roll for critical hit
                         if (Rand(100) <= Clamp((kShipWeaponTemplate.GetArmorPen(GetShip(kCombatExchange.iSourceShip), IsUfo(kCombatExchange.iSourceShip)) + GetShip(kCombatExchange.iSourceShip).m_kTShip.iAP - GetShip(kCombatExchange.iTargetShip).m_kTShip.iArmor) / 2, 5, 25))
@@ -451,17 +567,6 @@ function UpdateWeapons(float fDeltaT)
 
                         if (iShip != 0)
                         {
-                            // Check for UFO Analysis research
-                            nmAnalysisTech = UFOTypeToAnalysisTech(LWCE_XGShip(GetShip(kCombatExchange.iTargetShip)).GetShipData().eType);
-
-                            if (LWCE_XGFacility_Labs(LABS()).LWCE_IsResearched(nmAnalysisTech))
-                            {
-                                kCombatExchange.iDamage *= 1.10;
-                            }
-
-                            // Interceptors get 1% increased damage per confirmed kill
-                            kCombatExchange.iDamage *= (1.0f + (float(m_kInterception.m_arrInterceptors[0].m_iConfirmedKills) / 100.0f));
-
                             // Weapons other than the primary (aka Wingtip Sparrowhawks) do half damage
                             if (iWeapon != 0)
                             {

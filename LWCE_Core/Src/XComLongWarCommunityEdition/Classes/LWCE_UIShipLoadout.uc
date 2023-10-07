@@ -1,5 +1,7 @@
 class LWCE_UIShipLoadout extends UIShipLoadout;
 
+var LWCE_XGShip m_kCEShip;
+
 simulated function bool OnAccept(optional string Arg = "")
 {
     local LWCE_XGHangarUI kMgr;
@@ -38,8 +40,8 @@ simulated function bool OnCancel(optional string Arg = "")
 
     kMgr = LWCE_XGHangarUI(GetMgr());
 
-    kShipWeapon = LWCEShipWeaponTemplate(`LWCE_ITEM(LWCE_XGShip_Interceptor(m_kShip).GetWeaponAtIndex(0)));
-    kMgr.LWCE_UpdateShipWeaponView(m_kShip, kShipWeapon);
+    kShipWeapon = `LWCE_SHIP_WEAPON(m_kCEShip.GetWeaponAtIndex(0));
+    kMgr.LWCE_UpdateShipWeaponView(kShipWeapon);
     kMgr.OnLeaveTable();
 
     return true;
@@ -56,13 +58,13 @@ function RealizeSelected()
     kMgr = LWCE_XGHangarUI(GetMgr());
 
     kShipWeapon = kMgr.m_arrCEItems[m_iCurrentSelection];
-    kMgr.LWCE_UpdateShipWeaponView(m_kShip, kShipWeapon);
+    kMgr.LWCE_UpdateShipWeaponView(kShipWeapon);
 
     shipWpnRange = kMgr.GetShipWeaponRangeBin(kShipWeapon.iRange);
-    shipWpnArmorPen = kShipWeapon.GetArmorPen(m_kShip, /* bShipIsXCom */ true);
-    shipWpnBaseDamage = kShipWeapon.GetDamage(m_kShip, /* bShipIsXCom */ true) * (1 + m_kShip.m_iConfirmedKills / 100.0f);
-    shipWpnFireRate = kShipWeapon.GetFiringTime(m_kShip, /* bShipIsXCom */ true);
-    shipWpnHitChance = kShipWeapon.GetHitChance(m_kShip, /* bShipIsXCom */ true) + Clamp(3 * m_kShip.m_iConfirmedKills, 0, 30);
+    shipWpnArmorPen = kShipWeapon.GetArmorPen(m_kCEShip, /* bShipIsXCom */ true);
+    shipWpnBaseDamage = kShipWeapon.GetDamage(m_kCEShip, /* bShipIsXCom */ true) * (1 + m_kCEShip.m_iConfirmedKills / 100.0f);
+    shipWpnFireRate = kShipWeapon.GetFiringTime(m_kCEShip, /* bShipIsXCom */ true);
+    shipWpnHitChance = kShipWeapon.GetHitChance(m_kCEShip, /* bShipIsXCom */ true) + Clamp(3 * m_kCEShip.m_iConfirmedKills, 0, 30);
 
     AS_SetStatData(0, class'LWCE_UIItemCards'.default.m_strHitChanceLabel, class'LWCE_UIItemCards'.static.GetShipHitChanceString(shipWpnHitChance));
 

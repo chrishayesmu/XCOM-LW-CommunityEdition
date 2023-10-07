@@ -18,7 +18,7 @@ struct CheckpointRecord_LWCE_XGHeadquarters extends XGHeadQuarters.CheckpointRec
     var array<LWCE_XGBase> m_arrBases;
     var array<LWCE_TBonus> m_arrBonuses;
     var array<LWCE_TFacilityCount> m_arrCEBaseFacilities;
-    var array<LWCE_TShipOrder> m_arrCEInterceptorOrders;
+    var array<LWCE_TShipOrder> m_arrCEShipOrders;
     var array<LWCE_TSatellite> m_arrCESatellites;
     var array<name> m_arrCEFacilityBinksPlayed;
     var array<name> m_arrCELastCaptives;
@@ -31,7 +31,7 @@ struct CheckpointRecord_LWCE_XGHeadquarters extends XGHeadQuarters.CheckpointRec
 var array<LWCE_XGBase> m_arrBases;
 var array<LWCE_TBonus> m_arrBonuses;
 var array<LWCE_TFacilityCount> m_arrCEBaseFacilities; // A count of each facility type XCOM has, across all bases.
-var array<LWCE_TShipOrder> m_arrCEInterceptorOrders;
+var array<LWCE_TShipOrder> m_arrCEShipOrders;
 var array<LWCE_TSatellite> m_arrCESatellites;
 var array<name> m_arrCEFacilityBinksPlayed;
 var array<name> m_arrCELastCaptives;

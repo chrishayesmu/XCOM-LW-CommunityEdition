@@ -829,7 +829,7 @@ function XGMission CreateCrashMission(XGShip_UFO kUFO)
     kMission.m_kUFOObjective = kUFO.m_kObjective.m_kTObjective;
     kMission.m_iCounter = kUFO.m_iCounter;
 
-    kReward = CreateMissionRewards(LWCE_XGShip_UFO(kUFO).m_kCETShip.arrSalvage);
+    kReward = CreateMissionRewards(LWCE_XGShip(kUFO).m_kTemplate.arrSalvage);
     class'LWCE_XGMission_Extensions'.static.SetMissionRewards(kMission, kReward);
 
     RemoveUFO(kUFO);
@@ -861,7 +861,7 @@ function XGMission CreateLandedUFOMission(XGShip_UFO kUFO)
         kMission.m_iDetectedBy = -1;
     }
 
-    kReward = CreateMissionRewards(LWCE_XGShip_UFO(kUFO).m_kCETShip.arrSalvage);
+    kReward = CreateMissionRewards(LWCE_XGShip(kUFO).m_kTemplate.arrSalvage);
     class'LWCE_XGMission_Extensions'.static.SetMissionRewards(kMission, kReward);
 
     return kMission;
@@ -967,7 +967,7 @@ function DetermineCrashLoot(XGShip_UFO kUFO, EShipWeapon eWeapon)
     `LWCE_LOG_DEPRECATED_CLS(DetermineCrashLoot);
 }
 
-function LWCE_DetermineCrashLoot(LWCE_XGShip_UFO kUFO, LWCE_XGShip_Interceptor kInterceptor)
+function LWCE_DetermineCrashLoot(LWCE_XGShip kUFO, LWCE_XGShip kInterceptor)
 {
     local LWCEShipWeaponTemplate kShipWeapon;
     local int Index, iSurvived, iTotal, iSurvivalChance;
@@ -975,6 +975,7 @@ function LWCE_DetermineCrashLoot(LWCE_XGShip_UFO kUFO, LWCE_XGShip_Interceptor k
 
     kShipWeapon = LWCEShipWeaponTemplate(`LWCE_ITEM(kInterceptor.GetWeaponAtIndex(0)));
 
+    // TODO: need a source for salvage other than the template, so we can modify it
     for (Index = 0; Index < kUFO.m_kCETShip.arrSalvage.Length; Index++)
     {
         iTotal = kUFO.m_kCETShip.arrSalvage[Index].iQuantity;
@@ -1334,7 +1335,7 @@ function OnUFODestroyed(XGShip_UFO kUFO)
 function OnUFOShotDown(XGShip_Interceptor kJet, XGShip_UFO kUFO)
 {
     kUFO.m_kObjective.NotifyOfCrash(kUFO);
-    LWCE_DetermineCrashLoot(LWCE_XGShip_UFO(kUFO), LWCE_XGShip_Interceptor(kJet));
+    LWCE_DetermineCrashLoot(LWCE_XGShip(kUFO), LWCE_XGShip(kJet));
     AIAddNewMission(eMission_Crash, kUFO);
 
     STAT_AddStat(eRecap_UFOsShotDown, 1);

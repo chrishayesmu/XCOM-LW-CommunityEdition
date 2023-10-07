@@ -58,19 +58,19 @@ function AddItem(int iItemId, optional int iQuantity = -1, optional int iContine
     // must use LWCE_AddItem.
     if (iItemId == eItem_AlienAlloys)
     {
-        LWCE_AddItem('Item_AlienAlloy', iQuantity, iContinent);
+        LWCE_AddItem('Item_AlienAlloy', iQuantity, '');
         return;
     }
 
     if (iItemId == eItem_Elerium115)
     {
-        LWCE_AddItem('Item_Elerium', iQuantity, iContinent);
+        LWCE_AddItem('Item_Elerium', iQuantity, '');
         return;
     }
 
     if (iItemId == eItem_Meld)
     {
-        LWCE_AddItem('Item_Meld', iQuantity, iContinent);
+        LWCE_AddItem('Item_Meld', iQuantity, '');
         return;
     }
 
@@ -106,7 +106,7 @@ function LWCE_AddItem(name ItemName, optional int iQuantity = 1, optional name n
 
     if (kItem.nmResultingShip != '')
     {
-        LWCE_XGFacility_Hangar(HANGAR()).AddShip(kItem.nmResultingShip, nmContinent);
+        LWCE_XGFacility_Hangar(HANGAR()).LWCE_AddShip(kItem.nmResultingShip, nmContinent);
 
         if (kItem.nmResultingShip == 'Firestorm')
         {

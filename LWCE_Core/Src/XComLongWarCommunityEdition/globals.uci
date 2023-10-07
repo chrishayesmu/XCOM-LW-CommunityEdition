@@ -25,6 +25,7 @@
 `define LWCE_LOG_DEPRECATED(funcname) `LWCE_LOG("ERROR: LWCE-incompatible function `{funcname} was called. This needs to be replaced with LWCE_`funcname. Stack trace follows."); ScriptTrace();
 `define LWCE_LOG_DEPRECATED_CLS(funcname) `LWCE_LOG_CLS("ERROR: LWCE-incompatible function `{funcname} was called. This needs to be replaced with LWCE_`funcname. Stack trace follows."); ScriptTrace();
 `define LWCE_LOG_DEPRECATED_NOREPLACE_CLS(funcname) `LWCE_LOG_CLS("ERROR: LWCE-incompatible function `{funcname} was called. This function is deprecated and unavailable. Stack trace follows."); ScriptTrace();
+`define LWCE_LOG_DEPRECATED_BY(funcname, replacename) `LWCE_LOG("ERROR: LWCE-incompatible function `{funcname} was called. This needs to be replaced with `replacename. Stack trace follows."); ScriptTrace();
 `define LWCE_LOG_NOT_IMPLEMENTED(funcname) `LWCE_LOG_CLS("ERROR: function `{funcname} has not yet been implemented");
 
 `define LWCE_EVENT_MGR (class'LWCE_XComEngine'.static.GetEventManager())
@@ -47,7 +48,7 @@
 `define LWCE_FACILITY_TEMPLATE_MGR (class'LWCEFacilityTemplateManager'.static.GetInstance())
 `define LWCE_FOUNDRY_TEMPLATE_MGR (class'LWCEFoundryProjectTemplateManager'.static.GetInstance())
 `define LWCE_ITEM_TEMPLATE_MGR (class'LWCEItemTemplateManager'.static.GetInstance())
-`define LWCE_SHIP_TEMPLATE_MGR (class'LWCEItemTemplateManager'.static.GetInstance())
+`define LWCE_SHIP_TEMPLATE_MGR (class'LWCEShipTemplateManager'.static.GetInstance())
 `define LWCE_TECH_TEMPLATE_MGR (class'LWCETechTemplateManager'.static.GetInstance())
 
 // Retrieve templates by name

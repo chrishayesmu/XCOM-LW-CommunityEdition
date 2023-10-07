@@ -98,13 +98,21 @@ function name LWCE_GetContinent()
 
 function XGShip_UFO LaunchUFO(EShipType eShip, array<int> arrFlightPlan, Vector2D v2Target, float fDuration)
 {
-    local XGShip_UFO kUFO;
+    `LWCE_LOG_DEPRECATED_CLS(LaunchUFO);
 
-    if (eShip == eShip_UFOEthereal && m_kTObjective.eType == eObjective_Flyby)
+    return none;
+}
+
+function LWCE_XGShip LWCE_LaunchUFO(name nmShipType, array<int> arrFlightPlan, Vector2D v2Target, float fDuration)
+{
+    local LWCE_XGShip kUFO;
+
+    if (nmShipType == 'UFOOverseer' && m_kTObjective.eType == eObjective_Flyby)
     {
         v2Target = m_v2Target;
     }
 
+    // TODO: this is rolling ship type; we probably need multiple functions to do all this
     if (eShip < eShip_UFOSmallScout || eShip > /* Assault Carrier */ 14)
     {
         switch (m_kTObjective.eType)
@@ -134,7 +142,7 @@ function XGShip_UFO LaunchUFO(EShipType eShip, array<int> arrFlightPlan, Vector2
             }
     }
 
-    kUFO = Spawn(class'LWCE_XGShip_UFO');
+    kUFO = Spawn(class'LWCE_XGShip');
     kUFO.Init(ITEMTREE().GetShip(eShip));
     kUFO.SetObjective(self);
     kUFO.SetFlightPlan(arrFlightPlan, v2Target, ECountry(m_iCountryTarget), fDuration);

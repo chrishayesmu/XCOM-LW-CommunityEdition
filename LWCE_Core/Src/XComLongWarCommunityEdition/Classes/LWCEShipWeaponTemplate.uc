@@ -59,23 +59,25 @@ var array< delegate<DamageModifierDel> > arrDamageModifiers;
 var array< delegate<FiringTimeModifierDel> > arrFiringTimeModifiers;
 var array< delegate<HitChanceModifierDel> > arrHitChanceModifiers;
 
-delegate int ArmorPenModifierDel(LWCEShipWeaponTemplate kShipWeapon, XGShip kShip, bool bShipIsXCom, int iCurrentValue);
-delegate int DamageModifierDel(LWCEShipWeaponTemplate kShipWeapon, XGShip kShip, bool bShipIsXCom, int iCurrentValue);
-delegate float FiringTimeModifierDel(LWCEShipWeaponTemplate kShipWeapon, XGShip kShip, bool bShipIsXCom, float iCurrentValue);
-delegate int HitChanceModifierDel(LWCEShipWeaponTemplate kShipWeapon, XGShip kShip, bool bShipIsXCom, int iCurrentValue);
+delegate int ArmorPenModifierDel(LWCEShipWeaponTemplate kAttackerWeapon, LWCE_XGShip kAttacker, LWCE_XGShip kTarget, int iCurrentValue);
+delegate int DamageModifierDel(LWCEShipWeaponTemplate kAttackerWeapon, LWCE_XGShip kAttacker, LWCE_XGShip kTarget, int iCurrentValue);
+delegate float FiringTimeModifierDel(LWCEShipWeaponTemplate kAttackerWeapon, LWCE_XGShip kAttacker, float iCurrentValue);
+delegate int HitChanceModifierDel(LWCEShipWeaponTemplate kAttackerWeapon, LWCE_XGShip kAttacker, LWCE_XGShip kTarget, int iCurrentValue);
 
 // TODO: add more hooks to allow for dynamically adjusting the remaining stats
 
 /// <summary>
 /// Gets this weapon's total armor penetration.
 /// </summary>
+/// <param name="kAttacker">The ship which is firing the weapon.</param>
+/// <param name="kTarget">The ship which is being attacked. May be none (e.g. when viewing stats in the hangar).</param>
 /// <remarks>
 /// This should include only effects which are part of the weapon, such as the weapon's base stats, or
 /// stat changes from other sources that are weapon-dependent (e.g. how some Foundry projects only improve
 /// specific ship weapons). Effects which are not weapon-dependent, such as UFO stat increases due to alien
 /// research or Foundry projects that affect all weapons equally, should not be accounted for here.
 /// </remarks>
-function int GetArmorPen(XGShip kShip, bool bShipIsXCom)
+function int GetArmorPen(LWCE_XGShip kAttacker, LWCE_XGShip kTarget)
 {
     local int iResult;
     local delegate<ArmorPenModifierDel> delModifier;
@@ -84,7 +86,7 @@ function int GetArmorPen(XGShip kShip, bool bShipIsXCom)
 
     foreach arrArmorPenModifiers(delModifier)
     {
-        iResult += delModifier(self, kShip, bShipIsXCom, iResult);
+        iResult += delModifier(self, kAttacker, iResult);
     }
 
     return iResult;
@@ -93,13 +95,15 @@ function int GetArmorPen(XGShip kShip, bool bShipIsXCom)
 /// <summary>
 /// Gets this weapon's total damage.
 /// </summary>
+/// <param name="kAttacker">The ship which is firing the weapon.</param>
+/// <param name="kTarget">The ship which is being attacked. May be none (e.g. when viewing stats in the hangar).</param>
 /// <remarks>
 /// This should include only effects which are part of the weapon, such as the weapon's base stats, or
 /// stat changes from other sources that are weapon-dependent (e.g. how some Foundry projects only improve
 /// specific ship weapons). Effects which are not weapon-dependent, such as UFO stat increases due to alien
 /// research or Foundry projects that affect all weapons equally, should not be accounted for here.
 /// </remarks>
-function int GetDamage(XGShip kShip, bool bShipIsXCom)
+function int GetDamage(LWCE_XGShip kAttacker, LWCE_XGShip kTarget)
 {
     local int iResult;
     local delegate<DamageModifierDel> delModifier;
@@ -108,7 +112,7 @@ function int GetDamage(XGShip kShip, bool bShipIsXCom)
 
     foreach arrDamageModifiers(delModifier)
     {
-        iResult += delModifier(self, kShip, bShipIsXCom, iResult);
+        iResult += delModifier(self, kAttacker, iResult);
     }
 
     return iResult;
@@ -117,13 +121,14 @@ function int GetDamage(XGShip kShip, bool bShipIsXCom)
 /// <summary>
 /// Gets this weapon's total firing time (the time between shots).
 /// </summary>
+/// <param name="kAttacker">The ship which is firing the weapon.</param>
 /// <remarks>
 /// This should include only effects which are part of the weapon, such as the weapon's base stats, or
 /// stat changes from other sources that are weapon-dependent (e.g. how some Foundry projects only improve
 /// specific ship weapons). Effects which are not weapon-dependent, such as UFO stat increases due to alien
 /// research or Foundry projects that affect all weapons equally, should not be accounted for here.
 /// </remarks>
-function float GetFiringTime(XGShip kShip, bool bShipIsXCom)
+function float GetFiringTime(LWCE_XGShip kAttacker)
 {
     local float fResult;
     local delegate<FiringTimeModifierDel> delModifier;
@@ -132,7 +137,7 @@ function float GetFiringTime(XGShip kShip, bool bShipIsXCom)
 
     foreach arrFiringTimeModifiers(delModifier)
     {
-        fResult += delModifier(self, kShip, bShipIsXCom, fResult);
+        fResult += delModifier(self, kAttacker, fResult);
     }
 
     return fResult;
@@ -141,13 +146,15 @@ function float GetFiringTime(XGShip kShip, bool bShipIsXCom)
 /// <summary>
 /// Gets this weapon's total hit chance (with Balanced tactics).
 /// </summary>
+/// <param name="kAttacker">The ship which is firing the weapon.</param>
+/// <param name="kTarget">The ship which is being attacked. May be none (e.g. when viewing stats in the hangar).</param>
 /// <remarks>
 /// This should include only effects which are part of the weapon, such as the weapon's base stats, or
 /// stat changes from other sources that are weapon-dependent (e.g. how some Foundry projects only improve
 /// specific ship weapons). Effects which are not weapon-dependent, such as UFO stat increases due to alien
 /// research or Foundry projects that affect all weapons equally, should not be accounted for here.
 /// </remarks>
-function int GetHitChance(XGShip kShip, bool bShipIsXCom)
+function int GetHitChance(LWCE_XGShip kAttacker, LWCE_XGShip kTarget)
 {
     local int iResult;
     local delegate<HitChanceModifierDel> delModifier;
@@ -156,7 +163,7 @@ function int GetHitChance(XGShip kShip, bool bShipIsXCom)
 
     foreach arrHitChanceModifiers(delModifier)
     {
-        iResult += delModifier(self, kShip, bShipIsXCom, iResult);
+        iResult += delModifier(self, kAttacker, iResult);
     }
 
     return iResult;

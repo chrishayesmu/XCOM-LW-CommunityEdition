@@ -554,7 +554,7 @@ struct LWCE_TShipOrder
 };
 
 /// <summary>
-/// The stats of a ship during an interception or on the Geoscape (i.e. interceptors and UFOs).
+/// The stats of a ship during an interception or on the Geoscape.
 /// </summary>
 struct LWCE_TShipStats
 {
@@ -563,6 +563,7 @@ struct LWCE_TShipStats
     var int iArmorPen;
     var int iHealth;
     var int iDamage;
+    var int iDamageReduction;
     var int iDefense;
     var int iEngagementSpeed;
     var int iSpeed;

@@ -1104,7 +1104,7 @@ function OnShipAdded(EShipType eShip, int iContinent)
     `LWCE_LOG_DEPRECATED_CLS(OnShipAdded);
 }
 
-function LWCE_OnShipAdded(LWCE_XGShip_Interceptor kInterceptor)
+function LWCE_OnShipAdded(LWCE_XGShip kInterceptor)
 {
     local int Index;
 

@@ -1,6 +1,8 @@
 class LWCE_UIShipSummary extends UIShipSummary
     dependson(LWCETypes);
 
+var LWCE_XGShip m_kCEShip;
+
 var const localized string m_strManualRenameDialogTitle;
 var const localized string m_strRenameDialogAccept;
 var const localized string m_strRenameDialogCancel;
@@ -65,23 +67,23 @@ function OnRenameShipDialogueCallback(EUIAction eAction)
 
         kData.strTitle = m_strManualRenameDialogTitle;
         kData.iMaxChars = 25;
-        kData.strInputBoxText = LWCE_XGShip_Interceptor(m_kShip).GetCallsign();
+        kData.strInputBoxText = m_kCEShip.GetCallsign();
         XComPresentationLayerBase(Owner).UIInputDialog(kData);
     }
     else if (eAction == eUIAction_Cancel) // Random name
     {
-        `LWCE_HANGAR.AssignRandomCallsign(m_kShip);
-        AS_SetShipName(m_kShip.m_strCallsign);
+        `LWCE_HANGAR.AssignRandomCallsign(m_kCEShip);
+        AS_SetShipName(m_kCEShip.m_strCallsign);
         `HQPRES.m_kShipList.m_bUpdateDataOnReceiveFocus = true;
     }
 }
 
 function OnKeyboardInputComplete(string Text)
 {
-    if (Text != "" && Text != LWCE_XGShip_Interceptor(m_kShip).GetCallsign())
+    if (Text != "" && Text != m_kCEShip.GetCallsign())
     {
-        LWCE_XGShip_Interceptor(m_kShip).SetCallsign(Text);
-        AS_SetShipName(m_kShip.m_strCallsign);
+        m_kCEShip.SetCallsign(Text);
+        AS_SetShipName(m_kCEShip.m_strCallsign);
         GetMgr().PlayGoodSound();
         `HQPRES.m_kShipList.m_bUpdateDataOnReceiveFocus = true;
     }
@@ -207,13 +209,14 @@ simulated function OnWeaponItemCard()
 
 function UpdateData()
 {
-    local LWCE_XGShip_Interceptor kShip;
+    local LWCEShipWeaponTemplate kPrimaryWeapon;
     local int shipStatusID;
 
-    kShip = LWCE_XGShip_Interceptor(m_kShip);
+    kPrimaryWeapon = `LWCE_SHIP_WEAPON(m_kCEShip.GetWeaponAtIndex(0));
+
     shipStatusID = eUIState_Normal;
 
-    switch (m_kShip.GetStatus())
+    switch (m_kCEShip.GetStatus())
     {
         case eShipStatus_Ready:
             shipStatusID = eUIState_Good;
@@ -230,10 +233,10 @@ function UpdateData()
             break;
     }
 
-    AS_SetShipName(m_kShip.m_strCallsign);
+    AS_SetShipName(m_kCEShip.m_strCallsign);
     AS_SetWeaponLabel(m_strWeaponLabel);
-    AS_SetWeaponName(m_kShip.GetWeaponString());
-    AS_SetShipStatus(class'UIUtilities'.static.GetHTMLColoredText(m_kShip.GetStatusString(), shipStatusID), shipStatusID);
-    AS_SetKills(m_strKillsLabel @ m_kShip.m_iConfirmedKills);
-    AS_SetWeaponImage(`LWCE_ITEM(kShip.GetWeaponAtIndex(0)).ImagePath);
+    AS_SetWeaponName(kPrimaryWeapon.strName);
+    AS_SetShipStatus(class'UIUtilities'.static.GetHTMLColoredText(m_kCEShip.GetStatusString(), shipStatusID), shipStatusID);
+    AS_SetKills(m_strKillsLabel @ m_kCEShip.m_iConfirmedKills);
+    AS_SetWeaponImage(kPrimaryWeapon.ImagePath);
 }

@@ -1203,14 +1203,13 @@ function UpdateFoundryProjects()
 
             m_arrCEFoundryProjects[iProject].iHoursLeft = 0;
             OnFoundryProjectCompleted(iProject);
-            ITEMTREE().UpdateShips();
 
             // TODO: put this in the template somehow
             if (m_arrCEFoundryProjects[iProject].ProjectName == 'Foundry_WingtipSparrowhawks')
             {
                 for (iWorkDone = 0; iWorkDone < HANGAR().m_arrInts.Length; iWorkDone++)
                 {
-                    LWCE_XGShip_Interceptor(HANGAR().m_arrInts[iWorkDone]).LWCE_EquipWeapon('Item_StingrayMissiles', 1);
+                    LWCE_XGShip(HANGAR().m_arrInts[iWorkDone]).LWCE_EquipWeapon('Item_StingrayMissiles', 1);
                 }
             }
 

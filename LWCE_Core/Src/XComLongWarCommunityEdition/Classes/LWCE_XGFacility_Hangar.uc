@@ -1,31 +1,34 @@
 class LWCE_XGFacility_Hangar extends XGFacility_Hangar
     config(LWCEQualityOfLife);
 
-struct CheckpointRecord_LWCE_XGFacility_Hangar extends CheckpointRecord_XGFacility_Hangar
-{
-    var name m_nmCEBestWeaponEquipped;
-};
-
 struct LWCE_TContinentInfo
 {
     var name nmContinent;
     var TText strContinentName;
     var int iNumShips;
-    var array<XGShip_Interceptor> arrCraft;
-    var array<int> m_arrInterceptorOrderIndexes;
+    var array<LWCE_XGShip> arrShips;
+    var array<int> m_arrShipOrderIndexes;
 };
 
-var const localized array<string> PilotNames;
-var const localized array<string> PilotRanks;
+struct CheckpointRecord_LWCE_XGFacility_Hangar extends CheckpointRecord_XGFacility_Hangar
+{
+    var array<LWCE_XGShip> m_arrCEShips;
+    var name m_nmCEBestWeaponEquipped;
+};
+
+var array<LWCE_XGShip> m_arrCEShips;
+var name m_nmCEBestWeaponEquipped; // TODO: not being populated
 
 var config bool bAutoNicknameNewPilots;
 
-var name m_nmCEBestWeaponEquipped; // TODO: not being populated
+var const localized array<string> PilotNames;
+var const localized array<string> PilotRanks;
 
 function AddDropship()
 {
     if (m_kSkyranger == none)
     {
+        // TODO use templates
         m_kSkyranger = Spawn(class'LWCE_XGShip_Dropship');
         m_kSkyranger.Init(ITEMTREE().GetShip(eShip_Skyranger));
         m_kSkyranger.m_strCallsign = m_strCallsignSkyranger;
@@ -34,45 +37,52 @@ function AddDropship()
 
 function AddFirestorm(int iContinent)
 {
+    `LWCE_LOG_DEPRECATED_CLS(AddFirestorm);
+}
+
+function LWCE_AddFirestorm(name nmContinent)
+{
     local int iInterceptorIndex, I;
-    local LWCE_XGShip_Interceptor kFirestorm;
+    local LWCE_XGShip kFirestorm;
 
     iInterceptorIndex = INDEX_NONE;
     kFirestorm = none;
 
+    // TODO delete this and use LWCE_AddShip
+
     // Find the interceptor pilot with the most kills
-    for (I = 0; I < m_arrInts.Length; I++)
+    for (I = 0; I < m_arrCEShips.Length; I++)
     {
-        if (m_arrInts[I] != none && !m_arrInts[I].IsFirestorm())
+        if (m_arrCEShips[I] != none && !m_arrCEShips[I].IsType('Firestorm'))
         {
-            if (iInterceptorIndex == INDEX_NONE || m_arrInts[I].m_iConfirmedKills > m_arrInts[iInterceptorIndex].m_iConfirmedKills)
+            if (iInterceptorIndex == INDEX_NONE || m_arrCEShips[I].m_iConfirmedKills > m_arrCEShips[iInterceptorIndex].m_iConfirmedKills)
             {
                 iInterceptorIndex = I;
             }
         }
     }
 
-    kFirestorm = Spawn(class'LWCE_XGShip_Interceptor');
+    kFirestorm = Spawn(class'LWCE_XGShip');
+    kFirestorm.m_iHomeBay = GetAvailableBay(); // TODO this isn't looking at continent yet
     kFirestorm.m_nmContinent = LWCE_XGHeadquarters(HQ()).LWCE_GetContinent();
-    kFirestorm.m_iHomeBay = GetAvailableBay();
-    kFirestorm.Init(ITEMTREE().GetShip(eShip_Firestorm));
+    kFirestorm.LWCE_Init('Firestorm', nmContinent, class'LWCEShipTemplate'.const.SHIP_TEAM_XCOM);
     m_iFirestormCounter += 1;
 
     if (iInterceptorIndex >= 0)
     {
         // Swap callsign and kill count with the chosen interceptor (aka swap pilots)
-        kFirestorm.m_strCallsign = m_arrInts[iInterceptorIndex].m_strCallsign;
-        kFirestorm.m_iConfirmedKills = m_arrInts[iInterceptorIndex].m_iConfirmedKills;
+        kFirestorm.m_strCallsign = m_arrCEShips[iInterceptorIndex].m_strCallsign;
+        kFirestorm.m_iConfirmedKills = m_arrCEShips[iInterceptorIndex].m_iConfirmedKills;
         m_iInterceptorCounter += 1;
 
         if (bAutoNicknameNewPilots)
         {
-            AssignRandomCallsign(m_arrInts[iInterceptorIndex]);
+            AssignRandomCallsign(m_arrCEShips[iInterceptorIndex]);
         }
         else
         {
-            m_arrInts[iInterceptorIndex].m_strCallsign = m_strCallsignInterceptor $ "-" $ string(m_iInterceptorCounter);
-            m_arrInts[iInterceptorIndex].m_iConfirmedKills = 0;
+            m_arrCEShips[iInterceptorIndex].m_strCallsign = m_strCallsignInterceptor $ "-" $ string(m_iInterceptorCounter);
+            m_arrCEShips[iInterceptorIndex].m_iConfirmedKills = 0;
         }
     }
     else
@@ -87,7 +97,7 @@ function AddFirestorm(int iContinent)
         }
     }
 
-    m_arrInts.AddItem(kFirestorm);
+    m_arrCEShips.AddItem(kFirestorm);
 
     ReorderCraft();
     kFirestorm.UpdateHangarShip();
@@ -97,13 +107,14 @@ function AddFirestorm(int iContinent)
 
 function AddInterceptor(int iContinent)
 {
-    `LWCE_LOG_DEPRECATED_CLS(AddInterceptor);
+    `LWCE_LOG("ERROR: LWCE-incompatible function AddInterceptor was called. This needs to be replaced with LWCE_AddShip. Stack trace follows."); 
+    ScriptTrace();
 }
 
-function LWCE_AddInterceptor(name nmContinent)
+function LWCE_AddShip(name nmShipType, name nmContinent)
 {
     local LWCE_XGHeadquarters kHQ;
-    local LWCE_XGShip_Interceptor kInterceptor;
+    local LWCE_XGShip kShip;
 
     kHQ = LWCE_XGHeadquarters(HQ());
 
@@ -112,36 +123,36 @@ function LWCE_AddInterceptor(name nmContinent)
         nmContinent = kHQ.LWCE_GetContinent();
     }
 
-    kInterceptor = Spawn(class'LWCE_XGShip_Interceptor');
-    kInterceptor.m_nmContinent = nmContinent;
+    kShip = Spawn(class'LWCE_XGShip');
 
     if (nmContinent == kHQ.LWCE_GetContinent())
     {
-        kInterceptor.m_iHomeBay = GetAvailableBay();
+        // TODO integrate this with continent
+        kShip.m_iHomeBay = GetAvailableBay();
     }
 
-    kInterceptor.Init(ITEMTREE().GetShip(eShip_Interceptor));
+    kShip.LWCE_Init(nmShipType, nmContinent, class'LWCEShipTemplate'.const.SHIP_TEAM_XCOM);
 
     m_iInterceptorCounter += 1;
-    kInterceptor.m_strCallsign = m_strCallsignInterceptor $ "-" $ string(m_iInterceptorCounter);
+    kShip.m_strCallsign = m_strCallsignInterceptor $ "-" $ string(m_iInterceptorCounter);
 
-    m_arrInts.AddItem(kInterceptor);
+    m_arrCEShips.AddItem(kShip);
 
     if (bAutoNicknameNewPilots)
     {
-        AssignRandomCallsign(kInterceptor);
+        AssignRandomCallsign(kShip);
     }
 
     ReorderCraft();
-    kInterceptor.UpdateHangarShip();
+    kShip.UpdateHangarShip();
     UpdateHangarBays();
 
-    LWCE_XGFundingCouncil(GEOSCAPE().World().m_kFundingCouncil).LWCE_OnShipAdded(kInterceptor);
+    LWCE_XGFundingCouncil(GEOSCAPE().World().m_kFundingCouncil).LWCE_OnShipAdded(kShip);
 }
 
-function AssignRandomCallsign(XGShip_Interceptor kShip)
+function AssignRandomCallsign(LWCE_XGShip kShip)
 {
-    LWCE_XGShip_Interceptor(kShip).SetCallsign(PilotNames[Rand(PilotNames.Length)]);
+    kShip.SetCallsign(PilotNames[Rand(PilotNames.Length)]);
 }
 
 function bool CanEquip(int iItem, XGShip_Interceptor kShip, out string strHelp)
@@ -151,7 +162,7 @@ function bool CanEquip(int iItem, XGShip_Interceptor kShip, out string strHelp)
     return false;
 }
 
-function bool LWCE_CanEquip(name ItemName, LWCE_XGShip_Interceptor kShip, out string strHelp)
+function bool LWCE_CanEquip(name ItemName, LWCE_XGShip kShip, out string strHelp)
 {
     local LWCEShipWeaponTemplate kShipWeapon;
 
@@ -163,13 +174,13 @@ function bool LWCE_CanEquip(name ItemName, LWCE_XGShip_Interceptor kShip, out st
 
     kShipWeapon = LWCEShipWeaponTemplate(`LWCE_ITEM(ItemName));
 
-    if (!kShipWeapon.bCanEquipOnFirestorm && kShip.IsFirestorm())
+    if (!kShipWeapon.bCanEquipOnFirestorm && kShip.IsType('Firestorm'))
     {
         strHelp = m_sUnavailable;
         return false;
     }
 
-    if (!kShipWeapon.bCanEquipOnInterceptor && kShip.IsInterceptor())
+    if (!kShipWeapon.bCanEquipOnInterceptor && kShip.IsType('Interceptor'))
     {
         strHelp = m_sUnavailable;
         return false;
@@ -210,7 +221,7 @@ function EquipWeapon(EItemType eItem, XGShip_Interceptor kShip)
     `LWCE_LOG_DEPRECATED_CLS(EquipWeapon);
 }
 
-function LWCE_EquipWeapon(name ItemName, XGShip_Interceptor kShip)
+function LWCE_EquipWeapon(name ItemName, LWCE_XGShip kShip)
 {
     local LWCEShipWeaponTemplate kTemplate;
 
@@ -218,9 +229,9 @@ function LWCE_EquipWeapon(name ItemName, XGShip_Interceptor kShip)
 
     LWCE_XGStorage(STORAGE()).LWCE_RemoveItem(ItemName, 1);
     Sound().PlaySFX(SNDLIB().SFX_Facility_ConstructItem);
-    LWCE_XGShip_Interceptor(kShip).LWCE_EquipWeapon(ItemName, 0);
+    kShip.LWCE_EquipWeapon(ItemName, 0);
 
-    if (kShip.IsFirestorm())
+    if (kShip.IsType('Firestorm'))
     {
         kShip.m_iHoursDown = kTemplate.iFirestormArmingTimeHours;
     }
@@ -266,15 +277,15 @@ function LWCE_TContinentInfo LWCE_GetContinentInfo(name nmContinent)
 
     kInfo.nmContinent = nmContinent;
     kInfo.strContinentName.StrValue = kContinent.GetName();
-    kInfo.arrCraft = LWCE_GetInterceptorsByContinent(nmContinent);
-    kInfo.iNumShips = kInfo.arrCraft.Length;
+    kInfo.arrShips = LWCE_GetShipsByContinent(nmContinent);
+    kInfo.iNumShips = kInfo.arrShips.Length;
 
-    for (iOrder = 0; iOrder < kHQ.m_arrCEInterceptorOrders.Length; iOrder++)
+    for (iOrder = 0; iOrder < kHQ.m_arrCEShipOrders.Length; iOrder++)
     {
-        if (kHQ.m_arrCEInterceptorOrders[iOrder].nmDestinationContinent == nmContinent)
+        if (kHQ.m_arrCEShipOrders[iOrder].nmDestinationContinent == nmContinent)
         {
-            kInfo.m_arrInterceptorOrderIndexes.AddItem(iOrder);
-            kInfo.iNumShips += kHQ.m_arrCEInterceptorOrders[iOrder].iNumInterceptors;
+            kInfo.m_arrShipOrderIndexes.AddItem(iOrder);
+            kInfo.iNumShips += kHQ.m_arrCEShipOrders[iOrder].iNumInterceptors;
         }
     }
 
@@ -299,21 +310,22 @@ function array<XGShip_Interceptor> GetInterceptorsByContinent(int iContinent)
 
     arrInterceptors.Length = 0;
 
-    `LWCE_LOG_DEPRECATED_CLS(GetInterceptorsByContinent);
+    `LWCE_LOG("ERROR: LWCE-incompatible function GetInterceptorsByContinent was called. This needs to be replaced with LWCE_GetShipsByContinent. Stack trace follows."); 
+    ScriptTrace();
 
     return arrInterceptors;
 }
 
-function array<XGShip_Interceptor> LWCE_GetInterceptorsByContinent(name nmContinent)
+function array<LWCE_XGShip> LWCE_GetShipsByContinent(name nmContinent)
 {
-    local array<XGShip_Interceptor> arrInterceptors;
-    local XGShip_Interceptor kInt;
+    local array<LWCE_XGShip> arrInterceptors;
+    local LWCE_XGShip kShip;
 
-    foreach m_arrInts(kInt)
+    foreach m_arrCEShips(kShip)
     {
-        if (LWCE_XGShip_Interceptor(kInt).GetHomeContinent() == nmContinent)
+        if (kShip.GetHomeContinent() == nmContinent)
         {
-            arrInterceptors.AddItem(kInt);
+            arrInterceptors.AddItem(kShip);
         }
     }
     
@@ -349,7 +361,7 @@ function array<TItem> GetUpgrades(XGShip_Interceptor kShip)
     return arrItems;
 }
 
-function array<LWCEShipWeaponTemplate> LWCE_GetUpgrades(XGShip_Interceptor kShip)
+function array<LWCEShipWeaponTemplate> LWCE_GetUpgrades()
 {
     local LWCE_XGStorage kStorage;
     local array<LWCEShipWeaponTemplate> arrItems, arrTemplates;
