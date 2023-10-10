@@ -18,6 +18,7 @@ struct CheckpointRecord_LWCE_XGHeadquarters extends XGHeadQuarters.CheckpointRec
     var array<LWCE_XGBase> m_arrBases;
     var array<LWCE_TBonus> m_arrBonuses;
     var array<LWCE_TFacilityCount> m_arrCEBaseFacilities;
+    var array<LWCE_TShipTransfer> m_arrCEShipTransfers;
     var array<LWCE_TShipOrder> m_arrCEShipOrders;
     var array<LWCE_TSatellite> m_arrCESatellites;
     var array<name> m_arrCEFacilityBinksPlayed;
@@ -32,6 +33,7 @@ var array<LWCE_XGBase> m_arrBases;
 var array<LWCE_TBonus> m_arrBonuses;
 var array<LWCE_TFacilityCount> m_arrCEBaseFacilities; // A count of each facility type XCOM has, across all bases.
 var array<LWCE_TShipOrder> m_arrCEShipOrders;
+var array<LWCE_TShipTransfer> m_arrCEShipTransfers;
 var array<LWCE_TSatellite> m_arrCESatellites;
 var array<name> m_arrCEFacilityBinksPlayed;
 var array<name> m_arrCELastCaptives;
@@ -565,15 +567,15 @@ function LWCE_GetEvents(out array<LWCE_THQEvent> arrEvents)
         }
     }
 
-    for (Index = 0; Index < m_akInterceptorOrders.Length; Index++)
+    for (Index = 0; Index < m_arrCEShipOrders.Length; Index++)
     {
-        kEvent =  kBlankEvent;
+        kEvent = kBlankEvent;
         kEvent.EventType = 'InterceptorOrdering';
-        kEvent.iHours = m_akInterceptorOrders[Index].iHours;
+        kEvent.iHours = m_arrCEShipOrders[Index].iHours;
 
         kEvent.kData = class'LWCEDataContainer'.static.New('THQEventData');
-        kEvent.kData.AddInt(m_akInterceptorOrders[Index].iDestinationContinent);
-        kEvent.kData.AddInt(m_akInterceptorOrders[Index].iNumInterceptors);
+        kEvent.kData.AddName(m_arrCEShipOrders[Index].nmDestinationContinent);
+        kEvent.kData.AddInt(m_arrCEShipOrders[Index].iNumShips);
 
         bAdded = false;
 
@@ -593,15 +595,15 @@ function LWCE_GetEvents(out array<LWCE_THQEvent> arrEvents)
         }
     }
 
-    for (Index = 0; Index < m_arrShipTransfers.Length; Index++)
+    for (Index = 0; Index < m_arrCEShipTransfers.Length; Index++)
     {
-        kEvent =  kBlankEvent;
+        kEvent = kBlankEvent;
         kEvent.EventType = 'ShipTransfers';
-        kEvent.iHours = m_arrShipTransfers[Index].iHours;
+        kEvent.iHours = m_arrCEShipTransfers[Index].iHours;
 
         kEvent.kData = class'LWCEDataContainer'.static.New('THQEventData');
-        kEvent.kData.AddInt(m_arrShipTransfers[Index].iDestination);
-        kEvent.kData.AddInt(m_arrShipTransfers[Index].iNumShips);
+        kEvent.kData.AddName(m_arrCEShipTransfers[Index].nmDestinationContinent);
+        kEvent.kData.AddInt(m_arrCEShipTransfers[Index].iNumShips);
 
         bAdded = false;
 
@@ -652,7 +654,7 @@ function LWCE_GetEvents(out array<LWCE_THQEvent> arrEvents)
     {
         if (m_arrCESatellites[Index].iTravelTime > 0)
         {
-            kEvent =  kBlankEvent;
+            kEvent = kBlankEvent;
             kEvent.EventType = 'SatOperational';
             kEvent.iHours = m_arrCESatellites[Index].iTravelTime;
 
@@ -844,22 +846,35 @@ function bool IsHyperwaveActive()
 
 function OrderInterceptors(int iContinent, int iQuantity)
 {
-    local TShipOrder kOrder;
+    `LWCE_LOG_DEPRECATED_CLS(OrderInterceptors);
+}
+
+/// <summary>
+/// Places an order for new ships, paying the cost for them immediately.
+/// </summary>
+/// <param name="nmShipItem">The name of the item template corresponding to the ship to order, e.g. 'Item_Interceptor'.</param>
+/// <param name="nmContinent">Which continent's hangar the ship will be in when it arrives.</param>
+/// <param name="iQuantity">How many of this ship to order.</param>
+function LWCE_OrderShips(name nmShipItem, name nmContinent, int iQuantity)
+{
+    local LWCE_TShipOrder kOrder;
     local int iCost;
 
-    iCost = `LWCE_ITEM('Item_Interceptor').kCost.iCash;
+    // TODO: this should include other components of the cost as well
+    iCost = `LWCE_ITEM(nmShipItem).kCost.iCash;
 
     // LWCE issue #1: normally when you order interceptors, the strategy HUD (particularly the player's current money)
     // doesn't update until you back out to the main HQ screen. This fix simply updates the HUD immediately.
     AddResource(eResource_Money, -iCost * iQuantity);
     PRES().GetStrategyHUD().UpdateDefaultResources();
 
-    kOrder.iNumInterceptors = iQuantity;
-    kOrder.iDestinationContinent = iContinent;
-    kOrder.iHours = 72;
+    kOrder.iNumShips = iQuantity;
+    kOrder.nmDestinationContinent = nmContinent;
+    kOrder.nmShipType = nmShipItem;
+    kOrder.iHours = 72; // TODO make this part of the ship template?
 
     STAT_AddStat(eRecap_InterceptorsHired, iQuantity);
-    m_akInterceptorOrders.AddItem(kOrder);
+    m_arrCEShipOrders.AddItem(kOrder);
 }
 
 function OrderStaff(int iType, int iQuantity)
@@ -925,7 +940,7 @@ function ReduceInterceptorOrder(int iOrder)
 {
     local int iCost;
 
-    if (iOrder < 0 || iOrder >= m_akInterceptorOrders.Length)
+    if (iOrder < 0 || iOrder >= m_arrCEShipOrders.Length)
     {
         return;
     }
@@ -936,11 +951,11 @@ function ReduceInterceptorOrder(int iOrder)
     AddResource(eResource_Money, iCost);
     PRES().GetStrategyHUD().UpdateDefaultResources();
 
-    --m_akInterceptorOrders[iOrder].iNumInterceptors;
+    --m_arrCEShipOrders[iOrder].iNumShips;
 
-    if (m_akInterceptorOrders[iOrder].iNumInterceptors <= 0)
+    if (m_arrCEShipOrders[iOrder].iNumShips <= 0)
     {
-        m_akInterceptorOrders.Remove(iOrder, 1);
+        m_arrCEShipOrders.Remove(iOrder, 1);
     }
 }
 
@@ -991,42 +1006,49 @@ function SetStartingData(name nmContinent, name nmCountry, name nmStartingBonus)
 
 function UpdateInterceptorOrders()
 {
+    local LWCEDataContainer kData;
     local LWCE_XGStorage kStorage;
     local array<int> aiRemove;
-    local int iOrder, iOrderCount, iContinent, iTransfer;
+    local int iOrder, iOrderCount, iTransfer;
+    local name nmContinent, nmShipType;
 
     kStorage = LWCE_XGStorage(STORAGE());
 
-    for (iOrder = 0; iOrder < m_akInterceptorOrders.Length; iOrder++)
+    for (iOrder = 0; iOrder < m_arrCEShipOrders.Length; iOrder++)
     {
-        m_akInterceptorOrders[iOrder].iHours -= 1;
+        m_arrCEShipOrders[iOrder].iHours -= 1;
 
-        if (m_akInterceptorOrders[iOrder].iHours <= 0)
+        if (m_arrCEShipOrders[iOrder].iHours <= 0)
         {
             aiRemove.AddItem(iOrder);
 
-            for (iOrderCount = 0; iOrderCount < m_akInterceptorOrders[iOrder].iNumInterceptors; iOrderCount++)
+            for (iOrderCount = 0; iOrderCount < m_arrCEShipOrders[iOrder].iNumShips; iOrderCount++)
             {
-                iContinent = m_akInterceptorOrders[iOrder].iDestinationContinent;
-                kStorage.LWCE_AddItem('Item_Interceptor', 1, iContinent);
+                nmContinent = m_arrCEShipOrders[iOrder].nmDestinationContinent;
+                nmShipType = m_arrCEShipOrders[iOrder].nmShipType;
+                kStorage.LWCE_AddItem(nmShipType, 1, nmContinent);
             }
 
-            PRES().Notify(eGA_NewInterceptors, m_akInterceptorOrders[iOrder].iNumInterceptors, m_akInterceptorOrders[iOrder].iDestinationContinent);
+            kData = class'LWCEDataContainer'.static.New('NotifyData');
+            kData.AddInt(m_arrCEShipOrders[iOrder].iNumShips);
+            kData.AddName(m_arrCEShipOrders[iOrder].nmDestinationContinent);
+
+            LWCE_XComHQPresentationLayer(PRES()).LWCE_Notify('ShipOrderComplete', kData);           
         }
     }
 
     for (iOrder = aiRemove.Length - 1; iOrder >= 0; iOrder--)
     {
-        m_akInterceptorOrders.Remove(aiRemove[iOrder], 1);
+        m_arrCEShipOrders.Remove(aiRemove[iOrder], 1);
     }
 
     aiRemove.Remove(0, aiRemove.Length);
 
-    for (iTransfer = 0; iTransfer < m_arrShipTransfers.Length; iTransfer++)
+    for (iTransfer = 0; iTransfer < m_arrCEShipTransfers.Length; iTransfer++)
     {
-        m_arrShipTransfers[iTransfer].iHours -= 1;
+        m_arrCEShipTransfers[iTransfer].iHours -= 1;
 
-        if (m_arrShipTransfers[iTransfer].iHours > 0)
+        if (m_arrCEShipTransfers[iTransfer].iHours > 0)
         {
         }
         else
@@ -1037,7 +1059,7 @@ function UpdateInterceptorOrders()
 
     for (iOrder = aiRemove.Length - 1; iOrder >= 0; iOrder--)
     {
-        m_arrShipTransfers.Remove(aiRemove[iOrder], 1);
+        m_arrCEShipTransfers.Remove(aiRemove[iOrder], 1);
     }
 }
 

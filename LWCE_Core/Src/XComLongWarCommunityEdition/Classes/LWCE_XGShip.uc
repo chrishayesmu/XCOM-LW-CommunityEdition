@@ -23,6 +23,9 @@ struct CheckpointRecord_LWCE_XGShip extends XGShip.CheckpointRecord
     var int m_iHoursDown;
     var float m_fFlightTime;
     var LWCE_XGInterception m_kEngagement;
+    var bool m_bEverDetected;
+    var bool m_bWasEngaged;
+    var bool m_bLanded;
 };
 
 var name m_nmContinent;
@@ -35,6 +38,9 @@ var int m_iHomeBay;
 var int m_iHoursDown;
 var float m_fFlightTime;
 var LWCE_XGInterception m_kEngagement;
+var bool m_bEverDetected;
+var bool m_bWasEngaged;
+var bool m_bLanded;
 
 var name m_nmEngagementStance; // e.g. Aggressive, Balanced, Defensive
 

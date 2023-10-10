@@ -545,11 +545,15 @@ struct LWCE_TSatNode
     var name nmCountry;
 };
 
+/// <summary>
+/// An order which is placed for new ships. This is not used for ships which are built via
+/// engineering; those are handled the same as other items, except that they reserve a hangar bay.
+/// </summary>
 struct LWCE_TShipOrder
 {
-    var int iNumInterceptors;
+    var int iNumShips;
     var name nmDestinationContinent;
-    var name nmShipType;
+    var name nmShipType; // Corresponds to an item template, not a ship template
     var int iHours;
 };
 
@@ -568,6 +572,17 @@ struct LWCE_TShipStats
     var int iEngagementSpeed;
     var int iSpeed;
     var array<name> arrWeapons;
+};
+
+/// <summary>
+/// Tracks a transfer of ships from one continent to another. 
+/// </summary>
+struct LWCE_TShipTransfer
+{
+    var int iNumShips;
+    var name nmShipType;
+    var name nmDestinationContinent;
+    var int iHours;
 };
 
 struct LWCE_TTechState

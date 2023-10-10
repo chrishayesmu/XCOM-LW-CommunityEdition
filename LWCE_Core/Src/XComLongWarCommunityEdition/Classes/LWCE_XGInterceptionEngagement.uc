@@ -24,6 +24,17 @@ function Init(XGInterception kInterception)
 }
 
 /// <summary>
+/// Calculates the percentage of armor which the target ship has.
+/// </summary>
+/// <param name="kTarget">The ship which is being attacked.</param>
+function int CalculateArmor(LWCE_XGShip kTarget)
+{
+    // This function (and other incredibly simple calculations) exists basically so that subclasses can
+    // potentially override how one stat is calculated without having to redo all of the air combat logic
+    return kTarget.m_kTCachedStats.iArmor;
+}
+
+/// <summary>
 /// Calculates the percentage of armor which the attacker can penetrate on the target. The output is
 /// not capped to the target's actual armor amount, allowing for "over-penetration" mechanics if desired.
 /// </summary>
@@ -61,7 +72,7 @@ function int CalculateCriticalChance(int iArmor, int iArmorPen)
 /// <param name="kAttacker">The ship which is attacking.</param>
 /// <param name="kTarget">The ship which is being attacked.</param>
 /// <param name="kWeapon">The weapon which the attacking ship is currently firing.</param>
-function int CalculateDamage(LWCE_XGShip kAttacker, LWCE_XGShip kTarget, LWCEShipWeaponTemplate kShipWeaponTemplate, CombatExchange comExchange)
+function int CalculateDamage(LWCE_XGShip kAttacker, LWCE_XGShip kTarget, LWCEShipWeaponTemplate kShipWeaponTemplate)
 {
     local int iDamage;
 
@@ -486,6 +497,22 @@ function bool LWCE_IsConsumableResearched(name ItemName)
     return false;
 }
 
+function int RollForDamage(int iBaseDamage, float fDamageMitigation, bool bIsCritical)
+{
+    local int iDamage;
+
+    iDamage = iBaseDamage;
+
+    if (bIsCritical)
+    {
+        iDamage *= 2;
+    }
+
+    iDamage += Rand(iDamage / 2);
+
+    return Max(0, iDamage * fDamageMitigation);
+}
+
 function StaggerWeaponsForShip(int iShip)
 {
     local int I;
@@ -510,7 +537,9 @@ function UpdateWeapons(float fDeltaT)
     local array<name> arrShipWeapons;
     local array<CombatExchange> akCombatExchange;
     local LWCE_XGShip kAttacker, kTarget;
-    local int iArmor, iArmorPen, iCriticalChance, iDamage, iHitChance, iShip, iWeapon, I;
+    local bool bIsCritical;
+    local float fDamageMitigation;
+    local int iArmor, iArmorPen, iBaseDamage, iCriticalChance, iDamage, iHitChance, iShip, iWeapon, I;
 
     kTemplateMgr = `LWCE_ITEM_TEMPLATE_MGR;
 
@@ -563,37 +592,35 @@ function UpdateWeapons(float fDeltaT)
 
                         kTarget = LWCE_GetShip(kCombatExchange.iTargetShip);
 
-                        iArmor = CalculateArmor(kAttacker, kTarget);
+                        iArmor = CalculateArmor(kTarget);
                         iArmorPen = CalculateArmorPen(kAttacker, kTarget, kShipWeaponTemplate);
-                        iHitChance = CalculateHitChance(kCombatExchange.iSourceShip, kCombatExchange.iTargetShip, kShipWeaponTemplate);
-
-                        kCombatExchange.iDamage = CalculateDamage(kShipWeaponTemplate, kCombatExchange);
-
-                        // Roll for critical hit
-                        if (Rand(100) <= Clamp((kShipWeaponTemplate.GetArmorPen(GetShip(kCombatExchange.iSourceShip), IsUfo(kCombatExchange.iSourceShip)) + GetShip(kCombatExchange.iSourceShip).m_kTShip.iAP - GetShip(kCombatExchange.iTargetShip).m_kTShip.iArmor) / 2, 5, 25))
-                        {
-                            kCombatExchange.iDamage *= 2.0f;
-                        }
-
-                        kCombatExchange.iDamage = kCombatExchange.iDamage + Rand(kCombatExchange.iDamage / 2);
+                        iCriticalChance = CalculateCriticalChance(iArmor, iArmorPen);
+                        iHitChance = CalculateHitChance(kAttacker, kTarget, kShipWeaponTemplate);
+                        iBaseDamage = CalculateDamage(kAttacker, kTarget, kShipWeaponTemplate);
+                        fDamageMitigation = CalculateDamageMitigation(iArmor, iArmorPen);
+                        bIsCritical = Rand(100) <= iCriticalChance;
+                        
+                        iDamage = RollForDamage(iBaseDamage, fDamageMitigation, bIsCritical);
 
                         if (iShip != 0)
                         {
                             // Weapons other than the primary (aka Wingtip Sparrowhawks) do half damage
+                            // TODO: handle this by creating new ship weapon templates for the lower damage weapons instead
                             if (iWeapon != 0)
                             {
-                                kCombatExchange.iDamage /= 2.0;
+                                iDamage /= 2.0;
                             }
                         }
 
-                        if (Rand(100) <= iHitChance)
-                        {
-                            kCombatExchange.bHit = true;
-                        }
-                        else
-                        {
-                            kCombatExchange.bHit = false;
+                        // Damage is always stored, even on a miss, in case an aim module is used
+                        kCombatExchange.bHit = Rand(100) <= iHitChance;
+                        kCombatExchange.iDamage = iDamage;
 
+                        if (!kCombatExchange.bHit)
+                        {
+                            // This signals that aim modules can't change the outcome (i.e. don't allow Sparrowhawks to burn up
+                            // aim module charges)
+                            // TODO make this more flexible; some secondary weapons might want to be able to use aim modules
                             if (iShip == 0 || iWeapon != 0)
                             {
                                 kCombatExchange.iDamage = 0;

@@ -94,7 +94,7 @@ function ReturnToBase(optional XGShip_Interceptor kJet)
 
 function LWCE_ReturnToBase(optional LWCE_XGShip kTargetShip)
 {
-    local XGShip_Interceptor kShip;
+    local LWCE_XGShip kShip;
 
     if (kTargetShip != none)
     {
@@ -185,6 +185,32 @@ function RecordKill(LWCE_XGShip kAttacker, LWCE_XGShip kVictim)
     m_arrKills.AddItem(kKill);
 }
 
+function ClearOtherEngagements(XGShip_UFO kUFO)
+{
+    `LWCE_LOG_DEPRECATED_CLS(ClearOtherEngagements);
+}
+
+function LWCE_ClearOtherEngagements(LWCE_XGShip kShip)
+{
+    local XGInterception kInterception;
+    local array<XGInterception> arrInterceptions;
+
+    arrInterceptions = GEOSCAPE().m_arrInterceptions;
+
+    foreach arrInterceptions(kInterception)
+    {
+        if (kInterception == self)
+        {
+            continue;
+        }
+
+        if (LWCE_XGInterception(kInterception).HasFriendlyShip(kShip) || LWCE_XGInterception(kInterception).HasEnemyShip(kShip))
+        {
+            kInterception.CompleteEngagement();
+        }
+    }
+}
+
 function CompleteEngagement()
 {
     local int I;
@@ -202,7 +228,7 @@ function CompleteEngagement()
 
     if (m_eUFOResult == eUR_Crash)
     {
-        ClearOtherEngagements(m_arrEnemyShips[0]);
+        LWCE_ClearOtherEngagements(m_arrEnemyShips[0]);
         kAI.LWCE_OnUFOShotDown(m_arrFriendlyShips, m_arrEnemyShips[0]);
     }
     else if (m_eUFOResult == eUR_Destroyed)

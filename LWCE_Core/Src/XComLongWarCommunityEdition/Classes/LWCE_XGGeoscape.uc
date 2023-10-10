@@ -50,7 +50,7 @@ static function name AlertNameFromEnum(EGeoscapeAlert eAlert)
         case eGA_NewScientists:
             return 'NewScientists';
         case eGA_NewInterceptors:
-            return 'NewInterceptors';
+            return 'ShipOrderComplete';
         case eGA_NewItemsReceived:
             return 'NewItemsReceived';
         case eGA_NewItemBuilt:
