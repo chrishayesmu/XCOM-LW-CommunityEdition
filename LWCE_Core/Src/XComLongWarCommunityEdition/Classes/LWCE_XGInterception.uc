@@ -188,10 +188,12 @@ function RecordKill(LWCE_XGShip kAttacker, LWCE_XGShip kVictim)
 function CompleteEngagement()
 {
     local int I;
+    local LWCE_XGFacility_Hangar kHangar;
     local LWCE_XGShip kShip;
     local LWCE_XGStrategyAI kAI;
 
     kAI = LWCE_XGStrategyAI(AI());
+    kHangar = LWCE_XGFacility_Hangar(HANGAR());
 
     if (m_bSimulatedCombat)
     {
@@ -214,22 +216,18 @@ function CompleteEngagement()
 
     for (I = 0; I < m_arrFriendlyShips.Length; I++)
     {
-        kShip = LWCE_XGShip(m_arrFriendlyShips[I]);
+        kShip = m_arrFriendlyShips[I];
 
         if (kShip.GetHP() <= 0)
         {
-            HANGAR().OnInterceptorDestroyed(kShip);
+            kHangar.LWCE_OnShipDestroyed(kShip);
         }
         else
         {
             kShip.ReturnToBase();
-            kShip.m_iConfirmedKills += 1;
-
-            // Reset the interceptor's callsign, prompting it to update the rank label
-            kShip.SetCallsign(kShip.GetCallsign());
         }
     }
-    
+
     // Add confirmed kills to ships post-engagement. Note that unlike vanilla, we actually
     // keep track of UFO kills also, though they have no mechanical effect.
     for (I = 0; I < m_arrKills.Length; I++)

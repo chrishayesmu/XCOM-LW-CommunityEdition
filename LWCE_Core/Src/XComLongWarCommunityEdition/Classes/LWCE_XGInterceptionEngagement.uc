@@ -32,7 +32,26 @@ function Init(XGInterception kInterception)
 /// <param name="kWeapon">The weapon which the attacking ship is currently firing.</param>
 function int CalculateArmorPen(LWCE_XGShip kAttacker, LWCE_XGShip kTarget, LWCEShipWeaponTemplate kWeapon)
 {
+    local int iArmorPen;
 
+    iArmorPen = kAttacker.m_kTCachedStats.iArmorPen;
+    iArmorPen += kWeapon.GetArmorPen(kAttacker, kTarget);
+
+    return iArmorPen;
+}
+
+/// <summary>
+/// Calculates the percentage chance that the attacker will critically hit the target.
+/// </summary>
+/// <param name="iArmor">The armor of the targeted ship.</param>
+/// <param name="kTarget">The total penetration of the attacker's weapon versus the target.</param>
+function int CalculateCriticalChance(int iArmor, int iArmorPen)
+{
+    local int iCritChance;
+
+    iCritChance = (iArmor - iArmorPen) / 2;
+
+    return Clamp(iCritChance, 5, 25);
 }
 
 /// <summary>
@@ -49,11 +68,8 @@ function int CalculateDamage(LWCE_XGShip kAttacker, LWCE_XGShip kTarget, LWCEShi
     iDamage = kShipWeaponTemplate.GetDamage(kAttacker, kTarget);
     iDamage += kAttacker.m_kTCachedStats.iDamage;
     iDamage -= kTarget.m_kTCachedStats.iDamageReduction;
-    
-    // fDamageMitigation = LWCE_GetDamageMitigation(kShipWeaponTemplate, comExchange);
-    // iFinalDmg = iDamage * (1.0f - fDamageMitigation);
 
-    if (kTarget.nmAnalysisTech != '' && LWCE_XGFacility_Labs(LABS()).LWCE_IsResearched(kTarget.nmAnalysisTech))
+    if (kTarget.m_kTemplate.nmAnalysisTech != '' && LWCE_XGFacility_Labs(LABS()).LWCE_IsResearched(kTarget.m_kTemplate.nmAnalysisTech))
     {
         iDamage *= 1.1f;
     }
@@ -65,6 +81,16 @@ function int CalculateDamage(LWCE_XGShip kAttacker, LWCE_XGShip kTarget, LWCEShi
     }
 
     return iDamage;
+}
+
+function float CalculateDamageMitigation(int iArmor, int iArmorPen)
+{
+    local float fEffectiveArmor;
+
+    // Armor and penetration are integer percentages for ease-of-use, so divide to a float
+    fEffectiveArmor = (iArmor - iArmorPen) / 100.0f;
+
+    return FClamp(fEffectiveArmor, 0.0f, 0.95f);
 }
 
 /// <summary>
@@ -177,26 +203,8 @@ function bool LWCE_CanUseConsumable(name ItemName)
 
 function float GetDamageMitigation(TShipWeapon SHIPWEAPON, CombatExchange comExchange)
 {
-    `LWCE_LOG_DEPRECATED_CLS(GetDamageMitigation);
+    `LWCE_LOG_DEPRECATED_BY(CalculateDamageMitigation);
     return -100.0f;
-}
-
-function float LWCE_GetDamageMitigation(LWCEShipWeaponTemplate kShipWeaponTemplate, CombatExchange comExchange)
-{
-    local float firingShipArmorPen, firingWeaponArmorPen, targetShipArmor, armorMitigation, Defense, Offense,
-	    finalMitigation;
-
-    // TODO: these calculations are probably wrong right now, because LWCEShipWeaponTemplate uses 1-to-1 values for
-    // armor pen (e.g. 25 -> 25%) but the old TShip data which is in use has 5-to-1 (e.g. 5 -> 25%). When moving ships
-    // to templates, revisit this function.
-    armorMitigation = 0.050;
-    targetShipArmor = LWCE_XGShip(GetShip(comExchange.iTargetShip)).GetShipData().iArmor;
-    firingShipArmorPen = LWCE_XGShip(GetShip(comExchange.iSourceShip)).GetShipData().iArmorPen;
-    firingWeaponArmorPen = kShipWeaponTemplate.GetArmorPen(GetShip(comExchange.iSourceShip), !IsUfo(comExchange.iSourceShip)) / 100.0f;
-    Offense = firingWeaponArmorPen + firingShipArmorPen;
-    Defense = targetShipArmor;
-    finalMitigation = FClamp(armorMitigation * (Defense - Offense), 0.0, 0.950);
-    return finalMitigation;
 }
 
 function float GetEncounterStartingRange()
@@ -211,7 +219,7 @@ function float GetEncounterStartingRange()
 
     for (iShip = 0; iShip < GetNumShips(); iShip++)
     {
-        kShip = LWCE_XGShip(GetShip(iShip));
+        kShip = LWCE_GetShip(iShip);
         arrShipWeapons = kShip.LWCE_GetWeapons();
 
         for (iWeapon =  0; iWeapon < arrShipWeapons.Length; iWeapon++)
@@ -501,19 +509,19 @@ function UpdateWeapons(float fDeltaT)
     local name nmAnalysisTech;
     local array<name> arrShipWeapons;
     local array<CombatExchange> akCombatExchange;
-    local LWCE_XGShip kShip;
-    local int iChanceToHit, iShip, iWeapon, I;
+    local LWCE_XGShip kAttacker, kTarget;
+    local int iArmor, iArmorPen, iCriticalChance, iDamage, iHitChance, iShip, iWeapon, I;
 
     kTemplateMgr = `LWCE_ITEM_TEMPLATE_MGR;
 
     for (iShip = 0; iShip < GetNumShips(); iShip++)
     {
-        kShip = LWCE_GetShip(iShip);
-        kShip.UpdateWeapons(fDeltaT);
+        kAttacker = LWCE_GetShip(iShip);
+        kAttacker.UpdateWeapons(fDeltaT);
 
         if (AreAllWeaponsInRange(iShip))
         {
-            arrShipWeapons = LWCE_XGShip(kShip).LWCE_GetWeapons();
+            arrShipWeapons = kAttacker.LWCE_GetWeapons();
 
             for (iWeapon = 0; iWeapon < arrShipWeapons.Length; iWeapon++)
             {
@@ -531,9 +539,9 @@ function UpdateWeapons(float fDeltaT)
 
                 if (m_afShipDistance[iShip] <= kShipWeaponTemplate.iRange)
                 {
-                    if (kShip.m_afWeaponCooldown[iWeapon] <= 0.0)
+                    if (kAttacker.m_afWeaponCooldown[iWeapon] <= 0.0)
                     {
-                        kShip.m_afWeaponCooldown[iWeapon] += kShipWeaponTemplate.GetFiringTime(kShip);
+                        kAttacker.m_afWeaponCooldown[iWeapon] += kShipWeaponTemplate.GetFiringTime(kAttacker);
                         kCombatExchange.iSourceShip = iShip;
                         kCombatExchange.iWeapon = iWeapon;
 
@@ -553,7 +561,11 @@ function UpdateWeapons(float fDeltaT)
                             kCombatExchange.iTargetShip = 0;
                         }
 
-                        iChanceToHit = CalculateHitChance(kCombatExchange.iSourceShip, kCombatExchange.iTargetShip, kShipWeaponTemplate);
+                        kTarget = LWCE_GetShip(kCombatExchange.iTargetShip);
+
+                        iArmor = CalculateArmor(kAttacker, kTarget);
+                        iArmorPen = CalculateArmorPen(kAttacker, kTarget, kShipWeaponTemplate);
+                        iHitChance = CalculateHitChance(kCombatExchange.iSourceShip, kCombatExchange.iTargetShip, kShipWeaponTemplate);
 
                         kCombatExchange.iDamage = CalculateDamage(kShipWeaponTemplate, kCombatExchange);
 
@@ -574,7 +586,7 @@ function UpdateWeapons(float fDeltaT)
                             }
                         }
 
-                        if (Rand(100) <= iChanceToHit)
+                        if (Rand(100) <= iHitChance)
                         {
                             kCombatExchange.bHit = true;
                         }
@@ -660,36 +672,4 @@ function UseConsumableEffect(int iItemType)
 function LWCE_UseConsumableEffect(name ItemName)
 {
     `LWCE_UTILS.AdjustItemQuantity(m_arrCEConsumableQuantitiesInEffect, ItemName, -1);
-}
-
-// TODO replace this with ship template data
-protected function name UFOTypeToAnalysisTech(int iShipType)
-{
-    switch (iShipType)
-    {
-        case 4:
-            return 'Tech_UFOAnalysis_Scout';
-        case 5:
-            return 'Tech_UFOAnalysis_Destroyer';
-        case 6:
-            return 'Tech_UFOAnalysis_Abductor';
-        case 7:
-            return 'Tech_UFOAnalysis_Transport';
-        case 8:
-            return 'Tech_UFOAnalysis_Battleship';
-        case 9:
-            return 'Tech_UFOAnalysis_Overseer';
-        case 10:
-            return 'Tech_UFOAnalysis_Fighter';
-        case 11:
-            return 'Tech_UFOAnalysis_Raider';
-        case 12:
-            return 'Tech_UFOAnalysis_Harvester';
-        case 13:
-            return 'Tech_UFOAnalysis_TerrorShip';
-        case 14:
-            return 'Tech_UFOAnalysis_AssaultCarrier';
-        default:
-            return '';
-    }
 }

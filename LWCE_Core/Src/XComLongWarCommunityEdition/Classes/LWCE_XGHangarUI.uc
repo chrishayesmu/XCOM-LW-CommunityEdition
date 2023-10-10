@@ -46,14 +46,14 @@ static function LWCE_TItemCard LWCE_BuildShipWeaponCard(name ItemName, optional 
     kItemCard.iCardType = eItemCard_ShipWeapon;
     kItemCard.strName = kShipWeapon.strName;
     kItemCard.ItemName = ItemName;
-    kItemCard.iBaseDamage = kShipWeapon.GetDamage(kShip, /* bShipIsXCom */ true);
+    kItemCard.iBaseDamage = kShipWeapon.GetDamage(kShip);
     kItemCard.shipWpnRange = GetShipWeaponRangeBin(kShipWeapon.iRange);
-    kItemCard.shipWpnHitChance = kShipWeapon.GetHitChance(kShip, /* bShipIsXCom */ true);
-    kItemCard.shipWpnArmorPen = kShipWeapon.GetArmorPen(kShip, /* bShipIsXCom */ true);
-    kItemCard.shipWpnFiringTime = kShipWeapon.GetFiringTime(kShip, /* bShipIsXCom */ true);
+    kItemCard.shipWpnHitChance = kShipWeapon.GetHitChance(kShip);
+    kItemCard.shipWpnArmorPen = kShipWeapon.GetArmorPen(kShip);
+    kItemCard.shipWpnFiringTime = kShipWeapon.GetFiringTime(kShip);
     kItemCard.strFlavorText = class'XComLocalizer'.static.ExpandString(kShipWeapon.strTacticalText);
 
-    // TODO centralize this math somewhere 
+    // TODO centralize this math somewhere
     if (kShip != none)
     {
         kItemCard.iBaseDamage *= (1 + kShip.m_iConfirmedKills / 100.0f);

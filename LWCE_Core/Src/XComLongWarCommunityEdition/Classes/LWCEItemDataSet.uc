@@ -42,6 +42,7 @@ static function OnPostTemplatesCreated()
 
     // All ship weapons benefit from base game Foundry projects. Alien-only weapons are included; the stat modifier
     // functions will filter out alien ships as needed.
+    // TODO: just only apply to the weapons we want instead
     for (Index = 0; Index < arrTemplates.Length; Index++)
     {
         if (!arrTemplates[Index].IsShipWeapon())
@@ -54,7 +55,6 @@ static function OnPostTemplatesCreated()
         kShipWeaponTemplate.arrArmorPenModifiers.AddItem(ShipWeapon_ArmorPenModifier);
         kShipWeaponTemplate.arrDamageModifiers.AddItem(ShipWeapon_DamageModifier);
         kShipWeaponTemplate.arrFiringTimeModifiers.AddItem(ShipWeapon_FiringTimeModifier);
-        kShipWeaponTemplate.arrHitChanceModifiers.AddItem(ShipWeapon_HitChanceModifier);
     }
 }
 
@@ -299,19 +299,14 @@ private static function ModifyStatChanges_ScopeUpgrade(const LWCEEquipmentTempla
 
 // TODO: move the stats applied below into configuration
 
-private static function int ShipWeapon_ArmorPenModifier(LWCEShipWeaponTemplate kShipWeapon, XGShip kShip, bool bShipIsXCom, int iCurrentValue)
+private static function int ShipWeapon_ArmorPenModifier(LWCEShipWeaponTemplate kShipWeapon, LWCE_XGShip kAttacker, LWCE_XGShip kTarget, int iCurrentValue)
 {
     local LWCE_XGFacility_Engineering kEngineering;
     local int iArmorPenModifier;
 
-    if (bShipIsXCom)
+    if (kAttacker.m_nmTeam == class'LWCEShipTemplate'.const.SHIP_TEAM_XCOM)
     {
         kEngineering = `LWCE_ENGINEERING;
-
-        if (kEngineering.LWCE_IsFoundryTechResearched('Foundry_PenetratorWeapons'))
-        {
-            iArmorPenModifier += 25;
-        }
 
         if (kShipWeapon != none && kShipWeapon.GetItemName() == 'Item_LaserCannon' && kEngineering.LWCE_IsFoundryTechResearched('Foundry_Supercapacitors'))
         {
@@ -326,12 +321,12 @@ private static function int ShipWeapon_ArmorPenModifier(LWCEShipWeaponTemplate k
     return iArmorPenModifier;
 }
 
-private static function int ShipWeapon_DamageModifier(LWCEShipWeaponTemplate kShipWeapon, XGShip kShip, bool bShipIsXCom, int iCurrentValue)
+private static function int ShipWeapon_DamageModifier(LWCEShipWeaponTemplate kShipWeapon, LWCE_XGShip kAttacker, LWCE_XGShip kTarget, int iCurrentValue)
 {
     local LWCE_XGFacility_Engineering kEngineering;
     local int iDamageModifier;
 
-    if (bShipIsXCom)
+    if (kAttacker.m_nmTeam == class'LWCEShipTemplate'.const.SHIP_TEAM_XCOM)
     {
         kEngineering = `LWCE_ENGINEERING;
 
@@ -348,11 +343,11 @@ private static function int ShipWeapon_DamageModifier(LWCEShipWeaponTemplate kSh
     return iDamageModifier;
 }
 
-private static function float ShipWeapon_FiringTimeModifier(LWCEShipWeaponTemplate kShipWeapon, XGShip kShip, bool bShipIsXCom, float fCurrentValue)
+private static function float ShipWeapon_FiringTimeModifier(LWCEShipWeaponTemplate kShipWeapon, LWCE_XGShip kAttacker, float fCurrentValue)
 {
     local float fFiringTimeModifier;
 
-    if (bShipIsXCom)
+    if (kAttacker.m_nmTeam == class'LWCEShipTemplate'.const.SHIP_TEAM_XCOM)
     {
         if (kShipWeapon != none && kShipWeapon.GetItemName() == 'Item_LaserCannon' && `LWCE_ENGINEERING.LWCE_IsFoundryTechResearched('Foundry_Supercapacitors'))
         {
@@ -361,26 +356,4 @@ private static function float ShipWeapon_FiringTimeModifier(LWCEShipWeaponTempla
     }
 
     return fFiringTimeModifier;
-}
-
-private static function int ShipWeapon_HitChanceModifier(LWCEShipWeaponTemplate kShipWeapon, XGShip kShip, bool bShipIsXCom, int iCurrentValue)
-{
-    local int iAimModifier;
-
-    if (bShipIsXCom)
-    {
-        if (`LWCE_ENGINEERING.LWCE_IsFoundryTechResearched('Foundry_ImprovedAvionics'))
-        {
-            iAimModifier += 10;
-        }
-    }
-    else
-    {
-        if (`LWCE_ENGINEERING.LWCE_IsFoundryTechResearched('Foundry_UFOCountermeasures'))
-        {
-            iAimModifier -= 15;
-        }
-    }
-
-    return iAimModifier;
 }

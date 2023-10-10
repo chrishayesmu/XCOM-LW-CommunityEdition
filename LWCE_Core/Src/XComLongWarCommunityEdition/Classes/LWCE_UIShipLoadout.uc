@@ -61,10 +61,10 @@ function RealizeSelected()
     kMgr.LWCE_UpdateShipWeaponView(kShipWeapon);
 
     shipWpnRange = kMgr.GetShipWeaponRangeBin(kShipWeapon.iRange);
-    shipWpnArmorPen = kShipWeapon.GetArmorPen(m_kCEShip, /* bShipIsXCom */ true);
-    shipWpnBaseDamage = kShipWeapon.GetDamage(m_kCEShip, /* bShipIsXCom */ true) * (1 + m_kCEShip.m_iConfirmedKills / 100.0f);
-    shipWpnFireRate = kShipWeapon.GetFiringTime(m_kCEShip, /* bShipIsXCom */ true);
-    shipWpnHitChance = kShipWeapon.GetHitChance(m_kCEShip, /* bShipIsXCom */ true) + Clamp(3 * m_kCEShip.m_iConfirmedKills, 0, 30);
+    shipWpnArmorPen = kShipWeapon.GetArmorPen(m_kCEShip);
+    shipWpnBaseDamage = kShipWeapon.GetDamage(m_kCEShip) * (1 + m_kCEShip.m_iConfirmedKills / 100.0f);
+    shipWpnFireRate = kShipWeapon.GetFiringTime(m_kCEShip);
+    shipWpnHitChance = kShipWeapon.GetHitChance(m_kCEShip) + Clamp(3 * m_kCEShip.m_iConfirmedKills, 0, 30);
 
     AS_SetStatData(0, class'LWCE_UIItemCards'.default.m_strHitChanceLabel, class'LWCE_UIItemCards'.static.GetShipHitChanceString(shipWpnHitChance));
 

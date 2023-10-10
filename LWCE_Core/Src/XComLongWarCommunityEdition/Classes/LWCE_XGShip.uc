@@ -22,6 +22,7 @@ struct CheckpointRecord_LWCE_XGShip extends XGShip.CheckpointRecord
     var int m_iHomeBay;
     var int m_iHoursDown;
     var float m_fFlightTime;
+    var LWCE_XGInterception m_kEngagement;
 };
 
 var name m_nmContinent;
@@ -33,14 +34,15 @@ var int m_iConfirmedKills;
 var int m_iHomeBay;
 var int m_iHoursDown;
 var float m_fFlightTime;
+var LWCE_XGInterception m_kEngagement;
 
 var name m_nmEngagementStance; // e.g. Aggressive, Balanced, Defensive
 
 var private XGHangarShip m_kHangarShip;
 
-// Stats are cached because retrieving them is somewhat expensive, and they're needed many times during 
-// an interception. Note that these stats won't reflect anything that has occurred to the ship; for example, 
-// the cached HP is always at maximum. Use XGShip.m_iHP for current HP, and LWCE_XGShip.LWCE_GetWeapons for 
+// Stats are cached because retrieving them is somewhat expensive, and they're needed many times during
+// an interception. Note that these stats won't reflect anything that has occurred to the ship; for example,
+// the cached HP is always at maximum. Use XGShip.m_iHP for current HP, and LWCE_XGShip.LWCE_GetWeapons for
 // the up-to-date weapons loadout (as XCom ships may modify theirs to not match the cached stats).
 var LWCE_TShipStats m_kTCachedStats;
 
@@ -53,8 +55,6 @@ function Init(TShip kTShip)
 
 function LWCE_Init(name nmShipTemplate, name nmContinent, name nmTeam)
 {
-    local int I;
-
     m_nmContinent = nmContinent;
     m_nmShipTemplate = nmShipTemplate;
     m_nmTeam = nmTeam;
@@ -296,6 +296,34 @@ function XGHangarShip GetWeaponViewShip()
     }
 
     return m_kHangarShip;
+}
+
+/// <summary>
+/// Sets this ship to track the lead enemy ship in the given interception. Non-XCOM ships will simply ignore this function.
+/// </summary>
+function Hunt(XGInterception kInterception)
+{
+    if (m_nmTeam != class'LWCEShipTemplate'.const.SHIP_TEAM_XCOM)
+    {
+        return;
+    }
+
+    m_kEngagement = LWCE_XGInterception(kInterception);
+    m_v2Destination = m_kEngagement.m_arrEnemyShips[0].GetCoords();
+}
+
+/// <summary>
+/// Sends this ship back to its base. Non-XCOM ships will simply ignore this function.
+/// </summary>
+function ReturnToBase()
+{
+    if (m_nmTeam != class'LWCEShipTemplate'.const.SHIP_TEAM_XCOM)
+    {
+        return;
+    }
+
+    m_kEngagement = none;
+    m_v2Destination = GetHomeCoords();
 }
 
 /// <summary>

@@ -77,7 +77,7 @@ delegate int HitChanceModifierDel(LWCEShipWeaponTemplate kAttackerWeapon, LWCE_X
 /// specific ship weapons). Effects which are not weapon-dependent, such as UFO stat increases due to alien
 /// research or Foundry projects that affect all weapons equally, should not be accounted for here.
 /// </remarks>
-function int GetArmorPen(LWCE_XGShip kAttacker, LWCE_XGShip kTarget)
+function int GetArmorPen(LWCE_XGShip kAttacker, optional LWCE_XGShip kTarget)
 {
     local int iResult;
     local delegate<ArmorPenModifierDel> delModifier;
@@ -86,7 +86,7 @@ function int GetArmorPen(LWCE_XGShip kAttacker, LWCE_XGShip kTarget)
 
     foreach arrArmorPenModifiers(delModifier)
     {
-        iResult += delModifier(self, kAttacker, iResult);
+        iResult += delModifier(self, kAttacker, kTarget, iResult);
     }
 
     return iResult;
@@ -103,7 +103,7 @@ function int GetArmorPen(LWCE_XGShip kAttacker, LWCE_XGShip kTarget)
 /// specific ship weapons). Effects which are not weapon-dependent, such as UFO stat increases due to alien
 /// research or Foundry projects that affect all weapons equally, should not be accounted for here.
 /// </remarks>
-function int GetDamage(LWCE_XGShip kAttacker, LWCE_XGShip kTarget)
+function int GetDamage(LWCE_XGShip kAttacker, optional LWCE_XGShip kTarget)
 {
     local int iResult;
     local delegate<DamageModifierDel> delModifier;
@@ -112,7 +112,7 @@ function int GetDamage(LWCE_XGShip kAttacker, LWCE_XGShip kTarget)
 
     foreach arrDamageModifiers(delModifier)
     {
-        iResult += delModifier(self, kAttacker, iResult);
+        iResult += delModifier(self, kAttacker, kTarget, iResult);
     }
 
     return iResult;
@@ -154,7 +154,7 @@ function float GetFiringTime(LWCE_XGShip kAttacker)
 /// specific ship weapons). Effects which are not weapon-dependent, such as UFO stat increases due to alien
 /// research or Foundry projects that affect all weapons equally, should not be accounted for here.
 /// </remarks>
-function int GetHitChance(LWCE_XGShip kAttacker, LWCE_XGShip kTarget)
+function int GetHitChance(LWCE_XGShip kAttacker, optional LWCE_XGShip kTarget)
 {
     local int iResult;
     local delegate<HitChanceModifierDel> delModifier;
@@ -163,7 +163,7 @@ function int GetHitChance(LWCE_XGShip kAttacker, LWCE_XGShip kTarget)
 
     foreach arrHitChanceModifiers(delModifier)
     {
-        iResult += delModifier(self, kAttacker, iResult);
+        iResult += delModifier(self, kAttacker, kTarget, iResult);
     }
 
     return iResult;
