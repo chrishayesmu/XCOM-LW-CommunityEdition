@@ -707,6 +707,33 @@ function LWCE_GetEvents(out array<LWCE_THQEvent> arrEvents)
     }
 }
 
+function int GetSatellite(ECountry eSatCountry)
+{
+    `LWCE_LOG_DEPRECATED_CLS(GetSatellite);
+
+    return 1000;
+}
+
+/// <summary>
+/// Returns the index in m_arrCESatellites of the satellite over the given country, if any.
+/// </summary>
+/// <param name="nmSatCountry">The country to check for a satellite over.</param>
+/// <returns>An index into m_arrCESatellites, or INDEX_NONE if there is no satellite over the country.</returns>
+function int LWCE_GetSatellite(name nmSatCountry)
+{
+    local int iSatellite;
+
+    for (iSatellite = 0; iSatellite < m_arrCESatellites.Length; iSatellite++)
+    {
+        if (m_arrCESatellites[iSatellite].nmCountry == nmSatCountry)
+        {
+            return iSatellite;
+        }
+    }
+    
+    return INDEX_NONE;
+}
+
 function int GetFacilityMaintenanceCost()
 {
     local LWCEFacilityTemplateManager kTemplateMgr;

@@ -230,6 +230,19 @@ function LWCE_XGCountry LWCE_GetCountry(name nmCountry)
     return none;
 }
 
+function array<LWCE_XGCountry> LWCE_GetCountries()
+{
+    local array<LWCE_XGCountry> arrCountries;
+    local int Index;
+
+    for (Index = 0; Index < m_arrCountries.Length; Index++)
+    {
+        arrCountries.AddItem(LWCE_XGCountry(m_arrCountries[Index]));
+    }
+    
+    return arrCountries;
+}
+
 function EContinent GetRandomContinent()
 {
     `LWCE_LOG_DEPRECATED_CLS(GetRandomContinent);
