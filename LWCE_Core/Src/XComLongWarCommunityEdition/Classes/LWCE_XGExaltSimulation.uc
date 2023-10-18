@@ -1,6 +1,79 @@
 class LWCE_XGExaltSimulation extends XGExaltSimulation
     dependson(LWCE_XGFacility_Labs, LWCE_XGMissionControlUI);
 
+struct LWCE_TExaltClueDefinition
+{
+    var int m_iClueTextIndex;
+    var array<name> m_arrValidCountries;
+    var array<name> m_arrInvalidCountries;
+};
+
+struct LWCE_TExaltCellData
+{
+    var name m_nmCountry;
+    var int m_iDaysUntilHidden;
+    var int m_iDaysUntilNextActivity;
+};
+
+struct LWCE_TExaltCellPlacementScore
+{
+    var name m_nmCountry;
+    var float m_fScore;
+};
+
+struct LWCE_TCovertOpsOperative
+{
+    var LWCE_XGStrategySoldier m_kCovertOpsSoldier;
+    var name m_nmInfiltratedCountry;
+    var int m_iDaysUntilComplete;
+};
+
+struct LWCE_TExaltCellLastVisibilityStatus
+{
+    var name m_nmCountry;
+    var EExaltCellLastVisibilityStatus m_eVisibilityStatus;
+};
+
+struct CheckpointRecord_LWCE_XGExaltSimulation extends XGExaltSimulation.CheckpointRecord
+{
+    var array<LWCE_TExaltClueDefinition> m_arrCEClues;
+    var array<LWCE_TExaltCellData> m_arrCECellData;
+    var array<LWCE_TExaltCellLastVisibilityStatus> m_arrCECellLastVisibilityData;
+    var TCovertOpsOperative m_kCECovertOpsOperative;
+    var array<name> m_arrCEAccusedCountries;
+};
+
+var array<LWCE_TExaltClueDefinition> m_arrCEClues;
+var array<LWCE_TExaltCellData> m_arrCECellData;
+var array<LWCE_TExaltCellLastVisibilityStatus> m_arrCECellLastVisibilityData;
+var TCovertOpsOperative m_kCECovertOpsOperative;
+var array<name> m_arrCEAccusedCountries;
+
+function ExposeCell(ECountry eCountryToExpose)
+{
+    `LWCE_LOG_DEPRECATED_CLS(ExposeCell);
+}
+
+function LWCE_ExposeCell(name nmCountryToExpose)
+{
+    local int iIndex, iDaysToExpose;
+
+    for (iIndex = 0; iIndex < m_arrCellData.Length; iIndex++)
+    {
+        if (m_arrCellData[iIndex].m_eCountry == eCountryToExpose)
+        {
+            if (m_arrCellData[iIndex].m_iDaysUntilHidden <= 0)
+            {
+                SetLastVisibiltyStatus(eCountryToExpose, 1);
+            }
+
+            iDaysToExpose = int(RandRange(float(m_kTuning.m_kCellTuning.m_iMinDaysToHide), float(m_kTuning.m_kCellTuning.m_iMaxDaysToHide)));
+            m_arrCellData[iIndex].m_iDaysUntilHidden = iDaysToExpose;
+            return;
+        }
+    }
+}
+
 function int GetCollectedClueCount()
 {
     return LWCE_XGStorage(STORAGE()).LWCE_GetNumItemsAvailable('Item_EXALTIntelligence');
