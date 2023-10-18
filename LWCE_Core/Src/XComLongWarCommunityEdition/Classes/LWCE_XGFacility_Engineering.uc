@@ -1184,8 +1184,9 @@ function RestoreFoundryFunds(int iIndex)
 
 function UpdateFoundryProjects()
 {
+    local LWCE_XGFacility_Hangar kHangar;
     local bool bGeneratedAlert;
-    local int iProject, iWorkDone;
+    local int iProject, iWorkDone, iShip;
 
     for (iProject = 0; iProject < m_arrCEFoundryProjects.Length; iProject++)
     {
@@ -1207,9 +1208,11 @@ function UpdateFoundryProjects()
             // TODO: put this in the template somehow
             if (m_arrCEFoundryProjects[iProject].ProjectName == 'Foundry_WingtipSparrowhawks')
             {
-                for (iWorkDone = 0; iWorkDone < HANGAR().m_arrInts.Length; iWorkDone++)
+                kHangar = LWCE_XGFacility_Hangar(HANGAR());
+
+                for (iShip = 0; iShip < kHangar.m_arrCEShips.Length; iShip++)
                 {
-                    LWCE_XGShip(HANGAR().m_arrInts[iWorkDone]).LWCE_EquipWeapon('Item_StingrayMissiles', 1);
+                    kHangar.m_arrCEShips[iWorkDone].LWCE_EquipWeapon('Item_StingrayMissiles', 1);
                 }
             }
 

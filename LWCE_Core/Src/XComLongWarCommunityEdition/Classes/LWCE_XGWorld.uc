@@ -83,40 +83,22 @@ function BuildCity()
 
 function BuildCouncilCountry(int iCountry, int iContinent, bool bDeveloped)
 {
-    local TCountry kCountry;
-
-    kCountry.iEnum = iCountry;
-    kCountry.strName = class'XGLocalizedData'.default.CountryNames[iCountry];
-    kCountry.strNameWithArticle = class'XGLocalizedData'.default.CountryNamesWithArticle[iCountry];
-    kCountry.strNameWithArticleLower = class'XGLocalizedData'.default.CountryNamesWithArticleLower[iCountry];
-    kCountry.strNamePossessive = class'XGLocalizedData'.default.CountryPossessive[iCountry];
-    kCountry.strNameAdjective = class'XGLocalizedData'.default.CountryAdjective[iCountry];
-    kCountry.iContinent = iContinent;
-    kCountry.bDeveloped = bDeveloped;
-    kCountry.bCouncilMember = true;
-
-    m_arrCountries[iCountry] = Spawn(class'LWCE_XGCountry');
-    m_arrCountries[iCountry].InitNewGame(kCountry);
-
-    Continent(iContinent).m_arrCountries.AddItem(iCountry);
+    `LWCE_LOG_DEPRECATED_BY(BuildCouncilCountry, LWCE_BuildCountry);
 }
 
 function BuildCountry(int iCountry, int iContinent, bool bDeveloped)
 {
-    local TCountry kCountry;
+    `LWCE_LOG_DEPRECATED_CLS(BuildCountry);
+}
 
-    kCountry.iEnum = iCountry;
-    kCountry.strName = class'XGLocalizedData'.default.CountryNames[iCountry];
-    kCountry.strNamePossessive = class'XGLocalizedData'.default.CountryPossessive[iCountry];
-    kCountry.strNameAdjective = class'XGLocalizedData'.default.CountryAdjective[iCountry];
-    kCountry.iContinent = iContinent;
-    kCountry.bDeveloped = bDeveloped;
-    kCountry.bCouncilMember = false;
+function LWCE_BuildCountry(name nmCountry, name nmContinent)
+{
+    local LWCE_XGCountry kCountry;
+    
+    kCountry = Spawn(class'LWCE_XGCountry');
+    kCountry.LWCE_InitNewGame(nmCountry, nmContinent);
 
-    m_arrCountries[iCountry] = Spawn(class'LWCE_XGCountry');
-    m_arrCountries[iCountry].InitNewGame(kCountry);
-
-    Continent(iContinent).m_arrCountries.AddItem(iCountry);
+    m_arrCountries.AddItem(kCountry);
 }
 
 function CreateContinents()
@@ -134,6 +116,23 @@ function CreateContinents()
         kContinent.InitNewGame();
 
         m_arrContinents.AddItem(kContinent);
+    }
+}
+
+function CreateCountries()
+{
+    local int iContinent, iCountry;
+    local XGContinent kContinent;
+    local LWCE_XGContinent kCEContinent;
+
+    foreach m_arrContinents(kContinent)
+    {
+        kCEContinent = LWCE_XGContinent(kContinent);
+
+        for (iCountry = 0; iCountry < kCEContinent.m_kTemplate.arrCountries.Length; iCountry++)
+        {
+            LWCE_BuildCountry(kCEContinent.m_kTemplate.arrCountries[iCountry], kCEContinent.m_nmContinent);
+        }
     }
 }
 
@@ -164,12 +163,25 @@ function array<int> GetContinents()
     local array<int> arrContinents;
     arrContinents.Length = 0;
 
-    `LWCE_LOG_DEPRECATED_CLS(GetContinents);
+    `LWCE_LOG_DEPRECATED_BY(GetContinents, LWCE_GetContinentNames);
 
     return arrContinents;
 }
 
-function array<name> LWCE_GetContinents()
+function array<LWCE_XGContinent> LWCE_GetContinents()
+{
+    local array<LWCE_XGContinent> arrContinents;
+    local int Index;
+
+    for (Index = 0; Index < m_arrContinents.Length; Index++)
+    {
+        arrContinents.AddItem(LWCE_XGContinent(m_arrContinents[Index]));
+    }
+    
+    return arrContinents;
+}
+
+function array<name> LWCE_GetContinentNames()
 {
     local array<name> arrContinents;
     local int Index;
@@ -180,6 +192,21 @@ function array<name> LWCE_GetContinents()
     }
     
     return arrContinents;
+}
+
+function LWCE_XGContinent GetContinentContainingCountry(name nmCountry)
+{
+    local XGContinent kContinent;
+
+    foreach m_arrContinents(kContinent)
+    {
+        if (LWCE_XGContinent(kContinent).ContainsCountry(nmCountry))
+        {
+            return LWCE_XGContinent(kContinent);
+        }
+    }
+
+    return none;
 }
 
 function XGCountry GetCountry(int iCountryID)

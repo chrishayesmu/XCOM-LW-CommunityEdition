@@ -23,6 +23,11 @@ function InitNewGame()
     m_nmBonus = m_kTemplate.arrContinentBonuses[Rand(m_kTemplate.arrContinentBonuses.Length)];
 }
 
+function bool ContainsCountry(name nmCountry)
+{
+    return m_kTemplate.arrCountries.Find(nmCountry) != INDEX_NONE;
+}
+
 function TContinentBonus GetBonus()
 {
     local TContinentBonus kBonus;

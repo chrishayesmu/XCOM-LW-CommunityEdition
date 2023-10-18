@@ -20,17 +20,24 @@ event Destroyed()
 
 function UpdateData()
 {
+    local LWCE_XGFacility_Hangar kHangar;
     local LWCE_XGFundingCouncil kFundingCouncil;
+    local LWCE_XGHeadquarters kHQ;
     local LWCE_XGPendingRequestsUI kMgr;
+    local LWCE_XGWorld kWorld;
     local LWCE_TFCRequest kRequest;
-    local XGCountry kCountry;
+    local LWCE_XGCountry kCountry;
     local string Status, TimeLeft;
     local bool bCanComplete, bInProgress, bIsComplete;
     local string strViewRequest, strRequest;
     local int iNumRequests, I;
 
-    kFundingCouncil = LWCE_XGFundingCouncil(`HQGAME.GetGameCore().GetWorld().m_kFundingCouncil);
     kMgr = LWCE_XGPendingRequestsUI(GetMgr());
+    kHangar = LWCE_XGFacility_Hangar(kMgr.HANGAR());
+    kHQ = LWCE_XGHeadquarters(kMgr.HQ());
+    kWorld = LWCE_XGWorld(kMgr.WORLD());
+    kFundingCouncil = LWCE_XGFundingCouncil(kWorld.m_kFundingCouncil);
+
     iNumRequests = kMgr.GetNumOfRequests();
 
     if (iNumRequests > 0)
@@ -56,7 +63,7 @@ function UpdateData()
         {
             if (kRequest.eType == eFCRType_JetTransfer)
             {
-                if (HANGAR().IsShipInTransitTo(`HQGAME.GetGameCore().GetHQ().Country(kRequest.eRequestingCountry).GetContinent()))
+                if (kHangar.LWCE_IsShipInTransitTo(kWorld.GetContinentContainingCountry(kRequest.nmRequestingCountry).m_nmContinent))
                 {
                     Status = m_strStatus_OperationInProgress;
                     bInProgress = true;
@@ -66,7 +73,7 @@ function UpdateData()
                     Status = m_strStatus_TransferComplete;
                     bIsComplete = true;
                 }
-                else if (HANGAR().m_arrInts.Length > 0)
+                else if (kHangar.m_arrCEShips.Length > 0)
                 {
                     Status = m_strStatus_AwaitingJetTransfer;
                     bInProgress = true;
@@ -79,7 +86,7 @@ function UpdateData()
             }
             else  if (kRequest.eType == eFCRType_SatLaunch)
             {
-                if (`HQGAME.GetGameCore().GetHQ().IsSatelliteInTransitTo(kRequest.eRequestingCountry))
+                if (kHQ.LWCE_IsSatelliteInTransitTo(kRequest.nmRequestingCountry))
                 {
                     Status = m_strStatus_SatelliteEnRoute;
                     bInProgress = true;
@@ -89,7 +96,7 @@ function UpdateData()
                     Status = m_strStatus_SatelliteCoverageComplete;
                     bIsComplete = true;
                 }
-                else if (`HQGAME.GetGameCore().GetHQ().CanLaunchSatelliteTo(kRequest.eRequestingCountry))
+                else if (kHQ.LWCE_CanLaunchSatelliteTo(kRequest.nmRequestingCountry))
                 {
                     Status = m_strStatus_AwaitingSatelliteCoverage;
                 }
@@ -123,8 +130,8 @@ function UpdateData()
 
         if (kRequest.eType == eFCRType_SatLaunch)
         {
-            kCountry = `HQGAME.GetGameCore().GetHQ().Country(kRequest.eRequestingCountry);
-            strRequest = m_strSatelliteTransferLabel $ kCountry.m_kTCountry.strName;
+            kCountry = kWorld.LWCE_GetCountry(kRequest.nmRequestingCountry);
+            strRequest = m_strSatelliteTransferLabel $ `LWCE_COUNTRY(kCountry.m_nmCountry).strName;
             AS_AddFundingRequest(I, strRequest, Status, TimeLeft, bCanComplete, bInProgress, bIsComplete);
         }
         else

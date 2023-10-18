@@ -3,8 +3,8 @@ class LWCE_XGPendingRequestsUI extends XGPendingRequestsUI
 
 struct LWCE_TPendingRequest
 {
-    var ECountry eRequestingCountry;
     var EFCRequestType eType;
+    var name nmRequestingCountry;
     var TText txtTitle;
     var TText txtSubTitle;
     var TText txtTopSecretLabel;
@@ -156,7 +156,7 @@ function string RewardToString(EFCRewardType eReward, int iAmount)
     return "";
 }
 
-function array<string> LWCE_RewardToString(LWCE_TRequestReward kReward, ECountry eRequestingCountry)
+function array<string> LWCE_RewardToString(LWCE_TRequestReward kReward, name nmRequestingCountry)
 {
     local LWCEItemTemplate kItem;
     local XGParamTag kTag;
@@ -214,7 +214,7 @@ function array<string> LWCE_RewardToString(LWCE_TRequestReward kReward, ECountry
     if (kReward.iCountryDefense != 0)
     {
         kTag.IntValue0 = kReward.iCountryDefense;
-        kTag.StrValue0 = Country(eRequestingCountry).m_kTCountry.strName;
+        kTag.StrValue0 = `LWCE_COUNTRY(nmRequestingCountry).strName;
         strReward = kReward.iCountryDefense > 0 ? class'XComLocalizer'.static.ExpandString(m_strDefenseIncrease) : class'XComLocalizer'.static.ExpandString(m_strDefenseReduction);
         arrStrings.AddItem(strReward);
     }
@@ -262,10 +262,10 @@ function LWCE_UpdateRequest(LWCE_TFCRequest kRequest)
         kDisplayItem = `LWCE_ITEM(kRequest.arrRequestedItems[0].ItemName);
     }
 
-    kUI.eRequestingCountry = kRequest.eRequestingCountry;
+    kUI.nmRequestingCountry = kRequest.nmRequestingCountry;
     kUI.img.strPath = kDisplayItem.ImagePath;
 
-    kTag.StrValue0 = Country(kRequest.eRequestingCountry).m_kTCountry.strName;
+    kTag.StrValue0 = `LWCE_COUNTRY(kRequest.nmRequestingCountry).strName;
     kUI.txtTitle.StrValue = class'XComLocalizer'.static.ExpandString(m_strTitleLabel);
     kUI.txtTitle.iState = eUIState_Warning;
 
@@ -327,7 +327,7 @@ function LWCE_UpdateRequest(LWCE_TFCRequest kRequest)
     kUI.txtRewardLabel.StrValue = m_strLabelRewards;
     kUI.txtRewardLabel.iState = eUIState_Good;
 
-    arrRewardStrings = LWCE_RewardToString(kRequest.kReward, kRequest.eRequestingCountry);
+    arrRewardStrings = LWCE_RewardToString(kRequest.kReward, kRequest.nmRequestingCountry);
 
     for (Index = 0; Index < arrRewardStrings.Length; Index++)
     {

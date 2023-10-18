@@ -26,13 +26,22 @@ function LWCE_GetEvents(out array<LWCE_THQEvent> arrEvents)
 
 function PerformIncreasePanicOperation(ECountry eOperationCountry)
 {
-    local XGContinent kContinent;
-    local XGCountry kCountry;
-    local ECountry eSelectedCountry;
-    local int iCountryIter, iValidCountries, iPropagandaPanicAmount;
+    `LWCE_LOG_DEPRECATED_CLS(PerformIncreasePanicOperation);
+}
 
-    kCountry = Country(eOperationCountry);
-    kContinent = Continent(kCountry.GetContinent());
+function LWCE_PerformIncreasePanicOperation(name nmOperationCountry)
+{
+    local LWCE_XGContinent kContinent;
+    local LWCE_XGCountry kCountry;
+    local LWCE_XGWorld kWorld;
+    local ECountry eSelectedCountry;
+    local int iValidCountries, iPropagandaPanicAmount;
+    local array<name> arrValidCountries;
+    local name nmCountryIter;
+
+    kWorld = LWCE_XGWorld(WORLD());
+    kCountry = kWorld.LWCE_GetCountry(nmOperationCountry);
+    kContinent = kWorld.LWCE_GetContinent(kCountry.LWCE_GetContinent());
 
     if (kCountry.LeftXCom())
     {
@@ -43,32 +52,36 @@ function PerformIncreasePanicOperation(ECountry eOperationCountry)
     kCountry.AddPanic(iPropagandaPanicAmount);
 
     // Select a random country on the same continent as the target to also receive panic
-    foreach kContinent.m_arrCountries(iCountryIter)
+    foreach kContinent.m_arrCECountries(nmCountryIter)
     {
-        if (!Country(iCountryIter).LeftXCom() && iCountryIter != eOperationCountry)
-        {
-            iValidCountries++;
+        kCountry = kWorld.LWCE_GetCountry(nmCountryIter);
 
-            if (Rand(iValidCountries) == 0)
-            {
-                eSelectedCountry = ECountry(iCountryIter);
-            }
+        if (!kCountry.LeftXCom() && nmCountryIter != eOperationCountry)
+        {
+            arrValidCountries.AddItem(nmCountryIter);
         }
     }
 
-    if (iValidCountries > 0)
+    if (arrValidCountries.Length > 0)
     {
-        Country(eSelectedCountry).AddPanic(20);
+        kCountry = kWorld.LWCE_GetCountry(arrValidCountries[Rand(arrValidCountries.Length)]);
+        kCountry.AddPanic(20);
     }
 
-    ExposeCell(eOperationCountry);
+    LWCE_ExposeCell(nmOperationCountry);
     PRES().UINarrative(`XComNarrativeMomentEW("ExaltIntro"));
-    LWCE_XGGeoscape(GEOSCAPE()).LWCE_Alert(`LWCE_ALERT('ExaltMissionActivity').AddInt(eOperationCountry).AddInt(2).Build());
-    SITROOM().PushExaltOperationHeadline(eOperationCountry, 1);
+    LWCE_XGGeoscape(GEOSCAPE()).LWCE_Alert(`LWCE_ALERT('ExaltMissionActivity').AddName(nmOperationCountry).AddInt(2).Build());
+    LWCE_XGFacility_SituationRoom(SITROOM()).LWCE_PushExaltOperationHeadline(nmOperationCountry, 1);
+
     m_iDaysSinceLastOperation = 0;
 }
 
 function PerformResearchHackOperation(ECountry eOperationCountry)
+{
+    `LWCE_LOG_DEPRECATED_CLS(PerformResearchHackOperation);
+}
+
+function LWCE_PerformResearchHackOperation(name nmOperationCountry)
 {
     local int iEstimatedProjectHours, iRemainingProjectHours, iPercentageHoursHacked, iBaseHoursHacked, iHoursHacked, iLabReduction;
     local int iProgressIndex;
@@ -102,19 +115,24 @@ function PerformResearchHackOperation(ECountry eOperationCountry)
         kLabs.m_arrCEProgress[iProgressIndex].iHoursCompleted -= iHoursHacked * kLabs.GetResearchPerHour();
     }
 
-    ExposeCell(eOperationCountry);
+    LWCE_ExposeCell(nmOperationCountry);
     PRES().UINarrative(`XComNarrativeMomentEW("ExaltIntro"));
-    LWCE_XGGeoscape(GEOSCAPE()).LWCE_Alert(`LWCE_ALERT('ExaltResearchHack').AddInt(eOperationCountry).AddInt(3).AddInt(iHoursHacked).AddInt(iLabReduction).Build());
-    SITROOM().PushExaltOperationHeadline(eOperationCountry, eExaltCellExposeReason_ResearchHack);
+    LWCE_XGGeoscape(GEOSCAPE()).LWCE_Alert(`LWCE_ALERT('ExaltResearchHack').AddName(nmOperationCountry).AddInt(3).AddInt(iHoursHacked).AddInt(iLabReduction).Build());
+    LWCE_XGFacility_SituationRoom(SITROOM()).LWCE_PushExaltOperationHeadline(nmOperationCountry, eExaltCellExposeReason_ResearchHack);
 
     m_iDaysSinceLastOperation = 0;
 }
 
 function PerformSabotageOperation(ECountry eOperationCountry)
 {
+    `LWCE_LOG_DEPRECATED_CLS(PerformSabotageOperation);
+}
+
+function LWCE_PerformSabotageOperation(name nmOperationCountry)
+{
     local int iAmountStolen;
 
-    ExposeCell(eOperationCountry);
+    LWCE_ExposeCell(nmOperationCountry);
     iAmountStolen = 40 * AI().GetMonth() + Rand(100);
 
     if (iAmountStolen > 0)
@@ -262,13 +280,13 @@ function string RecordExaltSweep()
     return "";
 }
 
-function bool LWCE_RollDiceForCellPlacement(ECountry eCountryForPlacement)
+function bool LWCE_RollDiceForCellPlacement(name nmCountryForPlacement)
 {
     local float fChance;
 
     fChance = m_kTuning.m_kPlacementRollTuning.m_fBaseChance;
 
-    if (HQ().GetSatellite(eCountryForPlacement) >= 0)
+    if (LWCE_XGHeadquarters(HQ()).LWCE_GetSatellite(nmCountryForPlacement) >= 0)
     {
         fChance += LWCE_XGFacility_Engineering(ENGINEERING()).LWCE_IsFoundryTechResearched('Foundry_StealthSatellites') ? m_kTuning.m_kPlacementRollTuning.m_fStealthSatelliteMod : m_kTuning.m_kPlacementRollTuning.m_fSatelliteMod;
     }

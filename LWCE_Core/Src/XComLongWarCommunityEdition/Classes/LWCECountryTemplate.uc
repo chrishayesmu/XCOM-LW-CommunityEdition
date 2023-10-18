@@ -18,6 +18,11 @@ var const localized string strNameWithArticle;
 var const localized string strNameWithArticleLower;
 var const localized string strNamePossessive;
 var const localized string strNameAdjective;
+var const localized array<localized string> TickerPanicLow;
+var const localized array<localized string> TickerPanicMedium;
+var const localized array<localized string> TickerPanicHigh;
+var const localized array<localized string> TickerPanicMax;
+
 
 function name GetCountryName()
 {

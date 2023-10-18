@@ -533,7 +533,6 @@ function UpdateWeapons(float fDeltaT)
     local CombatExchange kCombatExchange;
     local LWCEItemTemplateManager kTemplateMgr;
     local LWCEShipWeaponTemplate kShipWeaponTemplate;
-    local name nmAnalysisTech;
     local array<name> arrShipWeapons;
     local array<CombatExchange> akCombatExchange;
     local LWCE_XGShip kAttacker, kTarget;

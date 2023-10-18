@@ -450,6 +450,28 @@ function bool CanAffordCost(const LWCE_TCost kCost)
     return true;
 }
 
+function bool CanLaunchSatelliteTo(int iCountry)
+{
+    `LWCE_LOG_DEPRECATED_CLS(CanLaunchSatelliteTo);
+
+    return false;
+}
+
+/// <summary>
+/// Checks whether the player can launch a satellite to the specified country. In vanilla EW, this
+/// would have checked if the country had left the nation; that check was removed in LW since that's
+/// how you do alien base assaults. A new check is added in LWCE that the country doesn't already have
+/// a satellite, which helps make the result more consistent with the function's name.
+/// </summary>
+function bool LWCE_CanLaunchSatelliteTo(name nmCountry)
+{
+    local LWCE_XGStorage kStorage;
+    
+    kStorage = LWCE_XGStorage(STORAGE());
+
+    return kStorage.LWCE_GetNumItemsAvailable('Item_Satellite') > 0 && !`LWCE_XGCountry(nmCountry).HasSatelliteCoverage();
+}
+
 function CreateFacilities()
 {
     local XGFacility kFacility;
@@ -532,12 +554,15 @@ function GetEvents(out array<THQEvent> arrEvents)
 
 function LWCE_GetEvents(out array<LWCE_THQEvent> arrEvents)
 {
+    local LWCE_XGCountry kCountry;
     local LWCE_XGFundingCouncil kFundingCouncil;
+    local LWCE_XGWorld kWorld;
     local LWCE_THQEvent kBlankEvent, kEvent;
     local int Index, iEvent;
     local bool bAdded;
 
-    kFundingCouncil = LWCE_XGFundingCouncil(World().m_kFundingCouncil);
+    kWorld = LWCE_XGWorld(WORLD());
+    kFundingCouncil = LWCE_XGFundingCouncil(kWorld.m_kFundingCouncil);
 
     for (Index = 0; Index < m_arrHiringOrders.Length; Index++)
     {
@@ -625,12 +650,13 @@ function LWCE_GetEvents(out array<LWCE_THQEvent> arrEvents)
 
     for (Index = 0; Index < kFundingCouncil.m_arrCECurrentRequests.Length; Index++)
     {
+        kCountry = kWorld.LWCE_GetCountry(kFundingCouncil.m_arrCECurrentRequests[Index].nmRequestingCountry);
         kEvent = kBlankEvent;
         kEvent.EventType = 'FCRequest';
         kEvent.iHours = kFundingCouncil.m_arrCECurrentRequests[Index].iHoursToRespond;
 
         kEvent.kData = class'LWCEDataContainer'.static.New('THQEventData');
-        kEvent.kData.AddInt(Country(kFundingCouncil.m_arrCECurrentRequests[Index].eRequestingCountry).GetContinent());
+        kEvent.kData.AddName(kCountry.LWCE_GetContinent());
 
         bAdded = false;
 
@@ -844,6 +870,28 @@ function bool IsHyperwaveActive()
     return LWCE_HasFacility('Facility_HyperwaveRadar') && m_bHyperwaveActivated;
 }
 
+function bool IsSatelliteInTransitTo(int iCountry)
+{
+    `LWCE_LOG_DEPRECATED_CLS(IsSatelliteInTransitTo);
+
+    return false;
+}
+
+function bool LWCE_IsSatelliteInTransitTo(name nmCountry)
+{
+    local int iSatellite;
+    
+    for (iSatellite = 0; iSatellite < m_arrCESatellites.Length; iSatellite++)
+    {
+        if (m_arrCESatellites[iSatellite].nmCountry == nmCountry && m_arrCESatellites[iSatellite].iTravelTime > 0)
+        {
+            return true;
+        }
+    }
+
+    return false;
+}
+
 function OrderInterceptors(int iContinent, int iQuantity)
 {
     `LWCE_LOG_DEPRECATED_CLS(OrderInterceptors);
@@ -860,7 +908,7 @@ function LWCE_OrderShips(name nmShipItem, name nmContinent, int iQuantity)
     local LWCE_TShipOrder kOrder;
     local int iCost;
 
-    // TODO: this should include other components of the cost as well
+    // TODO: this should include other components of the cost as well, for mods
     iCost = `LWCE_ITEM(nmShipItem).kCost.iCash;
 
     // LWCE issue #1: normally when you order interceptors, the strategy HUD (particularly the player's current money)

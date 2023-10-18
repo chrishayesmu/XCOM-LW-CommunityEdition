@@ -40,7 +40,7 @@ struct LWCE_TFCRequest
     var string strTickerSuccess;
     var string strTickerIgnore;
 
-    var ECountry eRequestingCountry;
+    var name nmRequestingCountry;
     var bool bIsTransferRequest;
     var bool bIsTransferComplete;
 };
@@ -76,6 +76,7 @@ var array<LWCE_TFCRequest> m_arrCEPendingRequests;
 var array<LWCE_TRequestCooldown> m_arrCERequestCooldowns;
 
 var LWCE_TFCRequest m_kLastCompletedSatelliteTransferRequest;
+var name m_nmPendingSatelliteRequestCountry;
 
 var private LWCECouncilRequestTemplateManager m_kTemplateMgr;
 
@@ -198,7 +199,7 @@ function bool AttemptTurnInRequest(int iRequestIndex)
             }
         }
 
-        LWCE_GrantFCRewards(m_arrCECurrentRequests[iRequestIndex].kReward, m_arrCECurrentRequests[iRequestIndex].eRequestingCountry);
+        LWCE_GrantFCRewards(m_arrCECurrentRequests[iRequestIndex].kReward, m_arrCECurrentRequests[iRequestIndex].nmRequestingCountry);
         OnRequestCompleted(iRequestIndex);
 
         return true;
@@ -250,6 +251,12 @@ function bool CanRequestExpire(TFCRequest kRequest)
 
 function bool LWCE_CanRequestExpire(LWCE_TFCRequest kRequest)
 {
+    local LWCE_XGFacility_Hangar kHangar;
+    local LWCE_XGHeadquarters kHQ;
+
+    kHangar = LWCE_XGFacility_Hangar(HANGAR());
+    kHQ = LWCE_XGHeadquarters(HQ());
+
     if (kRequest.bIsTransferComplete)
     {
         return false;
@@ -257,12 +264,38 @@ function bool LWCE_CanRequestExpire(LWCE_TFCRequest kRequest)
 
     if (kRequest.bIsTransferRequest)
     {
-        if (kRequest.eType == eFCRType_JetTransfer && HANGAR().IsShipInTransitTo(kRequest.eRequestingCountry))
+        if (kRequest.eType == eFCRType_JetTransfer && kHangar.LWCE_IsShipInTransitTo(kRequest.nmRequestingCountry))
         {
             return false;
         }
 
-        if (kRequest.eType == eFCRType_SatLaunch && HQ().IsSatelliteInTransitTo(kRequest.eRequestingCountry))
+        if (kRequest.eType == eFCRType_SatLaunch && kHQ.LWCE_IsSatelliteInTransitTo(kRequest.nmRequestingCountry))
+        {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+function bool CanTransferSatellite(int iCountry)
+{
+    `LWCE_LOG_DEPRECATED_CLS(CanTransferSatellite);
+
+    return false;
+}
+
+function bool LWCE_CanTransferSatellite(name nmCountry)
+{
+    local LWCE_XGHeadquarters kHQ;
+    local int iSatellite;
+
+    kHQ = LWCE_XGHeadquarters(HQ());
+
+    // We can transfer a satellite unless there's already one over the given country
+    for (iSatellite = 0; iSatellite < kHQ.m_arrCESatellites.Length; iSatellite++)
+    {
+        if (kHQ.m_arrCESatellites[iSatellite].nmCountry == nmCountry)
         {
             return false;
         }
@@ -330,26 +363,26 @@ function ClearExpiredRequests()
     m_arrCEExpiredRequests.Remove(0, m_arrCEExpiredRequests.Length);
 }
 
-function bool CreateRequestFromTemplate(out LWCE_TFCRequest kRequest, const LWCECouncilRequestTemplate kRequestTemplate, ECountry eRequestingCountry)
+function bool CreateRequestFromTemplate(out LWCE_TFCRequest kRequest, const LWCECouncilRequestTemplate kRequestTemplate, name nmRequestingCountry)
 {
     local LWCE_TItemQuantity kItemQuantity;
     local LWCE_TRewardSoldier kRewardSoldier;
     local LWCE_XGFacility_Barracks kBarracks;
-    local XGCountry kCountry;
+    local LWCE_XGCountry kCountry;
     local XGCountryTag kTag;
     local bool bIsDynamicWar;
     local int Index, iCash, iEngineers, iScientists, iSoldiers;
     local int iBonusCash, iBonusEngineers, iBonusScientists, iBonusSoldiers;
 
     kBarracks = LWCE_XGFacility_Barracks(BARRACKS());
-    kCountry = Country(eRequestingCountry);
+    kCountry = `LWCE_XGCOUNTRY(nmRequestingCountry);
 
     kTag = new class'XGCountryTag';
     kTag.kCountry = kCountry;
 
     kRequest.RequestName = kRequestTemplate.GetRequestName();
     kRequest.eType = kRequestTemplate.eType;
-    kRequest.eRequestingCountry = eRequestingCountry;
+    kRequest.nmRequestingCountry = nmRequestingCountry;
     kRequest.iHoursToRespond = kRequestTemplate.iHoursToRespond;
 
     if (kRequest.eType == eFCRType_SatLaunch || kRequest.eType == eFCRType_JetTransfer)
@@ -595,6 +628,29 @@ function XGMission_FundingCouncil CreateMission(TFCMission MissionData)
     return kMission;
 }
 
+function ECountry DetermineFCRequestCountry()
+{
+    `LWCE_LOG_DEPRECATED_CLS(DetermineFCRequestCountry);
+
+    return ECountry(0);
+}
+
+function name LWCE_DetermineFCRequestCountry()
+{
+    local array<XGCountry> arrCountries;
+    local XGCountry kCountry;
+
+    foreach World().m_arrCountries(kCountry)
+    {
+        if (kCountry.IsCouncilMember() && !kCountry.LeftXCom())
+        {
+            arrCountries.AddItem(kCountry);
+        }
+    }
+
+    return LWCE_XGCountry(arrCountries[Rand(arrCountries.Length)]).m_nmCountry;
+}
+
 function bool DetermineNewFCMission(optional EFCMission eMission)
 {
     local TFCMission kMission;
@@ -656,11 +712,10 @@ function bool LWCE_DetermineNewFCRequest()
 {
     local LWCE_TFCRequest kRequest;
     local LWCECouncilRequestTemplate kRequestTemplate;
-    local ECountry eRequestingCountry;
-    local name RequestName;
+    local name nmRequestingCountry, RequestName;
 
     SITROOM().SetDisabled(false);
-    eRequestingCountry = DetermineFCRequestCountry();
+    nmRequestingCountry = LWCE_DetermineFCRequestCountry();
     RequestName = LWCE_ChooseNextRequest();
 
     if (RequestName == '')
@@ -675,9 +730,9 @@ function bool LWCE_DetermineNewFCRequest()
         return false;
     }
 
-    if (kRequestTemplate.eType == eFCRType_SatLaunch && !CanTransferSatellite(eRequestingCountry))
+    if (kRequestTemplate.eType == eFCRType_SatLaunch && !LWCE_CanTransferSatellite(nmRequestingCountry))
     {
-        `LWCE_LOG_CLS("LWCE_DetermineNewFCRequest: chose satellite request but can't launch sat to " $ eRequestingCountry);
+        `LWCE_LOG_CLS("LWCE_DetermineNewFCRequest: chose satellite request but can't launch sat to " $ nmRequestingCountry);
         return false;
     }
 
@@ -688,7 +743,7 @@ function bool LWCE_DetermineNewFCRequest()
         return false;
     }
 
-    if (!CreateRequestFromTemplate(kRequest, kRequestTemplate, eRequestingCountry))
+    if (!CreateRequestFromTemplate(kRequest, kRequestTemplate, nmRequestingCountry))
     {
         `LWCE_LOG_CLS("LWCE_DetermineNewFCRequest: couldn't create request from template " $ RequestName);
         return false;
@@ -741,12 +796,19 @@ function int GetItemQuestPrice(EItemType eItem)
 
 function ECountry GetLastAcceptedRequestCountry()
 {
-    if (m_arrCECurrentRequests.Length > 0)
-    {
-        return m_arrCECurrentRequests[m_arrCECurrentRequests.Length - 1].eRequestingCountry;
-    }
+    `LWCE_LOG_DEPRECATED_CLS(GetLastAcceptedRequestCountry);
 
     return ECountry(0);
+}
+
+function name LWCE_GetLastAcceptedRequestCountry()
+{
+    if (m_arrCECurrentRequests.Length > 0)
+    {
+        return m_arrCECurrentRequests[m_arrCECurrentRequests.Length - 1].nmRequestingCountry;
+    }
+
+    return '';
 }
 
 function EFCRequest GetLastAcceptedRequestType()
@@ -878,7 +940,7 @@ function GiveCustomSoldier(const out TFundingCouncilRewardSoldier CustomSoldier)
 }
 
 // NOTE: the base GrantFCRewards is still used for FC missions and is not deprecated as of now
-function LWCE_GrantFCRewards(LWCE_TRequestReward kReward, ECountry eRewardingCountry)
+function LWCE_GrantFCRewards(LWCE_TRequestReward kReward, name nmRewardingCountry)
 {
     local LWCE_XGFacility_Barracks kBarracks;
     local LWCE_XGStorage kStorage;
@@ -905,7 +967,7 @@ function LWCE_GrantFCRewards(LWCE_TRequestReward kReward, ECountry eRewardingCou
 
     if (kReward.iPanic != 0)
     {
-        Country(eRewardingCountry).AddPanic(kReward.iPanic);
+        `LWCE_XGCOUNTRY(nmRewardingCountry).AddPanic(kReward.iPanic);
     }
 
     for (Index = 0; Index < kReward.arrItemRewards.Length; Index++)
@@ -925,7 +987,7 @@ function bool HasConflictingRequest(const out LWCE_TFCRequest kRequest)
 
     for (Index = 0; Index < m_arrCECurrentRequests.Length; Index++)
     {
-        if (kRequest.RequestName == m_arrCECurrentRequests[Index].RequestName && kRequest.eRequestingCountry == m_arrCECurrentRequests[Index].eRequestingCountry)
+        if (kRequest.RequestName == m_arrCECurrentRequests[Index].RequestName && kRequest.nmRequestingCountry == m_arrCECurrentRequests[Index].nmRequestingCountry)
         {
             return true;
         }
@@ -988,14 +1050,37 @@ function int IgnorePendingRequest()
     return m_arrCEPendingRequests.Length - 1;
 }
 
+function bool IsCountryInContinent(ECountry iCountry, int iContinent)
+{
+    `LWCE_LOG_DEPRECATED_CLS(IsCountryInContinent);
+
+    return false;
+}
+
+function bool LWCE_IsCountryInContinent(name nmCountry, name nmContinent)
+{
+    local LWCE_XGContinent kContinent;
+    local LWCE_XGWorld kWorld;
+
+    kWorld = LWCE_XGWorld(WORLD());
+    kContinent = kWorld.LWCE_GetContinent(nmContinent);
+
+    return kContinent.ContainsCountry(nmCountry);
+}
+
 function OnCountryLeft(ECountry eLeft)
+{
+    `LWCE_LOG_DEPRECATED_CLS(OnCountryLeft);
+}
+
+function LWCE_OnCountryLeft(name nmCountry)
 {
     local int I;
 
     // Remove any council requests from the country that left
     for (I = m_arrCEPendingRequests.Length - 1; I >= 0; I--)
     {
-        if (m_arrCEPendingRequests[I].eRequestingCountry == eLeft)
+        if (m_arrCEPendingRequests[I].nmRequestingCountry == nmCountry)
         {
             m_arrCEPendingRequests.Remove(I, 1);
         }
@@ -1003,21 +1088,23 @@ function OnCountryLeft(ECountry eLeft)
 
     for (I = m_arrCECurrentRequests.Length - 1; I >= 0; I--)
     {
-        if (m_arrCECurrentRequests[I].eRequestingCountry == eLeft)
+        if (m_arrCECurrentRequests[I].nmRequestingCountry == nmCountry)
         {
             m_arrCECurrentRequests.Remove(I, 1);
         }
     }
 
-    SITROOM().PushCountryWithdrawHeadline(eLeft);
+    LWCE_XGFacility_SituationRoom(SITROOM()).LWCE_PushCountryWithdrawHeadline(nmCountry);
 }
 
 function OnRequestCompleted(int iRequestIndex)
 {
+    local LWCE_XGFacility_SituationRoom kSitRoom;
     local TText kText;
-    local XGCountry kCountry;
+    local LWCE_XGCountry kCountry;
 
-    kCountry = Country(m_arrCECurrentRequests[iRequestIndex].eRequestingCountry);
+    kSitRoom = LWCE_XGFacility_SituationRoom(SITROOM());
+    kCountry = `LWCE_XGCOUNTRY(m_arrCECurrentRequests[iRequestIndex].nmRequestingCountry);
 
     if (m_arrCECurrentRequests[iRequestIndex].eType == eFCRType_SatLaunch)
     {
@@ -1027,11 +1114,12 @@ function OnRequestCompleted(int iRequestIndex)
 
     kText.iState = eUIState_Good;
     kText.StrValue = m_arrCECurrentRequests[iRequestIndex].strTickerSuccess;
-    SITROOM().PushFundingCouncilHeadline(m_arrCECurrentRequests[iRequestIndex].eRequestingCountry, kText);
+    kSitRoom.LWCE_PushFundingCouncilHeadline(m_arrCECurrentRequests[iRequestIndex].nmRequestingCountry, kText);
+    
     Achieve(AT_HappyToOblige);
 
     // Add shields to the requesting country
-    kCountry.m_kTCountry.iScience = Clamp(kCountry.m_kTCountry.iScience + m_arrCECurrentRequests[iRequestIndex].kReward.iCountryDefense, 0, 100);
+    kCountry.m_iShields = Clamp(kCountry.m_iShields + m_arrCECurrentRequests[iRequestIndex].kReward.iCountryDefense, 0, 100);
 
     m_arrCECurrentRequests.Remove(iRequestIndex, 1);
 
@@ -1042,17 +1130,24 @@ function OnRequestCompleted(int iRequestIndex)
 
 function OnRequestExpired(int iRequestIndex)
 {
+    local LWCE_XGFacility_SituationRoom kSitRoom;
+    local LWCEDataContainer kData;
     local TText kText;
+
+    kSitRoom = LWCE_XGFacility_SituationRoom(SITROOM());
 
     if (iRequestIndex != -1)
     {
-        PRES().Notify(eGA_FCExpiredRequest, m_arrCECurrentRequests[iRequestIndex].eRequestingCountry);
+        kData = class'LWCEDataContainer'.static.NewName('NotifyData', m_arrCECurrentRequests[iRequestIndex].nmRequestingCountry);
+        LWCE_XComHQPresentationLayer(PRES()).LWCE_Notify('FCExpiredRequest', kData);
+
         m_arrCEExpiredRequests.AddItem(m_arrCECurrentRequests[iRequestIndex]);
     }
 
     kText.iState = eUIState_Bad;
     kText.StrValue = m_arrCECurrentRequests[iRequestIndex].strTickerIgnore;
-    SITROOM().PushFundingCouncilHeadline(m_arrCECurrentRequests[iRequestIndex].eRequestingCountry, kText);
+    kSitRoom.LWCE_PushFundingCouncilHeadline(m_arrCECurrentRequests[iRequestIndex].nmRequestingCountry, kText);
+    
     m_arrCECurrentRequests.Remove(iRequestIndex, 1);
 }
 
@@ -1075,20 +1170,19 @@ function LWCE_OnSatelliteSuccessfullyTransferred(LWCE_TSatellite kSatellite, opt
 {
     local int iRequest;
 
-// TODO: commented until we change countries to names
-/*
+    // TODO: commented until we change countries to names
     for (iRequest = 0; iRequest < m_arrCECurrentRequests.Length; iRequest++)
     {
         if (m_arrCECurrentRequests[iRequest].eType == eFCRType_SatLaunch)
         {
-            if (m_arrCECurrentRequests[iRequest].eRequestingCountry == kSatellite.iCountry)
+            if (m_arrCECurrentRequests[iRequest].nmRequestingCountry == kSatellite.nmCountry)
             {
                 SITROOM().m_bRequiresAttention = bSitRoomAttention;
                 m_arrCECurrentRequests[iRequest].bIsTransferComplete = true;
 
                 if (bTurnInRequest)
                 {
-                    LWCE_GrantFCRewards(m_arrCECurrentRequests[iRequest].kReward, m_arrCECurrentRequests[iRequest].eRequestingCountry);
+                    LWCE_GrantFCRewards(m_arrCECurrentRequests[iRequest].kReward, m_arrCECurrentRequests[iRequest].nmRequestingCountry);
                     OnRequestCompleted(iRequest);
                 }
 
@@ -1096,7 +1190,6 @@ function LWCE_OnSatelliteSuccessfullyTransferred(LWCE_TSatellite kSatellite, opt
             }
         }
     }
- */
 }
 
 function OnShipAdded(EShipType eShip, int iContinent)
@@ -1104,9 +1197,15 @@ function OnShipAdded(EShipType eShip, int iContinent)
     `LWCE_LOG_DEPRECATED_CLS(OnShipAdded);
 }
 
-function LWCE_OnShipAdded(LWCE_XGShip kInterceptor)
+function LWCE_OnShipAdded(LWCE_XGShip kShip)
 {
+    local LWCE_XGFacility_Hangar kHangar;
+    local LWCE_XGContinent kContinent;
+    local LWCE_XGWorld kWorld;
     local int Index;
+
+    kHangar = LWCE_XGFacility_Hangar(HANGAR());
+    kWorld = LWCE_XGWorld(WORLD());
 
     // When an interceptor order completes, check if there's an outstanding council request
     // for an interceptor to that continent, and turn it in if so
@@ -1114,16 +1213,16 @@ function LWCE_OnShipAdded(LWCE_XGShip kInterceptor)
     {
         if (m_arrCECurrentRequests[Index].bIsTransferRequest && !m_arrCECurrentRequests[Index].bIsTransferComplete)
         {
-            if (eShip == eShip_Interceptor && m_arrCECurrentRequests[Index].eType == eFCRType_JetTransfer)
+            if (kShip.m_nmShipTemplate == 'Interceptor' && m_arrCECurrentRequests[Index].eType == eFCRType_JetTransfer)
             {
-                if (IsCountryInContinent(m_arrCECurrentRequests[Index].eRequestingCountry, iContinent))
+                kContinent = kWorld.GetContinentContainingCountry(m_arrCECurrentRequests[Index].nmRequestingCountry);
+
+                // TODO: not entirely sure why this check is here
+                if (!kHangar.LWCE_IsShipInTransitTo(kContinent.m_nmContinent))
                 {
-                    if (!HANGAR().IsShipInTransitTo(m_arrCECurrentRequests[Index].eRequestingCountry))
-                    {
-                        m_arrCECurrentRequests[Index].bIsTransferComplete = true;
-                        AttemptTurnInRequest(Index);
-                        return;
-                    }
+                    m_arrCECurrentRequests[Index].bIsTransferComplete = true;
+                    AttemptTurnInRequest(Index);
+                    return;
                 }
             }
         }
@@ -1132,18 +1231,26 @@ function LWCE_OnShipAdded(LWCE_XGShip kInterceptor)
 
 function OnShipSuccessfullyTransferred(XGShip_Interceptor kShip, optional bool bSitRoomAttention = true, optional bool bAttemptTurnInRequest = false)
 {
-    local XGCountry kCountry;
+    `LWCE_LOG_DEPRECATED_CLS(OnShipSuccessfullyTransferred);
+}
+
+function LWCE_OnShipSuccessfullyTransferred(LWCE_XGShip kShip, optional bool bSitRoomAttention = true, optional bool bAttemptTurnInRequest = false)
+{
+    local LWCE_XGContinent kContinent;
+    local LWCE_XGWorld kWorld;
     local int iRequest;
+
+    kWorld = LWCE_XGWorld(WORLD());
 
     for (iRequest = 0; iRequest < m_arrCECurrentRequests.Length; iRequest++)
     {
         if (m_arrCECurrentRequests[iRequest].eType == eFCRType_JetTransfer)
         {
-            kCountry = Country(m_arrCECurrentRequests[iRequest].eRequestingCountry);
+            kContinent = kWorld.GetContinentContainingCountry(m_arrCECurrentRequests[iRequest].nmRequestingCountry);
 
-            if (kCountry.m_kTCountry.iContinent == kShip.m_iHomeContinent)
+            if (kContinent.m_nmContinent == kShip.m_nmContinent)
             {
-                LWCE_XGGeoscape(GEOSCAPE()).LWCE_Alert(`LWCE_ALERT('FCJetTransfer').AddInt(m_arrCECurrentRequests[iRequest].eRequestingCountry).Build());
+                LWCE_XGGeoscape(GEOSCAPE()).LWCE_Alert(`LWCE_ALERT('FCJetTransfer').AddName(m_arrCECurrentRequests[iRequest].nmRequestingCountry).Build());
                 SITROOM().m_bRequiresAttention = bSitRoomAttention;
                 m_arrCECurrentRequests[iRequest].bIsTransferComplete = true;
 
@@ -1165,6 +1272,8 @@ function OnValidRequestAdded(out TFCRequest kRequest)
 
 function LWCE_OnValidRequestAdded(out LWCE_TFCRequest kRequest)
 {
+    local LWCEDataContainer kData;
+
     m_iFCRequestsThisMonth++;
 
     LWCE_SetRequestCoolDown(kRequest.RequestName);
@@ -1177,7 +1286,9 @@ function LWCE_OnValidRequestAdded(out LWCE_TFCRequest kRequest)
     else
     {
         m_arrCECurrentRequests.AddItem(kRequest);
-        PRES().Notify(eGA_FCDelayedRequest, kRequest.eRequestingCountry);
+
+        kData = class'LWCEDataContainer'.static.NewName('NotifyData', kRequest.nmRequestingCountry);
+        LWCE_XComHQPresentationLayer(PRES()).LWCE_Notify('FCDelayedRequest', kData);
     }
 }
 

@@ -12,6 +12,39 @@ simulated function XGSatelliteSitRoomUI GetSatelliteMgr()
 
 state SatelliteState
 {
+    simulated event PushedState()
+    {
+        local LWCE_XGFundingCouncil kFundingCouncil;
+        local LWCE_XGSituationRoomUI kSitRoomUI;
+
+        kFundingCouncil = LWCE_XGFundingCouncil(`HQGAME.GetGameCore().GetWorld().m_kFundingCouncil);
+        kSitRoomUI = LWCE_XGSituationRoomUI(GetSitRoomMgr());
+
+        if (kFundingCouncil.m_nmPendingSatelliteRequestCountry != '')
+        {
+            m_iCurrentCountry = kSitRoomUI.LWCE_GetCountryUISlot(kFundingCouncil.m_nmPendingSatelliteRequestCountry);
+            kFundingCouncil.m_nmPendingSatelliteRequestCountry = '';
+        }
+
+        // TODO
+        if (m_iCurrentCountry == INDEX_NONE)
+        {
+            m_iCurrentCountry = GetSatelliteMgr().m_iCountry;
+        }
+        
+        HideObjectives();
+        AS_SetDisplayMode(DISPLAY_MODE_SATELLITE);
+        RealizeSelected();
+        UpdateHUD();
+
+        XComHQPresentationLayer(controllerRef.m_Pres).GetStrategyHUD().m_kMenu.Hide();
+        XComHQPresentationLayer(controllerRef.m_Pres).GetStrategyHUD().m_kMenu.m_kSubMenu.Hide();
+        XComHQPresentationLayer(controllerRef.m_Pres).m_kStrategyHUD.ClearButtonHelp();
+        XComHQPresentationLayer(controllerRef.m_Pres).m_kStrategyHUD.ShowBackButton(OnUCancel);
+
+        m_kSitRoomHUD.AS_SetDisplayMode(DISPLAY_MODE_SATELLITE);
+    }
+
     simulated function UpdateHUD()
     {
         local XGSatelliteSitRoomUI kSatMgr;

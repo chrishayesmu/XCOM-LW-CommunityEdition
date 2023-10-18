@@ -131,6 +131,8 @@ function LWCE_TShipStats GetStats(name nmShipTeam)
     {
         Del(kStats, nmShipTeam);
     }
+
+    return kStats;
 }
 
 protected function ApplyUpgrade(out LWCE_TShipStats kStats, out LWCE_TShipScheduledUpgrade kUpgrade)

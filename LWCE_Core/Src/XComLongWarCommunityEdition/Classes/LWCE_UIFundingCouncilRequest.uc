@@ -39,10 +39,12 @@ simulated function XGPendingRequestsUI GetMgr()
 
 simulated function bool OnAccept(optional string Arg = "")
 {
+    local LWCE_XGFundingCouncil kFundingCouncil;
     local LWCE_XGPendingRequestsUI kMgr;
     local bool bRequestComplete;
 
     kMgr = LWCE_XGPendingRequestsUI(GetMgr());
+    kFundingCouncil = LWCE_XGFundingCouncil(kMgr.WORLD().m_kFundingCouncil);
 
     if (kMgr.m_kCERequest.txtAccept.iState != eUIState_Good)
     {
@@ -61,7 +63,7 @@ simulated function bool OnAccept(optional string Arg = "")
     else if (kMgr.m_kCERequest.eType == eFCRType_SatLaunch)
     {
         kMgr.PlayGoodSound();
-        `HQGAME.GetGameCore().GetWorld().m_kFundingCouncil.m_ePendingSatelliteRequestCountry = kMgr.m_kCERequest.eRequestingCountry;
+        kFundingCouncil.m_nmPendingSatelliteRequestCountry = kMgr.m_kCERequest.nmRequestingCountry;
         `HQPRES.PopState();
         kMgr.HQ().JumpToFacility(kMgr.SITROOM(), 0.0, eSitView_Satellites);
     }
@@ -112,7 +114,7 @@ function ShowRequestComplete()
     kData = kMgr.m_kCERequest;
 
     kTag = new class'XGCountryTag';
-    kTag.kCountry = kMgr.Country(kData.eRequestingCountry);
+    kTag.kCountry = `LWCE_XGCOUNTRY(kData.nmRequestingCountry);
 
     AS_OpenRequestCompleteDialog(kMgr.m_strRequestCompletedTitleLabel,
                                  Caps(kData.txtSubTitle.StrValue),

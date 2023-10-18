@@ -285,7 +285,7 @@ function LWCE_TContinentInfo LWCE_GetContinentInfo(name nmContinent)
         if (kHQ.m_arrCEShipOrders[iOrder].nmDestinationContinent == nmContinent)
         {
             kInfo.m_arrShipOrderIndexes.AddItem(iOrder);
-            kInfo.iNumShips += kHQ.m_arrCEShipOrders[iOrder].iNumInterceptors;
+            kInfo.iNumShips += kHQ.m_arrCEShipOrders[iOrder].iNumShips;
         }
     }
 
@@ -310,8 +310,7 @@ function array<XGShip_Interceptor> GetInterceptorsByContinent(int iContinent)
 
     arrInterceptors.Length = 0;
 
-    `LWCE_LOG("ERROR: LWCE-incompatible function GetInterceptorsByContinent was called. This needs to be replaced with LWCE_GetShipsByContinent. Stack trace follows."); 
-    ScriptTrace();
+    `LWCE_LOG_DEPRECATED_BY(GetInterceptorsByContinent, LWCE_GetShipsByContinent);
 
     return arrInterceptors;
 }
@@ -408,6 +407,31 @@ function GiveMissionReward(XGShip_Dropship kSkyranger)
     }
 }
 
+function bool IsShipInTransitTo(int iContinent)
+{
+    `LWCE_LOG_DEPRECATED_CLS(IsShipInTransitTo);
+
+    return false;
+}
+
+function bool LWCE_IsShipInTransitTo(name nmContinent)
+{
+    local int iIndex;
+
+    for (iIndex = 0; iIndex < m_arrCEShips.Length; iIndex++)
+    {
+        if (m_arrCEShips[iIndex].m_nmContinent == nmContinent)
+        {
+            if (m_arrCEShips[iIndex].GetStatus() == eShipStatus_Transfer)
+            {
+                return true;
+            }
+        }
+    }
+
+    return false;
+}
+
 static function EShipWeapon ItemTypeToShipWeapon(EItemType eItem)
 {
     `LWCE_LOG_DEPRECATED_NOREPLACE_CLS(ItemTypeToShipWeapon);
@@ -495,24 +519,9 @@ function bool OrderedHigher(XGShip_Interceptor kCraft1, XGShip_Interceptor kCraf
 
 function EItemType ShipTypeToItemType(EShipType eShip)
 {
-    `LWCE_LOG_DEPRECATED_CLS(ShipTypeToItemType);
+    `LWCE_LOG_DEPRECATED_NOREPLACE_CLS(ShipTypeToItemType);
 
     return eItem_None;
-}
-
-function name LWCE_ShipTypeToItemType(EShipType eShip)
-{
-    switch (eShip)
-    {
-        case eShip_Interceptor:
-            return 'Item_Interceptor';
-        case eShip_Skyranger:
-            return 'Item_Skyranger';
-        case eShip_Firestorm:
-            return 'Item_Firestorm';
-        default:
-            return '';
-    }
 }
 
 function UnloadArtifacts(XGShip_Dropship kSkyranger)
