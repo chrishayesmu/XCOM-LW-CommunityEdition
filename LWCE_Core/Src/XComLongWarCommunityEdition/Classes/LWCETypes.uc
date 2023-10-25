@@ -530,6 +530,20 @@ struct LWCE_TObjectSummary
     var name ItemType;
 };
 
+/// <summary>
+/// Represents an objective for the alien strategy layer AI.
+/// </summary>
+struct LWCE_TObjective
+{
+    var name nmType;
+    var string strName;
+    var array<int> arrStartDates;
+    var array<name> arrShips;
+    var array<name> arrMissions;
+    var array<int> arrRadii;
+    var array<int> arrRandDays;
+};
+
 struct LWCE_TSatellite
 {
     var name nmType; // The type of satellite; usually this will be 'Item_Satellite' but maybe some mod wants high-res or thermal sats, etc

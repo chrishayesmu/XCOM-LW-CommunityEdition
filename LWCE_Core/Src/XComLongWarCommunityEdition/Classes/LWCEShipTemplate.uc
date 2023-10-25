@@ -33,8 +33,9 @@ var config int iSpeed;            // This ship's speed on the Geoscape. UFOs wil
 var config int iEngagementSpeed;  // This ship's speed during an interception. Used to calculate how long the interception will last.
 var config int iArmor;            // Armor providing resistance to attacks from other ships.
 var config int iArmorPen;         // This ship's ability to overcome enemy armor; also provided by ship weapons.
-var config int iResourceCost;     // Cost in alien resources to replace/repair this ship if destroyed/damaged
+var config int iResourceCost;     // Cost in alien resources to replace/repair this ship if destroyed/damaged.
 var config int iThreat;           // How much threat is generated with the aliens by shooting down or assaulting this ship.
+var config bool bIsCloaked;       // If true, this ship can't be detected by satellites without the Hyperwave active.
 
 var config name nmAnalysisTech;          // Which tech is the corresponding analysis for this ship type.
 var config name nmSize;                  // How large this ship is (Small, Medium, Large, VeryLarge). Displayed on the Geoscape and also used for

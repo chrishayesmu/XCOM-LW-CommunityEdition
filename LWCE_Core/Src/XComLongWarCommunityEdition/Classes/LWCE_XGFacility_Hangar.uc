@@ -1,5 +1,5 @@
 class LWCE_XGFacility_Hangar extends XGFacility_Hangar
-    config(LWCEQualityOfLife);
+    config(LWCEBaseStrategyGame);
 
 struct LWCE_TContinentInfo
 {
@@ -20,6 +20,7 @@ var array<LWCE_XGShip> m_arrCEShips;
 var name m_nmCEBestWeaponEquipped; // TODO: not being populated
 
 var config bool bAutoNicknameNewPilots;
+var config itn iNumShipSlotsPerContinent;
 
 var const localized array<string> PilotNames;
 var const localized array<string> PilotRanks;
@@ -253,6 +254,21 @@ function LWCE_EquipWeapon(name ItemName, LWCE_XGShip kShip)
 */
 }
 
+function array<XGShip_Interceptor> GetAllInterceptors()
+{
+    local array<XGShip_Interceptor> arrInts;
+
+    `LWCE_LOG_DEPRECATED_BY(GetAllInterceptors, LWCE_GetAllShips);
+
+    arrInts.Length = 0;
+    return arrInts;
+}
+
+function array<LWCE_XGShip> LWCE_GetAllShips()
+{
+    return m_arrCEShips;
+}
+
 function TContinentInfo GetContinentInfo(EContinent eCont)
 {
     local TContinentInfo kInfo;
@@ -315,20 +331,94 @@ function array<XGShip_Interceptor> GetInterceptorsByContinent(int iContinent)
     return arrInterceptors;
 }
 
+function int GetNumInterceptorsInRange(XGShip_UFO kUFO)
+{
+    `LWCE_LOG_DEPRECATED_BY(GetNumInterceptorsInRange, LWCE_GetNumShipsInRange);
+
+    return -1000;
+}
+
+/// <summary>
+/// Finds all of the friendly ships which are in the same continent as the enemy ship.
+/// </summary>
+function int LWCE_GetNumShipsInRange(LWCE_XGShip kShip)
+{
+    return LWCE_GetNumShips(kShip.GetContinent());
+}
+
+function int GetNumInterceptorsInRangeAndAvailable(XGShip_UFO kUFO)
+{
+    `LWCE_LOG_DEPRECATED_BY(GetNumInterceptorsInRangeAndAvailable, LWCE_GetNumShipsInRangeAndAvailable);
+
+    return -1000;
+}
+
+function int LWCE_GetNumShipsInRangeAndAvailable(LWCE_XGShip kShip)
+{
+    local int iIndex, iAvailable;
+
+    for (iIndex = 0; iIndex < m_arrCEShips.Length; iIndex++)
+    {
+        if (m_arrCEShips[iIndex].m_nmContinent == kShip.GetContinent())
+        {
+            if (m_arrCEShips[iIndex].GetStatus() == eShipStatus_Ready)
+            {
+                iAvailable++;
+            }
+        }
+    }
+
+    return iAvailable;
+}
+
+function int GetFreeHangerSpots(int iContinent)
+{
+    `LWCE_LOG_DEPRECATED_BY(GetFreeHangerSpots, LWCE_GetFreeHangarSpots);
+
+    return -1000;
+}
+
+/// <summary>
+/// Determines how many hangar spots are unoccupied on the given continent.
+/// </summary>
+function int LWCE_GetFreeHangarSpots(name nmContinent)
+{
+    return default.iNumShipSlotsPerContinent - GetContinentInfo(EContinent(iContinent)).iNumShips;
+}
+
+function int GetTotalInterceptorCapacity(optional int kContinent = 5)
+{
+    `LWCE_LOG_DEPRECATED_BY(GetTotalInterceptorCapacity, LWCE_GetNumHangarSlotsForContinent);
+
+    return -1000;
+}
+
+/// <summary>
+/// Determines how many hangar slots exist for the given continent. By default this is the same
+/// for every continent, but this gives us a space to add a mod hook if needed.
+/// </summary>
+function int LWCE_GetNumHangarSlotsForContinent(name nmContinent)
+{
+    return default.iNumShipSlotsPerContinent;
+}
+
+/// <summary>
+/// Gets all of the friendly ships which are stationed on the given continent.
+/// </summary>
 function array<LWCE_XGShip> LWCE_GetShipsByContinent(name nmContinent)
 {
-    local array<LWCE_XGShip> arrInterceptors;
+    local array<LWCE_XGShip> arrShips;
     local LWCE_XGShip kShip;
 
     foreach m_arrCEShips(kShip)
     {
         if (kShip.GetHomeContinent() == nmContinent)
         {
-            arrInterceptors.AddItem(kShip);
+            arrShips.AddItem(kShip);
         }
     }
     
-    return arrInterceptors;
+    return arrShips;
 }
 
 function string GetRankForKills(int iKills)

@@ -1328,6 +1328,8 @@ native	    static final operator(34)   vector2d -= (out vector2d A, vector2d B);
 
 native      static final function float V2DSize(Vector2D A);
 native      static final function float V2DSizeSq(Vector2D A);
+native      static final function Vector2D V2DNormal(Vector2D A);
+native      static final function Vector2D V2DLerp(Vector2D A, Vector2D B, float Alpha);
 
 /**
  * Returns the value in the Range, relative to Pct.

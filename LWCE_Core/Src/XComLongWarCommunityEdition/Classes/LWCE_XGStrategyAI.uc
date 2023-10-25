@@ -41,6 +41,11 @@ struct LWCE_AIMissionPlan
     }
 };
 
+struct CheckpointRecord_LWCE_XGStrategyAI extends XGStrategyAI.CheckpointRecord
+{
+    var array<LWCE_XGShip> m_arrShips;
+};
+
 var config array<LWCE_AIMissionPlan> PossibleMissionPlans;
 var config bool bForceFirstMonthInfiltration;
 
@@ -69,6 +74,8 @@ var config int MinResourcesForHQAssaultCounter;
 var config int MinThreatForHQAssaultCounter;
 var config int CounterValueToSpawnHQAssault;
 var config int MonthToForceSpawnHQAssault;
+
+var array<LWCE_XGShip> m_arrShips;
 
 function AddAirBaseDefenseMission()
 {
@@ -351,6 +358,20 @@ function AIAddNewObjectives()
     `LWCE_LOG_CLS("AIAddNewObjectives complete");
 }
 
+function AIAddNewUFO(XGShip_UFO kUFO)
+{
+    `LWCE_LOG_DEPRECATED_BY(AIAddNewUFO, LWCE_AIAddNewShip);
+}
+
+/// <summary>
+/// Adds the given ship to the strategy AI's tracking. The AI is then responsible for handling when it is
+/// shot down, flies away, or otherwise exits the geoscape.
+/// </summary>
+function LWCE_AIAddNewShip(LWCE_XGShip kShip)
+{
+    m_arrShips.AddItem(kShip);
+}
+
 function ApplyMissionPanic(XGMission kMission, bool bXComSuccess, optional bool bExpired, optional bool bDontApplyToContinent)
 {
     local XGCountry kCountry;
@@ -589,10 +610,84 @@ function bool CalcTerrorMissionPanicResult(out int iCountryPanicChange, out int 
     return false;
 }
 
+function bool ClearFromAbductionList(ECountry eTarget)
+{
+    `LWCE_LOG_DEPRECATED_BY(ClearFromAbductionList, LWCE_ClearCountryObjectives);
+
+    return false;
+}
+
+/// <summary>
+/// Removes some alien objectives related to the given country - only Abductions, Terror missions,
+/// and Infiltrations. Other objectives, such as bombing runs, will remain.
+/// </summary>
+function bool LWCE_ClearCountryObjectives(name nmTargetCountry)
+{
+    local XGAlienObjective kObjective, kSimulObj;
+    local LWCE_XGAlienObjective kCEObjective;
+    local array<LWCE_XGAlienObjective> arrRemove;
+    local array<LWCE_XGShip> arrRemoveShips;
+    local LWCE_XGShip kShip;
+    local bool bFound;
+
+    foreach m_arrObjectives(kObjective)
+    {
+        kCEObjective = LWCE_XGObjective(kObjective);
+
+        if (kCEObjective.m_nmCountryTarget != nmTargetCountry)
+        {
+            continue;
+        }
+
+        if (kCEObjective.m_kCETObjective.nmType == 'Abduct')
+        {
+            if (!kCEObjective.m_bAbductionLaunched)
+            {
+                bFound = true;
+                arrRemove.AddItem(kCEObjective);
+            }
+        }
+        else if (kCEObjective.m_kCETObjective.nmType == 'Terrorize')
+        {
+            bFound = true;
+            arrRemove.AddItem(kCEObjective);
+        }
+        else if (kCEObjective.m_kCETObjective.nmType == 'Infiltrate')
+        {
+            bFound = true;
+            arrRemove.AddItem(kCEObjective);
+        }
+    }
+
+    foreach arrRemove(kCEObjective)
+    {
+        foreach kCEObjective.m_arrSimultaneousObjs(kSimulObj)
+        {
+            kSimulObj.m_arrSimultaneousObjs.RemoveItem(kCEObjective);
+        }
+
+        CheckForAbductionBlitz(kCEObjective.m_arrSimultaneousObjs);
+
+        foreach m_arrShips(kShip)
+        {
+            if (kShip.m_kObjective == kCEObjective)
+            {
+                arrRemoveShips.AddItem(kShip);
+            }
+        }
+
+        foreach arrRemoveShips(kShip)
+        {
+            LWCE_RemoveShip(kShip);
+        }
+    }
+
+    return bFound;
+}
+
 function CostTest()
 {
-    `LWCE_LOG_CLS("ERROR: LWCE-incompatible function CostTest was called. This needs to be replaced with RestoreCountryToXCom. Stack trace follows.");
-    ScriptTrace();
+    `LWCE_LOG_DEPRECATED_BY(CostTest, RestoreCountryToXCom);
 }
 
 function XGMission CreateTempleMission()
@@ -1418,6 +1513,27 @@ function bool PickMissionPlan(int Month, int Resources, int Threat, out LWCE_AIM
 
     `LWCE_LOG("Selected mission plan at index " $ Index);
     return true;
+}
+
+function RemoveUFO(XGShip_UFO kUFO)
+{
+    `LWCE_LOG_DEPRECATED_BY(RemoveUFO, LWCE_RemoveShip);
+}
+
+/// <summary>
+/// Removes the given ship completely from the Geoscape and from the strategy AI's tracking,
+/// then destroys it.
+/// </summary>
+function LWCE_RemoveShip(LWCE_XGShip kShip)
+{
+    LWCE_XGGeoscape(GEOSCAPE()).LWCE_RemoveShip(kShip);
+    m_arrShips.RemoveItem(kUFO);
+
+    kShip.HideEntity(true);
+    kShip.GetEntity().Destroy();
+    kShip.Destroy();
+
+    PRES().MissionNotify();
 }
 
 /// <summary>

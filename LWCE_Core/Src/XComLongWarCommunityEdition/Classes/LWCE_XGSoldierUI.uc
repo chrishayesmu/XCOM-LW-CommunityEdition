@@ -1008,7 +1008,7 @@ function UpdateMainMenu()
                 kOption.iState = eUIState_Normal;
                 kOption.strHelp = m_strNoEditSHIV;
             }
-            else if (m_kSoldier.GetStatus() == eStatus_OnMission && `LWCE_UTILS.AreVectorsSame(kSkyranger.m_v2Coords, HQ().GetCoords()))
+            else if (m_kSoldier.GetStatus() == eStatus_OnMission && kSkyranger.m_v2Coords != HQ().GetCoords())
             {
                 kOption.iState = eUIState_Disabled;
                 kOption.strHelp = m_strNoEditAwaySoldiers;
@@ -1101,7 +1101,7 @@ function UpdateMainMenu()
                 kOption.iState = eUIState_Disabled;
                 kOption.strHelp = m_strNoDismissWoundedSoldiers;
             }
-            else if (m_kSoldier.GetStatus() == eStatus_OnMission && `LWCE_UTILS.AreVectorsSame(kSkyranger.m_v2Coords, HQ().GetCoords()))
+            else if (m_kSoldier.GetStatus() == eStatus_OnMission && kSkyranger.m_v2Coords != HQ().GetCoords())
             {
                 kOption.iState = eUIState_Disabled;
             }

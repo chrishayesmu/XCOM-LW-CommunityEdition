@@ -477,19 +477,24 @@ function LWCE_Alert(LWCE_TGeoscapeAlert kAlert)
 
 function CancelInterception(XGShip_UFO kUFO)
 {
-    local array<XGShip_Interceptor> arrInterceptors;
-    local XGShip_Interceptor kInt;
+    `LWCE_LOG_DEPRECATED_CLS(CancelInterception);
+}
+
+function LWCE_CancelInterception(LWCE_XGShip kEnemyShip)
+{
+    local array<LWCE_XGShip> arrFriendlyShips;
+    local LWCE_XGShip kFriendlyShip;
     local bool bCanceled;
 
-    arrInterceptors = HANGAR().GetAllInterceptors();
+    arrFriendlyShips = LWCE_XGFacility_Hangar(HANGAR()).LWCE_GetAllShips();
 
-    foreach arrInterceptors(kInt)
+    foreach arrFriendlyShips(kFriendlyShip)
     {
-        if (kInt.m_kEngagement != none)
+        if (kFriendlyShip.m_kEngagement != none)
         {
-            if (kInt.m_kEngagement.m_kUFOTarget == kUFO)
+            if (kFriendlyShip.m_kEngagement.m_arrEnemyShips[0] == kEnemyShip)
             {
-                kInt.m_kEngagement.ReturnToBase(kInt);
+                kFriendlyShip.m_kEngagement.LWCE_ReturnToBase(kFriendlyShip);
                 bCanceled = true;
             }
         }
@@ -497,7 +502,7 @@ function CancelInterception(XGShip_UFO kUFO)
 
     if (bCanceled)
     {
-        LWCE_Alert(`LWCE_ALERT('UFOLost').AddInt(kUFO.m_iCounter).Build());
+        LWCE_Alert(`LWCE_ALERT('UFOLost').AddInt(kEnemyShip.m_iCounter).Build());
     }
 }
 
@@ -516,36 +521,45 @@ function ClearTopAlert(optional bool bDoNotResume = false)
 
 function int DetectUFO(XGShip_UFO kUFO)
 {
+    `LWCE_LOG_DEPRECATED_BY(DetectUFO, LWCE_DetectShip);
+
+    return 1000;
+}
+
+function int LWCE_DetectShip(LWCE_XGShip kShip)
+{
+    local LWCE_XGFacility_Hangar kHangar;
     local LWCE_XGHeadquarters kHQ;
     local int iChance, Index;
 
+    kHangar = LWCE_XGFacility_Hangar(HANGAR());
     kHQ = LWCE_XGHeadquarters(HQ());
 
-    if (kUFO.m_kObjective == none || kUFO.m_kObjective.m_bComplete)
+    if (kShip.m_kObjective == none || kShip.m_kObjective.m_bComplete)
     {
         return -1;
     }
 
     // Can't see Overseer UFOs without a Hyperwave facility
-    if (kUFO.GetType() == eShip_UFOEthereal && kHQ.LWCE_GetNumFacilities('Facility_HyperwaveRelay') == 0)
+    if (kShip.m_kTemplate.bIsCloaked && kHQ.LWCE_GetNumFacilities('Facility_HyperwaveRelay') == 0)
     {
         return -1;
     }
 
     // If the UFO lands it's replaced by a mission site, so the UFO itself is not shown
-    if (kUFO.m_bLanded)
+    if (kShip.m_bLanded)
     {
         return -1;
     }
 
-    if (kUFO.IsInCountry())
+    if (kShip.IsInCountry())
     {
         // If there's a satellite in the country, the UFO is always spotted
-        for (Index = 0; Index < kHQ.m_arrSatellites.Length; Index++)
+        for (Index = 0; Index < kHQ.m_arrCESatellites.Length; Index++)
         {
-            if (kHQ.m_arrSatellites[Index].iTravelTime <= 0)
+            if (kHQ.m_arrCESatellites[Index].iTravelTime <= 0)
             {
-                if (kHQ.m_arrSatellites[Index].iCountry == kUFO.GetCountry())
+                if (kHQ.m_arrCESatellites[Index].nmCountry == kShip.m_nmCountryTarget)
                 {
                     return Index;
                 }
@@ -553,16 +567,16 @@ function int DetectUFO(XGShip_UFO kUFO)
         }
 
         // Always see hunting satellites, even if there isn't a satellite in the country
-        if (kUFO.m_kObjective.GetType() == eObjective_Hunt)
+        if (kShip.m_kObjective.GetType() == 'Hunt')
         {
             return 0;
         }
 
         // There's a fixed chance per interceptor on the continent to detect the UFO
-        if (HANGAR().GetNumInterceptorsInRangeAndAvailable(kUFO) > 0)
+        if (kHangar.LWCE_GetNumShipsInRangeAndAvailable(kShip) > 0)
         {
             // m_eSpecies is used as a sentinel value to make sure interceptors only get one chance to detect the UFO
-            if (kUFO.m_eSpecies == eChar_Civilian)
+            if (kShip.m_eSpecies == eChar_Civilian)
             {
                 return -1;
             }
@@ -575,13 +589,13 @@ function int DetectUFO(XGShip_UFO kUFO)
                 iChance *= 2.0;
             }
 
-            if (Roll(iChance * HANGAR().GetNumInterceptorsInRangeAndAvailable(kUFO)))
+            if (Roll(iChance * HANGAR().GetNumInterceptorsInRangeAndAvailable(kShip)))
             {
                 return 0;
             }
             else
             {
-                kUFO.m_eSpecies = eChar_Civilian;
+                kShip.m_eSpecies = eChar_Civilian;
             }
         }
     }
@@ -670,7 +684,6 @@ function int LWCE_GetSatTravelTime(name nmCountry)
     local XGCountry kDestCountry;
     local Vector2D v2Dist;
 
-    // TODO: validate that V2DSize gives the correct results here
     kDestCountry = LWCE_XGWorld(WORLD()).LWCE_GetCountry(nmCountry);
     v2Dist = GetShortestDist(HQ().GetCoords(), kDestCountry.GetCoords());
     return int(3.0f + ((V2DSize(v2Dist) / 1.40) * 7.0f));
@@ -895,6 +908,21 @@ function RemoveMission(XGMission kMission, bool bXComSuccess, optional bool bExp
     {
         BARRACKS().ClearSquad(kSkyranger);
     }
+}
+
+function RemoveUFO(XGShip_UFO kShip)
+{
+    `LWCE_LOG_DEPRECATED_BY(RemoveUFO, LWCE_RemoveShip);
+}
+
+function LWCE_RemoveShip(LWCE_XGShip kShip)
+{
+    if (kShip.GetHP() > 0)
+    {
+        LWCE_CancelInterception(kShip);
+    }
+    
+    UpdateSound();
 }
 
 function SkyrangerArrival(XGShip_Dropship kSkyranger, optional bool bRequestOrders)
