@@ -49,6 +49,7 @@
 `define LWCE_FOUNDRY_TEMPLATE_MGR (class'LWCEFoundryProjectTemplateManager'.static.GetInstance())
 `define LWCE_ITEM_TEMPLATE_MGR (class'LWCEItemTemplateManager'.static.GetInstance())
 `define LWCE_SHIP_TEMPLATE_MGR (class'LWCEShipTemplateManager'.static.GetInstance())
+`define LWCE_SHIP_MISSION_TEMPLATE_MGR (class'LWCEShipMissionTemplateManager'.static.GetInstance())
 `define LWCE_TECH_TEMPLATE_MGR (class'LWCETechTemplateManager'.static.GetInstance())
 
 // Retrieve templates by name
@@ -59,10 +60,11 @@
 `define LWCE_COUNTRY(nm) (`LWCE_COUNTRY_TEMPLATE_MGR.FindCountryTemplate(`nm))
 `define LWCE_EQUIPMENT(nm) (`LWCE_ITEM_TEMPLATE_MGR.FindEquipmentTemplate(`nm))
 `define LWCE_FACILITY(nm) (`LWCE_FACILITY_TEMPLATE_MGR.FindFacilityTemplate(`nm))
-`define LWCE_FTECH(nm) (`LWCE_FOUNDRY_TEMPLATE_MGR.FindProjectTemplate(`nm))
+`define LWCE_FOUNDRY_PROJECT(nm) (`LWCE_FOUNDRY_TEMPLATE_MGR.FindProjectTemplate(`nm))
 `define LWCE_ITEM(nm) (`LWCE_ITEM_TEMPLATE_MGR.FindItemTemplate(`nm))
 `define LWCE_TECH(nm) (`LWCE_TECH_TEMPLATE_MGR.FindTechTemplate(`nm))
 `define LWCE_SHIP(nm) (`LWCE_SHIP_TEMPLATE_MGR.FindShipTemplate(`nm))
+`define LWCE_SHIP_MISSION(nm) (`LWCE_SHIP_MISSION_TEMPLATE_MGR.FindShipMissionTemplate(`nm))
 `define LWCE_SHIP_WEAPON(nm) (`LWCE_ITEM_TEMPLATE_MGR.FindShipWeaponTemplate(`nm))
 `define LWCE_WEAPON(nm) (`LWCE_ITEM_TEMPLATE_MGR.FindWeaponTemplate(`nm))
 

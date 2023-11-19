@@ -270,7 +270,7 @@ function bool LWCE_UnlockFoundryProject(name ProjectName, out LWCE_TItemUnlock k
         return false;
     }
 
-    kTemplate = `LWCE_FTECH(ProjectName);
+    kTemplate = `LWCE_FOUNDRY_PROJECT(ProjectName);
 
     kUnlock.bFoundryProject = true;
     kUnlock.sndFanfare = SNDLIB().SFX_Unlock_Foundry;

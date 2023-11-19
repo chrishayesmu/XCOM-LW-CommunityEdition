@@ -35,6 +35,8 @@ var config int iArmor;            // Armor providing resistance to attacks from 
 var config int iArmorPen;         // This ship's ability to overcome enemy armor; also provided by ship weapons.
 var config int iResourceCost;     // Cost in alien resources to replace/repair this ship if destroyed/damaged.
 var config int iThreat;           // How much threat is generated with the aliens by shooting down or assaulting this ship.
+var config int iBounty;           // If an XCOM ship shoots down this ship and destroys it outright, not generating a crash site, this
+                                  // is the cash bounty that will be awarded.  
 var config bool bIsCloaked;       // If true, this ship can't be detected by satellites without the Hyperwave active.
 
 var config name nmAnalysisTech;          // Which tech is the corresponding analysis for this ship type.
@@ -66,6 +68,28 @@ var const localized string strDescription; // Only shown in the XCOM hangar scre
 /// craft without applying it to UFOs. This should always be used instead of depending on the ship's type,
 /// as you may get surprised by mods that do things like let XCOM take over UFOs and fly them.</param>
 delegate ModifyStatsDel(out LWCE_TShipStats kStats, name nmShipTeam);
+
+/// <summary>
+/// Gets the salvage available if this ship lands or is shot down. The array returned is owned by the caller and
+/// can be freely modified without changing the template's data.
+/// </summary>
+function array<LWCE_TItemQuantity> GetSalvage()
+{
+    local array<LWCE_TItemQuantity> arrSalvageCopy;
+
+    arrSalvageCopy = arrSalvage;
+
+    return arrSalvageCopy;
+}
+
+/// <summary>
+/// Gets the resource cost for this ship, i.e. what it would cost the alien AI to fully replace this
+/// ship if it was destroyed.
+/// </summary>
+function int GetResourceCost(name nmShipTeam)
+{
+    return iResourceCost;
+}
 
 /// <summary>
 /// Retrieves the stats for a ship using this template. This is the only way that stats should be
@@ -134,6 +158,14 @@ function LWCE_TShipStats GetStats(name nmShipTeam)
     }
 
     return kStats;
+}
+
+/// <summary>
+/// Gets how much threat should be added to XCOM's counter if they shoot down this ship.
+/// </summary>
+function int GetThreatIncrement(name nmShipTeam)
+{
+    return iThreat;
 }
 
 protected function ApplyUpgrade(out LWCE_TShipStats kStats, out LWCE_TShipScheduledUpgrade kUpgrade)

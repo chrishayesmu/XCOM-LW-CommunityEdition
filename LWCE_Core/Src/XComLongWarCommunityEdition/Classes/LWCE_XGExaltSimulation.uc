@@ -245,6 +245,8 @@ function int GetCollectedClueCount()
 function int GetCurrentOperativeCountry()
 {
     `LWCE_LOG_DEPRECATED_CLS(GetCurrentOperativeCountry);
+
+    return -1;
 }
 
 function name LWCE_GetCurrentOperativeCountry()
@@ -304,7 +306,7 @@ function int GetNumCountriesNotRuledOutByClues()
     local array<LWCE_XGCountry> arrCountries;
     local LWCE_XGCountry kCountry;
     local LWCE_XGWorld kWorld;
-    local int iIndex, iValidCountries;
+    local int iValidCountries;
 
     kWorld = LWCE_XGWorld(WORLD());
     arrCountries = kWorld.LWCE_GetCountries();
@@ -507,8 +509,7 @@ function LWCE_PerformIncreasePanicOperation(name nmOperationCountry)
     local LWCE_XGContinent kContinent;
     local LWCE_XGCountry kCountry;
     local LWCE_XGWorld kWorld;
-    local ECountry eSelectedCountry;
-    local int iValidCountries, iPropagandaPanicAmount;
+    local int iPropagandaPanicAmount;
     local array<name> arrValidCountries;
     local name nmCountryIter;
 
@@ -721,10 +722,8 @@ function PlaceNextCell(optional bool bIgnoreDiceRoll = false)
 
 function PostCombat(XGMission kMission, bool bSuccess)
 {
-    local XGContinent kContinent;
-    local XGCountry kCountry;
-    local LWCE_XGContinent kCEContinent;
-    local LWCE_XGCountry kCECountry;
+    local LWCE_XGContinent kContinent;
+    local LWCE_XGCountry kCountry;
     local LWCE_XGWorld kWorld;
     local name nmNeighborCountry;
 
@@ -753,19 +752,19 @@ function PostCombat(XGMission kMission, bool bSuccess)
         }
         else
         {
-            kCECountry = kWorld.LWCE_GetCountry(m_nmExaltCountry);
+            kCountry = kWorld.LWCE_GetCountry(m_nmExaltCountry);
 
-            if (kCECountry.LeftXCom())
+            if (kCountry.LeftXCom())
             {
-                kCEContinent = kWorld.LWCE_GetContinent(kCECountry.LWCE_GetContinent());
+                kContinent = kWorld.LWCE_GetContinent(kCountry.LWCE_GetContinent());
 
-                foreach kCEContinent.m_kTemplate.arrCountries(nmNeighborCountry)
+                foreach kContinent.m_kTemplate.arrCountries(nmNeighborCountry)
                 {
-                    kCECountry = kWorld.LWCE_GetCountry(nmNeighborCountry);
+                    kCountry = kWorld.LWCE_GetCountry(nmNeighborCountry);
 
-                    if (kCECountry.IsCouncilMember())
+                    if (kCountry.IsCouncilMember())
                     {
-                        kCECountry.AddPanic(40);
+                        kCountry.AddPanic(40);
                     }
                 }
 
@@ -841,7 +840,6 @@ function LWCE_SetCovertOperative(LWCE_XGStrategySoldier kSoldier, name nmCountry
 
 protected function int LWCE_GetActiveCellsOnContinent(LWCE_XGContinent kContinent)
 {
-    local LWCE_XGCountry kCountry;
     local int iActiveCellsInContinent;
     local name nmCountry;
 
@@ -1036,7 +1034,6 @@ protected function LWCE_NextDayForOperative()
 protected function LWCE_RelocateCell(name nmCellCountry)
 {
     local LWCE_XComHQPresentationLayer kPres;
-    local LWCEDataContainer kData;
     local int iIndex;
 
     kPres = LWCE_XComHQPresentationLayer(PRES());
@@ -1206,7 +1203,6 @@ protected function name LWCE_SelectCountryForCellPlacementAttempt()
     local array<LWCE_XGCountry> arrCountries;
     local array<LWCE_TExaltCellPlacementScore> arrCountryScores;
     local LWCE_TExaltCellPlacementScore kScore;
-    local int iIndex;
     local float fTotalScore;
     local name nmSelectedCountry;
 

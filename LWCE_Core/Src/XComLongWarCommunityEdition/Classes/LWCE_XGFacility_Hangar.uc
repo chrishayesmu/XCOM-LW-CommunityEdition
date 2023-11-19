@@ -20,7 +20,7 @@ var array<LWCE_XGShip> m_arrCEShips;
 var name m_nmCEBestWeaponEquipped; // TODO: not being populated
 
 var config bool bAutoNicknameNewPilots;
-var config itn iNumShipSlotsPerContinent;
+var config int iNumShipSlotsPerContinent;
 
 var const localized array<string> PilotNames;
 var const localized array<string> PilotRanks;
@@ -320,6 +320,21 @@ function LWCE_TContinentInfo LWCE_GetContinentInfo(name nmContinent)
     return kInfo;
 }
 
+function int GetFreeHangerSpots(int iContinent)
+{
+    `LWCE_LOG_DEPRECATED_BY(GetFreeHangerSpots, LWCE_GetFreeHangarSpots);
+
+    return -1000;
+}
+
+/// <summary>
+/// Determines how many hangar spots are unoccupied on the given continent.
+/// </summary>
+function int LWCE_GetFreeHangarSpots(name nmContinent)
+{
+    return default.iNumShipSlotsPerContinent - LWCE_GetContinentInfo(nmContinent).iNumShips;
+}
+
 function array<XGShip_Interceptor> GetInterceptorsByContinent(int iContinent)
 {
     local array<XGShip_Interceptor> arrInterceptors;
@@ -329,6 +344,32 @@ function array<XGShip_Interceptor> GetInterceptorsByContinent(int iContinent)
     `LWCE_LOG_DEPRECATED_BY(GetInterceptorsByContinent, LWCE_GetShipsByContinent);
 
     return arrInterceptors;
+}
+
+function int GetNumInterceptors(int iContinent)
+{
+    `LWCE_LOG_DEPRECATED_BY(GetNumInterceptors, LWCE_GetNumShips);
+
+    return -1000;
+}
+
+/// <summary>
+/// Returns how many ships are assigned to the given continent.
+/// </summary>
+function int LWCE_GetNumShips(name nmContinent)
+{
+    local LWCE_XGShip kShip;
+    local int iNumShips;
+
+    foreach m_arrCEShips(kShip)
+    {
+        if (kShip.m_nmContinent == nmContinent)
+        {
+            iNumShips++;
+        }
+    }
+    
+    return iNumShips;
 }
 
 function int GetNumInterceptorsInRange(XGShip_UFO kUFO)
@@ -353,6 +394,11 @@ function int GetNumInterceptorsInRangeAndAvailable(XGShip_UFO kUFO)
     return -1000;
 }
 
+/// <summary>
+/// Returns how many ships are in range of the given enemy ship, and are also able to engage it.
+/// By default, "in range" means they're on the same continent, and "able to engage" means the
+/// friendly ship is undamaged and not mid-transfer (i.e. it is in eShipStatus_Ready).
+/// </summary>
 function int LWCE_GetNumShipsInRangeAndAvailable(LWCE_XGShip kShip)
 {
     local int iIndex, iAvailable;
@@ -369,21 +415,6 @@ function int LWCE_GetNumShipsInRangeAndAvailable(LWCE_XGShip kShip)
     }
 
     return iAvailable;
-}
-
-function int GetFreeHangerSpots(int iContinent)
-{
-    `LWCE_LOG_DEPRECATED_BY(GetFreeHangerSpots, LWCE_GetFreeHangarSpots);
-
-    return -1000;
-}
-
-/// <summary>
-/// Determines how many hangar spots are unoccupied on the given continent.
-/// </summary>
-function int LWCE_GetFreeHangarSpots(name nmContinent)
-{
-    return default.iNumShipSlotsPerContinent - GetContinentInfo(EContinent(iContinent)).iNumShips;
 }
 
 function int GetTotalInterceptorCapacity(optional int kContinent = 5)

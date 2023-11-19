@@ -61,7 +61,7 @@ function bool LWCE_CreditAppliesToFoundryTech(name CreditName, name FoundryTechN
 {
     local LWCEFoundryProjectTemplate kTemplate;
 
-    kTemplate = `LWCE_FTECH(FoundryTechName);
+    kTemplate = `LWCE_FOUNDRY_PROJECT(FoundryTechName);
 
     if (kTemplate != none)
     {
@@ -326,7 +326,7 @@ function TFoundryTech GetFoundryTech(int iFoundryTechType, optional bool bRushRe
 {
     local TFoundryTech kTech;
 
-    `LWCE_LOG_CLS("ERROR: LWCE-incompatible function GetFoundryTech was called. This needs to be replaced with the macro LWCE_FTECH. Stack trace follows.");
+    `LWCE_LOG_CLS("ERROR: LWCE-incompatible function GetFoundryTech was called. This needs to be replaced with the macro LWCE_FOUNDRY_TECH. Stack trace follows.");
     ScriptTrace();
 
     return kTech;
@@ -481,7 +481,7 @@ function bool LWCE_HasFoundryPrereqs(name ProjectName)
 {
     local LWCEFoundryProjectTemplate kTech;
 
-    kTech = `LWCE_FTECH(ProjectName);
+    kTech = `LWCE_FOUNDRY_PROJECT(ProjectName);
 
     if (!`LWCE_HQ.ArePrereqsFulfilled(kTech.kPrereqs))
     {

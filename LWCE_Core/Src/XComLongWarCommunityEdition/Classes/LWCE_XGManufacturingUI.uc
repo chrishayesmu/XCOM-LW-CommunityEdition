@@ -66,7 +66,7 @@ function DirectInitialize()
         }
         else
         {
-            kFoundryTech = `LWCE_FTECH(m_kCEFoundryProject.ProjectName);
+            kFoundryTech = `LWCE_FOUNDRY_PROJECT(m_kCEFoundryProject.ProjectName);
             m_kCEFoundryProject.iHoursLeft = kFoundryTech.iPointsToComplete;
             m_kCEFoundryProject.iMaxEngineers = kFoundryTech.iEngineers;
             m_kCEFoundryProject.iEngineers = m_kCEFoundryProject.iMaxEngineers;
@@ -538,7 +538,7 @@ function UpdateManufactureFoundry()
 
     kEngineering = LWCE_XGFacility_Engineering(ENGINEERING());
 
-    kTech = `LWCE_FTECH(m_kCEFoundryProject.ProjectName);
+    kTech = `LWCE_FOUNDRY_PROJECT(m_kCEFoundryProject.ProjectName);
     kTag = XGParamTag(XComEngine(class'Engine'.static.GetEngine()).LocalizeContext.FindTag("XGParam"));
 
     if (kTech != none)

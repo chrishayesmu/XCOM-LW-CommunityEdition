@@ -138,7 +138,7 @@ function BuildEventOptions()
                 kOption.clrOption = MakeColor(100, 100, 100, byte(175 / 3));
                 break;
             case 'Foundry':
-                kFoundryTech = `LWCE_FTECH(m_kCEEvents.arrEvents[iEvent].kData.Data[0].Nm);
+                kFoundryTech = `LWCE_FOUNDRY_PROJECT(m_kCEEvents.arrEvents[iEvent].kData.Data[0].Nm);
 
                 kOption.EventType = 'Foundry';
                 kOption.iPriority = 2;
@@ -1843,7 +1843,7 @@ function UpdateAlert()
         case 'FoundryProjectCompleted':
             Sound().PlaySFX(SNDLIB().SFX_Alert_FoundryProjectComplete);
 
-            kFoundryTech = `LWCE_FTECH(kGeoAlert.kData.Data[0].Nm);
+            kFoundryTech = `LWCE_FOUNDRY_PROJECT(kGeoAlert.kData.Data[0].Nm);
 
             kAlert.txtTitle.StrValue = kFoundryTech.strName;
             kAlert.txtTitle.iState = eUIState_Good;

@@ -535,20 +535,44 @@ struct LWCE_TObjectSummary
 /// </summary>
 struct LWCE_TObjective
 {
+    // The overall goal of the objective. Base game values include `Scout`, `Hunt`, `Bomb`, 
+    // `Terrorize`, `AssaultXComAirBase`, `AssaultXComHQ`, `Infiltrate`, `Research`, `Harvest`, 
+    // `Abduct`, and `CommandOverwatch`.
     var name nmType;
+
+    // The name to display for this objective if the player has the Hyperwave Relay.
     var string strName;
-    var array<int> arrStartDates;
-    var array<name> arrShips;
+
+    // A series of missions which ships will embark on as part of this objective. All of the arrays in
+    // this struct should have the same length; they are implicitly tied together. Base game values for missions are
+    // `Direct`, `Dropoff`, `Flyby`, `Seek`, `QuickSpecimen`, `LongSpecimen`, `QuickScout`, and `LongScout`.
+    // They are largely just used for determining the flight plan of the ship.
     var array<name> arrMissions;
+
+    // Used for picking exactly where a ship should go. If -1, the ship will pick a random point within the target country;
+    // if 0, the ship will go exactly to its target, which is usually a city's coordinates or the country's center point. If
+    // a positive value, represents a distance in miles. The ship will navigate to a random point which is less than that
+    // distance away from its target.
     var array<int> arrRadii;
+
+    // When scheduling a mission, it will be up to arrRandDays[] days earlier or later than the given start date.
     var array<int> arrRandDays;
+
+    // Which type of ship will be sent on the mission. Should be the name of an LWCEShipTemplate.
+    var array<name> arrShips;
+
+    // When to schedule the mission. These dates are offsets from when the objective is created, which is typically the start 
+    // of the month; e.g. a date of 0 would be the first day of the month. However, some objectives are created mid-month, such as
+    // satellite hunts which follow a successful scouting mission. Additionally, a start date could be extremely long, spanning more
+    // than one month, and this would also be supported.
+    var array<int> arrStartDates;
 };
 
 struct LWCE_TSatellite
 {
     var name nmType; // The type of satellite; usually this will be 'Item_Satellite' but maybe some mod wants high-res or thermal sats, etc
     var Vector2D v2Loc;
-    var XGEntity kSatEntity;
+    var LWCE_XGEntity kSatEntity;
     var name nmCountry; // Which country the satellite is monitoring
     var int iTravelTime; // How long until the satellite is in position; if <= 0, it's already arrived
 };
@@ -569,6 +593,18 @@ struct LWCE_TShipOrder
     var name nmDestinationContinent;
     var name nmShipType; // Corresponds to an item template, not a ship template
     var int iHours;
+};
+
+/// <summary>
+/// A record of an enemy ship's mission and its outcome.
+/// </summary>
+struct LWCE_TShipRecord
+{
+    var name nmShipType; // The type of ship which conducted the mission
+    var name nmObjective; // The overall objective of the mission, as in LWCE_XGAlienObjective
+    var name nmCountry; // The country which was targeted by this mission
+    var EUFOMissionResult eResult; // The outcome of the mission
+    var int iMonth; // The month the mission occurred in, with month 0 being the campaign's start month
 };
 
 /// <summary>

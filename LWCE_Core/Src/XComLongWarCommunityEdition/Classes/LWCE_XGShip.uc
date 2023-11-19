@@ -9,7 +9,8 @@
 /// UFOs could be assigned to alien bases much like interceptors have a home base. Consolidating everything into
 /// one class makes these scenarios much simpler to implement.
 /// </summary>
-class LWCE_XGShip extends XGShip;
+class LWCE_XGShip extends XGShip
+    dependson(LWCETypes);
 
 struct CheckpointRecord_LWCE_XGShip extends XGShip.CheckpointRecord
 {
@@ -28,6 +29,7 @@ struct CheckpointRecord_LWCE_XGShip extends XGShip.CheckpointRecord
     var Vector2D m_v2Target;
     var Vector2D m_v2Intermediate;
     var array<name> m_arrFlightPlan;
+    var array<LWCE_TItemQuantity> m_arrSalvage;
     var name m_nmApproach;
     var name m_nmCountryTarget;
     var int m_iCounter;
@@ -36,22 +38,23 @@ struct CheckpointRecord_LWCE_XGShip extends XGShip.CheckpointRecord
     var bool m_bEverDetected;
     var bool m_bWasEngaged;
     var bool m_bLanded;
+    var bool m_bRolledDetectionByShips;    
 };
 
-var name m_nmShipTemplate;
+var name m_nmShipTemplate; // Name of an LWCEShipTemplate which describes this ship's capabilities.
 var name m_nmTeam;
 var array<name> m_arrCEWeapons;
 
 // These variables are used for air combat
-var LWCE_XGInterception m_kEngagement;
+var LWCE_XGInterception m_kEngagement; // The current interception this ship is part of, if any.
 var name m_nmEngagementStance; // e.g. Aggressive, Balanced, Defensive
 
 // These variables are typically for XCOM's ships
-var name m_nmContinent;
+var name m_nmContinent; // Which continent's hangar this ship is assigned to. Blank for non-XCOM ships.
 var string m_strCallsign;
-var int m_iConfirmedKills;
-var int m_iHomeBay;
-var int m_iHoursDown;
+var int m_iConfirmedKills; // How many enemy ships this ship has shot down in its lifetime.
+var int m_iHomeBay; // Which hangar slot is occupied by this ship in its continent.
+var int m_iHoursDown; // Remaining hours of repair/refueling/rearming/transfer until this ship is ready for use.
 var float m_fFlightTime;
 
 // These variables are typically only used for enemy ships
@@ -59,14 +62,16 @@ var LWCE_XGAlienObjective m_kObjective;
 var Vector2D m_v2Target;
 var Vector2D m_v2Intermediate;
 var array<name> m_arrFlightPlan;
-var name m_nmApproach;
-var name m_nmCountryTarget;
-var int m_iCounter;
-var int m_iDetectedBy;
-var float m_fTimeInCountry;
+var array<LWCE_TItemQuantity> m_arrSalvage;
+var name m_nmApproach;      // How this ship will approach its target on the Geoscape; base game values are 'SeekingLatitude' and 'SeekingLongitude'.
+var name m_nmCountryTarget; // Which country this ship is attempting to perform a mission in.
+var int m_iCounter;         // Simple counter of how many ships were detected by XCOM by the time this one was detected. Ex: the first detected UFO is "UFO-1".
+var int m_iDetectedBy;      // The index of the satellite which has detected this ship (in LWCE_XGHeadquarters.m_arrCESatellites). If undetected, this value is INDEX_NONE.
+var float m_fTimeInCountry; // How much time this ship should spend loitering in its target country when its flight plan step is 'SpendTime'.
 var bool m_bEverDetected;
 var bool m_bWasEngaged;
 var bool m_bLanded;
+var bool m_bRolledDetectionByShips; // Whether the target continent's ships have already rolled to detect this ship; they only get one chance.
 
 var private XGHangarShip m_kHangarShip;
 
@@ -171,6 +176,15 @@ function name GetWeaponAtIndex(int Index)
 function array<name> LWCE_GetWeapons()
 {
     return m_arrCEWeapons;
+}
+
+/// <summary>
+/// Determines whether this ship can be tracked by XCOM, which just depends on which stage
+/// of its flight plan it's in. Ships without a flight plan (e.g. XCOM's ships) are never trackable.
+/// </summary>
+function bool IsTrackable()
+{
+    return m_nmCountryTarget != '' && CurrentPlan() != 'LiftOff';
 }
 
 function int NumWeapons()
@@ -279,6 +293,14 @@ function bool IsDamaged()
     return m_iHP < m_kTCachedStats.iHealth;
 }
 
+/// <summary>
+/// Returns whether this ship is currently being detected by anything.
+/// </summary>
+function bool IsDetected()
+{
+    return m_iDetectedBy != INDEX_NONE;
+}
+
 function bool IsType(name nmShipType)
 {
     return nmShipType == m_nmShipTemplate;
@@ -321,6 +343,21 @@ function SetCallsign(string strNewCallsign)
     if (strNewCallsign != m_strCallsign)
     {
         m_strCallsign = `LWCE_HANGAR.GetRankForKills(m_iConfirmedKills) @ strNewCallsign;
+    }
+}
+
+/// <summary>
+/// Sets the ID of whatever is detecting this ship. In unmodded scenarios, this is usually the index of a satellite in
+/// LWCE_XGHeadquarters.m_arrCESatellites, or INDEX_NONE if the ship is currently undetected. The value could also be 0,
+/// which may indicate a satellite or that interceptors detected the ship.
+/// </summary>
+function SetDetection(int iDetector)
+{
+    m_iDetectedBy = iDetector;
+
+    if (iDetector != INDEX_NONE)
+    {
+        m_bEverDetected = true;
     }
 }
 

@@ -141,7 +141,6 @@ function array<LWCE_XGCountry> LWCE_SortSitCountries()
     local LWCE_XGContinent kContinent;
     local LWCE_XGCountry kCountry;
     local LWCE_XGWorld kWorld;
-    local name nmContinent;
     local int iCountry;
 
     kWorld = LWCE_XGWorld(WORLD());

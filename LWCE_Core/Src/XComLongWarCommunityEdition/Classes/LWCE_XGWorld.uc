@@ -121,7 +121,7 @@ function CreateContinents()
 
 function CreateCountries()
 {
-    local int iContinent, iCountry;
+    local int iCountry;
     local XGContinent kContinent;
     local LWCE_XGContinent kCEContinent;
 

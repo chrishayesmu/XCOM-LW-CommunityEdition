@@ -570,7 +570,7 @@ function UpdateReport()
 
     for (Index = 0; Index < arrNameResults.Length; Index++)
     {
-        kTag.StrValue0 = `LWCE_FTECH(arrNameResults[Index]).strName;
+        kTag.StrValue0 = `LWCE_FOUNDRY_PROJECT(arrNameResults[Index]).strName;
         kReport.txtResults.Add(1);
         kReport.txtResults[kReport.txtResults.Length - 1].StrValue = class'XComLocalizer'.static.ExpandString(m_strFoundryBuildAvailable);
         kReport.txtResults[kReport.txtResults.Length - 1].iState = eUIState_Warning;

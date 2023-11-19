@@ -177,7 +177,7 @@ function TTableMenuOption BuildQueueItem(int iQueueSlot)
         kOption.arrStrings.AddItem("---");
         kOption.arrStates.AddItem(eUIState_Normal);
 
-        kOption.arrStrings.AddItem(m_strFoundryPrefix @ `LWCE_FTECH(kFProject.ProjectName).strName);
+        kOption.arrStrings.AddItem(m_strFoundryPrefix @ `LWCE_FOUNDRY_PROJECT(kFProject.ProjectName).strName);
         kOption.arrStates.AddItem(eUIState_Normal);
 
         kOption.arrStrings.AddItem(kEngineering.LWCE_GetFoundryETAString(kFProject));

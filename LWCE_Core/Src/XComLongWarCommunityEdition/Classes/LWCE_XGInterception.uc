@@ -229,15 +229,25 @@ function CompleteEngagement()
     if (m_eUFOResult == eUR_Crash)
     {
         LWCE_ClearOtherEngagements(m_arrEnemyShips[0]);
-        kAI.LWCE_OnUFOShotDown(m_arrFriendlyShips, m_arrEnemyShips[0]);
+
+        // We need to find which ship did the shootdown, because their weaponry may impact how
+        // much loot is recoverable from the crash site
+        for (I = 0; I < m_arrKills.Length; I++)
+        {
+            if (m_arrKills[I].kVictim == m_arrEnemyShips[0])
+            {
+                kAI.LWCE_OnShipShotDown(m_arrKills[I].kAttacker, m_arrEnemyShips[0]);
+                break;
+            }
+        }
     }
     else if (m_eUFOResult == eUR_Destroyed)
     {
-        kAI.LWCE_OnUFODestroyed(m_arrEnemyShips[0]);
+        kAI.LWCE_OnShipDestroyed(m_arrEnemyShips[0]);
     }
     else
     {
-        kAI.LWCE_OnUFOAttacked(m_arrEnemyShips[0]);
+        kAI.LWCE_OnShipAttacked(m_arrEnemyShips[0]);
     }
 
     for (I = 0; I < m_arrFriendlyShips.Length; I++)
@@ -255,7 +265,7 @@ function CompleteEngagement()
     }
 
     // Add confirmed kills to ships post-engagement. Note that unlike vanilla, we actually
-    // keep track of UFO kills also, though they have no mechanical effect.
+    // keep track of the enemy ship's kills also, though they have no mechanical effect.
     for (I = 0; I < m_arrKills.Length; I++)
     {
         if (m_arrKills[I].kAttacker.GetHP() <= 0)

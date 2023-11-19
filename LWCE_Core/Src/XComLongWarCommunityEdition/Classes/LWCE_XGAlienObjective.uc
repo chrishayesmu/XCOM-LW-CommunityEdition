@@ -3,16 +3,17 @@ class LWCE_XGAlienObjective extends XGAlienObjective;
 struct CheckpointRecord_LWCE_XGAlienObjective extends XGAlienObjective.CheckpointRecord
 {
     var LWCE_TObjective m_kCETObjective;
+    var LWCE_XGShip m_kLastShip;
     var name m_nmCityTarget;
     var name m_nmCountryTarget;
-    var LWCE_XGShip m_kLastShip;
+    var name m_nmShipTeam;
 };
 
 var LWCE_TObjective m_kCETObjective;
+var LWCE_XGShip m_kLastShip;
 var name m_nmCityTarget;
 var name m_nmCountryTarget;
 var name m_nmShipTeam;
-var LWCE_XGShip m_kLastShip;
 
 function Init(TObjective kObj, int iStartDate, Vector2D v2Target, int iCountry, optional int iCity, optional EShipType eShip)
 {
@@ -45,6 +46,32 @@ function LWCE_Init(LWCE_TObjective kObj, int iStartDate, Vector2D v2Target, name
     m_iNextMissionTimer = ConvertDaysToTimeslices(m_kCETObjective.arrStartDates[0], m_kCETObjective.arrRandDays[0]);
 }
 
+function CheckIsComplete(XGShip_UFO kUFO)
+{
+    `LWCE_LOG_DEPRECATED_CLS(CheckIsComplete);
+}
+
+/// <summary>
+/// Checks if this objective is complete, meaning there are no more missions scheduled.
+/// If so, and if the last mission succeeded, notifies the enemy strategy AI of mission success.
+/// </summary>
+function LWCE_CheckIsComplete(LWCE_XGShip kShip)
+{
+    if (m_iNextMissionTimer == -1 && !m_bComplete)
+    {
+        m_bComplete = true;
+
+        if (m_bLastMissionSuccessful)
+        {
+            LWCE_XGStrategyAI(AI()).LWCE_OnObjectiveEnded(self, kShip);
+        }
+    }
+}
+
+/// <summary>
+/// Removes all pending missions and their associated ships, schedules, etc, effectively rendering
+/// this objective inactive.
+/// </summary>
 function ClearMissions()
 {
     m_kCETObjective.arrMissions.Length = 0;
@@ -78,6 +105,9 @@ function Vector2D DetermineMissionTarget(int iRadius)
     return v2Target;
 }
 
+/// <summary>
+/// Rolls to see if the last ship launched was able to find a satellite over m_nmCountryTarget.
+/// </summary>
 function bool FoundSatellite()
 {
     local LWCE_XGCountry kCountry;
@@ -146,85 +176,9 @@ function array<int> GetFlightPlan(EUFOMission eMission, out float fDuration)
 {
     local array<int> arrFlightPlan;
 
-    `LWCE_LOG_DEPRECATED_CLS(GetFlightPlan);
+    `LWCE_LOG_DEPRECATED_BY(GetFlightPlan, LWCEShipMissionTemplate.GetFlightPlanSteps);
 
     arrFlightPlan.Length = 0;
-    return arrFlightPlan;
-}
-
-function array<name> LWCE_GetFlightPlan(name nmShipMission, out float fDuration)
-{
-    local array<name> arrFlightPlan;
-
-    switch (nmShipMission)
-    {
-        case 'Direct':
-            arrFlightPlan.AddItem('Arrive');
-            arrFlightPlan.AddItem('Land');
-
-            break;
-        case 'Dropoff':
-            arrFlightPlan.AddItem('Arrive');
-            arrFlightPlan.AddItem('FlyOver');
-            arrFlightPlan.AddItem('Depart');
-            arrFlightPlan.AddItem('LiftOff');
-
-            break;
-        case 'QuickSpecimen':
-            arrFlightPlan.AddItem('Arrive');
-            arrFlightPlan.AddItem('Land');
-            arrFlightPlan.AddItem('Depart');
-            arrFlightPlan.AddItem('LiftOff');
-            fDuration = 4.0;
-
-            break;
-        case 'LongSpecimen':
-            arrFlightPlan.AddItem('Arrive');
-            arrFlightPlan.AddItem('SpendTime');
-            arrFlightPlan.AddItem('Land');
-            arrFlightPlan.AddItem('Depart');
-            arrFlightPlan.AddItem('LiftOff');
-            fDuration = 4.0;
-
-            break;
-        case 'QuickScout':
-            arrFlightPlan.AddItem('Arrive');
-            arrFlightPlan.AddItem('SpendTime');
-            arrFlightPlan.AddItem('Land');
-            arrFlightPlan.AddItem('Depart');
-            arrFlightPlan.AddItem('LiftOff');
-            fDuration = 4.0;
-
-            break;
-        case 'LongScout':
-            arrFlightPlan.AddItem('Arrive');
-            arrFlightPlan.AddItem('SpendTime');
-            arrFlightPlan.AddItem('Land');
-            arrFlightPlan.AddItem('Depart');
-            arrFlightPlan.AddItem('LiftOff');
-            fDuration = 6.0;
-
-            break;
-        case 'Flyby':
-            arrFlightPlan.AddItem('Arrive');
-            arrFlightPlan.AddItem('SpendTime');
-            arrFlightPlan.AddItem('Land');
-            arrFlightPlan.AddItem('Depart');
-            arrFlightPlan.AddItem('LiftOff');
-            fDuration = 4.0;
-
-            break;
-        case 'Seek':
-            arrFlightPlan.AddItem('Arrive');
-            arrFlightPlan.AddItem('SpendTime');
-            arrFlightPlan.AddItem('Land');
-            arrFlightPlan.AddItem('Depart');
-            arrFlightPlan.AddItem('LiftOff');
-            fDuration = 6.0;
-
-            break;
-    }
-
     return arrFlightPlan;
 }
 
@@ -240,6 +194,10 @@ function name LWCE_GetType()
     return m_kCETObjective.nmType;
 }
 
+/// <summary>
+/// Launches a new ship on the next scheduled mission, and schedules another mission following this one,
+/// if any remain for this objective.
+/// </summary>
 function LaunchNextMission()
 {
     local LWCE_XGHeadquarters kHQ;
@@ -248,8 +206,14 @@ function LaunchNextMission()
     local array<name> arrFlightPlan;
     local float fDuration;
 
+    // This shouldn't be necessary, but just in case a mod does something funny
+    if (m_kCETObjective.arrMissions.Length == 0)
+    {
+        return;
+    }
+
     arrFlightPlan = LWCE_GetFlightPlan(m_kCETObjective.arrMissions[0], fDuration);
-    kShip = LWCE_LaunchUFO(m_kCETObjective.arrShips[0], arrFlightPlan, DetermineMissionTarget(m_kCETObjective.arrRadii[0]), fDuration);
+    kShip = LWCE_LaunchShip(m_kCETObjective.arrShips[0], arrFlightPlan, DetermineMissionTarget(m_kCETObjective.arrRadii[0]), fDuration);
     m_iSightings += 1;
 
     `LWCE_XGCONTINENT(LWCE_GetContinent()).m_kMonthly.iUFOsSeen += 1;
@@ -275,12 +239,15 @@ function LaunchNextMission()
 
 function XGShip_UFO LaunchUFO(EShipType eShip, array<int> arrFlightPlan, Vector2D v2Target, float fDuration)
 {
-    `LWCE_LOG_DEPRECATED_CLS(LaunchUFO);
+    `LWCE_LOG_DEPRECATED_BY(LaunchUFO, LWCE_LaunchShip);
 
     return none;
 }
 
-function LWCE_XGShip LWCE_LaunchUFO(name nmShipType, array<name> arrFlightPlan, Vector2D v2Target, float fDuration)
+/// <summary>
+/// Spawns a ship and immediately sets it to begin on the given flight plan.
+/// </summary>
+function LWCE_XGShip LWCE_LaunchShip(name nmShipType, array<name> arrFlightPlan, Vector2D v2Target, float fDuration)
 {
     local LWCE_XGShip kShip;
 
@@ -297,6 +264,97 @@ function LWCE_XGShip LWCE_LaunchUFO(name nmShipType, array<name> arrFlightPlan, 
     LWCE_XGStrategyAI(AI()).LWCE_AIAddNewShip(kShip);
 
     return kShip;
+}
+
+function NotifyOfAssaulted(XGShip_UFO kUFO)
+{
+    `LWCE_LOG_DEPRECATED_CLS(NotifyOfAssaulted);
+}
+
+/// <summary>
+/// Informs the enemy strategic AI that this ship landed and was successfully assaulted by XCOM.
+/// </summary>
+function LWCE_NotifyOfAssaulted(LWCE_XGShip kShip)
+{
+    m_iDetected += 1;
+
+    if (kShip == m_kLastShip)
+    {
+        LWCE_CheckIsComplete(kShip);
+    }
+}
+
+function NotifyOfCrash(XGShip_UFO kUFO)
+{
+    `LWCE_LOG_DEPRECATED_CLS(NotifyOfCrash);
+}
+
+/// <summary>
+/// Informs the enemy strategic AI that this ship was shot down by XCOM. This could mean it was either
+/// destroyed or resulted in a crash landing, spawning a mission.
+/// </summary>
+function LWCE_NotifyOfCrash(LWCE_XGShip kShip)
+{
+    local LWCE_XGContinent kContinent;
+    local LWCE_XGStrategyAI kAI;
+
+    kAI = LWCE_XGStrategyAI(AI());
+    kContinent = `LWCE_XGCONTINENT(LWCE_GetContinent());
+
+    m_iShotDown += 1;
+    m_iDetected += 1;
+    kContinent.m_kMonthly.iUFOsShotdown += 1;
+    kContinent.m_kMonthly.iUFOsDetected += 1;
+    
+    kAI.LWCE_LogUFORecord(kShip, eUMR_ShotDown);
+
+    if (kShip == m_kLastShip)
+    {
+        LWCE_CheckIsComplete(kShip);
+    }
+}
+
+function NotifyOfSuccess(XGShip_UFO kUFO)
+{
+    `LWCE_LOG_DEPRECATED_CLS(NotifyOfSuccess);
+}
+
+/// <summary>
+/// Informs the enemy strategic AI that this ship has completed its mission successfully.
+/// </summary>
+function LWCE_NotifyOfSuccess(LWCE_XGShip kShip)
+{
+    local EUFOMissionResult eResult;
+
+    if (kShip == m_kLastShip)
+    {
+        m_bLastMissionSuccessful = true;
+    }
+
+    if (kShip.m_bEverDetected)
+    {
+        m_iDetected += 1;
+        `LWCE_XGCONTINENT(LWCE_GetContinent()).m_kMonthly.iUFOsDetected += 1;
+        eResult = eUMR_Detected;
+    }
+    else
+    {
+        eResult = eUMR_Undetected;
+    }
+
+    if (kShip.m_bWasEngaged)
+    {
+        eResult = eUMR_Intercepted;
+    }
+
+    LWCE_XGStrategyAI(AI()).LWCE_LogUFORecord(kShip, eResult);
+
+    if (kShip == m_kLastShip)
+    {
+        LWCE_CheckIsComplete(kShip);
+    }
+
+    LWCE_XGStrategyAI(AI()).LWCE_RemoveShip(kShip);
 }
 
 function OverseerUpdate()

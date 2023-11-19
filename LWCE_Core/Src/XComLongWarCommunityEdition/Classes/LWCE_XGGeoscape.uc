@@ -254,6 +254,86 @@ function InitNewGame()
     m_arrCraftEncounters.Add(15);
 }
 
+event Tick(float fDeltaT)
+{
+    local int I, iSlices;
+    local float fGameTime, fRemainderTime, fUseMaximumTimeslice;
+
+    if (UI == none)
+    {
+        return;
+    }
+
+    if (!PRES().IsInState('State_PauseMenu', true))
+    {
+        Game().m_fGameDuration += fDeltaT;
+    }
+
+    if (!IsScanning())
+    {
+        UpdateSound();
+    }
+
+    if ( (HasAlerts() || HasRequests()) && !IsBusy() || LWCE_GetTopAlert().AlertType == 'DropArrive' )
+    {
+        if (!IsPaused())
+        {
+            Pause();
+        }
+
+        return;
+    }
+
+    fGameTime = fDeltaT * m_fTimeScale;
+
+    if (m_kDateTime != none && `HQGAME.m_kEarth != none && !IsPaused())
+    {
+        `HQGAME.m_kEarth.UpdateUniverseRotation(m_kDateTime);
+    }
+
+    if (fGameTime == 0.0f)
+    {
+        return;
+    }
+
+    if (fGameTime >= 60.0f)
+    {
+        if (fGameTime <= 900.0f)
+        {
+            fUseMaximumTimeslice = 60.0f;
+        }
+        else
+        {
+            fUseMaximumTimeslice = 1800.0f;
+        }
+
+        fRemainderTime = fGameTime > fUseMaximumTimeslice ? fGameTime % fUseMaximumTimeslice : 0.0f;
+        iSlices = Max(int(fGameTime / fUseMaximumTimeslice), 1);
+
+        for (I = 0; I < iSlices; I++)
+        {
+            GameTick(fUseMaximumTimeslice);
+
+            if (HasAlerts())
+            {
+                UpdateUI(fDeltaT);
+                return;
+            }
+        }
+
+        if (fRemainderTime > 0.0f)
+        {
+            GameTick(fRemainderTime);
+        }
+    }
+    else
+    {
+        GameTick(fGameTime);
+    }
+
+    UpdateUI(fDeltaT);
+}
+
 function int AddMission(XGMission kMission, optional bool bFirst)
 {
     local name nmGeoscapeAlert;
@@ -546,15 +626,15 @@ function int LWCE_DetectShip(LWCE_XGShip kShip)
         return -1;
     }
 
-    // If the UFO lands it's replaced by a mission site, so the UFO itself is not shown
+    // If the ship lands it's replaced by a mission site, so the ship itself is not shown
     if (kShip.m_bLanded)
     {
         return -1;
     }
 
-    if (kShip.IsInCountry())
+    if (kShip.IsTrackable())
     {
-        // If there's a satellite in the country, the UFO is always spotted
+        // If there's a satellite in the country, the ship is always spotted
         for (Index = 0; Index < kHQ.m_arrCESatellites.Length; Index++)
         {
             if (kHQ.m_arrCESatellites[Index].iTravelTime <= 0)
@@ -566,20 +646,22 @@ function int LWCE_DetectShip(LWCE_XGShip kShip)
             }
         }
 
-        // Always see hunting satellites, even if there isn't a satellite in the country
-        if (kShip.m_kObjective.GetType() == 'Hunt')
+        // Always see ships hunting satellites, even if there isn't a satellite in the country
+        if (kShip.m_kObjective.LWCE_GetType() == 'Hunt')
         {
             return 0;
         }
 
-        // There's a fixed chance per interceptor on the continent to detect the UFO
+        // There's a fixed chance per ship on the continent to detect the inbound ship
         if (kHangar.LWCE_GetNumShipsInRangeAndAvailable(kShip) > 0)
         {
-            // m_eSpecies is used as a sentinel value to make sure interceptors only get one chance to detect the UFO
-            if (kShip.m_eSpecies == eChar_Civilian)
+            // Ships only get one chance at detection
+            if (kShip.m_bRolledDetectionByShips)
             {
                 return -1;
             }
+
+            kShip.m_bRolledDetectionByShips = true;
 
             iChance = class'XGTacticalGameCore'.default.UFO_INTERCEPTION_PCT;
 
@@ -589,13 +671,9 @@ function int LWCE_DetectShip(LWCE_XGShip kShip)
                 iChance *= 2.0;
             }
 
-            if (Roll(iChance * HANGAR().GetNumInterceptorsInRangeAndAvailable(kShip)))
+            if (Roll(iChance * kHangar.LWCE_GetNumShipsInRangeAndAvailable(kShip)))
             {
                 return 0;
-            }
-            else
-            {
-                kShip.m_eSpecies = eChar_Civilian;
             }
         }
     }
@@ -795,38 +873,45 @@ function LWCE_OnFundingCouncilRequestAdded()
     m_bActiveFundingCouncilRequestPopup = true;
 }
 
-function OnUFODetected(int iUFO)
+/// <summary>
+/// Called whenever an enemy ship is detected. (Despite the name, it applies to ships of all types.)
+/// Notifies the player with a Geoscape alert.
+/// </summary>
+function OnUFODetected(int iShip)
 {
-    local XGShip_UFO kUFO;
+    local LWCE_XGShip kShip;
     local XGMission kMission;
 
-    kUFO = AI().GetUFO(iUFO);
-    kUFO.m_iCounter = ++m_iDetectedUFOs;
+    kShip = LWCE_XGStrategyAI(AI()).LWCE_GetShip(iShip);
+    kShip.m_iCounter = ++m_iDetectedUFOs;
 
-    if (kUFO.m_kTShip.eType == eShip_UFOEthereal)
+    if (kShip.m_nmShipTemplate == 'UFOEthereal')
     {
         HQ().m_bHyperwaveActivated = true;
     }
 
-    if (kUFO.IsFlying())
+    if (kShip.IsFlying())
     {
-        LWCE_Alert(`LWCE_ALERT('UFODetected').AddInt(iUFO).Build());
+        LWCE_Alert(`LWCE_ALERT('UFODetected').AddInt(iShip).Build());
 
-        if (kUFO.m_kObjective.m_kTObjective.eType == /* HQ assault */ 9)
+        if (kShip.m_kObjective.m_kCETObjective.nmType == 'AssaultXComHQ')
         {
             PRES().Notify(52);
         }
     }
     else
     {
-        foreach m_arrMissions(kMission)
-        {
-            if (XGMission_UFOLanded(kMission) != none && XGMission_UFOLanded(kMission).kUFO == kUFO)
-            {
-                LWCE_Alert(`LWCE_ALERT('UFOLanded').AddInt(kMission.m_iID).Build());
-                break;
-            }
-        }
+        `LWCE_LOG_ERROR("Landed UFO missions in Geoscape require update to XGMission framework");
+        ScriptTrace();
+
+        // foreach m_arrMissions(kMission)
+        // {
+        //     if (XGMission_UFOLanded(kMission) != none && XGMission_UFOLanded(kMission).kUFO == kShip)
+        //     {
+        //         LWCE_Alert(`LWCE_ALERT('UFOLanded').AddInt(kMission.m_iID).Build());
+        //         break;
+        //     }
+        // }
     }
 }
 
@@ -861,6 +946,11 @@ simulated function LWCE_PreloadSquadIntoSkyranger(name nmAlertType, bool bUnload
 
             break;
     }
+}
+
+function RadarUpdate()
+{
+    `LWCE_LOG_NOT_IMPLEMENTED(RadarUpdate);
 }
 
 function RemoveMission(XGMission kMission, bool bXComSuccess, optional bool bExpired, optional bool bFirstMission, optional bool bDontApplyToContinent)
@@ -961,82 +1051,25 @@ function SpawnTempleEntity()
     m_kTemple.Init(eEntityGraphic_Mission_Temple_Ship);
 }
 
-event Tick(float fDeltaT)
+function int TrackUFO(XGShip_UFO kShip)
 {
-    local int I, iSlices;
-    local float fGameTime, fRemainderTime, fUseMaximumTimeslice;
+    `LWCE_LOG_DEPRECATED_BY(TrackUFO, LWCE_TrackShip);
 
-    if (UI == none)
+    return 1000;
+}
+
+/// <summary>
+/// Checks whether the given ship can be tracked, and if so, returns the index of the satellite capable of
+/// tracking it. Otherwise, returns INDEX_NONE. Does not check if the ship has cloaking capability.
+/// </summary>
+function int LWCE_TrackShip(LWCE_XGShip kShip)
+{
+    if (kShip.IsTrackable())
     {
-        return;
-    }
-
-    if (!PRES().IsInState('State_PauseMenu', true))
-    {
-        Game().m_fGameDuration += fDeltaT;
-    }
-
-    if (!IsScanning())
-    {
-        UpdateSound();
-    }
-
-    if ( (HasAlerts() || HasRequests()) && !IsBusy() || LWCE_GetTopAlert().AlertType == 'DropArrive' )
-    {
-        if (!IsPaused())
-        {
-            Pause();
-        }
-
-        return;
-    }
-
-    fGameTime = fDeltaT * m_fTimeScale;
-
-    if (m_kDateTime != none && `HQGAME.m_kEarth != none && !IsPaused())
-    {
-        `HQGAME.m_kEarth.UpdateUniverseRotation(m_kDateTime);
-    }
-
-    if (fGameTime == 0.0f)
-    {
-        return;
-    }
-
-    if (fGameTime >= 60.0f)
-    {
-        if (fGameTime <= 900.0f)
-        {
-            fUseMaximumTimeslice = 60.0f;
-        }
-        else
-        {
-            fUseMaximumTimeslice = 1800.0f;
-        }
-
-        fRemainderTime = fGameTime > fUseMaximumTimeslice ? fGameTime % fUseMaximumTimeslice : 0.0f;
-        iSlices = Max(int(fGameTime / fUseMaximumTimeslice), 1);
-
-        for (I = 0; I < iSlices; I++)
-        {
-            GameTick(fUseMaximumTimeslice);
-
-            if (HasAlerts())
-            {
-                UpdateUI(fDeltaT);
-                return;
-            }
-        }
-
-        if (fRemainderTime > 0.0f)
-        {
-            GameTick(fRemainderTime);
-        }
+        return kShip.m_iDetectedBy;
     }
     else
     {
-        GameTick(fGameTime);
+        return -1;
     }
-
-    UpdateUI(fDeltaT);
 }

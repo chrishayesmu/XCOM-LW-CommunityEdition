@@ -4,10 +4,13 @@ struct CheckpointRecord_LWCE_XGContinent extends XGContinent.CheckpointRecord
 {
     var name m_nmBonus;
     var name m_nmContinent;
+    var array<LWCE_TUFORecord> m_arrCEShipRecord;
 };
 
 var name m_nmBonus; // Which bonus is awarded for completing satellite coverage on this continent
 var name m_nmContinent;
+var array<LWCE_TUFORecord> m_arrCEShipRecord; // History of all of the enemy ships that have been sent on missions targeting this continent.
+
 var LWCEContinentTemplate m_kTemplate;
 
 function ApplyCheckpointRecord()

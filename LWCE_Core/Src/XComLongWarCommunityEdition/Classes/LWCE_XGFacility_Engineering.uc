@@ -89,6 +89,18 @@ function InitNewGame()
     m_iEleriumHalfLife = int(class'XGTacticalGameCore'.default.SW_ELERIUM_HALFLIFE);
 }
 
+function GetEvents(out array<THQEvent> arrEvents)
+{
+    `LWCE_LOG_DEPRECATED_CLS(GetEvents);
+}
+
+function LWCE_GetEvents(out array<LWCE_THQEvent> arrEvents)
+{
+    LWCE_GetItemEvents(arrEvents);
+    LWCE_GetFacilityEvents(arrEvents);
+    LWCE_GetFoundryEvents(arrEvents);
+}
+
 // #region Functions related to facilities and construction
 
 function AddConstructionProject(int iProject, int X, int Y)
@@ -811,7 +823,7 @@ function LWCE_AddFoundryProject(out LWCE_TFoundryProject kProject)
     m_bStartedFoundryProject = true;
 
     // Notify mods of this project
-    `LWCE_MOD_LOADER.OnFoundryProjectAddedToQueue(kProject, `LWCE_FTECH(kProject.ProjectName));
+    `LWCE_MOD_LOADER.OnFoundryProjectAddedToQueue(kProject, `LWCE_FOUNDRY_PROJECT(kProject.ProjectName));
 }
 
 function AddFoundryProjectToQueue(out TFoundryProject kProject)
@@ -853,7 +865,7 @@ function CancelFoundryProject(int iIndex)
     RemoveFoundryProject(kProject.iIndex);
 
     // Notify mods that a project is canceled
-    `LWCE_MOD_LOADER.OnFoundryProjectCanceled(kProject, `LWCE_FTECH(kProject.ProjectName));
+    `LWCE_MOD_LOADER.OnFoundryProjectCanceled(kProject, `LWCE_FOUNDRY_PROJECT(kProject.ProjectName));
 }
 
 function ChangeFoundryIndex(int iOldIndex, int iNewIndex)
@@ -946,6 +958,57 @@ function string LWCE_GetFoundryETAString(LWCE_TFoundryProject kProject)
     }
 }
 
+function GetFoundryEvents(out array<THQEvent> arrEvents)
+{
+    `LWCE_LOG_DEPRECATED_CLS(GetFoundryEvents);
+}
+
+function LWCE_GetFoundryEvents(out array<LWCE_THQEvent> arrEvents)
+{
+    local int iFoundryProject, iEvent;
+    local LWCE_THQEvent kBlankEvent, kEvent;
+    local bool bAdded;
+    local int iWorkDone;
+
+    for (iFoundryProject = 0; iFoundryProject < m_arrCEFoundryProjects.Length; iFoundryProject++)
+    {
+        if (!m_arrCEFoundryProjects[iFoundryProject].bNotify)
+        {
+            continue;
+        }
+
+        iWorkDone = GetWorkPerHour(m_arrCEFoundryProjects[iFoundryProject].iEngineers, m_arrCEFoundryProjects[iFoundryProject].bRush);
+
+        kEvent = kBlankEvent;
+        kEvent.EventType = 'Foundry';
+        kEvent.iHours = m_arrCEFoundryProjects[iFoundryProject].iHoursLeft / iWorkDone;
+
+        if ((m_arrCEFoundryProjects[iFoundryProject].iHoursLeft % iWorkDone) > 0)
+        {
+            kEvent.iHours += 1;
+        }
+
+        kEvent.kData = class'LWCEDataContainer'.static.NewName('THQEventData', m_arrCEFoundryProjects[iFoundryProject].ProjectName);
+
+        bAdded = false;
+
+        for (iEvent = 0; iEvent < arrEvents.Length; iEvent++)
+        {
+            if (arrEvents[iEvent].iHours > kEvent.iHours)
+            {
+                arrEvents.InsertItem(iEvent, kEvent);
+                bAdded = true;
+                break;
+            }
+        }
+
+        if (!bAdded)
+        {
+            arrEvents.AddItem(kEvent);
+        }
+    }
+}
+
 function TFoundryProject GetFoundryProject(int iIndex)
 {
     local TFoundryProject kProject;
@@ -974,7 +1037,7 @@ function LWCE_TProjectCost LWCE_GetFoundryProjectCost(name ProjectName, bool bRu
     local LWCE_TProjectCost kProjectCost;
     local LWCEFoundryProjectTemplate kTemplate;
 
-    kTemplate = `LWCE_FTECH(ProjectName);
+    kTemplate = `LWCE_FOUNDRY_PROJECT(ProjectName);
 
     if (kTemplate == none)
     {
@@ -1126,7 +1189,7 @@ function OnFoundryProjectCompleted(int iProjectIndex)
     }
 
     // Notify mods that a project is complete
-    `LWCE_MOD_LOADER.OnFoundryProjectCompleted(m_arrCEFoundryProjects[iProjectIndex], `LWCE_FTECH(m_arrCEFoundryProjects[iProjectIndex].ProjectName));
+    `LWCE_MOD_LOADER.OnFoundryProjectCompleted(m_arrCEFoundryProjects[iProjectIndex], `LWCE_FOUNDRY_PROJECT(m_arrCEFoundryProjects[iProjectIndex].ProjectName));
 
     // Do this afterwards because it can also contain a mod hook and this order makes the most sense from a modder's perspective
     BARRACKS().UpdateFoundryPerks();
@@ -1498,69 +1561,6 @@ function string LWCE_GetETAString(LWCE_TItemProject kProject)
     return class'XComLocalizer'.static.ExpandString(m_strETADay);
 }
 
-function GetEvents(out array<THQEvent> arrEvents)
-{
-    `LWCE_LOG_DEPRECATED_CLS(GetEvents);
-}
-
-function LWCE_GetEvents(out array<LWCE_THQEvent> arrEvents)
-{
-    LWCE_GetItemEvents(arrEvents);
-    LWCE_GetFacilityEvents(arrEvents);
-    LWCE_GetFoundryEvents(arrEvents);
-}
-
-function GetFoundryEvents(out array<THQEvent> arrEvents)
-{
-    `LWCE_LOG_DEPRECATED_CLS(GetFoundryEvents);
-}
-
-function LWCE_GetFoundryEvents(out array<LWCE_THQEvent> arrEvents)
-{
-    local int iFoundryProject, iEvent;
-    local LWCE_THQEvent kBlankEvent, kEvent;
-    local bool bAdded;
-    local int iWorkDone;
-
-    for (iFoundryProject = 0; iFoundryProject < m_arrCEFoundryProjects.Length; iFoundryProject++)
-    {
-        if (!m_arrCEFoundryProjects[iFoundryProject].bNotify)
-        {
-            continue;
-        }
-
-        iWorkDone = GetWorkPerHour(m_arrCEFoundryProjects[iFoundryProject].iEngineers, m_arrCEFoundryProjects[iFoundryProject].bRush);
-
-        kEvent = kBlankEvent;
-        kEvent.EventType = 'Foundry';
-        kEvent.iHours = m_arrCEFoundryProjects[iFoundryProject].iHoursLeft / iWorkDone;
-
-        if ((m_arrCEFoundryProjects[iFoundryProject].iHoursLeft % iWorkDone) > 0)
-        {
-            kEvent.iHours += 1;
-        }
-
-        kEvent.kData = class'LWCEDataContainer'.static.NewName('THQEventData', m_arrCEFoundryProjects[iFoundryProject].ProjectName);
-
-        bAdded = false;
-
-        for (iEvent = 0; iEvent < arrEvents.Length; iEvent++)
-        {
-            if (arrEvents[iEvent].iHours > kEvent.iHours)
-            {
-                arrEvents.InsertItem(iEvent, kEvent);
-                bAdded = true;
-                break;
-            }
-        }
-
-        if (!bAdded)
-        {
-            arrEvents.AddItem(kEvent);
-        }
-    }
-}
-
 function bool GetItemCostSummary(out TCostSummary kCostSummary, EItemType eItem, optional int iQuantity = 1, optional bool Brush, optional bool bShowEng, optional int iProjectIndex = -1)
 {
     `LWCE_LOG_DEPRECATED_CLS(GetItemCostSummary);
@@ -1748,6 +1748,29 @@ function array<LWCEItemTemplate> LWCE_GetItemsByCategory(name nmCategory, int iT
     {
         return LWCE_XGStorage(STORAGE()).LWCE_GetItemsInCategory(nmCategory, iTransactionType);
     }
+}
+
+function int GetNumFirestormsBuilding()
+{
+    `LWCE_LOG_DEPRECATED_BY(GetNumFirestormsBuilding, LWCE_GetNumShipsBuilding);
+
+    return -1000;
+}
+
+function int GetNumSatellitesBuilding()
+{
+    local int iNumSatellites;
+    local LWCE_TItemProject kProject;
+
+    foreach m_arrCEItemProjects(kProject)
+    {
+        if (kProject.ItemName == 'Item_Satellite')
+        {
+            iNumSatellites += kProject.iQuantityLeft;
+        }
+    }
+
+    return iNumSatellites;
 }
 
 function int GetNumShivsOrdered()

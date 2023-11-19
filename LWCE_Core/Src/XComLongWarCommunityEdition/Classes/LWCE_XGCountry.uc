@@ -4,12 +4,14 @@ struct CheckpointRecord_LWCE_XGCountry extends XGCountry.CheckpointRecord
 {
     var name m_nmCountry;
     var name m_nmContinent;
+    var array<LWCE_TUFORecord> m_arrCEShipRecord;
     var int m_iShields;
     var bool m_bIsCouncilMember;
 };
 
 var name m_nmCountry;
 var name m_nmContinent;
+var array<LWCE_TUFORecord> m_arrCEShipRecord; // History of all of the enemy ships that have been sent on missions targeting this country.
 var int m_iShields; // Country's defense level; replaces m_kTCountry.iScience in LW
 var bool m_bIsCouncilMember;
 
@@ -78,6 +80,25 @@ function AddPanic(int iPanic, optional bool bSuppressHeadline)
     CalcFunding();
 }
 
+/// <summary>
+/// Checks whether this country has been targeted by a satellite-hunting mission since the last
+/// time its satellite coverage changed.
+/// </summary>
+function bool BeenHunted()
+{
+    local int iRecord;
+
+    for (iRecord = 0; iRecord < m_arrCEShipRecord.Length; iRecord++)
+    {
+        if (m_arrCEShipRecord[iRecord].nmObjective == 'Hunt')
+        {
+            return true;
+        }
+    }
+
+    return false;
+}
+
 function int CalcFunding(optional int iAdditionalPanic)
 {
     `LWCE_LOG_DEPRECATED_CLS(CalcFunding);
@@ -95,7 +116,7 @@ function int CalcFunding(optional int iAdditionalPanic)
 /// a satellite, regardless of whether one is actually present. Overridden by bPretendHasSatellite.</param>
 function int LWCE_CalcFunding(optional bool bPretendHasSatellite = false, optional bool bPretendHasNoSatellite = false)
 {
-    local int iMax, iFunding;
+    local int iFunding;
     local float fPenaltyPct;
 
     if (LeftXCom())
@@ -218,4 +239,30 @@ function LeaveXComProject()
     {
         STAT_AddStat(19, -50);
     }
+}
+
+function SetSatelliteCoverage(bool bCoverage)
+{
+    if (m_bSatellite == bCoverage)
+    {
+        return;
+    }
+
+    m_bSatellite = bCoverage;
+
+    if (!m_bSecretPact)
+    {
+        `LWCE_XGCONTINENT(m_nmContinent).LWCE_SetSatelliteCoverage(m_nmCountry, bCoverage);
+
+        if (bCoverage)
+        {
+            AddPanic(class'XGTacticalGameCore'.default.PANIC_SAT_ADDED_COUNTRY);
+        }
+    }
+
+    // Countries erase their records whenever satellite coverage changes, presumably because the history
+    // is only used when checking if a country has been hunted
+    m_arrCEShipRecord.Length = 0;
+
+    BeginPaying();
 }
