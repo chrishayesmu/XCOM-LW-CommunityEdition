@@ -48,7 +48,7 @@ struct LWCE_AIMissionPlan
 struct CheckpointRecord_LWCE_XGStrategyAI extends XGStrategyAI.CheckpointRecord
 {
     var array<LWCE_XGShip> m_arrCEShips;
-    var array<LWCE_TUFORecord> m_arrCEShipRecord;
+    var array<LWCE_TShipRecord> m_arrCEShipRecord;
     var array<name> m_arrCEShipsShotDown;
 };
 
@@ -82,7 +82,7 @@ var config int CounterValueToSpawnHQAssault;
 var config int MonthToForceSpawnHQAssault;
 
 var array<LWCE_XGShip> m_arrCEShips;
-var array<LWCE_TUFORecord> m_arrCEShipRecord; // History of all of the enemy ships that have been sent on missions.
+var array<LWCE_TShipRecord> m_arrCEShipRecord; // History of all of the enemy ships that have been sent on missions.
 var array<name> m_arrCEShipsShotDown; // Tracks ship types that have been shot down by XCOM.
 
 function InitNewGame()
@@ -117,7 +117,7 @@ function AddAirBaseDefenseMission()
 
     kHQ = LWCE_XGHeadquarters(HQ());
     kWorld = LWCE_XGWorld(WORLD());
-    
+
     arrContinents = kWorld.LWCE_GetContinents();
 
     // Map each continent to the country containing its air base
@@ -288,12 +288,9 @@ function XGAlienObjective AIAddNewObjective(EAlienObjective eObjective, int iSta
 function LWCE_XGAlienObjective LWCE_AIAddNewObjective(name nmObjective, int iStartDate, Vector2D v2Target, name nmCountry, optional name nmCity = '', optional name nmShipType = '')
 {
     local LWCE_XGAlienObjective kAlienObjective;
-    local LWCE_TObjective kTObjective;
-
-    kTObjective = GetObjectiveDefinition(nmObjective);
 
     kAlienObjective = Spawn(class'LWCE_XGAlienObjective');
-    kAlienObjective.LWCE_Init(kTObjective, iStartDate, v2Target, nmCountry, nmCity, nmShipType);
+    kAlienObjective.LWCE_Init(nmObjective, iStartDate, v2Target, nmCountry, nmCity, nmShipType);
     m_arrObjectives.AddItem(kAlienObjective);
 
     return kAlienObjective;
@@ -323,9 +320,9 @@ function AIAddNewObjectives()
 
     // Calculate what our resources will be without updating them, in case we need to fall back to the
     // superclass method, which will also update them
-    StartOfMonthResources = STAT_GetStat(19) + MonthlyResourcesPerBase * World().GetNumDefectors();
+    StartOfMonthResources = `ALIEN_RESOURCES + MonthlyResourcesPerBase * World().GetNumDefectors();
     StartOfMonthResources = Clamp(StartOfMonthResources, ResourceFloorPerMonthPassed * GetMonth(), MaximumResources);
-    StartOfMonthThreat = STAT_GetStat(21);
+    StartOfMonthThreat = `XCOM_THREAT;
 
     if (!PickMissionPlan(GetMonth(), StartOfMonthResources, StartOfMonthThreat, MissionPlan))
     {
@@ -337,6 +334,7 @@ function AIAddNewObjectives()
 
     STAT_SetStat(19, StartOfMonthResources);
 
+    // TODO: rewrite all of this to use objective names and templates
     iNumAbductions      = RollMissionCount(MissionPlan.NumAbductions);
     iNumAirBaseDefenses = RollMissionCount(MissionPlan.NumAirBaseDefenses);
     iNumBombings        = RollMissionCount(MissionPlan.NumBombings);
@@ -588,7 +586,7 @@ function ApplyMissionPanic(XGMission kMission, bool bXComSuccess, optional bool 
         case eMission_AlienBase:
             if (bXComSuccess)
             {
-                RestoreCountryToXCom(kCountry.GetID());
+                RestoreCountryToXCom(LWCE_XGCountry(kCountry).m_nmCountry);
                 kCountry.m_iPanic = 98;
                 kCountry.AddPanic(class'XGTacticalGameCore'.default.PANIC_ALIENBASE_CONQUERED_CLASSIC_AND_IMPOSSIBLE);
 
@@ -787,6 +785,7 @@ function bool LWCE_ClearCountryObjectives(name nmTargetCountry)
             continue;
         }
 
+        // TODO let the template dictate whether the objective can continue or not; update function docs at that time
         if (kCEObjective.m_kCETObjective.nmType == 'Abduct')
         {
             if (!kCEObjective.m_bAbductionLaunched)
@@ -910,15 +909,25 @@ function XGMission CreateHQAssaultMission()
 
 function XGMission CreateExaltRaidMission(ECountry ExaltCountry)
 {
+    `LWCE_LOG_DEPRECATED_CLS(CreateExaltRaidMission);
+
+    return none;
+}
+
+function XGMission LWCE_CreateExaltRaidMission(name nmCountry)
+{
     local XGMission_ExaltRaid kMission;
 
     kMission = Spawn(class'LWCE_XGMission_ExaltRaid');
     kMission.m_kDesc = Spawn(class'LWCE_XGBattleDesc').Init();
-    kMission.m_iCity = Country(ExaltCountry).GetRandomCity();
-    kMission.m_iCountry = ExaltCountry;
-    kMission.m_iContinent = Country(ExaltCountry).GetContinent();
-    kMission.m_v2Coords = CITY(kMission.m_iCity).m_v2Coords;
     kMission.m_kDesc.m_kAlienSquad = DetermineExaltRaidSquad();
+
+    `LWCE_LOG_ERROR("Country/continent names are not supported for LWCE_CreateExaltRaidMission yet!");
+    ScriptTrace();
+    // kMission.m_iCity = Country(nmCountry).GetRandomCity();
+    // kMission.m_iCountry = nmCountry;
+    // kMission.m_iContinent = Country(nmCountry).GetContinent();
+    // kMission.m_v2Coords = CITY(kMission.m_iCity).m_v2Coords;
 
     return kMission;
 }
@@ -1426,6 +1435,19 @@ function GetEvents(out array<THQEvent> arrEvents)
     }
 }
 
+function XGShip_UFO GetUFO(int iUFOindex)
+{
+    `LWCE_LOG_DEPRECATED_BY(GetUFO, LWCE_GetShip);
+}
+
+/// <summary>
+/// Retrieves the ship with the given index.
+/// </summary>
+function LWCE_XGShip LWCE_GetShip(int iShipIndex)
+{
+    return m_arrCEShips[iShipIndex];
+}
+
 /**
  * Penalizes XCOM for losing a base defense mission.
  */
@@ -1463,36 +1485,17 @@ function FillUFOPool()
     STAT_AddStat(2, 20); // +20 bonus research
 }
 
-/// <summary>
-/// Determines how many continents are actively "resisting" the alien invasion, meaning that UFOs over
-/// those continents have been getting shot down or assaulted.
-/// </summary>
+
 function int GetNumResistingContinents()
 {
-    local array<int> arrContinents;
-    local int iCountry, iContinent;
+    `LWCE_LOG_DEPRECATED_NOREPLACE_CLS(GetNumResistingContinents);
 
-    local CompileError e;
-    for (iCountry = 0; iCountry < m_kResistance.arrCountries.Length; iCountry++)
-    {
-        if (m_kResistance.arrCountries[iCountry] > 0)
-        {
-            iContinent = Country(iCountry).GetContinent();
-
-            if (arrContinents.Find(iContinent) == INDEX_NONE)
-            {
-                arrContinents.AddItem(iContinent);
-            }
-        }
-    }
-
-    return arrContinents.Length;
+    return -1000;
 }
 
 function bool IsGoodOverseerTarget(EContinent eTarget)
 {
-    `LWCE_LOG("ERROR: LWCE-incompatible function IsGoodOverseerTarget was called. This needs to be replaced with IsFirestormOnContinent. Stack trace follows."); 
-    ScriptTrace();
+    `LWCE_LOG_DEPRECATED_BY(IsGoodOverseerTarget, IsFirestormOnContinent);
 
     return false;
 }
@@ -1610,12 +1613,12 @@ function LogUFORecord(XGShip_UFO kShip, EUFOMissionResult eResult)
 
 /// <summary>
 /// Records the given ship's mission and its outcome, storing a copy of the record internally,
-/// as well as copies with the target country and target continent of the mission. Also handles 
+/// as well as copies with the target country and target continent of the mission. Also handles
 /// some consequences of the mission, such as changes to alien research/resources, and panic.
 /// </summary>
 function LWCE_LogShipRecord(LWCE_XGShip kShip, EUFOMissionResult eResult)
 {
-    local LWCE_TUFORecord kRecord;
+    local LWCE_TShipRecord kRecord;
     local LWCE_XGCountry kCountry;
     local LWCE_XGContinent kContinent;
     local int iPanic, iResearch, iResources;
@@ -1766,7 +1769,7 @@ function LWCE_LogShipRecord(LWCE_XGShip kShip, EUFOMissionResult eResult)
         }
 
         iResources = kShip.m_kTemplate.GetResourceCost(kShip.m_nmTeam);
-        
+
         if (IsOptionEnabled(9)) // Dynamic War
         {
             iResources /= class'XGTacticalGameCore'.default.SW_MARATHON;
@@ -1796,13 +1799,63 @@ function LWCE_LogShipRecord(LWCE_XGShip kShip, EUFOMissionResult eResult)
     }
 }
 
+function OnObjectiveEnded(XGAlienObjective kObj, XGShip_UFO kLastUFO)
+{
+    `LWCE_LOG_DEPRECATED_CLS(OnObjectiveEnded);
+}
+
+function LWCE_OnObjectiveEnded(LWCE_XGAlienObjective kObj, LWCE_XGShip kLastShip)
+{
+    if (kObj.m_bLastMissionSuccessful)
+    {
+        switch (kObj.GetType())
+        {
+            case eObjective_Abduct:
+                CheckForAbductionBlitz(kObj.m_arrSimultaneousObjs);
+                break;
+            case eObjective_Terrorize: // This is the "terrorize" objective performed by an assault carrier en route to XCOM HQ
+                AIAddNewMission(/* XCOM HQ assault */ 9, kLastUFO);
+                break;
+            case eObjective_Infiltrate:
+                SignPact(kLastUFO, kObj.m_iCountryTarget);
+                break;
+            case eObjective_Hunt:
+                if (kObj.FoundSatellite())
+                {
+                    OnSatelliteDestroyed(kObj.m_iCountryTarget);
+                }
+                else
+                {
+                    HQ().m_arrSatellites[HQ().GetSatellite(ECountry(kObj.m_iCountryTarget))].kSatEntity.SetHidden(true);
+                }
+
+                break;
+            case eObjective_Flyby:
+                if (kLastUFO.m_kTShip.eType == eShip_UFOEthereal)
+                {
+                    OnEtherealFlyby(kLastUFO);
+                }
+
+                break;
+            case 9: // HQ assault
+                m_iHQAssaultCounter = 1;
+                break;
+            case 10: // Air base assault
+                AIAddNewMission(14, kLastUFO);
+                break;
+            default:
+                break;
+        }
+    }
+}
+
 function OnUFOAttacked(XGShip_UFO kUFO)
 {
     `LWCE_LOG_DEPRECATED_BY(OnUFOAttacked, LWCE_OnShipAttacked);
 }
 
 /// <summary>
-/// Notifies the AI that a ship was attacked in an interception, but not shot down. 
+/// Notifies the AI that a ship was attacked in an interception, but not shot down.
 /// The ship may decide to abandon its mission if sufficiently damaged.
 /// </summary>
 function LWCE_OnShipAttacked(LWCE_XGShip kShip)
@@ -1945,7 +1998,7 @@ function LWCE_OnShipShotDown(LWCE_XGShip kAttacker, LWCE_XGShip kVictim)
 
     Achieve(AT_TablesTurned);
     SITROOM().PushNarrativeHeadline(eTickerNarrative_UFOShotDown);
-    
+
     if (m_arrCEShipsShotDown.Find(kVictim.m_nmShipTemplate) == INDEX_NONE)
     {
         m_arrCEShipsShotDown.AddItem(kVictim.m_nmShipTemplate);
@@ -2040,41 +2093,67 @@ function LWCE_RemoveShip(LWCE_XGShip kShip)
     PRES().MissionNotify();
 }
 
-function RestoreCountryToXCom(int iCountryId)
-{
-    `LWCE_LOG_DEPRECATED_CLS(RestoreCountryToXCom);
-}
-
 /// <summary>
 /// Returns a country to the XCOM Project, as after a successful alien base assault.
 /// </summary>
-function LWCE_RestoreCountryToXCom(name nmCountry)
+function RestoreCountryToXCom(name nmCountry)
 {
     local LWCE_XGCountry kCountry;
 
     kCountry = `LWCE_XGCOUNTRY(nmCountry);
-    kCountry.m_bSecretPact = false;
 
     World().m_iNumCountriesLost -= 1;
     STAT_AddStat(eRecap_CountriesLost, -1);
 
-    if (kCountry.HasSatelliteCoverage())
-    {
-        `LWCE_XGCONTINENT(kCountry.LWCE_GetContinent()).LWCE_SetSatelliteCoverage(nmCountry, true);
-    }
-
-    kCountry.BeginPaying();
-
-    if (kCountry.GetEntity() != none)
-    {
-        kCountry.HideEntity(true);
-        kCountry.GetEntity().Destroy();
-    }
+    kCountry.RejoinXComProject();
 
     LWCE_XGGeoscape(GEOSCAPE()).LWCE_Alert(`LWCE_ALERT('CountryRejoinedXCom').AddName(nmCountry).Build());
 
     // Reduce alien bonus research by 15
     STAT_AddStat(2, -15);
+}
+
+/// <summary>
+/// Selects one or more countries to target for a mission objective, following the given target selection algorithm.
+/// Note that this function is NOT idempotent; aside from having random elements, the algorithm
+/// is also allowed to have side effects (e.g. the AvoidSatellites algorithm can sometimes deduct
+/// from alien resources).
+///
+/// Some algorithms behave differently when scheduling multiple missions at the same time; for example, when the
+/// Terrorize algorithm is used for multiple missions, all targets past the first one will be completely random.
+/// For this reason, countries are selected in batches by this function.
+/// </summary>
+/// <param name="nmTargetSelectionAlgorithm">Which algorithm to use to select target countries.</param>
+/// <param name="iNumTargets">How many target countries should be selected in total.</param>
+/// <returns>An array of countries to target. Depending on the algorithm used, this may contain duplicate entries.</returns>
+function array<name> SelectTargetCountries(name nmTargetSelectionAlgorithm, int iNumTargets)
+{
+    local array<name> arrTargets;
+
+    // We can eventually add an event to allow extending these algorithms, whenever somebody asks for it
+
+    switch (nmTargetSelectionAlgorithm)
+    {
+        case 'AvoidSatellites':
+            return SelectTargetCountries_AvoidSatellites();
+        case 'ProtectAlienBases':
+            return SelectTargetCountries_ProtectAlienBases();
+        case 'SatelliteCovered':
+            return SelectTargetCountries_SatelliteCovered();
+        case 'SpreadPanic':
+            return SelectTargetCountries_SpreadPanic();
+        case 'Terrorize':
+            return SelectTargetCountries_Terrorize();
+        case 'XComAdvancedAirBase':
+            return SelectTargetCountries_XComAdvancedAirBase();
+        case 'XComHQ':
+            return SelectTargetCountries_XComHQ();
+        case 'XComMember':
+            return SelectTargetCountries_XComMember();
+    }
+
+    arrTargets.Length = 0;
+    return arrTargets;
 }
 
 function SignPact(XGShip_UFO kUFO, int iCountry)
@@ -2151,15 +2230,6 @@ protected function int DetermineLandedUFOMissionTimer(LWCE_XGShip kShip)
     }
 }
 
-protected function LWCE_TObjective GetObjectiveDefinition(name nmObjective)
-{
-    local LWCE_TObjective kObjective;
-
-    `LWCE_LOG_NOT_IMPLEMENTED(GetObjectiveDefinition);
-
-    return kObjective;
-}
-
 protected function int RollMissionCount(float Count)
 {
     local int iCount;
@@ -2189,4 +2259,343 @@ protected function LWCE_TMissionReward CreateMissionRewards(const array<LWCE_TIt
     }
 
     return kReward;
+}
+
+/// <summary>
+/// Selects one or more target countries for missions based on the 'AvoidSatellites' algorithm. For more details,
+/// see SelectTargetCountries, as well as DefaultLWCEBaseStrategyAI.ini.
+/// </summary>
+protected function array<name> SelectTargetCountries_AvoidSatellites(int iNumTargets)
+{
+    local array<name> arrTargets;
+    local LWCE_XGCountry kCountry;
+    local LWCE_XGWorld kWorld;
+    local int iCounter;
+
+    kWorld = `LWCE_WORLD;
+
+    while (iNumTargets > 0)
+    {
+        kCountry = LWCE_XGCountry(kWorld.GetRandomCouncilCountry());
+
+        // Roll to see if we need to avoid this satellite-covered country
+        if (kCountry.HasSatelliteCoverage() && Rand(10) < STAT_GetStat(21))
+        {
+            // Keep rerolling until we run out of tries or hit an uncovered country
+            for (iCounter = 0; iCounter < 16; iCounter++)
+            {
+                kCountry = LWCE_XGCountry(kWorld.GetRandomCouncilCountry());
+
+                if (!kCountry.HasSatelliteCoverage())
+                {
+                    // The reroll costs 5 alien resources if successful
+                    STAT_AddStat(19, -5);
+                    break;
+                }
+            }
+        }
+
+        arrTargets.AddItem(kCountry.m_nmCountry);
+
+        iNumTargets--;
+    }
+
+    return arrTargets;
+}
+
+/// <summary>
+/// Selects one or more target countries for missions based on the 'ProtectAlienBases' algorithm. For more details,
+/// see SelectTargetCountries, as well as DefaultLWCEBaseStrategyAI.ini.
+/// </summary>
+protected function array<name> SelectTargetCountries_ProtectAlienBases(int iNumTargets)
+{
+    local array<LWCE_XGCountry> arrCouncilCountries, arrPossibleCountries;
+    local array<name> arrTargets, arrReplacementTargets;
+    local LWCE_XGCountry kCountry;
+    local LWCE_XGWorld kWorld;
+    local int Index;
+
+    kWorld = `LWCE_WORLD;
+    arrCouncilCountries = kWorld.GetCouncilCountries(/* bRequireCurrentMember */ false);
+
+    foreach arrCouncilCountries(kCountry)
+    {
+        if (kCountry.LeftXCom() && kCountry.HasSatelliteCoverage())
+        {
+            arrPossibleCountries.AddItem(kCountry);
+        }
+    }
+
+    // If any countries exist matching our original criteria, then all targets are pulled from this pool (duplicates allowed)
+    if (arrPossibleCountries.Length > 0)
+    {
+        while (iNumTargets > 0)
+        {
+            arrTargets.AddItem(arrPossibleCountries[Rand(arrPossibleCountries.Length)]);
+
+            iNumTargets--;
+        }
+
+        return arrTargets;
+    }
+
+    // If we fail to find any targets with the initial criteria, fall back to the SpreadPanic algorithm
+    arrTargets = SelectTargetCountries_SpreadPanic(iNumTargets);
+
+    // .. but if any of the targets selected don't have satellite coverage, replace them
+    // with a random satellite-covered country, per the SatelliteCovered algorithm
+    for (Index = 0; Index < arrTargets.Length; Index++)
+    {
+        if (!kWorld.LWCE_GetCountry(arrTargets[Index]).HasSatelliteCoverage())
+        {
+            arrReplacementTargets = SelectTargetCountries_SatelliteCovered(1);
+            arrTargets[Index] = arrReplacementTargets[0].m_nmCountry;
+        }
+    }
+
+    return arrTargets;
+}
+
+/// <summary>
+/// Selects one or more target countries for missions based on the 'SatelliteCovered' algorithm. For more details,
+/// see SelectTargetCountries, as well as DefaultLWCEBaseStrategyAI.ini.
+/// </summary>
+protected function array<name> SelectTargetCountries_SatelliteCovered(int iNumTargets)
+{
+    local array<LWCE_XGCountry> arrSatelliteCountries;
+    local LWCE_XGCountry kCountry;
+    local LWCE_XGWorld kWorld;
+    local array<name> arrEligibleCountries, arrTargets;
+
+    kWorld = `LWCE_WORLD;
+
+    arrSatelliteCountries = `LWCE_WORLD.GetCouncilCountries(/* bRequireCurrentMember */ false);
+
+    foreach arrSatelliteCountries(kCountry)
+    {
+        if (kCountry.HasSatelliteCoverage())
+        {
+            arrEligibleCountries.AddItem(kCountry);
+        }
+    }
+
+    while (iNumTargets > 0)
+    {
+        if (arrSatelliteCountries.Length > 0)
+        {
+            // If we have countries with satellite coverage, always pull from them, with duplicates allowed
+            arrTargets.AddItem(arrSatelliteCountries[Rand(arrSatelliteCountries.Length)].m_nmCountry);
+        }
+        else
+        {
+            // Otherwise, just use any random member of the XCOM project
+            kCountry = LWCE_XGCountry(kWorld.GetRandomCouncilCountry());
+            arrTargets.AddItem(kCountry.m_nmCountry);
+        }
+
+        iNumTargets--;
+    }
+
+    return arrTargets;
+}
+
+/// <summary>
+/// Selects one or more target countries for missions based on the 'SpreadPanic' algorithm. For more details,
+/// see SelectTargetCountries, as well as DefaultLWCEBaseStrategyAI.ini.
+/// </summary>
+protected function array<name> SelectTargetCountries_SpreadPanic(int iNumTargets)
+{
+    local array<LWCE_XGCountry> arrCouncilCountries, arrPossibleCountries;
+    local array<name> arrTargets;
+    local LWCE_XGCountry kAdjacentCountry, kCountry;
+    local LWCE_XGWorld kWorld;
+    local name nmAdjacentCountry;
+
+    kWorld = `LWCE_WORLD;
+    arrCouncilCountries = kWorld.GetCouncilCountries(/* bRequireCurrentMember */ false);
+
+    if (kWorld.GetNumDefectors() == 0)
+    {
+        // If all countries are still in the council, then they're all eligible
+        arrPossibleCountries = arrCouncilCountries;
+    }
+    else
+    {
+        // Otherwise, for each defected country, add its "neighboring" countries that haven't defected yet
+        foreach arrCouncilCountries(kCountry)
+        {
+            if (!kCountry.LeftXCom())
+            {
+                continue;
+            }
+
+            foreach kCountry.m_kTemplate.arrAdjacentCountries(nmAdjacentCountry)
+            {
+                // Just in case someone messes up their config
+                if (nmAdjacentCountry == kCountry.m_nmCountry)
+                {
+                    continue;
+                }
+
+                kAdjacentCountry = kWorld.LWCE_GetCountry(nmAdjacentCountry);
+
+                // It is possible to add the same country multiple times, if multiple of its adjacencies have defected;
+                // this is expected and matches the LW 1.0 behavior
+                if (!kAdjacentCountry.LeftXCom())
+                {
+                    arrPossibleCountries.AddItem(kAdjacentCountry);
+                }
+            }
+        }
+    }
+
+    arrPossibleCountries.Sort(LWCE_SortTerrorTargets);
+
+    while (iNumTargets > 0)
+    {
+        if (Roll(class'XGTacticalGameCore'.default.AI_TERRORIZE_MOST_PANICKED))
+        {
+            arrTargets.AddItem(arrPossibleCountries[0].m_nmCountry);
+        }
+
+        arrTargets.AddItem(arrPossibleCountries[Rand(Min(3, arrPossibleCountries.Length))].m_nmCountry);
+
+        iNumTargets--;
+    }
+
+    return arrTargets;
+}
+
+/// <summary>
+/// Selects one or more target countries for missions based on the 'Terrorize' algorithm. For more details,
+/// see SelectTargetCountries, as well as DefaultLWCEBaseStrategyAI.ini.
+/// </summary>
+protected function array<name> SelectTargetCountries_Terrorize(int iNumTargets)
+{
+    local int iTargetedMissions, iUntargetedMissions;
+    local array<name> arrTargets;
+    local LWCE_XGCountry kCountry;
+    local LWCE_XGWorld kWorld;
+
+    kWorld = `LWCE_WORLD;
+
+    // TODO rename these config vars not to be about "terrors" per se
+    // TODO add handling for Dynamic War
+    iTargetedMissions = MaxTargetedTerrorsPerMonth < 0 ? iNumTargets : Min(MaxTargetedTerrorsPerMonth, iNumTargets);
+
+    // If alien resources are high enough, they don't bother targeting any terrors at all
+    if (STAT_GetStat(19) >= IndiscriminateTerrorResourceThreshold)
+    {
+        iTargetedMissions = 0;
+    }
+
+    iUntargetedMissions = iNumTargets - iTargetedMissions;
+
+    // Targeted missions used the SpreadPanic algorithm
+    if (iTargetedMissions > 0)
+    {
+        arrTargets = SelectTargetCountries_SpreadPanic(iTargetedMissions);
+    }
+
+    // All remaining targets are just purely random
+    while (iUntargetedMissions > 0)
+    {
+        kCountry = LWCE_XGCountry(kWorld.GetRandomCouncilCountry());
+        arrTargets.AddItem(kCountry.m_nmCountry);
+
+        iUntargetedMissions--;
+    }
+
+    return arrTargets;
+}
+
+/// <summary>
+/// Selects one or more target countries for missions based on the 'XComAdvancedAirBase' algorithm. For more details,
+/// see SelectTargetCountries, as well as DefaultLWCEBaseStrategyAI.ini.
+/// </summary>
+protected function array<name> SelectTargetCountries_XComAdvancedAirBase(int iNumTargets)
+{
+    local array<name> arrEligibleCountries, arrTargets;
+    local LWCE_XGHeadquarters kHQ;
+    local LWCE_XGWorld kWorld;
+    local LWCE_XGContinent kCEContinent;
+    local XGContinent kContinent;
+
+    kHQ = `LWCE_HQ;
+    kWorld = `LWCE_WORLD;
+
+    foreach kWorld.m_arrContinents(kContinent)
+    {
+        kCEContinent = LWCE_XGContinent(kContinent);
+
+        // Ignore the starting continent, it doesn't technically have an air base
+        if (kCEContinent.m_nmContinent == kHQ.m_nmContinent)
+        {
+            continue;
+        }
+
+        // If a continent has at least one Firestorm, it's an eligible target
+        if (IsFirestormOnContinent(kCEContinent.m_nmContinent))
+        {
+            arrEligibleCountries.AddItem(kCEContinent.m_kTemplate.nmHQCountry);
+            break;
+        }
+    }
+
+    // LW 1.0 has no situation where multiple air base defenses are added at once, so we're just
+    // going to allow duplicates
+    while (iNumTargets > 0 && arrEligibleCountries.Length > 0)
+    {
+        arrTargets.AddItem(arrEligibleCountries[Rand(arrEligibleCountries.Length)]);
+        iNumTargets--;
+    }
+
+    return arrTargets;
+}
+
+/// <summary>
+/// Selects one or more target countries for missions based on the 'XComHQ' algorithm. For more details,
+/// see SelectTargetCountries, as well as DefaultLWCEBaseStrategyAI.ini.
+/// </summary>
+protected function array<name> SelectTargetCountries_XComHQ(int iNumTargets)
+{
+    local array<name> arrTargets;
+    local name nmHQCountry;
+
+    nmHQCountry = `LWCE_HQ.LWCE_GetHomeCountry();
+
+    while (iNumTargets > 0)
+    {
+        arrTargets.AddItem(nmHQCountry);
+
+        iNumTargets--;
+    }
+
+    return arrTargets;
+}
+
+/// <summary>
+/// Selects one or more target countries for missions based on the 'XComMember' algorithm. For more details,
+/// see SelectTargetCountries, as well as DefaultLWCEBaseStrategyAI.ini.
+/// </summary>
+protected function array<name> SelectTargetCountries_XComMember(int iNumTargets)
+{
+    local array<LWCE_XGCountry> arrCouncilCountries;
+    local array<name> arrTargets;
+    local int Index;
+
+    arrCouncilCountries = `LWCE_WORLD.GetCouncilCountries(/* bRequireCurrentMember */ true);
+
+    // Unlike most algorithms, XComMember doesn't allow duplicates, because it is potentially being used for abduction
+    // blitzes in which every country needs to be unique
+    while (iNumTargets > 0 && arrCouncilCountries.Length > 0)
+    {
+        Index = Rand(arrCouncilCountries.Length);
+        arrTargets.AddItem(arrCouncilCountries[Index].m_nmCountry);
+        arrCouncilCountries.Remove(Index, 1);
+
+        iNumTargets--;
+    }
+
+    return arrTargets;
 }

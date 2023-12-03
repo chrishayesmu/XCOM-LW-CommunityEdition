@@ -6,7 +6,7 @@ var config array<config TRect> arrBounds;   // Bounding boxes which together def
 var config array<name> arrCountries;        // The names of the countries which are in this continent.
 var config array<name> arrContinentBonuses; // Which bonuses are available via complete satellite coverage. If multiple are specified, one is chosen randomly
                                             // at the start of the campaign.
-
+var config name nmHQCountry;                // Which country contains `v2HQLocation`; this country will be considered to contain the continent's air base.
 var config string ImagePath;                // TODO
 
 var const localized string strName;
@@ -18,4 +18,15 @@ var const localized string strNameAdjective;
 function name GetContinentName()
 {
     return DataName;
+}
+
+function bool ValidateTemplate(out string strError)
+{
+    if (arrCountries.Find(nmHQCountry) == INDEX_NONE)
+    {
+        strError = "nmHQCountry is " $ nmHQCountry $ " but that wasn't found in arrCountries";
+        return false;
+    }
+
+	return super.ValidateTemplate(strError);
 }

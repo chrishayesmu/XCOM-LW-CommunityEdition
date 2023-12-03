@@ -599,6 +599,52 @@ function ClearTopAlert(optional bool bDoNotResume = false)
     }
 }
 
+function ColorCountry(ECountry eCntry, Color Col)
+{
+    `LWCE_LOG_DEPRECATED_CLS(ColorCountry);
+}
+
+/// <summary>
+/// Changes the given country's color on the Geoscape globe.
+/// </summary>
+function LWCE_ColorCountry(name nmCountry, Color Col)
+{
+    `LWCE_LOG_NOT_IMPLEMENTED(LWCE_ColorCountry);
+
+    // `HQGAME.GetEarth().HighlightCountry(nmCountry, Col);
+}
+
+function ClearCountryColor(ECountry eCntry, Color Col)
+{
+    `LWCE_LOG_DEPRECATED_CLS(ClearCountryColor);
+}
+
+/// <summary>
+/// TODO; not clear
+/// </summary>
+function LWCE_ClearCountryColor(name nmCountry, Color Col)
+{
+    `LWCE_LOG_NOT_IMPLEMENTED(LWCE_ClearCountryColor);
+
+    // `HQGAME.GetEarth().ClearCountryHighlight(nmCountry);
+}
+
+function ClearCountryPulse(ECountry eCntry)
+{
+    `LWCE_LOG_DEPRECATED_CLS(ClearCountryPulse);
+}
+
+/// <summary>
+/// Removes the pulse from the given country and recolors it according to its panic level.
+/// </summary>
+function LWCE_ClearCountryPulse(name nmCountry)
+{
+    `LWCE_LOG_NOT_IMPLEMENTED(LWCE_ClearCountryPulse);
+
+    // `HQGAME.GetEarth().ClearCountryHighlight(nmCountry);
+    // UpdateCountryColors();
+}
+
 function int DetectUFO(XGShip_UFO kUFO)
 {
     `LWCE_LOG_DEPRECATED_BY(DetectUFO, LWCE_DetectShip);
@@ -948,6 +994,21 @@ simulated function LWCE_PreloadSquadIntoSkyranger(name nmAlertType, bool bUnload
     }
 }
 
+function PulseCountry(ECountry eCntry, Color col1, Color col2, float fTime)
+{
+    `LWCE_LOG_DEPRECATED_CLS(PulseCountry);
+}
+
+/// <summary>
+/// Causes the specified country to pulse between two colors.
+/// </summary>
+function LWCE_PulseCountry(name nmCountry, Color col1, Color col2, float fTime)
+{
+    `LWCE_LOG_NOT_IMPLEMENTED(LWCE_PulseCountry);
+
+    // `HQGAME.GetEarth().PulseCountry(nmCountry, col1, col2, fTime);
+}
+
 function RadarUpdate()
 {
     `LWCE_LOG_NOT_IMPLEMENTED(RadarUpdate);
@@ -1011,7 +1072,7 @@ function LWCE_RemoveShip(LWCE_XGShip kShip)
     {
         LWCE_CancelInterception(kShip);
     }
-    
+
     UpdateSound();
 }
 
@@ -1071,5 +1132,21 @@ function int LWCE_TrackShip(LWCE_XGShip kShip)
     else
     {
         return -1;
+    }
+}
+
+/// <summary>
+/// Recolors all current Council countries to match their panic color.
+/// </summary>
+function UpdateCountryColors()
+{
+    local array<LWCE_XGCountry> arrCountries;
+    local LWCE_XGCountry kCountry;
+
+    arrCountries = `LWCE_WORLD.GetCouncilCountries(/* bRequireCurrentMember */ true);
+
+    foreach arrCountries(kCountry)
+    {
+        LWCE_ColorCountry(kCountry.m_nmCountry, kCountry.GetPanicColor());
     }
 }

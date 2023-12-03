@@ -5,7 +5,7 @@ static function LWCEShipMissionTemplateManager GetInstance()
     return LWCEShipMissionTemplateManager(class'LWCE_XComEngine'.static.GetTemplateManager(class'LWCEShipMissionTemplateManager'));
 }
 
-function bool AddEventListenerTemplate(LWCEShipMissionTemplate Data, bool ReplaceDuplicate = false)
+function bool AddShipMissionTemplate(LWCEShipMissionTemplate Data, bool ReplaceDuplicate = false)
 {
     return AddDataTemplate(Data, ReplaceDuplicate);
 }

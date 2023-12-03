@@ -4,16 +4,17 @@ struct CheckpointRecord_LWCE_XGCountry extends XGCountry.CheckpointRecord
 {
     var name m_nmCountry;
     var name m_nmContinent;
-    var array<LWCE_TUFORecord> m_arrCEShipRecord;
+    var array<LWCE_TShipRecord> m_arrCEShipRecord;
     var int m_iShields;
-    var bool m_bIsCouncilMember;
+    var bool m_bIsGrantingBonus;
 };
 
 var name m_nmCountry;
 var name m_nmContinent;
-var array<LWCE_TUFORecord> m_arrCEShipRecord; // History of all of the enemy ships that have been sent on missions targeting this country.
+var name m_nmBonus;
+var array<LWCE_TShipRecord> m_arrCEShipRecord; // History of all of the enemy ships that have been sent on missions targeting this country.
 var int m_iShields; // Country's defense level; replaces m_kTCountry.iScience in LW
-var bool m_bIsCouncilMember;
+var bool m_bIsGrantingBonus; // Whether this country is currently
 
 var LWCECountryTemplate m_kTemplate;
 
@@ -125,7 +126,7 @@ function int LWCE_CalcFunding(optional bool bPretendHasSatellite = false, option
     }
 
     iFunding = m_kTemplate.iCashPerMonth;
-    
+
     if (IsOptionEnabled(`LW_SECOND_WAVE_ID(WarWeariness)))
     {
         fPenaltyPct = AI().GetMonth() * 0.050;
@@ -196,10 +197,24 @@ function InitNewGame(TCountry kCountry)
 
 function LWCE_InitNewGame(name nmCountry, name nmContinent)
 {
+    m_kTemplate = `LWCE_COUNTRY(nmCountry);
+
     m_nmCountry = nmCountry;
     m_nmContinent = nmContinent;
 
-    m_kTemplate = `LWCE_COUNTRY(m_nmCountry);
+    // If this is the starting country, our bonus is already decided for us by the player
+    if (IsStartingCountry())
+    {
+        m_nmBonus = LWCE_XGHeadquarters(HQ()).m_nmStartingBonus;
+        m_bIsGrantingBonus = true;
+    }
+    else if (m_kTemplate.arrStartingBonuses.Length > 0)
+    {
+        // Otherwise, randomly choose a possible bonus for this country to have
+        // TODO: it would be better to do this at a higher level and avoid the same bonus appearing in multiple countries
+        // (unless some config setting indicates that we want that)
+        m_nmBonus = m_kTemplate.arrStartingBonuses[Rand(m_kTemplate.arrStartingBonuses.Length)];
+    }
 }
 
 function bool IsCouncilMember()
@@ -207,9 +222,14 @@ function bool IsCouncilMember()
     return m_kTemplate.bIsCouncilMember;
 }
 
+function bool IsStartingCountry()
+{
+    return `LWCE_HQ.m_nmCountry == m_nmCountry;
+}
+
 function LeaveXComProject()
 {
-    LWCE_XGStrategyAI(AI()).LWCE_ClearFromAbductionList(m_nmCountry);
+    LWCE_XGStrategyAI(AI()).LWCE_ClearCountryObjectives(m_nmCountry);
 
     m_iFunding = 0;
     m_iPanic = -1;
@@ -221,13 +241,13 @@ function LeaveXComProject()
 
     if (HasSatelliteCoverage())
     {
-        HQ().RemoveSatellite(m_nmCountry);
+        LWCE_XGHeadquarters(HQ()).LWCE_RemoveSatellite(m_nmCountry);
     }
 
     m_bSecretPact = true;
-    GEOSCAPE().ColorCountry(m_nmCountry, GetPanicColor());
+    LWCE_XGGeoscape(GEOSCAPE()).LWCE_ColorCountry(m_nmCountry, GetPanicColor());
     Game().CheckForLoseGame();
-    World().m_kFundingCouncil.OnCountryLeft(m_nmCountry);
+    LWCE_XGFundingCouncil(World().m_kFundingCouncil).LWCE_OnCountryLeft(m_nmCountry);
     World().m_iNumCountriesLost += 1;
 
     STAT_AddStat(eRecap_CountriesLost, 1);
@@ -241,6 +261,39 @@ function LeaveXComProject()
     }
 }
 
+/// <summary>
+/// Brings this country back into the XCom project. In LW 1.0, this occurs after successfully assaulting an alien base.
+/// </summary>
+function RejoinXComProject()
+{
+    if (!LeftXCom())
+    {
+        return;
+    }
+
+    m_bSecretPact = false;
+
+    if (HasSatelliteCoverage())
+    {
+        if (!m_bIsGrantingBonus)
+        {
+            m_bIsGrantingBonus = true;
+            `LWCE_HQ.AdjustBonusLevel(m_nmBonus, class'LWCE_XGHeadquarters'.const.COUNTRY_SATELLITE_BONUS_LEVEL_AMOUNT);
+        }
+
+        `LWCE_XGCONTINENT(m_nmContinent).LWCE_SetSatelliteCoverage(m_nmCountry, true);
+    }
+
+    BeginPaying();
+
+    // Destroy the alien base Geoscape entity
+    if (GetEntity() != none)
+    {
+        HideEntity(true);
+        GetEntity().Destroy();
+    }
+}
+
 function SetSatelliteCoverage(bool bCoverage)
 {
     if (m_bSatellite == bCoverage)
@@ -250,7 +303,9 @@ function SetSatelliteCoverage(bool bCoverage)
 
     m_bSatellite = bCoverage;
 
-    if (!m_bSecretPact)
+    // Only inform the continent of coverage changes if this country is still in the council; otherwise
+    // it messes with logic for continent bonuses and panic
+    if (!LeftXCom())
     {
         `LWCE_XGCONTINENT(m_nmContinent).LWCE_SetSatelliteCoverage(m_nmCountry, bCoverage);
 
@@ -263,6 +318,18 @@ function SetSatelliteCoverage(bool bCoverage)
     // Countries erase their records whenever satellite coverage changes, presumably because the history
     // is only used when checking if a country has been hunted
     m_arrCEShipRecord.Length = 0;
+
+    // Check if we need to gain or lose a bonus due to this coverage change
+    if (bCoverage && !LeftXCom() && !m_bIsGrantingBonus)
+    {
+        m_bIsGrantingBonus = true;
+        `LWCE_HQ.AdjustBonusLevel(m_nmBonus, class'LWCE_XGHeadquarters'.const.COUNTRY_SATELLITE_BONUS_LEVEL_AMOUNT);
+    }
+    else if (!bCoverage && m_bIsGrantingBonus && !IsStartingCountry())
+    {
+        m_bIsGrantingBonus = false;
+        `LWCE_HQ.AdjustBonusLevel(m_nmBonus, -1 * class'LWCE_XGHeadquarters'.const.COUNTRY_SATELLITE_BONUS_LEVEL_AMOUNT);
+    }
 
     BeginPaying();
 }

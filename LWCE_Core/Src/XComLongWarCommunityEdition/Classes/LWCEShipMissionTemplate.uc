@@ -7,12 +7,12 @@ class LWCEShipMissionTemplate extends LWCEDataTemplate
 /// </summary>
 struct LWCE_AIShipMissionConfig
 {
-    var int iMinResearch; // Minimum alien research to use this config.
-    var int iMaxResearch; // Maximum alien research to use this config; -1 indicates no maximum.
+    var int iMinResearch;  // Minimum alien research to use this config.
+    var int iMaxResearch;  // Maximum alien research to use this config; -1 indicates no maximum.
     var int iMinResources; // Minimum alien resources to use this config.
     var int iMaxResources; // Maximum alien resources to use this config; -1 indicates no maximum.
     var int iRepeatPerExcessResources; // If set, adds extra entries for this config for every N resources the aliens possess beyond iMinResources.
-    var name nmShipType; // The name of an LWCEShipTemplate which will be used for the mission.
+    var name nmShipType;   // The name of an LWCEShipTemplate which will be used for the mission.
 
     structdefaultproperties
     {
@@ -166,4 +166,22 @@ function array<name> GetPossibleShips(int iAlienResearch, int iAlienResources)
     }
 
     return arrShips;
+}
+
+/// <summary>
+/// Rolls for what ship should be used to conduct a mission of this type. If more than one ship type
+/// is possible, the outcome is random.
+/// </summary>
+function name RollForShip(int iAlienResearch, int iAlienResources)
+{
+    local array<name> arrShips;
+
+    arrShips = GetPossibleShips(iAlienResearch, iAlienResources);
+
+    if (arrShips.Length == 0)
+    {
+        return '';
+    }
+
+    return arrShips[Rand(arrShips.Length)];
 }

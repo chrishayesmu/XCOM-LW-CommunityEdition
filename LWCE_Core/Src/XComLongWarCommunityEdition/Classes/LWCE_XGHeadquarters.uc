@@ -1,6 +1,10 @@
 class LWCE_XGHeadquarters extends XGHeadQuarters
     dependson(LWCETypes);
 
+const COUNTRY_SATELLITE_BONUS_LEVEL_AMOUNT = 1;   // The normal bonus level gained from placing a satellite over a country.
+const COUNTRY_STARTING_BONUS_LEVEL_AMOUNT = 2;    // The normal bonus level gained from starting in a particular country.
+const CONTINENT_SATELLITE_BONUS_LEVEL_AMOUNT = 2; // The normal bonus level gained from completing satellite coverage over an entire continent.
+
 struct LWCE_TBonus
 {
     var name BonusName;
@@ -27,6 +31,7 @@ struct CheckpointRecord_LWCE_XGHeadquarters extends XGHeadQuarters.CheckpointRec
     var int m_iNextBaseId;
     var name m_nmContinent;
     var name m_nmCountry;
+    var name m_nmStartingBonus;
 };
 
 var array<LWCE_XGBase> m_arrBases;
@@ -41,6 +46,7 @@ var LWCEItemContainer m_kCELastCargoArtifacts;
 var int m_iNextBaseId;
 var name m_nmContinent;
 var name m_nmCountry;
+var name m_nmStartingBonus;
 
 var const localized string m_strHQBaseName;
 
@@ -283,6 +289,63 @@ function LWCE_AddFacility(name nmFacility)
 }
 
 /// <summary>
+/// Increase or decrease the level of a bonus. If increasing a bonus which is not already earned,
+/// it will be newly applied; if decreasing a bonus to level 0 or below, it will be unapplied. Note
+/// that bonuses with negative levels will actually be persisted, not deleted, just in case this is
+/// useful behavior for some mod.
+///
+/// An event, 'BonusLevelChanged', will be emitted before this function returns.
+/// </summary>
+/// <param name="nmBonus">The name of the bonus to modify.</param>
+/// <param name="iAdjustment">How much to change the bonus level by.</param>
+/// <returns>The new level of the bonus after incrementing it.</param>
+function int AdjustBonusLevel(name nmBonus, int iAdjustment)
+{
+    local LWCEDataContainer kEventData;
+    local LWCE_TBonus kBonus;
+    local int Index, iOriginalLevel, iAdjustedLevel;
+
+    Index = m_arrBonuses.Find('BonusName', nmBonus);
+
+    if (Index == INDEX_NONE)
+    {
+        iOriginalLevel = 0;
+        iAdjustedLevel = iAdjustment;
+
+        kBonus.BonusName = nmBonus;
+        kBonus.Level = iAdjustedLevel;
+        m_arrBonuses.AddItem(kBonus);
+    }
+    else
+    {
+        iOriginalLevel = m_arrBonuses[Index].Level;
+        iAdjustedLevel = iOriginalLevel + iAdjustment;
+
+        m_arrBonuses[Index].Level = iAdjustedLevel;
+    }
+
+    // EVENT: BonusLevelChanged
+    //
+    // SUMMARY: Emitted when a bonus (such as a country or continent bonus) has just changed.
+    //          Most bonuses don't need to care when this happens, but it could be relevant to some;
+    //          for example, a bonus granting worldwide vision of all UFOs would want to update the
+    //          geoscape immediately when activated.
+    //
+    // DATA: LWCEDataContainer
+    //       Data[0]: int - The level of the bonus before the change.
+    //       Data[1]: int - The level of the bonus after the change.
+    //
+    // SOURCE: LWCE_XGHeadquarters
+    kEventData = class'LWCEDataContainer'.static.New('BonusLevelChanged');
+    kEventData.AddInt(iOriginalLevel);
+    kEventData.AddInt(iAdjustedLevel);
+
+    `LWCE_EVENT_MGR.TriggerEvent('BonusLevelChanged', kEventData, self);
+
+    return iAdjustedLevel;
+}
+
+/// <summary>
 /// Checks if the provided prerequisites are currently fulfilled. Optional parameters allow for
 /// "what-if" checks, e.g. "will these prereqs be fulfilled if the given Foundry project is completed".
 /// </summary>
@@ -466,7 +529,7 @@ function bool CanLaunchSatelliteTo(int iCountry)
 function bool LWCE_CanLaunchSatelliteTo(name nmCountry)
 {
     local LWCE_XGStorage kStorage;
-    
+
     kStorage = LWCE_XGStorage(STORAGE());
 
     return kStorage.LWCE_GetNumItemsAvailable('Item_Satellite') > 0 && !`LWCE_XGCountry(nmCountry).HasSatelliteCoverage();
@@ -730,7 +793,7 @@ function int LWCE_GetSatellite(name nmSatCountry)
             return iSatellite;
         }
     }
-    
+
     return INDEX_NONE;
 }
 
@@ -753,6 +816,21 @@ function int GetFacilityMaintenanceCost()
     }
 
     return -iMaintenance;
+}
+
+function ECountry GetHomeCountry()
+{
+    `LWCE_LOG_DEPRECATED_CLS(GetHomeCountry);
+
+    return ECountry(0);
+}
+
+/// <summary>
+/// Returns the country which contains XCOM HQ, i.e. the player's starting country.
+/// </summary>
+function name LWCE_GetHomeCountry()
+{
+    return m_nmCountry;
 }
 
 function int GetNumFacilities(EFacilityType eFacility)
@@ -835,63 +913,6 @@ function bool LWCE_HasFacility(name nmFacility)
     return Index == INDEX_NONE ? false : m_arrCEBaseFacilities[Index].Count > 0;
 }
 
-/// <summary>
-/// Increase or decrease the level of a bonus. If increasing a bonus which is not already earned,
-/// it will be newly applied; if decreasing a bonus to level 0 or below, it will be unapplied. Note
-/// that bonuses with negative levels will actually be persisted, not deleted, just in case this is
-/// useful behavior for some mod.
-///
-/// An event, 'BonusLevelChanged', will be emitted before this function returns.
-/// </summary>
-/// <param name="nmBonus">The name of the bonus to modify.</param>
-/// <param name="iAdjustment">How much to change the bonus level by.</param>
-/// <returns>The new level of the bonus after incrementing it.</param>
-function int AdjustBonusLevel(name nmBonus, int iAdjustment)
-{
-    local LWCEDataContainer kEventData;
-    local LWCE_TBonus kBonus;
-    local int Index, iOriginalLevel, iAdjustedLevel;
-
-    Index = m_arrBonuses.Find('BonusName', nmBonus);
-
-    if (Index == INDEX_NONE)
-    {
-        iOriginalLevel = 0;
-        iAdjustedLevel = iAdjustment;
-
-        kBonus.BonusName = nmBonus;
-        kBonus.Level = iAdjustedLevel;
-        m_arrBonuses.AddItem(kBonus);
-    }
-    else
-    {
-        iOriginalLevel = m_arrBonuses[Index].Level;
-        iAdjustedLevel = iOriginalLevel + iAdjustment;
-
-        m_arrBonuses[Index].Level = iAdjustedLevel;
-    }
-
-    // EVENT: BonusLevelChanged
-    //
-    // SUMMARY: Emitted when a bonus (such as a country or continent bonus) has just changed.
-    //          Most bonuses don't need to care when this happens, but it could be relevant to some;
-    //          for example, a bonus granting worldwide vision of all UFOs would want to update the
-    //          geoscape immediately when activated.
-    //
-    // DATA: LWCEDataContainer
-    //       Data[0]: int - The level of the bonus before the change.
-    //       Data[1]: int - The level of the bonus after the change.
-    //
-    // SOURCE: LWCE_XGHeadquarters
-    kEventData = class'LWCEDataContainer'.static.New('BonusLevelChanged');
-    kEventData.AddInt(iOriginalLevel);
-    kEventData.AddInt(iAdjustedLevel);
-
-    `LWCE_EVENT_MGR.TriggerEvent('BonusLevelChanged', kEventData, self);
-
-    return iAdjustedLevel;
-}
-
 function bool IsHyperwaveActive()
 {
     return LWCE_HasFacility('Facility_HyperwaveRadar') && m_bHyperwaveActivated;
@@ -907,7 +928,7 @@ function bool IsSatelliteInTransitTo(int iCountry)
 function bool LWCE_IsSatelliteInTransitTo(name nmCountry)
 {
     local int iSatellite;
-    
+
     for (iSatellite = 0; iSatellite < m_arrCESatellites.Length; iSatellite++)
     {
         if (m_arrCESatellites[iSatellite].nmCountry == nmCountry && m_arrCESatellites[iSatellite].iTravelTime > 0)
@@ -1067,13 +1088,45 @@ function LWCE_RemoveFacility(name nmFacility)
     ModifyFacilityCount(nmFacility, -1);
 }
 
+function RemoveSatellite(int iCountry)
+{
+    `LWCE_LOG_DEPRECATED_CLS(RemoveSatellite);
+}
+
+/// <summary>
+/// Removes the satellite over the given country, if any.
+/// </summary>
+function LWCE_RemoveSatellite(name nmCountry)
+{
+    local LWCE_XGWorld kWorld;
+    local int iSatellite;
+
+    kWorld = LWCE_XGWorld(WORLD());
+
+    for (iSatellite = 0; iSatellite < m_arrCESatellites.Length; iSatellite++)
+    {
+        if (m_arrCESatellites[iSatellite].nmCountry == nmCountry)
+        {
+            kWorld.LWCE_GetCountry(nmCountry).SetSatelliteCoverage(false);
+            m_arrCESatellites[iSatellite].kSatEntity.SetBase(none);
+            m_arrCESatellites[iSatellite].kSatEntity.SetHidden(true);
+            m_arrCESatellites[iSatellite].kSatEntity.Destroy();
+            m_arrCESatellites.Remove(iSatellite, 1);
+            break; // In LW 1.0 this is a return but then we don't update graphics
+        }
+    }
+
+    UpdateSatCoverageGraphics();
+}
+
 function SetStartingData(name nmContinent, name nmCountry, name nmStartingBonus)
 {
     m_nmContinent = nmContinent;
     m_nmCountry = nmCountry;
+    m_nmStartingBonus = nmStartingBonus;
 
     // TODO make starting bonus level a configurable value
-    AdjustBonusLevel(nmStartingBonus, 2);
+    AdjustBonusLevel(m_nmStartingBonus, COUNTRY_STARTING_BONUS_LEVEL_AMOUNT);
 
     LWCE_XGStorage(STORAGE()).LWCE_AddItem('Item_Satellite');
     LWCE_AddSatelliteNode(nmCountry, 'Item_Satellite', true);
@@ -1108,7 +1161,7 @@ function UpdateInterceptorOrders()
             kData.AddInt(m_arrCEShipOrders[iOrder].iNumShips);
             kData.AddName(m_arrCEShipOrders[iOrder].nmDestinationContinent);
 
-            LWCE_XComHQPresentationLayer(PRES()).LWCE_Notify('ShipOrderComplete', kData);           
+            LWCE_XComHQPresentationLayer(PRES()).LWCE_Notify('ShipOrderComplete', kData);
         }
     }
 

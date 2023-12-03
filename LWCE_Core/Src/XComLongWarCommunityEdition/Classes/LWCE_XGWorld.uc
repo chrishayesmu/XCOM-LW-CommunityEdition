@@ -94,7 +94,7 @@ function BuildCountry(int iCountry, int iContinent, bool bDeveloped)
 function LWCE_BuildCountry(name nmCountry, name nmContinent)
 {
     local LWCE_XGCountry kCountry;
-    
+
     kCountry = Spawn(class'LWCE_XGCountry');
     kCountry.LWCE_InitNewGame(nmCountry, nmContinent);
 
@@ -139,7 +139,7 @@ function CreateCountries()
 function XGContinent GetContinent(int iContinent)
 {
     `LWCE_LOG_DEPRECATED_CLS(GetContinent);
-    
+
     return none;
 }
 
@@ -177,7 +177,7 @@ function array<LWCE_XGContinent> LWCE_GetContinents()
     {
         arrContinents.AddItem(LWCE_XGContinent(m_arrContinents[Index]));
     }
-    
+
     return arrContinents;
 }
 
@@ -190,7 +190,7 @@ function array<name> LWCE_GetContinentNames()
     {
         arrContinents.AddItem(LWCE_XGContinent(m_arrContinents[Index]).m_nmContinent);
     }
-    
+
     return arrContinents;
 }
 
@@ -207,6 +207,26 @@ function LWCE_XGContinent GetContinentContainingCountry(name nmCountry)
     }
 
     return none;
+}
+
+/// <summary>
+/// Gets all of the countries which are part of the XCOM funding council. If `bRequireCurrentMember` is `true`,
+/// then only countries which are currently in the council (i.e. have not defected) are returned.
+/// </summary>
+function array<LWCE_XGCountry> GetCouncilCountries(bool bRequireCurrentMember)
+{
+    local array<LWCE_XGCountry> arrCouncilCountries;
+    local XGCountry kCountry;
+
+    foreach m_arrCountries(kCountry)
+    {
+        if (kCountry.IsCouncilMember() && (!bRequireCurrentMember || !kCountry.LeftXCom()))
+        {
+            arrCouncilCountries.AddItem(LWCE_XGCountry(kCountry));
+        }
+    }
+
+    return arrCouncilCountries;
 }
 
 function XGCountry GetCountry(int iCountryID)
@@ -239,7 +259,7 @@ function array<LWCE_XGCountry> LWCE_GetCountries()
     {
         arrCountries.AddItem(LWCE_XGCountry(m_arrCountries[Index]));
     }
-    
+
     return arrCountries;
 }
 

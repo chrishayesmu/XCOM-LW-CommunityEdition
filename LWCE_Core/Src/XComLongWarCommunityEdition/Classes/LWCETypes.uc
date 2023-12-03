@@ -535,9 +535,9 @@ struct LWCE_TObjectSummary
 /// </summary>
 struct LWCE_TObjective
 {
-    // The overall goal of the objective. Base game values include `Scout`, `Hunt`, `Bomb`, 
-    // `Terrorize`, `AssaultXComAirBase`, `AssaultXComHQ`, `Infiltrate`, `Research`, `Harvest`, 
-    // `Abduct`, and `CommandOverwatch`.
+    // The overall goal of the objective. Base game values include `Scout`, `Hunt`, `Bomb`,
+    // `Terrorize`, `AssaultXComAirBase`, `AssaultXComHQ`, `Infiltrate`, `Research`, `Harvest`,
+    // `Abduct`, and `CommandOverwatch`. Must map to an LWCEEnemyObjectiveTemplate instance.
     var name nmType;
 
     // The name to display for this objective if the player has the Hyperwave Relay.
@@ -561,7 +561,7 @@ struct LWCE_TObjective
     // Which type of ship will be sent on the mission. Should be the name of an LWCEShipTemplate.
     var array<name> arrShips;
 
-    // When to schedule the mission. These dates are offsets from when the objective is created, which is typically the start 
+    // When to schedule the mission. These dates are offsets from when the objective is created, which is typically the start
     // of the month; e.g. a date of 0 would be the first day of the month. However, some objectives are created mid-month, such as
     // satellite hunts which follow a successful scouting mission. Additionally, a start date could be extremely long, spanning more
     // than one month, and this would also be supported.
@@ -625,7 +625,7 @@ struct LWCE_TShipStats
 };
 
 /// <summary>
-/// Tracks a transfer of ships from one continent to another. 
+/// Tracks a transfer of ships from one continent to another.
 /// </summary>
 struct LWCE_TShipTransfer
 {

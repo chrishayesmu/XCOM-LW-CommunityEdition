@@ -104,6 +104,11 @@ function LWCE_AddItem(name ItemName, optional int iQuantity = 1, optional name n
         return;
     }
 
+    if (kItem.IsInfinite())
+    {
+        return;
+    }
+
     if (kItem.nmResultingShip != '')
     {
         LWCE_XGFacility_Hangar(HANGAR()).LWCE_AddShip(kItem.nmResultingShip, nmContinent);

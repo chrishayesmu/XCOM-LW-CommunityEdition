@@ -95,7 +95,7 @@ function bool LWCE_AccuseCountry(name nmAccusedCountry)
 
         if (kCountry.LeftXCom())
         {
-            kContinent = LWCE_GetContinent(kCountry.LWCE_GetContinent());
+            kContinent = kWorld.LWCE_GetContinent(kCountry.LWCE_GetContinent());
 
             foreach kContinent.m_kTemplate.arrCountries(nmNeighborCountry)
             {
@@ -569,7 +569,7 @@ function LWCE_PerformRandomOperation(name nmOperationCountry)
     }
 
     eChosenOperation = arrPossibleOperations[Rand(arrPossibleOperations.Length)];
-    
+
     switch (eChosenOperation)
     {
         case eExaltCellExposeReason_SabatogeOperation:
@@ -1138,7 +1138,7 @@ protected function LWCE_SelectClues(name nmDesiredCountry)
 {
     local array<LWCE_XGCountry> arrCountries;
     local LWCE_XGCountry kCountry;
-    local LWCE_XGWorld kWorld;    
+    local LWCE_XGWorld kWorld;
     local array<LWCE_TExaltClueDefinition> arrCandidateClues;
     local LWCE_TExaltClueDefinition kClue;
     local array<name> arrRemainingCountries;

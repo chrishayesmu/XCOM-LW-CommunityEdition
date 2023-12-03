@@ -15,35 +15,65 @@ var name m_nmCityTarget;
 var name m_nmCountryTarget;
 var name m_nmShipTeam;
 
+var LWCEEnemyObjectiveTemplate m_kTemplate;
+
 function Init(TObjective kObj, int iStartDate, Vector2D v2Target, int iCountry, optional int iCity, optional EShipType eShip)
 {
     `LWCE_LOG_DEPRECATED_CLS(Init);
 }
 
-function LWCE_Init(LWCE_TObjective kObj, int iStartDate, Vector2D v2Target, name nmShipTeam, name nmCountry, optional name nmCity, optional name nmShipType)
+function LWCE_Init(name nmObjective, int iStartDate, Vector2D v2Target, name nmShipTeam, name nmCountry, optional name nmCity, optional name nmShipType)
 {
-    local int iShip, iDate;
+    local LWCEShipMissionTemplate kShipMission;
+    local LWCEShipMissionTemplateManager kShipMissionMgr;
+    local int Index, iAlienResearch, iAlienResources;
 
-    m_kCETObjective = kObj;
+    m_kCETObjective.nmType = nmObjective;
     m_nmCountryTarget = nmCountry;
     m_nmCityTarget = nmCity;
     m_nmShipTeam = nmShipTeam;
     m_v2Target = v2Target;
 
+    kShipMissionMgr = `LWCE_SHIP_MISSION_TEMPLATE_MGR;
+    m_kTemplate = `LWCE_ENEMY_OBJECTIVE(m_kCETObjective.nmType);
+
+    iAlienResearch = `ALIEN_RESEARCH;
+    iAlienResources = `ALIEN_RESOURCES;
+
+    // Populate our objective data from the ship mission templates; after this, those templates aren't used again
+    // except to retrieve their flight plans
+    for (Index = 0; Index < m_kTemplate.arrMissions.Length; Index++)
+    {
+        kShipMission = kShipMissionMgr.FindShipMissionTemplate(m_kTemplate.arrMissions[Index]);
+
+        m_kCETObjective.arrMissions.AddItem(kShipMission.GetMissionName());
+        m_kCETObjective.arrRadii.AddItem(kShipMission.iFlightRadius);
+        m_kCETObjective.arrRandDays.AddItem(kShipMission.iRandomDays);
+        m_kCETObjective.arrShips.AddItem(kShipMission.RollForShip(iAlienResearch, iAlienResources));
+        m_kCETObjective.arrStartDates.AddItem(kShipMission.iStartDays);
+    }
+
+    // Override the ship type, if one is provided
     if (nmShipType != '')
     {
-        for (iShip = 0; iShip < m_kCETObjective.arrShips.Length; iShip++)
+        for (Index = 0; Index < m_kCETObjective.arrShips.Length; Index++)
         {
-            m_kCETObjective.arrShips[iShip] = nmShipType;
+            m_kCETObjective.arrShips[Index] = nmShipType;
         }
     }
 
-    for (iDate = 0; iDate < m_kCETObjective.arrStartDates.Length; iDate++)
+    // Offset all start dates by the incoming start date
+    for (Index = 0; Index < m_kCETObjective.arrStartDates.Length; Index++)
     {
-        m_kCETObjective.arrStartDates[iDate] += iStartDate;
+        m_kCETObjective.arrStartDates[Index] += iStartDate;
     }
 
     m_iNextMissionTimer = ConvertDaysToTimeslices(m_kCETObjective.arrStartDates[0], m_kCETObjective.arrRandDays[0]);
+}
+
+function ApplyCheckpointRecord()
+{
+    m_kTemplate = `LWCE_ENEMY_OBJECTIVE(m_kCETObjective.nmType);
 }
 
 function CheckIsComplete(XGShip_UFO kUFO)
@@ -200,6 +230,7 @@ function name LWCE_GetType()
 /// </summary>
 function LaunchNextMission()
 {
+    local LWCEShipMissionTemplate kShipMission;
     local LWCE_XGHeadquarters kHQ;
     local LWCE_XGShip kShip;
     local int iSatIndex;
@@ -212,7 +243,8 @@ function LaunchNextMission()
         return;
     }
 
-    arrFlightPlan = LWCE_GetFlightPlan(m_kCETObjective.arrMissions[0], fDuration);
+    kShipMission = `LWCE_SHIP_MISSION(m_kCETObjective.arrMissions[0]);
+    arrFlightPlan = kShipMission.GetFlightPlanSteps(fDuration);
     kShip = LWCE_LaunchShip(m_kCETObjective.arrShips[0], arrFlightPlan, DetermineMissionTarget(m_kCETObjective.arrRadii[0]), fDuration);
     m_iSightings += 1;
 
@@ -225,6 +257,7 @@ function LaunchNextMission()
         m_kLastShip = kShip;
     }
 
+    // TODO: move this logic into some event listener or template delegate
     if (m_kCETObjective.nmType == 'Hunt')
     {
         kHQ = LWCE_XGHeadquarters(HQ());
@@ -305,8 +338,8 @@ function LWCE_NotifyOfCrash(LWCE_XGShip kShip)
     m_iDetected += 1;
     kContinent.m_kMonthly.iUFOsShotdown += 1;
     kContinent.m_kMonthly.iUFOsDetected += 1;
-    
-    kAI.LWCE_LogUFORecord(kShip, eUMR_ShotDown);
+
+    kAI.LWCE_LogShipRecord(kShip, eUMR_ShotDown);
 
     if (kShip == m_kLastShip)
     {
@@ -347,7 +380,7 @@ function LWCE_NotifyOfSuccess(LWCE_XGShip kShip)
         eResult = eUMR_Intercepted;
     }
 
-    LWCE_XGStrategyAI(AI()).LWCE_LogUFORecord(kShip, eResult);
+    LWCE_XGStrategyAI(AI()).LWCE_LogShipRecord(kShip, eResult);
 
     if (kShip == m_kLastShip)
     {

@@ -108,7 +108,7 @@ function LWCE_AddFirestorm(name nmContinent)
 
 function AddInterceptor(int iContinent)
 {
-    `LWCE_LOG("ERROR: LWCE-incompatible function AddInterceptor was called. This needs to be replaced with LWCE_AddShip. Stack trace follows."); 
+    `LWCE_LOG("ERROR: LWCE-incompatible function AddInterceptor was called. This needs to be replaced with LWCE_AddShip. Stack trace follows.");
     ScriptTrace();
 }
 
@@ -368,7 +368,7 @@ function int LWCE_GetNumShips(name nmContinent)
             iNumShips++;
         }
     }
-    
+
     return iNumShips;
 }
 
@@ -448,7 +448,7 @@ function array<LWCE_XGShip> LWCE_GetShipsByContinent(name nmContinent)
             arrShips.AddItem(kShip);
         }
     }
-    
+
     return arrShips;
 }
 
@@ -587,6 +587,20 @@ function LandDropship(XGShip_Dropship kSkyranger)
     GEOSCAPE().Resume();
 }
 
+function OnInterceptorDestroyed(XGShip_Interceptor kInterceptor)
+{
+    `LWCE_LOG_DEPRECATED_BY(OnInterceptorDestroyed, LWCE_OnShipDestroyed);
+}
+
+function LWCE_OnShipDestroyed(LWCE_XGShip kShip)
+{
+    m_iJetsLost += 1;
+    m_bNarrLostJet = true;
+    LWCE_RemoveShip(kShip);
+    GEOSCAPE().ResetShipTimeScale();
+    STAT_AddStat(eRecap_InterceptorsLost, 1);
+}
+
 function bool OrderedHigher(XGShip_Interceptor kCraft1, XGShip_Interceptor kCraft2)
 {
     // Same as the base OrderedHigher but without GetWeapon calls since our items are unordered
@@ -636,6 +650,41 @@ function bool OrderedHigher(XGShip_Interceptor kCraft1, XGShip_Interceptor kCraf
     }
 
     return false;
+}
+
+function RemoveInterceptor(XGShip_Interceptor kInt)
+{
+    `LWCE_LOG_DEPRECATED_BY(RemoveInterceptor, LWCE_RemoveShip);
+}
+
+function LWCE_RemoveShip(LWCE_XGShip kShip)
+{
+    local LWCE_XGStorage kStorage;
+    local name nmWeapon;
+
+    kStorage = LWCE_XGStorage(STORAGE());
+
+    m_arrCEShips.RemoveItem(kShip);
+
+    if (kShip.m_iHP > 0)
+    {
+        foreach kShip.m_arrCEWeapons(nmWeapon)
+        {
+            kStorage.LWCE_AddItem(nmWeapon);
+        }
+    }
+
+    if (kShip.m_kEntity != none)
+    {
+        kShip.HideEntity(true);
+        kShip.m_kEntity.Destroy();
+    }
+
+    kShip.DestroyHangarShip();
+    kShip.Destroy();
+
+    ReorderCraft();
+    UpdateHangarBays();
 }
 
 function EItemType ShipTypeToItemType(EShipType eShip)

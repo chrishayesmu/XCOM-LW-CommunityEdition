@@ -45,6 +45,7 @@
 `define LWCE_CONTINENT_TEMPLATE_MGR (class'LWCEContinentTemplateManager'.static.GetInstance())
 `define LWCE_COUNCIL_REQUEST_TEMPLATE_MGR (class'LWCECouncilRequestTemplateManager'.static.GetInstance())
 `define LWCE_COUNTRY_TEMPLATE_MGR (class'LWCECountryTemplateManager'.static.GetInstance())
+`define LWCE_ENEMY_OBJECTIVE_TEMPLATE_MGR (class'LWCEEnemyObjectiveTemplateManager'.static.GetInstance())
 `define LWCE_FACILITY_TEMPLATE_MGR (class'LWCEFacilityTemplateManager'.static.GetInstance())
 `define LWCE_FOUNDRY_TEMPLATE_MGR (class'LWCEFoundryProjectTemplateManager'.static.GetInstance())
 `define LWCE_ITEM_TEMPLATE_MGR (class'LWCEItemTemplateManager'.static.GetInstance())
@@ -58,6 +59,7 @@
 `define LWCE_CITY(nm) (`LWCE_CITY_TEMPLATE_MGR.FindCityTemplate(`nm))
 `define LWCE_CONTINENT(nm) (`LWCE_CONTINENT_TEMPLATE_MGR.FindContinentTemplate(`nm))
 `define LWCE_COUNTRY(nm) (`LWCE_COUNTRY_TEMPLATE_MGR.FindCountryTemplate(`nm))
+`define LWCE_ENEMY_OBJECTIVE(nm) (`LWCE_ENEMY_OBJECTIVE_TEMPLATE_MGR.FindEnemyObjectiveTemplate(`nm))
 `define LWCE_EQUIPMENT(nm) (`LWCE_ITEM_TEMPLATE_MGR.FindEquipmentTemplate(`nm))
 `define LWCE_FACILITY(nm) (`LWCE_FACILITY_TEMPLATE_MGR.FindFacilityTemplate(`nm))
 `define LWCE_FOUNDRY_PROJECT(nm) (`LWCE_FOUNDRY_TEMPLATE_MGR.FindProjectTemplate(`nm))
@@ -118,6 +120,11 @@
 // ---------------------------
 // Strategy-or-tactical macros
 // ---------------------------
+`define ALIEN_RESEARCH (STAT_GetStat(1))
+`define ALIEN_BONUS_RESEARCH (STAT_GetStat(2))
+`define ALIEN_RESOURCES (STAT_GetStat(19))
+`define XCOM_THREAT (STAT_GetStat(21))
+
 `define LWCE_BONUS_LEVEL(nmBonus) \
 	(`LWCE_IS_STRAT_GAME ? `LWCE_HQ.GetBonusLevel(`nmBonus) : -1 )
 
