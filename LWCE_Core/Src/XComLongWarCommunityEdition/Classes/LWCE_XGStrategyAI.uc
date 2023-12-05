@@ -1525,6 +1525,31 @@ function bool IsFirestormOnContinent(name nmContinent)
     return false;
 }
 
+function bool IsTerrorTarget(ECountry eTarget)
+{
+    `LWCE_LOG_DEPRECATED_CLS(IsTerrorTarget);
+
+    return false;
+}
+
+function bool LWCE_IsTerrorTarget(name nmCountry)
+{
+    local XGAlienObjective kObjective;
+    local LWCE_XGAlienObjective kCEObjective;
+
+    foreach m_arrObjectives(kObjective)
+    {
+        kCEObjective = LWCE_XGAlienObjective(kObjective);
+
+        if (kCEObjective.m_kCETObjective.nmType == 'Terrorize' && kCEObjective.m_nmCountryTarget == nmCountry)
+        {
+            return true;
+        }
+    }
+
+    return false;
+}
+
 function LaunchBlitz(array<ECityType> arrTargetCities, optional bool bFirstBlitz)
 {
     local XGMission_Abduction kMission;
@@ -1635,7 +1660,7 @@ function LWCE_LogShipRecord(LWCE_XGShip kShip, EUFOMissionResult eResult)
 
     m_arrCEShipRecord.AddItem(kRecord);
 
-    if (kRecord.eUFO != eShip_UFOEthereal)
+    if (kRecord.nmShipType != 'UFOOverseer')
     {
         if (kRecord.nmObjective != 'Hunt')
         {
@@ -1814,26 +1839,28 @@ function LWCE_OnObjectiveEnded(LWCE_XGAlienObjective kObj, LWCE_XGShip kLastShip
                 CheckForAbductionBlitz(kObj.m_arrSimultaneousObjs);
                 break;
             case eObjective_Terrorize: // This is the "terrorize" objective performed by an assault carrier en route to XCOM HQ
-                AIAddNewMission(/* XCOM HQ assault */ 9, kLastUFO);
+                LWCE_AIAddNewMission(/* XCOM HQ assault */ 9, kLastShip);
                 break;
             case eObjective_Infiltrate:
-                SignPact(kLastUFO, kObj.m_iCountryTarget);
+                LWCE_SignPact(kLastShip, kObj.m_nmCountryTarget);
                 break;
             case eObjective_Hunt:
                 if (kObj.FoundSatellite())
                 {
-                    OnSatelliteDestroyed(kObj.m_iCountryTarget);
+                    LWCE_OnSatelliteDestroyed(kObj.m_nmCountryTarget);
                 }
                 else
                 {
+                    // TODO
                     HQ().m_arrSatellites[HQ().GetSatellite(ECountry(kObj.m_iCountryTarget))].kSatEntity.SetHidden(true);
                 }
 
                 break;
             case eObjective_Flyby:
-                if (kLastUFO.m_kTShip.eType == eShip_UFOEthereal)
+                if (kLastShip.m_kTShip.eType == eShip_UFOEthereal)
                 {
-                    OnEtherealFlyby(kLastUFO);
+                    `LWCE_LOG_NOT_IMPLEMENTED(LWCE_OnObjectiveEnded.OverseerCase);
+                    // LWCE_OnEtherealFlyby(kLastShip);
                 }
 
                 break;
@@ -1841,7 +1868,7 @@ function LWCE_OnObjectiveEnded(LWCE_XGAlienObjective kObj, LWCE_XGShip kLastShip
                 m_iHQAssaultCounter = 1;
                 break;
             case 10: // Air base assault
-                AIAddNewMission(14, kLastUFO);
+                LWCE_AIAddNewMission(14, kLastShip);
                 break;
             default:
                 break;
@@ -1884,12 +1911,12 @@ function OnSatelliteDestroyed(int nmCountry)
 /// </summary>
 function LWCE_OnSatelliteDestroyed(name nmCountry)
 {
-    local XGContinent kContinent;
-    local XGCountry kCountry;
+    local LWCE_XGContinent kContinent;
+    local LWCE_XGCountry kCountry;
     local LWCE_XGShip kShip;
 
     LWCE_XGHeadquarters(HQ()).LWCE_RemoveSatellite(nmCountry);
-    LWCE_XGGeoscape(GEOSCAPE()).LWCE_Alert(`LWCE_ALERT('SatelliteDestroyed').AddInt(nmCountry).Build());
+    LWCE_XGGeoscape(GEOSCAPE()).LWCE_Alert(`LWCE_ALERT('SatelliteDestroyed').AddName(nmCountry).Build());
 
     kCountry = `LWCE_XGCOUNTRY(nmCountry);
     kContinent = `LWCE_XGCONTINENT(kCountry.LWCE_GetContinent());
@@ -1898,10 +1925,6 @@ function LWCE_OnSatelliteDestroyed(name nmCountry)
     kCountry.AddPanic(class'XGTacticalGameCore'.default.PANIC_SAT_DESTROYED_COUNTRY);
 
     kContinent.m_kMonthly.iSatellitesLost += 1;
-
-    m_arrCEResistingCountries.RemoveItem(nmCountry);
-    m_arrCEUnresistingCountries.RemoveItem(nmCountry);
-
     STAT_AddStat(eRecap_SatellitesLost, 1);
 
     // Clear detection status of all ships, then redo it based on current satellites
@@ -2135,21 +2158,21 @@ function array<name> SelectTargetCountries(name nmTargetSelectionAlgorithm, int 
     switch (nmTargetSelectionAlgorithm)
     {
         case 'AvoidSatellites':
-            return SelectTargetCountries_AvoidSatellites();
+            return SelectTargetCountries_AvoidSatellites(iNumTargets);
         case 'ProtectAlienBases':
-            return SelectTargetCountries_ProtectAlienBases();
+            return SelectTargetCountries_ProtectAlienBases(iNumTargets);
         case 'SatelliteCovered':
-            return SelectTargetCountries_SatelliteCovered();
+            return SelectTargetCountries_SatelliteCovered(iNumTargets);
         case 'SpreadPanic':
-            return SelectTargetCountries_SpreadPanic();
+            return SelectTargetCountries_SpreadPanic(iNumTargets);
         case 'Terrorize':
-            return SelectTargetCountries_Terrorize();
+            return SelectTargetCountries_Terrorize(iNumTargets);
         case 'XComAdvancedAirBase':
-            return SelectTargetCountries_XComAdvancedAirBase();
+            return SelectTargetCountries_XComAdvancedAirBase(iNumTargets);
         case 'XComHQ':
-            return SelectTargetCountries_XComHQ();
+            return SelectTargetCountries_XComHQ(iNumTargets);
         case 'XComMember':
-            return SelectTargetCountries_XComMember();
+            return SelectTargetCountries_XComMember(iNumTargets);
     }
 
     arrTargets.Length = 0;
@@ -2331,7 +2354,7 @@ protected function array<name> SelectTargetCountries_ProtectAlienBases(int iNumT
     {
         while (iNumTargets > 0)
         {
-            arrTargets.AddItem(arrPossibleCountries[Rand(arrPossibleCountries.Length)]);
+            arrTargets.AddItem(arrPossibleCountries[Rand(arrPossibleCountries.Length)].m_nmCountry);
 
             iNumTargets--;
         }
@@ -2349,7 +2372,7 @@ protected function array<name> SelectTargetCountries_ProtectAlienBases(int iNumT
         if (!kWorld.LWCE_GetCountry(arrTargets[Index]).HasSatelliteCoverage())
         {
             arrReplacementTargets = SelectTargetCountries_SatelliteCovered(1);
-            arrTargets[Index] = arrReplacementTargets[0].m_nmCountry;
+            arrTargets[Index] = arrReplacementTargets[0];
         }
     }
 
@@ -2362,29 +2385,29 @@ protected function array<name> SelectTargetCountries_ProtectAlienBases(int iNumT
 /// </summary>
 protected function array<name> SelectTargetCountries_SatelliteCovered(int iNumTargets)
 {
-    local array<LWCE_XGCountry> arrSatelliteCountries;
+    local array<LWCE_XGCountry> arrCouncilCountries;
     local LWCE_XGCountry kCountry;
     local LWCE_XGWorld kWorld;
     local array<name> arrEligibleCountries, arrTargets;
 
     kWorld = `LWCE_WORLD;
 
-    arrSatelliteCountries = `LWCE_WORLD.GetCouncilCountries(/* bRequireCurrentMember */ false);
+    arrCouncilCountries = `LWCE_WORLD.GetCouncilCountries(/* bRequireCurrentMember */ false);
 
-    foreach arrSatelliteCountries(kCountry)
+    foreach arrCouncilCountries(kCountry)
     {
         if (kCountry.HasSatelliteCoverage())
         {
-            arrEligibleCountries.AddItem(kCountry);
+            arrEligibleCountries.AddItem(kCountry.m_nmCountry);
         }
     }
 
     while (iNumTargets > 0)
     {
-        if (arrSatelliteCountries.Length > 0)
+        if (arrEligibleCountries.Length > 0)
         {
             // If we have countries with satellite coverage, always pull from them, with duplicates allowed
-            arrTargets.AddItem(arrSatelliteCountries[Rand(arrSatelliteCountries.Length)].m_nmCountry);
+            arrTargets.AddItem(arrEligibleCountries[Rand(arrEligibleCountries.Length)]);
         }
         else
         {
@@ -2598,4 +2621,51 @@ protected function array<name> SelectTargetCountries_XComMember(int iNumTargets)
     }
 
     return arrTargets;
+}
+
+function int SortTerrorTargets(ECountry eTarget1, ECountry eTarget2)
+{
+    `LWCE_LOG_DEPRECATED_CLS(SortTerrorTargets);
+
+    return 0;
+}
+
+protected function int LWCE_SortTerrorTargets(LWCE_XGCountry kTarget1, LWCE_XGCountry kTarget2)
+{
+    if (LWCE_IsTerrorTarget(kTarget1.m_nmCountry))
+    {
+        if (LWCE_IsTerrorTarget(kTarget2.m_nmCountry))
+        {
+            if (kTarget2.GetPanicBlocks() > kTarget1.GetPanicBlocks())
+            {
+                return -1; // Swap
+            }
+            else
+            {
+                return 0; // Don't swap
+            }
+        }
+        else
+        {
+            return -1;
+        }
+    }
+    else
+    {
+        if (LWCE_IsTerrorTarget(kTarget2.m_nmCountry))
+        {
+            return 0;
+        }
+        else
+        {
+            if (kTarget2.GetPanicBlocks() > kTarget1.GetPanicBlocks())
+            {
+                return -1;
+            }
+            else
+            {
+                return 0;
+            }
+        }
+    }
 }
