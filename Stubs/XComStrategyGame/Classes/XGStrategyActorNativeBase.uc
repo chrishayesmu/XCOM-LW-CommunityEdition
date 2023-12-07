@@ -164,6 +164,7 @@ enum EUFOMissionResult
     eUMR_Intercepted,
     eUMR_ShotDown,
     eUMR_Assaulted,
+    eUMR_AssaultedFailed,
     eUMR_MAX
 };
 

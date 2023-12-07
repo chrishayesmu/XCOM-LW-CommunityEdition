@@ -7,6 +7,7 @@ struct CheckpointRecord_LWCE_XGAlienObjective extends XGAlienObjective.Checkpoin
     var name m_nmCityTarget;
     var name m_nmCountryTarget;
     var name m_nmShipTeam;
+    var EUFOMissionResult m_eLatestMissionResult;
 };
 
 var LWCE_TObjective m_kCETObjective;
@@ -14,6 +15,7 @@ var LWCE_XGShip m_kLastShip;
 var name m_nmCityTarget;
 var name m_nmCountryTarget;
 var name m_nmShipTeam;
+var EUFOMissionResult m_eLatestMissionResult;
 
 var LWCEEnemyObjectiveTemplate m_kTemplate;
 
@@ -34,8 +36,8 @@ function LWCE_Init(name nmObjective, int iStartDate, Vector2D v2Target, name nmS
     m_nmShipTeam = nmShipTeam;
     m_v2Target = v2Target;
 
-    kShipMissionMgr = `LWCE_SHIP_MISSION_TEMPLATE_MGR;
     m_kTemplate = `LWCE_ENEMY_OBJECTIVE(m_kCETObjective.nmType);
+    kShipMissionMgr = `LWCE_SHIP_MISSION_TEMPLATE_MGR;
 
     iAlienResearch = `ALIEN_RESEARCH;
     iAlienResources = `ALIEN_RESOURCES;
@@ -93,7 +95,7 @@ function LWCE_CheckIsComplete(LWCE_XGShip kShip)
 
         if (m_bLastMissionSuccessful)
         {
-            LWCE_XGStrategyAI(AI()).LWCE_OnObjectiveEnded(self, kShip);
+            m_kTemplate.ObjectiveSucceeded(self, kShip);
         }
     }
 }
@@ -284,6 +286,8 @@ function LWCE_XGShip LWCE_LaunchShip(name nmShipType, array<name> arrFlightPlan,
 {
     local LWCE_XGShip kShip;
 
+    m_eLatestMissionResult = eUMR_Undetected;
+
     if (nmShipType == 'UFOOverseer' && m_kCETObjective.nmType == 'CommandOverwatch')
     {
         v2Target = m_v2Target;
@@ -310,6 +314,7 @@ function NotifyOfAssaulted(XGShip_UFO kUFO)
 function LWCE_NotifyOfAssaulted(LWCE_XGShip kShip)
 {
     m_iDetected += 1;
+    m_eLatestMissionResult = eUMR_Assaulted;
 
     if (kShip == m_kLastShip)
     {
@@ -334,12 +339,14 @@ function LWCE_NotifyOfCrash(LWCE_XGShip kShip)
     kAI = LWCE_XGStrategyAI(AI());
     kContinent = `LWCE_XGCONTINENT(LWCE_GetContinent());
 
+    m_eLatestMissionResult = eUMR_ShotDown;
+
     m_iShotDown += 1;
     m_iDetected += 1;
     kContinent.m_kMonthly.iUFOsShotdown += 1;
     kContinent.m_kMonthly.iUFOsDetected += 1;
 
-    kAI.LWCE_LogShipRecord(kShip, eUMR_ShotDown);
+    kAI.LWCE_LogShipRecord(kShip, m_eLatestMissionResult);
 
     if (kShip == m_kLastShip)
     {
@@ -379,6 +386,8 @@ function LWCE_NotifyOfSuccess(LWCE_XGShip kShip)
     {
         eResult = eUMR_Intercepted;
     }
+
+    m_eLatestMissionResult = eResult;
 
     LWCE_XGStrategyAI(AI()).LWCE_LogShipRecord(kShip, eResult);
 

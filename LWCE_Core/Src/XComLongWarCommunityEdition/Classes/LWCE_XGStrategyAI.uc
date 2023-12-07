@@ -152,6 +152,23 @@ function AddAirBaseDefenseMission()
     }
 }
 
+function AddHuntTarget(ECountry eTargetCountry)
+{
+    `LWCE_LOG_DEPRECATED_CLS(AddHuntTarget);
+}
+
+/// <summary>
+/// Adds a Hunt objective targeting the given country.
+/// </summary>
+function LWCE_AddHuntTarget(name nmTargetCountry)
+{
+    local LWCE_XGHeadquarters kHQ;
+
+    kHQ = LWCE_XGHeadquarters(HQ());
+
+    LWCE_AIAddNewObjective('Hunt', Rand(5), kHQ.m_arrCESatellites[kHQ.LWCE_GetSatellite(nmTargetCountry)].v2Loc, nmTargetCountry);
+}
+
 /// <summary>
 /// In Long War, this function was repurposed to add an air base defense mission. For LWCE, we've made
 /// a separate function for that and we simply delegate to it for now.
@@ -1225,7 +1242,12 @@ function LWCE_DetermineAbductionReward(out LWCE_TMissionReward kReward, EMission
 /// </summary>
 function array<int> DetermineBestHuntTargets()
 {
+    local array<int> arrTargets;
+
     `LWCE_LOG_DEPRECATED_NOREPLACE_CLS(DetermineBestHuntTargets);
+
+    arrTargets.Length = 0;
+    return arrTargets;
 }
 
 function DetermineCrashLoot(XGShip_UFO kUFO, EShipWeapon eWeapon)
@@ -1438,6 +1460,8 @@ function GetEvents(out array<THQEvent> arrEvents)
 function XGShip_UFO GetUFO(int iUFOindex)
 {
     `LWCE_LOG_DEPRECATED_BY(GetUFO, LWCE_GetShip);
+
+    return none;
 }
 
 /// <summary>
@@ -1646,7 +1670,7 @@ function LWCE_LogShipRecord(LWCE_XGShip kShip, EUFOMissionResult eResult)
     local LWCE_TShipRecord kRecord;
     local LWCE_XGCountry kCountry;
     local LWCE_XGContinent kContinent;
-    local int iPanic, iResearch, iResources;
+    local int iPanic, iResources;
 
     // TODO: rewrite tons of the below and maybe refactor into a few functions
     kRecord.nmShipType = kShip.m_nmShipTemplate;
@@ -1673,13 +1697,10 @@ function LWCE_LogShipRecord(LWCE_XGShip kShip, EUFOMissionResult eResult)
                 }
             }
 
-            if (int(kRecord.eResult) <= 2) // eUMR_Undetected, eUMR_Detected, eUMR_Intercepted
+            if (kRecord.eResult == eUMR_Undetected || kRecord.eResult == eUMR_Detected || kRecord.eResult == eUMR_Intercepted)
             {
-                if (kRecord.nmObjective == 'Bomb') // Bombing
-                {
-                    iPanic = class'XGTacticalGameCore'.default.EARLY_UFO_CHANCE;
-                }
-                else
+                // TODO: use some other method to decide whether to apply panic/bonus research here
+                if (kRecord.nmObjective != 'Bomb')
                 {
                     iPanic = class'XGTacticalGameCore'.default.PANIC_UFO_IGNORED;
 
@@ -1700,94 +1721,18 @@ function LWCE_LogShipRecord(LWCE_XGShip kShip, EUFOMissionResult eResult)
                 kCountry.AddPanic(iPanic);
             }
 
-            if (kRecord.eResult == 5) // Ground assault on landed UFO that failed
+            if (kRecord.eResult == eUMR_AssaultedFailed) // Ground assault on landed UFO that failed
             {
                 kCountry.AddPanic(class'XGTacticalGameCore'.default.PANIC_UFO_ESCAPED);
-            }
-
-            if (kRecord.nmObjective == 'Scout' && LWCE_ShouldHunt(kShip, kRecord.nmCountry, kRecord.eResult))
-            {
-                LWCE_AddHuntTarget(kRecord.nmCountry);
-            }
-        }
-
-        // Branch: UFO mission succeeded
-        if (kRecord.eResult <= 2 || kRecord.eResult == 5)
-        {
-            if (kRecord.nmObjective == 'Research')
-            {
-                // Add bonus research depending on the UFO type
-                if (kRecord.eUFO == 4)
-                {
-                    STAT_AddStat(2, 3);
-                }
-
-                if (kRecord.eUFO == 11)
-                {
-                    STAT_AddStat(2, 5);
-                }
-
-                if (kRecord.eUFO == 6)
-                {
-                    STAT_AddStat(2, 8);
-                }
-
-                if (kRecord.eUFO >= 13)
-                {
-                    STAT_AddStat(2, 10);
-                }
-            }
-
-            if (kRecord.nmObjective == 'Harvest')
-            {
-                iResources = 0;
-
-                // Determine resource gain for successful harvest
-                if (kRecord.eUFO == eShip_UFOSmallScout) // Scout
-                {
-                    iResources = class'XGTacticalGameCore'.default.UFOAlloys[6] + Rand(5);
-                }
-                else if (kRecord.eUFO == 11) // Raider
-                {
-                    iResources = class'XGTacticalGameCore'.default.UFOAlloys[7] + Rand(5);
-                }
-                else if (kRecord.eUFO == 12) // Harvester
-                {
-                    iResources = class'XGTacticalGameCore'.default.UFOAlloys[8] + Rand(5);
-                }
-                else if (kRecord.eUFO == eShip_UFOSupply) // Transport
-                {
-                    iResources = class'XGTacticalGameCore'.default.UFOAlloys[9] + Rand(5);
-                }
-
-                if (IsOptionEnabled(9)) // Dynamic War
-                {
-                    iResources /= class'XGTacticalGameCore'.default.SW_MARATHON;
-                }
-
-                STAT_AddStat(19, iResources);
-            }
-
-            if (kRecord.nmObjective == 'Bomb')
-            {
-                if (kRecord.eResult <= 2)
-                {
-                    PRES().Notify(eGA_MissedAliens, kRecord.ECountry, kRecord.eUFO);
-                }
-
-                if (kRecord.eResult == eUMR_Undetected)
-                {
-                    PRES().Notify(24, kRecord.ECountry, kRecord.eUFO);
-                }
             }
         }
     }
 
-    // Branch: UFO was intercepted
-    if (kRecord.eResult >= 2 && kRecord.eResult <= 4)
+    // Branch: UFO was intercepted in some form
+    if (kRecord.eResult == eUMR_Intercepted || kRecord.eResult == eUMR_ShotDown || kRecord.eResult == eUMR_Assaulted)
     {
         // If the UFO was shot down or successfully assaulted, increase XCOM's threat level
-        if (kRecord.eResult >= 3)
+        if (kRecord.eResult == eUMR_ShotDown || kRecord.eResult == eUMR_Assaulted)
         {
             kShip.m_iHP = 0;
             STAT_AddStat(21, kShip.m_kTemplate.GetThreatIncrement(kShip.m_nmTeam));
@@ -1805,12 +1750,6 @@ function LWCE_LogShipRecord(LWCE_XGShip kShip, EUFOMissionResult eResult)
         STAT_AddStat(19, -1 * iResources);
     }
 
-    // When an Overseer does a flyby of an alien base, if there's a satellite over it, it generates a hunt mission
-    if (kRecord.eUFO == eShip_UFOEthereal && kRecord.eObjective == eObjective_Flyby && kCountry.LeftXCom() && kCountry.HasSatelliteCoverage())
-    {
-        LWCE_AddHuntTarget(kRecord.nmCountry);
-    }
-
     if (kRecord.nmObjective != 'Terrorize' && kRecord.nmObjective != 'Abduct')
     {
         kContinent.m_arrCEShipRecord.AddItem(kRecord);
@@ -1818,7 +1757,7 @@ function LWCE_LogShipRecord(LWCE_XGShip kShip, EUFOMissionResult eResult)
     }
 
     // If the player tried a ground assault on the UFO but failed, remove it so you can't try again
-    if (kRecord.eResult == 5)
+    if (kRecord.eResult == eUMR_AssaultedFailed)
     {
         LWCE_RemoveShip(kShip);
     }
@@ -1826,54 +1765,7 @@ function LWCE_LogShipRecord(LWCE_XGShip kShip, EUFOMissionResult eResult)
 
 function OnObjectiveEnded(XGAlienObjective kObj, XGShip_UFO kLastUFO)
 {
-    `LWCE_LOG_DEPRECATED_CLS(OnObjectiveEnded);
-}
-
-function LWCE_OnObjectiveEnded(LWCE_XGAlienObjective kObj, LWCE_XGShip kLastShip)
-{
-    if (kObj.m_bLastMissionSuccessful)
-    {
-        switch (kObj.GetType())
-        {
-            case eObjective_Abduct:
-                CheckForAbductionBlitz(kObj.m_arrSimultaneousObjs);
-                break;
-            case eObjective_Terrorize: // This is the "terrorize" objective performed by an assault carrier en route to XCOM HQ
-                LWCE_AIAddNewMission(/* XCOM HQ assault */ 9, kLastShip);
-                break;
-            case eObjective_Infiltrate:
-                LWCE_SignPact(kLastShip, kObj.m_nmCountryTarget);
-                break;
-            case eObjective_Hunt:
-                if (kObj.FoundSatellite())
-                {
-                    LWCE_OnSatelliteDestroyed(kObj.m_nmCountryTarget);
-                }
-                else
-                {
-                    // TODO
-                    HQ().m_arrSatellites[HQ().GetSatellite(ECountry(kObj.m_iCountryTarget))].kSatEntity.SetHidden(true);
-                }
-
-                break;
-            case eObjective_Flyby:
-                if (kLastShip.m_kTShip.eType == eShip_UFOEthereal)
-                {
-                    `LWCE_LOG_NOT_IMPLEMENTED(LWCE_OnObjectiveEnded.OverseerCase);
-                    // LWCE_OnEtherealFlyby(kLastShip);
-                }
-
-                break;
-            case 9: // HQ assault
-                m_iHQAssaultCounter = 1;
-                break;
-            case 10: // Air base assault
-                LWCE_AIAddNewMission(14, kLastShip);
-                break;
-            default:
-                break;
-        }
-    }
+    `LWCE_LOG_DEPRECATED_BY(OnObjectiveEnded, LWCEEnemyObjectiveTemplate.arrOnSuccessDelegates);
 }
 
 function OnUFOAttacked(XGShip_UFO kUFO)
@@ -1951,6 +1843,8 @@ function LWCE_OnShipDestroyed(LWCE_XGShip kShip)
     local bool bHasAlienMetallurgy;
     local int iAlloysInBounty, iAlloysInSalvage, iAlloysDivisor;
 
+    kStorage = LWCE_XGStorage(STORAGE());
+
     // Give a cash and alloys bounty based on what ship type was shot down; cash is configured directly,
     // while alloys are determined based on the alloys in the salvage
     if (kShip.m_kTemplate.iBounty > 0)
@@ -1965,6 +1859,8 @@ function LWCE_OnShipDestroyed(LWCE_XGShip kShip)
         bHasAlienMetallurgy = LWCE_XGFacility_Engineering(ENGINEERING()).LWCE_IsFoundryTechResearched('Foundry_AlienMetallurgy');
         iAlloysDivisor = bHasAlienMetallurgy ? 3 : 5;
         iAlloysInBounty = 1 + Rand(iAlloysInSalvage / iAlloysDivisor);
+
+        kStorage.LWCE_AddItem('Item_AlienAlloy', iAlloysInBounty);
     }
 
     `LWCE_XGCOUNTRY(kShip.GetCountry()).AddPanic(class'XGTacticalGameCore'.default.PANIC_UFO_SHOOTDOWN);
@@ -2195,6 +2091,49 @@ function LWCE_SignPact(LWCE_XGShip kShip, name nmCountry)
         kCountry.SignPact();
         LWCE_XGGeoscape(GEOSCAPE()).LWCE_Alert(`LWCE_ALERT('SecretPact').AddName(nmCountry).Build());
     }
+}
+
+function bool ShouldHunt(XGShip_UFO eUFO, ECountry eTarget, EUFOMissionResult eResult)
+{
+    `LWCE_LOG_DEPRECATED_CLS(ShouldHunt);
+
+    return false;
+}
+
+/// <summary>
+/// Determines whether a hunt should follow after a scouting mission.
+/// </summary>
+function bool LWCE_ShouldHunt(LWCE_XGShip kShip, name nmTargetCountry, EUFOMissionResult eResult)
+{
+    if (eResult == eUMR_Undetected)
+    {
+        return false;
+    }
+
+    if (int(eResult) >= 3) // eUMR_ShotDown, eUMR_Assaulted
+    {
+        return false;
+    }
+
+    // Up to 50% chance to fail based on the country's shields
+    if (Roll(`LWCE_XGCOUNTRY(nmTargetCountry).m_iShields / 2))
+    {
+        return false;
+    }
+
+    // Chance to fail equal to the percentage of health lost
+    if (!Roll(int(100.0f * kShip.GetHPPercentage())))
+    {
+        return false;
+    }
+
+    // Base success chance is 40%, +1% for every 15 alien research
+    if (Roll(40 + (STAT_GetStat(1) / 15)))
+    {
+        return true;
+    }
+
+    return false;
 }
 
 protected function int DetermineCrashedUFOMissionTimer(LWCE_XGShip kShip)

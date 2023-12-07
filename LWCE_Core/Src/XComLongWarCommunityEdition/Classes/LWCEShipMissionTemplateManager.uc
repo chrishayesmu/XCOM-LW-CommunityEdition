@@ -29,3 +29,8 @@ function array<LWCEShipMissionTemplate> GetAllShipMissionTemplates()
 
     return arrTemplates;
 }
+
+defaultproperties
+{
+    ManagedTemplateClass=class'LWCEShipMissionTemplate'
+}

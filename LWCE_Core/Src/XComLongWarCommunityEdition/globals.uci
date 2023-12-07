@@ -151,6 +151,7 @@
 `define LWCE_PSILABS (LWCE_XGFacility_PsiLabs(`LWCE_BARRACKS.m_kPsiLabs))
 `define LWCE_STORAGE (LWCE_XGStorage(`HQGAME.GetGameCore().GetHQ().m_kEngineering.GetStorage()))
 `define LWCE_STRATEGY (LWCE_XGStrategy(`HQGAME.GetGameCore()))
+`define LWCE_STRATEGY_AI (LWCE_XGStrategyAI(`LWCE_STRATEGY.m_kAI))
 `define LWCE_TECHTREE (LWCE_XGTechTree(`HQGAME.GetGameCore().GetHQ().GetLabs().m_kTree))
 `define LWCE_WORLD (LWCE_XGWorld(`LWCE_STRATEGY.m_kWorld))
 

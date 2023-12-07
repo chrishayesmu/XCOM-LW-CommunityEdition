@@ -44,6 +44,18 @@ function LWCE_AddNotice(name AlertName, LWCEDataContainer kData)
 
     switch (AlertName)
     {
+        case 'CountryBombed':
+            kTag.StrValue0 = `LWCE_XGCOUNTRY(kData.Data[0].Nm).GetNameWithArticle(true);
+            kNotice.txtNotice.StrValue = class'XComLocalizer'.static.ExpandString(m_strLabelWarningContactLost);
+            kNotice.txtNotice.iState = eUIState_Warning;
+            kNotice.imgNotice.iImage = eImage_Interceptor;
+            break;
+        case 'ItemRepairsComplete':
+            kTag.StrValue0 = `LWCE_ITEM(kData.Data[0].Nm).strName;
+            kNotice.txtNotice.StrValue = class'XComLocalizer'.static.ExpandString(m_strSpeakSatDestroyed);
+            kNotice.txtNotice.iState = eUIState_Warning;
+            kNotice.imgNotice.iImage = eImage_FacilityGear;
+            break;
         case 'NewItemBuilt':
             Sound().PlaySFX(SNDLIB().SFX_Notify_ItemBuilt);
             kTag.IntValue0 = kData.Data[1].I;
@@ -52,11 +64,11 @@ function LWCE_AddNotice(name AlertName, LWCEDataContainer kData)
             kNotice.txtNotice.iState = eUIState_Warning;
             kNotice.imgNotice.iImage = eImage_FacilityGear;
             break;
-        case 'ItemRepairsComplete':
-            kTag.StrValue0 = `LWCE_ITEM(kData.Data[0].Nm).strName;
-            kNotice.txtNotice.StrValue = class'XComLocalizer'.static.ExpandString(m_strSpeakSatDestroyed);
+        case 'ShipActivityOverCountry':
+            kTag.StrValue0 = `LWCE_XGCOUNTRY(kData.Data[0].Nm).GetNameWithArticle(true);
+            kNotice.txtNotice.StrValue = class'XComLocalizer'.static.ExpandString(m_strLabelWarningUFOOnGround);
             kNotice.txtNotice.iState = eUIState_Warning;
-            kNotice.imgNotice.iImage = eImage_FacilityGear;
+            kNotice.imgNotice.iImage = eImage_Interceptor;
             break;
         default:
             iData1 = kData.Data.Length > 0 ? kData.Data[0].I : 0;

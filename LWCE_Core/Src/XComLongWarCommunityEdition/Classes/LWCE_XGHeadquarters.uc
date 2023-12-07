@@ -1119,6 +1119,21 @@ function LWCE_RemoveSatellite(name nmCountry)
     UpdateSatCoverageGraphics();
 }
 
+/// <summary>
+/// Sets visibility for the Geoscape entity of the satellite over the given country.
+/// </summary>
+function SetSatelliteVisible(name nmCountry, bool bVisible)
+{
+    local int Index;
+
+    Index = LWCE_GetSatellite(nmCountry);
+
+    if (Index != INDEX_NONE)
+    {
+        m_arrCESatellites[Index].kSatEntity.SetHidden(!bVisible);
+    }
+}
+
 function SetStartingData(name nmContinent, name nmCountry, name nmStartingBonus)
 {
     m_nmContinent = nmContinent;

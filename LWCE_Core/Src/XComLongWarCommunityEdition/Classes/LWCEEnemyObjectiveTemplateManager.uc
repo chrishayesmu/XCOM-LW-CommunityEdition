@@ -29,3 +29,8 @@ function array<LWCEEnemyObjectiveTemplate> GetAllEnemyObjectiveTemplates()
 
     return arrTemplates;
 }
+
+defaultproperties
+{
+    ManagedTemplateClass=class'LWCEEnemyObjectiveTemplate'
+}
