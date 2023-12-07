@@ -22,9 +22,8 @@
 `define LWCE_LOG_CLS(msg, cond) `LWCE_LOG(`msg, `cond)
 
 // Special log macros for specific situations
-`define LWCE_LOG_DEPRECATED(funcname) `LWCE_LOG("ERROR: LWCE-incompatible function `{funcname} was called. This needs to be replaced with LWCE_`funcname. Stack trace follows."); ScriptTrace();
-`define LWCE_LOG_DEPRECATED_CLS(funcname) `LWCE_LOG_CLS("ERROR: LWCE-incompatible function `{funcname} was called. This needs to be replaced with LWCE_`funcname. Stack trace follows."); ScriptTrace();
-`define LWCE_LOG_DEPRECATED_NOREPLACE_CLS(funcname) `LWCE_LOG_CLS("ERROR: LWCE-incompatible function `{funcname} was called. This function is deprecated and unavailable. Stack trace follows."); ScriptTrace();
+`define LWCE_LOG_DEPRECATED_CLS(funcname) `LWCE_LOG_ERROR("LWCE-incompatible function `{funcname} was called. This needs to be replaced with LWCE_`funcname. Stack trace follows."); ScriptTrace();
+`define LWCE_LOG_DEPRECATED_NOREPLACE_CLS(funcname) `LWCE_LOG_ERROR("LWCE-incompatible function `{funcname} was called. This function is deprecated and unavailable. Stack trace follows."); ScriptTrace();
 `define LWCE_LOG_DEPRECATED_BY(funcname, replacename) `LWCE_LOG("ERROR: LWCE-incompatible function `{funcname} was called. This needs to be replaced with `replacename. Stack trace follows."); ScriptTrace();
 `define LWCE_LOG_NOT_IMPLEMENTED(funcname) `LWCE_LOG_CLS("ERROR: function `{funcname} has not yet been implemented");
 

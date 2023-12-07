@@ -31,7 +31,7 @@ static function TItemCard BuildShipWeaponCard(EItemType eWeapon)
 {
     local TItemCard kItemCard;
 
-    `LWCE_LOG_DEPRECATED(BuildShipWeaponCard);
+    `LWCE_LOG_DEPRECATED_CLS(BuildShipWeaponCard);
 
     return kItemCard;
 }
