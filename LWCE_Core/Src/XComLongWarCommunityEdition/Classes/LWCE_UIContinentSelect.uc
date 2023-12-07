@@ -8,7 +8,7 @@ simulated function XGContinentUI GetMgr()
 {
     if (m_kLocalMgr == none)
     {
-        m_kLocalMgr = LWCE_XGContinentUI(XComHQPresentationLayer(controllerRef.m_Pres).GetMgr(class'LWCE_XGContinentUI', (self), m_iView));
+        m_kLocalMgr = LWCE_XGContinentUI(XComHQPresentationLayer(controllerRef.m_Pres).GetMgr(class'LWCE_XGContinentUI', self, m_iView));
     }
 
     return m_kLocalMgr;
@@ -148,7 +148,27 @@ simulated function LWCE_RealizeSelected()
 
 simulated function UpdateLayout()
 {
-    super.UpdateLayout();
+    local int I;
+    local string optionText;
+    local UIChooseTech.UIOption kOption;
+
+    Invoke("clear");
+
+    for (I = 0; I < m_arrUIOptions.Length; I++)
+    {
+        kOption = m_arrUIOptions[I];
+
+        if (kOption.iState == eUIState_Disabled)
+        {
+            optionText = class'UIUtilities'.static.GetHTMLColoredText(Caps(kOption.strLabel), eUIState_Bad);
+        }
+        else
+        {
+            optionText = class'UIUtilities'.static.GetHTMLColoredText(Caps(kOption.strLabel), kOption.iState);
+        }
+
+        AS_AddOption(kOption.iIndex, optionText, 0);
+    }
 
     LWCE_RealizeSelected();
 }

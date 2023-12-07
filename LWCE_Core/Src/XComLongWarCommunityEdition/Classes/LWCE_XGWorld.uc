@@ -12,7 +12,6 @@ function Init(bool bNewGame)
 {
     local XGCountry kCountry;
     local ESatelliteCoverage SatCoverage;
-    local int iCountry;
 
     if (HQ().IsHyperwaveActive())
     {
@@ -37,33 +36,32 @@ function Init(bool bNewGame)
     }
     else
     {
-        // I have no idea what this loop is for, or why you would be missing countries mid-game, or why
-        // if you were missing countries, you would add them all in one continent. Maybe this is a weird
-        // carry-over from a beta version of LW that had less countries or something.
-        if (World().m_arrCountries.Length < 36)
-        {
-            for (iCountry = World().m_arrCountries.Length; iCountry < 36; iCountry++)
-            {
-                BuildCountry(iCountry, eContinent_Europe, true);
-            }
-        }
-
+        // Not sure how needed this all is; why would it default to hyperwave?
         SatCoverage = eSat_Hyperwave;
 
-        foreach World().m_arrCountries(kCountry)
+        foreach m_arrCountries(kCountry)
         {
             if (kCountry.HasSatelliteCoverage())
             {
-                `HQGAME.GetEarth().SetCountrySatellite(ECountry(kCountry.GetID()), SatCoverage);
+                `LWCE_LOG_NOT_IMPLEMENTED(LWCE_XGWorld.Init -> SetCountrySatellite);
+                // `HQGAME.GetEarth().SetCountrySatellite(ECountry(kCountry.GetID()), SatCoverage);
             }
         }
     }
 }
 
+function InitNewGame()
+{
+    CreateContinents();
+    CreateCountries();
+    CreateCities();
+    CreateSatNodes();
+}
+
 function BuildCity()
 {
     local int iCity;
-    local XGCity kCity;
+    local LWCE_XGCity kCity;
 
     m_arrCities.Add(255);
 
@@ -101,6 +99,59 @@ function LWCE_BuildCountry(name nmCountry, name nmContinent)
     m_arrCountries.AddItem(kCountry);
 }
 
+function BuildSatNode(ECountry ECountry, Vector2D v2Coords)
+{
+    `LWCE_LOG_DEPRECATED_CLS(BuildSatNode);
+}
+
+function LWCE_BuildSatNode(name nmCountry, Vector2D v2Coords)
+{
+    local LWCE_TSatNode kNode;
+
+    kNode.nmCountry = nmCountry;
+    kNode.v2Coords = v2Coords;
+
+    m_arrCESatNodes.AddItem(kNode);
+}
+
+/// <summary>
+/// Creates all of the cities to start the game.
+/// </summary>
+function CreateCities()
+{
+    local array<LWCE_XGCountry> arrCountries;
+    local LWCECityTemplateManager kCityTemplateMgr;
+    local LWCECityTemplate kCityTemplate;
+    local LWCE_XGCountry kCountry;
+    local LWCE_XGCity kCity;
+    local name nmCity;
+
+    kCityTemplateMgr = `LWCE_CITY_TEMPLATE_MGR;
+
+    arrCountries = LWCE_GetCountries();
+
+    foreach arrCountries(kCountry)
+    {
+        foreach kCountry.m_kTemplate.arrCities(nmCity)
+        {
+            kCityTemplate = kCityTemplateMgr.FindCityTemplate(nmCity);
+
+            kCity = Spawn(class'LWCE_XGCity');
+            kCity.m_nmCity = nmCity;
+            kCity.m_strName = kCityTemplate.strName;
+            kCity.m_nmCountry = kCountry.m_nmCountry;
+            kCity.m_v2Coords = kCityTemplate.v2Location;
+
+            m_arrCities.AddItem(kCity);
+
+            kCountry.m_arrCECities.AddItem(nmCity);
+        }
+    }
+}
+
+/// <summary>
+/// Creates all of the continents to start the game.
+/// </summary>
 function CreateContinents()
 {
     local array<LWCEContinentTemplate> arrContinents;
@@ -119,6 +170,9 @@ function CreateContinents()
     }
 }
 
+/// <summary>
+/// Creates all of the countries to start the game.
+/// </summary>
 function CreateCountries()
 {
     local int iCountry;
@@ -133,6 +187,22 @@ function CreateCountries()
         {
             LWCE_BuildCountry(kCEContinent.m_kTemplate.arrCountries[iCountry], kCEContinent.m_nmContinent);
         }
+    }
+}
+
+/// <summary>
+/// Creates all of the satellite nodes to start the game.
+/// </summary>
+function CreateSatNodes()
+{
+    local array<LWCE_XGCountry> arrCountries;
+    local LWCE_XGCountry kCountry;
+
+    arrCountries = LWCE_GetCountries();
+
+    foreach arrCountries(kCountry)
+    {
+        LWCE_BuildSatNode(kCountry.m_nmCountry, kCountry.m_kTemplate.v2SatNodeLoc);
     }
 }
 

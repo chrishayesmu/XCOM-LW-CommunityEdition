@@ -4,7 +4,9 @@ struct CheckpointRecord_LWCE_XGCountry extends XGCountry.CheckpointRecord
 {
     var name m_nmCountry;
     var name m_nmContinent;
+    var name m_nmBonus;
     var array<LWCE_TShipRecord> m_arrCEShipRecord;
+    var array<name> m_arrCECities;
     var int m_iShields;
     var bool m_bIsGrantingBonus;
 };
@@ -13,6 +15,7 @@ var name m_nmCountry;
 var name m_nmContinent;
 var name m_nmBonus;
 var array<LWCE_TShipRecord> m_arrCEShipRecord; // History of all of the enemy ships that have been sent on missions targeting this country.
+var array<name> m_arrCECities; // Separate from the template in case the template changes mid-campaign due to mod changes/updates
 var int m_iShields; // Country's defense level; replaces m_kTCountry.iScience in LW
 var bool m_bIsGrantingBonus; // Whether this country is currently
 
@@ -188,6 +191,21 @@ function string GetNameWithArticle(optional bool bLowerCase)
     {
         return m_kTemplate.strNameWithArticle;
     }
+}
+
+function int GetRandomCity()
+{
+    `LWCE_LOG_DEPRECATED_CLS(GetRandomCity);
+
+    return -1;
+}
+
+/// <summary>
+/// Gets the name of a random city which belongs to this country.
+/// </summary>
+function name LWCE_GetRandomCity()
+{
+    return m_arrCECities[Rand(m_arrCECities.Length)];
 }
 
 function InitNewGame(TCountry kCountry)
