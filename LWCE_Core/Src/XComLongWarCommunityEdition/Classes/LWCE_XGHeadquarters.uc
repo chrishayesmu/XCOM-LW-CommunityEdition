@@ -177,13 +177,11 @@ function AddSatelliteNode(int iCountry, int iType, optional bool bInstant)
 
 function LWCE_AddSatelliteNode(name nmCountry, name nmType, optional bool bInstant)
 {
-    local LWCE_XGFacility_Labs kLabs;
     local LWCE_XGWorld kWorld;
     local LWCE_XGCountry kCountry;
     local LWCE_TSatellite kSatellite;
     local LWCE_TSatNode kNode;
 
-    kLabs = LWCE_XGFacility_Labs(LABS());
     kWorld = LWCE_XGWorld(WORLD());
     kCountry = kWorld.LWCE_GetCountry(nmCountry);
     kNode = kWorld.LWCE_GetSatelliteNode(nmCountry);
@@ -232,17 +230,6 @@ function LWCE_AddSatelliteNode(name nmCountry, name nmType, optional bool bInsta
     else if (STAT_GetStat(eRecap_ThirdSatellite) == 0 && m_arrCESatellites.Length == 3)
     {
         STAT_SetStat(eRecap_ThirdSatellite, Game().GetDays());
-    }
-
-    // If just now getting the We Have Ways continent bonus, and current research is an autopsy or interrogation,
-    // complete the research right away
-    // TODO rewrite this and also make it not do this in Long War, just apply the bonus
-    if (Continent(kCountry.GetContinent()).HasBonus() && Continent(kCountry.GetContinent()).m_eBonus == eCB_WeHaveWays)
-    {
-        if (kLabs.LWCE_IsInterrogationTech(kLabs.m_kCEProject.TechName) || kLabs.LWCE_IsAutopsyTech(kLabs.m_kCEProject.TechName))
-        {
-            kLabs.m_kCEProject.iActualHoursLeft = 0;
-        }
     }
 }
 
@@ -585,6 +572,9 @@ function LWCE_XGBase GetBaseById(int Id)
     return none;
 }
 
+/// <summary>
+/// Retrieves the current level of the specified bonus. If unearned, it will be 0.
+/// </summary>
 function int GetBonusLevel(name nmBonus)
 {
     local int Index;
@@ -895,6 +885,13 @@ function int GetSatelliteLimit()
     iSatelliteLimit += class'XGTacticalGameCore'.default.UPLINK_ADJACENCY_BONUS * LWCE_XGBase(Base()).LWCE_GetAdjacencies('Satellite');
 
     return iSatelliteLimit;
+}
+
+function int HasBonus(EContinentBonus eBonus)
+{
+    `LWCE_LOG_DEPRECATED_BY(HasBonus, GetBonusLevel);
+
+    return -100;
 }
 
 function bool HasFacility(int iFacility)

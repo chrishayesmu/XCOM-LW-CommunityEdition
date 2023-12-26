@@ -156,7 +156,7 @@ function TSoldier CreateTSoldier(optional EGender eForceGender, optional int iCo
     return kSoldier;
 }
 
-function LWCE_TSoldier LWCE_CreateTSoldier(optional EGender eForceGender, optional int iCountry = -1, optional name nmRaceTemplate = '', optional bool bIsAugmented = false)
+function LWCE_TSoldier LWCE_CreateTSoldier(optional EGender eForceGender, optional name nmCountry = '', optional name nmRaceTemplate = '', optional bool bIsAugmented = false)
 {
     local LWCE_TSoldier kSoldier;
     local LWCE_TDefaultSoldierAppearance DefaultAppearance;
@@ -168,18 +168,18 @@ function LWCE_TSoldier LWCE_CreateTSoldier(optional EGender eForceGender, option
     kTemplateMgr = `LWCE_CONTENT_TEMPLATE_MGR;
     DefaultAppearance = FindDefaultAppearanceForClass(/* iSoldierClassId */ 0);
 
-    if (iCountry == -1)
+    if (nmCountry == '')
     {
-        iCountry = PickOriginCountry();
+        nmCountry = LWCE_PickOriginCountry();
     }
 
-    kSoldier.iCountry = iCountry;
+    kSoldier.nmCountry = nmCountry;
     kSoldier.kAppearance.iFlag = kSoldier.iCountry;
     kSoldier.iRank = 0;
 
     if (nmRaceTemplate == '')
     {
-        kSoldier.kAppearance.nmRace = LWCE_GetRandomRaceByCountry(kSoldier.iCountry);
+        kSoldier.kAppearance.nmRace = LWCE_GetRandomRaceByCountry(kSoldier.nmCountry);
     }
     else
     {
@@ -200,7 +200,7 @@ function LWCE_TSoldier LWCE_CreateTSoldier(optional EGender eForceGender, option
     // Soldier language: check the game setting for all soldiers speaking the player's language
     if (`PROFILESETTINGS != none && `PROFILESETTINGS.Data != none && `PROFILESETTINGS.Data.m_bForeignLanguages)
     {
-        kSoldier.kAppearance.nmLanguage = LanguageNameByBaseID(GetLanguageByCountry(ECountry(iCountry)));
+        kSoldier.kAppearance.nmLanguage = LanguageNameByBaseID(LWCE_GetLanguageByCountry(nmCountry));
     }
     else
     {
@@ -294,6 +294,131 @@ function name LWCE_GetNextVoice(EGender Gender, name nmLanguage, bool bIsMec)
     return PossibleVoices[m_arrNextVoices[iVoiceTrackingIndex].iNextIndex - 1].GetContentTemplateName();
 }
 
+function ECharacterLanguage GetLanguageByCountry(ECountry Country)
+{
+    `LWCE_LOG_DEPRECATED_CLS(GetLanguageByCountry);
+
+    return ECharacterLanguage(0);
+}
+
+function name LWCE_GetLanguageByCountry(name nmCountry)
+{
+    switch (Country)
+    {
+        case eCountry_USA:
+            return eCharLanguage_English;
+        case 5:   // France
+        case 35:  // Belgium
+        case 96:  // Cameroon
+        case 97:  // Congo
+        case 98:  // Gabon
+        case 99:  // Ivory Coast
+        case 103: // Senegal
+            return eCharLanguage_French;
+        case 4:
+        case 53:
+        case 73:
+            return eCharLanguage_German;
+        case 9:
+            return eCharLanguage_Italian;
+        case 23:
+            return eCharLanguage_Polish;
+        case 1:
+        case 85:
+        case 92:
+        case 108:
+        case 109:
+        case 119:
+        case 125:
+        case 126:
+            return eCharLanguage_Russian;
+        case 13:
+            return eCharLanguage_Spanish;
+        case 3:
+            return 7;
+        case 8:
+        case 47:
+            return 8;
+        case 32:
+            return 9;
+        case 31:
+            return 10;
+        case 22:
+        case 43:
+        case 102:
+            return 11;
+        case 12:
+        case 46:
+        case 123:
+            return 12;
+        case 25:
+        case 75:
+            return 13;
+        case 15:
+            return 16;
+        case 2:
+        case 50:
+            return 17;
+        case 6:
+            return 18;
+        case 7:
+            return 19;
+        case 10:
+            return 20;
+        case 19:
+        case 29:
+        case 74:
+        case 101:
+            return 21;
+        case 20:
+        case 21:
+        case 26:
+        case 28:
+        case 37:
+        case 59:
+        case 60:
+        case 61:
+        case 62:
+        case 63:
+        case 64:
+        case 67:
+        case 68:
+        case 80:
+        case 81:
+        case 82:
+        case 83:
+            return 22;
+        case 24:
+            return 23;
+        case 17:
+            return 24;
+        case 27:
+            return 25;
+        case 30:
+            return 26;
+        case 33:
+            return 27;
+        case 34:
+            return 28;
+        case 18:
+        case 49:
+        case 76:
+        case 77:
+        case 78:
+        case 100:
+        case 104:
+        case 111:
+        case 113:
+        case 114:
+        case 115:
+        case 116:
+        case 117:
+            return 29;
+    }
+
+    return GetLanguageByString();
+}
+
 function int GetRandomRaceByCountry(int iCountry)
 {
     `LWCE_LOG_DEPRECATED_CLS(GetRandomRaceByCountry);
@@ -301,16 +426,14 @@ function int GetRandomRaceByCountry(int iCountry)
     return -1;
 }
 
-function name LWCE_GetRandomRaceByCountry(int iCountry)
+function name LWCE_GetRandomRaceByCountry(name nmCountry)
 {
     local array<LWCERaceTemplate> arrTemplates;
     local int Index;
     local name nmRace;
 
-    // TODO: define this mapping in country templates later
-    nmRace = RaceNameByBaseID(super.GetRandomRaceByCountry(iCountry));
-
     arrTemplates = `LWCE_CONTENT_TEMPLATE_MGR.GetRaces();
+    nmRace = `LWCE_COUNTRY(nmCountry).RollForRace();
 
     for (Index = 0; Index < arrTemplates.Length; Index++)
     {
@@ -321,6 +444,41 @@ function name LWCE_GetRandomRaceByCountry(int iCountry)
     }
 
     return '';
+}
+
+function int PickOriginCountry(optional int iContinent)
+{
+    `LWCE_LOG_DEPRECATED_CLS(PickOriginCountry);
+
+    return -1;
+}
+
+function name LWCE_PickOriginCountry()
+{
+    local array<LWCE_XGCountry> arrCountries;
+    local LWCE_XGCountry kCountry;
+    local int iRoll, iSum, iTotalWeight;
+
+    arrCountries = `LWCE_WORLD.LWCE_GetCountries();
+
+    foreach arrCountries(kCountry)
+    {
+        iTotalWeight += kCountry.m_kTemplate.iSoldierOriginWeight;
+    }
+
+    iRoll = Rand(iTotalWeight);
+
+    foreach arrCountries(kCountry)
+    {
+        iSum += kCountry.m_kTemplate.iSoldierOriginWeight;
+
+        if (iRoll < iSum)
+        {
+            return kCountry.m_nmCountry;
+        }
+    }
+
+    return arrCountries[arrCountries.Length - 1].m_kTemplate.iSoldierOriginWeight;
 }
 
 static protected function LWCEHairColorContentTemplate ChooseRandomHairColor()
@@ -348,6 +506,7 @@ static protected function LWCESkinColorContentTemplate ChooseRandomSkinColorForR
 /// </summary>
 static protected function name PickFallbackLanguageForVoice(name nmLanguage)
 {
+    // TODO: replace this with some sort of config-based fallback
     switch (nmLanguage)
     {
         case 'EnglishBritish':

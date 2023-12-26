@@ -22,6 +22,7 @@ var name m_nmCEBestWeaponEquipped; // TODO: not being populated
 var config bool bAutoNicknameNewPilots;
 var config int iNumShipSlotsPerContinent;
 
+// TODO migrate PilotNames to use an LWCENameListTemplate instead
 var const localized array<string> PilotNames;
 var const localized array<string> PilotRanks;
 
@@ -114,6 +115,7 @@ function AddInterceptor(int iContinent)
 
 function LWCE_AddShip(name nmShipType, name nmContinent)
 {
+    local LWCE_XGFundingCouncil kFundingCouncil;
     local LWCE_XGHeadquarters kHQ;
     local LWCE_XGShip kShip;
 
@@ -148,7 +150,14 @@ function LWCE_AddShip(name nmShipType, name nmContinent)
     kShip.UpdateHangarShip();
     UpdateHangarBays();
 
-    LWCE_XGFundingCouncil(GEOSCAPE().World().m_kFundingCouncil).LWCE_OnShipAdded(kShip);
+    kFundingCouncil = LWCE_XGFundingCouncil(GEOSCAPE().World().m_kFundingCouncil);
+
+    // The funding council may be none at the very start of the campaign, while the world is being set up. That's okay
+    // since there won't be any council requests to fulfill anyway, so just skip the call in that case.
+    if (kFundingCouncil != none)
+    {
+        kFundingCouncil.LWCE_OnShipAdded(kShip);
+    }
 }
 
 function AssignRandomCallsign(LWCE_XGShip kShip)
@@ -528,6 +537,33 @@ function GiveMissionReward(XGShip_Dropship kSkyranger)
     }
 }
 
+/// <summary>
+/// Checks if the given hangar bay is available. This refers to the bays in XCOM HQ which are used for displaying ships;
+/// it has nothing to do with how the ships themselves are stored on each continent.
+/// </summary>
+function bool IsBayAvailable(int iBay)
+{
+    local LWCE_XGShip kShip;
+    local name nmHQContinent;
+
+    nmHQContinent = LWCE_XGHeadquarters(HQ()).LWCE_GetContinent();
+
+    foreach m_arrCEShips(kShip)
+    {
+        if (kShip.m_nmContinent != nmHQContinent)
+        {
+            continue;
+        }
+
+        if (kShip.m_iHomeBay == iBay)
+        {
+            return false;
+        }
+    }
+
+    return true;
+}
+
 function bool IsShipInTransitTo(int iContinent)
 {
     `LWCE_LOG_DEPRECATED_CLS(IsShipInTransitTo);
@@ -687,6 +723,52 @@ function LWCE_RemoveShip(LWCE_XGShip kShip)
     UpdateHangarBays();
 }
 
+/// <summary>
+/// Sets up the ship models in the XCOM HQ hangars so that they're ready to be used by Kismet.
+/// </summary>
+function SetHangarShipsForKismet()
+{
+    local name nmHQContinent;
+    local LWCE_XGShip kShip;
+    local array<XGHangarShip> arrBayInterceptors;
+    local array<SequenceObject> arrEvents;
+    local SequenceObject kEvent;
+    local SeqEvent_ShipToKismet kShipEvent;
+
+    arrBayInterceptors.Length = 4;
+    nmHQContinent = LWCE_XGHeadquarters(HQ()).LWCE_GetContinent();
+
+    foreach m_arrCEShips(kShip)
+    {
+        if (kShip.m_nmContinent == nmHQContinent && kShip.m_iHomeBay >= 0 && kShip.m_iHomeBay < arrBayInterceptors.Length)
+        {
+            arrBayInterceptors[kShip.m_iHomeBay] = kShip.GetHangarShip();
+        }
+    }
+
+    WorldInfo.GetGameSequence().FindSeqObjectsByClass(class'SeqEvent_ShipToKismet', true, arrEvents);
+
+    foreach arrEvents(kEvent)
+    {
+        kShipEvent = SeqEvent_ShipToKismet(kEvent);
+
+        kShipEvent.Firestorm1 = (arrBayInterceptors[0] != none && arrBayInterceptors[0].IsA('XGHangarShip_Firestorm')) ? arrBayInterceptors[0] : none;
+        kShipEvent.Ship1 = kShipEvent.Firestorm1 == none ? arrBayInterceptors[0] : none;
+
+        kShipEvent.Firestorm2 = (arrBayInterceptors[1] != none && arrBayInterceptors[1].IsA('XGHangarShip_Firestorm')) ? arrBayInterceptors[1] : none;
+        kShipEvent.Ship2 = kShipEvent.Firestorm2 == none ? arrBayInterceptors[1] : none;
+
+        kShipEvent.Firestorm3 = (arrBayInterceptors[2] != none && arrBayInterceptors[2].IsA('XGHangarShip_Firestorm')) ? arrBayInterceptors[2] : none;
+        kShipEvent.Ship3 = kShipEvent.Firestorm3 == none ? arrBayInterceptors[2] : none;
+
+        kShipEvent.Firestorm4 = (arrBayInterceptors[3] != none && arrBayInterceptors[3].IsA('XGHangarShip_Firestorm')) ? arrBayInterceptors[3] : none;
+        kShipEvent.Ship4 = kShipEvent.Firestorm4 == none ? arrBayInterceptors[3] : none;
+
+        kShipEvent.PopulateLinkedVariableValues();
+        SeqEvent_ShipToKismet(kEvent).CheckActivate(self, self);
+    }
+}
+
 function EItemType ShipTypeToItemType(EShipType eShip)
 {
     `LWCE_LOG_DEPRECATED_NOREPLACE_CLS(ShipTypeToItemType);
@@ -787,6 +869,61 @@ function UnloadArtifacts(XGShip_Dropship kSkyranger)
     }
 
     kCargo.m_kArtifactsContainer.Clear();
+}
+
+/// <summary>
+/// Updates the hangar bays in XCOM HQ to display ships in their current status (ready vs repairing).
+/// </summary>
+function UpdateHangarBays()
+{
+    local int I;
+    local name nmHQContinent;
+    local bool bFound;
+    local LWCE_XGShip kShip;
+    local SeqAct_Interp kSeqAct, kDisable1, kDisable2;
+
+    SetHangarShipsForKismet();
+    nmHQContinent = LWCE_XGHeadquarters(HQ()).LWCE_GetContinent();
+
+    // Bound of 4 here is presumably because EW had 4 ships per continent and that's how many the base map can handle
+    for (I = 0; I < 4; I++)
+    {
+        bFound = false;
+
+        foreach m_arrCEShips(kShip)
+        {
+            if (kShip.m_nmContinent == nmHQContinent && kShip.m_iHomeBay == I)
+            {
+                if (kShip.m_iStatus == eShipStatus_Ready)
+                {
+                    kSeqAct = m_arrHangarOpen[I];
+                    kDisable1 = m_arrHangarRepair[I];
+                    kDisable2 = m_arrHangarClosed[I];
+                }
+                else
+                {
+                    kSeqAct = m_arrHangarRepair[I];
+                    kDisable1 = m_arrHangarClosed[I];
+                    kDisable2 = m_arrHangarOpen[I];
+                }
+
+                bFound = true;
+                break;
+            }
+        }
+
+        if (!bFound)
+        {
+            kSeqAct = m_arrHangarClosed[I];
+            kDisable1 = m_arrHangarOpen[I];
+            kDisable2 = m_arrHangarRepair[I];
+        }
+
+        kDisable1.Reset();
+        kDisable2.Reset();
+        kSeqAct.Reset();
+        kSeqAct.ForceActivateInput(0);
+    }
 }
 
 function UpdateWeaponView(EShipWeapon eWeapon)

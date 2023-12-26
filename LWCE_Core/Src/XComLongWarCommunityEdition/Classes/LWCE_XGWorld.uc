@@ -60,23 +60,7 @@ function InitNewGame()
 
 function BuildCity()
 {
-    local int iCity;
-    local LWCE_XGCity kCity;
-
-    m_arrCities.Add(255);
-
-    for (iCity = 0; iCity < class'XGFacility_Engineering'.default.m_arrAlloyProjects.Length; iCity++)
-    {
-        kCity = Spawn(class'LWCE_XGCity');
-        kCity.m_iID = class'XGFacility_Engineering'.default.m_arrAlloyProjects[iCity].iType;
-        kCity.m_strName = class'XGLocalizedData'.default.CityTypeNames[kCity.m_iID];
-        kCity.m_iCountry = class'XGFacility_Engineering'.default.m_arrAlloyProjects[iCity].iCountry;
-        kCity.m_v2Coords = class'XGFacility_Engineering'.default.m_arrAlloyProjects[iCity].v2Loc;
-
-        m_arrCities[kCity.m_iID] = kCity;
-
-        Country(kCity.m_iCountry).m_arrCities.AddItem(kCity.m_iID);
-    }
+    `LWCE_LOG_DEPRECATED_BY(BuildCity, CreateCities);
 }
 
 function BuildCouncilCountry(int iCountry, int iContinent, bool bDeveloped)
@@ -128,7 +112,7 @@ function CreateCities()
 
     kCityTemplateMgr = `LWCE_CITY_TEMPLATE_MGR;
 
-    arrCountries = LWCE_GetCountries();
+    arrCountries = GetCouncilCountries(/* bRequireCurrentMember */ false);
 
     foreach arrCountries(kCountry)
     {

@@ -1,5 +1,19 @@
 class LWCECountryTemplate extends LWCEDataTemplate
+    dependson(LWCETypes)
     config(LWCEWorld);
+
+struct LWCE_TNameListConfig
+{
+    var name nmGender;
+    var name nmRace;
+    var name nmNameList;
+    var int iWeight;
+
+    structdefaultproperties
+    {
+        iWeight=1
+    };
+};
 
 var config int iStartingCash;                // How much cash the player will have if choosing this country as their starting location.
 var config int iEngineersPerMonth;           // How many engineers this country gives each month if it has satellite coverage
@@ -17,6 +31,10 @@ var config array<name> arrAdjacentCountries; // Which countries should be consid
                                              // how to expand away from countries in which they already have bases. Adjacency should be a symmetric relationship,
                                              // where [A adj B] implies [B adj A], but this is not enforced currently.
 var config int iSoldierOriginWeight;         // The weighting which assigns the relative likelihood of soldiers to be from this country.
+var config array<LWCE_TNameListConfig> arrFirstNameLists;
+var config array<LWCE_TNameListConfig> arrLastNameLists;
+var config array<LWCE_NameIntKVP> arrSoldierRaceWeights;
+var config array<LWCE_NameIntKVP> arrSpokenLanguageWeights;
 var const localized string strName;
 var const localized string strNameWithArticle;
 var const localized string strNameWithArticleLower;
@@ -69,4 +87,72 @@ function TRect GetBounds()
 function Vector2D GetCoords()
 {
     return `LWCE_UTILS.RectCenter(GetBounds());
+}
+
+/// <summary>
+/// Rolls for a language to assign to a new soldier, using arrSpokenLanguageWeights. This function does
+/// NOT respect the m_bForeignLanguages setting in XComOnlineProfileSettingsDataBlob; callers are responsible
+/// for checking that themselves if applicable in their context.
+/// </summary>
+function name RollForLanguage()
+{
+    local int iRoll, iSum, iTotalWeight;
+    local LWCE_NameIntKVP kWeightPair;
+
+    if (arrSpokenLanguageWeights.Length == 0)
+    {
+        return '';
+    }
+
+    foreach arrSpokenLanguageWeights(kWeightPair)
+    {
+        iTotalWeight += kWeightPair.Value;
+    }
+
+    iRoll = Rand(iTotalWeight);
+
+    foreach arrSpokenLanguageWeights(kWeightPair)
+    {
+        iSum += kWeightPair.Value;
+
+        if (iRoll < iSum)
+        {
+            return kWeightPair.Key;
+        }
+    }
+
+    return arrSpokenLanguageWeights[arrSpokenLanguageWeights.Length - 1].Key;
+}
+
+/// <summary>
+/// Rolls for a race to assign to a new soldier, using arrSoldierRaceWeights.
+/// </summary>
+function name RollForRace()
+{
+    local int iRoll, iSum, iTotalWeight;
+    local LWCE_NameIntKVP kWeightPair;
+
+    if (arrSoldierRaceWeights.Length == 0)
+    {
+        return '';
+    }
+
+    foreach arrSoldierRaceWeights(kWeightPair)
+    {
+        iTotalWeight += kWeightPair.Value;
+    }
+
+    iRoll = Rand(iTotalWeight);
+
+    foreach arrSoldierRaceWeights(kWeightPair)
+    {
+        iSum += kWeightPair.Value;
+
+        if (iRoll < iSum)
+        {
+            return kWeightPair.Key;
+        }
+    }
+
+    return arrSoldierRaceWeights[arrSoldierRaceWeights.Length - 1].Key;
 }

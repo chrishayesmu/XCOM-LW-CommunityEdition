@@ -1253,10 +1253,14 @@ function LWCE_SetNewProject(name TechName)
     }
 }
 
+/// <summary>
+/// Updates the current bonus to research speed, as determined by the number of laboratories and lab adjacencies.
+/// </summary>
 function UpdateLabBonus()
 {
     m_fLabBonus = class'XGTacticalGameCore'.default.LAB_BONUS * LWCE_XGHeadquarters(HQ()).LWCE_GetNumFacilities('Facility_Laboratory');
 
+    // TODO: use events to override the adjacency bonus value instead
     if (HQ().HasBonus(`LW_HQ_BONUS_ID(JaiVidwan)) > 0)
     {
         m_fAdjLabBonus = ((HQ().HasBonus(`LW_HQ_BONUS_ID(JaiVidwan)) / 100.0f) + class'XGTacticalGameCore'.default.LAB_ADJACENCY_BONUS) * LWCE_XGBase(Base()).LWCE_GetAdjacencies('Laboratory');

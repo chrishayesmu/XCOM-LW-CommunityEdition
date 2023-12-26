@@ -103,6 +103,15 @@ function bool BeenHunted()
     return false;
 }
 
+/// <summary>
+/// Causes the country to recalculate its funding, taking its current state into account. This function is slightly
+/// misnamed, as if the country isn't in the XCOM project, it won't be paying anything.
+/// </summary>
+function BeginPaying()
+{
+    m_iFunding = LWCE_CalcFunding();
+}
+
 function int CalcFunding(optional int iAdditionalPanic)
 {
     `LWCE_LOG_DEPRECATED_CLS(CalcFunding);

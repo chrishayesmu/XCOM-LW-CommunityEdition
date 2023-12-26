@@ -38,7 +38,7 @@ struct CheckpointRecord_LWCE_XGShip extends XGShip.CheckpointRecord
     var bool m_bEverDetected;
     var bool m_bWasEngaged;
     var bool m_bLanded;
-    var bool m_bRolledDetectionByShips;    
+    var bool m_bRolledDetectionByShips;
 };
 
 var name m_nmShipTemplate; // Name of an LWCEShipTemplate which describes this ship's capabilities.
@@ -53,7 +53,7 @@ var name m_nmEngagementStance; // e.g. Aggressive, Balanced, Defensive
 var name m_nmContinent; // Which continent's hangar this ship is assigned to. Blank for non-XCOM ships.
 var string m_strCallsign;
 var int m_iConfirmedKills; // How many enemy ships this ship has shot down in its lifetime.
-var int m_iHomeBay; // Which hangar slot is occupied by this ship in its continent.
+var int m_iHomeBay; // Which hangar slot is occupied by this ship in the HQ continent. This is specifically referring to a space in the base map where the ship is displayed.
 var int m_iHoursDown; // Remaining hours of repair/refueling/rearming/transfer until this ship is ready for use.
 var float m_fFlightTime;
 
@@ -137,7 +137,7 @@ function name GetCountry()
 }
 
 /// <summary>
-/// For friendly ships, returns the continent they are occupying hangar space in. 
+/// For friendly ships, returns the continent they are occupying hangar space in.
 /// For enemy ships, returns the name of the continent containing the country which
 /// they are currently targeting for their mission, if any.
 /// </summary>
@@ -425,7 +425,7 @@ function DestroyHangarShip()
 /// <summary>
 /// Gets or creates an Actor which is the visual representation of this ship in the hangar view.
 /// </summary>
-function XGHangarShip GetWeaponViewShip()
+function XGHangarShip GetHangarShip()
 {
     if (m_kHangarShip == none)
     {
@@ -485,7 +485,7 @@ function UpdateHangarShip()
     {
         if (m_kHangarShip == none)
         {
-            GetWeaponViewShip();
+            GetHangarShip();
         }
     }
     else
@@ -555,7 +555,7 @@ protected function CalculateArrival(Vector2D v2Target, TRect kBound)
         {
             m_v2Coords.Y = kBound.fTop + RandRange(-MilesToYMapCoords(200), 0.0);
         }
-    } 
+    }
     until (DistanceInMiles(v2Target, m_v2Coords) < 250);
 
     if (m_nmApproach == 'SeekingLatitude')
