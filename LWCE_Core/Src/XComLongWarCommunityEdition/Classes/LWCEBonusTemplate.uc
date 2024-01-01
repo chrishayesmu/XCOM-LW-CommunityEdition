@@ -81,6 +81,11 @@ protected function OnCampaignStart(Object EventData, Object EventSource, Name Ev
 
     for (Index = 0; Index < arrStartingFacilities.Length; Index++) {
         kBase.LWCE_SetFacility(arrStartingFacilities[Index].FacilityName, arrStartingFacilities[Index].X, arrStartingFacilities[Index].Y);
+
+        if (kStrategy.m_arrCEFacilityUnlocks.Find(arrStartingFacilities[Index].FacilityName) == INDEX_NONE)
+        {
+            kStrategy.m_arrCEFacilityUnlocks.AddItem(arrStartingFacilities[Index].FacilityName);
+        }
     }
 
     for (Index = 0; Index < arrStartingFoundryProjects.Length; Index++) {

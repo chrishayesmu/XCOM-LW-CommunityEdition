@@ -115,6 +115,8 @@ function InitNewGame()
     local XGFacility kFacility;
     local int I;
 
+    m_kBase = AddBase(m_strHQBaseName, /* bIsPrimaryBase */ true, /* bUsesAccessLifts */ true, /* Width */ 7, /* Height */ 5, GetCoords());
+
     CreateFacilities();
 
     foreach m_arrFacilities(kFacility)
@@ -122,11 +124,10 @@ function InitNewGame()
         kFacility.InitNewGame();
     }
 
-    m_kBase = AddBase(m_strHQBaseName, /* bIsPrimaryBase */ true, /* bUsesAccessLifts */ true, /* Width */ 7, /* Height */ 5, GetCoords());
-
     m_kActiveFacility = m_arrFacilities[0];
     m_fAnnounceTimer = 10.0;
 
+    // TODO replace this loop
     for (I = 0; I < 5; I++)
     {
         if (I != m_iContinent)

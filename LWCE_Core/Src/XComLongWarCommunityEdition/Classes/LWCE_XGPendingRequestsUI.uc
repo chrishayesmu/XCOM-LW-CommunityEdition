@@ -78,7 +78,7 @@ function bool CanSelectCurrentRequest()
         return false;
     }
 
-    if (m_arrCERequests[m_iHighlight].RequestName == '')
+    if (m_arrCERequests[m_iHighlight].nmRequest == '')
     {
         return false;
     }

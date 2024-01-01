@@ -369,3 +369,14 @@ function string RecordStartedGame()
 
     return "";
 }
+
+function StartGame()
+{
+    local name nmHomeCountry;
+
+    nmHomeCountry = LWCE_XGHeadquarters(HQ()).LWCE_GetHomeCountry();
+
+    AddInitialPanic();
+    InitFunding();
+    AddResource(eResource_Money, `LWCE_COUNTRY(nmHomeCountry).iStartingCash * class'XGTacticalGameCore'.default.FundingBalance[Game().GetDifficulty() + 4]));
+}

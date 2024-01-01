@@ -63,8 +63,8 @@ simulated event PostBeginPlay()
         if (kUnit != none)
         {
             m_kCEAppearance = kUnit.m_kCESoldier.kAppearance;
-            `LWCE_LOG_CLS("FindMatchingPawn: calling in tac game, unit iGender = " $ kUnit.m_kCESoldier.kAppearance.iGender $ ", local iGender = " $ m_kCEAppearance.iGender);
-            kPawnTemplate = `LWCE_CONTENT_TEMPLATE_MGR.FindMatchingPawn(ECharacter(kUnit.LWCE_GetCharacter().GetCharacterType()), EGender(kUnit.m_kCESoldier.kAppearance.iGender), kUnit.LWCE_GetCharacter().GetCharacter().kInventory.nmArmor);
+
+            kPawnTemplate = `LWCE_CONTENT_TEMPLATE_MGR.FindMatchingPawn(ECharacter(kUnit.LWCE_GetCharacter().GetCharacterType()), kUnit.m_kCESoldier.kAppearance.nmGender, kUnit.LWCE_GetCharacter().GetCharacter().kInventory.nmArmor);
             kArchetype = XComUnitPawn(`LWCE_CONTENT_MGR.GetArchetypeByPath(kPawnTemplate.ArchetypeName));
             class'LWCEActorUtilities'.static.InitPawnFromArchetype(kArchetype, self);
         }
@@ -108,7 +108,7 @@ simulated event PostBeginPlay()
 function LWCE_Init(const out LWCE_TCharacter inCharacter, const out LWCE_TInventory Inv, const out LWCE_TAppearance Appearance)
 {
     m_kCEChar = inCharacter;
-    bIsFemale = Appearance.iGender == eGender_Female;
+    bIsFemale = Appearance.nmGender == 'Female';
     m_kCEAppearance = Appearance;
 
     LWCE_SetAppearance(Appearance, false);
@@ -171,8 +171,8 @@ simulated function RequestFullPawnContent()
 
         if (IsInStrategy())
         {
-            `LWCE_LOG_CLS("FindMatchingPawn: calling in RequestFullPawnContent, iGender = " $ m_kCEAppearance.iGender);
-            ContentTemplate = kTemplateMgr.FindMatchingPawn(ECharacter(m_kCEChar.iCharacterType), EGender(m_kCEAppearance.iGender), m_kCEChar.kInventory.nmArmor);
+            `LWCE_LOG_CLS("FindMatchingPawn: calling in RequestFullPawnContent, nmGender = " $ m_kCEAppearance.nmGender);
+            ContentTemplate = kTemplateMgr.FindMatchingPawn(ECharacter(m_kCEChar.iCharacterType), m_kCEAppearance.nmGender, m_kCEChar.kInventory.nmArmor);
 
             if (ContentTemplate == none)
             {
@@ -328,7 +328,7 @@ simulated function SetAppearance(const out TAppearance kAppearance, optional boo
 simulated function LWCE_SetAppearance(const out LWCE_TAppearance kAppearance, optional bool bRequestContent = true)
 {
     m_kCEAppearance = kAppearance;
-    bIsFemale = m_kCEAppearance.iGender == eGender_Female;
+    bIsFemale = m_kCEAppearance.nmGender == 'Female';
     m_bSetAppearance = true;
 
     if (bRequestContent)
@@ -382,13 +382,13 @@ function LWCE_FindPossibleCustomParts(const out LWCE_TCharacter inCharacter)
         `LWCE_LOG_CLS(self $ ": Chose new race " $ m_kCEAppearance.nmRace);
     }
 
-    nmRace = kTemplateMgr.FindRaceTemplate(m_kCEAppearance.nmRace).Race;
+    nmRace = m_kCEAppearance.nmRace;
 
     m_arrCEArmorKits = kTemplateMgr.FindMatchingArmorKits(inCharacter.kInventory.nmArmor); // TODO get default and set if needed
     m_arrCEFacialHairs = kTemplateMgr.GetFacialHairs();
-    m_arrCEHairs = kTemplateMgr.FindMatchingHair(EGender(m_kCEAppearance.iGender), /* bCivilianOnly */ false, /* bAllowHelmets */ true);
-    m_arrCEHeads = kTemplateMgr.FindMatchingHeads(ECharacter(m_kCEChar.iCharacterType), nmRace, EGender(m_kCEAppearance.iGender));
-    m_arrCEVoices = kTemplateMgr.FindMatchingVoices(EGender(m_kCEAppearance.iGender), m_kCEAppearance.nmLanguage, inCharacter.bIsAugmented);
+    m_arrCEHairs = kTemplateMgr.FindMatchingHair(m_kCEAppearance.nmGender, /* bCivilianOnly */ false, /* bAllowHelmets */ true);
+    m_arrCEHeads = kTemplateMgr.FindMatchingHeads(ECharacter(m_kCEChar.iCharacterType), nmRace, m_kCEAppearance.nmGender);
+    m_arrCEVoices = kTemplateMgr.FindMatchingVoices(m_kCEAppearance.nmGender, m_kCEAppearance.nmLanguage, inCharacter.bIsAugmented);
 
     m_arrCEArmorColors = kTemplateMgr.GetArmorColors();
     m_arrCEHairColors = kTemplateMgr.GetHairColors();
@@ -599,9 +599,9 @@ simulated function LWCE_SetArmorTint(name nmArmorColor)
 }
 
 // There is no non-LWCE SetGender, but this keeps it consistent with other functions
-simulated function LWCE_SetGender(int iGender)
+simulated function LWCE_SetGender(name nmGender)
 {
-    m_kCEAppearance.iGender = iGender;
+    m_kCEAppearance.nmGender = nmGender;
 
     // Invalidate fields that are gender-dependent
     m_kCEAppearance.nmHaircut = '';
@@ -620,11 +620,8 @@ simulated function SetFacialHair(int PresetIdx)
 
 simulated function LWCE_SetFacialHair(name nmFacialHair)
 {
-    if (m_kCEAppearance.iGender == eGender_Male)
-    {
-        m_kCEAppearance.nmFacialHair = nmFacialHair;
-        UpdateMeshMaterials(m_kHeadMeshComponent);
-    }
+    m_kCEAppearance.nmFacialHair = nmFacialHair;
+    UpdateMeshMaterials(m_kHeadMeshComponent);
 }
 
 simulated function SetHair(int HairId)
@@ -748,6 +745,22 @@ simulated function UpdateArmorMaterial(MeshComponent MeshComp, MaterialInstanceC
     }
 }
 
+simulated function UpdateFlagMaterial(MaterialInstanceConstant MIC)
+{
+    // LW 1.0 packed its tactical flags into a few textures, presumably for performance. For ease of use, we're
+    // going to try not doing that in LWCE, and just have each flag in its own texture (the same texture as used
+    // on the strategy layer). This will simplify modding, but if it actually poses a performance issue, we can revert
+    // back to LW 1.0's behavior.
+
+    if (m_kCEAppearance.strFlagPath == "")
+    {
+        // If there's no flag set, use the United Nations flag
+        m_kCEAppearance.strFlagPath = "LongWar.Flags_Strategy.065-United_Nations";
+    }
+
+    MIC.SetTextureParameterValue('FlagTex', Texture2D(FindObject(m_kCEAppearance.strFlagPath, class'Texture2D')));
+}
+
 simulated function UpdateHairMaterial(MaterialInstanceConstant MIC)
 {
     local LWCEColorContentTemplate kTemplate;
@@ -775,7 +788,7 @@ simulated function UpdateSkinMaterial(MaterialInstanceConstant MIC, bool bHasHai
     ParamColor = ColorToLinearColor(kTemplate.PrimaryColor);
     MIC.SetVectorParameterValue('HairColor', ParamColor);
 
-    if (m_kCEAppearance.iGender == eGender_Male && bHasHair && m_kCEAppearance.nmFacialHair != '')
+    if (bHasHair && m_kCEAppearance.nmFacialHair != '')
     {
         kFacialHair = kTemplateMgr.FindFacialHairTemplate(m_kCEAppearance.nmFacialHair);
         ParamColor = ColorToLinearColor(kFacialHair.Mask);

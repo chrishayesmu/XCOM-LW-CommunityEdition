@@ -36,8 +36,8 @@ var config array<int>  arrRoscosmosSatelliteDiscount;
 var config array<int>  arrSandhurstOTSRanksReduction;
 var config array<int>  arrSpecialAirServiceAimBonus;
 var config array<int>  arrSpecialWarfareSchoolDiscount;
-var config array<int>  arrSpetznazBonusHP;
-var config array<int>  arrSurvivalTrainingBonusHP;
+var config array<int>  arrSpetznazHPBonus;
+var config array<int>  arrSurvivalTrainingHPBonus;
 var config array<int>  arrTaskForceArrowheadBonusWill;
 var config array<int>  arrWealthOfNationsBonusFunding;
 var config array<int>  arrWeHaveWaysResearchTimeReduction;
@@ -63,7 +63,6 @@ static function array<LWCEDataTemplate> CreateTemplates()
     arrTemplates.AddItem(GiftOfOsiris());
     arrTemplates.AddItem(IndependenceDay());
     arrTemplates.AddItem(JaiVidwan());
-    arrTemplates.AddItem(JungleScouts());
     arrTemplates.AddItem(LegacyOfUxmal());
     arrTemplates.AddItem(NeoPanzers());
     arrTemplates.AddItem(NewWarfare());
@@ -87,6 +86,30 @@ static function array<LWCEDataTemplate> CreateTemplates()
     arrTemplates.AddItem(XenologicalRemedies());
 
     return arrTemplates;
+}
+
+static function OnPostTemplatesCreated()
+{
+    local LWCEItemTemplateManager kTemplateMgr;
+    local LWCEArmorTemplate kArmorTemplate;
+    local name nmTemplate;
+
+    kTemplateMgr = `LWCE_ITEM_TEMPLATE_MGR;
+
+    // Set up the Jungle Scouts bonus: an extra small item slot for certain armors
+    foreach default.arrJungleScoutsCompatibleArmor(nmTemplate)
+    {
+        kArmorTemplate = kTemplateMgr.FindArmorTemplate(nmTemplate);
+
+        // Getting a none template isn't wholly unexpected; some mods may ship config that would make them
+        // compatible with other mods that may not be present, for example
+        if (kArmorTemplate == none)
+        {
+            continue;
+        }
+
+        kArmorTemplate.arrSmallInventorySlotsFns.AddItem(JungleScouts_GetSmallInventorySlotsDelegate);
+    }
 }
 
 static function int GetBonusValueInt(const out array<int> Values, int BonusLevel)
@@ -338,16 +361,18 @@ static function LWCEBonusTemplate JaiVidwan()
     return Template;
 }
 
-static function LWCEBonusTemplate JungleScouts()
+static function JungleScouts_GetSmallInventorySlotsDelegate(LWCE_XGStrategySoldier kSoldier, out int iNumSlots)
 {
-    local LWCEBonusTemplate Template;
+    if (`LWCE_BONUS_LEVEL('JungleScouts') <= 0)
+    {
+        return;
+    }
 
-    `CREATE_BONUS_TEMPLATE(Template, 'JungleScouts');
-
-    Template.bRegisterInStrategy = true;
-    // TODO: hook into events for armor inventory slots
-
-    return Template;
+    // Make sure we don't double dip if the player has the real Tactical Rigging project
+    if (!kSoldier.HasPerk(`LW_PERK_ID(TacticalRigging)))
+    {
+        iNumSlots++;
+    }
 }
 
 static function LWCEBonusTemplate LegacyOfUxmal()
@@ -405,9 +430,24 @@ static function LWCEBonusTemplate PatriaeSemperVigilis()
     `CREATE_BONUS_TEMPLATE(Template, 'PatriaeSemperVigilis');
 
     Template.bRegisterInStrategy = true;
-    // TODO: hook into events for unit bonus will
+    Template.AddEvent('AfterInitializeSoldierStats', PatriaeSemperVigilis_AddWill);
 
     return Template;
+}
+
+function PatriaeSemperVigilis_AddWill(Object EventData, Object EventSource, Name EventID, Object CallbackData)
+{
+    local LWCE_XGStrategySoldier kSoldier;
+    local LWCEDataContainer kDataContainer;
+    local int iBonusLevel, iWillBonus;
+
+    kDataContainer = LWCEDataContainer(EventData);
+    kSoldier = LWCE_XGStrategySoldier(kDataContainer.Data[0].Obj);
+
+    iBonusLevel = `LWCE_BONUS_LEVEL('PatriaeSemperVigilis');
+    iWillBonus = GetBonusValueInt(arrPatriaeSemperVigilisWillBonus, iBonusLevel);
+
+    kSoldier.m_kChar.aStats[eStat_Will] += iWillBonus;
 }
 
 static function LWCEBonusTemplate PaxNigeriana()
@@ -417,9 +457,24 @@ static function LWCEBonusTemplate PaxNigeriana()
     `CREATE_BONUS_TEMPLATE(Template, 'PaxNigeriana');
 
     Template.bRegisterInStrategy = true;
-    // TODO: hook into events for unit bonus mobility
+    Template.AddEvent('AfterInitializeSoldierStats', PaxNigeriana_AddMobility);
 
     return Template;
+}
+
+function PaxNigeriana_AddMobility(Object EventData, Object EventSource, Name EventID, Object CallbackData)
+{
+    local LWCE_XGStrategySoldier kSoldier;
+    local LWCEDataContainer kDataContainer;
+    local int iBonusLevel, iMobilityBonus;
+
+    kDataContainer = LWCEDataContainer(EventData);
+    kSoldier = LWCE_XGStrategySoldier(kDataContainer.Data[0].Obj);
+
+    iBonusLevel = `LWCE_BONUS_LEVEL('PaxNigeriana');
+    iMobilityBonus = GetBonusValueInt(arrPaxNigerianaMobilityBonus, iBonusLevel);
+
+    kSoldier.m_kChar.aStats[eStat_Mobility] += iMobilityBonus;
 }
 
 static function LWCEBonusTemplate PerArduaAdAstra()
@@ -429,9 +484,40 @@ static function LWCEBonusTemplate PerArduaAdAstra()
     `CREATE_BONUS_TEMPLATE(Template, 'PerArduaAdAstra');
 
     Template.bRegisterInStrategy = true;
-    // TODO: hook into events for unit bonus stat rolls
+    Template.AddEvent('AfterInitializeSoldierStats', PerArduaAdAstra_AddToUnrolledStats);
+    Template.AddEvent('BeforeInitializeSoldierStats', PerArduaAdAstra_AddToPointBuy);
 
     return Template;
+}
+
+function PerArduaAdAstra_AddToPointBuy(Object EventData, Object EventSource, Name EventID, Object CallbackData)
+{
+    local LWCEDataContainer kDataContainer;
+    local int iBonusLevel, iExtraPoints;
+
+    kDataContainer = LWCEDataContainer(EventData);
+
+    iBonusLevel = `LWCE_BONUS_LEVEL('PerArduaAdAstra');
+    iExtraPoints = GetBonusValueInt(arrPerArduaAdAstraStatRollsBonus, iBonusLevel);
+    kDataContainer.Data[2].I += iExtraPoints;
+}
+
+function PerArduaAdAstra_AddToUnrolledStats(Object EventData, Object EventSource, Name EventID, Object CallbackData)
+{
+    local LWCEDataContainer kDataContainer;
+    local int iBonusLevel;
+
+    kDataContainer = LWCEDataContainer(EventData);
+
+    // If point buy was used to roll stats, we don't want to change anything
+    if (kDataContainer.Data[1].B)
+    {
+        return;
+    }
+
+    iBonusLevel = `LWCE_BONUS_LEVEL('PerArduaAdAstra');
+
+    // TODO need a config with the stat changes for soldiers
 }
 
 static function LWCEBonusTemplate PowerToThePeople()
@@ -453,10 +539,72 @@ static function LWCEBonusTemplate QuaidOrsay()
     `CREATE_BONUS_TEMPLATE(Template, 'QuaidOrsay');
 
     Template.bRegisterInStrategy = true;
+    Template.AddEvent('CouncilRequestGenerated', QuaidOrsay_OnCouncilRequestGenerated);
+    Template.AddEvent('CouncilRequestOnCooldown', QuaidOrsay_ReduceCouncilRequestCooldown);
     // TODO: hook into events for EXALT scans and council requests
 
     return Template;
 }
+
+function QuaidOrsay_OnCouncilRequestGenerated(Object EventData, Object EventSource, Name EventID, Object CallbackData)
+{
+    local LWCEDataContainer kDataContainer;
+    local LWCE_XGFundingCouncil kFundingCouncil;
+    local name nmRequest, nmRequestingCountry;
+    local int iBonusLevel, iCooldownReductionPercentage, iShieldsIncreasePercentage;
+    local int Index;
+
+    kFundingCouncil = LWCE_XGFundingCouncil(EventSource);
+    kDataContainer = LWCEDataContainer(EventData);
+
+    iBonusLevel = `LWCE_BONUS_LEVEL('QuaidOrsay');
+    iCooldownReductionPercentage = GetBonusValueInt(arrQuaidOrsayCouncilRequestCooldownReduction, iBonusLevel);
+    iShieldsIncreasePercentage = GetBonusValueInt(arrQuaidOrsayCouncilRequestShieldsBonus, iBonusLevel);
+
+    // First effect: reduce the time until the next request will occur
+    kFundingCouncil.m_iSecondRequestCountdown *= (100 - iCooldownReductionPercentage) / 100.0f;
+
+    // Second effect: increase the amount of country defense granted by the request
+    nmRequest = kDataContainer.Data[0].Nm;
+    nmRequestingCountry = kDataContainer.Data[1].Nm;
+
+    for (Index = 0; Index < kFundingCouncil.m_arrCECurrentRequests.Length; Index++)
+    {
+        if (kFundingCouncil.m_arrCECurrentRequests[Index].nmRequest != nmRequest || kFundingCouncil.m_arrCECurrentRequests[Index].nmRequestingCountry != nmRequestingCountry)
+        {
+            continue;
+        }
+
+        kFundingCouncil.m_arrCECurrentRequests[Index].kReward.iCountryDefense *= (100 + iShieldsIncreasePercentage) / 100.0f;
+        return;
+    }
+
+    // The request may have wound up in one of two places, so repeat the above loop with a different array
+    for (Index = 0; Index < kFundingCouncil.m_arrCEPendingRequests.Length; Index++)
+    {
+        if (kFundingCouncil.m_arrCEPendingRequests[Index].nmRequest != nmRequest || kFundingCouncil.m_arrCEPendingRequests[Index].nmRequestingCountry != nmRequestingCountry)
+        {
+            continue;
+        }
+
+        kFundingCouncil.m_arrCEPendingRequests[Index].kReward.iCountryDefense *= (100 + iShieldsIncreasePercentage) / 100.0f;
+        return;
+    }
+}
+
+function QuaidOrsay_ReduceCouncilRequestCooldown(Object EventData, Object EventSource, Name EventID, Object CallbackData)
+{
+    local LWCEDataContainer kDataContainer;
+    local int iBonusLevel, iCooldownReductionPercentage;
+
+    iBonusLevel = `LWCE_BONUS_LEVEL('QuaidOrsay');
+    iCooldownReductionPercentage = GetBonusValueInt(arrQuaidOrsayCouncilRequestCooldownReduction, iBonusLevel);
+
+    kDataContainer = LWCEDataContainer(EventData);
+    kDataContainer.Data[1].I *= (100 - iCooldownReductionPercentage) / 100.0f;
+}
+
+
 
 static function LWCEBonusTemplate RingOfFire()
 {
@@ -465,9 +613,26 @@ static function LWCEBonusTemplate RingOfFire()
     `CREATE_BONUS_TEMPLATE(Template, 'RingOfFire');
 
     Template.bRegisterInStrategy = true;
-    // TODO: hook into events for base steam vents
+    Template.AddEvent('BeforeGenerateBaseTiles', RingOfFire_AdjustSteamVents);
 
     return Template;
+}
+
+function RingOfFire_AdjustSteamVents(Object EventData, Object EventSource, Name EventID, Object CallbackData)
+{
+    local LWCEDataContainer kDataContainer;
+    local int iBonusLevel, iExtraVents;
+
+    if (!LWCE_XGBase(EventSource).m_bIsPrimaryBase)
+    {
+        return;
+    }
+
+    iBonusLevel = `LWCE_BONUS_LEVEL('RingOfFire');
+    iExtraVents = GetBonusValueInt(arrRingOfFireAddedSteamVents, iBonusLevel);
+
+    kDataContainer = LWCEDataContainer(EventData);
+    kDataContainer.Data[0].I += iExtraVents;
 }
 
 static function LWCEBonusTemplate Robotics()
@@ -513,9 +678,24 @@ static function LWCEBonusTemplate SpecialAirService()
     `CREATE_BONUS_TEMPLATE(Template, 'SpecialAirService');
 
     Template.bRegisterInStrategy = true;
-    // TODO: hook into events for unit bonus aim
+    Template.AddEvent('AfterInitializeSoldierStats', SpecialAirService_AddAim);
 
     return Template;
+}
+
+function SpecialAirService_AddAim(Object EventData, Object EventSource, Name EventID, Object CallbackData)
+{
+    local LWCE_XGStrategySoldier kSoldier;
+    local LWCEDataContainer kDataContainer;
+    local int iBonusLevel, iAimBonus;
+
+    kDataContainer = LWCEDataContainer(EventData);
+    kSoldier = LWCE_XGStrategySoldier(kDataContainer.Data[0].Obj);
+
+    iBonusLevel = `LWCE_BONUS_LEVEL('SpecialAirService');
+    iAimBonus = GetBonusValueInt(arrSpecialAirServiceAimBonus, iBonusLevel);
+
+    kSoldier.m_kChar.aStats[eStat_Offense] += iAimBonus;
 }
 
 static function LWCEBonusTemplate SpecialWarfareSchool()
@@ -549,9 +729,24 @@ static function LWCEBonusTemplate SurvivalTraining()
     `CREATE_BONUS_TEMPLATE(Template, 'SurvivalTraining');
 
     Template.bRegisterInStrategy = true;
-    // TODO: hook into events for unit bonus HP
+    Template.AddEvent('AfterInitializeSoldierStats', SurvivalTraining_AddHP);
 
     return Template;
+}
+
+function SurvivalTraining_AddHP(Object EventData, Object EventSource, Name EventID, Object CallbackData)
+{
+    local LWCE_XGStrategySoldier kSoldier;
+    local LWCEDataContainer kDataContainer;
+    local int iBonusLevel, iHPBonus;
+
+    kDataContainer = LWCEDataContainer(EventData);
+    kSoldier = LWCE_XGStrategySoldier(kDataContainer.Data[0].Obj);
+
+    iBonusLevel = `LWCE_BONUS_LEVEL('SurvivalTraining');
+    iHPBonus = GetBonusValueInt(arrSurvivalTrainingHPBonus, iBonusLevel);
+
+    kSoldier.m_kChar.aStats[eStat_HP] += iHPBonus;
 }
 
 static function LWCEBonusTemplate TaskForceArrowhead()

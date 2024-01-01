@@ -409,6 +409,21 @@ function int LWCE_GetBaseClass()
     return m_kCEChar.iBaseClassId;
 }
 
+function int GetCountry()
+{
+    `LWCE_LOG_DEPRECATED_CLS(GetCountry);
+
+    return -1;
+}
+
+/// <summary>
+/// Returns the country of origin for this soldier.
+/// </summary>
+function name LWCE_GetCountry()
+{
+    return m_kCESoldier.nmCountry;
+}
+
 function string GetClassIcon()
 {
     return `LWCE_BARRACKS.GetClassIcon(m_kCEChar.iClassId, class'LWCE_XComPerkManager'.static.LWCE_HasAnyGeneMod(m_kCEChar), m_kCEChar.bHasPsiGift);

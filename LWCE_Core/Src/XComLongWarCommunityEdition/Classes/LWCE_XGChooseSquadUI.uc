@@ -50,7 +50,7 @@ function LWCE_TSoldierLoadout LWCE_BuildLoadout(XGStrategySoldier kSoldier, int 
     kCESoldier = LWCE_XGStrategySoldier(kSoldier);
 
     kLoadout.txtName.StrValue = kCESoldier.GetName(7);
-    kLoadout.imgFlag.strPath = class'UIScreen'.static.GetFlagPath(kCESoldier.m_kCESoldier.iCountry);
+    kLoadout.imgFlag.strPath = `LWCE_COUNTRY(kCESoldier.m_kCESoldier.nmCountry).strFlagIconPath;
     kLoadout.txtNickname.StrValue = kCESoldier.GetNickname();
     kLoadout.txtNickname.iState = eUIState_Nickname;
     kLoadout.ClassType = kCESoldier.m_kCEChar.iClassId;
@@ -107,7 +107,7 @@ function TTableMenuOption BuildSoldierOption(XGStrategySoldier kSoldier, array<i
         switch (arrCategories[iCategory])
         {
             case 0:
-                strCategory = string(kCESoldier.m_kCESoldier.iCountry);
+                strCategory = string(kCESoldier.m_kCESoldier.nmCountry);
                 break;
             case 1:
                 strCategory = string(kCESoldier.GetRank());

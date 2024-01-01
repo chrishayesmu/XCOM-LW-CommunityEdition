@@ -64,7 +64,6 @@ var const localized string strBriefSummary;   // A summary of the item to show i
 var const localized string strTacticalText;   // Text shown in the detailed view of items. Should be formatted as bullet points to match other
                                               // items. See examples in XComGame.int, in the array m_aItemTacticalText, for the HTML to use.
 
-
 delegate bool IsInfiniteDel();
 delegate bool IsPriorityDel();
 

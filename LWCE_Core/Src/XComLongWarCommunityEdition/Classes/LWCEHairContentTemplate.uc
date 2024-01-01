@@ -1,6 +1,6 @@
 class LWCEHairContentTemplate extends LWCEContentTemplate;
 
-var config EGender Gender;
+var config array<name> arrGenders;
 
 var config bool bCanUseOnCivilian;
 

@@ -73,9 +73,9 @@ struct LWCE_TAppearance
     var name nmLanguage;
     var name nmVoice;
     var name nmArmorKit;
+    var name nmGender;
+    var string strFlagPath;
     var int iBodyMaterial;
-    var int iFlag;
-    var int iGender;
 
     // TODO: deprecate using templates for colors
     var name nmArmorColor;
@@ -140,10 +140,10 @@ struct LWCE_TSoldier
     var string strClassIcon;
     var int iRank;
     var int iPsiRank;
-    var int iCountry;
     var int iXP;
     var int iPsiXP;
     var int iNumKills;
+    var name nmCountry;
     var LWCE_TAppearance kAppearance;
     var int iSoldierClassId;
     var bool bBlueshirt;

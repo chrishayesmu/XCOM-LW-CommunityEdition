@@ -88,11 +88,14 @@ function TSoldierDebriefItem BuildSoldierOption(XGStrategySoldier kSoldier)
 function LWCE_TSoldierDebriefItem LWCE_BuildSoldierOption(XGStrategySoldier kSoldier)
 {
     local LWCE_TSoldierDebriefItem kItem;
+    local LWCE_XGStrategySoldier kCESoldier;
 
-    kItem.txtName.StrValue = kSoldier.GetName(eNameType_FullNick);
+    kCESoldier = LWCE_XGStrategySoldier(kSoldier);
+
+    kItem.txtName.StrValue = kCESoldier.GetName(eNameType_FullNick);
     kItem.txtName.iState = eUIState_Warning;
 
-    if (LWCE_XGStrategySoldier(kSoldier).m_kCESoldier.kAppearance.iGender == eGender_Female)
+    if (kCESoldier.m_kCESoldier.kAppearance.nmGender == 'Female')
     {
         kItem.imgSoldier.iImage = eImage_MugshotFemale;
     }
@@ -101,55 +104,55 @@ function LWCE_TSoldierDebriefItem LWCE_BuildSoldierOption(XGStrategySoldier kSol
         kItem.imgSoldier.iImage = eImage_MugshotMale;
     }
 
-    kItem.imgFlag.strPath = class'UIScreen'.static.GetFlagPath(kSoldier.GetCountry());
-    kItem.m_bIsTank = kSoldier.IsATank();
-    kItem.iSoldierClassId = LWCE_XGStrategySoldier(kSoldier).LWCE_GetClass();
+    kItem.imgFlag.strPath = `LWCE_COUNTRY(kCESoldier.LWCE_GetCountry()).strFlagIconPath;
+    kItem.m_bIsTank = kCESoldier.IsATank();
+    kItem.iSoldierClassId = kCESoldier.LWCE_GetClass();
 
-    kItem.txtStatus.StrValue = kSoldier.GetStatusString();
-    kItem.txtStatus.iState = kSoldier.GetStatusUIState();
+    kItem.txtStatus.StrValue = kCESoldier.GetStatusString();
+    kItem.txtStatus.iState = kCESoldier.GetStatusUIState();
 
     kItem.txtMissions.strLabel = m_strLabelMissions;
-    kItem.txtMissions.StrValue = string(kSoldier.GetNumMissions());
+    kItem.txtMissions.StrValue = string(kCESoldier.GetNumMissions());
     kItem.txtMissions.iState = eUIState_Bad;
 
     kItem.txtKills.strLabel = m_strLabelKills;
-    kItem.txtKills.StrValue = string(kSoldier.GetNumKills());
+    kItem.txtKills.StrValue = string(kCESoldier.GetNumKills());
     kItem.txtKills.iState = eUIState_Bad;
 
-    if (kSoldier.IsDead())
+    if (kCESoldier.IsDead())
     {
         kItem.eState = eUIState_Disabled;
 
         if (kItem.m_bIsTank)
         {
-            kItem.iSoldierRank = kSoldier.GetSHIVRank();
+            kItem.iSoldierRank = kCESoldier.GetSHIVRank();
         }
         else
         {
-            kItem.iSoldierRank = kSoldier.GetRank();
+            kItem.iSoldierRank = kCESoldier.GetRank();
         }
 
         kItem.m_isDead = true;
     }
-    else if (kSoldier.IsReadyToLevelUp() || (kSoldier.HasPsiGift() && kSoldier.IsReadyToPsiLevelUp()) )
+    else if (kCESoldier.IsReadyToLevelUp() || (kCESoldier.HasPsiGift() && kCESoldier.IsReadyToPsiLevelUp()) )
     {
-        LWCE_BuildSoldierPromotion(kSoldier, kItem.kPromotion, kItem);
+        LWCE_BuildSoldierPromotion(kCESoldier, kItem.kPromotion, kItem);
         kItem.eState = eUIState_Good;
         BARRACKS().ReorderRanks();
         kItem.iSoldierClassId = 0; // TODO: this might be fake from a decompilation error
     }
     else
     {
-        kItem.m_bHasGeneMod = class'LWCE_XComPerkManager'.static.LWCE_HasAnyGeneMod(LWCE_XGStrategySoldier(kSoldier).m_kCEChar);
-        kItem.m_bIsPsiSoldier = kSoldier.m_kChar.bHasPsiGift;
+        kItem.m_bHasGeneMod = class'LWCE_XComPerkManager'.static.LWCE_HasAnyGeneMod(kCESoldier.m_kCEChar);
+        kItem.m_bIsPsiSoldier = kCESoldier.m_kChar.bHasPsiGift;
 
         if (kItem.m_bIsTank)
         {
-            kItem.iSoldierRank = kSoldier.GetSHIVRank();
+            kItem.iSoldierRank = kCESoldier.GetSHIVRank();
         }
         else
         {
-            kItem.iSoldierRank = kSoldier.GetRank();
+            kItem.iSoldierRank = kCESoldier.GetRank();
         }
     }
 

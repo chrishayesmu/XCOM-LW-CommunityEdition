@@ -14724,16 +14724,16 @@ strSummary="\"Our studies of the Sectoid's abilities to manipulate reality by th
 strCodeName="Backfire"
 strReport="A thousand rumors and charlatans over the centuries, and yet, in a matter of weeks, we have proven it is true: Humans, with suitable training and technological assistance, can manipulate reality by thought alone. We are still arguing whether to call this new branch of human experience psionics or noetics, but one thing is certain: With a suitable investment of resources, we can begin training some of our talented soldiers in specialized techniques to assist them on the battlefield."
 
-[Race_African LWCERaceTemplate]
+[African LWCERaceTemplate]
 DisplayName=African
 
-[Race_Asian LWCERaceTemplate]
+[Asian LWCERaceTemplate]
 DisplayName=Asian
 
-[Race_Caucasian LWCERaceTemplate]
+[Caucasian LWCERaceTemplate]
 DisplayName=Caucasian
 
-[Race_Hispanic LWCERaceTemplate]
+[Hispanic LWCERaceTemplate]
 DisplayName=Hispanic
 
 [ArmorColor_0 LWCEArmorColorContentTemplate]

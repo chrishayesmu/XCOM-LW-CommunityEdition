@@ -179,7 +179,7 @@ static function LWCE_TSoldierPawnContent LWCE_BuildSoldierContent(LWCE_TTransfer
     }
 
     // TODO: won't work for SHIVs
-    kContent.nmPawn = `LWCE_CONTENT_TEMPLATE_MGR.FindMatchingPawn(eChar_Soldier, EGender(kTransfer.kSoldier.kAppearance.iGender), kTransfer.kChar.kInventory.nmArmor).GetContentTemplateName();
+    kContent.nmPawn = `LWCE_CONTENT_TEMPLATE_MGR.FindMatchingPawn(eChar_Soldier, kTransfer.kSoldier.kAppearance.nmGender, kTransfer.kChar.kInventory.nmArmor).GetContentTemplateName();
     kContent.nmKit = LWCE_DetermineSoldierKit(kTransfer);
     kContent.kAppearance = kTransfer.kSoldier.kAppearance;
     kContent.kInventory = kTransfer.kChar.kInventory;
@@ -455,18 +455,7 @@ function InitHumanLoadoutInfosFromDropshipCargoInfo()
 
 static function int MapSoldierToPawn(int iArmor, int iGender, bool bGeneMod)
 {
-    `LWCE_LOG_DEPRECATED_CLS(MapSoldierToPawn);
+    `LWCE_LOG_DEPRECATED_NOREPLACE_CLS(MapSoldierToPawn);
 
     return -1;
-}
-
-static function LWCEPawnContentTemplate LWCE_MapSoldierToPawn(name nmArmor, int iGender)
-{
-    // TODO deprecate this function
-    if (nmArmor == '')
-    {
-        return none;
-    }
-
-    return `LWCE_CONTENT_TEMPLATE_MGR.FindMatchingPawn(eChar_Soldier, EGender(iGender), nmArmor);
 }

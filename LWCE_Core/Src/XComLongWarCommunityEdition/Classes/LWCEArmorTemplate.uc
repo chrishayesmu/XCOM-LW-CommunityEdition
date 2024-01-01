@@ -8,46 +8,60 @@ var config int iLargeItemSlots;
 
 var config int iSmallItemSlots;
 
-var config array<name> arrProperties; // Properties of the armor; LWCE uses the values from EArmorProperty, but the array uses names so that
-                                      // mods can define custom properties if they wish.
+// Properties of the armor; LWCE uses the values from EArmorProperty, but the array uses names so that mods can define custom properties if they wish.
+var config array<name> arrProperties;
 
-function int GetLargeInventorySlots(XGStrategySoldier kSoldier)
+// Delegates which can modify how many large item inventory slots are available.
+var array< delegate<InventorySlotsDel> > arrLargeInventorySlotsFns;
+
+// Delegates which can modify how many small item inventory slots are available.
+var array< delegate<InventorySlotsDel> > arrSmallInventorySlotsFns;
+
+delegate InventorySlotsDel(LWCE_XGStrategySoldier kSoldier, out int iNumSlots);
+
+function int GetLargeInventorySlots(LWCE_XGStrategySoldier kSoldier)
 {
+    local delegate<InventorySlotsDel> delSlotsFn;
+    local int iNumSlots;
+
+    iNumSlots = iLargeItemSlots;
+
+    foreach arrLargeInventorySlotsFns(delSlotsFn)
+    {
+        delSlotsFn(kSoldier, iNumSlots);
+    }
+
+    // TODO: move this logic into a dataset's delegate once abilities are migrated
     if (kSoldier.HasPerk(`LW_PERK_ID(FireRocket)))
     {
-        return iLargeItemSlots + 1;
+        iNumSlots++;
     }
 
-    return iLargeItemSlots;
+    return iNumSlots;
 }
 
-function int GetSmallInventorySlots(XGStrategySoldier kSoldier)
+function int GetSmallInventorySlots(LWCE_XGStrategySoldier kSoldier)
 {
     local bool bHasTacRigging;
+    local delegate<InventorySlotsDel> delSlotsFn;
+    local int iNumSlots;
 
-    bHasTacRigging = kSoldier.HasPerk(`LW_PERK_ID(TacticalRigging));
+    iNumSlots = iSmallItemSlots;
 
-    // Jungle Scouts starting bonus: certain early-game armors count as having Tactical Rigging
-    if (`LWCE_HQ.HasBonus(`LW_HQ_BONUS_ID(JungleScouts)) > 0)
+    foreach arrSmallInventorySlotsFns(delSlotsFn)
     {
-        switch (GetItemName())
-        {
-            case 'Item_AuroraArmor':
-            case 'Item_KestrelArmor':
-            case 'Item_PhalanxArmor':
-            case 'Item_TacArmor':
-            case 'Item_TacVest':
-                bHasTacRigging = true;
-                break;
-        }
+        delSlotsFn(kSoldier, iNumSlots);
     }
+
+    // TODO: move this logic into a dataset's delegate once abilities are migrated
+    bHasTacRigging = kSoldier.HasPerk(`LW_PERK_ID(TacticalRigging));
 
     if (bHasTacRigging)
     {
-        return iSmallItemSlots + 1;
+        iNumSlots++;
     }
 
-    return iSmallItemSlots;
+    return iNumSlots;
 }
 
 function bool HasArmorProperty(EArmorProperty eProp)

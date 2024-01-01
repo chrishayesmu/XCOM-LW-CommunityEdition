@@ -13,7 +13,7 @@ struct LWCE_TNextVoice
 {
     var int iNextIndex;
     var name nmLanguage;
-    var EGender Gender;
+    var name nmGender;
     var bool bIsMec;
 };
 
@@ -34,14 +34,6 @@ static function LWCE_TDefaultSoldierAppearance FindDefaultAppearanceForClass(int
     }
 
     return Appearance;
-}
-
-static function int LanguageBaseIDByName(name nmLanguage)
-{
-    // TODO implement
-    `LWCE_LOG_CLS("WARNING: LanguageBaseIDByName is not yet implemented!");
-
-    return 0;
 }
 
 static function name LanguageNameByBaseID(int iLanguage)
@@ -156,14 +148,14 @@ function TSoldier CreateTSoldier(optional EGender eForceGender, optional int iCo
     return kSoldier;
 }
 
-function LWCE_TSoldier LWCE_CreateTSoldier(optional EGender eForceGender, optional name nmCountry = '', optional name nmRaceTemplate = '', optional bool bIsAugmented = false)
+function LWCE_TSoldier LWCE_CreateTSoldier(optional name nmForceGender, optional name nmCountry = '', optional name nmRaceTemplate = '', optional bool bIsAugmented = false)
 {
     local LWCE_TSoldier kSoldier;
     local LWCE_TDefaultSoldierAppearance DefaultAppearance;
     local LWCEContentTemplateManager kTemplateMgr;
+    local LWCECountryTemplate kCountryTemplate;
     local array<LWCEHairContentTemplate> arrHairs;
     local array<LWCEHeadContentTemplate> arrHeads;
-    local name nmRaceNonTemplate; // Race as in 'Asian', not the template name 'Race_Asian'; needed for other template lookups
 
     kTemplateMgr = `LWCE_CONTENT_TEMPLATE_MGR;
     DefaultAppearance = FindDefaultAppearanceForClass(/* iSoldierClassId */ 0);
@@ -173,34 +165,35 @@ function LWCE_TSoldier LWCE_CreateTSoldier(optional EGender eForceGender, option
         nmCountry = LWCE_PickOriginCountry();
     }
 
+    kCountryTemplate = `LWCE_COUNTRY(nmCountry);
+
     kSoldier.nmCountry = nmCountry;
-    kSoldier.kAppearance.iFlag = kSoldier.iCountry;
+    kSoldier.kAppearance.strFlagPath = kCountryTemplate.strFlagIconPath;
     kSoldier.iRank = 0;
 
     if (nmRaceTemplate == '')
     {
-        kSoldier.kAppearance.nmRace = LWCE_GetRandomRaceByCountry(kSoldier.nmCountry);
+        kSoldier.kAppearance.nmRace = kCountryTemplate.RollForRace();
     }
     else
     {
         kSoldier.kAppearance.nmRace = nmRaceTemplate;
     }
 
-    nmRaceNonTemplate = kTemplateMgr.FindRaceTemplate(kSoldier.kAppearance.nmRace).Race;
-
-    if (eForceGender != eGender_None)
+    if (nmForceGender != '')
     {
-        kSoldier.kAppearance.iGender = eForceGender;
+        kSoldier.kAppearance.nmGender = nmForceGender;
     }
     else
     {
-        kSoldier.kAppearance.iGender = Rand(2) == 0 ? eGender_Female : eGender_Male;
+        // TODO: set up a config somewhere to roll for genders (maybe specify weight in a new gender template)
+        kSoldier.kAppearance.nmGender = Rand(2) == 0 ? 'Female' : 'Male';
     }
 
-    // Soldier language: check the game setting for all soldiers speaking the player's language
+    // Soldier language: check the game setting for whether all soldiers should speak the player's language
     if (`PROFILESETTINGS != none && `PROFILESETTINGS.Data != none && `PROFILESETTINGS.Data.m_bForeignLanguages)
     {
-        kSoldier.kAppearance.nmLanguage = LanguageNameByBaseID(LWCE_GetLanguageByCountry(nmCountry));
+        kSoldier.kAppearance.nmLanguage = kCountryTemplate.RollForSpokenLanguage();
     }
     else
     {
@@ -213,32 +206,63 @@ function LWCE_TSoldier LWCE_CreateTSoldier(optional EGender eForceGender, option
     }
     else
     {
-        arrHairs = kTemplateMgr.FindMatchingHair(EGender(kSoldier.kAppearance.iGender), /* bCivilianOnly */ false, /* bAllowHelmets */ false);
+        arrHairs = kTemplateMgr.FindMatchingHair(kSoldier.kAppearance.nmGender, /* bCivilianOnly */ false, /* bAllowHelmets */ false);
         kSoldier.kAppearance.nmHaircut = arrHairs[Rand(arrHairs.Length)].GetContentTemplateName();
     }
 
-    arrHeads = kTemplateMgr.FindMatchingHeads(eChar_Soldier, nmRaceNonTemplate, EGender(kSoldier.kAppearance.iGender));
+    arrHeads = kTemplateMgr.FindMatchingHeads(eChar_Soldier, kSoldier.kAppearance.nmRace, kSoldier.kAppearance.nmGender);
     kSoldier.kAppearance.nmHead = arrHeads[Rand(arrHeads.Length)].GetContentTemplateName();
 
     // bIsAugmented: right now soldiers are only generated as bio troops, but possibly a mod will want hooks to create new MECs directly
-    kSoldier.kAppearance.nmVoice = LWCE_GetNextVoice(EGender(kSoldier.kAppearance.iGender), kSoldier.kAppearance.nmLanguage, /* bIsAugmented */ false);
+    kSoldier.kAppearance.nmVoice = LWCE_GetNextVoice(kSoldier.kAppearance.nmGender, kSoldier.kAppearance.nmLanguage, /* bIsAugmented */ false);
 
     // Not all languages have voice packs for all gender/MEC combos; fallback if we get an invalid combination
     if (kSoldier.kAppearance.nmVoice == '')
     {
         kSoldier.kAppearance.nmLanguage = PickFallbackLanguageForVoice(kSoldier.kAppearance.nmLanguage);
-        kSoldier.kAppearance.nmVoice = LWCE_GetNextVoice(EGender(kSoldier.kAppearance.iGender), kSoldier.kAppearance.nmLanguage, /* bIsAugmented */ false);
+        kSoldier.kAppearance.nmVoice = LWCE_GetNextVoice(kSoldier.kAppearance.nmGender, kSoldier.kAppearance.nmLanguage, /* bIsAugmented */ false);
     }
 
     kSoldier.kAppearance.nmArmorColor = DefaultAppearance.nmArmorColor;
     kSoldier.kAppearance.nmArmorKit = DefaultAppearance.nmArmorKit;
     kSoldier.kAppearance.nmHairColor = ChooseRandomHairColor().GetContentTemplateName();
-    kSoldier.kAppearance.nmSkinColor = ChooseRandomSkinColorForRace(nmRaceNonTemplate).GetContentTemplateName();
+    kSoldier.kAppearance.nmSkinColor = ChooseRandomSkinColorForRace(kSoldier.kAppearance.nmRace).GetContentTemplateName();
 
-    // TODO add LWCE_GenerateName
-    GenerateName(kSoldier.kAppearance.iGender, kSoldier.iCountry, kSoldier.strFirstName, kSoldier.strLastName, RaceBaseIDByName(kSoldier.kAppearance.nmRace));
+    LWCE_GenerateName(kSoldier.kAppearance.nmGender, kSoldier.nmCountry, kSoldier.kAppearance.nmRace, kSoldier.strFirstName, kSoldier.strLastName);
 
     return kSoldier;
+}
+
+function GenerateName(int iGender, int iCountry, out string strFirst, out string strLast, optional int iRace = -1)
+{
+    `LWCE_LOG_DEPRECATED_CLS(GenerateName);
+}
+
+/// <summary>
+/// Generates a first and last name using the provided gender, country, and race.
+/// </summary>
+function LWCE_GenerateName(name nmGender, name nmCountry, name nmRace, out string strFirst, out string strLast)
+{
+    local LWCECountryTemplate kCountryTemplate;
+    local LWCENameListTemplate kNameListTemplate;
+    local name nmFirstNameList, nmLastNameList;
+
+    kCountryTemplate = `LWCE_COUNTRY(nmCountry);
+
+    nmFirstNameList = kCountryTemplate.RollForFirstNameList(nmRace, nmGender);
+    nmLastNameList = kCountryTemplate.RollForLastNameList(nmRace, nmGender);
+
+    if (nmFirstNameList != '')
+    {
+        kNameListTemplate = `LWCE_NAME_LIST(nmFirstNameList);
+        strFirst = kNameListTemplate.RollForName();
+    }
+
+    if (nmLastNameList != '')
+    {
+        kNameListTemplate = `LWCE_NAME_LIST(nmLastNameList);
+        strLast = kNameListTemplate.RollForName();
+    }
 }
 
 function int GetNextFemaleVoice(ECharacterLanguage eLang, bool IsMec)
@@ -257,18 +281,18 @@ function int GetNextMaleVoice(ECharacterLanguage eLang, bool IsMec)
     return -1;
 }
 
-function name LWCE_GetNextVoice(EGender Gender, name nmLanguage, bool bIsMec)
+function name LWCE_GetNextVoice(name nmGender, name nmLanguage, bool bIsMec)
 {
     local int iVoiceTrackingIndex;
     local LWCE_TNextVoice kNextVoice;
     local array<LWCEVoiceContentTemplate> PossibleVoices;
 
-    iVoiceTrackingIndex = GetVoiceTrackingRecordIndex(Gender, nmLanguage, bIsMec);
+    iVoiceTrackingIndex = GetVoiceTrackingRecordIndex(nmGender, nmLanguage, bIsMec);
 
     if (iVoiceTrackingIndex == INDEX_NONE)
     {
         kNextVoice.iNextIndex = 0;
-        kNextVoice.Gender = Gender;
+        kNextVoice.nmGender = nmGender;
         kNextVoice.nmLanguage = nmLanguage;
         kNextVoice.bIsMec = bIsMec;
 
@@ -276,11 +300,10 @@ function name LWCE_GetNextVoice(EGender Gender, name nmLanguage, bool bIsMec)
         m_arrNextVoices.AddItem(kNextVoice);
     }
 
-    PossibleVoices = `LWCE_CONTENT_TEMPLATE_MGR.FindMatchingVoices(Gender, nmLanguage, bIsMec);
+    PossibleVoices = `LWCE_CONTENT_TEMPLATE_MGR.FindMatchingVoices(nmGender, nmLanguage, bIsMec);
 
     if (PossibleVoices.Length == 0)
     {
-        `LWCE_LOG_CLS("Gender " $ Gender $ ", language " $ nmLanguage $ ", and bIsMec " $ bIsMec $ " has no voices available");
         return '';
     }
 
@@ -296,154 +319,16 @@ function name LWCE_GetNextVoice(EGender Gender, name nmLanguage, bool bIsMec)
 
 function ECharacterLanguage GetLanguageByCountry(ECountry Country)
 {
-    `LWCE_LOG_DEPRECATED_CLS(GetLanguageByCountry);
+    `LWCE_LOG_DEPRECATED_BY(LWCECountryTemplate.RollForSpokenLanguage);
 
     return ECharacterLanguage(0);
 }
 
-function name LWCE_GetLanguageByCountry(name nmCountry)
-{
-    switch (Country)
-    {
-        case eCountry_USA:
-            return eCharLanguage_English;
-        case 5:   // France
-        case 35:  // Belgium
-        case 96:  // Cameroon
-        case 97:  // Congo
-        case 98:  // Gabon
-        case 99:  // Ivory Coast
-        case 103: // Senegal
-            return eCharLanguage_French;
-        case 4:
-        case 53:
-        case 73:
-            return eCharLanguage_German;
-        case 9:
-            return eCharLanguage_Italian;
-        case 23:
-            return eCharLanguage_Polish;
-        case 1:
-        case 85:
-        case 92:
-        case 108:
-        case 109:
-        case 119:
-        case 125:
-        case 126:
-            return eCharLanguage_Russian;
-        case 13:
-            return eCharLanguage_Spanish;
-        case 3:
-            return 7;
-        case 8:
-        case 47:
-            return 8;
-        case 32:
-            return 9;
-        case 31:
-            return 10;
-        case 22:
-        case 43:
-        case 102:
-            return 11;
-        case 12:
-        case 46:
-        case 123:
-            return 12;
-        case 25:
-        case 75:
-            return 13;
-        case 15:
-            return 16;
-        case 2:
-        case 50:
-            return 17;
-        case 6:
-            return 18;
-        case 7:
-            return 19;
-        case 10:
-            return 20;
-        case 19:
-        case 29:
-        case 74:
-        case 101:
-            return 21;
-        case 20:
-        case 21:
-        case 26:
-        case 28:
-        case 37:
-        case 59:
-        case 60:
-        case 61:
-        case 62:
-        case 63:
-        case 64:
-        case 67:
-        case 68:
-        case 80:
-        case 81:
-        case 82:
-        case 83:
-            return 22;
-        case 24:
-            return 23;
-        case 17:
-            return 24;
-        case 27:
-            return 25;
-        case 30:
-            return 26;
-        case 33:
-            return 27;
-        case 34:
-            return 28;
-        case 18:
-        case 49:
-        case 76:
-        case 77:
-        case 78:
-        case 100:
-        case 104:
-        case 111:
-        case 113:
-        case 114:
-        case 115:
-        case 116:
-        case 117:
-            return 29;
-    }
-
-    return GetLanguageByString();
-}
-
 function int GetRandomRaceByCountry(int iCountry)
 {
-    `LWCE_LOG_DEPRECATED_CLS(GetRandomRaceByCountry);
+    `LWCE_LOG_DEPRECATED_BY(LWCECountryTemplate.RollForRace);
 
     return -1;
-}
-
-function name LWCE_GetRandomRaceByCountry(name nmCountry)
-{
-    local array<LWCERaceTemplate> arrTemplates;
-    local int Index;
-    local name nmRace;
-
-    arrTemplates = `LWCE_CONTENT_TEMPLATE_MGR.GetRaces();
-    nmRace = `LWCE_COUNTRY(nmCountry).RollForRace();
-
-    for (Index = 0; Index < arrTemplates.Length; Index++)
-    {
-        if (arrTemplates[Index].Race == nmRace)
-        {
-            return arrTemplates[Index].GetContentTemplateName();
-        }
-    }
-
-    return '';
 }
 
 function int PickOriginCountry(optional int iContinent)
@@ -478,7 +363,7 @@ function name LWCE_PickOriginCountry()
         }
     }
 
-    return arrCountries[arrCountries.Length - 1].m_kTemplate.iSoldierOriginWeight;
+    return arrCountries[arrCountries.Length - 1].m_nmCountry;
 }
 
 static protected function LWCEHairColorContentTemplate ChooseRandomHairColor()
@@ -525,13 +410,13 @@ static protected function name PickFallbackLanguageForVoice(name nmLanguage)
     }
 }
 
-protected function int GetVoiceTrackingRecordIndex(EGender Gender, name nmLanguage, bool bIsMec)
+protected function int GetVoiceTrackingRecordIndex(name nmGender, name nmLanguage, bool bIsMec)
 {
     local int Index;
 
     for (Index = 0; Index < m_arrNextVoices.Length; Index++)
     {
-        if (m_arrNextVoices[Index].Gender == Gender && m_arrNextVoices[Index].nmLanguage == nmLanguage && m_arrNextVoices[Index].bIsMec == bIsMec)
+        if (m_arrNextVoices[Index].nmGender == nmGender && m_arrNextVoices[Index].nmLanguage == nmLanguage && m_arrNextVoices[Index].bIsMec == bIsMec)
         {
             return Index;
         }

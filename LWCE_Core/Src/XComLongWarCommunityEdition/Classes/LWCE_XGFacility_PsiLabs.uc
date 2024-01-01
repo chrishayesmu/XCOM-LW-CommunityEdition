@@ -295,7 +295,7 @@ Begin:
         Sleep(0.10);
     }
 
-    if (LWCE_XGStrategySoldier(PsiCinematicSoldier).m_kCESoldier.kAppearance.iGender == eGender_Male)
+    if (LWCE_XGStrategySoldier(PsiCinematicSoldier).m_kCESoldier.kAppearance.nmGender == 'Male')
     {
         PRES().UINarrative(`XComNarrativeMoment("Psionics"),, PsiCinematicComplete, SendSoldierToPsiCinematic, Base().GetFacility3DLocation(eFacility_PsiLabs));
     }

@@ -114,25 +114,27 @@ function bool AdvanceFeature(int Feature, int Dir)
 
 function AdvanceGender(int Dir)
 {
-    local int iGender;
+    local name nmGender;
 
-    iGender = m_kCEPawn.m_kCEAppearance.iGender == eGender_Female ? eGender_Male : eGender_Female;
+    // TODO: set up a list of all genders somewhere (probably as templates for localization)
+    nmGender = m_kCEPawn.m_kCEAppearance.nmGender == 'Female' ? 'Male' : 'Female';
 
     // XComHumanPawn doesn't have a function to change gender, so we need to set the underlying
     // variables directly. We then call SetRace because that triggers enough of the processing
     // to update the face mesh to the new gender.
-    m_kCEPawn.m_kCEAppearance.iGender = iGender;
-    m_kCEPawn.bIsFemale = iGender == eGender_Female;
-    m_kCEPawn.LWCE_SetGender(m_kCEPawn.m_kCEAppearance.iGender);
+    m_kCEPawn.m_kCEAppearance.nmGender = nmGender;
+    m_kCEPawn.bIsFemale = nmGender == 'Female';
+    m_kCEPawn.LWCE_SetGender(m_kCEPawn.m_kCEAppearance.nmGender);
 
     // Finally, we need to trigger a reload of the character's skeleton and armor mesh, because female
     // soldiers are scaled down relative to male soldiers. If we don't do this, the soldier's head has
     // the scale of the new gender, but the rest of the model doesn't. SetInventory reloads that content
     // for us.
+    // TODO: why is this commented out? test that it's not needed, probably because LWCE_SetGender handles it
     //m_kCEPawn.LWCE_SetInventory(m_kCEPawn.m_kCEChar, m_kCESoldier.m_kCEChar.kInventory, m_kCEPawn.m_kCEAppearance);
 
     // Sync back our changes to the soldier data
-    m_kCESoldier.m_kCESoldier.kAppearance.iGender = m_kCEPawn.m_kCEAppearance.iGender;
+    m_kCESoldier.m_kCESoldier.kAppearance.nmGender = m_kCEPawn.m_kCEAppearance.nmGender;
     m_kCESoldier.m_kCESoldier.kAppearance.nmHead = m_kCEPawn.m_kCEAppearance.nmHead;
     m_kCESoldier.m_kCESoldier.kAppearance.nmHaircut = m_kCEPawn.m_kCEAppearance.nmHaircut;
     m_kCESoldier.m_kCESoldier.kAppearance.nmVoice = m_kCEPawn.m_kCEAppearance.nmVoice;
@@ -728,7 +730,7 @@ function UpdateMainMenu()
     // Gender
     kOption.strText = m_strGenderLabel;
     kOption.iState = eUIState_Normal;
-    kOption.strHelp = m_kCEPawn.m_kCEAppearance.iGender == eGender_Female ? m_strGenderFemale : m_strGenderMale;
+    kOption.strHelp = m_kCEPawn.m_kCEAppearance.nmGender == 'Female' ? m_strGenderFemale : m_strGenderMale;
     kSpinnerMenu.arrOptions.AddItem(kOption);
     m_arrSpinnerHandlers.AddItem(AdvanceGender);
 
@@ -779,7 +781,9 @@ function UpdateMainMenu()
     m_arrSpinnerHandlers.AddItem(AdvanceHairColor);
 
     // Facial hair
-    if (m_kCEPawn.m_kCEAppearance.iGender == eGender_Male)
+    // TODO: let the gender template indicate if facial hair is supported, or query all facial hair templates
+    // to see if any exist for the current gender
+    if (m_kCEPawn.m_kCEAppearance.nmGender == 'Male')
     {
         kOption.strText = m_strFacialHairSpinner;
         kOption.iState = eUIState_Normal;

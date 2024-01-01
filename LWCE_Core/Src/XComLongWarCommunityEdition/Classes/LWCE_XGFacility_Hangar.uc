@@ -26,6 +26,35 @@ var config int iNumShipSlotsPerContinent;
 var const localized array<string> PilotNames;
 var const localized array<string> PilotRanks;
 
+function Init(bool bLoadingFromSave)
+{
+    local int I;
+    local LWCE_XGShip kShip;
+
+    BaseInit();
+
+    for (I = 1; I < 5; I++)
+    {
+        m_arrHangarOpen[I - 1]   = class'XComGlamManager'.static.SearchForMatinee("Base_Bay" $ I $ "_Open");
+        m_arrHangarClosed[I - 1] = class'XComGlamManager'.static.SearchForMatinee("Base_Bay" $ I $ "_Closed");
+        m_arrHangarRepair[I - 1] = class'XComGlamManager'.static.SearchForMatinee("Base_Bay" $ I $ "_Repair");
+    }
+
+    m_cinViewWeapons = class'XComGlamManager'.static.SearchForMatinee("Base_Bay1_ViewWeapons");
+
+    foreach m_arrCEShips(kShip)
+    {
+        kShip.UpdateHangarShip();
+
+        if (bLoadingFromSave)
+        {
+            kShip.InitWatchVariables();
+        }
+    }
+
+    UpdateHangarBays();
+}
+
 function AddDropship()
 {
     if (m_kSkyranger == none)
@@ -528,12 +557,6 @@ function GiveMissionReward(XGShip_Dropship kSkyranger)
     if (kSkyranger.CargoInfo.m_kReward.iCredits > 0)
     {
         AddResource(eResource_Money, kSkyranger.CargoInfo.m_kReward.iCredits);
-    }
-
-    if (kSkyranger.CargoInfo.m_kReward.iSoldierClass != 0)
-    {
-        LWCE_XGFacility_Barracks(BARRACKS()).LWCE_CreateSoldier(kSkyranger.CargoInfo.m_kReward.iSoldierClass, kSkyranger.CargoInfo.m_kReward.iSoldierLevel, kSkyranger.CargoInfo.m_kReward.iCountry);
-        STAT_AddStat(eRecap_SoldiersCollected, 1);
     }
 }
 

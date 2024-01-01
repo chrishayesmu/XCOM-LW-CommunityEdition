@@ -96,6 +96,50 @@ function Vector2D GetHQLocation()
     return m_kTemplate.v2HQLocation;
 }
 
+function int GetRandomCity()
+{
+    `LWCE_LOG_DEPRECATED_CLS(GetRandomCity);
+
+    return -1;
+}
+
+/// <summary>
+/// Returns a random city in this continent. The city will belong to a country which is still a member of the XCom project.
+/// </summary>
+function name LWCE_GetRandomCity()
+{
+    return `LWCE_XGCOUNTRY(LWCE_GetRandomCouncilCountry()).LWCE_GetRandomCity();
+}
+
+function int GetRandomCouncilCountry()
+{
+    `LWCE_LOG_DEPRECATED_CLS(GetRandomCouncilCountry);
+
+    return -1;
+}
+
+/// <summary>
+/// Returns a random country in this continent which is still a member of the XCom project.
+/// </summary>
+function name LWCE_GetRandomCouncilCountry()
+{
+    local LWCE_XGCountry kCountry;
+    local array<name> arrCouncilCountries;
+    local int iCountry;
+
+    for (iCountry = 0; iCountry < m_kTemplate.arrCountries.Length; iCountry++)
+    {
+        kCountry = `LWCE_XGCOUNTRY(m_kTemplate.arrCountries[iCountry]);
+
+        if (kCountry.IsCouncilMember() && !kCountry.m_bSecretPact)
+        {
+            arrCouncilCountries.AddItem(m_kTemplate.arrCountries[iCountry]);
+        }
+    }
+
+    return arrCouncilCountries[Rand(arrCouncilCountries.Length)];
+}
+
 function RecordCountryHelped(ECountry eHelpedCountry)
 {
     `LWCE_LOG_DEPRECATED_CLS(RecordCountryHelped);

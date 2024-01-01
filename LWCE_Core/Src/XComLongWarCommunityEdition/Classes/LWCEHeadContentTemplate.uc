@@ -1,6 +1,6 @@
 class LWCEHeadContentTemplate extends LWCEContentTemplate;
 
-var config EGender Gender;
+var config array<name> arrGenders;
 
 var config ECharacter Character;
 

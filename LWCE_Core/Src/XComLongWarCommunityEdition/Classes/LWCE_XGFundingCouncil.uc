@@ -10,7 +10,7 @@ struct LWCE_TRewardSoldier
 
 struct LWCE_TRequestCooldown
 {
-    var name RequestName;
+    var name nmRequest;
     var int iHoursRemaining;
 };
 
@@ -27,7 +27,8 @@ struct LWCE_TRequestReward
 
 struct LWCE_TFCRequest
 {
-    var name RequestName;
+    var name nmRequest;
+    var name nmRequestingCountry;
     var EFCRequestType eType;
     var int iHoursToRespond;
 
@@ -40,7 +41,6 @@ struct LWCE_TFCRequest
     var string strTickerSuccess;
     var string strTickerIgnore;
 
-    var name nmRequestingCountry;
     var bool bIsTransferRequest;
     var bool bIsTransferComplete;
 };
@@ -105,6 +105,8 @@ function InitNewGame()
 
 function Update()
 {
+    local LWCEDataContainer kEventData;
+    local LWCE_TFCRequest kCreatedRequest;
     local int iRequest, Index;
 
     for (Index = m_arrCERequestCooldowns.Length - 1; Index >= 0; Index--)
@@ -152,12 +154,26 @@ function Update()
         {
             m_iSecondRequestCountdown = `LWCE_UTILS.RandInRange(kTimeBetweenRequests);
 
-            if (HQ().HasBonus(`LW_HQ_BONUS_ID(QuaidOrsay)) > 0)
-            {
-                m_iSecondRequestCountdown *= (1.0f - (float(HQ().HasBonus(`LW_HQ_BONUS_ID(QuaidOrsay))) / 100.0f));
-            }
+            kCreatedRequest = LWCE_DetermineNewFCRequest();
 
-            LWCE_DetermineNewFCRequest();
+            // EVENT: CouncilRequestGenerated
+            //
+            // SUMMARY: Emitted after an attempt to generate a council request. Note that the attempt may not have succeeded, for example if a request template is wrongly configured;
+            //          see the event's data for how to determine this. Regardless of whether a request was generated, a cooldown period will be set before another request occurs.
+            //          The new request will be stored in either LWCE_XGFundingCouncil.m_arrCECurrentRequests or LWCE_XGFundingCouncil.m_arrCEPendingRequests, depending on whether
+            //          the player can currently fulfill it. This event can be used to modify the request, though removing it completely is not advised, because the player is going to
+            //          be notified about the request during the next Geoscape tick.
+            //
+            // DATA: LWCEDataContainer
+            //       Data[0]: name - The name of the LWCECouncilRequestTemplate which was generated. If blank, no request was generated.
+            //       Data[1]: name - The country which is submitting the request. If blank, no request was generated.
+            //
+            // SOURCE: LWCE_XGFundingCouncil
+            kEventData = class'LWCEDataContainer'.static.New('CouncilRequestGenerated');
+            kEventData.AddName(kCreatedRequest.nmRequest);
+            kEventData.AddName(kCreatedRequest.nmRequestingCountry);
+
+            `LWCE_EVENT_MGR.TriggerEvent('CouncilRequestGenerated', kEventData, self);
         }
     }
 }
@@ -180,7 +196,7 @@ function bool AttemptTurnInRequest(int iRequestIndex)
         kRequest = m_arrCECurrentRequests[iRequestIndex];
     }
 
-    if (kRequest.RequestName == '' || kRequest.bIsTransferRequest)
+    if (kRequest.nmRequest == '' || kRequest.bIsTransferRequest)
     {
         return false;
     }
@@ -380,7 +396,7 @@ function bool CreateRequestFromTemplate(out LWCE_TFCRequest kRequest, const LWCE
     kTag = new class'XGCountryTag';
     kTag.kCountry = kCountry;
 
-    kRequest.RequestName = kRequestTemplate.GetRequestName();
+    kRequest.nmRequest = kRequestTemplate.GetRequestName();
     kRequest.eType = kRequestTemplate.eType;
     kRequest.nmRequestingCountry = nmRequestingCountry;
     kRequest.iHoursToRespond = kRequestTemplate.iHoursToRespond;
@@ -481,7 +497,7 @@ function bool CreateRequestFromTemplate(out LWCE_TFCRequest kRequest, const LWCE
     }
 
     kRequest.kReward.iCash = iCash + iBonusCash;
-    kRequest.kReward.iCountryDefense = RollCountryDefenseReward(kRequestTemplate.arrRewards[Index].kCountryDefense);
+    kRequest.kReward.iCountryDefense = `LWCE_UTILS.RandInRange(kRequestTemplate.arrRewards[Index].kCountryDefense);
     kRequest.kReward.iEngineers = iEngineers + iBonusEngineers;
     kRequest.kReward.iScientists = iScientists + iBonusScientists;
     kRequest.kReward.iPanic = `LWCE_UTILS.RandInRange(kRequestTemplate.arrRewards[Index].kPanic);
@@ -494,7 +510,7 @@ function bool CreateRequestFromTemplate(out LWCE_TFCRequest kRequest, const LWCE
         // TODO: move soldier rank data to config
         kRewardSoldier.iRank = 3;
 
-        if (kCountry.m_kTCountry.iScience > 50 && AI().GetMonth() > 11)
+        if (kCountry.m_iShields > 50 && AI().GetMonth() > 11)
         {
             kRewardSoldier.iRank = 4;
         }
@@ -708,9 +724,9 @@ function bool DetermineNewFCRequest(optional EFCRequest eRequest)
     return false;
 }
 
-function bool LWCE_DetermineNewFCRequest()
+function LWCE_TFCRequest LWCE_DetermineNewFCRequest()
 {
-    local LWCE_TFCRequest kRequest;
+    local LWCE_TFCRequest kBlank, kRequest;
     local LWCECouncilRequestTemplate kRequestTemplate;
     local name nmRequestingCountry, RequestName;
 
@@ -720,33 +736,33 @@ function bool LWCE_DetermineNewFCRequest()
 
     if (RequestName == '')
     {
-        `LWCE_LOG_CLS("LWCE_DetermineNewFCRequest: couldn't find request template to use");
-        return false;
+        `LWCE_LOG_VERBOSE("LWCE_DetermineNewFCRequest: couldn't find request template to use");
+        return kBlank;
     }
 
     if (!GetRequestTemplate(RequestName, kRequestTemplate))
     {
-        `LWCE_LOG_CLS("LWCE_DetermineNewFCRequest: couldn't get request config for template " $ RequestName);
-        return false;
+        `LWCE_LOG_VERBOSE("LWCE_DetermineNewFCRequest: couldn't get request config for template " $ RequestName);
+        return kBlank;
     }
 
     if (kRequestTemplate.eType == eFCRType_SatLaunch && !LWCE_CanTransferSatellite(nmRequestingCountry))
     {
-        `LWCE_LOG_CLS("LWCE_DetermineNewFCRequest: chose satellite request but can't launch sat to " $ nmRequestingCountry);
-        return false;
+        `LWCE_LOG_VERBOSE("LWCE_DetermineNewFCRequest: chose satellite request but can't launch sat to " $ nmRequestingCountry);
+        return kBlank;
     }
 
     if (kRequestTemplate.arrRewards.Length == 0)
     {
-        `LWCE_LOG_CLS("LWCE_DetermineNewFCRequest: request template " $ RequestName $ " has no rewards configured. Placing on cooldown with no action");
+        `LWCE_LOG_VERBOSE("LWCE_DetermineNewFCRequest: request template " $ RequestName $ " has no rewards configured. Placing on cooldown with no action");
         LWCE_SetRequestCooldown(RequestName);
-        return false;
+        return kBlank;
     }
 
     if (!CreateRequestFromTemplate(kRequest, kRequestTemplate, nmRequestingCountry))
     {
-        `LWCE_LOG_CLS("LWCE_DetermineNewFCRequest: couldn't create request from template " $ RequestName);
-        return false;
+        `LWCE_LOG_VERBOSE("LWCE_DetermineNewFCRequest: couldn't create request from template " $ RequestName);
+        return kBlank;
     }
 
     kRequest.bIsTransferRequest = kRequest.eType == eFCRType_JetTransfer || kRequest.eType == eFCRType_SatLaunch;
@@ -754,15 +770,15 @@ function bool LWCE_DetermineNewFCRequest()
 
     if (HasConflictingRequest(kRequest))
     {
-        `LWCE_LOG_CLS("LWCE_DetermineNewFCRequest: conflicting request exists for template " $ RequestName);
+        `LWCE_LOG_VERBOSE("LWCE_DetermineNewFCRequest: conflicting request exists for template " $ RequestName);
         LWCE_SetRequestCoolDown(RequestName);
-        return false;
+        return kBlank;
     }
 
     LWCE_OnValidRequestAdded(kRequest);
 
-    `LWCE_LOG_CLS("LWCE_DetermineNewFCRequest: added new request using template " $ kRequest.RequestName);
-    return true;
+    `LWCE_LOG_VERBOSE("LWCE_DetermineNewFCRequest: added new request using template " $ kRequest.nmRequest);
+    return kRequest;
 }
 
 function ForceRequest(optional string strRequest)
@@ -821,7 +837,7 @@ function name LWCE_GetLastAcceptedRequestType()
 {
     if (m_arrCECurrentRequests.Length > 0)
     {
-        return m_arrCECurrentRequests[m_arrCECurrentRequests.Length - 1].RequestName;
+        return m_arrCECurrentRequests[m_arrCECurrentRequests.Length - 1].nmRequest;
     }
 
     return '';
@@ -868,6 +884,9 @@ function GiveCustomSoldier(const out TFundingCouncilRewardSoldier CustomSoldier)
 {
     local LWCE_XGStrategySoldier Soldier;
 
+    `LWCE_LOG_ERROR("GiveCustomSoldier not updated to use templates yet!");
+    ScriptTrace();
+/*
     Soldier = LWCE_XGFacility_Barracks(BARRACKS()).LWCE_CreateSoldier(CustomSoldier.soldierClass, CustomSoldier.SoldierRank, CustomSoldier.Country);
     Soldier.m_kSoldier.kAppearance = CustomSoldier.Appearance;
     Soldier.m_kSoldier.strFirstName = CustomSoldier.firstName;
@@ -937,6 +956,7 @@ function GiveCustomSoldier(const out TFundingCouncilRewardSoldier CustomSoldier)
     }
 
     Soldier.m_kChar.aStats[eStat_Defense] = 0;
+ */
 }
 
 // NOTE: the base GrantFCRewards is still used for FC missions and is not deprecated as of now
@@ -977,7 +997,7 @@ function LWCE_GrantFCRewards(LWCE_TRequestReward kReward, name nmRewardingCountr
 
     for (Index = 0; Index < kReward.arrSoldiers.Length; Index++)
     {
-        kBarracks.LWCE_CreateSoldier(kReward.arrSoldiers[Index].iClassId, kReward.arrSoldiers[Index].iRank, ECountry(Rand(36)));
+        kBarracks.LWCE_CreateSoldier(kReward.arrSoldiers[Index].iClassId, kReward.arrSoldiers[Index].iRank, LWCE_XGCountry(WORLD().GetRandomCountry()).m_nmCountry);
     }
 }
 
@@ -987,7 +1007,7 @@ function bool HasConflictingRequest(const out LWCE_TFCRequest kRequest)
 
     for (Index = 0; Index < m_arrCECurrentRequests.Length; Index++)
     {
-        if (kRequest.RequestName == m_arrCECurrentRequests[Index].RequestName && kRequest.nmRequestingCountry == m_arrCECurrentRequests[Index].nmRequestingCountry)
+        if (kRequest.nmRequest == m_arrCECurrentRequests[Index].nmRequest && kRequest.nmRequestingCountry == m_arrCECurrentRequests[Index].nmRequestingCountry)
         {
             return true;
         }
@@ -1033,7 +1053,7 @@ function bool LWCE_HasRequestOfType(name RequestName)
 
     for (Index = 0; Index < m_arrCECurrentRequests.Length; Index++)
     {
-        if (m_arrCECurrentRequests[Index].RequestName == RequestName)
+        if (m_arrCECurrentRequests[Index].nmRequest == RequestName)
         {
             return true;
         }
@@ -1115,7 +1135,7 @@ function OnRequestCompleted(int iRequestIndex)
     kText.iState = eUIState_Good;
     kText.StrValue = m_arrCECurrentRequests[iRequestIndex].strTickerSuccess;
     kSitRoom.LWCE_PushFundingCouncilHeadline(m_arrCECurrentRequests[iRequestIndex].nmRequestingCountry, kText);
-    
+
     Achieve(AT_HappyToOblige);
 
     // Add shields to the requesting country
@@ -1147,7 +1167,7 @@ function OnRequestExpired(int iRequestIndex)
     kText.iState = eUIState_Bad;
     kText.StrValue = m_arrCECurrentRequests[iRequestIndex].strTickerIgnore;
     kSitRoom.LWCE_PushFundingCouncilHeadline(m_arrCECurrentRequests[iRequestIndex].nmRequestingCountry, kText);
-    
+
     m_arrCECurrentRequests.Remove(iRequestIndex, 1);
 }
 
@@ -1276,7 +1296,7 @@ function LWCE_OnValidRequestAdded(out LWCE_TFCRequest kRequest)
 
     m_iFCRequestsThisMonth++;
 
-    LWCE_SetRequestCoolDown(kRequest.RequestName);
+    LWCE_SetRequestCoolDown(kRequest.nmRequest);
 
     if (LWCE_CanAcceptRequest(kRequest))
     {
@@ -1307,7 +1327,7 @@ function bool LWCE_PassesRequestRequirements(const LWCECouncilRequestTemplate kR
     {
         // Base game checks by localized name, presumably because that codifies both the request type and the country involved.
         // We add a check by request name in case two mods add requests with the same localized name.
-        if (m_arrCECurrentRequests[Index].RequestName == kRequestTemplate.GetRequestName() && m_arrCECurrentRequests[Index].strName == kRequestTemplate.strName)
+        if (m_arrCECurrentRequests[Index].nmRequest == kRequestTemplate.GetRequestName() && m_arrCECurrentRequests[Index].strName == kRequestTemplate.strName)
         {
             return false;
         }
@@ -1340,6 +1360,7 @@ function SetRequestCoolDown(out EFCRequest kRequest, int amnt)
 function LWCE_SetRequestCooldown(name RequestName)
 {
     local LWCECouncilRequestTemplate kRequestTemplate;
+    local LWCEDataContainer kEventData;
     local LWCE_TRequestCooldown kCooldown;
     local int iCooldown, Index;
 
@@ -1355,13 +1376,7 @@ function LWCE_SetRequestCooldown(name RequestName)
 
     iCooldown = kRequestTemplate.iCooldownInHours;
 
-    // Check for Quai d'Orsay bonus
-    if (HQ().HasBonus(`LW_HQ_BONUS_ID(QuaidOrsay)) > 0)
-    {
-        iCooldown *= (1.0f - (HQ().HasBonus(`LW_HQ_BONUS_ID(QuaidOrsay)) / 100.0f));
-    }
-
-    Index = m_arrCERequestCooldowns.Find('RequestName', RequestName);
+    Index = m_arrCERequestCooldowns.Find('nmRequest', RequestName);
 
     if (Index != INDEX_NONE)
     {
@@ -1369,9 +1384,41 @@ function LWCE_SetRequestCooldown(name RequestName)
     }
     else
     {
-        kCooldown.RequestName = RequestName;
+        kCooldown.nmRequest = RequestName;
         kCooldown.iHoursRemaining = iCooldown;
         m_arrCERequestCooldowns.AddItem(kCooldown);
+    }
+
+    // EVENT: CouncilRequestOnCooldown
+    //
+    // SUMMARY: Emitted after a council request has been placed on cooldown. Typically this occurs as soon as a request is generated and made available to
+    //          the player, but sometimes this isn't the case. For example, the request may be generated but discarded because no valid rewards exist, or
+    //          because a pre-existing council request conflicts with the new one.
+    //
+    // DATA: LWCEDataContainer
+    //       Data[0]: name - The name of the LWCECouncilRequestTemplate instance which was placed on cooldown.
+    //       Data[1]: int - Return parameter for event handlers. The cooldown, in hours, of the request. Event handlers can modify this value, or even return
+    //                      a zero or negative value, which will immediately take the request off cooldown again.
+    //
+    // SOURCE: LWCE_XGFundingCouncil
+    kEventData = class'LWCEDataContainer'.static.New('CouncilRequestOnCooldown');
+    kEventData.AddName(RequestName);
+    kEventData.AddInt(iCooldown);
+
+    `LWCE_EVENT_MGR.TriggerEvent('CouncilRequestOnCooldown', kEventData, self);
+
+    iCooldown = kEventData.Data[1].I;
+
+    // Find the index again even if we already had it before; an event handler may have modified our array
+    Index = m_arrCERequestCooldowns.Find('nmRequest', RequestName);
+
+    if (iCooldown <= 0)
+    {
+        m_arrCERequestCooldowns.Remove(Index, 1);
+    }
+    else
+    {
+        m_arrCERequestCooldowns[Index].iHoursRemaining = iCooldown;
     }
 }
 
@@ -1411,7 +1458,7 @@ protected function int GetRemainingCooldown(name RequestName)
 {
     local int Index;
 
-    Index = m_arrCERequestCooldowns.Find('RequestName', RequestName);
+    Index = m_arrCERequestCooldowns.Find('nmRequest', RequestName);
 
     if (Index == INDEX_NONE)
     {
@@ -1446,21 +1493,4 @@ protected function int GetRewardEquivalentCashValue(const out LWCE_TFCRequest kR
     }
 
     return iCash;
-}
-
-protected function int RollCountryDefenseReward(LWCE_TRange kRange)
-{
-    local int iCountryDefense;
-    local float fDefenseMultiplier;
-
-    fDefenseMultiplier = 1.0f;
-
-    if (HQ().HasBonus(`LW_HQ_BONUS_ID(QuaidOrsay)) > 0)
-    {
-        fDefenseMultiplier += HQ().HasBonus(`LW_HQ_BONUS_ID(QuaidOrsay)) / 100.0f;
-    }
-
-    iCountryDefense = `LWCE_UTILS.RandInRange(kRange) * fDefenseMultiplier;
-
-    return iCountryDefense;
 }

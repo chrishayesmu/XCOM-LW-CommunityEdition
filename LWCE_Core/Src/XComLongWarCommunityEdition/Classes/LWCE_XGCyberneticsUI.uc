@@ -63,7 +63,7 @@ function TTableMenuOption BuildSoldierOption(XGStrategySoldier kSoldier, array<i
 
                 break;
             case 0:
-                strCategory = string(kCESoldier.m_kCESoldier.iCountry);
+                strCategory = string(kCESoldier.m_kCESoldier.nmCountry);
                 break;
             case 1:
                 strCategory = string(kCESoldier.GetRank());

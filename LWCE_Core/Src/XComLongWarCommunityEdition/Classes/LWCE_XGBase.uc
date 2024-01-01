@@ -172,11 +172,6 @@ function GenerateTiles()
     iAccessX = GetAccessX(); // after event, in case base size is changed
     iNumSteamVents = kEventData.Data[0].I;
 
-    if (m_bIsPrimaryBase && HQ().HasBonus(/* Ring of Fire */ 13) > 0)
-    {
-        iNumSteamVents += HQ().HasBonus(13);
-    }
-
     `LWCE_LOG_CLS("GenerateTiles: base is " $ m_iNumTilesHigh $ " tiles high and " $ m_iNumTilesWide $ " tiles wide. Is primary base: " $ m_bIsPrimaryBase);
 
     m_arrCETiles.Add(m_iNumTilesHigh * m_iNumTilesWide);
@@ -238,51 +233,6 @@ function GenerateTiles()
     {
         LWCE_SetFacility('Facility_AccessLift', iAccessX, 1);
         m_arrCETiles[TileIndex(iAccessX, 1)].eState = eTileState_Accessible;
-    }
-
-
-    if (m_bIsPrimaryBase)
-    {
-        if (HQ().HasBonus(/* Skunkworks */ 17) > 0)
-        {
-            LWCE_SetFacility('Facility_Foundry', 4, 1);
-            LWCE_XGStrategy(Game()).m_arrCEFacilityUnlocks.AddItem('Facility_Foundry');
-        }
-
-        if (HQ().HasBonus(/* Advanced Preparations */ 20) > 0)
-        {
-            LWCE_SetFacility('Facility_Laboratory', 4, 1);
-            LWCE_SetFacility('Facility_Workshop', 5, 1);
-            LWCE_XGStrategy(Game()).m_arrCEFacilityUnlocks.AddItem('Facility_Laboratory');
-            LWCE_XGStrategy(Game()).m_arrCEFacilityUnlocks.AddItem('Facility_Workshop');
-        }
-
-        if (HQ().HasBonus(/* Research Focus */ 33) > 0)
-        {
-            LWCE_SetFacility('Facility_Laboratory', 4, 1);
-            LWCE_SetFacility('Facility_Laboratory', 5, 1);
-            LWCE_XGStrategy(Game()).m_arrCEFacilityUnlocks.AddItem('Facility_Laboratory');
-        }
-
-        if (HQ().HasBonus(/* Assembly Line */ 34) > 0)
-        {
-            LWCE_SetFacility('Facility_Laboratory', 4, 1);
-            LWCE_SetFacility('Facility_Laboratory', 5, 1);
-            LWCE_XGStrategy(Game()).m_arrCEFacilityUnlocks.AddItem('Facility_Laboratory');
-        }
-
-        if (HQ().HasBonus(/* Roscosmos */ 29) > 0)
-        {
-            LWCE_SetFacility('Facility_SatelliteUplink', 1, 1);
-        }
-
-        if (HQ().HasBonus(/* Wei Renmin Fuwu */ 30) > 0)
-        {
-            LWCE_SetFacility('Facility_RepairBay', 4, 1);
-            LWCE_SetFacility('Facility_Workshop', 5, 1);
-            LWCE_XGStrategy(Game()).m_arrCEFacilityUnlocks.AddItem('Facility_RepairBay');
-            LWCE_XGStrategy(Game()).m_arrCEFacilityUnlocks.AddItem('Facility_Workshop');
-        }
     }
 
     // EVENT: AfterGenerateBaseTiles
@@ -955,7 +905,7 @@ function LWCE_SetFacility(name FacilityName, int X, int Y)
     // DATA: LWCEDataContainer
     //       Data[0]: name - The name of the facility, as in its LWCEFacilityTemplate.
     //       Data[1]: int - The X coordinate of the facility in the base. For multi-tile facilities, this marks the top-left corner.
-    //       Data[2]: int - The Y coordinate of the facility in the base. For multi-tile facilities, this marks the top-left corner. 
+    //       Data[2]: int - The Y coordinate of the facility in the base. For multi-tile facilities, this marks the top-left corner.
     //                      Remember that Y = 0 is a special player-inaccessible row.
     //
     // SOURCE: LWCE_XGBase - The base which the facility has been added in.

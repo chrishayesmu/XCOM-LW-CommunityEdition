@@ -42,7 +42,7 @@ function TTableMenuOption BuildSoldierLine(XGUnit kUnit, array<int> arrCategorie
         switch (arrCategories[iCategory])
         {
             case 13:
-                kOption.arrStrings[iCategory] = string(kSoldier.m_kCESoldier.iCountry);
+                kOption.arrStrings[iCategory] = string(kSoldier.m_kCESoldier.nmCountry);
                 break;
             case 14:
                 kOption.arrStrings[iCategory] = kSoldier.SafeGetCharacterName();

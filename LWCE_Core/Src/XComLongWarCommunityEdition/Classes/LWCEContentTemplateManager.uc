@@ -95,7 +95,7 @@ function array<LWCEArmorKitContentTemplate> FindMatchingArmorKits(name nmArmor, 
     return ArmorKits;
 }
 
-function array<LWCEHairContentTemplate> FindMatchingHair(EGender Gender, optional bool bCivilianOnly = false, optional bool bAllowHelmets = false, optional name CustomTag = '')
+function array<LWCEHairContentTemplate> FindMatchingHair(name nmGender, optional bool bCivilianOnly = false, optional bool bAllowHelmets = false, optional name CustomTag = '')
 {
     local int Index;
     local LWCEHairContentTemplate Hair;
@@ -110,7 +110,7 @@ function array<LWCEHairContentTemplate> FindMatchingHair(EGender Gender, optiona
             continue;
         }
 
-        if (Hair.Gender != Gender && !Hair.bIsHelmet)
+        if (!Hair.bIsHelmet && Hair.arrGenders.Length > 0 && Hair.arrGenders.Find(nmGender) == INDEX_NONE)
         {
             continue;
         }
@@ -136,7 +136,7 @@ function array<LWCEHairContentTemplate> FindMatchingHair(EGender Gender, optiona
     return HairTemplates;
 }
 
-function array<LWCEHeadContentTemplate> FindMatchingHeads(ECharacter Character, name nmRace, optional EGender Gender = eGender_None, optional name CustomTag = '')
+function array<LWCEHeadContentTemplate> FindMatchingHeads(ECharacter Character, name nmRace, optional name nmGender = '', optional name CustomTag = '')
 {
     local int Index;
     local LWCEHeadContentTemplate Head;
@@ -161,7 +161,7 @@ function array<LWCEHeadContentTemplate> FindMatchingHeads(ECharacter Character, 
             continue;
         }
 
-        if (Gender != eGender_None && Head.Gender != Gender)
+        if (nmGender != '' && Head.arrGenders.Length > 0 && Head.arrGenders.Find(nmGender) == INDEX_NONE)
         {
             continue;
         }
@@ -177,7 +177,7 @@ function array<LWCEHeadContentTemplate> FindMatchingHeads(ECharacter Character, 
     return Heads;
 }
 
-function LWCEPawnContentTemplate FindMatchingPawn(ECharacter Character, optional EGender Gender = eGender_None, optional name nmArmor)
+function LWCEPawnContentTemplate FindMatchingPawn(ECharacter Character, optional name nmGender = '', optional name nmArmor = '')
 {
     local int Index;
     local LWCEPawnContentTemplate Pawn;
@@ -197,7 +197,7 @@ function LWCEPawnContentTemplate FindMatchingPawn(ECharacter Character, optional
             continue;
         }
 
-        if (Gender != eGender_None && Pawn.Gender != Gender)
+        if (nmGender != '' && Pawn.arrGenders.Length > 0 && Pawn.arrGenders.Find(nmGender) == INDEX_NONE)
         {
             continue;
         }
@@ -212,7 +212,7 @@ function LWCEPawnContentTemplate FindMatchingPawn(ECharacter Character, optional
 
     if (Pawns.Length != 1)
     {
-        `LWCE_LOG_CLS("WARNING: expected to find exactly 1 pawn matching character " $ Character $ ", Gender " $ Gender $ ", and armor '" $ nmArmor $ "'. Content may be misconfigured.");
+        `LWCE_LOG_CLS("WARNING: expected to find exactly 1 pawn matching character " $ Character $ ", Gender " $ nmGender $ ", and armor '" $ nmArmor $ "'. Content may be misconfigured.");
     }
 
     return Pawns[0];
@@ -244,7 +244,7 @@ function array<LWCESkinColorContentTemplate> FindMatchingSkinColors(name nmRace)
     return SkinColors;
 }
 
-function array<LWCEVoiceContentTemplate> FindMatchingVoices(EGender Gender, name Language, optional bool bIsMec = false, optional name CustomTag = '')
+function array<LWCEVoiceContentTemplate> FindMatchingVoices(name nmGender, name Language, optional bool bIsMec = false, optional name CustomTag = '')
 {
     local int Index;
     local LWCEVoiceContentTemplate Voice;
@@ -259,7 +259,7 @@ function array<LWCEVoiceContentTemplate> FindMatchingVoices(EGender Gender, name
             continue;
         }
 
-        if (Voice.Gender != Gender)
+        if (Voice.arrGenders.Length > 0 && Voice.arrGenders.Find(nmGender) == INDEX_NONE)
         {
             continue;
         }

@@ -323,7 +323,7 @@ function PlayFinalCinematic()
 {
     local XComNarrativeMoment lMoment;
 
-    if (LWCE_XGStrategySoldier(BARRACKS().m_kVolunteer).m_kCESoldier.kAppearance.iGender == eGender_Female)
+    if (LWCE_XGStrategySoldier(BARRACKS().m_kVolunteer).m_kCESoldier.kAppearance.nmGender == 'Female')
     {
         lMoment = `XComNarrativeMoment("TP13_TheEnd_Female");
     }
@@ -488,5 +488,5 @@ Begin:
         GEOSCAPE().TakeFirstMission();
     }
 
-    stop;    
+    stop;
 }

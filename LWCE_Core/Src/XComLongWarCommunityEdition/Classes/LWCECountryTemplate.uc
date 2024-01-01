@@ -12,7 +12,7 @@ struct LWCE_TNameListConfig
     structdefaultproperties
     {
         iWeight=1
-    };
+    }
 };
 
 var config int iStartingCash;                // How much cash the player will have if choosing this country as their starting location.
@@ -21,6 +21,7 @@ var config int iScientistsPerMonth;          // How many scientists this country
 var config int iCashPerMonth;                // How much this country gives each month if it has satellite coverage; a percentage is given without coverage
 var config bool bIsCouncilMember;            // Whether this country is ever in the XCOM council. If not, the configuration above is unused, and
                                              // this country essentially only exists as a place for missions to occur.
+var config string strFlagIconPath;           // Path to an image containing the icon of this country's flag. Must contain the "img:///" prefix.
 var config Vector2D v2SatNodeLoc;            // The location on the Geoscape to display a satellite graphic if this country has a satellite.
 var config array<config TRect> arrBounds;    // Bounding boxes which together define the area of this country.
 var config array<name> arrCities;            // The names of the cities which are in this country.
@@ -44,7 +45,6 @@ var const localized array<localized string> TickerPanicLow;
 var const localized array<localized string> TickerPanicMedium;
 var const localized array<localized string> TickerPanicHigh;
 var const localized array<localized string> TickerPanicMax;
-
 
 function name GetCountryName()
 {
@@ -90,38 +90,23 @@ function Vector2D GetCoords()
 }
 
 /// <summary>
-/// Rolls for a language to assign to a new soldier, using arrSpokenLanguageWeights. This function does
-/// NOT respect the m_bForeignLanguages setting in XComOnlineProfileSettingsDataBlob; callers are responsible
-/// for checking that themselves if applicable in their context.
+/// Rolls for a name list to use when generating a character's first name.
 /// </summary>
-function name RollForLanguage()
+/// <param name="nmRace">Filters to name lists supporting this race; if blank, no filter is applied.</param>
+/// <param name="nmGender">Filters to name lists supporting this gender; if blank, no filter is applied.</param>
+function name RollForFirstNameList(name nmRace, name nmGender)
 {
-    local int iRoll, iSum, iTotalWeight;
-    local LWCE_NameIntKVP kWeightPair;
+    return RollForNameList(nmRace, nmGender, arrFirstNameLists);
+}
 
-    if (arrSpokenLanguageWeights.Length == 0)
-    {
-        return '';
-    }
-
-    foreach arrSpokenLanguageWeights(kWeightPair)
-    {
-        iTotalWeight += kWeightPair.Value;
-    }
-
-    iRoll = Rand(iTotalWeight);
-
-    foreach arrSpokenLanguageWeights(kWeightPair)
-    {
-        iSum += kWeightPair.Value;
-
-        if (iRoll < iSum)
-        {
-            return kWeightPair.Key;
-        }
-    }
-
-    return arrSpokenLanguageWeights[arrSpokenLanguageWeights.Length - 1].Key;
+/// <summary>
+/// Rolls for a name list to use when generating a character's last name.
+/// </summary>
+/// <param name="nmRace">Filters to name lists supporting this race; if blank, no filter is applied.</param>
+/// <param name="nmGender">Filters to name lists supporting this gender; if blank, no filter is applied.</param>
+function name RollForLastNameList(name nmRace, name nmGender)
+{
+    return RollForNameList(nmRace, nmGender, arrLastNameLists);
 }
 
 /// <summary>
@@ -155,4 +140,89 @@ function name RollForRace()
     }
 
     return arrSoldierRaceWeights[arrSoldierRaceWeights.Length - 1].Key;
+}
+
+/// <summary>
+/// Rolls for a language to assign to a new soldier, using arrSpokenLanguageWeights. This function does
+/// NOT respect the m_bForeignLanguages setting in XComOnlineProfileSettingsDataBlob; callers are responsible
+/// for checking that themselves if applicable in their context.
+/// </summary>
+function name RollForSpokenLanguage()
+{
+    local int iRoll, iSum, iTotalWeight;
+    local LWCE_NameIntKVP kWeightPair;
+
+    if (arrSpokenLanguageWeights.Length == 0)
+    {
+        return '';
+    }
+
+    foreach arrSpokenLanguageWeights(kWeightPair)
+    {
+        iTotalWeight += kWeightPair.Value;
+    }
+
+    iRoll = Rand(iTotalWeight);
+
+    foreach arrSpokenLanguageWeights(kWeightPair)
+    {
+        iSum += kWeightPair.Value;
+
+        if (iRoll < iSum)
+        {
+            return kWeightPair.Key;
+        }
+    }
+
+    return arrSpokenLanguageWeights[arrSpokenLanguageWeights.Length - 1].Key;
+}
+
+protected function name RollForNameList(name nmRace, name nmGender, const out array<LWCE_TNameListConfig> arrListConfigs)
+{
+    local int iRoll, iSum, iTotalWeight;
+    local LWCE_TNameListConfig kListConfig;
+
+    if (arrListConfigs.Length == 0)
+    {
+        return '';
+    }
+
+    foreach arrListConfigs(kListConfig)
+    {
+        if (kListConfig.nmRace != '' && nmRace != '' && kListConfig.nmRace != nmRace)
+        {
+            continue;
+        }
+
+        if (kListConfig.nmGender != '' && nmGender != '' && kListConfig.nmGender != nmGender)
+        {
+            continue;
+        }
+
+        iTotalWeight += kListConfig.iWeight;
+    }
+
+    iRoll = Rand(iTotalWeight);
+
+    foreach arrListConfigs(kListConfig)
+    {
+        if (kListConfig.nmRace != '' && nmRace != '' && kListConfig.nmRace != nmRace)
+        {
+            continue;
+        }
+
+        if (kListConfig.nmGender != '' && nmGender != '' && kListConfig.nmGender != nmGender)
+        {
+            continue;
+        }
+
+        iSum += kListConfig.iWeight;
+
+        if (iRoll < iSum)
+        {
+            return kListConfig.nmNameList;
+        }
+    }
+
+    return arrListConfigs[arrListConfigs.Length - 1].nmNameList;
 }

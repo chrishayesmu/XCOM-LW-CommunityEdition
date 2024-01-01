@@ -26,7 +26,7 @@ function InitNewGame()
     bInitingNewGame = true;
     m_iCapacity = class'XGTacticalGameCore'.default.BARRACKS_CAPACITY;
     m_arrOTSUpgrades.Add(8);
-    LWCE_CreateSoldier(0, 0, HQ().GetHomeCountry());
+    LWCE_CreateSoldier(0, 0, LWCE_XGHeadquarters(HQ()).LWCE_GetHomeCountry());
 
     AddNewSoldiers(class'XGTacticalGameCore'.default.NUM_STARTING_SOLDIERS - 1, false);
     bInitingNewGame = false;
@@ -42,7 +42,7 @@ function AddNewSoldier(XGStrategySoldier kSoldier, optional bool bSkipReorder = 
     UpdateFoundryPerksForSoldier(kSoldier);
     NameCheck(kSoldier);
 
-    // EVENT: BeforeAddMissionToGeoscape
+    // EVENT: AddNewSoldier
     //
     // SUMMARY: Emitted right before a soldier is added to the barracks. This includes SHIVs. At this point, all base game
     //          soldier generation (stats, class, country, name, etc) is complete and can be overridden by listeners.
@@ -79,7 +79,7 @@ function AddNewSoldiers(int iNumSoldiers, optional bool bCreatePawns = true)
         kSoldier.m_kChar = TACTICAL().GetTCharacter(eChar_Soldier);
         kSoldier.Init();
 
-        RandomizeStats(kSoldier);
+        InitializeSoldierStats(kSoldier);
         STORAGE().AutoEquip(kSoldier);
         AddNewSoldier(kSoldier, true);
 
@@ -138,7 +138,7 @@ function LWCE_AddTank(name ArmorName, name WeaponName)
     }
 
     kTank.m_kCESoldier.iRank = -1;
-    kTank.m_kCESoldier.iCountry = 66;
+    kTank.m_kCESoldier.nmCountry = 'XCom';
     kTankLoadout.nmArmor = ArmorName;
     kTank.Init();
 
@@ -279,13 +279,16 @@ function bool CanLoadSoldier(XGStrategySoldier kSoldier, optional bool bAllowInj
 
 function ChooseHQAssaultSquad(XGShip_Dropship kSkyranger, bool bReinforcements)
 {
-    local XGStrategySoldier kSoldier;
+    local LWCE_XGContinent kHQContinent;
+    local LWCE_XGStrategySoldier kSoldier;
+
+    kHQContinent = `LWCE_XGCONTINENT(`LWCE_HQ.LWCE_GetContinent());
 
     if (bReinforcements)
     {
         while (kSkyranger.m_arrSoldiers.Length > 8)
         {
-            kSoldier = kSkyranger.m_arrSoldiers[Rand(kSkyranger.m_arrSoldiers.Length)];
+            kSoldier = LWCE_XGStrategySoldier(kSkyranger.m_arrSoldiers[Rand(kSkyranger.m_arrSoldiers.Length)]);
             UnloadSoldier(kSoldier);
         }
 
@@ -293,12 +296,13 @@ function ChooseHQAssaultSquad(XGShip_Dropship kSkyranger, bool bReinforcements)
 
         while (!kSkyranger.IsFull())
         {
-            kSoldier = LWCE_CreateSoldier(0, 0, Continent(HQ().GetContinent()).GetRandomCouncilCountry(), true);
+            kSoldier = LWCE_CreateSoldier(0, 0, kHQContinent.LWCE_GetRandomCouncilCountry(), /* bBlueshirt */ true);
             kSoldier.m_bBlueShirt = true;
-            kSoldier.m_kSoldier.kAppearance.iArmorTint = 7;
-            kSoldier.m_kSoldier.kAppearance.iHaircut = 425;
-            kSoldier.m_kSoldier.kAppearance.iVoice = kSoldier.m_kSoldier.kAppearance.iGender == eGender_Male ? 61 : 64;
-            kSoldier.m_kSoldier.kAppearance.iLanguage = 0;
+            kSoldier.m_kCESoldier.kAppearance.nmArmorColor = 'ArmorColor_7';
+            kSoldier.m_kCESoldier.kAppearance.nmHaircut = 'HairContent_KevlarHelmet9';
+            kSoldier.m_kCESoldier.kAppearance.nmVoice = kSoldier.m_kCESoldier.kAppearance.nmGender == 'Male' ? 'VoiceContent_MaleBlueshirt' : 'VoiceContent_FemaleBlueshirt';
+            kSoldier.m_kCESoldier.kAppearance.nmLanguage = 'EnglishAmerican';
+
             LoadSoldier(kSoldier, kSkyranger);
         }
     }
@@ -310,7 +314,7 @@ function XGStrategySoldier CreateSoldier(ESoldierClass iClassId, int iSoldierLev
     return none;
 }
 
-function LWCE_XGStrategySoldier LWCE_CreateSoldier(int iClassId, int iSoldierLevel, int iCountry, optional bool bBlueshirt = false)
+function LWCE_XGStrategySoldier LWCE_CreateSoldier(int iClassId, int iSoldierLevel, name nmCountry, optional bool bBlueshirt = false)
 {
     local LWCE_XGFacility_Engineering kEngineering;
     local LWCE_XGFacility_Lockers kLockers;
@@ -321,12 +325,12 @@ function LWCE_XGStrategySoldier LWCE_CreateSoldier(int iClassId, int iSoldierLev
     kLockers = LWCE_XGFacility_Lockers(LOCKERS());
 
     kSoldier = Spawn(class'LWCE_XGStrategySoldier');
-    kSoldier.m_kCESoldier = LWCE_XGCharacterGenerator(m_kCharGen).LWCE_CreateTSoldier(, iCountry);
+    kSoldier.m_kCESoldier = LWCE_XGCharacterGenerator(m_kCharGen).LWCE_CreateTSoldier(, nmCountry);
     kSoldier.m_kCESoldier.bBlueshirt = bBlueshirt;
     kSoldier.m_kChar = TACTICAL().GetTCharacter(eChar_Soldier);
     kSoldier.Init();
 
-    RandomizeStats(kSoldier);
+    InitializeSoldierStats(kSoldier);
     STORAGE().AutoEquip(kSoldier);
 
     if (bBlueshirt)
@@ -542,11 +546,11 @@ function GenerateNewNickname(XGStrategySoldier kNickSoldier)
     if (kCESoldier.m_kCESoldier.strNickName == "")
     {
         kClassDef = GetClassDefinition(kCESoldier.LWCE_GetClass());
-        NickNames = kCESoldier.m_kCESoldier.kAppearance.iGender == eGender_Female ? kClassDef.NicknamesFemale : kClassDef.NicknamesMale;
+        NickNames = kCESoldier.m_kCESoldier.kAppearance.nmGender == 'Female' ? kClassDef.NicknamesFemale : kClassDef.NicknamesMale;
 
         if (NickNames.Length == 0)
         {
-            `LWCE_LOG_CLS("WARNING! Class ID " $ kClassDef.iSoldierClassId $ " does not have any nicknames configured for gender " $ (kCESoldier.m_kCESoldier.kAppearance.iGender == eGender_Female ? "female" : "male"));
+            `LWCE_LOG_CLS("WARNING! Class ID " $ kClassDef.iSoldierClassId $ " does not have any nicknames configured for gender " $ kCESoldier.m_kCESoldier.kAppearance.nmGender);
             return;
         }
 
@@ -940,7 +944,7 @@ function NickNameCheck(XGStrategySoldier kSoldier)
     }
 
     kClassDef = GetClassDefinition(kCESoldier.LWCE_GetClass());
-    NickNames = kCESoldier.m_kCESoldier.kAppearance.iGender == eGender_Female ? kClassDef.NicknamesFemale : kClassDef.NicknamesMale;
+    NickNames = kCESoldier.m_kCESoldier.kAppearance.nmGender == 'Female' ? kClassDef.NicknamesFemale : kClassDef.NicknamesMale;
 
     iCounter = 20;
     while (NickNameMatch(kCESoldier) && iCounter > 0)
@@ -1060,10 +1064,19 @@ function PostMission(XGShip_Dropship kSkyranger, bool bSkipSetHQLocation)
 
 function RandomizeStats(XGStrategySoldier kRecruit)
 {
-    local LWCE_XGStrategySoldier kCERecruit;
+    `LWCE_LOG_DEPRECATED_BY(InitializeSoldierStats);
+}
 
+/// <summary>
+/// Initializes the stats of a new soldier. It is assumed that the soldier's stats have already been set
+/// to match the default soldier stats; this function applies the point buy system from LW 1.0 on top of the
+/// defaults, as well as any second wave options or campaign bonuses that modify stats.
+/// </summary>
+function InitializeSoldierStats(LWCE_XGStrategySoldier kRecruit)
+{
+    // Logic is adapted from the RandomizeStats function in Long War.
     // iMultiple is originally a simple int, expanded by Long War to an array with the following mapping
-    // (taken from the LW souce files, S_XGFacility_Barracks_RandomizeStats.upk_mod):
+    // (taken from the LW source files, S_XGFacility_Barracks_RandomizeStats.upk_mod):
     //
     //    pointArray[5]      (0-4)
     //    totalPoints        (5)
@@ -1072,7 +1085,7 @@ function RandomizeStats(XGStrategySoldier kRecruit)
     //    finder             (8)
     //    selection	         (9)
     //    stat               (10)
-    //    statsArray[5]       (11-15)
+    //    statsArray[5]      (11-15)
     //    deltaArray[5]      (16-20)
     //    totalDeltaStat     (21)
     //    temp               (22)
@@ -1085,48 +1098,70 @@ function RandomizeStats(XGStrategySoldier kRecruit)
     //    Mobility            3
     //    Will                4
 
+    local bool bUsePointBuy;
     local int deltaArray[5], pointArray[5], statsArray[5];
     local int currentPoints, totalDeltaStat, totalPoints, finder, iterations, selection, iStat, iTemp;
+    local LWCEDataContainer kEventData;
 
-    kCERecruit = LWCE_XGStrategySoldier(kRecruit);
+    // TODO: move Strict Screening to an event listener
+    bUsePointBuy = !IsOptionEnabled(/* Strict Screening */ 2);
 
-    if (!IsOptionEnabled(/* Strict Screening */ 2))
+    // TODO: don't use the baseline character for anything; replace the generation entirely
+    // TODO: introduce new config variables
+    deltaArray[eStat_HP] = kRecruit.m_kChar.aStats[eStat_HP] - class'XGTacticalGameCore'.default.HIGH_WILL;
+    deltaArray[eStat_Offense] = kRecruit.m_kChar.aStats[eStat_Offense] - class'XGTacticalGameCore'.default.LOW_AIM;
+    deltaArray[eStat_Defense] = -class'XGTacticalGameCore'.default.HIGH_MOBILITY;
+    deltaArray[eStat_Mobility] = kRecruit.m_kChar.aStats[eStat_Mobility] - class'XGTacticalGameCore'.default.LOW_MOBILITY;
+    deltaArray[4] = kRecruit.m_kChar.aStats[eStat_Will] - class'XGTacticalGameCore'.default.LOW_WILL;
+
+    pointArray[eStat_HP] = deltaArray[eStat_HP] * (class'XGTacticalGameCore'.default.ROOKIE_STARTING_WILL / 100);
+    pointArray[eStat_Offense] = deltaArray[eStat_Offense] * class'XGTacticalGameCore'.default.ROOKIE_AIM;
+    pointArray[eStat_Defense] = deltaArray[eStat_Defense] * (class'XGTacticalGameCore'.default.ROOKIE_MOBILITY / 100);
+    pointArray[eStat_Mobility] = deltaArray[eStat_Mobility] * (class'XGTacticalGameCore'.default.ROOKIE_MOBILITY % 100);
+    pointArray[4] = deltaArray[4] * (class'XGTacticalGameCore'.default.ROOKIE_STARTING_WILL % 100);
+
+    // All stats are initialized to their lowest possible value
+    kRecruit.m_kChar.aStats[eStat_HP] = class'XGTacticalGameCore'.default.HIGH_WILL;
+    kRecruit.m_kChar.aStats[eStat_Offense] = class'XGTacticalGameCore'.default.LOW_AIM;
+    kRecruit.m_kChar.aStats[eStat_Defense] += class'XGTacticalGameCore'.default.HIGH_MOBILITY;
+    kRecruit.m_kChar.aStats[eStat_Mobility] = class'XGTacticalGameCore'.default.LOW_MOBILITY;
+    kRecruit.m_kChar.aStats[eStat_Will] = class'XGTacticalGameCore'.default.LOW_WILL;
+
+    totalPoints = 0;
+    totalDeltaStat = 0;
+
+    for (iStat = 0; iStat < 5; iStat++)
     {
-        // TODO: don't use the baseline character for anything; replace the generation entirely
-        // TODO: introduce new config variables
-        deltaArray[0] = kCERecruit.m_kChar.aStats[eStat_HP] - class'XGTacticalGameCore'.default.HIGH_WILL;
-        deltaArray[1] = kCERecruit.m_kChar.aStats[eStat_Offense] - class'XGTacticalGameCore'.default.LOW_AIM;
-        deltaArray[2] = -class'XGTacticalGameCore'.default.HIGH_MOBILITY;
-        deltaArray[3] = kCERecruit.m_kChar.aStats[eStat_Mobility] - class'XGTacticalGameCore'.default.LOW_MOBILITY;
-        deltaArray[4] = kCERecruit.m_kChar.aStats[eStat_Will] - class'XGTacticalGameCore'.default.LOW_WILL;
+        totalPoints += pointArray[iStat];
+        totalDeltaStat += ((1260 * deltaArray[iStat]) / (1 + Max(1, (deltaArray[iStat] - 1) / 3)));
+    }
 
-        pointArray[0] = deltaArray[0] * (class'XGTacticalGameCore'.default.ROOKIE_STARTING_WILL / 100);
-        pointArray[1] = deltaArray[1] * class'XGTacticalGameCore'.default.ROOKIE_AIM;
-        pointArray[2] = deltaArray[2] * (class'XGTacticalGameCore'.default.ROOKIE_MOBILITY / 100);
-        pointArray[3] = deltaArray[3] * (class'XGTacticalGameCore'.default.ROOKIE_MOBILITY % 100);
-        pointArray[4] = deltaArray[4] * (class'XGTacticalGameCore'.default.ROOKIE_STARTING_WILL % 100);
+    // EVENT: BeforeInitializeSoldierStats
+    //
+    // SUMMARY: Emitted at the start of the process for initializing a new XCOM soldier's stats. Can be used to modify how their stats will be generated,
+    //          but should not directly touch the soldier's stats; that can be done in AfterInitializeSoldierStats.
+    //
+    // DATA: LWCEDataContainer
+    //       Data[0]: LWCE_XGStrategySoldier - The soldier who is having their stats initialized. Do not attempt to modify them yourself during this event!
+    //       Data[1]: boolean - Return parameter for event handlers. If true, stats should be randomized using the point buy system from LW 1.0.
+    //                          Otherwise, base stats will not be changed, but other events may still adjust the soldier's stats in later phases
+    //                          of initialization.
+    //       Data[2]: int - Return parameter for event handlers. The total number of stat points available to spend during the point buy process.
+    //                      If Data[1] is false when the event completes, this will not be used.
+    //
+    // SOURCE: LWCE_XGFacility_Barracks
+    kEventData = class'LWCEDataContainer'.static.New('BeforeInitializeSoldierStats');
+    kEventData.AddObject(kRecruit);
+    kEventData.AddBool(bUsePointBuy);
+    kEventData.AddInt(totalPoints);
 
-        // All stats are initialized to their lowest possible value
-        kCERecruit.m_kChar.aStats[eStat_HP] = class'XGTacticalGameCore'.default.HIGH_WILL;
-        kCERecruit.m_kChar.aStats[eStat_Offense] = class'XGTacticalGameCore'.default.LOW_AIM;
-        kCERecruit.m_kChar.aStats[eStat_Defense] += class'XGTacticalGameCore'.default.HIGH_MOBILITY;
-        kCERecruit.m_kChar.aStats[eStat_Mobility] = class'XGTacticalGameCore'.default.LOW_MOBILITY;
-        kCERecruit.m_kChar.aStats[eStat_Will] = class'XGTacticalGameCore'.default.LOW_WILL;
+    `LWCE_EVENT_MGR.TriggerEvent('BeforeInitializeSoldierStats', kEventData, self);
 
-        totalPoints = 0;
-        totalDeltaStat = 0;
+    bUsePointBuy = kEventData.Data[1].B;
+    totalPoints = kEventData.Data[2].I;
 
-        for (iStat = 0; iStat < 5; iStat++)
-        {
-            totalPoints += pointArray[iStat];
-            totalDeltaStat += ((1260 * deltaArray[iStat]) / (1 + Max(1, (deltaArray[iStat] - 1) / 3)));
-        }
-
-        if (HQ().HasBonus(/* Per Ardua Ad Astra */ 10) > 0)
-        {
-            totalPoints += HQ().HasBonus(10);
-        }
-
+    if (bUsePointBuy)
+    {
         currentPoints = totalPoints;
 
         for (iterations = 0; currentPoints > 0 && iterations < 512; iterations++)
@@ -1144,7 +1179,7 @@ function RandomizeStats(XGStrategySoldier kRecruit)
                 }
             }
 
-            if (iStat == 0)
+            if (iStat == eStat_HP)
             {
                 if (statsArray[0] < 2 * deltaArray[0]) // if (statsArray[0] < 2 * deltaArray[0])
                 {
@@ -1156,7 +1191,7 @@ function RandomizeStats(XGStrategySoldier kRecruit)
                 }
             }
 
-            if (iStat == 1) // if (stat == 1)
+            if (iStat == eStat_Offense) // if (stat == 1)
             {
                 iTemp = 1 + Rand((deltaArray[1] - 1) / 3);
                 iTemp = Min(iTemp, (2 * deltaArray[1]) - statsArray[1]);
@@ -1172,7 +1207,7 @@ function RandomizeStats(XGStrategySoldier kRecruit)
                 }
             }
 
-            if (iStat == 2) // if (stat == 2)
+            if (iStat == eStat_Defense) // if (stat == 2)
             {
                 iTemp = 1 + Rand((deltaArray[2] - 1) / 3);
                 iTemp = Min(iTemp, (2 * deltaArray[2]) - statsArray[2]);
@@ -1188,7 +1223,7 @@ function RandomizeStats(XGStrategySoldier kRecruit)
                 }
             }
 
-            if (iStat == 3) // if (stat == 3)
+            if (iStat == eStat_Mobility) // if (stat == 3)
             {
                 if (statsArray[3] < (2 * deltaArray[3]))
                 {
@@ -1208,7 +1243,6 @@ function RandomizeStats(XGStrategySoldier kRecruit)
 
                 if (statsArray[4] < (2 * deltaArray[4]))
                 {
-                    // End:0xC83
                     if ((currentPoints - (class'XGTacticalGameCore'.default.ROOKIE_STARTING_WILL % 100)) >= 0)
                     {
                         currentPoints -= (iTemp * (class'XGTacticalGameCore'.default.ROOKIE_STARTING_WILL % 100));
@@ -1218,51 +1252,44 @@ function RandomizeStats(XGStrategySoldier kRecruit)
             }
         }
 
-        kCERecruit.m_kChar.aStats[eStat_HP] += statsArray[0];
-        kCERecruit.m_kChar.aStats[eStat_Offense] += statsArray[1];
-        kCERecruit.m_kChar.aStats[eStat_Defense] += statsArray[2];
-        kCERecruit.m_kChar.aStats[eStat_Mobility] += statsArray[3];
-        kCERecruit.m_kChar.aStats[eStat_Will] += statsArray[4];
-    }
-    else if (HQ().HasBonus(/* Per Ardua Ad Astra */ 10) > 0)
-    {
-        kCERecruit.m_kChar.aStats[eStat_Offense] += 2;
-        kCERecruit.m_kChar.aStats[eStat_Defense] += 1;
-        kCERecruit.m_kChar.aStats[eStat_Will] += 2;
+        kRecruit.m_kChar.aStats[eStat_HP] += statsArray[0];
+        kRecruit.m_kChar.aStats[eStat_Offense] += statsArray[1];
+        kRecruit.m_kChar.aStats[eStat_Defense] += statsArray[2];
+        kRecruit.m_kChar.aStats[eStat_Mobility] += statsArray[3];
+        kRecruit.m_kChar.aStats[eStat_Will] += statsArray[4];
     }
 
+    // EVENT: AfterInitializeSoldierStats
+    //
+    // SUMMARY: Emitted after a soldier's stats have been initialized (either with point buy, or simply left as default). This event can be used to conditionally
+    //          change soldier stats, e.g. based on country bonuses.
+    //
+    // DATA: LWCEDataContainer
+    //       Data[0]: LWCE_XGStrategySoldier - The soldier who is having their stats initialized. Do not attempt to modify them yourself during this event!
+    //       Data[1]: boolean - If true, stats were randomized using the point buy system from LW 1.0. Otherwise, the soldier's stats are at default values.
+    //       Data[2]: int - The total number of stat points which were available to spend during the point buy process, if point buy was used.
+    //
+    // SOURCE: LWCE_XGFacility_Barracks
+    kEventData = class'LWCEDataContainer'.static.New('AfterInitializeSoldierStats');
+    kEventData.AddObject(kRecruit);
+    kEventData.AddBool(bUsePointBuy);
+    kEventData.AddInt(totalPoints);
+
+    `LWCE_EVENT_MGR.TriggerEvent('AfterInitializeSoldierStats', kEventData, self);
+
+    // TODO: move Cinematic Mode to an event listener
     if (IsOptionEnabled(/* Cinematic Mode */ 11))
     {
-        kCERecruit.m_kChar.aStats[eStat_Offense] += int(class'XGTacticalGameCore'.default.ABDUCTION_REWARD_SCI);
+        kRecruit.m_kChar.aStats[eStat_Offense] += int(class'XGTacticalGameCore'.default.ABDUCTION_REWARD_SCI);
     }
 
-    if (HQ().HasBonus(/* Pax Nigeriana */ 8) > 0)
-    {
-        kCERecruit.m_kChar.aStats[eStat_Mobility] += HQ().HasBonus(8);
-    }
+    `LWCE_LOG_VERBOSE("New recruit final stats for " $ kRecruit.GetName(eNameType_Full) $ ": HP = " $ kRecruit.m_kChar.aStats[eStat_HP] $ "; aim = " $ kRecruit.m_kChar.aStats[eStat_Offense] $ "; mobility = " $ kRecruit.m_kChar.aStats[eStat_Mobility] $ "; Will = " $ kRecruit.m_kChar.aStats[eStat_Will]);
 
-    if (HQ().HasBonus(/* Special Air Service */ 15) > 0)
-    {
-        kCERecruit.m_kChar.aStats[eStat_Offense] += HQ().HasBonus(15);
-    }
-
-    if (HQ().HasBonus(/* Patriae Semper Vigilis */ 21) > 0)
-    {
-        kCERecruit.m_kChar.aStats[eStat_Will] += HQ().HasBonus(21);
-    }
-
-    if (HQ().HasBonus(/* Survival Training */ 27) > 0)
-    {
-        kCERecruit.m_kChar.aStats[eStat_HP] += HQ().HasBonus(27);
-    }
-
-    `LWCE_LOG_CLS("New recruit final stats for " $ kCERecruit.GetName(eNameType_Full) $ ": HP = " $ kCERecruit.m_kChar.aStats[eStat_HP] $ "; aim = " $ kCERecruit.m_kChar.aStats[eStat_Offense] $ "; mobility = " $ kCERecruit.m_kChar.aStats[eStat_Mobility] $ "; Will = " $ kCERecruit.m_kChar.aStats[eStat_Will]);
-
-    kCERecruit.m_kCEChar.aStats[eStat_HP] = kCERecruit.m_kChar.aStats[eStat_HP];
-    kCERecruit.m_kCEChar.aStats[eStat_Offense] = kCERecruit.m_kChar.aStats[eStat_Offense];
-    kCERecruit.m_kCEChar.aStats[eStat_Defense] = kCERecruit.m_kChar.aStats[eStat_Defense];
-    kCERecruit.m_kCEChar.aStats[eStat_Mobility] = kCERecruit.m_kChar.aStats[eStat_Mobility];
-    kCERecruit.m_kCEChar.aStats[eStat_Will] = kCERecruit.m_kChar.aStats[eStat_Will];
+    kRecruit.m_kCEChar.aStats[eStat_HP] = kRecruit.m_kChar.aStats[eStat_HP];
+    kRecruit.m_kCEChar.aStats[eStat_Offense] = kRecruit.m_kChar.aStats[eStat_Offense];
+    kRecruit.m_kCEChar.aStats[eStat_Defense] = kRecruit.m_kChar.aStats[eStat_Defense];
+    kRecruit.m_kCEChar.aStats[eStat_Mobility] = kRecruit.m_kChar.aStats[eStat_Mobility];
+    kRecruit.m_kCEChar.aStats[eStat_Will] = kRecruit.m_kChar.aStats[eStat_Will];
 }
 
 /// <summary>
