@@ -378,5 +378,5 @@ function StartGame()
 
     AddInitialPanic();
     InitFunding();
-    AddResource(eResource_Money, `LWCE_COUNTRY(nmHomeCountry).iStartingCash * class'XGTacticalGameCore'.default.FundingBalance[Game().GetDifficulty() + 4]));
+    AddResource(eResource_Money, `LWCE_COUNTRY(nmHomeCountry).iStartingCash * class'XGTacticalGameCore'.default.FundingBalance[Game().GetDifficulty() + 4]);
 }
