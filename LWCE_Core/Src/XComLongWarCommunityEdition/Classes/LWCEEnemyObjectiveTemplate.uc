@@ -2,8 +2,15 @@ class LWCEEnemyObjectiveTemplate extends LWCEDataTemplate
     config(LWCEBaseStrategyAI);
 
 // What algorithm to use when picking a target country (and possibly city) for this objective.
-// Base game values can be `SatelliteCovered`, `ProtectAlienBases`, `Terrorize`,
+// See ini file for possible values.
 var config name nmTargetSelectionAlgorithm;
+
+// How to select the exact coordinates that will be used when ships are flying to this objective.
+var config name nmFineGrainedTarget;
+
+var config int iStartDays;
+var config int iRandDays;
+var config bool bSpreadThroughoutMonth;
 
 // The individual ship missions which make up this objective. Each entry in this array must
 // correspond to an LWCEShipMissionTemplate instance.

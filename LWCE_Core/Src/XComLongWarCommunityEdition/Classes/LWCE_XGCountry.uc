@@ -229,6 +229,8 @@ function LWCE_InitNewGame(name nmCountry, name nmContinent)
     m_nmCountry = nmCountry;
     m_nmContinent = nmContinent;
 
+    m_arrBounds = m_kTemplate.arrBounds;
+
     // If this is the starting country, our bonus is already decided for us by the player
     if (IsStartingCountry())
     {

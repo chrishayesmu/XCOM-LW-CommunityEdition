@@ -472,6 +472,33 @@ function int LWCE_GetNumHangarSlotsForContinent(name nmContinent)
 }
 
 /// <summary>
+/// Calculates the total maintenance cost across all ships owned by XCOM, including the Skyranger.
+/// </summary>
+function int GetShipMaintenanceCost()
+{
+    local LWCE_XGShip kShip;
+    local int iOverhead;
+
+    iOverhead = 0;
+
+    foreach m_arrCEShips(kShip)
+    {
+        iOverhead += kShip.m_kTemplate.GetMaintenanceCost(class'LWCEShipTemplate'.const.SHIP_TEAM_XCOM);
+    }
+
+    iOverhead += LWCE_XGShip_Dropship(m_kSkyranger).m_kTemplate.GetMaintenanceCost(class'LWCEShipTemplate'.const.SHIP_TEAM_XCOM);
+
+    return iOverhead;
+}
+
+function int GetCraftMaintenanceCost(EShipType eShip)
+{
+    `LWCE_LOG_DEPRECATED_BY(GetCraftMaintenanceCost, LWCEShipTemplate.GetMaintenanceCost);
+
+    return 1000;
+}
+
+/// <summary>
 /// Gets all of the friendly ships which are stationed on the given continent.
 /// </summary>
 function array<LWCE_XGShip> LWCE_GetShipsByContinent(name nmContinent)

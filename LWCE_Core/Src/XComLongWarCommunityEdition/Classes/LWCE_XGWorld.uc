@@ -190,6 +190,28 @@ function CreateSatNodes()
     }
 }
 
+function XGCity GetCity(int iCity)
+{
+    `LWCE_LOG_DEPRECATED_CLS(GetCity);
+
+    return none;
+}
+
+function LWCE_XGCity LWCE_GetCity(name nmCity)
+{
+    local int Index;
+
+    for (Index = 0; Index < m_arrCities.Length; Index++)
+    {
+        if (LWCE_XGCity(m_arrCities[Index]).m_nmCity == nmCity)
+        {
+            return LWCE_XGCity(m_arrCities[Index]);
+        }
+    }
+
+    return none;
+}
+
 function XGContinent GetContinent(int iContinent)
 {
     `LWCE_LOG_DEPRECATED_CLS(GetContinent);
@@ -315,6 +337,42 @@ function array<LWCE_XGCountry> LWCE_GetCountries()
     }
 
     return arrCountries;
+}
+
+/// <summary>
+/// Calculates XCOM's total income from council nations each month. Any bonuses, such as Long War's Wealth of Nations
+/// continent bonus, are included in this number.
+/// </summary>
+function int GetIncome()
+{
+    local LWCEDataContainer kEventData;
+    local int iCountry, iFunding;
+
+    for (iCountry = 0; iCountry < m_arrCountries.Length; iCountry++)
+    {
+        // In LW 1.0, there's a check that the funding is positive; LWCE removes it in case a mod makes countries actually cost money under some circumstances
+        if (m_arrCountries[iCountry].IsCouncilMember())
+        {
+            iFunding += m_arrCountries[iCountry].GetCurrentFunding();
+        }
+    }
+
+    // EVENT: CalculateIncomeFromCountries
+    //
+    // SUMMARY: Emitted after calculating how much income XCOM is receiving from all countries combined.
+    //          Event handlers can use this to modify XCOM's income.
+    //
+    // DATA: LWCEDataContainer
+    //       Data[0]: int - Return parameter for event handlers. The calculated sum which XCOM will receive
+    //                      (or possibly pay, if negative) each month.
+    //
+    // SOURCE: LWCE_XGWorld
+    kEventData = class'LWCEDataContainer'.static.New('CalculateIncomeFromCountries');
+    kEventData.AddInt(iFunding);
+
+    `LWCE_EVENT_MGR.TriggerEvent('CalculateIncomeFromCountries', kEventData, self);
+
+    return iFunding;
 }
 
 function EContinent GetRandomContinent()

@@ -4,11 +4,13 @@ struct CheckpointRecord_LWCE_XGContinent extends XGContinent.CheckpointRecord
 {
     var name m_nmBonus;
     var name m_nmContinent;
+    var array<name> m_arrCECountries;
     var array<LWCE_TShipRecord> m_arrCEShipRecord;
 };
 
 var name m_nmBonus; // Which bonus is awarded for completing satellite coverage on this continent
 var name m_nmContinent;
+var array<name> m_arrCECountries;
 var array<LWCE_TShipRecord> m_arrCEShipRecord; // History of all of the enemy ships that have been sent on missions targeting this continent.
 
 var protectedwrite LWCEContinentTemplate m_kTemplate;
@@ -22,13 +24,16 @@ function InitNewGame()
 {
     m_kTemplate = `LWCE_CONTINENT(m_nmContinent);
 
+    m_arrBounds = m_kTemplate.arrBounds;
+    m_arrCECountries = m_arrCECountries;
+
     // Pick a bonus at random if there's multiple; if not, this picks the only one
     m_nmBonus = m_kTemplate.arrContinentBonuses[Rand(m_kTemplate.arrContinentBonuses.Length)];
 }
 
 function bool ContainsCountry(name nmCountry)
 {
-    return m_kTemplate.arrCountries.Find(nmCountry) != INDEX_NONE;
+    return m_arrCECountries.Find(nmCountry) != INDEX_NONE;
 }
 
 function TContinentBonus GetBonus()
@@ -74,7 +79,7 @@ function name GetHQCountry()
 
     kCountryTemplateMgr = `LWCE_COUNTRY_TEMPLATE_MGR;
 
-    foreach m_kTemplate.arrCountries(nmCountry)
+    foreach m_arrCECountries(nmCountry)
     {
         kCountry = kCountryTemplateMgr.FindCountryTemplate(nmCountry);
 
@@ -88,7 +93,7 @@ function name GetHQCountry()
     }
 
     `LWCE_LOG_WARN("Continent " $ m_nmContinent $ " couldn't find any country containing its HQ location of " $ `V2DTOSTR(m_kTemplate.v2HQLocation));
-    return m_kTemplate.arrCountries[0];
+    return m_arrCECountries[0];
 }
 
 function Vector2D GetHQLocation()
@@ -127,17 +132,25 @@ function name LWCE_GetRandomCouncilCountry()
     local array<name> arrCouncilCountries;
     local int iCountry;
 
-    for (iCountry = 0; iCountry < m_kTemplate.arrCountries.Length; iCountry++)
+    for (iCountry = 0; iCountry < m_arrCECountries.Length; iCountry++)
     {
-        kCountry = `LWCE_XGCOUNTRY(m_kTemplate.arrCountries[iCountry]);
+        kCountry = `LWCE_XGCOUNTRY(m_arrCECountries[iCountry]);
 
         if (kCountry.IsCouncilMember() && !kCountry.m_bSecretPact)
         {
-            arrCouncilCountries.AddItem(m_kTemplate.arrCountries[iCountry]);
+            arrCouncilCountries.AddItem(m_arrCECountries[iCountry]);
         }
     }
 
     return arrCouncilCountries[Rand(arrCouncilCountries.Length)];
+}
+
+/// <summary>
+/// Checks whether this continent's bonus has been earned (i.e. it has complete satellite coverage over every country).
+/// </summary>
+function bool HasBonus()
+{
+    return m_iNumSatellites == m_arrCECountries.Length;
 }
 
 function RecordCountryHelped(ECountry eHelpedCountry)
@@ -184,7 +197,7 @@ function LWCE_SetSatelliteCoverage(name nmCountry, bool bCoverage)
         AddPanic(class'XGTacticalGameCore'.default.PANIC_SAT_ADDED_CONTINENT);
         LWCE_RecordCountryHelped(nmCountry);
 
-        if (STAT_GetStat(eRecap_FirstContinent) == 0 && m_iNumSatellites == m_arrCountries.Length)
+        if (STAT_GetStat(eRecap_FirstContinent) == 0 && m_iNumSatellites == m_arrCECountries.Length)
         {
             STAT_SetStat(eRecap_FirstContinent, Game().GetDays());
         }
@@ -197,25 +210,25 @@ function LWCE_SetSatelliteCoverage(name nmCountry, bool bCoverage)
         // In LW 1.0, this retains the EW logic of "HQ continent always has its bonuses", so the corresponding
         // stat is never set. Since this isn't actually true in LW, we change it in LWCE to remove that check.
         // (Although it's not clear whether these values are ever read.)
-        if (m_iNumSatellites == m_arrCountries.Length)
+        if (m_iNumSatellites == m_arrCECountries.Length)
         {
             LWCE_XGHeadquarters(HQ()).AdjustBonusLevel(m_nmBonus, class'LWCE_XGHeadquarters'.const.CONTINENT_SATELLITE_BONUS_LEVEL_AMOUNT);
 
-            switch (m_eContinent)
+            switch (m_nmContinent)
             {
-                case eContinent_NorthAmerica:
+                case 'NorthAmerica':
                     STAT_SetStat(eRecap_NorthAmericaBonuses, 1);
                     break;
-                case eContinent_SouthAmerica:
+                case 'SouthAmerica':
                     STAT_SetStat(eRecap_SouthAmericaBonuses, 1);
                     break;
-                case eContinent_Europe:
+                case 'Europe':
                     STAT_SetStat(eRecap_EuropeBonuses, 1);
                     break;
-                case eContinent_Asia:
+                case 'Asia':
                     STAT_SetStat(eRecap_AsiaBonuses, 1);
                     break;
-                case eContinent_Africa:
+                case 'Africa':
                     STAT_SetStat(eRecap_AfricaBonuses, 1);
                     break;
             }
@@ -223,7 +236,7 @@ function LWCE_SetSatelliteCoverage(name nmCountry, bool bCoverage)
     }
     else
     {
-        bHadContinentBonus = m_iNumSatellites == m_arrCountries.Length;
+        bHadContinentBonus = m_iNumSatellites == m_arrCECountries.Length;
 
         LWCE_RecordCountryNotHelped(nmCountry);
         m_iNumSatellites -= 1;

@@ -116,7 +116,7 @@ function BeginCombat(XGMission kMission)
     m_kStrategyTransport.m_kBattleDesc.m_bIsTutorial = m_bTutorial;
     m_kStrategyTransport.m_kBattleDesc.m_bOvermindEnabled = m_bOvermindEnabled;
     m_kStrategyTransport.m_kBattleDesc.m_bIsIronman = m_bIronMan;
-    m_kStrategyTransport.m_kBattleDesc.m_eContinent = EContinent(kMission.GetContinent().GetID());
+    m_kStrategyTransport.m_kBattleDesc.m_eContinent = EContinent(0); // TODO how is this even used in the battle layer?
     m_kStrategyTransport.m_kBattleDesc.m_eTimeOfDay = GEOSCAPE().m_kDateTime.GetTimeOfDay();
     m_kStrategyTransport.m_kBattleDesc.m_kMedalBattleData = BARRACKS().GetMedalBattleData();
     m_kStrategyTransport.m_iMissionID = kMission.m_iID;

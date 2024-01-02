@@ -16,7 +16,7 @@ static function GenerateBattleDescription(XGMission kSelf)
 
         kSelf.m_kDesc.m_iMissionID = kSelf.m_iID;
         kSelf.m_kDesc.m_strOpName = kSelf.GenerateOpName(kSelf.m_kDesc.m_bIsTutorial && kSelf.m_kDesc.m_bDisableSoldierChatter);
-        kSelf.m_kDesc.m_strLocation = kSelf.GetLocationString();
+        kSelf.m_kDesc.m_strLocation = "NOT YET IMPLEMENTED"; // kSelf.GetLocationString();
         kSelf.m_kDesc.m_iMissionType = kSelf.m_iMissionType;
 
         if (kSelf.m_iMissionType == eMission_Crash)

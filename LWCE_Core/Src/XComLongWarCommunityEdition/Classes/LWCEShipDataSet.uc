@@ -16,7 +16,7 @@ static function OnPostTemplatesCreated()
 
     foreach arrShipTemplates(kShipTemplate)
     {
-        kShipTemplate.arrModifyStatsFn.AddItem(ModifyShipStats);
+        kShipTemplate.arrModifyStatsFns.AddItem(ModifyShipStats);
     }
 }
 
@@ -43,7 +43,7 @@ static function ModifyShipStats(out LWCE_TShipStats kStats, name nmShipTeam)
         {
             kStats.iArmorPen += 25;
         }
-        
+
         // In LW 1.0 this is implemented as a malus to UFO aim, but with the addition of ship's having
         // a defense stat, we rewrite it to apply to XCOM's crafts instead
         if (kEngineering.LWCE_IsFoundryTechResearched('Foundry_UFOCountermeasures'))

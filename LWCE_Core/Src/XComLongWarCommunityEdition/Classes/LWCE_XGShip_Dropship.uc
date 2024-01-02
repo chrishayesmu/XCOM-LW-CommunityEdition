@@ -1,8 +1,12 @@
 class LWCE_XGShip_Dropship extends XGShip_Dropship;
 
+var LWCEShipTemplate m_kTemplate;
+
 function Init(TShip kTShip)
 {
     super(XGShip).Init(kTShip);
+
+    m_kTemplate = `LWCE_SHIP('Skyranger');
 
     CargoInfo = Spawn(class'LWCE_XGDropshipCargoInfo');
     LWCE_XGDropshipCargoInfo(CargoInfo).Init();
@@ -11,6 +15,11 @@ function Init(TShip kTShip)
     m_iCapacity = class'XGTacticalGameCore'.default.SKYRANGER_CAPACITY;
 
     InitSound();
+}
+
+function ApplyCheckpointRecord()
+{
+    m_kTemplate = `LWCE_SHIP('Skyranger');
 }
 
 function BuildTransferData()

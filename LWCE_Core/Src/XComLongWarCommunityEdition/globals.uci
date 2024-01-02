@@ -48,6 +48,7 @@
 `define LWCE_FACILITY_TEMPLATE_MGR (class'LWCEFacilityTemplateManager'.static.GetInstance())
 `define LWCE_FOUNDRY_TEMPLATE_MGR (class'LWCEFoundryProjectTemplateManager'.static.GetInstance())
 `define LWCE_ITEM_TEMPLATE_MGR (class'LWCEItemTemplateManager'.static.GetInstance())
+`define LWCE_MISSION_PLAN_TEMPLATE_MGR (class'LWCEMissionPlanTemplateManager'.static.GetInstance())
 `define LWCE_NAME_LIST_TEMPLATE_MGR (class'LWCENameListTemplateManager'.static.GetInstance())
 `define LWCE_SHIP_TEMPLATE_MGR (class'LWCEShipTemplateManager'.static.GetInstance())
 `define LWCE_SHIP_MISSION_TEMPLATE_MGR (class'LWCEShipMissionTemplateManager'.static.GetInstance())
@@ -158,6 +159,7 @@
 
 // These macros look similar to the LWCE_COUNTRY and LWCE_CONTINENT macros, but they're retrieving the
 // XGCountry and XGContinent objects in the strat layer, while the other macros retrieve templates
+`define LWCE_XGCITY(nm) (`LWCE_WORLD.LWCE_GetCity(`nm))
 `define LWCE_XGCONTINENT(nm) (`LWCE_WORLD.LWCE_GetContinent(`nm))
 `define LWCE_XGCOUNTRY(nm) (`LWCE_WORLD.LWCE_GetCountry(`nm))
 

@@ -711,6 +711,33 @@ function LWCE_TClassDefinition LWCE_GetLeastCommonClass()
     return arrBaseClasses[iLeastCommonIndex];
 }
 
+/// <summary>
+/// Populates some data which is used during tactical play for medal bonuses.
+///
+/// TODO: allow arbitrary data to persist strategy -> tactical transitions, and deprecate this
+/// </summary>
+function MedalBattleData GetMedalBattleData()
+{
+    local LWCE_XGWorld kWorld;
+    local int I;
+
+    kWorld = LWCE_XGWorld(WORLD());
+
+    m_kMedalBattleData.m_iNumContinentBonuses = 0;
+
+    for (I = 0; I < kWorld.m_arrContinents.Length; I++)
+    {
+        if (kWorld.m_arrContinents[I].HasBonus())
+        {
+            m_kMedalBattleData.m_iNumContinentBonuses++;
+        }
+    }
+
+    m_kMedalBattleData.m_iNumExaltCellsRemoved = EXALT().m_iCellsCleared;
+
+    return m_kMedalBattleData;
+}
+
 function int LWCE_GetNumSoldiersOfBaseClass(int iClassId)
 {
     local int iNum;

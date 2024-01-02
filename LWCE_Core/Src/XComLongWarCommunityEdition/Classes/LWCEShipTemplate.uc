@@ -33,10 +33,12 @@ var config int iSpeed;            // This ship's speed on the Geoscape. UFOs wil
 var config int iEngagementSpeed;  // This ship's speed during an interception. Used to calculate how long the interception will last.
 var config int iArmor;            // Armor providing resistance to attacks from other ships.
 var config int iArmorPen;         // This ship's ability to overcome enemy armor; also provided by ship weapons.
+
+var config int iMaintenanceCost;  // For XCOM-owned ships, how much this ship costs in maintenance each month.
 var config int iResourceCost;     // Cost in alien resources to replace/repair this ship if destroyed/damaged.
 var config int iThreat;           // How much threat is generated with the aliens by shooting down or assaulting this ship.
 var config int iBounty;           // If an XCOM ship shoots down this ship and destroys it outright, not generating a crash site, this
-                                  // is the cash bounty that will be awarded.  
+                                  // is the cash bounty that will be awarded.
 var config bool bIsCloaked;       // If true, this ship can't be detected by satellites without the Hyperwave active.
 
 var config name nmAnalysisTech;          // Which tech is the corresponding analysis for this ship type.
@@ -55,10 +57,19 @@ var config array<name> arrWeapons;                        // Names of the ship's
 var config array<LWCE_TShipScheduledUpgrade> arrUpgrades; // Scheduled upgrades to apply to this ship automatically. Will be combined with the
                                                           // global upgrades specified in LWCEShipDataSet.
 
-var array< delegate<ModifyStatsDel> > arrModifyStatsFn;
+var array< delegate<ModifyMaintenanceDel> > arrMaintenanceCostFns;
+
+var array< delegate<ModifyStatsDel> > arrModifyStatsFns;
 
 var const localized string strName;
 var const localized string strDescription; // Only shown in the XCOM hangar screen
+
+/// <summary>
+/// A delegate which can be used to dynamically adjust monthly maintenance costs for ships.
+/// </summary>
+/// <param name="iMaintenanceCost">Out parameter for the updated cost.</param>
+/// <param name="nmShipTeam">Which team this ship is on.</param>
+delegate ModifyMaintenanceDel(out int iMaintenance, name nmShipTeam);
 
 /// <summary>
 /// A delegate which mods can use to dynamically adjust ship stats.
@@ -68,6 +79,34 @@ var const localized string strDescription; // Only shown in the XCOM hangar scre
 /// craft without applying it to UFOs. This should always be used instead of depending on the ship's type,
 /// as you may get surprised by mods that do things like let XCOM take over UFOs and fly them.</param>
 delegate ModifyStatsDel(out LWCE_TShipStats kStats, name nmShipTeam);
+
+/// <summary>
+/// Gets the monthly maintenance cost of this ship, with any applicable bonuses/penalties applied. Normally this
+/// is only relevant to XCOM, but the ship's team is provided in case any mods want to implement alien maintenance too.
+/// </summary>
+function int GetMaintenanceCost(name nmShipTeam)
+{
+    local delegate<ModifyMaintenanceDel> costDel;
+    local int iCost;
+
+    iCost = iMaintenanceCost;
+
+    foreach arrMaintenanceCostFns(costDel)
+    {
+        costDel(iCost, nmShipTeam);
+    }
+
+    return iCost;
+}
+
+/// <summary>
+/// Gets the resource cost for this ship, i.e. what it would cost the alien AI to fully replace this
+/// ship if it was destroyed.
+/// </summary>
+function int GetResourceCost(name nmShipTeam)
+{
+    return iResourceCost;
+}
 
 /// <summary>
 /// Gets the salvage available if this ship lands or is shot down. The array returned is owned by the caller and
@@ -80,15 +119,6 @@ function array<LWCE_TItemQuantity> GetSalvage()
     arrSalvageCopy = arrSalvage;
 
     return arrSalvageCopy;
-}
-
-/// <summary>
-/// Gets the resource cost for this ship, i.e. what it would cost the alien AI to fully replace this
-/// ship if it was destroyed.
-/// </summary>
-function int GetResourceCost(name nmShipTeam)
-{
-    return iResourceCost;
 }
 
 /// <summary>
@@ -152,7 +182,7 @@ function LWCE_TShipStats GetStats(name nmShipTeam)
         }
     }
 
-    foreach arrModifyStatsFn(Del)
+    foreach arrModifyStatsFns(Del)
     {
         Del(kStats, nmShipTeam);
     }

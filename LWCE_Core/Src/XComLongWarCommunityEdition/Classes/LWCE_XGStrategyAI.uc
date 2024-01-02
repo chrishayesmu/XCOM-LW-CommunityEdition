@@ -1,50 +1,6 @@
 class LWCE_XGStrategyAI extends XGStrategyAI
     config(LWCEBaseStrategyAI);
 
-/// <summary>
-/// Configuration struct for what missions the AI should schedule at the start of the month.
-/// See the ini file for details on usage.
-/// </summary>
-struct LWCE_AIMissionPlan
-{
-    var int FirstValidMonth;
-    var int LastValidMonth;
-    var int MinResources;
-    var int MaxResources;
-    var int MinThreat;
-    var int MaxThreat;
-
-    var float NumAbductions;
-    var float NumAirBaseDefenses;
-    var float NumBombings;
-    var float NumHarvests;
-    var float NumHunts;
-    var float NumInfiltrations;
-    var float NumResearches;
-    var float NumScouts;
-    var float NumTerrors;
-
-    structdefaultproperties
-    {
-        FirstValidMonth=-1
-        LastValidMonth=-1
-        MinResources=-1
-        MaxResources=-1
-        MinThreat=-1
-        MaxThreat=-1
-
-        NumAbductions=0
-        NumAirBaseDefenses=0
-        NumBombings=0
-        NumHarvests=0
-        NumHunts=0
-        NumInfiltrations=0
-        NumResearches=0
-        NumScouts=0
-        NumTerrors=0
-    }
-};
-
 struct CheckpointRecord_LWCE_XGStrategyAI extends XGStrategyAI.CheckpointRecord
 {
     var array<LWCE_XGShip> m_arrCEShips;
@@ -52,7 +8,6 @@ struct CheckpointRecord_LWCE_XGStrategyAI extends XGStrategyAI.CheckpointRecord
     var array<name> m_arrCEShipsShotDown;
 };
 
-var config array<LWCE_AIMissionPlan> PossibleMissionPlans;
 var config bool bForceFirstMonthInfiltration;
 
 var config int MaxThreatCarriedOverEachMonth;
@@ -183,40 +138,27 @@ function AddLateMission()
 
 function int AddNewOverseers()
 {
-    local array<ECountry> arrVisible;
-    local int iMission, iChoice, iNumOverseers;
-    local ECountry eTargetCountry;
+    local XGCountry kCountry;
+    local LWCE_XGWorld kWorld;
+
+    kWorld = LWCE_XGWorld(WORLD());
 
     if (!LWCE_XGStorage(STORAGE()).LWCE_EverHadItem('Item_EtherealDevice'))
     {
-        arrVisible = DetermineBestVisibleTargets(true);
-        iNumOverseers = Min(3, arrVisible.Length);
-
-        for (iMission = 0; iMission < iNumOverseers; iMission++)
-        {
-            iChoice = Rand(arrVisible.Length);
-            eTargetCountry = arrVisible[iChoice];
-
-            if (arrVisible.Length > 1)
-            {
-                arrVisible.Remove(iChoice, 1);
-            }
-
-            AIAddNewObjective(eObjective_Flyby, 5 + (10 * iMission), Country(eTargetCountry).GetCoords(), eTargetCountry,, eShip_UFOEthereal);
-        }
+        LWCE_ScheduleNewObjectives('CommandOverwatch', 3);
     }
 
-    for (iChoice = 0; iChoice < 36; iChoice++)
+    foreach kWorld.m_arrCountries(kCountry)
     {
-        if (Country(iChoice).LeftXCom())
+        if (kCountry.LeftXCom())
         {
-            eTargetCountry = ECountry(iChoice);
-            AIAddNewObjective(eObjective_Flyby, 5 + Rand(20), Country(eTargetCountry).GetCoords(), eTargetCountry,, eShip_UFOEthereal);
-            iNumOverseers += 1;
+            LWCE_AIAddNewObjective('CommandOverwatch', 5 + Rand(20), kCountry.GetCoords(), LWCE_XGCountry(kCountry).m_nmCountry);
+
         }
     }
 
-    return iNumOverseers;
+    // Return value is unused, so we just return 0 for simplicity
+    return 0;
 }
 
 function AddNewTerrors(int iNumTerrors, int StartOfMonthResources)
@@ -315,13 +257,14 @@ function LWCE_XGAlienObjective LWCE_AIAddNewObjective(name nmObjective, int iSta
 
 function AIAddNewObjectives()
 {
-    local array<ECountry> arrVisibleTargets;
     local bool bSpawnedHQAssault;
-    local int CountryID;
-    local int Index;
-    local int iNumAbductions, iNumAirBaseDefenses, iNumBombings, iNumHarvests, iNumHunts, iNumInfiltrations, iNumResearches, iNumScouts, iNumTerrors;
-    local int StartOfMonthResources, StartOfMonthThreat;
-    local LWCE_AIMissionPlan MissionPlan;
+    local int iObjectiveIndex, iNumObjectives, iStartOfMonthResources, iStartOfMonthThreat;
+    local name nmStartingContinent;
+    local LWCEMissionPlanTemplate kMissionPlanTemplate;
+    local LWCE_XGCountry kCountry;
+    local LWCE_XGWorld kWorld;
+
+    kWorld = LWCE_XGWorld(WORLD());
 
     `LWCE_LOG_CLS("AIAddNewObjectives start");
 
@@ -337,11 +280,13 @@ function AIAddNewObjectives()
 
     // Calculate what our resources will be without updating them, in case we need to fall back to the
     // superclass method, which will also update them
-    StartOfMonthResources = `ALIEN_RESOURCES + MonthlyResourcesPerBase * World().GetNumDefectors();
-    StartOfMonthResources = Clamp(StartOfMonthResources, ResourceFloorPerMonthPassed * GetMonth(), MaximumResources);
-    StartOfMonthThreat = `XCOM_THREAT;
+    iStartOfMonthResources = `ALIEN_RESOURCES + MonthlyResourcesPerBase * World().GetNumDefectors();
+    iStartOfMonthResources = Clamp(iStartOfMonthResources, ResourceFloorPerMonthPassed * GetMonth(), MaximumResources);
+    iStartOfMonthThreat = `XCOM_THREAT;
 
-    if (!PickMissionPlan(GetMonth(), StartOfMonthResources, StartOfMonthThreat, MissionPlan))
+    kMissionPlanTemplate = PickMissionPlan(GetMonth(), iStartOfMonthResources, iStartOfMonthThreat);
+
+    if (kMissionPlanTemplate == none)
     {
         `LWCE_LOG("Unable to select a mission plan! Falling back to base LW logic for adding missions.");
         super.AIAddNewObjectives();
@@ -349,81 +294,37 @@ function AIAddNewObjectives()
         return;
     }
 
-    STAT_SetStat(19, StartOfMonthResources);
+    STAT_SetStat(19, iStartOfMonthResources);
 
-    // TODO: rewrite all of this to use objective names and templates
-    iNumAbductions      = RollMissionCount(MissionPlan.NumAbductions);
-    iNumAirBaseDefenses = RollMissionCount(MissionPlan.NumAirBaseDefenses);
-    iNumBombings        = RollMissionCount(MissionPlan.NumBombings);
-    iNumHarvests        = RollMissionCount(MissionPlan.NumHarvests);
-    iNumHunts           = RollMissionCount(MissionPlan.NumHunts);
-    iNumInfiltrations   = RollMissionCount(MissionPlan.NumInfiltrations);
-    iNumResearches      = RollMissionCount(MissionPlan.NumResearches);
-    iNumScouts          = RollMissionCount(MissionPlan.NumScouts);
-    iNumTerrors         = RollMissionCount(MissionPlan.NumTerrors);
+    for (iObjectiveIndex = 0; iObjectiveIndex < kMissionPlanTemplate.arrObjectives.Length; iObjectiveIndex++)
+    {
+        iNumObjectives = `LWCE_UTILS.RandInRange(kMissionPlanTemplate.arrObjectives[iObjectiveIndex].kAmount);
 
-    `LWCE_LOG("AIAddNewObjectives: iNumAbductions = " $ iNumAbductions);
-    `LWCE_LOG("AIAddNewObjectives: iNumAirBaseDefenses = " $ iNumAirBaseDefenses);
-    `LWCE_LOG("AIAddNewObjectives: iNumBombings = " $ iNumBombings);
-    `LWCE_LOG("AIAddNewObjectives: iNumHarvests = " $ iNumHarvests);
-    `LWCE_LOG("AIAddNewObjectives: iNumHunts = " $ iNumHunts);
-    `LWCE_LOG("AIAddNewObjectives: iNumInfiltrations = " $ iNumInfiltrations);
-    `LWCE_LOG("AIAddNewObjectives: iNumResearches = " $ iNumResearches);
-    `LWCE_LOG("AIAddNewObjectives: iNumScouts = " $ iNumScouts);
-    `LWCE_LOG("AIAddNewObjectives: iNumTerrors = " $ iNumTerrors);
-
-    AddNewAbductions(iNumAbductions, false);
-    AddNewTerrors(iNumTerrors, StartOfMonthResources);
-
-    for (Index = 0; Index < iNumAirBaseDefenses; Index++) {
-        AddLateMission();
-    }
-
-    for (Index = 0; Index < iNumBombings; Index++) {
-        AddUFOs(8, arrVisibleTargets);
-    }
-
-    for (Index = 0; Index < iNumHarvests; Index++) {
-        AddUFOs(eObjective_Harvest, arrVisibleTargets);
-    }
-
-    for (Index = 0; Index < iNumHunts; Index++) {
-        AddUFOs(eObjective_Hunt, arrVisibleTargets);
-    }
-
-    for (Index = 0; Index < iNumInfiltrations; Index++) {
-        AddUFOs(eObjective_Infiltrate, arrVisibleTargets);
-    }
-
-    for (Index = 0; Index < iNumResearches; Index++) {
-        AddUFOs(eObjective_Recon, arrVisibleTargets);
-    }
-
-    for (Index = 0; Index < iNumScouts; Index++) {
-        AddUFOs(eObjective_Scout, arrVisibleTargets);
+        LWCE_ScheduleNewObjectives(kMissionPlanTemplate.arrObjectives[iObjectiveIndex].nmObjective, iNumObjectives);
     }
 
     // Reduce and clamp threat at the start of each month
     STAT_SetStat(21, Clamp(STAT_GetStat(21) - ThreatDecreasePerMonth, 0, MaxThreatCarriedOverEachMonth));
 
-    // Force an infiltration mission in the first month
+    // Force an infiltration mission in the first month, if configured
     if (bForceFirstMonthInfiltration && GetMonth() == 0)
     {
-        CountryID = World().GetRandomCouncilCountry().GetID();
+        nmStartingContinent = LWCE_XGHeadquarters(HQ()).LWCE_GetHomeContinent();
+        kCountry = LWCE_XGCountry(kWorld.GetRandomCouncilCountry());
 
         // Don't infiltrate on the starting continent, too disruptive
-        while (Country(CountryID).GetContinent() == Country(HQ().GetHomeCountry()).GetContinent())
+        while (kCountry.LWCE_GetContinent() == nmStartingContinent)
         {
-            CountryID = World().GetRandomCouncilCountry().GetID();
+            kCountry = LWCE_XGCountry(World().GetRandomCouncilCountry());
         }
 
-        AIAddNewObjective(eObjective_Infiltrate, 5 + Rand(5), Country(CountryID).GetCoords(), CountryID);
+        LWCE_AIAddNewObjective('Infiltrate', 5 + Rand(5), kCountry.GetCoords(), kCountry.m_nmCountry);
     }
 
     // If not at max HQ assaults yet, increment the counter if currently valid
     if (MaxNumHQAssaultMissions < 0 || MaxNumHQAssaultMissions > Game().GetNumMissionsTaken(eMission_HQAssault))
     {
-        if (StartOfMonthResources >= MinResourcesForHQAssaultCounter && StartOfMonthThreat >= MinThreatForHQAssaultCounter)
+        if (iStartOfMonthResources >= MinResourcesForHQAssaultCounter && iStartOfMonthThreat >= MinThreatForHQAssaultCounter)
         {
             `LWCE_LOG("Requirements met: incrementing HQ assault counter (stat 22)");
             STAT_AddStat(22, 1);
@@ -456,6 +357,78 @@ function AIAddNewObjectives()
     m_iCounter = 0;
 
     `LWCE_LOG_CLS("AIAddNewObjectives complete");
+}
+
+/// <summary>
+/// Schedules new alien objectives, using the objective's template to fill in any unprovided parameters.
+/// </summary>
+function LWCE_ScheduleNewObjectives(name nmObjective, int iNumObjectives, optional int iStartDate = -1, optional name nmCountry = '', optional name nmCity = '', optional name nmShipType = '', optional Vector2D v2Target)
+{
+    local int Index, iActualStartDate;
+    local name nmActualCountry, nmActualCity;
+    local Vector2D v2ActualTarget;
+    local LWCEEnemyObjectiveTemplate kObjectiveTemplate;
+    local array<name> arrCountryTargets;
+
+    kObjectiveTemplate = `LWCE_ENEMY_OBJECTIVE(nmObjective);
+
+    // If we aren't given a specific country to target, we need to select our own, keeping in mind that it's possible to
+    // roll less targets than requested depending on the target selection algorithm in use.
+    if (nmCountry == '')
+    {
+        nmCity = '';
+
+        arrCountryTargets = SelectTargetCountries(kObjectiveTemplate.nmTargetSelectionAlgorithm, iNumObjectives);
+    }
+    else
+    {
+        for (Index = 0; Index < iNumObjectives; Index++)
+        {
+            arrCountryTargets.AddItem(nmCountry);
+        }
+    }
+
+    for (Index = 0; Index < arrCountryTargets.Length; Index++)
+    {
+        iActualStartDate = iStartDate;
+        nmActualCountry = arrCountryTargets[Index];
+        nmActualCity = nmCity;
+        v2ActualTarget = v2Target;
+
+        if (iActualStartDate == -1)
+        {
+            if (kObjectiveTemplate.bSpreadThroughoutMonth)
+            {
+                iActualStartDate = (1 + (Index * (30 / arrCountryTargets.Length))) + Rand((30 / arrCountryTargets.Length) - 1);
+            }
+            else
+            {
+                iActualStartDate = kObjectiveTemplate.iStartDays + Rand(kObjectiveTemplate.iRandDays);
+            }
+        }
+
+        if (v2ActualTarget.X == 0.0f && v2ActualTarget.Y == 0.0f)
+        {
+            switch (kObjectiveTemplate.nmFineGrainedTarget)
+            {
+                case 'ContinentHQ':
+                    v2ActualTarget = `LWCE_XGCONTINENT(`LWCE_XGCOUNTRY(nmActualCountry).LWCE_GetContinent()).GetHQLocation();
+                    break;
+                case 'Country':
+                    v2ActualTarget = `LWCE_XGCOUNTRY(nmActualCountry).GetCoords();
+                    break;
+                case 'RandomCity':
+                    nmActualCity = `LWCE_XGCOUNTRY(nmActualCountry).LWCE_GetRandomCity();
+                    v2ActualTarget = `LWCE_XGCITY(nmActualCity).GetCoords();
+                    break;
+                case 'XComHQ':
+                    v2ActualTarget = HQ().GetCoords();
+                    break;
+            }
+        }
+
+        LWCE_AIAddNewObjective(nmObjective, iActualStartDate, v2ActualTarget, nmActualCountry, nmActualCity, nmShipType);
+    }
 }
 
 function AIAddNewUFO(XGShip_UFO kUFO)
@@ -1011,13 +984,15 @@ function XGMission CreateFirstMission()
 
     kMission = Spawn(class'LWCE_XGMission_Abduction');
     kMission.m_kDesc = Spawn(class'LWCE_XGBattleDesc').Init();
-    kMission.m_iCity = Continent(HQ().GetContinent()).GetRandomCity();
-    kMission.m_iCountry = CITY(kMission.m_iCity).GetCountry();
-    kMission.m_iContinent = HQ().GetContinent();
     kMission.m_iDuration = 2 * `LWCE_STRATCFG(MissionGeoscapeDuration_Abduction);
-    kMission.m_v2Coords = CITY(kMission.m_iCity).m_v2Coords;
-    kMission.m_eTimeOfDay = 7;
+    kMission.m_eTimeOfDay = eTOD_Night;
     kMission.m_kDesc.m_kAlienSquad = DetermineFirstMissionSquad();
+
+    `LWCE_LOG_ERROR("Country/continent names are not supported for CreateFirstMission yet!");
+    // kMission.m_iCity = Continent(HQ().GetContinent()).GetRandomCity();
+    // kMission.m_iCountry = CITY(kMission.m_iCity).GetCountry();
+    // kMission.m_iContinent = HQ().GetContinent();
+    // kMission.m_v2Coords = CITY(kMission.m_iCity).m_v2Coords;
 
     return kMission;
 }
@@ -1929,66 +1904,37 @@ function LWCE_OnShipShotDown(LWCE_XGShip kAttacker, LWCE_XGShip kVictim)
     }
 }
 
-function bool PickMissionPlan(int Month, int Resources, int Threat, out LWCE_AIMissionPlan MissionPlan)
+function LWCEMissionPlanTemplate PickMissionPlan(int Month, int Resources, int Threat)
 {
-    local int Index;
-    local LWCE_AIMissionPlan Candidate;
-    local array<LWCE_AIMissionPlan> ValidCandidates;
+    local LWCEMissionPlanTemplate kMissionPlan;
+    local array<LWCEMissionPlanTemplate> arrAllMissionPlans, arrEligiblePlans;
 
-    `LWCE_LOG("Selecting a mission plan out of" @ PossibleMissionPlans.Length @ "configured");
+    arrAllMissionPlans = `LWCE_MISSION_PLAN_TEMPLATE_MGR.GetAllMissionPlanTemplates();
 
-    if (PossibleMissionPlans.Length == 0)
+    `LWCE_LOG("Selecting a mission plan out of " $ arrAllMissionPlans.Length $ " templates");
+
+    if (arrAllMissionPlans.Length == 0)
     {
-        `LWCE_LOG("No mission plans are configured!");
-        return false;
+        `LWCE_LOG("No mission plan templates exist!");
+        return none;
     }
 
-    foreach PossibleMissionPlans(Candidate) {
-        if (Candidate.FirstValidMonth >= 0 && Month < Candidate.FirstValidMonth)
-        {
-            continue;
-        }
-
-        if (Candidate.LastValidMonth >= 0 && Month > Candidate.LastValidMonth)
-        {
-            continue;
-        }
-
-        if (Candidate.MinResources >= 0 && Resources < Candidate.MinResources)
-        {
-            continue;
-        }
-
-        if (Candidate.MaxResources >= 0 && Resources > Candidate.MaxResources)
-        {
-            continue;
-        }
-
-        if (Candidate.MinThreat >= 0 && Threat < Candidate.MinThreat)
-        {
-            continue;
-        }
-
-        if (Candidate.MaxThreat >= 0 && Threat > Candidate.MaxThreat)
-        {
-            continue;
-        }
-
-        ValidCandidates.AddItem(Candidate);
-    }
-
-    `LWCE_LOG("Found " $ ValidCandidates.Length $ " possible mission plan(s) to choose from");
-
-    if (ValidCandidates.Length == 0)
+    foreach arrAllMissionPlans(kMissionPlan)
     {
-        return false;
+        if (kMissionPlan.IsEligible(Month, Resources, Threat))
+        {
+            arrEligiblePlans.AddItem(kMissionPlan);
+        }
     }
 
-    Index = Rand(ValidCandidates.Length);
-    MissionPlan = ValidCandidates[Index];
+    `LWCE_LOG("Found " $ arrEligiblePlans.Length $ " possible mission plan template(s) to choose from");
 
-    `LWCE_LOG("Selected mission plan at index " $ Index);
-    return true;
+    if (arrEligiblePlans.Length == 0)
+    {
+        return none;
+    }
+
+    return arrEligiblePlans[Rand(arrEligiblePlans.Length)];
 }
 
 function RemoveUFO(XGShip_UFO kUFO)

@@ -108,7 +108,7 @@ function bool CreatesShip()
 
 function LWCE_TCost GetCost(bool bRush)
 {
-    // TODO
+    // TODO: lots of places need to hook into this, including bonuses for costs on planes, armors, etc
     return kCost;
 }
 

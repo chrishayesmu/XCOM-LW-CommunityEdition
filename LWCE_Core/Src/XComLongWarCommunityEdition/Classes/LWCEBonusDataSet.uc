@@ -2,7 +2,9 @@ class LWCEBonusDataSet extends LWCEDataSet
     config(LWCEBonuses)
     dependson(LWCEBonusTemplate, LWCETypes);
 
-var config array<int>  arrAirSuperiorityDiscount;
+var config array<int>  arrAirSuperiorityMaintenanceDiscount;
+var config array<int>  arrAirSuperiorityShipPurchaseDiscount;
+var config array<int>  arrAirSuperiorityShipWeaponPurchaseDiscount;
 var config array<int>  arrArchitectsOfTheFutureDiscount;
 var config array<int>  arrArmyOfTheSouthernCrossAimBonus;
 var config array<int>  arrBaumeisterFacilityBuildTimeReduction;
@@ -47,7 +49,6 @@ static function array<LWCEDataTemplate> CreateTemplates()
 {
     local array<LWCEDataTemplate> arrTemplates;
 
-    arrTemplates.AddItem(AirSuperiority());
     arrTemplates.AddItem(ArchitectsOfTheFuture());
     arrTemplates.AddItem(ArmyOfTheSouthernCross());
     arrTemplates.AddItem(Baumeister());
@@ -90,16 +91,29 @@ static function array<LWCEDataTemplate> CreateTemplates()
 
 static function OnPostTemplatesCreated()
 {
-    local LWCEItemTemplateManager kTemplateMgr;
+    local LWCEItemTemplateManager kItemTemplateMgr;
+    local LWCEShipTemplateManager kShipTemplateMgr;
     local LWCEArmorTemplate kArmorTemplate;
+    local LWCEShipTemplate kShipTemplate;
+    local array<LWCEShipTemplate> arrAllShipTemplates;
     local name nmTemplate;
 
-    kTemplateMgr = `LWCE_ITEM_TEMPLATE_MGR;
+    kItemTemplateMgr = `LWCE_ITEM_TEMPLATE_MGR;
+    kShipTemplateMgr = `LWCE_SHIP_TEMPLATE_MGR;
+
+    // Set up the Air Superiority bonus: a discount on ship maintenance
+    // TODO: also set up a cost decrease for items that result in ships here
+    arrAllShipTemplates = kShipTemplateMgr.GetAllShipTemplates();
+
+    foreach arrAllShipTemplates(kShipTemplate)
+    {
+        kShipTemplate.arrMaintenanceCostFns.AddItem(AirSuperiority_DiscountMaintenance);
+    }
 
     // Set up the Jungle Scouts bonus: an extra small item slot for certain armors
     foreach default.arrJungleScoutsCompatibleArmor(nmTemplate)
     {
-        kArmorTemplate = kTemplateMgr.FindArmorTemplate(nmTemplate);
+        kArmorTemplate = kItemTemplateMgr.FindArmorTemplate(nmTemplate);
 
         // Getting a none template isn't wholly unexpected; some mods may ship config that would make them
         // compatible with other mods that may not be present, for example
@@ -126,16 +140,16 @@ static function int GetBonusValueInt(const out array<int> Values, int BonusLevel
     return Values[Index];
 }
 
-static function LWCEBonusTemplate AirSuperiority()
+static function AirSuperiority_DiscountMaintenance(out int iMaintenance, name nmShipTeam)
 {
-    local LWCEBonusTemplate Template;
+    local int iBonusLevel;
+    local float fDiscount;
 
-    `CREATE_BONUS_TEMPLATE(Template, 'AirSuperiority');
+    iBonusLevel = `LWCE_BONUS_LEVEL('AirSuperiority');
+    fDiscount = GetBonusValueInt(default.arrAirSuperiorityMaintenanceDiscount, iBonusLevel) / 100.0f;
+    fDiscount = FClamp(fDiscount, 0.0f, 100.0f);
 
-    Template.bRegisterInStrategy = true;
-    // TODO: hook into events for aircraft purchase/build, aircraft weapons build, and aircraft maintenance
-
-    return Template;
+    iMaintenance *= (100.0f - fDiscount) / 100.0f;
 }
 
 static function LWCEBonusTemplate ArchitectsOfTheFuture()
@@ -151,7 +165,7 @@ static function LWCEBonusTemplate ArchitectsOfTheFuture()
     return Template;
 }
 
-function ArchitectsOfTheFuture_AdjustFacilityCost(Object EventData, Object EventSource, Name EventID, Object CallbackData)
+static function ArchitectsOfTheFuture_AdjustFacilityCost(Object EventData, Object EventSource, Name EventID, Object CallbackData)
 {
     local LWCEFacilityTemplate kFacilityTemplate;
     local LWCEDataContainer kDataContainer;
@@ -167,13 +181,13 @@ function ArchitectsOfTheFuture_AdjustFacilityCost(Object EventData, Object Event
     }
 
     iBonusLevel = `LWCE_BONUS_LEVEL('ArchitectsOfTheFuture');
-    fDiscount = GetBonusValueInt(arrArchitectsOfTheFutureDiscount, iBonusLevel) / 100.0f;
+    fDiscount = GetBonusValueInt(default.arrArchitectsOfTheFutureDiscount, iBonusLevel) / 100.0f;
     kDataContainer = LWCEDataContainer(EventData);
     kCost = LWCECost(kDataContainer.Data[0].Obj);
     kCost.iCash = kCost.iCash * (1.0f - fDiscount);
 }
 
-function ArchitectsOfTheFuture_AdjustFacilityMaintenance(Object EventData, Object EventSource, Name EventID, Object CallbackData)
+static function ArchitectsOfTheFuture_AdjustFacilityMaintenance(Object EventData, Object EventSource, Name EventID, Object CallbackData)
 {
     local LWCEFacilityTemplate kFacilityTemplate;
     local LWCEDataContainer kDataContainer;
@@ -188,7 +202,7 @@ function ArchitectsOfTheFuture_AdjustFacilityMaintenance(Object EventData, Objec
     }
 
     iBonusLevel = `LWCE_BONUS_LEVEL('ArchitectsOfTheFuture');
-    fDiscount = GetBonusValueInt(arrArchitectsOfTheFutureDiscount, iBonusLevel) / 100.0f;
+    fDiscount = GetBonusValueInt(default.arrArchitectsOfTheFutureDiscount, iBonusLevel) / 100.0f;
     kDataContainer = LWCEDataContainer(EventData);
     kDataContainer.Data[0].I = kDataContainer.Data[0].I * (1.0f - fDiscount);
 }
@@ -435,7 +449,7 @@ static function LWCEBonusTemplate PatriaeSemperVigilis()
     return Template;
 }
 
-function PatriaeSemperVigilis_AddWill(Object EventData, Object EventSource, Name EventID, Object CallbackData)
+static function PatriaeSemperVigilis_AddWill(Object EventData, Object EventSource, Name EventID, Object CallbackData)
 {
     local LWCE_XGStrategySoldier kSoldier;
     local LWCEDataContainer kDataContainer;
@@ -445,7 +459,7 @@ function PatriaeSemperVigilis_AddWill(Object EventData, Object EventSource, Name
     kSoldier = LWCE_XGStrategySoldier(kDataContainer.Data[0].Obj);
 
     iBonusLevel = `LWCE_BONUS_LEVEL('PatriaeSemperVigilis');
-    iWillBonus = GetBonusValueInt(arrPatriaeSemperVigilisWillBonus, iBonusLevel);
+    iWillBonus = GetBonusValueInt(default.arrPatriaeSemperVigilisWillBonus, iBonusLevel);
 
     kSoldier.m_kChar.aStats[eStat_Will] += iWillBonus;
 }
@@ -462,7 +476,7 @@ static function LWCEBonusTemplate PaxNigeriana()
     return Template;
 }
 
-function PaxNigeriana_AddMobility(Object EventData, Object EventSource, Name EventID, Object CallbackData)
+static function PaxNigeriana_AddMobility(Object EventData, Object EventSource, Name EventID, Object CallbackData)
 {
     local LWCE_XGStrategySoldier kSoldier;
     local LWCEDataContainer kDataContainer;
@@ -472,7 +486,7 @@ function PaxNigeriana_AddMobility(Object EventData, Object EventSource, Name Eve
     kSoldier = LWCE_XGStrategySoldier(kDataContainer.Data[0].Obj);
 
     iBonusLevel = `LWCE_BONUS_LEVEL('PaxNigeriana');
-    iMobilityBonus = GetBonusValueInt(arrPaxNigerianaMobilityBonus, iBonusLevel);
+    iMobilityBonus = GetBonusValueInt(default.arrPaxNigerianaMobilityBonus, iBonusLevel);
 
     kSoldier.m_kChar.aStats[eStat_Mobility] += iMobilityBonus;
 }
@@ -490,7 +504,7 @@ static function LWCEBonusTemplate PerArduaAdAstra()
     return Template;
 }
 
-function PerArduaAdAstra_AddToPointBuy(Object EventData, Object EventSource, Name EventID, Object CallbackData)
+static function PerArduaAdAstra_AddToPointBuy(Object EventData, Object EventSource, Name EventID, Object CallbackData)
 {
     local LWCEDataContainer kDataContainer;
     local int iBonusLevel, iExtraPoints;
@@ -498,11 +512,11 @@ function PerArduaAdAstra_AddToPointBuy(Object EventData, Object EventSource, Nam
     kDataContainer = LWCEDataContainer(EventData);
 
     iBonusLevel = `LWCE_BONUS_LEVEL('PerArduaAdAstra');
-    iExtraPoints = GetBonusValueInt(arrPerArduaAdAstraStatRollsBonus, iBonusLevel);
+    iExtraPoints = GetBonusValueInt(default.arrPerArduaAdAstraStatRollsBonus, iBonusLevel);
     kDataContainer.Data[2].I += iExtraPoints;
 }
 
-function PerArduaAdAstra_AddToUnrolledStats(Object EventData, Object EventSource, Name EventID, Object CallbackData)
+static function PerArduaAdAstra_AddToUnrolledStats(Object EventData, Object EventSource, Name EventID, Object CallbackData)
 {
     local LWCEDataContainer kDataContainer;
     local int iBonusLevel;
@@ -546,7 +560,7 @@ static function LWCEBonusTemplate QuaidOrsay()
     return Template;
 }
 
-function QuaidOrsay_OnCouncilRequestGenerated(Object EventData, Object EventSource, Name EventID, Object CallbackData)
+static function QuaidOrsay_OnCouncilRequestGenerated(Object EventData, Object EventSource, Name EventID, Object CallbackData)
 {
     local LWCEDataContainer kDataContainer;
     local LWCE_XGFundingCouncil kFundingCouncil;
@@ -558,8 +572,8 @@ function QuaidOrsay_OnCouncilRequestGenerated(Object EventData, Object EventSour
     kDataContainer = LWCEDataContainer(EventData);
 
     iBonusLevel = `LWCE_BONUS_LEVEL('QuaidOrsay');
-    iCooldownReductionPercentage = GetBonusValueInt(arrQuaidOrsayCouncilRequestCooldownReduction, iBonusLevel);
-    iShieldsIncreasePercentage = GetBonusValueInt(arrQuaidOrsayCouncilRequestShieldsBonus, iBonusLevel);
+    iCooldownReductionPercentage = GetBonusValueInt(default.arrQuaidOrsayCouncilRequestCooldownReduction, iBonusLevel);
+    iShieldsIncreasePercentage = GetBonusValueInt(default.arrQuaidOrsayCouncilRequestShieldsBonus, iBonusLevel);
 
     // First effect: reduce the time until the next request will occur
     kFundingCouncil.m_iSecondRequestCountdown *= (100 - iCooldownReductionPercentage) / 100.0f;
@@ -592,19 +606,17 @@ function QuaidOrsay_OnCouncilRequestGenerated(Object EventData, Object EventSour
     }
 }
 
-function QuaidOrsay_ReduceCouncilRequestCooldown(Object EventData, Object EventSource, Name EventID, Object CallbackData)
+static function QuaidOrsay_ReduceCouncilRequestCooldown(Object EventData, Object EventSource, Name EventID, Object CallbackData)
 {
     local LWCEDataContainer kDataContainer;
     local int iBonusLevel, iCooldownReductionPercentage;
 
     iBonusLevel = `LWCE_BONUS_LEVEL('QuaidOrsay');
-    iCooldownReductionPercentage = GetBonusValueInt(arrQuaidOrsayCouncilRequestCooldownReduction, iBonusLevel);
+    iCooldownReductionPercentage = GetBonusValueInt(default.arrQuaidOrsayCouncilRequestCooldownReduction, iBonusLevel);
 
     kDataContainer = LWCEDataContainer(EventData);
     kDataContainer.Data[1].I *= (100 - iCooldownReductionPercentage) / 100.0f;
 }
-
-
 
 static function LWCEBonusTemplate RingOfFire()
 {
@@ -618,7 +630,7 @@ static function LWCEBonusTemplate RingOfFire()
     return Template;
 }
 
-function RingOfFire_AdjustSteamVents(Object EventData, Object EventSource, Name EventID, Object CallbackData)
+static function RingOfFire_AdjustSteamVents(Object EventData, Object EventSource, Name EventID, Object CallbackData)
 {
     local LWCEDataContainer kDataContainer;
     local int iBonusLevel, iExtraVents;
@@ -629,7 +641,7 @@ function RingOfFire_AdjustSteamVents(Object EventData, Object EventSource, Name 
     }
 
     iBonusLevel = `LWCE_BONUS_LEVEL('RingOfFire');
-    iExtraVents = GetBonusValueInt(arrRingOfFireAddedSteamVents, iBonusLevel);
+    iExtraVents = GetBonusValueInt(default.arrRingOfFireAddedSteamVents, iBonusLevel);
 
     kDataContainer = LWCEDataContainer(EventData);
     kDataContainer.Data[0].I += iExtraVents;
@@ -683,7 +695,7 @@ static function LWCEBonusTemplate SpecialAirService()
     return Template;
 }
 
-function SpecialAirService_AddAim(Object EventData, Object EventSource, Name EventID, Object CallbackData)
+static function SpecialAirService_AddAim(Object EventData, Object EventSource, Name EventID, Object CallbackData)
 {
     local LWCE_XGStrategySoldier kSoldier;
     local LWCEDataContainer kDataContainer;
@@ -693,7 +705,7 @@ function SpecialAirService_AddAim(Object EventData, Object EventSource, Name Eve
     kSoldier = LWCE_XGStrategySoldier(kDataContainer.Data[0].Obj);
 
     iBonusLevel = `LWCE_BONUS_LEVEL('SpecialAirService');
-    iAimBonus = GetBonusValueInt(arrSpecialAirServiceAimBonus, iBonusLevel);
+    iAimBonus = GetBonusValueInt(default.arrSpecialAirServiceAimBonus, iBonusLevel);
 
     kSoldier.m_kChar.aStats[eStat_Offense] += iAimBonus;
 }
@@ -734,7 +746,7 @@ static function LWCEBonusTemplate SurvivalTraining()
     return Template;
 }
 
-function SurvivalTraining_AddHP(Object EventData, Object EventSource, Name EventID, Object CallbackData)
+static function SurvivalTraining_AddHP(Object EventData, Object EventSource, Name EventID, Object CallbackData)
 {
     local LWCE_XGStrategySoldier kSoldier;
     local LWCEDataContainer kDataContainer;
@@ -744,7 +756,7 @@ function SurvivalTraining_AddHP(Object EventData, Object EventSource, Name Event
     kSoldier = LWCE_XGStrategySoldier(kDataContainer.Data[0].Obj);
 
     iBonusLevel = `LWCE_BONUS_LEVEL('SurvivalTraining');
-    iHPBonus = GetBonusValueInt(arrSurvivalTrainingHPBonus, iBonusLevel);
+    iHPBonus = GetBonusValueInt(default.arrSurvivalTrainingHPBonus, iBonusLevel);
 
     kSoldier.m_kChar.aStats[eStat_HP] += iHPBonus;
 }
@@ -768,9 +780,27 @@ static function LWCEBonusTemplate WealthOfNations()
     `CREATE_BONUS_TEMPLATE(Template, 'WealthOfNations');
 
     Template.bRegisterInStrategy = true;
-    // TODO: hook into events for monthly XCOM funding
+    Template.AddEvent('CalculateIncomeFromCountries', WealthOfNations_AdjustIncome);
 
     return Template;
+}
+
+static function WealthOfNations_AdjustIncome(Object EventData, Object EventSource, Name EventID, Object CallbackData)
+{
+    local LWCEDataContainer kDataContainer;
+    local int iBonusLevel, iIncomeIncreasePercentage;
+
+    kDataContainer = LWCEDataContainer(EventData);
+
+    iBonusLevel = `LWCE_BONUS_LEVEL('WealthOfNations');
+    iIncomeIncreasePercentage = GetBonusValueInt(default.arrWealthOfNationsBonusFunding, iBonusLevel);
+
+    // The simplest way to do this bonus is to simply multiply the incoming data value by our percentage. This has pros and cons:
+    // if a mod has made negative country incomes a possibility, this will also multiply those negatives. However, if we iterate the
+    // countries and calculate the bonus ourselves, then Wealth of Nations won't be multiplicative with any other handlers of this event
+    // which are changing funding. Since the latter case seems more likely, LWCE is going with the simple approach; any mod authors who
+    // find this poses an issue should contact us for possible changes.
+    kDataContainer.Data[1].I *= (100 + iIncomeIncreasePercentage) / 100.0f;
 }
 
 static function LWCEBonusTemplate WeHaveWays()

@@ -809,6 +809,14 @@ function int GetFacilityMaintenanceCost()
     return -iMaintenance;
 }
 
+/// <summary>
+/// Returns the continent which contains the player's starting country.
+/// </summary>
+function name LWCE_GetHomeContinent()
+{
+    return m_nmContinent;
+}
+
 function ECountry GetHomeCountry()
 {
     `LWCE_LOG_DEPRECATED_CLS(GetHomeCountry);

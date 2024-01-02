@@ -727,6 +727,78 @@ function int LWCE_DetectShip(LWCE_XGShip kShip)
     return -1;
 }
 
+function DetermineMap(XGMission kMission, optional EMissionTime eTime = eMissionTime_None)
+{
+    local string strMap;
+    local int PlayCount;
+    local EMissionType eMission;
+    local EShipType eUFO;
+
+    // TODO: there's a lot to clean up here once we migrate everything to LWCE mission objects
+    `ONLINEEVENTMGR.StorageWriteCooldownTimer = 3.0;
+
+    if (kMission.m_bScripted)
+    {
+        class'XComMapManager'.static.IncrementMapPlayHistory(kMission.m_kDesc.m_strMapName, `PROFILESETTINGS.Data.m_arrMapHistory, PlayCount);
+        `ONLINEEVENTMGR.SaveProfileSettings();
+        return;
+    }
+
+    if (kMission.m_iMissionType == eMission_Special)
+    {
+        kMission.m_kDesc.m_strMapName = XGMission_FundingCouncil(kMission).m_kTMission.strMapName;
+        kMission.m_kDesc.m_strMapCommand = class'XComMapManager'.static.GetMapCommandLine(kMission.m_kDesc.m_strMapName, true, true, kMission.m_kDesc);
+        class'XComMapManager'.static.IncrementMapPlayHistory(kMission.m_kDesc.m_strMapName, `PROFILESETTINGS.Data.m_arrMapHistory, PlayCount);
+        `ONLINEEVENTMGR.SaveProfileSettings();
+        return;
+    }
+
+    if (ISCONTROLLED() && kMission.m_iMissionType == eMission_Crash)
+    {
+        kMission.m_kDesc.m_strMapName = "CSmallScout_DirtRoad Tutorial 4 (UFO) Dirt Road";
+        kMission.m_kDesc.m_strMapCommand = class'XComMapManager'.static.GetMapCommandLine(kMission.m_kDesc.m_strMapName, true, true, kMission.m_kDesc);
+        class'XComMapManager'.static.IncrementMapPlayHistory(kMission.m_kDesc.m_strMapName, `PROFILESETTINGS.Data.m_arrMapHistory, PlayCount);
+        `ONLINEEVENTMGR.SaveProfileSettings();
+        return;
+    }
+
+    eMission = EMissionType(kMission.m_iMissionType);
+
+    if (eMission == eMission_LandedUFO)
+    {
+        eUFO = XGMission_UFOLanded(kMission).kUFO.m_kTShip.eType;
+    }
+    else if (eMission == eMission_Crash)
+    {
+        eUFO = EShipType(XGMission_UFOCrash(kMission).m_iUFOType);
+    }
+    else
+    {
+        eUFO = eShip_None;
+    }
+
+    if (XComHeadquartersCheatManager(GetALocalPlayerController().CheatManager) != none && kMission.m_bCheated)
+    {
+        strMap = kMission.m_kDesc.m_strMapName;
+    }
+    else
+    {
+        // The Country parameter in GetRandomMapDisplayName doesn't seem to be used, so just force it to 0
+        strMap = class'XComMapManager'.static.GetRandomMapDisplayName(eMission, eTime, eUFO, kMission.GetRegion(), ECountry(0), `PROFILESETTINGS.Data.m_arrMapHistory, PlayCount);
+    }
+
+    kMission.m_kDesc.m_iPlayCount = PlayCount;
+    kMission.m_kDesc.m_strMapName = strMap;
+    kMission.m_kDesc.m_strMapCommand = class'XComMapManager'.static.GetMapCommandLine(strMap, true, true, kMission.m_kDesc);
+
+    if (!(XComHeadquartersCheatManager(GetALocalPlayerController().CheatManager) != none) && kMission.m_bCheated)
+    {
+        class'XComMapManager'.static.IncrementMapPlayHistory(kMission.m_kDesc.m_strMapName, `PROFILESETTINGS.Data.m_arrMapHistory, PlayCount);
+    }
+
+    `ONLINEEVENTMGR.SaveProfileSettings(false);
+}
+
 function GameTick(float fGameTime)
 {
     UpdateShips(fGameTime);
