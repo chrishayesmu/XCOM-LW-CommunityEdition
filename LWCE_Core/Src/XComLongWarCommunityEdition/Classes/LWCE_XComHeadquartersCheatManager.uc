@@ -33,6 +33,48 @@ exec function CreateAlienBaseAlert()
     GEOSCAPE().AddMission(kMission);
 }
 
+exec function DumpAlienObjectives()
+{
+    local int iObj, iEarliestDay, iLatestDay, iMission;
+    local string strDays;
+    local LWCE_Console kConsole;
+    local LWCE_TObjective kTObj;
+    local LWCE_XGStrategyAI kStrategyAI;
+    local LWCE_XGAlienObjective kCEObj;
+
+    kConsole = GetConsole();
+    kStrategyAI = `LWCE_STRATEGY_AI;
+
+    kConsole.OutputTextLine("---------------- Printing active alien objectives ----------------");
+    kConsole.OutputTextLine("");
+
+    for (iObj = 0; iObj < kStrategyAI.m_arrObjectives.Length; iObj++)
+    {
+        kCEObj = LWCE_XGAlienObjective(kStrategyAI.m_arrObjectives[iObj]);
+        kTObj = kCEObj.m_kCETObjective;
+
+        kConsole.OutputTextLine("  [Obj " $ iObj $ "]: " $ kCEObj.m_kTemplate.GetObjectiveName() $ " -> " $ kCEObj.m_nmCountryTarget);
+
+        if (kTObj.arrMissions.Length == 0)
+        {
+            kConsole.OutputTextLine("        No missions are scheduled for this objective.");
+        }
+        else
+        {
+            for (iMission = 0; iMission < kTObj.arrMissions.Length; iMission++)
+            {
+                iEarliestDay = kTObj.arrStartDates[iMission] - kTObj.arrRandDays[iMission];
+                iLatestDay   = kTObj.arrStartDates[iMission] + kTObj.arrRandDays[iMission];
+                strDays = (iEarliestDay == iLatestDay) ? string(iEarliestDay) : iEarliestDay $ " to " $ iLatestDay;
+
+                kConsole.OutputTextLine("        Mission " $ iMission $ ": " $ kTObj.arrMissions[iMission] $ " in " $ strDays $ " days");
+            }
+        }
+
+        kConsole.OutputTextLine("");
+    }
+}
+
 exec function GiveAllTech()
 {
     GiveTech();
