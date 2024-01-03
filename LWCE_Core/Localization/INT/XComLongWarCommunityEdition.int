@@ -1,3 +1,36 @@
+[Abduct LWCEEnemyObjectiveTemplate]
+strName="Abductions"
+
+[AssaultXComAirBase LWCEEnemyObjectiveTemplate]
+strName="Retaliation"
+
+[AssaultXComHQ LWCEEnemyObjectiveTemplate]
+strName="Retaliation"
+
+[Bomb LWCEEnemyObjectiveTemplate]
+strName="Air Raid"
+
+[CommandOverwatch LWCEEnemyObjectiveTemplate]
+strName="Command Overwatch"
+
+[Harvest LWCEEnemyObjectiveTemplate]
+strName="Harvest Resources"
+
+[Hunt LWCEEnemyObjectiveTemplate]
+strName="Destroy Satellite"
+
+[Infiltrate LWCEEnemyObjectiveTemplate]
+strName="Infiltrate"
+
+[Research LWCEEnemyObjectiveTemplate]
+strName="Research"
+
+[Scout LWCEEnemyObjectiveTemplate]
+strName="Scout Target"
+
+[Terrorize LWCEEnemyObjectiveTemplate]
+strName="Terrorize Populace"
+
 [Aba LWCECityTemplate]
 strName="Aba"
 
