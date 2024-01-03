@@ -2,6 +2,9 @@ class LWCE_XGSatelliteSitRoomUI extends XGSatelliteSitRoomUI
     implements(LWCE_IFCRequestInterface)
     dependson(LWCE_XGFundingCouncil);
 
+var name m_nmCountry;
+var name m_nmContinent;
+
 simulated function GetRequestData(out TFCRequest kRequestRef)
 {
     // This doesn't seem to ever have real data populated, so we don't bother with it
@@ -13,6 +16,66 @@ simulated function LWCE_GetRequestData(out LWCE_TFCRequest kRequestRef)
     // This is added just to meet the interface requirements and avoid log errors
 }
 
+function SetTargetCountry(int targetCountry)
+{
+    `LWCE_LOG_DEPRECATED_CLS(SetTargetCountry);
+}
+
+function LWCE_SetTargetCountry(name nmTargetCountry)
+{
+    m_nmCountry = nmTargetCountry;
+    m_nmContinent = `LWCE_XGCOUNTRY(m_nmCountry).LWCE_GetContinent();
+    UpdateCountryHelp();
+    UpdateView();
+}
+
+function UpdateCountry()
+{
+    local TSatCountryUI kUI;
+    local LWCE_XGCountry kCountry;
+    local int iFunding;
+
+    if (m_nmCountry != '')
+    {
+        kCountry = `LWCE_XGCOUNTRY(m_nmCountry);
+        kUI.txtCountry.StrValue = kCountry.GetName();
+        kUI.iPanicLevel = kCountry.GetPanicBlocks();
+        kUI.bHasSatCoverage = kCountry.HasSatelliteCoverage();
+
+        if (kCountry.LeftXCom())
+        {
+            kUI.txtCountry.iState = eUIState_Good;
+        }
+        else
+        {
+            kUI.txtCountry.iState = eUIState_Cash;
+        }
+
+        if (kUI.bHasSatCoverage)
+        {
+            kUI.txtCountry.iState -= 1;
+        }
+
+        if (m_kCursorUI.bEnabled)
+        {
+            kUI.txtFunding.iState = eUIState_Cash;
+        }
+        else if (kCountry.LeftXCom())
+        {
+            kUI.txtFunding.iState = eUIState_Disabled;
+        }
+        else
+        {
+            kUI.txtFunding.iState = eUIState_Highlight;
+        }
+
+        iFunding = kCountry.LWCE_CalcFunding();
+        kUI.txtFunding.StrValue = ConvertCashToString(iFunding) @ m_strLabelPerMonth;
+    }
+
+    m_kCountryUI = kUI;
+}
+
 function UpdateCountryHelp()
 {
     local TSatCursorUI kUI;
@@ -20,19 +83,13 @@ function UpdateCountryHelp()
     kUI.txtHelp.StrValue = "";
     kUI.txtHelp.iState = eUIState_Bad;
 
-    if (m_iCountry == -1)
+    if (m_nmCountry == '')
     {
         kUI.bEnabled = false;
     }
     else
     {
-        if (Country(m_iCountry).LeftXCom())
-        {
-            kUI.txtHelp.StrValue = m_strLabelLeftXCom;
-            kUI.txtHelp.iState = eUIState_Bad;
-        }
-
-        if (Country(m_iCountry).HasSatelliteCoverage())
+        if (`LWCE_XGCOUNTRY(m_nmCountry).HasSatelliteCoverage())
         {
             kUI.bEnabled = false;
             kUI.txtHelp.StrValue = m_strLabelHasSatellite;

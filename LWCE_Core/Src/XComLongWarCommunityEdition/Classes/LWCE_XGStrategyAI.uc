@@ -143,17 +143,20 @@ function int AddNewOverseers()
 
     kWorld = LWCE_XGWorld(WORLD());
 
+    `LWCE_LOG("In AddNewOverseers");
+
     if (!LWCE_XGStorage(STORAGE()).LWCE_EverHadItem('Item_EtherealDevice'))
     {
         LWCE_ScheduleNewObjectives('CommandOverwatch', 3);
     }
+
+    `LWCE_LOG_CLS("Adding overseers for countries which have left XCOM");
 
     foreach kWorld.m_arrCountries(kCountry)
     {
         if (kCountry.LeftXCom())
         {
             LWCE_AIAddNewObjective('CommandOverwatch', 5 + Rand(20), kCountry.GetCoords(), LWCE_XGCountry(kCountry).m_nmCountry);
-
         }
     }
 
@@ -248,8 +251,10 @@ function LWCE_XGAlienObjective LWCE_AIAddNewObjective(name nmObjective, int iSta
 {
     local LWCE_XGAlienObjective kAlienObjective;
 
+    `LWCE_LOG("LWCE_AIAddNewObjective: nmObjective = " $ nmObjective $ ", iStartDate = " $ iStartDate $ ", nmCountry = " $ nmCountry $ ", nmCity = " $ nmCity);
+
     kAlienObjective = Spawn(class'LWCE_XGAlienObjective');
-    kAlienObjective.LWCE_Init(nmObjective, iStartDate, v2Target, nmCountry, nmCity, nmShipType);
+    kAlienObjective.LWCE_Init(nmObjective, iStartDate, v2Target, class'LWCEShipTemplate'.const.SHIP_TEAM_ALIEN, nmCountry, nmCity, nmShipType);
     m_arrObjectives.AddItem(kAlienObjective);
 
     return kAlienObjective;
@@ -294,11 +299,15 @@ function AIAddNewObjectives()
         return;
     }
 
+    `LWCE_LOG("Selected mission plan template " $ kMissionPlanTemplate.DataName);
+
     STAT_SetStat(19, iStartOfMonthResources);
 
     for (iObjectiveIndex = 0; iObjectiveIndex < kMissionPlanTemplate.arrObjectives.Length; iObjectiveIndex++)
     {
         iNumObjectives = `LWCE_UTILS.RandInRange(kMissionPlanTemplate.arrObjectives[iObjectiveIndex].kAmount);
+
+        `LWCE_LOG("Scheduling objective " $ kMissionPlanTemplate.arrObjectives[iObjectiveIndex].nmObjective $ " with " $ iNumObjectives $ " occurrences");
 
         LWCE_ScheduleNewObjectives(kMissionPlanTemplate.arrObjectives[iObjectiveIndex].nmObjective, iNumObjectives);
     }
@@ -403,7 +412,7 @@ function LWCE_ScheduleNewObjectives(name nmObjective, int iNumObjectives, option
             }
             else
             {
-                iActualStartDate = kObjectiveTemplate.iStartDays + Rand(kObjectiveTemplate.iRandDays);
+                iActualStartDate = kObjectiveTemplate.iStartDays + Rand(kObjectiveTemplate.iRandomDays);
             }
         }
 
@@ -2365,8 +2374,10 @@ protected function array<name> SelectTargetCountries_SpreadPanic(int iNumTargets
         {
             arrTargets.AddItem(arrPossibleCountries[0].m_nmCountry);
         }
-
-        arrTargets.AddItem(arrPossibleCountries[Rand(Min(3, arrPossibleCountries.Length))].m_nmCountry);
+        else
+        {
+            arrTargets.AddItem(arrPossibleCountries[Rand(Min(3, arrPossibleCountries.Length))].m_nmCountry);
+        }
 
         iNumTargets--;
     }

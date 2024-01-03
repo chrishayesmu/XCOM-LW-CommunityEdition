@@ -9,7 +9,7 @@ var config name nmTargetSelectionAlgorithm;
 var config name nmFineGrainedTarget;
 
 var config int iStartDays;
-var config int iRandDays;
+var config int iRandomDays;
 var config bool bSpreadThroughoutMonth;
 
 // The individual ship missions which make up this objective. Each entry in this array must
@@ -22,6 +22,11 @@ var array< delegate<OnObjectiveSuccessful> > arrOnSuccessDelegates;
 var const localized string strName;
 
 delegate OnObjectiveSuccessful(LWCE_XGAlienObjective kObj, LWCE_XGShip kLastShip);
+
+function name GetObjectiveName()
+{
+    return DataName;
+}
 
 /// <summary>
 /// Called when an objective using this template has succeeded (i.e. the last ship configured in the objective

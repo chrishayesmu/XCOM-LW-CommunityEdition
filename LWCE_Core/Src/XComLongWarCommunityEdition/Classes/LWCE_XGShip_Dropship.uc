@@ -1,12 +1,29 @@
 class LWCE_XGShip_Dropship extends XGShip_Dropship;
 
+struct CheckpointRecord_LWCE_XGShip_Dropship extends XGShip_Dropship.CheckpointRecord_XGShip_Dropship
+{
+    var name m_nmShipTemplate;
+};
+
+var name m_nmShipTemplate; // Name of an LWCEShipTemplate which describes this ship's capabilities.
+
 var LWCEShipTemplate m_kTemplate;
 
 function Init(TShip kTShip)
 {
-    super(XGShip).Init(kTShip);
+    `LWCE_LOG_DEPRECATED_CLS(Init);
+}
 
-    m_kTemplate = `LWCE_SHIP('Skyranger');
+function LWCE_Init(name nmShipTemplate)
+{
+    m_nmShipTemplate = nmShipTemplate;
+    m_kTemplate = `LWCE_SHIP(m_nmShipTemplate);
+
+    m_iHP = GetHullStrength();
+    SetEntity(Spawn(class'LWCE_XGShipEntity'), eEntityGraphic_Skyranger);
+
+    m_kGeoscape = GEOSCAPE();
+    InitWatchVariables();
 
     CargoInfo = Spawn(class'LWCE_XGDropshipCargoInfo');
     LWCE_XGDropshipCargoInfo(CargoInfo).Init();
@@ -19,7 +36,7 @@ function Init(TShip kTShip)
 
 function ApplyCheckpointRecord()
 {
-    m_kTemplate = `LWCE_SHIP('Skyranger');
+    m_kTemplate = `LWCE_SHIP(m_nmShipTemplate);
 }
 
 function BuildTransferData()
@@ -138,6 +155,46 @@ function int GetCapacity()
     }
 
     return iCapacity;
+}
+
+function int GetHullStrength()
+{
+    return m_kTemplate.iHealth;
+}
+
+function int GetRange()
+{
+    `LWCE_LOG_DEPRECATED_NOREPLACE_CLS(GetRange);
+
+    return -100;
+}
+
+function int GetSpeed()
+{
+    return m_kTemplate.iSpeed;
+}
+
+function EShipType GetType()
+{
+    `LWCE_LOG_DEPRECATED_BY(GetType, m_nmShipTemplate);
+
+    return EShipType(0);
+}
+
+function array<TShipWeapon> GetWeapons()
+{
+    local array<TShipWeapon> arrWeapons;
+
+    `LWCE_LOG_DEPRECATED_NOREPLACE_CLS(GetWeapons);
+
+    arrWeapons.Length = 0;
+
+    return arrWeapons;
+}
+
+function bool IsDamaged()
+{
+    return m_iHP < GetHullStrength();
 }
 
 function ReconstructTransferData()

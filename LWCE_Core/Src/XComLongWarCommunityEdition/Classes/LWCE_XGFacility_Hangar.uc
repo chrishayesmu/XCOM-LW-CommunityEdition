@@ -59,9 +59,8 @@ function AddDropship()
 {
     if (m_kSkyranger == none)
     {
-        // TODO use templates
         m_kSkyranger = Spawn(class'LWCE_XGShip_Dropship');
-        m_kSkyranger.Init(ITEMTREE().GetShip(eShip_Skyranger));
+        LWCE_XGShip_Dropship(m_kSkyranger).LWCE_Init('Skyranger');
         m_kSkyranger.m_strCallsign = m_strCallsignSkyranger;
     }
 }
@@ -824,6 +823,54 @@ function EItemType ShipTypeToItemType(EShipType eShip)
     `LWCE_LOG_DEPRECATED_NOREPLACE_CLS(ShipTypeToItemType);
 
     return eItem_None;
+}
+
+function TransferCraft(XGShip_Interceptor kInt, int iNewContinent)
+{
+    `LWCE_LOG_DEPRECATED_BY(TransferCraft, LWCE_TransferShip);
+}
+
+function LWCE_TransferShip(LWCE_XGShip kShip, name nmDestContinent)
+{
+    local LWCE_TShipTransfer kTransfer;
+    local LWCE_XGHeadquarters kHQ;
+    local int iTransfer;
+    local bool bFound;
+
+    kHQ = LWCE_XGHeadquarters(HQ());
+
+    kShip.m_nmContinent = nmDestContinent;
+    kShip.m_iHomeBay = -1;
+    kShip.m_v2Coords = kShip.GetHomeCoords();
+    kShip.m_v2Destination = kShip.m_v2Coords;
+    kShip.m_iStatus = eShipStatus_Transfer;
+    kShip.m_iHoursDown = class'XGTacticalGameCore'.default.INTERCEPTOR_TRANSFER_TIME;
+
+    ReorderCraft();
+    kShip.UpdateHangarShip();
+
+    for (iTransfer = 0; iTransfer < kHQ.m_arrCEShipTransfers.Length; iTransfer++)
+    {
+        if (kHQ.m_arrCEShipTransfers[iTransfer].iHours == kShip.m_iHoursDown && kHQ.m_arrCEShipTransfers[iTransfer].nmDestinationContinent == nmDestContinent)
+        {
+            kHQ.m_arrCEShipTransfers[iTransfer].iNumShips += 1;
+            bFound = true;
+            break;
+        }
+    }
+
+    if (!bFound)
+    {
+        kTransfer.nmDestinationContinent = nmDestContinent;
+        kTransfer.iHours = kShip.m_iHoursDown;
+        kTransfer.iNumShips = 1;
+        kTransfer.nmShipType = kShip.m_nmShipTemplate;
+
+        kHQ.m_arrCEShipTransfers.AddItem(kTransfer);
+    }
+
+    LWCE_XGFacility_SituationRoom(SITROOM()).LWCE_OnShipTransferExecuted(kShip);
+    UpdateHangarBays();
 }
 
 function UnloadArtifacts(XGShip_Dropship kSkyranger)

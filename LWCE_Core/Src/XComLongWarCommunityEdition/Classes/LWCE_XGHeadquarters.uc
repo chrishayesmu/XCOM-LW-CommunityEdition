@@ -112,8 +112,12 @@ function Init(bool bLoadingFromSave)
 
 function InitNewGame()
 {
+    local LWCE_XGWorld kWorld;
     local XGFacility kFacility;
     local int I;
+    local name nmContinent;
+
+    kWorld = LWCE_XGWorld(WORLD());
 
     m_kBase = AddBase(m_strHQBaseName, /* bIsPrimaryBase */ true, /* bUsesAccessLifts */ true, /* Width */ 7, /* Height */ 5, GetCoords());
 
@@ -127,12 +131,13 @@ function InitNewGame()
     m_kActiveFacility = m_arrFacilities[0];
     m_fAnnounceTimer = 10.0;
 
-    // TODO replace this loop
-    for (I = 0; I < 5; I++)
+    for (I = 0; I < kWorld.m_arrContinents.Length; I++)
     {
-        if (I != m_iContinent)
+        nmContinent = LWCE_XGContinent(kWorld.m_arrContinents[I]).m_nmContinent;
+
+        if (nmContinent != m_nmContinent)
         {
-            AddOutpost(I);
+            LWCE_AddOutpost(nmContinent);
         }
     }
 
@@ -164,10 +169,18 @@ function LWCE_XGBase AddBase(string strName, bool bIsPrimaryBase, bool bUsesAcce
 
 function AddOutpost(int iContinent)
 {
-    local XGOutpost kOutpost;
+    `LWCE_LOG_DEPRECATED_CLS(AddOutpost);
+}
+
+/// <summary>
+/// Adds a new outpost, which is basically just a Geoscape entity representing where air bases are.
+/// </summary>
+function LWCE_AddOutpost(name nmContinent)
+{
+    local LWCE_XGOutpost kOutpost;
 
     kOutpost = Spawn(class'LWCE_XGOutpost');
-    kOutpost.Init(iContinent);
+    kOutpost.LWCE_Init(nmContinent);
     m_arrOutposts.AddItem(kOutpost);
 }
 

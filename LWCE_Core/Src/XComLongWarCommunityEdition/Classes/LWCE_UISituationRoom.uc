@@ -10,13 +10,19 @@ simulated function XGSatelliteSitRoomUI GetSatelliteMgr()
     return m_kLocalSatelliteMgr;
 }
 
+simulated function LWCE_RealizeSelected()
+{
+}
+
 state SatelliteState
 {
     simulated event PushedState()
     {
+        local UIStrategyHUD kStrategyHUD;
         local LWCE_XGFundingCouncil kFundingCouncil;
         local LWCE_XGSituationRoomUI kSitRoomUI;
 
+        kStrategyHUD = XComHQPresentationLayer(controllerRef.m_Pres).GetStrategyHUD();
         kFundingCouncil = LWCE_XGFundingCouncil(`HQGAME.GetGameCore().GetWorld().m_kFundingCouncil);
         kSitRoomUI = LWCE_XGSituationRoomUI(GetSitRoomMgr());
 
@@ -26,23 +32,44 @@ state SatelliteState
             kFundingCouncil.m_nmPendingSatelliteRequestCountry = '';
         }
 
-        // TODO
+        // Note that m_iCurrentCountry is an index, not an ECountry value
         if (m_iCurrentCountry == INDEX_NONE)
         {
-            m_iCurrentCountry = GetSatelliteMgr().m_iCountry;
+            m_iCurrentCountry = LWCE_XGSatelliteSitRoomUI(GetSatelliteMgr()).m_iCountry;
         }
-        
+
         HideObjectives();
         AS_SetDisplayMode(DISPLAY_MODE_SATELLITE);
         RealizeSelected();
         UpdateHUD();
 
-        XComHQPresentationLayer(controllerRef.m_Pres).GetStrategyHUD().m_kMenu.Hide();
-        XComHQPresentationLayer(controllerRef.m_Pres).GetStrategyHUD().m_kMenu.m_kSubMenu.Hide();
-        XComHQPresentationLayer(controllerRef.m_Pres).m_kStrategyHUD.ClearButtonHelp();
-        XComHQPresentationLayer(controllerRef.m_Pres).m_kStrategyHUD.ShowBackButton(OnUCancel);
+        kStrategyHUD.m_kMenu.Hide();
+        kStrategyHUD.m_kMenu.m_kSubMenu.Hide();
+        kStrategyHUD.ClearButtonHelp();
+        kStrategyHUD.ShowBackButton(OnUCancel);
 
         m_kSitRoomHUD.AS_SetDisplayMode(DISPLAY_MODE_SATELLITE);
+    }
+
+    simulated function LWCE_RealizeSelected()
+    {
+        local ASValue myValue;
+        local array<ASValue> myArray;
+        local name nmCountry;
+
+        if (GetSatelliteMgr() != none && m_iCurrentCountry != -1)
+        {
+            nmCountry = LWCE_XGSituationRoomUI(GetSitRoomMgr()).m_arrCECountriesUI[m_iCurrentCountry].nmCountry;
+            LWCE_XGSatelliteSitRoomUI(GetSatelliteMgr()).LWCE_SetTargetCountry(nmCountry);
+        }
+
+        UpdateHUD();
+
+        myValue.Type = AS_Number;
+        myValue.N = m_iCurrentCountry;
+        myArray.AddItem(myValue);
+
+        Invoke("SetSelected", myArray);
     }
 
     simulated function UpdateHUD()

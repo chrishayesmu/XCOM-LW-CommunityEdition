@@ -1083,7 +1083,50 @@ function LWCE_PulseCountry(name nmCountry, Color col1, Color col2, float fTime)
 
 function RadarUpdate()
 {
-    `LWCE_LOG_NOT_IMPLEMENTED(RadarUpdate);
+    local int Index;
+    local LWCE_XGShip kShip;
+    local LWCE_XGStrategyAI kAI;
+
+    kAI = LWCE_XGStrategyAI(AI());
+
+    for (Index = 0; Index < kAI.m_arrCEShips.Length; Index++)
+    {
+        kShip = kAI.m_arrCEShips[Index];
+
+        if (kShip.IsDetected())
+        {
+            if (m_bSeeAll)
+            {
+                kShip.m_iDetectedBy = 0;
+            }
+            else
+            {
+                kShip.SetDetection(LWCE_TrackShip(kShip));
+            }
+
+            if (!kShip.IsDetected())
+            {
+                // Parameter isn't actually used in OnUFOVanished, which is also why we don't bother overriding it
+                OnUFOVanished(0);
+            }
+        }
+        else
+        {
+            if (m_bSeeAll)
+            {
+                kShip.m_iDetectedBy = 0;
+            }
+            else
+            {
+                kShip.SetDetection(LWCE_DetectShip(kShip));
+            }
+
+            if (kShip.IsDetected())
+            {
+                OnUFODetected(Index);
+            }
+        }
+    }
 }
 
 function RemoveMission(XGMission kMission, bool bXComSuccess, optional bool bExpired, optional bool bFirstMission, optional bool bDontApplyToContinent)

@@ -5,6 +5,7 @@ var const localized string m_strShipStatDisclaimer;
 
 var array<LWCE_TContinentInfo> m_arrCEContinents;
 var array<LWCEShipWeaponTemplate> m_arrCEItems;
+var array<LWCE_TItemProject> m_arrCEShipProjects;
 var UIShipSummary m_kShipSummaryScreen;
 
 function XGHangarUI.TTableItemSummary BuildItemSummary(TItem kItem)
@@ -107,9 +108,9 @@ function TItemCard HANGARUIGetItemCard(optional int iContinent = 0, optional int
     return kItemCard;
 }
 
-function LWCE_TItemCard LWCE_HANGARUIGetItemCard(optional int iContinent = 0, optional int iShip = 0, optional int viewOverride = -1)
+function LWCE_TItemCard LWCE_HANGARUIGetItemCard(optional name nmContinent = '', optional int iShip = 0, optional int viewOverride = -1)
 {
-    local int iView;
+    local int iContinent, iView;
     local LWCE_TItemCard kItemCard;
     local LWCE_XGShip kShip;
 
@@ -125,9 +126,14 @@ function LWCE_TItemCard LWCE_HANGARUIGetItemCard(optional int iContinent = 0, op
         {
             kShip = LWCE_XGShip(m_kShip);
         }
-        else if (m_arrCEContinents[iContinent].iNumShips > 0)
+        else if (nmContinent != '')
         {
-            kShip = m_arrCEContinents[iContinent].arrShips[iShip];
+            iContinent = m_arrCEContinents.Find('nmContinent', nmContinent);
+
+            if (m_arrCEContinents[iContinent].iNumShips > 0)
+            {
+                kShip = m_arrCEContinents[iContinent].arrShips[iShip];
+            }
         }
 
         if (kShip != none)
@@ -139,6 +145,13 @@ function LWCE_TItemCard LWCE_HANGARUIGetItemCard(optional int iContinent = 0, op
     }
 
     return kItemCard;
+}
+
+simulated function int GetNumPendingInterceptors(int iContinent)
+{
+    `LWCE_LOG_DEPRECATED_NOREPLACE_CLS(GetNumPendingInterceptors);
+
+    return -100;
 }
 
 function OnChooseTableOption(int iOption)
@@ -153,6 +166,31 @@ function OnChooseTableOption(int iOption)
         `LWCE_HANGAR.LWCE_EquipWeapon(m_arrCEItems[iOption].GetItemName(), LWCE_XGShip(m_kShip));
         GoToView(eHangarView_ShipSummary);
     }
+}
+
+function OnChooseTransferInterceptor(int iDestContinent)
+{
+    local LWCE_XGFacility_Hangar kHangar;
+    local name nmContinent;
+
+    kHangar = LWCE_XGFacility_Hangar(HANGAR());
+    nmContinent = m_arrCEContinents[iDestContinent].nmContinent;
+
+    if (kHangar.LWCE_GetFreeHangarSpots(nmContinent) <= 0)
+    {
+        PlayBadSound();
+    }
+    else
+    {
+        PlayGoodSound();
+        kHangar.LWCE_TransferShip(LWCE_XGShip(m_kShip), nmContinent);
+        GoToView(eHangarView_ShipList);
+    }
+}
+
+function OnChooseTransferInterceptorOption(int iOption)
+{
+    `LWCE_LOG_DEPRECATED_NOREPLACE_CLS(OnChooseTransferInterceptorOption);
 }
 
 function UpdateHireDisplay()
@@ -269,6 +307,35 @@ function UpdateInterceptorSummary()
     kSummary.txtWeaponRange.StrValue = kWeapon.iRange $ "km";
 
     m_kShipSummary = kSummary;
+}
+
+function UpdateShipList()
+{
+    local LWCE_XGFacility_Hangar kHangar;
+    local LWCE_XGWorld kWorld;
+    local array<LWCE_TContinentInfo> arrContinentList;
+    local name nmContinent, nmHQContinent;
+    local int iContinent;
+
+    kHangar = LWCE_XGFacility_Hangar(HANGAR());
+    kWorld = LWCE_XGWorld(WORLD());
+    nmHQContinent = LWCE_XGHeadquarters(HQ()).m_nmContinent;
+
+    for (iContinent = 0; iContinent < kWorld.m_arrContinents.Length; iContinent++)
+    {
+        nmContinent = LWCE_XGContinent(kWorld.m_arrContinents[iContinent]).m_nmContinent;
+
+        if (nmContinent == nmHQContinent)
+        {
+            arrContinentList.InsertItem(0, kHangar.LWCE_GetContinentInfo(nmContinent));
+        }
+        else
+        {
+            arrContinentList.AddItem(kHangar.LWCE_GetContinentInfo(nmContinent));
+        }
+    }
+
+    m_arrCEContinents = arrContinentList;
 }
 
 function UpdateShipWeaponView(XGShip_Interceptor kShip, EShipWeapon eWeapon)

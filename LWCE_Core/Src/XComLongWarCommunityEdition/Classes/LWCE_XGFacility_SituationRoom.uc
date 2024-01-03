@@ -38,6 +38,16 @@ function bool IsCodeActive()
     return kLabs.LWCE_IsResearched('Tech_AlienOperations') && !kLabs.LWCE_IsTechAvailable('Tech_AlienCommunications');
 }
 
+function OnShipTransferExecuted(XGShip_Interceptor kShip)
+{
+    `LWCE_LOG_DEPRECATED_CLS(OnShipTransferExecuted);
+}
+
+function LWCE_OnShipTransferExecuted(LWCE_XGShip kShip)
+{
+    LWCE_XGFundingCouncil(World().m_kFundingCouncil).LWCE_OnShipTransferExecuted(kShip);
+}
+
 function PushAmbientHeadline(int iAct)
 {
     local LWCE_TTickerItem kTickerItem;
@@ -76,7 +86,7 @@ function LWCE_PushCountryWithdrawHeadline(name nmCountry)
     local LWCE_TTickerItem kTickerItem;
 
     I = `SYNC_RAND(TickerCountryWithdraw.Length);
-    
+
     kTag = new class'XGCountryTag';
     kTag.kCountry = `LWCE_XGCOUNTRY(nmCountry);
 
@@ -85,7 +95,7 @@ function LWCE_PushCountryWithdrawHeadline(name nmCountry)
     kTickerItem.strCode = string(I);
     kTickerItem.kTickerText.iState = eUIState_Bad;
     kTickerItem.kTickerText.StrValue = class'XComLocalizer'.static.ExpandStringByTag(TickerCountryWithdraw[I], kTag);
-    
+
     AddTickerItem(kTickerItem);
 }
 
@@ -123,7 +133,7 @@ function LWCE_PushExaltOperationHeadline(name nmCountry, int iOperation)
     kTag = new class'XGCountryTag';
     kTag.kCountry = `LWCE_XGCOUNTRY(nmCountry);
     kTickerItem.kTickerText.StrValue = class'XComLocalizer'.static.ExpandStringByTag(kTickerItem.kTickerText.StrValue, kTag);
-    
+
     AddTickerItem(kTickerItem);
 }
 
@@ -245,12 +255,12 @@ function PushMissionSpecificHeadline(XGMission kMission, bool bSuccess, int iGen
     }
 
     LWCE_GetSpecificMissionTickerString(iMissionType, bSuccess, arrItems, kTickerItem);
-    
+
     kTag = new class'XGCountryTag';
     kTag.kCountry = Country(kMission.m_iCountry);
     kTag.kCity = kMission.GetCity();
     kTickerItem.kTickerText.StrValue = class'XComLocalizer'.static.ExpandStringByTag(kTickerItem.kTickerText.StrValue, kTag);
-    
+
     AddTickerItem(kTickerItem);
 }
 
@@ -269,7 +279,7 @@ function PushNarrativeHeadline(ETicker_Narratives eNarrative)
     kTickerItem.strCode = string(int(eNarrative));
     kTickerItem.kTickerText.iState = eUIState_Good;
     kTickerItem.kTickerText.StrValue = TickerNarratives[eNarrative];
-    
+
     AddTickerItem(kTickerItem);
 }
 
@@ -520,7 +530,7 @@ private function LWCE_GetCountryPanicTickerString(name nmCountry, int iPanic, ar
     kTicker.kTickerText.StrValue = arrItems[I];
     kTicker.kTickerText.iState = eUIState_Bad;
     kTicker.strCode = strCode;
-    
+
     m_arrCEUsedPanicTickers.AddItem(strCode);
 }
 
@@ -596,7 +606,7 @@ private function LWCE_GetSpecificMissionTickerString(int iMissionType, bool bSuc
     if (arrUsedItems.Length == arrEncodedItems.Length)
     {
         arrUsedItems.Length = 0;
-        
+
         for (I = 0; I < arrEncodedItems.Length; I++)
         {
             m_arrCEUsedMissionTickers.RemoveItem(arrEncodedItems[I]);

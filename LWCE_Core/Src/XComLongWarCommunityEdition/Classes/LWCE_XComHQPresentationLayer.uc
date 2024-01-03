@@ -342,6 +342,15 @@ simulated state State_HangarHiring
     }
 }
 
+simulated state State_HangarShipList
+{
+    simulated function Activate()
+    {
+        m_kShipList = Spawn(class'LWCE_UIShipList', self);
+        m_kShipList.Init(XComPlayerController(Owner), GetHUD());
+    }
+}
+
 simulated state State_InterceptionEngagement
 {
     simulated function ActivatePrivate()

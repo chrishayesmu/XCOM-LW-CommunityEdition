@@ -168,16 +168,16 @@ function array<LWCE_XGCountry> LWCE_SortSitCountries()
 function UpdateCountries()
 {
     local array<LWCE_TSitCountry> arrCountriesUI;
-    local array<XGCountry> arrCountries;
+    local array<LWCE_XGCountry> arrCountries;
     local int iCountry;
 
-    arrCountries = SortSitCountries();
-    
+    arrCountries = LWCE_SortSitCountries();
+
     for (iCountry = 0; iCountry < arrCountries.Length; iCountry++)
     {
-        arrCountriesUI.AddItem(LWCE_BuildSitCountry(LWCE_XGCountry(arrCountries[iCountry])));
+        arrCountriesUI.AddItem(LWCE_BuildSitCountry(arrCountries[iCountry]));
     }
-    
+
     m_arrCECountriesUI = arrCountriesUI;
 }
 
@@ -337,4 +337,175 @@ function UpdateView()
             }
         }
     }
+}
+
+function UpdateWorldMap()
+{
+    local TMapItemUI kItem;
+    local Vector2D vec, nudgeVec;
+    local LWCE_TSatellite kSatellite;
+    local LWCE_XGExaltSimulation kExaltSim;
+    local LWCE_XGFacility_Hangar kHangar;
+    local LWCE_XGHeadquarters kHQ;
+    local LWCE_XGShip kShip;
+    local LWCE_XGStrategyAI kAI;
+    local XGCountry kCountry;
+    local XGOutpost kOutpost;
+    local name nmCountry;
+    local int I;
+    local array<TMapItemUI> mapItems;
+    local bool bMatchFound;
+
+    kAI = LWCE_XGStrategyAI(AI());
+    kExaltSim = LWCE_XGExaltSimulation(EXALT());
+    kHangar = LWCE_XGFacility_Hangar(HANGAR());
+    kHQ = LWCE_XGHeadquarters(HQ());
+
+    m_mapItemsUI.Remove(0, m_mapItemsUI.Length);
+
+    kItem.Amount = 1;
+    kItem.eType = eMapItem_HQ;
+    vec = kHQ.GetCoords();
+    kItem.X = vec.X;
+    kItem.Y = vec.Y;
+
+    m_mapItemsUI.AddItem(kItem);
+
+    foreach kHangar.m_arrCEShips(kShip)
+    {
+        bMatchFound = false;
+        vec = kShip.GetCoords();
+
+        for (I = 0; I < mapItems.Length; I++)
+        {
+            if (mapItems[I].eType != eMapItem_GroundedPlanes)
+            {
+                continue;
+            }
+
+            if (mapItems[I].X == vec.X && mapItems[I].Y == vec.Y)
+            {
+                bMatchFound = true;
+                mapItems[I].Amount++;
+            }
+        }
+
+        if (!bMatchFound)
+        {
+            kItem.eType = eMapItem_GroundedPlanes;
+            kItem.X = vec.X;
+            kItem.Y = vec.Y;
+
+            mapItems.AddItem(kItem);
+        }
+    }
+
+    for (I = 0; I < mapItems.Length; I++)
+    {
+        vec.X = mapItems[I].X;
+        vec.Y = mapItems[I].Y;
+
+        m_mapItemsUI.AddItem(mapItems[I]);
+    }
+
+    kItem.Amount = 1;
+
+    foreach kAI.m_arrCEShips(kShip)
+    {
+        if (kShip.IsDetected())
+        {
+            vec = kShip.GetCoords();
+            kItem.eType = eMapItem_UFO;
+            kItem.X = vec.X;
+            kItem.Y = vec.Y;
+
+            m_mapItemsUI.AddItem(kItem);
+        }
+    }
+
+    foreach kHQ.m_arrOutposts(kOutpost)
+    {
+        vec = kOutpost.GetCoords();
+        kItem.eType = eMapItem_Outpost;
+        kItem.X = vec.X;
+        kItem.Y = vec.Y;
+
+        m_mapItemsUI.AddItem(kItem);
+    }
+
+    foreach kHQ.m_arrCESatellites(kSatellite)
+    {
+        vec = kSatellite.v2Loc;
+        kItem.eType = eMapItem_Satellite;
+        kItem.X = vec.X;
+        kItem.Y = vec.Y;
+
+        m_mapItemsUI.AddItem(kItem);
+    }
+
+    foreach World().m_arrCountries(kCountry)
+    {
+        nmCountry = LWCE_XGCountry(kCountry).m_nmCountry;
+        kItem.eType = 0;
+
+        switch (kExaltSim.LWCE_GetLastVisibiltyStatus(nmCountry))
+        {
+            case eExaltCellLastVisibilityStatus_None:
+                break;
+            case eExaltCellLastVisibilityStatus_Revealed:
+                kItem.eType = eMapItem_Cell_AnimateIn;
+                break;
+            case eExaltCellLastVisibilityStatus_Hidden:
+                kItem.eType = eMapItem_Cell_AnimateOut;
+                break;
+            case eExaltCellLastVisibilityStatus_Removed:
+                kItem.eType = eMapItem_Cell_AnimateOutOperative;
+                break;
+        }
+
+        if (kItem.eType == 0 && kExaltSim.LWCE_IsCellExposedInCountry(nmCountry))
+        {
+            if (kExaltSim.LWCE_IsOperativeInCountry(nmCountry))
+            {
+                if (kExaltSim.IsOperativeReadyForExtraction())
+                {
+                    kItem.eType = eMapItem_Cell_Ready;
+                }
+                else
+                {
+                    kItem.eType = eMapItem_Cell_Agent;
+                }
+            }
+            else
+            {
+                kItem.eType = eMapItem_Cell;
+            }
+        }
+
+        if (kItem.eType != 0)
+        {
+            vec = kCountry.GetCoords();
+
+            if (kCountry.HasSatelliteCoverage())
+            {
+                // I don't know why Germany has a different adjustment from every other country, but okay
+                if (nmCountry == 'Germany')
+                {
+                    nudgeVec = vect2d(0.020, 0.0);
+                    vec = nudgeVec + vec;
+                }
+                else
+                {
+                    nudgeVec = vect2d(-0.020, 0.0);
+                    vec = nudgeVec + vec;
+                }
+            }
+
+            kItem.X = vec.X;
+            kItem.Y = vec.Y;
+            m_mapItemsUI.AddItem(kItem);
+        }
+    }
+
+    kExaltSim.ClearLastVisibiltyStatusForAllCountries();
 }

@@ -37,7 +37,7 @@ function AddPanic(int iPanic, optional bool bSuppressHeadline)
         return;
     }
 
-    if (!m_kTCountry.bCouncilMember)
+    if (!IsCouncilMember())
     {
         return;
     }
@@ -64,24 +64,22 @@ function AddPanic(int iPanic, optional bool bSuppressHeadline)
         }
     }
 
-    iPanic += EXALT().GetPanicMod(ECountry(m_kTCountry.iEnum), iPanic);
+    iPanic += LWCE_XGExaltSimulation(EXALT()).LWCE_GetPanicMod(m_nmCountry, iPanic);
     m_iPanic = Clamp(m_iPanic + iPanic, 0, 99);
     GEOSCAPE().ColorCountry(ECountry(GetID()), GetPanicColor());
 
     if (m_iPanic >= GetPanicWarningThreshhold() && m_iPanic - iPanic < GetPanicWarningThreshhold() && iPanic > 0)
     {
-        LWCE_XGGeoscape(GEOSCAPE()).LWCE_Alert(`LWCE_ALERT('CountryPanic').AddInt(m_kTCountry.iEnum).Build());
+        LWCE_XGGeoscape(GEOSCAPE()).LWCE_Alert(`LWCE_ALERT('CountryPanic').AddName(m_nmCountry).Build());
     }
 
     if (iPrevPanic != m_iPanic)
     {
         if (!bSuppressHeadline)
         {
-            SITROOM().PushPanicHeadline(ECountry(GetID()), m_iPanic / 20);
+            LWCE_XGFacility_SituationRoom(SITROOM()).LWCE_PushPanicHeadline(m_nmCountry, m_iPanic / 20);
         }
     }
-
-    CalcFunding();
 }
 
 /// <summary>

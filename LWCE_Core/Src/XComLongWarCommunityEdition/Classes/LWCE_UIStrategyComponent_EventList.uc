@@ -153,6 +153,12 @@ simulated function UpdateButtonHelp()
 
     kMgr = LWCE_XGMissionControlUI(GetMgr());
 
+    // Manager might be missing if we're in a tac/strat transition
+    if (kMgr == none)
+    {
+        return;
+    }
+
     if (`HQGAME.GetGameCore().GetHQ().m_bInFacilityTransition)
     {
         return;

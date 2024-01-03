@@ -1285,6 +1285,19 @@ function LWCE_OnShipSuccessfullyTransferred(LWCE_XGShip kShip, optional bool bSi
     }
 }
 
+function OnShipTransferExecuted(XGShip_Interceptor kShip)
+{
+    `LWCE_LOG_DEPRECATED_CLS(OnShipTransferExecuted);
+}
+
+/// <summary>
+/// Called when the transfer of a ship between two continents has begun.
+/// </summary>
+function LWCE_OnShipTransferExecuted(LWCE_XGShip kShip)
+{
+    LWCE_OnShipSuccessfullyTransferred(kShip, /* bSitRoomAttention */ false, /* bAttemptTurnInRequest */ true);
+}
+
 function OnValidRequestAdded(out TFCRequest kRequest)
 {
     `LWCE_LOG_DEPRECATED_CLS(OnValidRequestAdded);

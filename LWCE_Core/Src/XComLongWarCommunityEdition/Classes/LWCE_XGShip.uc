@@ -168,14 +168,47 @@ function Vector2D GetHomeCoords()
     return homeCoords;
 }
 
+function EShipType GetType()
+{
+    `LWCE_LOG_DEPRECATED_BY(GetType, m_nmShipTemplate);
+
+    return EShipType(0);
+}
+
 function name GetWeaponAtIndex(int Index)
 {
     return m_arrCEWeapons[Index];
 }
 
+function array<TShipWeapon> GetWeapons()
+{
+    local array<TShipWeapon> arrWeapons;
+
+    `LWCE_LOG_DEPRECATED_CLS(GetWeapons);
+
+    arrWeapons.Length = 0;
+
+    return arrWeapons;
+}
+
 function array<name> LWCE_GetWeapons()
 {
     return m_arrCEWeapons;
+}
+
+function string GetWeaponString()
+{
+    return `LWCE_ITEM(m_arrCEWeapons[0]).strName;
+}
+
+function bool IsAlienShip()
+{
+    return m_nmTeam == class'LWCEShipTemplate'.const.SHIP_TEAM_ALIEN;
+}
+
+function bool IsHumanShip()
+{
+    return m_nmTeam == class'LWCEShipTemplate'.const.SHIP_TEAM_XCOM;
 }
 
 /// <summary>
@@ -556,7 +589,7 @@ protected function CalculateArrival(Vector2D v2Target, TRect kBound)
             m_v2Coords.Y = kBound.fTop + RandRange(-MilesToYMapCoords(200), 0.0);
         }
     }
-    until (DistanceInMiles(v2Target, m_v2Coords) < 250);
+    until (DistanceInMiles(v2Target, m_v2Coords) >= 250);
 
     if (m_nmApproach == 'SeekingLatitude')
     {
