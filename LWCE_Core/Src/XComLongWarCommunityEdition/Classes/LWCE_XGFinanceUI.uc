@@ -1,33 +1,31 @@
-class LWCE_XGFinanceUI extends XGFinanceUI;
+class LWCE_XGFinanceUI extends XGFinanceUI
+    dependson(LWCE_XGFacility_Hangar);
 
 function TFinanceSection BuildCraftUI()
 {
-    local LWCE_XGStorage kStorage;
+    local LWCEShipTemplate kShipTemplate;
+    local LWCE_XGFacility_Hangar kHangar;
     local TFinanceSection kUI;
     local TLabeledText ltxtItem;
+    local LWCE_TShipCount kTCount;
+    local int Index;
 
-    kStorage = LWCE_XGStorage(STORAGE());
+    kHangar = LWCE_XGFacility_Hangar(HANGAR());
+    kTCount = kHangar.GetShipCountsByType();
 
+    // Total cost across all ships
     kUI.ltxtTitle.StrValue = ConvertCashToString(HANGAR().GetShipMaintenanceCost());
     kUI.ltxtTitle.strLabel = m_strCraftMaintenance;
 
-    if (kStorage.LWCE_GetNumItemsAvailable('Item_Interceptor') > 0)
+    for (Index = 0; Index < kTCount.arrShipTypes.Length; Index++)
     {
-        ltxtItem.strLabel = kStorage.LWCE_GetNumItemsAvailable('Item_Interceptor') $ "x" @ `LWCE_ITEM('Item_Interceptor').strName;
-        ltxtItem.StrValue = ConvertCashToString(HANGAR().GetCraftMaintenanceCost(eShip_Interceptor) * kStorage.LWCE_GetNumItemsAvailable('Item_Interceptor'));
+        kShipTemplate = `LWCE_SHIP(kTCount.arrShipTypes[Index]);
+
+        ltxtItem.strLabel = kTCount.arrShipCounts[Index] $ "x " $ kShipTemplate.strName;
+        ltxtItem.StrValue = ConvertCashToString(kShipTemplate.GetMaintenanceCost(class'LWCEShipTemplate'.const.SHIP_TEAM_XCOM) * kTCount.arrShipCounts[Index]);
+
         kUI.arrItems.AddItem(ltxtItem);
     }
-
-    if (kStorage.LWCE_GetNumItemsAvailable('Item_Firestorm') > 0)
-    {
-        ltxtItem.strLabel = kStorage.LWCE_GetNumItemsAvailable('Item_Firestorm') $ "x" @ `LWCE_ITEM('Item_Firestorm').strName;
-        ltxtItem.StrValue = ConvertCashToString(HANGAR().GetCraftMaintenanceCost(eShip_Firestorm) * kStorage.LWCE_GetNumItemsAvailable('Item_Firestorm'));
-        kUI.arrItems.AddItem(ltxtItem);
-    }
-
-    ltxtItem.strLabel = kStorage.LWCE_GetNumItemsAvailable('Item_Skyranger') $ "x" @ `LWCE_ITEM('Item_Skyranger').strName;
-    ltxtItem.StrValue = ConvertCashToString(HANGAR().GetCraftMaintenanceCost(eShip_Skyranger));
-    kUI.arrItems.AddItem(ltxtItem);
 
     return kUI;
 }

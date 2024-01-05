@@ -10,6 +10,12 @@ struct LWCE_TContinentInfo
     var array<int> m_arrShipOrderIndexes;
 };
 
+struct LWCE_TShipCount
+{
+    var array<name> arrShipTypes;
+    var array<int> arrShipCounts;
+};
+
 struct CheckpointRecord_LWCE_XGFacility_Hangar extends CheckpointRecord_XGFacility_Hangar
 {
     var array<LWCE_XGShip> m_arrCEShips;
@@ -154,11 +160,12 @@ function LWCE_AddShip(name nmShipType, name nmContinent)
         nmContinent = kHQ.LWCE_GetContinent();
     }
 
+    // TODO we should probably check that the target continent actually has room for a ship
+
     kShip = Spawn(class'LWCE_XGShip');
 
     if (nmContinent == kHQ.LWCE_GetContinent())
     {
-        // TODO integrate this with continent
         kShip.m_iHomeBay = GetAvailableBay();
     }
 
@@ -452,6 +459,47 @@ function int LWCE_GetNumShipsInRangeAndAvailable(LWCE_XGShip kShip)
     }
 
     return iAvailable;
+}
+
+/// <summary>
+/// Counts how many ships XCOM has of each type, including the Skyranger.
+/// </summary>
+function LWCE_TShipCount GetShipCountsByType()
+{
+    local int Index, iShip;
+    local LWCE_TShipCount kTCount;
+
+    // Iterate all of the normal ships first; this will conveniently cause the Skyranger to appear last
+    // in the Finance UI, as it is in the vanilla game
+    for (iShip = 0; iShip < m_arrCEShips.Length; iShip++)
+    {
+        Index = kTCount.arrShipTypes.Find(m_arrCEShips[iShip].m_nmShipTemplate);
+
+        if (Index != INDEX_NONE)
+        {
+            kTCount.arrShipCounts[Index]++;
+        }
+        else
+        {
+            kTCount.arrShipTypes.AddItem(m_arrCEShips[iShip].m_nmShipTemplate);
+            kTCount.arrShipCounts.AddItem(1);
+        }
+    }
+
+    // It seems unlikely that there would be a ship with the same type as the dropship, but we check it anyway
+    Index = kTCount.arrShipTypes.Find(LWCE_XGShip_Dropship(m_kSkyranger).m_nmShipTemplate);
+
+    if (Index != INDEX_NONE)
+    {
+        kTCount.arrShipCounts[Index]++;
+    }
+    else
+    {
+        kTCount.arrShipTypes.AddItem(LWCE_XGShip_Dropship(m_kSkyranger).m_nmShipTemplate);
+        kTCount.arrShipCounts.AddItem(1);
+    }
+
+    return kTCount;
 }
 
 function int GetTotalInterceptorCapacity(optional int kContinent = 5)
