@@ -111,11 +111,20 @@ function LWCE_AddItem(name ItemName, optional int iQuantity = 1, optional name n
 
     if (kItem.nmResultingShip != '')
     {
-        LWCE_XGFacility_Hangar(HANGAR()).LWCE_AddShip(kItem.nmResultingShip, nmContinent);
+        if (iQuantity <= 0)
+        {
+            `LWCE_LOG_ERROR("Adding a non-positive number of ships is not supported; iQuantity was " $ iQuantity);
+            return;
+        }
+
+        for (I = 0; I < iQuantity; I++)
+        {
+            LWCE_XGFacility_Hangar(HANGAR()).LWCE_AddShip(kItem.nmResultingShip, nmContinent);
+        }
 
         if (kItem.nmResultingShip == 'Firestorm')
         {
-            STAT_AddStat(eRecap_FirestormsBuilt, 1);
+            STAT_AddStat(eRecap_FirestormsBuilt, iQuantity);
         }
 
         return;
