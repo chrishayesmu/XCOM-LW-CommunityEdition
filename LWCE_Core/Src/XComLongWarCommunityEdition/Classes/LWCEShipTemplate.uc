@@ -157,6 +157,7 @@ function LWCE_TShipStats GetStats(name nmShipTeam)
     kStats.iEngagementSpeed = iEngagementSpeed;
     kStats.iHealth = iHealth;
     kStats.iSpeed = iSpeed;
+    kStats.arrWeapons = arrWeapons;
 
     // Apply global upgrades in order of required alien research
     arrCurrentUpgrades = class'LWCEShipDataSet'.default.arrGlobalShipUpgrades;
