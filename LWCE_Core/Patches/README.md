@@ -1,1 +1,3 @@
-This directory contains PatchUPK scriptfiles (a.k.a `.upatch` files) used for doing class overrides and removing other kinds of hardcoded limitations.
+This directory contains PatchUPK scriptfiles (here saved as `.upatch` files) used for doing class overrides and removing other kinds of hardcoded limitations. These are handled automatically by our InnoSetup installer, so there should be no need to install them by hand.
+
+For developers modifying a `.upatch` file who want to test it, you can use PatchUPK directly (PatcherGUI may not work). Be warned that you may have to uninstall the most recent UPK patch to do this. If the most recent patch was applied by LWCE's installer, the uninstall file can be found in your `<GameDir>\XEW\LWCE Files\Patches` directory.

@@ -53,18 +53,15 @@ var delegate<PostLoadCheckpointCallback> __PostLoadCheckpointCallback__Delegate;
 
 delegate PostSaveCheckpointCallback()
 {
-    //return;    
 }
 
 delegate PostLoadCheckpointCallback()
 {
-    //return;    
 }
 
 event PreLoadCheckpoint()
 {
     OnlyApplyActorClasses.Remove(0, OnlyApplyActorClasses.Length);
-    //return;    
 }
 event PostLoadCheckpoint(){}
 

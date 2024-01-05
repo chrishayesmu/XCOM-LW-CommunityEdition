@@ -69,6 +69,4 @@ defaultproperties
     GameReplicationInfoClass=class'LWCE_XComTacticalGRI'
     HUDType=class'LWCE_XComTacticalHUD'
     PlayerControllerClass=class'LWCE_XComTacticalController'
-    TacticalSaveGameClass=class'LWCE_Checkpoint_TacticalGame'
-    TransportSaveGameClass=class'LWCE_Checkpoint_StrategyTransport'
 }

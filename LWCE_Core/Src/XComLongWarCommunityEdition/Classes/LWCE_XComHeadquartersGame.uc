@@ -98,6 +98,4 @@ defaultproperties
 {
     GameReplicationInfoClass=class'LWCE_XComGameReplicationInfo'
     PlayerControllerClass=class'LWCE_XComHeadquartersController'
-    TacticalSaveGameClass=class'LWCE_Checkpoint_TacticalGame'
-    TransportSaveGameClass=class'LWCE_Checkpoint_StrategyTransport'
 }

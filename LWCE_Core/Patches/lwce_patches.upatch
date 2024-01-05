@@ -1,7 +1,23 @@
+/**************************************************************************
+ * This file contains bytecode patches, meant to be installed using
+ * PatchUPK. This is handled automatically when installing LWCE. If you're
+ * adding to this file, note that we (almost) always use [REPLACEMENT_CODE]
+ * rather than [BEFORE_CODE] or [AFTER_CODE], in order to get consistent
+ * results if LWCE ends up being installed on top of itself.
+ *
+ * Some of these patches are critical to how LWCE works, dynamically loading
+ * our own classes at the top of the class hierarchy. Others are less core,
+ * but still important for accomplishing certain tasks that might be too hard
+ * to do otherwise (e.g. those that touch a lot of native code).
+ **************************************************************************/
+
+
+
+/********************************************************************
+ * XComGameInfo.InitGame: adds a few key mutators used by LWCE
+ ********************************************************************/
+
 UPK_FILE = XComGame.upk
-
-/* XComGameInfo.InitGame: adds a few key mutators used by LWCE */
-
 OBJECT = XComGameInfo.InitGame : AUTO
 [REPLACEMENT_CODE]
 1B <AddMutator> 1F <%t "XComMutator.XComMutatorLoader"> 27 16
@@ -19,8 +35,12 @@ OBJECT = XComGameInfo.InitGame : AUTO
 
 
 
-/* XComGameInfo.SetGameType: overrides the class names used for which subclass of XComGameInfo to instantiate */
+/********************************************************************
+ * XComGameInfo.SetGameType: overrides the class names used
+ * for which subclass of XComGameInfo to instantiate
+ ********************************************************************/
 
+UPK_FILE = XComGame.upk
 OBJECT = XComGameInfo.SetGameType : AUTO
 [REPLACEMENT_CODE]
 0F 00 <.GameInfoClassName> 12 20 <Engine.GameInfo> [@] <Engine.GameInfo.ParseOption.ReturnValue> 00 ( 1B <ParseOption> 00 <.Options> 1F <%t "Game"> 16 )
@@ -58,62 +78,152 @@ OBJECT = XComGameInfo.SetGameType : AUTO
 
 
 
+/********************************************************************
+ * Checkpoints: these patches modify classes related to how XCOM: EW
+ *              persists data. By modifying the class and field flags,
+ *              we're able to make the list of Actor classes to persist
+ *              a config variable, and load it from an ini file.
+ *
+ *              Note that we don't use [REPLACEMENT_CODE] for these,
+ *              because this is the actual class and field data, which
+ *              we do not want to have to replicate in full!
+ *
+ *              HUGE thanks to tracktwo: this is basically tracktwo's
+ *              "CustomCheckpoint" mod on Nexus, expanded to include
+ *              a couple more Checkpoint classes.
+ ********************************************************************/
 
-/**
- * XGLoadoutMgr.ApplyLoadout: sets XGItem.m_strUIImage to a string form of the item ID when instantiating an item.
- * This bypasses the fact that XGItem only contains an EItemType field. m_strUIImage only ever has its default value
- * read, so we should be safe to hijack it.
+
+/********************************************************************
+ * To understand what our Checkpoint patches are doing, you have to know
+ * a little about the structure of a UPK file. Each class has a data section
+ * in the file containing certain information, such as its name, superclass,
+ * properties, functions, etc. Classes have a bitfield called the ClassFlags, which
+ * includes flags for whether the class is native, placeable, editinlinenew, etc.
+ * One of those flags indicates that the class expects to load data from a config
+ * file. Very nearby the ClassFlags is another datum, which defines the name of
+ * said config file. Therefore, for each Checkpoint class we want to populate
+ * using config, we (1) update the ClassFlags to set the third least significant
+ * bit. and (2) set the config file name to "Checkpoint".
+ *
+ * This will cause each class to be associated with Checkpoint.ini, but since
+ * none of their properties are marked as config, there's still nothing loaded. Next,
+ * we have to update the actual property definition. This is only necessary in the
+ * base Checkpoint class, because the subclasses refer back to the superclass's
+ * data block, rather than making copies of it. The process is similar to updating
+ * the ClassFlags: find the respective PropertyFlags and set the proper bit.
+ ********************************************************************/
+
+
+UPK_FILE=XComGame.upk
+OBJECT=Checkpoint
+
+[BEFORE_CODE]
+// ClassFlags
+<%u 0x080000B2>
+// Unchanged
+<Core.Object>
+// Class's config file name
+<None>
+[AFTER_CODE]
+// Add flag 0x04 to the class flags, marking it as a config class
+<%u 0x080000B6>
+// Unchanged
+<Core.Object>
+// Set config file name
+<Checkpoint>
+
+
+
+UPK_FILE=XComGame.upk
+OBJECT=Checkpoint.ActorClassesToRecord
+
+[BEFORE_CODE]
+// PropertyFields
+<%u 0x00400002>
+[AFTER_CODE]
+// Add flag 0x00004000, marking field as config
+<%u 0x00404002>
+
+
+
+/*
+ * tracktwo's CustomCheckpoint mod also updated Checkpoint.ActorClassesToRecord.ActorClassesToRecord,
+ * which presumably is the internal type of the ActorClassesToRecord array. In testing with LWCE, this
+ * didn't seem to be necessary. In case it's needed, go get CustomCheckpoint to compare.
  */
 
-OBJECT = XGLoadoutMgr.ApplyLoadout : AUTO
-[REPLACEMENT_CODE]
-0F 00 <.kLoadoutInstances> 19 12 20 <Engine.Engine> [@] <Engine.Engine.GetCurrentWorldInfo.ReturnValue> 00 ( 1C <Engine.Engine.GetCurrentWorldInfo> 16 ) [@] <Engine.Actor.Spawn.ReturnValue> 00 ( 1C <Engine.Actor.Spawn> 20 <Class.XGLoadoutInstances> 19 00 <.kUnit> [@] <Engine.Actor.Owner> 00 ( 01 <Engine.Actor.Owner> ) 4A 4A 4A 4A 4A 4A 16 )
-0F 19 00 <.kLoadoutInstances> [@] <XGLoadoutInstances.m_iNumItems> 00 ( 01 <XGLoadoutInstances.m_iNumItems> ) 25
-0F 19 00 <.kLoadoutInstances> [@] <XGLoadoutInstances.m_iNumBackpackItems> 00 ( 01 <XGLoadoutInstances.m_iNumBackpackItems> ) 25
-0F 00 <.I> 25
-[#label_0x00B7]
-07 [@label_0x04F2] 96 00 <.I> 2C 1A 16
-	07 [@label_0x0301] 9A 00 <.I> 2C 0D 16
-		0F 00 <.J> 25
-		[#label_0x00E2]
-		07 [@label_0x02FE] 96 00 <.J> 36 35 <XGLoadoutMgr.TLoadout.Backpack> <@TLoadout> 00 00 00 <.kLoad> 16
-			07 [@label_0x02F0] 9B 10 00 <.J> 35 <XGLoadoutMgr.TLoadout.Backpack> <@TLoadout> 00 00 00 <.kLoad> 25 16
-				0F 00 <.kItem> 19 12 20 <Engine.Engine> [@] <Engine.Engine.GetCurrentWorldInfo.ReturnValue> 00 ( 1C <Engine.Engine.GetCurrentWorldInfo> 16 ) [@] <Engine.Actor.Spawn.ReturnValue> 00 ( 1C <Engine.Actor.Spawn> 13 <Class.XGWeapon> 12 20 <Class.XGItemLibrary> [@] <XGItemLibrary.GetItem.ReturnValue> 00 ( 1B <GetItem> 10 00 <.J> 35 <XGLoadoutMgr.TLoadout.Backpack> <@TLoadout> 00 00 00 <.kLoad> 16 ) 19 00 <.kUnit> [@] <Engine.Actor.Owner> 00 ( 01 <Engine.Actor.Owner> ) 4A 4A 4A 4A 4A 4A 16 )
-				19 2E <Class.XGWeapon> 00 <.kItem> [@] <NullRef> 00 ( 1B <ApplyAmmoCost> 10 00 <.J> 35 <XGLoadoutMgr.TLoadout.Backpack> <@TLoadout> 00 00 00 <.kLoad> 16 )
-				0F 19 00 <.kItem> [@] <XGItem.m_strUIImage> 00 ( 01 <XGItem.m_strUIImage> ) 38 53 10 00 <.J> 35 <XGLoadoutMgr.TLoadout.Backpack> <@TLoadout> 00 00 00 <.kLoad>
-				19 00 <.kItem> [@] <NullRef> 00 ( 1B <Init> 16 )
-				0F 1A 00 <.J> 19 00 <.kLoadoutInstances> [@] <XGLoadoutInstances.m_aBackpackItems> 00 ( 01 <XGLoadoutInstances.m_aBackpackItems> ) 00 <.kItem>
-				A3 19 00 <.kLoadoutInstances> [@] <XGLoadoutInstances.m_iNumBackpackItems> 00 ( 01 <XGLoadoutInstances.m_iNumBackpackItems> ) 16
-			[#label_0x02F0]
-			A5 00 <.J> 16
-			06 [@label_0x00E2]
-		[#label_0x02FE]
-		06 [@label_0x04E4]
-	[#label_0x0301]
-	07 [@label_0x04E4] 9B 1A 00 <.I> 35 <XGLoadoutMgr.TLoadout.Items> <@TLoadout> 00 00 00 <.kLoad> 25 16
-		0F 00 <.kItem> 19 12 20 <Engine.Engine> [@] <Engine.Engine.GetCurrentWorldInfo.ReturnValue> 00 ( 1C <Engine.Engine.GetCurrentWorldInfo> 16 ) [@] <Engine.Actor.Spawn.ReturnValue> 00 ( 1C <Engine.Actor.Spawn> 13 <Class.XGWeapon> 12 20 <Class.XGItemLibrary> [@] <XGItemLibrary.GetItem.ReturnValue> 00 ( 1B <GetItem> 1A 00 <.I> 35 <XGLoadoutMgr.TLoadout.Items> <@TLoadout> 00 00 00 <.kLoad> 16 ) 19 00 <.kUnit> [@] <Engine.Actor.Owner> 00 ( 01 <Engine.Actor.Owner> ) 4A 4A 4A 4A 4A 4A 16 )
-		19 2E <Class.XGWeapon> 00 <.kItem> [@] <NullRef> 00 ( 1B <ApplyAmmoCost> 1A 00 <.I> 35 <XGLoadoutMgr.TLoadout.Items> <@TLoadout> 00 00 00 <.kLoad> 16 )
-		0F 19 00 <.kItem> [@] <XGItem.m_strUIImage> 00 ( 01 <XGItem.m_strUIImage> ) 38 53 1A 00 <.I> 35 <XGLoadoutMgr.TLoadout.Items> <@TLoadout> 00 00 00 <.kLoad>
-		19 00 <.kItem> [@] <NullRef> 00 ( 1B <Init> 16 )
-		0F 1A 00 <.I> 19 00 <.kLoadoutInstances> [@] <XGLoadoutInstances.m_aItems> 00 ( 01 <XGLoadoutInstances.m_aItems> ) 00 <.kItem>
-		A3 19 00 <.kLoadoutInstances> [@] <XGLoadoutInstances.m_iNumItems> 00 ( 01 <XGLoadoutInstances.m_iNumItems> ) 16
-	[#label_0x04E4]
-	A5 00 <.I> 16
-	06 [@label_0x00B7]
-[#label_0x04F2]
-19 00 <.kUnit> [@] <NullRef> 00 ( 1B <ApplyLoadout> 00 <.kLoadoutInstances> 2D 00 <.bLoadFromCheckpoint> 16 )
-04 0B
-53
+
+
+UPK_FILE=XComGame.upk
+OBJECT=Checkpoint.ActorClassesToDestroy
+[BEFORE_CODE]
+<%u 0x00400002>
+[AFTER_CODE]
+<%u 0x00404002>
+
+
+
+UPK_FILE=XComGame.upk
+OBJECT=Checkpoint.ActorClassesNotToDestroy
+
+[BEFORE_CODE]
+<%u 0x00400002>
+[AFTER_CODE]
+<%u 0x00404002>
+
+
+
+UPK_FILE=XComGame.upk
+OBJECT=Checkpoint_StrategyTransport
+
+[BEFORE_CODE]
+<%u 0x080000B2>
+<Core.Object>
+<None>
+[AFTER_CODE]
+<%u 0x080000B6>
+<Core.Object>
+<Checkpoint>
+
+
+
+UPK_FILE=XComGame.upk
+OBJECT=Checkpoint_TacticalGame
+
+[BEFORE_CODE]
+<%u 0x080000B2>
+<Core.Object>
+<None>
+[AFTER_CODE]
+<%u 0x080000B6>
+<Core.Object>
+<Checkpoint>
+
+
+
+UPK_FILE=XComStrategyGame.upk
+OBJECT=Checkpoint_StrategyGame
+
+[BEFORE_CODE]
+<%u 0x00000032>
+<Core.Object>
+<None>
+[AFTER_CODE]
+// Add flag 0x04 to the class flags, marking it as a config class
+<%u 0x00000036>
+<Core.Object>
+// Set config file name
+<Checkpoint>
 
 
 
 
-
-
-/*******************************************
+/********************************************************************
  * XComUnitPawn: replace functions with calls to Mutate
- *******************************************/
+ ********************************************************************/
 
+UPK_FILE = XComGame.upk
 OBJECT = XComUnitPawn.TakeDirectDamage : AUTO
 [REPLACEMENT_CODE]
 // DamageEvent_CauseOfDeath = Dmg;
@@ -132,10 +242,11 @@ OBJECT = XComUnitPawn.TakeDirectDamage : AUTO
 
 
 
-/*******************************************
+/********************************************************************
  * XComProjectile: replace functions with calls to Mutate
- *******************************************/
+ ********************************************************************/
 
+UPK_FILE = XComGame.upk
 OBJECT = XComProjectile.CalculateUnitDamage : AUTO
 [REPLACEMENT_CODE]
 // WorldInfo.Game.Mutate("XComProjectile.CalculateUnitDamage|" $ Name, GetALocalPlayerController());
@@ -145,6 +256,9 @@ OBJECT = XComProjectile.CalculateUnitDamage : AUTO
 04 0B
 53
 
+
+
+UPK_FILE = XComGame.upk
 OBJECT = XComProjectile.InitFX : AUTO
 [REPLACEMENT_CODE]
 // WorldInfo.Game.Mutate("XComProjectile.InitFX|" $ Name $ "|" $ bResetParticles $ "|" $ bHit, GetALocalPlayerController());
@@ -155,6 +269,8 @@ OBJECT = XComProjectile.InitFX : AUTO
 53
 
 
+
+UPK_FILE = XComGame.upk
 OBJECT = XComProjectile.InitProjectile : AUTO
 [REPLACEMENT_CODE]
 49 [@] ( 28 15 )
@@ -167,9 +283,12 @@ OBJECT = XComProjectile.InitProjectile : AUTO
 04 0B
 53
 
-/*******************************************
+
+/********************************************************************
  * XComWeapon: replace functions with calls to Mutate
- *******************************************/
+ ********************************************************************/
+
+UPK_FILE = XComGame.upk
 OBJECT = XComWeapon.PrepareProjectile : AUTO
 [REPLACEMENT_CODE]
 // WorldInfo.Game.Mutate("XComWeapon.PrepareProjectile|" $ Name $ "|" $ TemplateIndex, GetALocalPlayerController());
@@ -180,11 +299,12 @@ OBJECT = XComWeapon.PrepareProjectile : AUTO
 53
 
 
-/*******************************************
+/********************************************************************
  * XComAlienSpawnVolume: replace call to XGLoadoutMgr.ApplyInventory
  *                       with a Mutate call for the same purpose
- *******************************************/
+ ********************************************************************/
 
+UPK_FILE = XComGame.upk
 OBJECT = XComAlienSpawnVolume.Touch : AUTO
 [REPLACEMENT_CODE]
 // Locale = Volume.Location;
@@ -238,10 +358,10 @@ OBJECT = XComAlienSpawnVolume.Touch : AUTO
 53
 
 
-/*******************************************
+/********************************************************************
  * XComMutator: remove logging calls, which are unnecessarily
  * verbose and make debugging difficult.
- *******************************************/
+ ********************************************************************/
 
 UPK_FILE = XComMutator.u
 OBJECT = XComMutator.Mutate : AUTO
