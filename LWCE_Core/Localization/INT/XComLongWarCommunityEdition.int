@@ -12315,6 +12315,18 @@ PilotNames="\"Blender\" Iyengar"
 PilotNames="\"Blinker\" Kamala"
 PilotNames="\"Stuntman\" Silva"
 
+[Firestorm LWCEShipTemplate]
+strName="Firestorm"
+strDescription="<Bullet/> Alien alloy-based airframe and adapted energy shielding let the Firestorm absorb dramatically more punishment than its predecessor\n<Bullet/> With upgraded armament, can engage even the most dangerous enemy craft\n<Bullet/> When stationed on continents where countries lack satellite coverage, interceptors have a small chance of detecting enemy UFOs over those countries; additional interceptors add to that chance\n<Bullet/> Experienced pilots (measured by kills) increase to-hit and damage of all weapons\n<Bullet/> Interceptors may be given aggressive (bonus to hit for interceptor and UFO), balanced (no bonuses), or defensive (penalty to hit for interceptor and UFO) tactics at launch"
+
+[Interceptor LWCEShipTemplate]
+strName="Interceptor"
+strDescription="<Bullet/> Heavily modified and augmented fast attack fighter\n<Bullet/> Armor and frame durability will be a major issue when engaging any but the smallest UFOs\n<Bullet/> When stationed on continents where countries lack satellite coverage, interceptors have a small chance of detecting enemy UFOs over those countries; additional interceptors add to that chance\n<Bullet/> Experienced pilots (measured by kills) increase to-hit and damage of all weapons\n<Bullet/> Interceptors may be given aggressive (bonus to hit for interceptor and UFO), balanced (no bonuses), or defensive (penalty to hit for interceptor and UFO) tactics at launch"
+
+[Skyranger LWCEShipTemplate]
+strName="Skyranger"
+strDescription="Skyranger"
+
 [DamnGoodGround LWCEAbilityTemplate]
 strFriendlyName="Damn Good Ground"
 strDescription="Confers +<XGAbility:DamnGoodGroundAimBonus/> Aim and +<XGAbility:DamnGoodGroundDefenseBonus/> Defense against enemies at lower elevation, in addition to the usual elevation bonuses."
@@ -12886,7 +12898,7 @@ strName="EXALT Intelligence"
 strNamePlural="EXALT Intelligence"
 strBriefSummary="This intelligence will help us narrow down the location of EXALT's base."
 
-[Item_Firestorm LWCEShipTemplate]
+[Item_Firestorm LWCEItemTemplate]
 strName="Firestorm"
 strNamePlural="Firestorms"
 strBriefSummary="The Firestorm is our highly advanced combat aircraft incorporating numerous advances gained from studying the technology found in the alien ships. Power and navigational systems in particular were adapted directly from the alien designs. Once it is built, our most experienced combat aviator will take over as the pilot of the new craft."
@@ -13076,7 +13088,7 @@ strBriefSummary="The Incinerator Module uses alien materials to hold elerium in 
 strPerkHUDSummary="+3 Damage for Flamethrower."
 strTacticalText= "<Bullet/> Confers +3 damage for flamethrowers\n<Bullet/> Can be equipped by MECs\n<Bullet/> Weight: 1"
 
-[Item_Interceptor LWCEShipTemplate]
+[Item_Interceptor LWCEItemTemplate]
 strName="Interceptor"
 strNamePlural="Interceptors"
 
@@ -13664,10 +13676,6 @@ strName="Skeleton Key"
 strNamePlural="Skeleton Keys"
 strBriefSummary="This device is the culmination of our research into the shard recovered from the alien Outsider. It should allow our troops to infiltrate an alien base and find out what's inside."
 strTacticalText= "<Bullet/> Used to disable the Alien Base's defenses, enabling a raid by XCOM forces\n<Bullet/> Not equipped by soldiers; having it in XCOM HQ will suffice\n<Bullet/> Consumed after one use; we'll need more to assault additional bases"
-
-[Item_Skyranger LWCEShipTemplate]
-strName="Skyranger"
-strNamePlural="Skyrangers"
 
 [Item_SmartshellPod LWCEWeaponTemplate]
 strName="Smartshell Pod"
