@@ -638,6 +638,12 @@ simulated function int CalcXP(XGUnit kSoldier, int iEvent, XGUnit kVictim)
                 iXPEarned = GetBasicKillXP(kSoldier);
             }
 
+            // Bonus exp if the victim was a pod leader/navigator
+            if (kVictim.m_iProximityMines >= 1)
+            {
+                iXPEarned *= 1.0f + (kVictim.m_iProximityMines / 10.0f);
+            }
+
             break;
         case eGameEvent_MissionComplete:
             if (DeservesBetterAlienBonus(kSoldier))

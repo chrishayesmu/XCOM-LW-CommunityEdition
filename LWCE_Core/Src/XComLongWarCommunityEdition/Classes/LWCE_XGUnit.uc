@@ -503,11 +503,6 @@ function int AbsorbDamage(const int IncomingDamage, XGUnit kDamageCauser, XGWeap
         {
             iReturnDmg = FCeil(fReturnDmg);
         }
-        else if (IncomingDamage == 12345)
-        {
-            // This is some special case that I don't even want to start digging into
-            iReturnDmg = FCeil(fReturnDmg);
-        }
         else
         {
             iReturnDmg = FFloor(fReturnDmg);
@@ -2728,6 +2723,8 @@ simulated function InitUnitUpgrades(int iLeaderLevel)
     iCharType = LWCE_GetCharacter().GetCharacterType();
     iCurrentResearch = `BATTLE.STAT_GetStat(1);
     kChar = LWCE_GetCharacter().GetCharacter();
+
+    m_iProximityMines = iLeaderLevel; // Gives bonus exp later when killing this unit; TODO replace with a custom field
 
     // TODO: replace all of this with our own config/logic
 
