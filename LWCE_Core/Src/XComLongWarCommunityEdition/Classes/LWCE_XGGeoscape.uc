@@ -1,11 +1,18 @@
 class LWCE_XGGeoscape extends XGGeoscape
     dependson(LWCETypes);
 
+struct CheckpointRecord_LWCE_XGGeoscape extends XGGeoscape.CheckpointRecord
+{
+    var array<name> m_arrCEShipEncounters;
+};
+
 struct LWCE_TGeoscapeAlert
 {
     var name AlertType;
     var LWCEDataContainer kData;
 };
+
+var array<name> m_arrCEShipEncounters;
 
 var array<LWCE_TGeoscapeAlert> m_arrCEAlerts;
 
@@ -250,8 +257,6 @@ function InitNewGame()
     m_kDateTime.SetTime(0, 0, 0, START_MONTH, START_DAY, START_YEAR);
 
     InitPlayer();
-
-    m_arrCraftEncounters.Add(15);
 }
 
 event Tick(float fDeltaT)
@@ -584,6 +589,22 @@ function LWCE_CancelInterception(LWCE_XGShip kEnemyShip)
     {
         LWCE_Alert(`LWCE_ALERT('UFOLost').AddInt(kEnemyShip.m_iCounter).Build());
     }
+}
+
+function bool CanIdentifyCraft(EShipType eCraft)
+{
+    `LWCE_LOG_DEPRECATED_BY(CanIdentifyCraft, LWCE_CanIdentifyShip);
+
+    return true;
+}
+
+/// <summary>
+/// Whether XCom is capable of identifying the given ship, should they encounter one. This requires either
+/// a successful encounter with a ship of the same type previously, or an active Hyperwave Relay.
+/// </summary>
+function bool LWCE_CanIdentifyShip(name nmShip)
+{
+    return HQ().IsHyperwaveActive() || m_arrCEShipEncounters.Find(nmShip) != INDEX_NONE;
 }
 
 function ClearTopAlert(optional bool bDoNotResume = false)

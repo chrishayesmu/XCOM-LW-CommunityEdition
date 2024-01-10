@@ -206,10 +206,10 @@ struct LWCE_TCost
 struct LWCE_TPrereqs
 {
     var array<name> arrFacilityReqs; // A list of facility names that must be built. For non-unique facilities, only one needs to be built.
-    var array<name> arrFoundryReqs; // A list of foundry project names that must be complete.
-    var array<name> arrItemReqs;    // A list of item names. The player must have possessed these at one time, but doesn't necessarily need to still have them now.
-    var array<name> arrTechReqs;    // A list of research tech names that must be complete.
-    var array<int> arrUfoReqs;      // A list of UFO types that must be encountered. A UFO type is considered encountered after a successful assault on a crashed or landed UFO.
+    var array<name> arrFoundryReqs;  // A list of foundry project names that must be complete.
+    var array<name> arrItemReqs;     // A list of item names. The player must have possessed these at one time, but doesn't necessarily need to still have them now.
+    var array<name> arrTechReqs;     // A list of research tech names that must be complete.
+    var array<name> arrShipReqs;     // A list of enemy ship types that must be encountered. A ship type is considered encountered after a successful assault on a crashed or landed ship.
 
     var int iRequiredSoldierRank;   // If set, XCOM must have at least one soldier of this rank or higher.
     var int iTotalSoldierRanks;     // If set, the sum of soldier ranks across XCOM's roster must be at least this value.

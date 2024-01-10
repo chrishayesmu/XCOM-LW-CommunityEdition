@@ -52,9 +52,12 @@ var const localized string m_strHQBaseName;
 
 function Init(bool bLoadingFromSave)
 {
+    local LWCE_XGGeoscape kGeoscape;
     local XGFacility kFacility;
     local XGOutpost kOutpost;
     local int iSat;
+
+    kGeoscape = LWCE_XGGeoscape(GEOSCAPE());
 
     foreach m_arrFacilities(kFacility)
     {
@@ -92,7 +95,7 @@ function Init(bool bLoadingFromSave)
         }
     }
 
-    if ( (GEOSCAPE().m_arrCraftEncounters.Length > 0 && GEOSCAPE().m_arrCraftEncounters[9] != 0) || (m_kMC != none && m_kMC.m_bDetectedOverseer))
+    if ( kGeoscape.m_arrCEShipEncounters.Find('UFOOverseer') != INDEX_NONE || (m_kMC != none && m_kMC.m_bDetectedOverseer))
     {
         m_bHyperwaveActivated = true;
     }
@@ -402,9 +405,9 @@ function bool ArePrereqsFulfilled(LWCE_TPrereqs kPrereqs,
         }
     }
 
-    foreach kPrereqs.arrUfoReqs(iPrereqId)
+    foreach kPrereqs.arrShipReqs(PrereqName)
     {
-        if (kGeoscape.m_arrCraftEncounters[iPrereqId] == 0)
+        if (kGeoscape.m_arrCEShipEncounters.Find(PrereqName) == INDEX_NONE)
         {
             return false;
         }
