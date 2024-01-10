@@ -80,6 +80,25 @@ exec function GiveAllTech()
     GiveTech();
 }
 
+exec function GiveFacility(string FacilityType)
+{
+    local int iX, iY;
+
+    if (!GetFreeFacilitySpot(iX, iY))
+    {
+        GetConsole().OutputTextLine("Couldn't find a free space to place facility");
+        return;
+    }
+
+    if (`LWCE_FACILITY(name(FacilityType)) == none)
+    {
+        GetConsole().OutputTextLine("Couldn't find a facility template called " $ FacilityType);
+        return;
+    }
+
+    LWCE_XGBase(`HQGAME.GetGameCore().GetHQ().m_kBase).LWCE_SetFacility(name(FacilityType), iX, iY);
+}
+
 /**
  * Completes the specified Foundry project, or all uncompleted Foundry projects if no argument is supplied.
  *

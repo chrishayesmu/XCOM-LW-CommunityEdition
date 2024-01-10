@@ -32,7 +32,7 @@
 
 `define COLORTOSTR(clr) ("(R=" $ `clr.R $ ", G=" $ `clr.G $ ", B=" $ `clr.B $ ", A=" $ `clr.A $ ")")
 `define RECTTOSTR(r) ("(xMin=" $ `r.fLeft $ ", xMax=" $ `r.fRight $ ", yMin=" $ `r.fTop $ ", yMax=" $ `r.fBottom $ ")")
-`define V2DTOSTR(v) ("(X=" $ `v.X $ ", Y=" $ `v.Y $")")
+`define V2DTOSTR(v) ("(X=" $ `v.X $ ", Y=" $ `v.Y $ ")")
 
 // Convenience class of static functions
 `define LWCE_UTILS class'LWCEUtils'.static

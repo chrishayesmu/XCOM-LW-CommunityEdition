@@ -5,6 +5,41 @@ class LWCE_XGSatelliteSitRoomUI extends XGSatelliteSitRoomUI
 var name m_nmCountry;
 var name m_nmContinent;
 
+function string BuildBonusString(int iNumSatellites, XGContinent kContinent)
+{
+    `LWCE_LOG_DEPRECATED_CLS(BuildBonusString);
+
+    return "DEPRECATED";
+}
+
+function string LWCE_BuildBonusString(LWCE_XGCountry kCountry)
+{
+    local string strBonus;
+    local int iScientists, iEngineers;
+
+    iScientists = kCountry.m_kTemplate.iScientistsPerMonth;
+    iEngineers = kCountry.m_kTemplate.iEngineersPerMonth;
+
+    if (iScientists > 0)
+    {
+        strBonus $= "+" $ iScientists @ (iScientists > 1 ? m_strLabelScientists : m_strLabelScientist);
+    }
+
+    if (iEngineers > 0)
+    {
+        if (strBonus != "")
+        {
+            strBonus $= ", ";
+        }
+
+        strBonus $= "+" $ iEngineers @ (iEngineers > 1 ? m_strLabelEngineers : m_strLabelEngineer);
+    }
+
+    strBonus @= m_strLabelPerMonth;
+
+    return strBonus;
+}
+
 simulated function GetRequestData(out TFCRequest kRequestRef)
 {
     // This doesn't seem to ever have real data populated, so we don't bother with it
@@ -16,6 +51,43 @@ simulated function LWCE_GetRequestData(out LWCE_TFCRequest kRequestRef)
     // This is added just to meet the interface requirements and avoid log errors
 }
 
+function bool HasUplinkCapacity()
+{
+    return LWCE_XGHeadquarters(HQ()).m_arrCESatellites.Length < HQ().GetSatelliteLimit();
+}
+
+function OnConfirmLaunch()
+{
+    local bool bAlreadyHadBonus;
+
+    if (!HasUplinkCapacity())
+    {
+        PlayBadSound();
+        GoToView(eSatelliteView_Main);
+    }
+    else
+    {
+        Sound().PlaySFX(SNDLIB().SFX_UI_SatelliteLaunch);
+        m_bLaunched = true;
+        bAlreadyHadBonus = `LWCE_XGCONTINENT(m_nmContinent).HasBonus();
+        LWCE_XGHeadquarters(HQ()).LWCE_AddSatelliteNode(m_nmCountry, 'Item_Satellite');
+        CheckUplinkCapacity();
+
+        if (ShowBonus() && !bAlreadyHadBonus)
+        {
+            GoToView(eSatelliteView_Bonus);
+        }
+        else if (ShowAlert())
+        {
+            GoToView(eSatelliteView_Alert);
+        }
+        else
+        {
+            GoToView(eSatelliteView_Main);
+        }
+    }
+}
+
 function SetTargetCountry(int targetCountry)
 {
     `LWCE_LOG_DEPRECATED_CLS(SetTargetCountry);
@@ -25,8 +97,179 @@ function LWCE_SetTargetCountry(name nmTargetCountry)
 {
     m_nmCountry = nmTargetCountry;
     m_nmContinent = `LWCE_XGCOUNTRY(m_nmCountry).LWCE_GetContinent();
+
     UpdateCountryHelp();
     UpdateView();
+}
+
+/// <summary>
+/// Whether to show an alert that a just-launched satellite has no ships to protect it.
+/// </summary>
+function bool ShowAlert()
+{
+    local LWCE_XGFacility_Hangar kHangar;
+    local LWCE_XGHeadquarters kHQ;
+    local name nmCountry;
+    local int iSatellite;
+
+    if (`HQPRES.IsInState('State_FundingCouncilRequest'))
+    {
+        return false;
+    }
+
+    kHQ = LWCE_XGHeadquarters(HQ());
+    kHangar = LWCE_XGFacility_Hangar(HANGAR());
+
+    iSatellite = kHQ.m_arrCESatellites.Length - 1;
+    nmCountry = kHQ.m_arrCESatellites[iSatellite].nmCountry;
+
+    return kHangar.LWCE_GetNumShips(`LWCE_XGCOUNTRY(nmCountry).LWCE_GetContinent()) == 0;
+}
+
+/// <summary>
+/// Whether the continent bonus for the selected continent should be shown as achieved.
+/// </summary>
+function bool ShowBonus()
+{
+    return `LWCE_XGCONTINENT(m_nmContinent).HasBonus();
+}
+
+/// <summary>
+/// Populates the alert dialog warning that a just-launched satellite has no ships to protect it.
+/// </summary>
+function UpdateAlert()
+{
+    local name nmCountry;
+    local int iSatellite;
+    local TMenuOption txtOption;
+    local TSatAlert kAlert;
+    local LWCE_XGContinent kContinent;
+    local LWCE_XGHeadquarters kHQ;
+    local XGParamTag kTag;
+
+    kHQ = LWCE_XGHeadquarters(HQ());
+    kTag = XGParamTag(XComEngine(class'Engine'.static.GetEngine()).LocalizeContext.FindTag("XGParam"));
+
+    iSatellite = kHQ.m_arrCESatellites.Length - 1;
+    nmCountry = kHQ.m_arrCESatellites[iSatellite].nmCountry;
+    kContinent = `LWCE_XGCONTINENT(`LWCE_XGCOUNTRY(nmCountry).LWCE_GetContinent());
+
+    kTag.StrValue0 = kContinent.GetName();
+    kAlert.txtTitle.StrValue = class'XComLocalizer'.static.ExpandString(m_strLabelNoInterceptorsInRegion);
+    kAlert.txtTitle.iState = eUIState_Bad;
+    kAlert.txtBody.StrValue = m_strLabelNoInterceptorsInRange;
+    kAlert.txtBody.iState = eUIState_Warning;
+
+    txtOption.strText = m_strLabelOk;
+    kAlert.mnuOptions.arrOptions.AddItem(txtOption);
+
+    m_kAlert = kAlert;
+}
+
+function UpdateConfirmUI()
+{
+    local TSatConfirm kUI;
+    local LWCE_XGContinent kContinent;
+    local LWCE_XGCountry kCountry;
+    local XGParamTag kTag;
+    local int iFunding;
+
+    kTag = XGParamTag(XComEngine(class'Engine'.static.GetEngine()).LocalizeContext.FindTag("XGParam"));
+    kCountry = `LWCE_XGCOUNTRY(m_nmCountry);
+    kContinent = `LWCE_XGCONTINENT(m_nmContinent);
+
+    if (kCountry.LeftXCom())
+    {
+        kUI.txtSpecialists.strLabel = m_strLabelLeftXCom;
+    }
+    else
+    {
+        kUI.txtSpecialists.strLabel = m_strLabelReward;
+        kUI.txtSpecialists.StrValue = LWCE_BuildBonusString(kCountry);
+        iFunding = kCountry.LWCE_CalcFunding(/* bPretendHasSatellite */ true) - kCountry.LWCE_CalcFunding();
+    }
+
+    kUI.txtTitle.StrValue = m_strLabelConfirmLaunch;
+    kUI.txtTitle.iState = eUIState_Warning;
+
+    kUI.txtCountryLabel.StrValue = m_strLabelCountry;
+    kUI.txtCountryLabel.iState = eUIState_Highlight;
+
+    kUI.txtTravelTimeLabel.StrValue = m_strLabelTravelTime;
+    kUI.txtTravelTimeLabel.iState = eUIState_Highlight;
+
+    kUI.txtFundingLabel.StrValue = m_strLabelFundingIncrease;
+    kUI.txtFundingLabel.iState = eUIState_Highlight;
+
+    kUI.txtCountry.StrValue = kCountry.GetName();
+    kUI.txtCountry.iState = eUIState_Highlight;
+
+    kUI.txtTravelTime.StrValue = LWCE_XGGeoscape(GEOSCAPE()).LWCE_GetSatTravelTime(m_nmCountry) @ m_strLabelDays;
+    kUI.txtTravelTime.iState = eUIState_Highlight;
+
+    kUI.txtFunding.StrValue = ConvertCashToString(iFunding) @ m_strLabelPerMonth;
+    kUI.txtFunding.iState = eUIState_Cash;
+
+    kTag.IntValue0 = kContinent.GetNumSatellites() + 1;
+    kTag.IntValue1 = kContinent.GetNumSatNodes();
+    kTag.StrValue0 = kContinent.GetName();
+    kUI.txtContinentCollection.StrValue = class'XComLocalizer'.static.ExpandString(m_strLabelMonitoring);
+
+    kUI.btxtLaunch.iButton = 1;
+    kUI.btxtLaunch.StrValue = m_strLabelLaunchSatelliteLower;
+
+    kUI.btxtCancel.iButton = 4;
+    kUI.btxtCancel.StrValue = m_strLabelCancelSatelliteLower;
+
+    m_kConfirm = kUI;
+}
+
+/// <summary>
+/// When a country is selected, its staff-per-month, continent bonus, and country bonus are displayed in the
+/// bottom center of the screen. That is the data being updated by this function.
+///
+/// TODO: need to localize bonus descriptions once localization is working
+/// </summary>
+function UpdateContinent()
+{
+    local TSatContinentUI kUI;
+    local LWCEBonusTemplate kBonusTemplate;
+    local LWCEBonusTemplateManager kBonusTemplateMgr;
+    local LWCE_XGContinent kContinent;
+    local LWCE_XGCountry kCountry;
+
+    kUI.iHighlightedBonus = -1;
+
+    if (m_nmCountry == '' || m_nmContinent == '')
+    {
+        m_kContinentUI = kUI;
+        return;
+    }
+
+    kBonusTemplateMgr = `LWCE_BONUS_TEMPLATE_MGR;
+    kContinent = `LWCE_XGCONTINENT(m_nmContinent);
+    kCountry = `LWCE_XGCOUNTRY(m_nmCountry);
+
+    kUI.txtContinent.StrValue = kContinent.GetName();
+    kUI.txtContinent.iState = eUIState_Highlight;
+
+    // Start by displaying engineer/scientist bonuses from the highlighted country
+    kUI.arrBonusLabels.AddItem(FormatBonusLabel(m_strLabelBonus, kCountry.HasSatelliteCoverage(), /* bForceNoFormatting */ true)); // m_strLabelBonus already has formatting in it
+    kUI.arrBonuses.AddItem(FormatBonusValue(LWCE_BuildBonusString(kCountry), kCountry.HasSatelliteCoverage()));
+
+    // The first bonus is the continent
+    kBonusTemplate = kBonusTemplateMgr.FindBonusTemplate(kContinent.LWCE_GetBonus());
+
+    kUI.arrBonusLabels.AddItem(FormatBonusLabel(kBonusTemplate.strName, kContinent.HasBonus()));
+    kUI.arrBonuses.AddItem(FormatBonusValue(kBonusTemplate.strDescription, kContinent.HasBonus()));
+
+    // Second bonus is the selected country's
+    kBonusTemplate = kBonusTemplateMgr.FindBonusTemplate(kCountry.m_nmBonus);
+
+    kUI.arrBonusLabels.AddItem(FormatBonusLabel(kBonusTemplate.strName, kCountry.IsGrantingBonus()));
+    kUI.arrBonuses.AddItem(FormatBonusValue(kBonusTemplate.strDescription, kCountry.IsGrantingBonus()));
+
+    m_kContinentUI = kUI;
 }
 
 function UpdateCountry()
@@ -125,14 +368,16 @@ function UpdateMain()
     local int iSatellite;
     local TMenu mnuSatellites;
     local TMenuOption txtOption;
+    local LWCE_XGHeadquarters kHQ;
     local LWCE_XGStorage kStorage;
 
+    kHQ = LWCE_XGHeadquarters(HQ());
     kStorage = LWCE_XGStorage(STORAGE());
 
-    m_kUI.Current = HQ().m_arrSatellites.Length;
-    m_kUI.Max = HQ().GetSatelliteLimit();
+    m_kUI.Current = kHQ.m_arrCESatellites.Length;
+    m_kUI.Max = kHQ.GetSatelliteLimit();
     m_kUI.ltxtCapacity.strLabel = m_strLabelUplinkCapacity;
-    m_kUI.ltxtCapacity.StrValue = HQ().m_arrSatellites.Length $ "/" $ HQ().GetSatelliteLimit();
+    m_kUI.ltxtCapacity.StrValue = kHQ.m_arrCESatellites.Length $ "/" $ kHQ.GetSatelliteLimit();
 
     if (!HasUplinkCapacity())
     {
@@ -159,4 +404,24 @@ function UpdateMain()
     }
 
     m_kUI.mnuSatellites = mnuSatellites;
+}
+
+protected function TText FormatBonusLabel(string strBonusName, bool bHasBonus, optional bool bForceNoFormatting = false)
+{
+    local TText txt;
+
+    txt.StrValue = strBonusName $ (bForceNoFormatting ? "" : ": ");
+    txt.iState = bHasBonus ? eUIState_Warning : eUIState_Disabled;
+
+    return txt;
+}
+
+protected function TText FormatBonusValue(string strBonusValue, bool bHasBonus)
+{
+    local TText txt;
+
+    txt.StrValue = strBonusValue;
+    txt.iState = bHasBonus ? eUIState_Highlight : eUIState_Disabled;
+
+    return txt;
 }

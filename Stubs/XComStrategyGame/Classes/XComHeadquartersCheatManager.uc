@@ -10,6 +10,7 @@ var ECharacter iForceAlienType;
 var XGEntity kEntity;
 
 exec function GivePerk(string strName){}
+function bool GetFreeFacilitySpot(out int iX, out int iY){}
 
 function XGGeoscape GEOSCAPE(){}
 function XGHeadQuarters HQ(){}

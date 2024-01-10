@@ -25,7 +25,7 @@ function InitNewGame()
     m_kTemplate = `LWCE_CONTINENT(m_nmContinent);
 
     m_arrBounds = m_kTemplate.arrBounds;
-    m_arrCECountries = m_arrCECountries;
+    m_arrCECountries = m_kTemplate.arrCountries;
 
     // Pick a bonus at random if there's multiple; if not, this picks the only one
     m_nmBonus = m_kTemplate.arrContinentBonuses[Rand(m_kTemplate.arrContinentBonuses.Length)];
@@ -53,6 +53,12 @@ function name LWCE_GetBonus()
 function string GetName()
 {
     return m_kTemplate.strName;
+}
+
+function int GetNumSatNodes()
+{
+    // Every country has a corresponding satellite node
+    return m_arrCECountries.Length;
 }
 
 function int GetID()

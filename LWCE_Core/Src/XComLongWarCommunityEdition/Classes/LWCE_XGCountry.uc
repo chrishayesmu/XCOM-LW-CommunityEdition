@@ -17,7 +17,7 @@ var name m_nmBonus;
 var array<LWCE_TShipRecord> m_arrCEShipRecord; // History of all of the enemy ships that have been sent on missions targeting this country.
 var array<name> m_arrCECities; // Separate from the template in case the template changes mid-campaign due to mod changes/updates
 var int m_iShields; // Country's defense level; replaces m_kTCountry.iScience in LW
-var bool m_bIsGrantingBonus; // Whether this country is currently
+var bool m_bIsGrantingBonus; // Whether this country is currently granting its bonus
 
 var LWCECountryTemplate m_kTemplate;
 
@@ -249,9 +249,19 @@ function bool IsCouncilMember()
     return m_kTemplate.bIsCouncilMember;
 }
 
+/// <summary>
+/// Checks whether this country is currently granting its bonus (in m_nmBonus) to the player. Usually this requires satellite
+/// coverage, but the starting country always grants its starting bonus regardless. Note that granting the bonus doesn't imply
+/// granting engineers/scientists per month, which requires satellite coverage.
+/// </summary>
+function bool IsGrantingBonus()
+{
+    return m_bIsGrantingBonus;
+}
+
 function bool IsStartingCountry()
 {
-    return `LWCE_HQ.m_nmCountry == m_nmCountry;
+    return LWCE_XGHeadquarters(HQ()).m_nmCountry == m_nmCountry;
 }
 
 function LeaveXComProject()

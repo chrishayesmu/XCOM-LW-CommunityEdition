@@ -147,6 +147,8 @@ function array<LWCE_XGCountry> LWCE_SortSitCountries()
     arrContinents = kWorld.LWCE_GetContinents();
 
     // TODO: need some way to sort, maybe north-to-south/east-to-west? or make the templates specify, ugh
+    `LWCE_LOG_WARN("Situation room countries will be in the wrong order until we apply a sort to them!");
+
     foreach arrContinents(kContinent)
     {
         for (iCountry = 0; iCountry < kContinent.m_kTemplate.arrCountries.Length; iCountry++)

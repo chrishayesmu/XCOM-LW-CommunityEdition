@@ -112,13 +112,13 @@ function LWCE_PushExaltOperationHeadline(name nmCountry, int iOperation)
 
     switch (iOperation)
     {
-        case 1: // TODO: where the hell is the enum for these
+        case eExaltCellExposeReason_SabatogeOperation:
             arrItems = TickerExaltSabotage;
             break;
-        case 2:
+        case eExaltCellExposeReason_IncreasedPanic:
             arrItems = TickerExaltPropaganda;
             break;
-        case 3:
+        case eExaltCellExposeReason_ResearchHack:
             arrItems = TickerExaltResearchHack;
             break;
     }

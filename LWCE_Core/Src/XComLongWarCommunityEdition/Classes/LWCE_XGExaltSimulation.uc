@@ -544,8 +544,8 @@ function LWCE_PerformIncreasePanicOperation(name nmOperationCountry)
 
     LWCE_ExposeCell(nmOperationCountry);
     PRES().UINarrative(`XComNarrativeMomentEW("ExaltIntro"));
-    LWCE_XGGeoscape(GEOSCAPE()).LWCE_Alert(`LWCE_ALERT('ExaltMissionActivity').AddName(nmOperationCountry).AddInt(2).Build());
-    LWCE_XGFacility_SituationRoom(SITROOM()).LWCE_PushExaltOperationHeadline(nmOperationCountry, 1);
+    LWCE_XGGeoscape(GEOSCAPE()).LWCE_Alert(`LWCE_ALERT('ExaltMissionActivity').AddName(nmOperationCountry).AddInt(eExaltCellExposeReason_IncreasedPanic).Build());
+    LWCE_XGFacility_SituationRoom(SITROOM()).LWCE_PushExaltOperationHeadline(nmOperationCountry, eExaltCellExposeReason_IncreasedPanic);
 
     m_iDaysSinceLastOperation = 0;
 }
@@ -625,8 +625,8 @@ function LWCE_PerformResearchHackOperation(name nmOperationCountry)
 
     LWCE_ExposeCell(nmOperationCountry);
     PRES().UINarrative(`XComNarrativeMomentEW("ExaltIntro"));
-    LWCE_XGGeoscape(GEOSCAPE()).LWCE_Alert(`LWCE_ALERT('ExaltResearchHack').AddName(nmOperationCountry).AddInt(3).AddInt(iHoursHacked).AddInt(iLabReduction).Build());
-    LWCE_XGFacility_SituationRoom(SITROOM()).LWCE_PushExaltOperationHeadline(nmOperationCountry, 3);
+    LWCE_XGGeoscape(GEOSCAPE()).LWCE_Alert(`LWCE_ALERT('ExaltResearchHack').AddName(nmOperationCountry).AddInt(eExaltCellExposeReason_ResearchHack).AddInt(iHoursHacked).AddInt(iLabReduction).Build());
+    LWCE_XGFacility_SituationRoom(SITROOM()).LWCE_PushExaltOperationHeadline(nmOperationCountry, eExaltCellExposeReason_ResearchHack);
 
     m_iDaysSinceLastOperation = 0;
 }
@@ -647,8 +647,8 @@ function LWCE_PerformSabotageOperation(name nmOperationCountry)
     {
         HQ().AddResource(eResource_Money, -iAmountStolen);
         PRES().UINarrative(`XComNarrativeMomentEW("ExaltIntro"));
-        LWCE_XGGeoscape(GEOSCAPE()).LWCE_Alert(`LWCE_ALERT('ExaltMissionActivity').AddName(nmOperationCountry).AddInt(1).AddInt(iAmountStolen).Build());
-        LWCE_XGFacility_SituationRoom(SITROOM()).LWCE_PushExaltOperationHeadline(nmOperationCountry, 2);
+        LWCE_XGGeoscape(GEOSCAPE()).LWCE_Alert(`LWCE_ALERT('ExaltMissionActivity').AddName(nmOperationCountry).AddInt(eExaltCellExposeReason_SabatogeOperation).AddInt(iAmountStolen).Build());
+        LWCE_XGFacility_SituationRoom(SITROOM()).LWCE_PushExaltOperationHeadline(nmOperationCountry, eExaltCellExposeReason_SabatogeOperation);
         m_iDaysSinceLastOperation = 0;
     }
 }

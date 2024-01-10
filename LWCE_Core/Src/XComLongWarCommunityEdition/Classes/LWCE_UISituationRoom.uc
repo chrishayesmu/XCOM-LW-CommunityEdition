@@ -1,4 +1,5 @@
-class LWCE_UISituationRoom extends UISituationRoom;
+class LWCE_UISituationRoom extends UISituationRoom
+    dependson(LWCE_XGSituationRoomUI);
 
 simulated function XGSatelliteSitRoomUI GetSatelliteMgr()
 {
@@ -10,8 +11,110 @@ simulated function XGSatelliteSitRoomUI GetSatelliteMgr()
     return m_kLocalSatelliteMgr;
 }
 
+simulated function bool OnMouseEvent(int Cmd, array<string> args)
+{
+    switch (Cmd)
+    {
+        case class'UI_FxsInput'.const.FXS_L_MOUSE_UP:
+            if (args[args.Length - 1] == "launchButtonMC")
+            {
+                OnAccept("");
+            }
+            else if (args[args.Length - 1] == "accuseButtonMC")
+            {
+                if (GetInfiltratorMgr().m_kCursorUI.txtAccuse.iState == eUIState_Good)
+                {
+                    OnAccuse();
+                }
+            }
+            else if (args[args.Length - 1] == "okButtonMC")
+            {
+                OnAccept("");
+            }
+            else if (args[args.Length - 1] == "cancelButtonMC")
+            {
+                OnUCancel();
+            }
+            else if (args[args.Length - 1] == "transitionButtonMC")
+            {
+                OnAccept();
+            }
+            else if (args[args.Length - 1] == "theSweepButton")
+            {
+                OnSweepDialogue();
+            }
+            else
+            {
+                if (!m_bAcceptsInput)
+                {
+                    return false;
+                }
+
+                m_iCurrentCountry = int(Split(args[args.Length - 1], "country", true));
+                LWCE_RealizeSelected();
+                PlaySound(`SoundCue("SoundUI.MenuSelectCue"), true);
+            }
+
+            break;
+    }
+
+    return true;
+}
+
+
 simulated function LWCE_RealizeSelected()
 {
+}
+
+simulated function UpdateCountries()
+{
+    local int Index;
+    local LWCE_TSitCountry kCountry;
+    local LWCE_XGSituationRoomUI kMgr;
+
+    kMgr = LWCE_XGSituationRoomUI(GetSitRoomMgr());
+
+    kMgr.UpdateCountries();
+
+    for (Index = 0; Index < kMgr.m_arrCECountriesUI.Length; Index++)
+    {
+        kCountry = kMgr.m_arrCECountriesUI[Index];
+        AS_LWCE_SetCountryInfo(Index, class'UIUtilities'.static.CapsCheckForGermanScharfesS(kCountry.txtName.StrValue), kCountry.txtFunding.StrValue, kCountry.iPanic, kCountry.eState == eSitCountry_Normal);
+
+        if (m_iCurrentCountry == -1 && kCountry.txtFunding.StrValue == "")
+        {
+            m_iCurrentCountry = Index;
+        }
+    }
+
+    if (m_iCurrentCountry == -1)
+    {
+        m_iCurrentCountry = 0;
+    }
+}
+
+protected simulated function AS_LWCE_SetCountryInfo(int iIndex, string countryName, string cash, int panicLevel, bool bIsActive)
+{
+    local int iShields;
+    local LWCE_XGSituationRoomUI kMgr;
+
+    kMgr = LWCE_XGSituationRoomUI(GetSitRoomMgr());
+    iShields = `LWCE_XGCOUNTRY(kMgr.m_arrCECountriesUI[iIndex].nmCountry).m_iShields;
+
+    panicLevel = (iShields << 8) | panicLevel;
+    manager.ActionScriptVoid(string(GetMCPath()) $ ".SetCountryInfo");
+}
+
+protected simulated function AS_LWCE_SetCountryInfoInfiltrator(int iIndex, string countryName, int panicLevel, bool bIsActive, bool bHasCell, XGSituationRoomUI.EUICellState cellState, bool bClearedByClues, bool bShowExaltBase)
+{
+    local int iShields;
+    local LWCE_XGSituationRoomUI kMgr;
+
+    kMgr = LWCE_XGSituationRoomUI(GetSitRoomMgr());
+    iShields = `LWCE_XGCOUNTRY(kMgr.m_arrCECountriesUI[iIndex].nmCountry).m_iShields;
+
+    panicLevel = (iShields << 8) | panicLevel;
+    manager.ActionScriptVoid(string(GetMCPath()) $ ".SetCountryInfoInfiltrator");
 }
 
 state SatelliteState
@@ -32,7 +135,8 @@ state SatelliteState
             kFundingCouncil.m_nmPendingSatelliteRequestCountry = '';
         }
 
-        // Note that m_iCurrentCountry is an index, not an ECountry value
+        // TODO: m_iCurrentCountry is an index, not an ECountry value, but it's being mixed with
+        // XGSatelliteSitRoomUI.m_iCountry which is definitely an enum? Not sure what's happening
         if (m_iCurrentCountry == INDEX_NONE)
         {
             m_iCurrentCountry = LWCE_XGSatelliteSitRoomUI(GetSatelliteMgr()).m_iCountry;
@@ -40,7 +144,7 @@ state SatelliteState
 
         HideObjectives();
         AS_SetDisplayMode(DISPLAY_MODE_SATELLITE);
-        RealizeSelected();
+        LWCE_RealizeSelected();
         UpdateHUD();
 
         kStrategyHUD.m_kMenu.Hide();
@@ -84,7 +188,7 @@ state SatelliteState
 
         for (iBonus = 0; iBonus < kSatMgr.m_kContinentUI.arrBonuses.Length; iBonus++)
         {
-            iHTMLState = 0;
+            iHTMLState = eUIState_Normal;
             bonus = "";
 
             if (kSatMgr.m_kContinentUI.arrBonusLabels.Length > iBonus)
