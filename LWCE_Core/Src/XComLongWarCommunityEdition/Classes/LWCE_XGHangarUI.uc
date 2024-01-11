@@ -59,7 +59,7 @@ static function LWCE_TItemCard LWCE_BuildShipWeaponCard(name ItemName, optional 
     {
         kItemCard.iBaseDamage *= (1 + kShip.m_iConfirmedKills / 100.0f);
         kItemCard.shipWpnHitChance += Clamp(3 * kShip.m_iConfirmedKills, 0, 30);
-        kItemCard.strFlavorText $= default.m_strShipStatDisclaimer;
+        kItemCard.strFlavorText = class'UIUtilities'.static.GetHTMLColoredText(default.m_strShipStatDisclaimer, eUIState_Warning) $ kItemCard.strFlavorText;
     }
 
     return kItemCard;
@@ -141,6 +141,7 @@ function LWCE_TItemCard LWCE_HANGARUIGetItemCard(optional name nmContinent = '',
             kItemCard.iCardType = eItemCard_Interceptor;
             kItemCard.strName = kShip.m_kTemplate.strName;
             kItemCard.strFlavorText = class'XComLocalizer'.static.ExpandString(kShip.m_kTemplate.strDescription);
+            kItemCard.strImage = kShip.m_kTemplate.strHangarImage;
         }
     }
 

@@ -46,6 +46,7 @@ var config name nmSize;                  // How large this ship is (Small, Mediu
                                          // some game logic. see DefaultLWCEShips.ini for details.
 var config string strImage;              // Path to the ship's image to use for Geoscape alerts. Unfortunately, the interception image is hardcoded
                                          // in the Flash layer based on the ship's EShipType value.
+var config string strHangarImage;        // Path to the ship's image to use in the Hangar UI.
 var config string strEngineSound;        // Path to the sound to play for this ship's engine.
 var config EEntityGraphic entityGraphic; // Which graphic to use when displaying this ship on the Geoscape.
 

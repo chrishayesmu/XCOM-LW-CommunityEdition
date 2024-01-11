@@ -456,6 +456,7 @@ struct LWCE_TItemCard
     var string strName;
     var string strFlavorText;
     var string strShivWeapon;
+    var string strImage;
     var name ItemName;
     var int shipWpnRange;
     var int shipWpnArmorPen;
