@@ -1,6 +1,14 @@
 class LWCE_UIShipList extends UIShipList
     dependson(LWCETypes, LWCE_XGFacility_Hangar);
 
+simulated function OnLoseFocus()
+{
+    // LWCE issue #75: hide the ship list screen while a ship card is open, so it's not interactable
+    super(UI_FxsPanel).OnLoseFocus();
+    XComHQPresentationLayer(controllerRef.m_Pres).m_kStrategyHUD.ClearButtonHelp();
+    Hide();
+}
+
 protected simulated function UpdateData()
 {
     local int iContinentIndex, iOrderIndex, I, iDays, iStatusState, iShipState, iShipType;

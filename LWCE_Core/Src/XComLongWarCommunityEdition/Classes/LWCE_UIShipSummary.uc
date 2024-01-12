@@ -19,6 +19,14 @@ simulated function XGHangarUI GetMgr()
     return m_kLocalMgr;
 }
 
+simulated function OnLoseFocus()
+{
+    super(UI_FxsPanel).OnLoseFocus();
+    XComHQPresentationLayer(controllerRef.m_Pres).m_kStrategyHUD.ClearButtonHelp();
+    XComHQPresentationLayer(controllerRef.m_Pres).GetStrategyHUD().AS_SetHumanResources();
+    Hide();
+}
+
 simulated function bool OnMouseEvent(int Cmd, array<string> args)
 {
     local string callbackObj;
