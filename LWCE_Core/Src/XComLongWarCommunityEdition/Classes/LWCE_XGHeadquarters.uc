@@ -979,8 +979,10 @@ function LWCE_OrderShips(name nmShipItem, name nmContinent, int iQuantity)
     local LWCE_TShipOrder kOrder;
     local int iCost, Index;
 
-    // TODO: this should include other components of the cost as well, for mods
+    // TODO: this should include other components of the cost as well, for mods. We'll need to support displaying
+    // those costs on the UI first
     iCost = `LWCE_ITEM(nmShipItem).kCost.iCash;
+    kOrder.kUnitCostPaid.iCash = iCost;
 
     // LWCE issue #1: normally when you order interceptors, the strategy HUD (particularly the player's current money)
     // doesn't update until you back out to the main HQ screen. This fix simply updates the HUD immediately.
@@ -1062,20 +1064,25 @@ function bool PayCost(const LWCE_TCost kCost)
 
 function ReduceInterceptorOrder(int iOrder)
 {
-    local int iCost;
+    `LWCE_LOG_DEPRECATED_BY(ReduceInterceptorOrder, LWCE_ReduceShipOrder);
+}
 
+function LWCE_ReduceShipOrder(int iOrder)
+{
     if (iOrder < 0 || iOrder >= m_arrCEShipOrders.Length)
     {
         return;
     }
 
-    iCost = `LWCE_ITEM('Item_Interceptor').kCost.iCash;
+    // LWCE issue #92: normally the refund amount is just based on the current Interceptor cost, which
+    // can cause problems if the cost changes between when the order is placed and when it's canceled.
+    // Our fix is to store the cost paid and use that instead.
+    RefundCost(m_arrCEShipOrders[iOrder].kUnitCostPaid);
 
     // LWCE issue #1: same fix as in OrderInterceptors, above.
-    AddResource(eResource_Money, iCost);
     PRES().GetStrategyHUD().UpdateDefaultResources();
 
-    --m_arrCEShipOrders[iOrder].iNumShips;
+    m_arrCEShipOrders[iOrder].iNumShips--;
 
     if (m_arrCEShipOrders[iOrder].iNumShips <= 0)
     {

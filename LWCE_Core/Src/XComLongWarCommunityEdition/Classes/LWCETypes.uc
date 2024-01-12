@@ -592,8 +592,9 @@ struct LWCE_TShipOrder
 {
     var int iNumShips;
     var name nmDestinationContinent;
-    var name nmShipType; // Corresponds to an item template, not a ship template
+    var name nmShipType; // Corresponds to an item template, not a ship template. TODO: that's really confusing
     var int iHours;
+    var LWCE_TCost kUnitCostPaid; // In case the order is canceled and we want to refund. This is the cost per ship, not total.
 };
 
 /// <summary>
