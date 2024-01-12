@@ -968,7 +968,8 @@ function OrderInterceptors(int iContinent, int iQuantity)
 }
 
 /// <summary>
-/// Places an order for new ships, paying the cost for them immediately.
+/// Places an order for new ships, paying the cost for them immediately. Note that orders for multiple ships will be split into
+/// multiple orders automatically.
 /// </summary>
 /// <param name="nmShipItem">The name of the item template corresponding to the ship to order, e.g. 'Item_Interceptor'.</param>
 /// <param name="nmContinent">Which continent's hangar the ship will be in when it arrives.</param>
@@ -976,7 +977,7 @@ function OrderInterceptors(int iContinent, int iQuantity)
 function LWCE_OrderShips(name nmShipItem, name nmContinent, int iQuantity)
 {
     local LWCE_TShipOrder kOrder;
-    local int iCost;
+    local int iCost, Index;
 
     // TODO: this should include other components of the cost as well, for mods
     iCost = `LWCE_ITEM(nmShipItem).kCost.iCash;
@@ -985,14 +986,19 @@ function LWCE_OrderShips(name nmShipItem, name nmContinent, int iQuantity)
     // doesn't update until you back out to the main HQ screen. This fix simply updates the HUD immediately.
     AddResource(eResource_Money, -iCost * iQuantity);
     PRES().GetStrategyHUD().UpdateDefaultResources();
+    STAT_AddStat(eRecap_InterceptorsHired, iQuantity);
 
-    kOrder.iNumShips = iQuantity;
+    // LWCE issue #94: the UI for orders containing multiple ships is misleading, so we automatically split them into
+    // separate orders.
+    kOrder.iNumShips = 1;
     kOrder.nmDestinationContinent = nmContinent;
     kOrder.nmShipType = nmShipItem;
     kOrder.iHours = 72; // TODO make this part of the ship template?
 
-    STAT_AddStat(eRecap_InterceptorsHired, iQuantity);
-    m_arrCEShipOrders.AddItem(kOrder);
+    for (Index = 0; Index < iQuantity; Index++)
+    {
+        m_arrCEShipOrders.AddItem(kOrder);
+    }
 }
 
 function OrderStaff(int iType, int iQuantity)
