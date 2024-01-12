@@ -81,7 +81,7 @@ simulated function bool OnMouseEvent(int Cmd, array<string> args)
 
 simulated function bool OnUnrealCommand(int Cmd, int Arg)
 {
-    local TItemCard cardData;
+    local LWCE_TItemCard cardData;
 
     if (!CheckInputIsReleaseOrDirectionRepeat(Cmd, Arg)
      || (Cmd == class'UI_FxsInput'.const.FXS_DPAD_LEFT
@@ -111,7 +111,7 @@ simulated function bool OnUnrealCommand(int Cmd, int Arg)
                 PlaySound(`SoundCue("SoundUI.MenuScrollCue"), true);
             }
 
-            -- m_iCurrentSelection;
+            m_iCurrentSelection--;
             if (m_iCurrentSelection < 0)
             {
                 m_iCurrentSelection = m_arrUIOptions.Length - 1;
@@ -129,7 +129,7 @@ simulated function bool OnUnrealCommand(int Cmd, int Arg)
                 PlaySound(`SoundCue("SoundUI.MenuScrollCue"), true);
             }
 
-            ++ m_iCurrentSelection;
+            m_iCurrentSelection++;
             if (m_iCurrentSelection >= m_arrUIOptions.Length)
             {
                 m_iCurrentSelection = 0;
@@ -160,12 +160,12 @@ simulated function bool OnUnrealCommand(int Cmd, int Arg)
             break;
         case class'UI_FxsInput'.const.FXS_BUTTON_L3:
         case class'UI_FxsInput'.const.FXS_KEY_F1:
-            cardData = GetMgr().ENGINEERINGUIGetItemCard();
+            cardData = LWCE_XGEngineeringUI(GetMgr()).LWCE_ENGINEERINGUIGetItemCard();
 
-            if (cardData.m_type != 0)
+            if (cardData.iCardType != 0)
             {
                 PlaySound(`SoundCue("SoundUI.MenuSelectCue"), true);
-                `HQPRES.UIItemCard(cardData);
+                `LWCE_HQPRES.LWCE_UIItemCard(cardData);
             }
             else
             {

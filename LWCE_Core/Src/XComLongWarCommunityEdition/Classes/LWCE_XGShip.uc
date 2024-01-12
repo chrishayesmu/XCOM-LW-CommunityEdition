@@ -168,11 +168,69 @@ function Vector2D GetHomeCoords()
     return homeCoords;
 }
 
+/// <summary>
+/// Returns the player-friendly name of this ship. If the name shouldn't be known to the player
+/// (e.g. it's a ship type they've never seen before), the caller is responsible for enforcing this.
+/// </summary>
+function string GetName()
+{
+    return m_kTemplate.strName;
+}
+
 function EShipType GetType()
 {
     `LWCE_LOG_DEPRECATED_BY(GetType, m_nmShipTemplate);
 
     return EShipType(0);
+}
+
+function string GetStatusString()
+{
+    local int iTimeOut;
+    local string strTimeOut;
+    local XGParamTag kTag;
+
+    if (m_nmTeam != class'LWCEShipTemplate'.const.SHIP_TEAM_XCOM)
+    {
+        return class'XGLocalizedData'.default.ShipStatusNames[GetStatus()];
+    }
+
+    kTag = XGParamTag(`XEXPANDCONTEXT.FindTag("XGParam"));
+
+    if (m_iHoursDown >= 24)
+    {
+        iTimeOut = m_iHoursDown / 24;
+
+        if ((m_iHoursDown % 24) > 0)
+        {
+            iTimeOut += 1;
+        }
+
+        kTag.IntValue0 = iTimeOut;
+        strTimeOut = class'XComLocalizer'.static.ExpandString(class'XGShip_Interceptor'.default.m_strValueDays);
+    }
+    else
+    {
+        kTag.IntValue0 = m_iHoursDown;
+        strTimeOut = class'XComLocalizer'.static.ExpandString(class'XGShip_Interceptor'.default.m_strValueHours);
+    }
+
+    kTag.StrValue0 = strTimeOut;
+
+    switch (GetStatus())
+    {
+        case eShipStatus_Ready:
+        case eShipStatus_Damaged:
+        case eShipStatus_Destroyed:
+            return super.GetStatusString();
+        case eShipStatus_Transfer:
+        case eShipStatus_Rearming:
+        case eShipStatus_Refuelling:
+        case eShipStatus_Repairing:
+            return class'XComLocalizer'.static.ExpandString(super.GetStatusString());
+        default:
+            return "???";
+    }
 }
 
 function name GetWeaponAtIndex(int Index)

@@ -315,13 +315,18 @@ simulated function LoadFlashAlertPanel()
 
 function UFOContact_BeginShipSelection(XGShip_UFO kTarget)
 {
-    if (UIMissionControl_UFORadarContactAlert(m_kActiveAlert) == none)
+    `LWCE_LOG_DEPRECATED_CLS(UFOContact_BeginShipSelection);
+}
+
+function LWCE_UFOContact_BeginShipSelection(LWCE_XGShip kTarget)
+{
+    if (LWCE_UIMissionControl_UFORadarContactAlert(m_kActiveAlert) == none)
     {
         m_kActiveAlert = Spawn(class'LWCE_UIMissionControl_UFORadarContactAlert', self);
         m_kActiveAlert.Init(controllerRef, manager, self);
     }
 
-    UIMissionControl_UFORadarContactAlert(m_kActiveAlert).BeginInterception(kTarget);
+    LWCE_UIMissionControl_UFORadarContactAlert(m_kActiveAlert).LWCE_BeginInterception(kTarget);
 }
 
 event Destroyed()

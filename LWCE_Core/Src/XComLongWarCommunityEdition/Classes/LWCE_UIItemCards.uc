@@ -214,7 +214,7 @@ simulated function UpdateData()
         case eItemCard_Satellite:
             AS_SetCardTitle(Caps(m_tCEItemCard.strName));
             AS_AddSimpleTextCardData(m_tCEItemCard.strFlavorText);
-            AS_SetCardImage(kItem.ImagePath, m_tCEItemCard.iCardType);
+            AS_SetCardImage(m_tCEItemCard.strImage != "" ? m_tCEItemCard.strImage : kItem.ImagePath, m_tCEItemCard.iCardType);
             break;
         case eItemCard_ShipWeapon:
             AS_SetCardTitle(Caps(m_tCEItemCard.strName));

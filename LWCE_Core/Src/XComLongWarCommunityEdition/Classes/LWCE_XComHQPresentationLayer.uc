@@ -107,6 +107,19 @@ reliable client simulated function UIFundingCouncilRequestComplete(IFCRequestInt
     PushState('State_FundingCouncilRequest');
 }
 
+reliable client simulated function UIIntercept(XGShip_UFO kUFO)
+{
+    `LWCE_LOG_DEPRECATED_CLS(UIIntercept);
+}
+
+/// <summary>
+/// Brings up the UI to TODO
+/// </summary>
+reliable client simulated function LWCE_UIIntercept(LWCE_XGShip kShip)
+{
+    LWCE_UIMissionControl(m_kUIMissionControl).LWCE_UFOContact_BeginShipSelection(kShip);
+}
+
 reliable client simulated function UIItemUnlock(TItemUnlock kUnlock)
 {
     `LWCE_LOG_DEPRECATED_CLS(UIItemUnlock);
@@ -171,15 +184,25 @@ reliable client simulated function LWCE_UIManufactureItem(name ItemName, optiona
 
 reliable client simulated function UIHangarShipSummary(XGShip_Interceptor kShip)
 {
+    `LWCE_LOG_DEPRECATED_CLS(UIHangarShipSummary);
+}
+
+reliable client simulated function LWCE_UIHangarShipSummary(LWCE_XGShip kShip)
+{
     m_kShipSummary = Spawn(class'LWCE_UIShipSummary', self);
-    m_kShipSummary.Init(XComPlayerController(Owner), GetHUD(), kShip);
+    LWCE_UIShipSummary(m_kShipSummary).LWCE_Init(XComPlayerController(Owner), GetHUD(), kShip);
     PushState('State_HangarShipSummary');
 }
 
 reliable client simulated function UIHangarShipLoadout(XGShip_Interceptor kShip)
 {
+    `LWCE_LOG_DEPRECATED_CLS(UIHangarShipLoadout);
+}
+
+reliable client simulated function LWCE_UIHangarShipLoadout(LWCE_XGShip kShip)
+{
     m_kShipLoadout = Spawn(class'LWCE_UIShipLoadout', self);
-    m_kShipLoadout.Init(XComPlayerController(Owner), GetHUD(), kShip);
+    LWCE_UIShipLoadout(m_kShipLoadout).LWCE_Init(XComPlayerController(Owner), GetHUD(), kShip);
     PushState('State_HangarShipLoadout');
 }
 
@@ -348,6 +371,17 @@ simulated state State_HangarShipList
     {
         m_kShipList = Spawn(class'LWCE_UIShipList', self);
         m_kShipList.Init(XComPlayerController(Owner), GetHUD());
+    }
+}
+
+simulated state State_HangarShipSummary
+{
+    simulated function Activate()
+    {
+        local LWCE_XGShip kShip;
+
+        kShip = LWCE_UIShipSummary(m_kShipSummary).m_kCEShip;
+        LWCE_XGFacility_Hangar(`HQGAME.GetGameCore().GetHQ().HANGAR()).LWCE_SetupWeaponView(kShip);
     }
 }
 

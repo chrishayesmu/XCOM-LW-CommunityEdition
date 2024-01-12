@@ -705,10 +705,9 @@ function UpdateManufactureItem()
         kWidget.txtNotes.StrValue @= m_strNoteWeaponAllSoldiers;
     }
 
-    // TODO move to template
-    if (kItem.GetItemName() == 'Item_Firestorm')
+    if (kItem.nmResultingShip != '')
     {
-        if (HANGAR().GetFreeHangerSpots(HQ().GetContinent()) < m_kCEItemProject.iQuantity)
+        if (LWCE_XGFacility_Hangar(HANGAR()).LWCE_GetFreeHangarSpots(LWCE_XGHeadquarters(HQ()).LWCE_GetContinent()) < m_kCEItemProject.iQuantity)
         {
             m_bCanAfford = false;
             kWidget.txtProblem.iState = eUIState_Bad;
@@ -719,6 +718,7 @@ function UpdateManufactureItem()
     }
     else if (kItem.GetItemName() == 'Item_Satellite')
     {
+        // TODO move to template
         iSatCap = HQ().m_arrSatellites.Length;
         iSatCap += LWCE_XGStorage(STORAGE()).LWCE_GetNumItemsAvailable('Item_Satellite');
         iSatCap += kEngineering.GetNumSatellitesBuilding();
@@ -734,11 +734,6 @@ function UpdateManufactureItem()
             kWidget.txtNotes.StrValue = m_strSatCapacity;
             kWidget.txtNotes.iState = eUIState_Bad;
         }
-    }
-    else if (m_kCEItemProject.iEngineers == 0)
-    {
-        kWidget.txtNotes.StrValue @= m_strNoteBuildStalled;
-        kWidget.txtNotes.iState = eUIState_Normal;
     }
 
     if (m_bCanRush)

@@ -709,6 +709,11 @@ function XGMission CheatCrash(XGShip_UFO strMapName)
     return none;
 }
 
+function CostAlienSquad()
+{
+    `LWCE_LOG_DEPRECATED_BY(CostAlienSquad, IsXComBeingAttacked);
+}
+
 /// <summary>
 /// Creates a new mission for defending one of XCOM's air bases.
 /// </summary>
@@ -1550,6 +1555,37 @@ function bool LWCE_IsTerrorTarget(name nmCountry)
         kCEObjective = LWCE_XGAlienObjective(kObjective);
 
         if (kCEObjective.m_kCETObjective.nmType == 'Terrorize' && kCEObjective.m_nmCountryTarget == nmCountry)
+        {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+/// <summary>
+/// Checks whether XCom is under attack, meaning that either an XCOM HQ assault or an XCOM airbase assault are imminent.
+/// This includes missions already spawned on the Geoscape, or ships which are en route to spawn such missions.
+/// </summary>
+function bool IsXComBeingAttacked()
+{
+    local LWCE_XGShip kShip;
+    local XGMission kMission;
+
+    foreach m_arrCEShips(kShip)
+    {
+        if (kShip.IsFlying())
+        {
+            if (kShip.m_kObjective.LWCE_GetType() == 'AssaultXComAirBase' || kShip.m_kObjective.LWCE_GetType() == 'AssaultXComHQ')
+            {
+                return true;
+            }
+        }
+    }
+
+    foreach GEOSCAPE().m_arrMissions(kMission)
+    {
+        if (kMission.m_iMissionType == eMission_LandedUFO && kMission.m_kDesc.m_strMapName == "EWI_HQAssault_MP (Airbase Defense)")
         {
             return true;
         }

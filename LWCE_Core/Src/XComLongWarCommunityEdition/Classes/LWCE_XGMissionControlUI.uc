@@ -176,7 +176,7 @@ function BuildEventOptions()
                 kOption.clrOption = MakeColor(0, 0, 200, byte(175 / 3));
                 break;
             case 'InterceptorOrdering':
-                kTag.StrValue0 = Continent(m_kCEEvents.arrEvents[iEvent].kData.Data[0].I).GetName();
+                kTag.StrValue0 = `LWCE_XGCONTINENT(m_kCEEvents.arrEvents[iEvent].kData.Data[0].Nm).GetName();
                 kOption.EventType = 'InterceptorOrdering';
                 kOption.iPriority = 2;
                 kOption.imgOption.iImage = eImage_OldInterception;
@@ -199,7 +199,7 @@ function BuildEventOptions()
                 kOption.clrOption = MakeColor(0, 0, 200, byte(175 / 3));
                 break;
             case 'ShipTransfers':
-                kTag.StrValue0 = Continent(m_kCEEvents.arrEvents[iEvent].kData.Data[0].I).GetName();
+                kTag.StrValue0 = `LWCE_XGCONTINENT(m_kCEEvents.arrEvents[iEvent].kData.Data[0].Nm).GetName();
                 kOption.EventType = 'ShipTransfers';
                 kOption.iPriority = 2;
                 kOption.imgOption.iImage = eImage_OldInterception;
@@ -208,7 +208,7 @@ function BuildEventOptions()
                 kOption.clrOption = MakeColor(0, 0, 200, byte(175 / 3));
                 break;
             case 'FCRequest':
-                kTag.StrValue0 = Continent(m_kCEEvents.arrEvents[iEvent].kData.Data[0].I).GetName();
+                kTag.StrValue0 = `LWCE_XGCONTINENT(m_kCEEvents.arrEvents[iEvent].kData.Data[0].Nm).GetName();
                 kOption.kData = m_kCEEvents.arrEvents[iEvent].kData;
                 kOption.EventType = 'FCRequest';
                 kOption.iPriority = 2;
@@ -818,16 +818,22 @@ function ProcessAlert()
     }
 }
 
-function ShowUFOInterceptAlert(int iUFOindex)
+/// <summary>
+/// Brings up the UI for the initial choice to intercept or ignore a ship contact.
+/// Despite still being named "UFO", works with LWCE ships.
+/// </summary>
+function ShowUFOInterceptAlert(int iShipIndex)
 {
     local LWCE_XGGeoscape kGeoscape;
+    local LWCE_XGStrategyAI kAI;
 
+    kAI = LWCE_XGStrategyAI(AI());
     kGeoscape = LWCE_XGGeoscape(GEOSCAPE());
 
-    kGeoscape.LWCE_Alert(`LWCE_ALERT('UFODetected').AddInt(iUFOindex).Build());
+    kGeoscape.LWCE_Alert(`LWCE_ALERT('UFODetected').AddInt(iShipIndex).Build());
     GoToView(eMCView_ChooseShip);
     kGeoscape.ClearTopAlert(true);
-    PRES().UIIntercept(AI().GetUFO(iUFOindex));
+    LWCE_XComHQPresentationLayer(PRES()).LWCE_UIIntercept(kAI.LWCE_GetShip(iShipIndex));
 }
 
 event Tick(float fDeltaT)

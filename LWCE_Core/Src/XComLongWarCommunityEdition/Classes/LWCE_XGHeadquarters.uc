@@ -360,7 +360,6 @@ function bool ArePrereqsFulfilled(LWCE_TPrereqs kPrereqs,
                                   optional name ItemName)
 {
     local name PrereqName;
-    local int iPrereqId;
     local LWCE_XGFacility_Barracks kBarracks;
     local LWCE_XGFacility_Engineering kEngineering;
     local LWCE_XGFacility_Labs kLabs;
@@ -964,7 +963,7 @@ function bool LWCE_IsSatelliteInTransitTo(name nmCountry)
 
 function OrderInterceptors(int iContinent, int iQuantity)
 {
-    `LWCE_LOG_DEPRECATED_CLS(OrderInterceptors);
+    `LWCE_LOG_DEPRECATED_BY(OrderInterceptors, LWCE_OrderShips);
 }
 
 /// <summary>
@@ -1008,8 +1007,9 @@ function OrderStaff(int iType, int iQuantity)
     local TStaffOrder kOrder;
     local int I;
 
-    // LWCE issue #14: update resource HUD after ordering soldiers
     AddResource(eResource_Money, -STAFF(iType).iCash * iQuantity);
+
+    // LWCE issue #14: update resource HUD after ordering soldiers
     PRES().GetStrategyHUD().UpdateDefaultResources();
 
     if (iType == eStaff_Soldier)
@@ -1226,10 +1226,7 @@ function UpdateInterceptorOrders()
     {
         m_arrCEShipTransfers[iTransfer].iHours -= 1;
 
-        if (m_arrCEShipTransfers[iTransfer].iHours > 0)
-        {
-        }
-        else
+        if (m_arrCEShipTransfers[iTransfer].iHours <= 0)
         {
             aiRemove.AddItem(iTransfer);
         }

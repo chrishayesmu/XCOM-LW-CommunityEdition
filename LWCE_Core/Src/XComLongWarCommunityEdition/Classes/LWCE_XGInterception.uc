@@ -19,6 +19,16 @@ var array<LWCE_XGShip> m_arrEnemyShips;       // Opposed ships. The first entry 
                                               // any other ships in the list.
 var array<LWCE_TInterceptionKill> m_arrKills; // Tracks which ships have killed which other ships in the engagement.
 
+function Init(XGShip_UFO kTarget)
+{
+    `LWCE_LOG_DEPRECATED_CLS(Init);
+}
+
+function LWCE_Init(array<LWCE_XGShip> arrEnemyShips)
+{
+    m_arrEnemyShips = arrEnemyShips;
+}
+
 function bool CheckForGood()
 {
     local LWCE_XGShip kShip;

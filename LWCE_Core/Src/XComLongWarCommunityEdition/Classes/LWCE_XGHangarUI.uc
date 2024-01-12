@@ -6,7 +6,7 @@ var const localized string m_strShipStatDisclaimer;
 var array<LWCE_TContinentInfo> m_arrCEContinents;
 var array<LWCEShipWeaponTemplate> m_arrCEItems;
 var array<LWCE_TItemProject> m_arrCEShipProjects;
-var UIShipSummary m_kShipSummaryScreen;
+var name m_nmContinentHiringInto;
 
 function XGHangarUI.TTableItemSummary BuildItemSummary(TItem kItem)
 {
@@ -55,10 +55,15 @@ static function LWCE_TItemCard LWCE_BuildShipWeaponCard(name ItemName, optional 
     kItemCard.strFlavorText = class'XComLocalizer'.static.ExpandString(kShipWeapon.strTacticalText);
 
     // TODO centralize this math somewhere
+    // TODO we aren't currently accounting for projects like Improved Avionics, so our hit chance is wrong
+    // TODO this should be a setting maybe, it could confuse people even with the warning text
     if (kShip != none)
     {
-        kItemCard.iBaseDamage *= (1 + kShip.m_iConfirmedKills / 100.0f);
-        kItemCard.shipWpnHitChance += Clamp(3 * kShip.m_iConfirmedKills, 0, 30);
+        kShip.ReinitCachedStatsFromTemplate();
+
+        kItemCard.iBaseDamage *= (1 + kShip.m_iConfirmedKills / 100.0f) + kShip.m_kTCachedStats.iDamage;
+        kItemCard.shipWpnHitChance += Clamp(3 * kShip.m_iConfirmedKills, 0, 30) + kShip.m_kTCachedStats.iAim;
+        kItemCard.shipWpnArmorPen += kShip.m_kTCachedStats.iArmorPen;
         kItemCard.strFlavorText = class'UIUtilities'.static.GetHTMLColoredText(default.m_strShipStatDisclaimer, eUIState_Warning) $ kItemCard.strFlavorText;
     }
 
@@ -97,6 +102,43 @@ function TTableMenuOption LWCE_BuildTableItem(LWCEShipWeaponTemplate kShipWeapon
     }
 
     return kOption;
+}
+
+/// <summary>
+/// Presents a dialog for the player to confirm that they wish to cancel a ship order.
+/// </summary>
+simulated function ConfirmRemovalOfPendingShipOrder()
+{
+    local TDialogueBoxData kData;
+    local int iOrderIndex;
+    local bool bIsInterceptor;
+
+    bIsInterceptor = false;
+    iOrderIndex = 0;
+
+    // Reducing interceptor orders takes priority over canceling Firestorms or other buildable ships
+    foreach m_arrCEContinents[m_iConfirmPendingShipRemoval_Continent].m_arrShipOrderIndexes(iOrderIndex)
+    {
+        bIsInterceptor = true;
+    }
+
+    // TODO: rewrite this whole thing to support more ship types. Might require revamping the UI, because right now
+    // there's only one "Cancel Order" button no matter how many ships are on order or what types they are
+    if (bIsInterceptor)
+    {
+        kData.strText = m_strCancelPendingOrderText_Interceptor;
+    }
+    else
+    {
+        kData.strText = m_strCancelPendingOrderText_Firestorm;
+    }
+
+    kData.strTitle = m_strCancelPendingOrderTitle;
+    kData.strAccept = class'UIUtilities'.default.m_strGenericConfirm;
+    kData.strCancel = class'UIDialogueBox'.default.m_strDefaultCancelLabel;
+    kData.fnCallback = RemovePendingShipOrder;
+
+    `HQPRES.UIRaiseDialog(kData);
 }
 
 function TItemCard HANGARUIGetItemCard(optional int iContinent = 0, optional int iShip = 0, optional int viewOverride = -1)
@@ -155,6 +197,74 @@ simulated function int GetNumPendingInterceptors(int iContinent)
     return -100;
 }
 
+/// <summary>
+/// Returns the callsign of the currently selected ship.
+/// </summary>
+function string GetShipName()
+{
+    if (XGShip_Dropship(m_kShip) != none)
+    {
+        return XGShip_Dropship(m_kShip).GetCallsign();
+    }
+    else if (LWCE_XGShip(m_kShip) != none)
+    {
+        return LWCE_XGShip(m_kShip).GetCallsign();
+    }
+    else
+    {
+        return m_strUnknownName;
+    }
+}
+
+function bool OnAcceptHiringOrder()
+{
+    if (m_iNumHiring > 0)
+    {
+        if (m_kHiring.txtNumToHire.iState == eUIState_Bad)
+        {
+            PlayBadSound();
+            return false;
+        }
+
+        LWCE_XGHeadquarters(HQ()).LWCE_OrderShips('Item_Interceptor', m_nmContinentHiringInto, m_iNumHiring);
+        m_iNumHiring = 1;
+        `HQPRES.m_kShipList.m_bUpdateDataOnReceiveFocus = true;
+    }
+
+    Sound().PlaySFX(SNDLIB().SFX_Notify_JetArrived);
+    GoToView(eHangarView_ShipList);
+    return true;
+}
+
+function OnChooseCraft(int iContinent, int iShip)
+{
+    local int iNumShipsInContinent;
+
+    iNumShipsInContinent = m_arrCEContinents[iContinent].iNumShips;
+
+    if (iNumShipsInContinent < class'LWCE_XGFacility_Hangar'.default.iNumShipSlotsPerContinent && iShip == iNumShipsInContinent)
+    {
+        PlayGoodSound();
+        m_nmContinentHiringInto = m_arrCEContinents[iContinent].nmContinent;
+        GoToView(eHangarView_Hire);
+    }
+    else if (iShip >= m_arrCEContinents[iContinent].arrShips.Length)
+    {
+        if (iShip < (m_arrCEContinents[iContinent].arrShips.Length + m_arrCEContinents[iContinent].m_arrShipOrderIndexes.Length))
+        {
+            m_iConfirmPendingShipRemoval_Continent = iContinent;
+            m_iConfirmPendingShipRemoval_Ship = iShip;
+            ConfirmRemovalOfPendingShipOrder();
+        }
+    }
+    else
+    {
+        PlaySmallOpenSound();
+        m_kShip = m_arrCEContinents[iContinent].arrShips[iShip];
+        GoToView(eHangarView_ShipSummary);
+    }
+}
+
 function OnChooseTableOption(int iOption)
 {
     if (m_kTable.mnuOptions.arrOptions[iOption].iState == eUIState_Disabled)
@@ -194,31 +304,100 @@ function OnChooseTransferInterceptorOption(int iOption)
     `LWCE_LOG_DEPRECATED_NOREPLACE_CLS(OnChooseTransferInterceptorOption);
 }
 
+/// <summary>
+/// Called when the player confirms that they wish to dismiss one of their ships.
+/// </summary>
+function OnEliminate()
+{
+    if (IsSkyranger() || m_kShip.GetStatus() == eShipStatus_OnMission || m_kShip.GetStatus() == eShipStatus_Transfer)
+    {
+        PlayBadSound();
+        return;
+    }
+
+    PlayGoodSound();
+    LWCE_XGFacility_Hangar(HANGAR()).LWCE_RemoveShip(LWCE_XGShip(m_kShip));
+    `HQPRES.m_kStrategyHUD.UpdateDefaultResources();
+    GoToView(eHangarView_ShipList);
+}
+
+/// <summary>
+/// Called when the player is attempting to increase how many ships they're ordering at one time.
+/// </summary>
+function OnIncreaseHiringOrder()
+{
+    local int iNewHiring, iNumShips;
+
+    iNumShips = m_iNumInterceptors + m_iNumInterceptorsOnOrder;
+    iNewHiring = m_iNumHiring + 1;
+
+    if (iNewHiring + iNumShips > class'LWCE_XGFacility_Hangar'.default.iNumShipSlotsPerContinent)
+    {
+        PlayBadSound();
+        return;
+    }
+
+    PlayScrollSound();
+    m_iNumHiring = iNewHiring;
+    UpdateView();
+}
+
+/// <summary>
+/// Callback for the dialog box asking the player to confirm that they wish to cancel an order.
+/// </summary>
+simulated function RemovePendingShipOrder(optional EUIAction eAction = eUIAction_Accept)
+{
+    local LWCE_TContinentInfo kContInfo;
+    local LWCE_XGHeadquarters kHQ;
+    local int iOrderIndex;
+
+    kHQ = LWCE_XGHeadquarters(HQ());
+    kContInfo = m_arrCEContinents[m_iConfirmPendingShipRemoval_Continent];
+
+    if (eAction == eUIAction_Accept)
+    {
+        // Actual ships are always shown on the UI first, then pending orders, so subtract the real ships
+        // to reach the correct index
+        iOrderIndex = m_iConfirmPendingShipRemoval_Ship - kContInfo.arrShips.Length;
+
+        kHQ.LWCE_ReduceShipOrder(kContInfo.m_arrShipOrderIndexes[iOrderIndex]);
+        UpdateView();
+        return;
+    }
+
+    PlayBadSound();
+}
+
 function UpdateHireDisplay()
 {
     local bool bCanAfford;
     local int iInterceptorCost, iTotalCost, iNumInterceptorsWanted, I, iOrderIndex, iTotalOrders;
-    local TContinentInfo kInfo;
+    local LWCE_TContinentInfo kInfo;
+    local LWCE_XGFacility_Hangar kHangar;
+    local LWCE_XGHeadquarters kHQ;
 
-    kInfo = HANGAR().GetContinentInfo(EContinent(m_iContinentHiringInto));
+    kHangar = LWCE_XGFacility_Hangar(HANGAR());
+    kHQ = LWCE_XGHeadquarters(HQ());
 
-    for (I = 0; I < kInfo.m_arrInterceptorOrderIndexes.Length; I++)
+    kInfo = kHangar.LWCE_GetContinentInfo(m_nmContinentHiringInto);
+
+    for (I = 0; I < kInfo.m_arrShipOrderIndexes.Length; I++)
     {
-        iOrderIndex = kInfo.m_arrInterceptorOrderIndexes[I];
-        iTotalOrders += HQ().m_akInterceptorOrders[iOrderIndex].iNumInterceptors;
+        iOrderIndex = kInfo.m_arrShipOrderIndexes[I];
+        iTotalOrders += kHQ.m_arrCEShipOrders[iOrderIndex].iNumShips;
     }
 
-    if (m_iContinentHiringInto == `HQGAME.GetGameCore().GetHQ().GetContinent())
+    if (m_nmContinentHiringInto == kHQ.m_nmContinent)
     {
-        iTotalOrders += ENGINEERING().GetNumFirestormsBuilding();
+        iTotalOrders += LWCE_XGFacility_Engineering(ENGINEERING()).LWCE_GetNumShipsBuilding();
     }
 
     iInterceptorCost = `LWCE_ITEM('Item_Interceptor').kCost.iCash;
 
-    m_iNumInterceptors = kInfo.arrCraft.Length;
+    m_iNumInterceptors = kInfo.arrShips.Length;
     m_iNumInterceptorsOnOrder = iTotalOrders;
 
-    m_iMaxCapacity = HANGAR().GetTotalInterceptorCapacity(kInfo.eCont);
+    m_iMaxCapacity = kHangar.LWCE_GetNumHangarSlotsForContinent(m_nmContinentHiringInto);
     iNumInterceptorsWanted = m_iNumInterceptorsOnOrder + m_iNumInterceptors + m_iNumHiring;
 
     iTotalCost = iInterceptorCost * m_iNumHiring;
@@ -231,7 +410,7 @@ function UpdateHireDisplay()
     m_kHiring.txtFacilityCap.iState = iNumInterceptorsWanted > m_iMaxCapacity ? eUIState_Bad : eUIState_Normal;
 
     m_kHiring.txtMaintenance.strLabel = m_strLabelHireMonthlyCost;
-    m_kHiring.txtMaintenance.StrValue = ConvertCashToString(-1 * HANGAR().GetCraftMaintenanceCost(eShip_Interceptor) * m_iNumHiring);
+    m_kHiring.txtMaintenance.StrValue = ConvertCashToString(-1 * `LWCE_SHIP('Interceptor').GetMaintenanceCost(class'LWCEShipTemplate'.const.SHIP_TEAM_XCOM) * m_iNumHiring);
     m_kHiring.txtMaintenance.iState = eUIState_Warning;
 
     m_kHiring.txtCost.strLabel = m_strLabelHireCost;
@@ -374,4 +553,51 @@ function UpdateTableMenu()
 
     kTable.mnuOptions = kTableMenu;
     m_kTable = kTable;
+}
+
+function UpdateTransferDisplay()
+{
+    local LWCE_XGContinent kContinent;
+    local LWCE_XGFacility_Hangar kHangar;
+    local THangarTransfer kTransfer;
+    local TMenuOption kOption;
+    local int iContinent, iCapacity;
+
+    kHangar = LWCE_XGFacility_Hangar(HANGAR());
+
+    for (iContinent = 0; iContinent < m_arrCEContinents.Length; iContinent++)
+    {
+        kContinent = `LWCE_XGCONTINENT(m_arrCEContinents[iContinent].nmContinent);
+
+        if (kContinent.m_nmContinent == LWCE_XGShip(m_kShip).m_nmContinent)
+        {
+            continue;
+        }
+
+        iCapacity = kHangar.LWCE_GetFreeHangarSpots(kContinent.m_nmContinent);
+        kOption.strText = kContinent.GetName() $ ":" @ iCapacity @ m_strOpenBays;
+        kOption.strText @= ":" @ kContinent.m_iNumSatellites @ m_strSatellites;
+
+        if (iCapacity > 0)
+        {
+            if (kContinent.m_iNumSatellites > 0)
+            {
+                kOption.iState = eUIState_Normal;
+            }
+            else
+            {
+                kOption.iState = eUIState_Warning;
+            }
+        }
+        else
+        {
+            kOption.iState = eUIState_Disabled;
+        }
+
+        kTransfer.mnuTransfer.arrOptions.AddItem(kOption);
+        kTransfer.arrOptions.AddItem(iContinent);
+    }
+
+    kTransfer.mnuTransfer.strLabel = m_strLabelTransferTo;
+    m_kTransfer = kTransfer;
 }

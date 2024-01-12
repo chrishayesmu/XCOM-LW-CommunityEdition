@@ -1757,6 +1757,29 @@ function int GetNumFirestormsBuilding()
     return -1000;
 }
 
+/// <summary>
+/// Counts the total number of ships currently being built. If nmOnlyShipsOfType is provided,
+/// then only the ships with a template name matching nmOnlyShipsOfType will be counted.
+/// </summary>
+function int LWCE_GetNumShipsBuilding(optional name nmOnlyShipsOfType = '')
+{
+    local int iNumShips;
+    local LWCEItemTemplate kItemTemplate;
+    local LWCE_TItemProject kProject;
+
+    foreach m_arrCEItemProjects(kProject)
+    {
+        kItemTemplate = m_kItemTemplateMgr.FindItemTemplate(kProject.ItemName);
+
+        if (kItemTemplate.nmResultingShip != '' && (nmOnlyShipsOfType == '' || nmOnlyShipsOfType == kItemTemplate.nmResultingShip))
+        {
+            iNumShips += kProject.iQuantityLeft;
+        }
+    }
+
+    return iNumShips;
+}
+
 function int GetNumSatellitesBuilding()
 {
     local int iNumSatellites;

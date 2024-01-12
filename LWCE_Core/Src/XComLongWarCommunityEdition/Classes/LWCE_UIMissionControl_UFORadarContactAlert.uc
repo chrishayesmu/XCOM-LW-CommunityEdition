@@ -10,6 +10,31 @@ simulated function XGMissionControlUI GetMgr(optional int iStaringView = -1)
     return m_kLocalMgr;
 }
 
+simulated function BeginInterception(XGShip_UFO kTarget)
+{
+    `LWCE_LOG_DEPRECATED_CLS(BeginInterception);
+}
+
+simulated function LWCE_BeginInterception(LWCE_XGShip kTarget)
+{
+    if (m_kInterceptMgr == none)
+    {
+        m_kInterceptMgr = Spawn(class'LWCE_XGInterceptionUI', self);
+        LWCE_XGInterceptionUI(m_kInterceptMgr).m_arrEnemyShips.AddItem(kTarget);
+        m_kInterceptMgr.Init(eIntView_JetSelection);
+    }
+
+    if (m_kInterceptMgr.m_akIntDistance.Length > 0)
+    {
+        m_nCachedState = 'ShipSelection';
+
+        if (IsInited())
+        {
+            GotoState(m_nCachedState);
+        }
+    }
+}
+
 simulated function ClearMissionControlAlertReference()
 {
     class'LWCE_UIMissionControl_AlertBase_Extensions'.static.ClearMissionControlAlertReference(self);

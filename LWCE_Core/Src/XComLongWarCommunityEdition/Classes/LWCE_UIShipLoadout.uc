@@ -2,6 +2,29 @@ class LWCE_UIShipLoadout extends UIShipLoadout;
 
 var LWCE_XGShip m_kCEShip;
 
+simulated function Init(XComPlayerController _controller, UIFxsMovie _manager, XGShip_Interceptor kShip)
+{
+    `LWCE_LOG_DEPRECATED_CLS(Init);
+}
+
+simulated function LWCE_Init(XComPlayerController _controller, UIFxsMovie _manager, LWCE_XGShip kShip)
+{
+    BaseInit(_controller, _manager);
+    manager.LoadScreen(self);
+    m_kCEShip = kShip;
+}
+
+simulated function OnInit()
+{
+    super.OnInit();
+
+    GetMgr().m_kShip = m_kCEShip;
+    AS_SetTitle(m_strScreenTitle);
+    AS_SetListLabels(m_strShipWeaponColumnLabel, m_strQuantityColumnLabel);
+    UpdateData();
+    `HQPRES.GetStrategyHUD().ShowBackButton(OnMouseCancel);
+}
+
 simulated function bool OnAccept(optional string Arg = "")
 {
     local LWCE_XGHangarUI kMgr;

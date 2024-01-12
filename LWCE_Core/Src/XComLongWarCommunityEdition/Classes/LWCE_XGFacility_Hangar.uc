@@ -5,9 +5,9 @@ struct LWCE_TContinentInfo
 {
     var name nmContinent;
     var TText strContinentName;
-    var int iNumShips;
-    var array<LWCE_XGShip> arrShips;
-    var array<int> m_arrShipOrderIndexes;
+    var int iNumShips;                    // The total number of ships on the continent, including pending orders or pending construction.
+    var array<LWCE_XGShip> arrShips;      // The ships on the continent which are actually part of XCOM's fleet, not including pending orders or pending construction.
+    var array<int> m_arrShipOrderIndexes; // Indexes in LWCE_XGHeadquarters.m_arrCEShipOrders.
 };
 
 struct LWCE_TShipCount
@@ -866,6 +866,63 @@ function SetHangarShipsForKismet()
     }
 }
 
+function SetupWeaponView(XGShip_Interceptor kShip)
+{
+    `LWCE_LOG_DEPRECATED_CLS(SetupWeaponView);
+}
+
+function LWCE_SetupWeaponView(LWCE_XGShip kShip)
+{
+    local array<SequenceObject> arrEvents;
+    local SequenceObject kEvent;
+    local SeqAct_Interp kInterp;
+    local XGHangarShip kHangarShip;
+
+    foreach AllActors(class'XGHangarShip', kHangarShip)
+    {
+        kHangarShip.SetHidden(true);
+    }
+
+    kHangarShip = kShip.GetHangarShip();
+    kHangarShip.SetHidden(false);
+
+    foreach m_arrHangarClosed(kInterp)
+    {
+        kInterp.Stop();
+    }
+
+    foreach m_arrHangarOpen(kInterp)
+    {
+        kInterp.Stop();
+    }
+
+    foreach m_arrHangarRepair(kInterp)
+    {
+        kInterp.Stop();
+    }
+
+    kHangarShip.LightEnvironment.SetEnabled(false);
+    WorldInfo.GetGameSequence().FindSeqObjectsByClass(class'SeqEvent_ShipToKismet', true, arrEvents);
+
+    foreach arrEvents(kEvent)
+    {
+        SeqEvent_ShipToKismet(kEvent).Firestorm1 = kHangarShip.IsA('XGHangarShip_Firestorm') ? kHangarShip : none;
+        SeqEvent_ShipToKismet(kEvent).Ship1 = SeqEvent_ShipToKismet(kEvent).Firestorm1 == none ? kHangarShip : none;
+        SeqEvent_ShipToKismet(kEvent).Ship2 = none;
+        SeqEvent_ShipToKismet(kEvent).Ship3 = none;
+        SeqEvent_ShipToKismet(kEvent).Ship4 = none;
+        SeqEvent_ShipToKismet(kEvent).Firestorm2 = none;
+        SeqEvent_ShipToKismet(kEvent).Firestorm3 = none;
+        SeqEvent_ShipToKismet(kEvent).Firestorm4 = none;
+        SeqEvent_ShipToKismet(kEvent).CheckActivate(self, self);
+    }
+
+    GetALocalPlayerController().SetCinematicMode(true, false, false, false, false, false);
+    m_cinViewWeapons.ForceActivateInput(0);
+    m_kViewWeaponsShip = kHangarShip;
+    XComGameReplicationInfo(class'Engine'.static.GetCurrentWorldInfo().GRI).DoRemoteEvent('ShipWeaponsOn');
+}
+
 function EItemType ShipTypeToItemType(EShipType eShip)
 {
     `LWCE_LOG_DEPRECATED_NOREPLACE_CLS(ShipTypeToItemType);
@@ -897,6 +954,7 @@ function LWCE_TransferShip(LWCE_XGShip kShip, name nmDestContinent)
     ReorderCraft();
     kShip.UpdateHangarShip();
 
+    // Merge transfers if possible; this makes them only appear once in the event list
     for (iTransfer = 0; iTransfer < kHQ.m_arrCEShipTransfers.Length; iTransfer++)
     {
         if (kHQ.m_arrCEShipTransfers[iTransfer].iHours == kShip.m_iHoursDown && kHQ.m_arrCEShipTransfers[iTransfer].nmDestinationContinent == nmDestContinent)
