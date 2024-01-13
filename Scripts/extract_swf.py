@@ -29,7 +29,7 @@ def extract_swf_files_from_upk(upk_path: Path, output_dir: Path):
 
         num_extracted += 1
 
-    print(f"Extracted {num_extracted} of {num_objects} objects successfully.")
+    print(f"Extracted {num_extracted} of {num_objects} objects from {upk_path.stem} successfully.")
 
 def main():
     parser = argparse.ArgumentParser(description="Extracts objects from a UPK into an output directory.")
