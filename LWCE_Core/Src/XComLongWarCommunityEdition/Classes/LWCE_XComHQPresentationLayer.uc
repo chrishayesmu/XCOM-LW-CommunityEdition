@@ -1,9 +1,7 @@
 class LWCE_XComHQPresentationLayer extends XComHQPresentationLayer
     dependson(LWCE_XGNarrative);
 
-`include(generators.uci)
-
-`LWCE_GENERATOR_XCOMPRESENTATIONLAYERBASE
+`include(generators_presentationlayer.uci)
 
 simulated function Init()
 {

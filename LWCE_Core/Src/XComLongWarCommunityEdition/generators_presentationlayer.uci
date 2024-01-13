@@ -1,0 +1,81 @@
+// -----------------
+// Overrides of functions/states from XComPresentationLayerBase
+// -----------------
+
+var LWCE_UIModSettings m_kModSettings;
+
+reliable client simulated function LWCE_UIModSettings()
+{
+    if (m_kModSettings == none)
+    {
+        PushState('State_ModSettings');
+    }
+}
+
+simulated state State_PCKeybindings
+{
+    simulated function Activate()
+    {
+        class'LWCE_XComPresentationLayerBase_Extensions'.static.State_PCKeybindings_Activate(self);
+    }
+}
+
+simulated state State_SaveScreen
+{
+    simulated function Activate()
+    {
+        class'LWCE_XComPresentationLayerBase_Extensions'.static.State_SaveScreen_Activate(self);
+    }
+}
+
+simulated state State_LoadScreen
+{
+    simulated function Activate()
+    {
+        class'LWCE_XComPresentationLayerBase_Extensions'.static.State_LoadScreen_Activate(self);
+    }
+}
+
+simulated state State_ModSettings extends BaseScreenState
+{
+    simulated function Activate()
+    {
+        m_kModSettings = Spawn(class'LWCE_UIModSettings', self);
+        m_kModSettings.Init(XComPlayerController(Owner), GetHUD());
+        m_kModSettings.Show();
+    }
+
+    simulated function Deactivate()
+    {
+        GetHUD().RemoveScreen(m_kModSettings);
+        m_kModSettings = none;
+    }
+
+    simulated function OnReceiveFocus()
+    {
+        m_kModSettings.OnReceiveFocus();
+    }
+
+    simulated function OnLoseFocus()
+    {
+        m_kModSettings.OnLoseFocus();
+    }
+
+    stop;
+}
+
+simulated state State_InterfaceMgr
+{
+    simulated function Activate()
+    {
+        m_kUIMovieMgr = new (self) class'UIFxsMovieMgr';
+        m_kUIMovieMgr.Init(self);
+
+        m_kHUD = new (self) class'LWCE_UIInterfaceMgr';
+        m_kUIMovieMgr.InitMovie(m_kHUD);
+
+        m_kModalHUD = new (self) class'UIFxsMovie';
+        m_kUIMovieMgr.InitMovie(m_kModalHUD);
+        m_kModalHUD.Show();
+    }
+}

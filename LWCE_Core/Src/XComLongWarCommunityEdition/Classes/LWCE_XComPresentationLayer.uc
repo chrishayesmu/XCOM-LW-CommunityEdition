@@ -1,8 +1,6 @@
 class LWCE_XComPresentationLayer extends XComPresentationLayer;
 
-`include(generators.uci)
-
-`LWCE_GENERATOR_XCOMPRESENTATIONLAYERBASE
+`include(generators_presentationlayer.uci)
 
 simulated function PHUDLevelUp(XGCharacter_Soldier kSoldier)
 {

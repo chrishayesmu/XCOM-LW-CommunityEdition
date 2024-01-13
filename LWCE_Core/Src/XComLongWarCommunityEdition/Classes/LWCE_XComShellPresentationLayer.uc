@@ -3,9 +3,7 @@ class LWCE_XComShellPresentationLayer extends XComShellPresentationLayer
 
 var config bool bShowDebugShellScreen;
 
-`include(generators.uci)
-
-`LWCE_GENERATOR_XCOMPRESENTATIONLAYERBASE
+`include(generators_presentationlayer.uci)
 
 simulated function EnterMainMenu()
 {

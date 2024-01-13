@@ -25,7 +25,7 @@ var array<UI_FxsScreen> screens;
 var name s_mainClip;
 var int m_bShowingModal;
 var Actor m_pPres;
-var private EConsoleType m_eConsoleType;
+var EConsoleType m_eConsoleType;
 var array<UI_FxsScreen> m_arrHighestDepthScreens;
 var array<UI_FxsScreen> m_arrScreensHiddenBeforeCinematics;
 
