@@ -1322,6 +1322,7 @@ native		static final operator(16)	vector2d -	(vector2d A, vector2d B);
 native      static final operator(16)   vector2d *  (vector2d A, float B);
 native      static final operator(16)   vector2d /  (vector2d A, float B );
 native      static final operator(34)   vector2d *= (out vector2d A, float B);
+native      static final operator(34)   vector2d *= (out vector2d A, vector2d B);
 native      static final operator(34)   vector2d /= (out vector2d A, float B);
 native      static final operator(34)   vector2d += (out vector2d A, vector2d B);
 native	    static final operator(34)   vector2d -= (out vector2d A, vector2d B);

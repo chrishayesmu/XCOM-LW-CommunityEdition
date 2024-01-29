@@ -86,7 +86,7 @@ function int CalculateDamage(LWCE_XGShip kAttacker, LWCE_XGShip kTarget, LWCEShi
     }
 
     // XCOM gets 1% increased damage per confirmed kill
-    if (kAttacker.m_nmTeam == class'LWCEShipTemplate'.const.SHIP_TEAM_XCOM)
+    if (kAttacker.IsXComShip())
     {
         iDamage *= (1.0f + (float(kAttacker.m_iConfirmedKills) / 100.0f));
     }
@@ -139,7 +139,7 @@ function int CalculateHitChance(LWCE_XGShip kAttacker, LWCE_XGShip kTarget, LWCE
         iHitChance -= 15;
     }
 
-    if (kAttacker.m_nmTeam == class'LWCEShipTemplate'.const.SHIP_TEAM_XCOM)
+    if (kAttacker.IsXComShip())
     {
         iHitChance += Clamp(3 * kAttacker.m_iConfirmedKills, 0, 30);
     }
@@ -212,6 +212,74 @@ function bool LWCE_CanUseConsumable(name ItemName)
     return !LWCE_HasConsumableBeenUsed(ItemName);
 }
 
+/// <summary>
+/// Determines the next time (as an offset from the current time in the combat simulation) when any ship will fire
+/// any of their weapons.
+/// </summary>
+function float FindNextWeaponTime()
+{
+    local int iShip, iWeapon;
+    local float fLowestWeaponTime;
+    local LWCE_XGShip kShip;
+
+    fLowestWeaponTime = 9999.0;
+
+    for (iShip = 0; iShip < GetNumShips(); iShip++)
+    {
+        if (!IsAnyWeaponInRange(iShip))
+        {
+            continue;
+        }
+
+        kShip = LWCE_GetShip(iShip);
+
+        for (iWeapon = 0; iWeapon < kShip.m_afWeaponCooldown.Length; iWeapon++)
+        {
+            fLowestWeaponTime = FMin(kShip.m_afWeaponCooldown[iWeapon], fLowestWeaponTime);
+        }
+    }
+
+    return fLowestWeaponTime;
+}
+
+/// <summary>
+/// Gets the Combat struct, effectively simulating 60 seconds of interception. This is interpreted by the UI
+/// layer and modified by the player aborting interception, using modules, etc.
+/// </summary>
+function Combat GetCombat()
+{
+    local LWCE_XGShip kShip;
+    local int I;
+    local float fNextWeaponTime;
+
+    for (I = 0; I < GetNumShips(); I++)
+    {
+        kShip = LWCE_GetShip(I);
+        m_aiShipHP.AddItem(kShip.GetHP());
+    }
+
+    m_fEncounterStartingRange = GetEncounterStartingRange();
+
+    for (I = 0; I < GetNumShips(); I++)
+    {
+        m_afShipDistance.AddItem(m_fEncounterStartingRange);
+    }
+
+    for (I = 0; I < GetNumShips(); I++)
+    {
+        StaggerWeaponsForShip(I);
+    }
+
+    while (m_fTimeElapsed < 60.0)
+    {
+        fNextWeaponTime = FindNextWeaponTime();
+        UpdateSim(fNextWeaponTime);
+    }
+
+    m_fTimeElapsed = 0.0;
+    return m_kCombat;
+}
+
 function float GetDamageMitigation(TShipWeapon SHIPWEAPON, CombatExchange comExchange)
 {
     `LWCE_LOG_DEPRECATED_BY(CalculateDamageMitigation);
@@ -257,6 +325,14 @@ function float GetEncounterStartingRange()
     return fStartingRange;
 }
 
+/// <summary>
+/// Gets a specific enemy ship from this interception. Index must be between 0 and GetNumEnemyShips().
+/// </summary>
+function LWCE_XGShip LWCE_GetEnemyShip(int Index)
+{
+    return LWCE_XGInterception(m_kInterception).m_arrEnemyShips[Index];
+}
+
 function int GetNumConsumableInEffect(int ItemName)
 {
     `LWCE_LOG_DEPRECATED_CLS(GetNumConsumableInEffect);
@@ -274,6 +350,42 @@ function int LWCE_GetNumConsumableInEffect(name ItemName)
     return `LWCE_UTILS.GetItemQuantity(m_arrCEConsumableQuantitiesInEffect, ItemName).iQuantity;
 }
 
+/// <summary>
+/// Gets how many enemy-aligned ships are participating in this interception.
+/// </summary>
+function int GetNumEnemyShips()
+{
+    return LWCE_XGInterception(m_kInterception).m_arrEnemyShips.Length;
+}
+
+/// <summary>
+/// Gets the total number of ships participating in this interception.
+/// </summary>
+function int GetNumShips()
+{
+    local LWCE_XGInterception kCEInterception;
+
+    kCEInterception = LWCE_XGInterception(m_kInterception);
+
+    return kCEInterception.m_arrFriendlyShips.Length + kCEInterception.m_arrEnemyShips.Length;
+}
+
+/// <summary>
+/// Gets how many XCOM-aligned ships are participating in this interception.
+/// </summary>
+function int GetNumPlayerShips()
+{
+    return LWCE_XGInterception(m_kInterception).m_arrFriendlyShips.Length;
+}
+
+/// <summary>
+/// Gets a specific XCOM-aligned ship from this interception. Index must be between 0 and GetNumPlayerShips().
+/// </summary>
+function LWCE_XGShip LWCE_GetPlayerShip(int Index)
+{
+    return LWCE_XGInterception(m_kInterception).m_arrFriendlyShips[Index];
+}
+
 function XGShip GetShip(int iIndex)
 {
     `LWCE_LOG_DEPRECATED_CLS(GetShip);
@@ -283,7 +395,8 @@ function XGShip GetShip(int iIndex)
 
 /// <summary>
 /// Retrieves a ship in the engagement by its index. By convention, enemy ships occupy indices 0..N-1 (where N
-/// is the number of enemy ships), and friendly ships follow them.
+/// is the number of enemy ships), and friendly ships follow them. If you want a ship from a specific side of
+/// the battle, it's better to use LWCE_GetEnemyShip or LWCE_GetPlayerShip instead.
 /// </summary>
 function LWCE_XGShip LWCE_GetShip(int iIndex)
 {
@@ -317,7 +430,7 @@ function float GetShortestWeaponRange(int iShip)
     local float fShortestWeaponRange;
 
     fShortestWeaponRange = 999999.0;
-    kShip = LWCE_XGShip(GetShip(iShip));
+    kShip = LWCE_GetShip(iShip);
     arrShipWeapons = kShip.LWCE_GetWeapons();
 
     for (iWeapon = 0; iWeapon < arrShipWeapons.Length; iWeapon++)
@@ -343,33 +456,33 @@ function float GetShortestWeaponRange(int iShip)
 function float GetTimeUntilOutrun(int iShip)
 {
     local float fMaxOutrunTime;
-    local XGShip kUFO, kInterceptor;
-    local float fUFOSpeed, fInterceptorSpeed;
-    local int iSlowestInterceptorSpeed, iBoostSpeedIncrease;
+    local LWCE_XGShip kEnemyShip, kFriendlyShip;
+    local int iEnemySpeed, iFinalSpeed, iFriendlySpeed, iBoostSpeedIncrease;
 
     fMaxOutrunTime = 9999.0;
 
-    if (IsUfo(iShip))
+    if (IsEnemyShip(iShip))
     {
         return fMaxOutrunTime;
     }
     else
     {
-        kUFO = LWCE_GetShip(0);
-        iSlowestInterceptorSpeed = 9999;
-        kInterceptor = LWCE_GetShip(iShip);
-        iSlowestInterceptorSpeed = kInterceptor.m_kTShip.iEngagementSpeed;
-        iBoostSpeedIncrease = int(float(iSlowestInterceptorSpeed) * 0.50);
-        fUFOSpeed = float(kUFO.m_kTShip.iEngagementSpeed);
-        fInterceptorSpeed = float(iSlowestInterceptorSpeed + (iBoostSpeedIncrease * (LWCE_GetNumConsumableInEffect('Item_UFOTracking'))));
+        kEnemyShip = LWCE_GetEnemyShip(0);
+        iEnemySpeed = float(kEnemyShip.m_kTShip.iEngagementSpeed);
 
-        if (fUFOSpeed != 0.0)
+        kFriendlyShip = LWCE_GetShip(iShip);
+        iFriendlySpeed = kFriendlyShip.GetEngagementSpeed();
+        iBoostSpeedIncrease = iFriendlySpeed / 2;
+
+        iFinalSpeed = iFriendlySpeed + (iBoostSpeedIncrease * LWCE_GetNumConsumableInEffect('Item_UFOTracking'));
+
+        if (iEnemySpeed != 0.0)
         {
-            return 30.0 * (fInterceptorSpeed / fUFOSpeed);
+            return 30.0 * (iFinalSpeed / iEnemySpeed);
         }
         else
         {
-            return fInterceptorSpeed;
+            return iFinalSpeed;
         }
     }
 }
@@ -497,6 +610,22 @@ function bool LWCE_IsConsumableResearched(name ItemName)
     return false;
 }
 
+/// <summary>
+/// Checks whether the ship at the given index belongs to the enemy team.
+/// </summary>
+function bool IsEnemyShip(int iShip)
+{
+    // Enemy ships occupy the first indices when looking at all ships in an interception
+    return iShip < LWCE_XGInterception(m_kInterception).m_arrEnemyShips.Length;
+}
+
+function bool IsUfo(int iShip)
+{
+    `LWCE_LOG_DEPRECATED_BY(IsUfo, IsEnemyShip);
+
+    return false;
+}
+
 function int RollForDamage(int iBaseDamage, float fDamageMitigation, bool bIsCritical)
 {
     local int iDamage;
@@ -510,7 +639,7 @@ function int RollForDamage(int iBaseDamage, float fDamageMitigation, bool bIsCri
 
     iDamage += Rand(iDamage / 2);
 
-    return Max(0, iDamage * fDamageMitigation);
+    return Max(0, iDamage * (1.0f - fDamageMitigation));
 }
 
 function StaggerWeaponsForShip(int iShip)
@@ -525,6 +654,113 @@ function StaggerWeaponsForShip(int iShip)
     for (I = 0; I < arrShipWeapons.Length; I++)
     {
         kShip.m_afWeaponCooldown[I] = float(Rand(20)) / 10.0;
+    }
+}
+
+/// <summary>
+///
+/// </summary>
+function UpdateEngagementResult(float fElapsedTime)
+{
+    local LWCE_XGInterception kCEInterception;
+    local LWCE_XGShip kLeadEnemyShip;
+    local int I;
+    local bool bAnyShipsChasing;
+
+    kCEInterception = LWCE_XGInterception(m_kInterception);
+
+    if (m_kInterception.m_eUFOResult != eUR_NONE)
+    {
+        return;
+    }
+
+    kLeadEnemyShip = kCEInterception.m_arrEnemyShips[0];
+
+    if (kLeadEnemyShip.m_iHP <= 0)
+    {
+        // TODO: make crash chance associated with the template somehow
+        switch (kLeadEnemyShip.m_nmShipTemplate)
+        {
+            case 'UFOScout':
+            case 'UFOFighter':
+                if (Rand(100) >= (kLeadEnemyShip.m_iHP / -5))
+                {
+                    kCEInterception.m_eUFOResult = eUR_Crash;
+                    return;
+                }
+
+                break;
+            case 'UFODestroyer':
+            case 'UFORaider':
+                if (Rand(100) >= (kLeadEnemyShip.m_iHP / -6))
+                {
+                    kCEInterception.m_eUFOResult = eUR_Crash;
+                    return;
+                }
+
+                break;
+            case 'UFOAbductor':
+            case 'UFOHarvester':
+                if (Rand(100) >= (kLeadEnemyShip.m_iHP / -7))
+                {
+                    kCEInterception.m_eUFOResult = eUR_Crash;
+                    return;
+                }
+
+                break;
+            case 'UFOTransport':
+            case 'UFOTerrorShip':
+                if (Rand(100) >= (kLeadEnemyShip.m_iHP / -8))
+                {
+                    kCEInterception.m_eUFOResult = eUR_Crash;
+                    return;
+                }
+
+                break;
+            case 'UFOBattleship':
+            case 'UFOAssaultCarrier':
+                if (Rand(100) >= (kLeadEnemyShip.m_iHP / -15))
+                {
+                    kCEInterception.m_eUFOResult = eUR_Crash;
+                    return;
+                }
+
+                break;
+            case 'UFOOverseer':
+                kCEInterception.m_eUFOResult = eUR_Crash;
+                return;
+        }
+
+        // If not handled in the switch above, then the overkill damage was sufficient to destroy the UFO. UFOs
+        // in the first month of the game are forced to be crashes and not outright destroyed.
+        if (AI().GetMonth() == 0)
+        {
+            kCEInterception.m_eUFOResult = eUR_Crash;
+        }
+        else
+        {
+            kCEInterception.m_eUFOResult = eUR_Destroyed;
+        }
+
+        return;
+    }
+    else
+    {
+        bAnyShipsChasing = false;
+
+        for (I = 0; I < kCEInterception.m_arrFriendlyShips.Length; I++)
+        {
+            if (kCEInterception.m_arrFriendlyShips[I].m_iHP > 0 && fElapsedTime <= GetTimeUntilOutrun(I + 1))
+            {
+                bAnyShipsChasing = true;
+                break;
+            }
+        }
+
+        if (!bAnyShipsChasing)
+        {
+            kCEInterception.m_eUFOResult = eUR_Escape;
+        }
     }
 }
 
@@ -597,8 +833,9 @@ function UpdateWeapons(float fDeltaT)
                         iHitChance = CalculateHitChance(kAttacker, kTarget, kShipWeaponTemplate);
                         iBaseDamage = CalculateDamage(kAttacker, kTarget, kShipWeaponTemplate);
                         fDamageMitigation = CalculateDamageMitigation(iArmor, iArmorPen);
-                        bIsCritical = Rand(100) <= iCriticalChance;
-                        
+                        bIsCritical = Roll(iCriticalChance);
+
+                        `LWCE_LOG("UpdateWeapons: kAttacker = " $ kAttacker $ "; iArmor = " $ iArmor $ "; iArmorPen = " $ iArmorPen $ "; iCriticalChance = " $ iCriticalChance $ "; iHitChance = " $ iHitChance $ "; iBaseDamage = " $ iBaseDamage $ "; fDamageMitigation = " $ fDamageMitigation $ "; bIsCritical = " $ bIsCritical);
                         iDamage = RollForDamage(iBaseDamage, fDamageMitigation, bIsCritical);
 
                         if (iShip != 0)

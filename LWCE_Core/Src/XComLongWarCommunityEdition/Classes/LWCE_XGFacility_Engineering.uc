@@ -1826,6 +1826,14 @@ function GrantInitialStores()
     HANGAR().AddDropship();
 }
 
+function bool HasRebate()
+{
+    local int iNumFacilities;
+
+    iNumFacilities = LWCE_XGHeadquarters(HQ()).LWCE_GetNumFacilities('Facility_Workshop');
+    return iNumFacilities >= 1 || LWCE_XGBase(Base()).LWCE_GetAdjacencies('Workshop') > 0;
+}
+
 function bool IsBuildingItem(EItemType eItem)
 {
     `LWCE_LOG_DEPRECATED_CLS(IsBuildingItem);

@@ -35,8 +35,8 @@ exec function CreateAlienBaseAlert()
 
 exec function DumpAlienObjectives()
 {
-    local int iObj, iEarliestDay, iLatestDay, iMission;
-    local string strDays;
+    local int iObj, iEarliestDay, iHours, iLatestDay, iMission;
+    local string strTime;
     local LWCE_Console kConsole;
     local LWCE_TObjective kTObj;
     local LWCE_XGStrategyAI kStrategyAI;
@@ -63,11 +63,35 @@ exec function DumpAlienObjectives()
         {
             for (iMission = 0; iMission < kTObj.arrMissions.Length; iMission++)
             {
-                iEarliestDay = kTObj.arrStartDates[iMission] - kTObj.arrRandDays[iMission];
-                iLatestDay   = kTObj.arrStartDates[iMission] + kTObj.arrRandDays[iMission];
-                strDays = (iEarliestDay == iLatestDay) ? string(iEarliestDay) : iEarliestDay $ " to " $ iLatestDay;
+                strTime = "";
 
-                kConsole.OutputTextLine("        Mission " $ iMission $ ": " $ kTObj.arrMissions[iMission] $ " in " $ strDays $ " days");
+                if (iMission == 0)
+                {
+                    iHours = (kCEObj.m_iNextMissionTimer - kCEObj.m_iTimer) / 2;
+
+                    if (iHours / 24 > 0)
+                    {
+                        strTime = (iHours / 24) @ Locs(class'UIUtilities'.static.GetDaysString(iHours / 24));
+                    }
+
+                    if (iHours % 24 > 0)
+                    {
+                        if (strTime != "")
+                        {
+                            strTime $= ", ";
+                        }
+
+                        strTime $= (iHours % 24) @ Locs(class'UIUtilities'.static.GetHoursString(iHours % 24));
+                    }
+                }
+                else
+                {
+                    iEarliestDay = kTObj.arrStartDates[iMission] - kTObj.arrRandDays[iMission];
+                    iLatestDay   = kTObj.arrStartDates[iMission] + kTObj.arrRandDays[iMission];
+                    strTime = (iEarliestDay == iLatestDay) ? string(iEarliestDay) : iEarliestDay $ " to " $ iLatestDay @ Locs(class'UIUtilities'.static.GetDaysString(iLatestDay));
+                }
+
+                kConsole.OutputTextLine("        Mission " $ iMission $ ": " $ kTObj.arrMissions[iMission] $ " in " $ strTime);
             }
         }
 
@@ -192,6 +216,21 @@ exec function GivePerk(string strName)
     }
 }
 
+exec function GiveShip(name nmShipTemplate, name nmContinent)
+{
+    local LWCE_XGFacility_Hangar kHangar;
+
+    kHangar = `LWCE_HANGAR;
+
+    if (kHangar.LWCE_GetFreeHangarSpots(nmContinent) == 0)
+    {
+        GetConsole().OutputTextLine("Continent " $ nmContinent $ " has no room for more ships");
+        return;
+    }
+
+    kHangar.LWCE_AddShip(nmShipTemplate, nmContinent);
+}
+
 /**
  * Completes the specified research tech, or all uncompleted research if no argument is supplied.
  *
@@ -204,7 +243,7 @@ exec function GiveTech(optional string TechName, optional int deprecated = 1, op
     local LWCETechTemplateManager kTemplateMgr;
     local array<LWCETechTemplate> arrTemplates;
 
-    kLabs = LWCE_XGFacility_Labs(`HQGAME.GetGameCore().GetHQ().m_kLabs);
+    kLabs = `LWCE_LABS;
     kTemplateMgr = `LWCE_TECH_TEMPLATE_MGR;
     arrTemplates = kTemplateMgr.GetAllTechTemplates();
 

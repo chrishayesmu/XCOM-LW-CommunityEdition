@@ -38,6 +38,41 @@ function bool IsCodeActive()
     return kLabs.LWCE_IsResearched('Tech_AlienOperations') && !kLabs.LWCE_IsTechAvailable('Tech_AlienCommunications');
 }
 
+function OnCodeCracked()
+{
+    local XGCountry kCountry;
+
+    `LWCE_LOG_ERROR("OnCodeCracked: still need to replace XGStrategyAI.AddToAssets to create a new alien base mission");
+
+    foreach World().m_arrCountries(kCountry)
+    {
+        if (kCountry.m_bSecretPact && kCountry.HasSatelliteCoverage())
+        {
+            // Cast is ECharacter but it's really representing an ECountry; this is a LW hack
+            // AI().AddToAssets(ECharacter(kCountry.GetID()), arrAssets);
+
+            if (!m_bCodeCracked)
+            {
+                m_bCodeCracked = true;
+                PRES().UINarrative(`XComNarrativeMoment("AlienBase"), none);
+                PRES().UIObjectiveDisplay(eObj_AssaultAlienBase);
+            }
+        }
+    }
+
+    Achieve(AT_XMarksTheSpot);
+}
+
+function OnShipSuccessfullyTransferred(XGShip_Interceptor kShip)
+{
+    `LWCE_LOG_DEPRECATED_CLS(OnShipSuccessfullyTransferred);
+}
+
+function LWCE_OnShipSuccessfullyTransferred(LWCE_XGShip kShip)
+{
+    LWCE_XGFundingCouncil(World().m_kFundingCouncil).LWCE_OnShipSuccessfullyTransferred(kShip);
+}
+
 function OnShipTransferExecuted(XGShip_Interceptor kShip)
 {
     `LWCE_LOG_DEPRECATED_CLS(OnShipTransferExecuted);

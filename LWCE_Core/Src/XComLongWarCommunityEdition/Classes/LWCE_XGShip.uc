@@ -32,6 +32,7 @@ struct CheckpointRecord_LWCE_XGShip extends XGShip.CheckpointRecord
     var array<LWCE_TItemQuantity> m_arrSalvage;
     var name m_nmApproach;
     var name m_nmCountryTarget;
+    var name m_nmMissionType;
     var int m_iCounter;
     var int m_iDetectedBy;
     var float m_fTimeInCountry;
@@ -55,7 +56,7 @@ var string m_strCallsign;
 var int m_iConfirmedKills; // How many enemy ships this ship has shot down in its lifetime.
 var int m_iHomeBay; // Which hangar slot is occupied by this ship in the HQ continent. This is specifically referring to a space in the base map where the ship is displayed.
 var int m_iHoursDown; // Remaining hours of repair/refueling/rearming/transfer until this ship is ready for use.
-var float m_fFlightTime;
+var float m_fFlightTime; // Remaining time for this ship to fly before it's out of fuel and has to return to base. In base LWCE, this has very limited use and won't force any ships to return.
 
 // These variables are typically only used for enemy ships
 var LWCE_XGAlienObjective m_kObjective;
@@ -65,6 +66,7 @@ var array<name> m_arrFlightPlan;
 var array<LWCE_TItemQuantity> m_arrSalvage;
 var name m_nmApproach;      // How this ship will approach its target on the Geoscape; base game values are 'SeekingLatitude' and 'SeekingLongitude'.
 var name m_nmCountryTarget; // Which country this ship is attempting to perform a mission in.
+var name m_nmMissionType;   // What type of LWCEShipMissionTemplate this ship is engaged in. Used for some localization.
 var int m_iCounter;         // Simple counter of how many ships were detected by XCOM by the time this one was detected. Ex: the first detected UFO is "UFO-1".
 var int m_iDetectedBy;      // The index of the satellite which has detected this ship (in LWCE_XGHeadquarters.m_arrCESatellites). If undetected, this value is INDEX_NONE.
 var float m_fTimeInCountry; // How much time this ship should spend loitering in its target country when its flight plan step is 'SpendTime'.
@@ -88,14 +90,15 @@ function Init(TShip kTShip)
     `LWCE_LOG_DEPRECATED_CLS(Init);
 }
 
-function LWCE_Init(name nmShipTemplate, name nmContinent, name nmTeam)
+function LWCE_Init(name nmShipTemplate, name nmContinent, name nmTeam, optional name nmMissionType = '')
 {
     m_nmContinent = nmContinent;
     m_nmShipTemplate = nmShipTemplate;
     m_nmTeam = nmTeam;
+    m_nmMissionType = nmMissionType;
     m_v2Coords = GetHomeCoords();
     m_v2Destination = m_v2Coords;
-    m_fFlightTime = 43200.0;
+    m_fFlightTime = INTERCEPTOR_FLIGHT_TIME;
     m_kGeoscape = GEOSCAPE();
 
     m_kTemplate = `LWCE_SHIP(m_nmShipTemplate);
@@ -119,7 +122,111 @@ function Update(float fDeltaT)
 {
     super.Update(fDeltaT);
 
-    // TODO: merge logic from UFOs and interceptors here
+    if (IsXComShip())
+    {
+        if (!IsFlying() || fDeltaT == 0.0f)
+        {
+            if (!IsFlying() && m_kEngagement == none && GetCoords() != GetHomeCoords())
+            {
+                ReturnToBase();
+            }
+
+            return;
+        }
+
+        if (m_kEngagement != none)
+        {
+            m_v2Destination = m_kEngagement.m_arrEnemyShips[0].GetCoords();
+        }
+
+        ConsumeFuel(fDeltaT);
+
+        if (GetFuelPercentage() == 0.0f)
+        {
+            if (m_kEngagement != none)
+            {
+                m_kEngagement.LWCE_ReturnToBase(self);
+            }
+            else
+            {
+                ReturnToBase();
+            }
+        }
+    }
+    else
+    {
+        if ((IsFlying() && CurrentPlan() == 'Arrive') || CurrentPlan() == 'Depart')
+        {
+            AdjustHeading();
+        }
+
+        if (CurrentPlan() == 'SpendTime')
+        {
+            m_fTimeInCountry -= fDeltaT;
+        }
+    }
+}
+
+/// <summary>
+/// Adjusts the ship's heading so it appropriately paths towards its destination.
+/// </summary>
+function AdjustHeading()
+{
+    local float fDistance, fAdjust;
+    local Vector2D v2CurrentHeading, v2Target, v2NewHeading;
+
+    if (IsXComShip())
+    {
+        return;
+    }
+
+    v2CurrentHeading = m_v2Destination - m_v2Coords;
+    fDistance = V2DSize(v2CurrentHeading);
+
+    if (fDistance > 0.20)
+    {
+        return;
+    }
+
+    fAdjust = (0.20f - fDistance) / 0.20f;
+    fAdjust = fAdjust * fAdjust;
+    v2Target = m_v2Intermediate - m_v2Coords;
+    v2NewHeading = V2DLerp(v2CurrentHeading, v2Target, fAdjust);
+    m_v2Destination = m_v2Coords + v2NewHeading;
+}
+
+/// <summary>
+/// Consumes some of the ship's fuel based on the flight time.
+/// </summary>
+function ConsumeFuel(float fFlightTime)
+{
+    m_fFlightTime = Max(0, m_fFlightTime - fFlightTime);
+}
+
+/// <summary>
+/// Returns a string describing what altitude this ship is flying at, which is purely cosmetic.
+/// XCom's ships don't have an altitude by default.
+/// </summary>
+function string GetAltitudeString()
+{
+    if (m_nmMissionType == '')
+    {
+        return "";
+    }
+
+    switch (`LWCE_SHIP_MISSION(m_nmMissionType).nmAltitude)
+    {
+        case 'NOE':
+            return class'XGShip_UFO'.default.m_strAltitudeLow;
+        case 'Low':
+            return class'XGShip_UFO'.default.m_strAltitudeHigh;
+        case 'High':
+            return class'XGShip_UFO'.default.m_strAltitudeVeryHigh;
+        default:
+            return "";
+    }
+
+    return "";
 }
 
 /// <summary>
@@ -128,7 +235,7 @@ function Update(float fDeltaT)
 /// </summary>
 function name GetCountry()
 {
-    if (m_nmTeam == class'LWCEShipTemplate'.const.SHIP_TEAM_XCOM)
+    if (IsXComShip())
     {
         return '';
     }
@@ -154,6 +261,16 @@ function name GetContinent()
     }
 
     return '';
+}
+
+/// <summary>
+/// Calculates what percentage of fuel is remaining before this ship has to return to base.
+/// </summary>
+function float GetFuelPercentage()
+{
+    // This is hard-coded, as in LW 1.0; if any mod authors want to implement a proper fuel system,
+    // reach out to the LWCE team to discuss a solution.
+    return m_fFlightTime / INTERCEPTOR_FLIGHT_TIME;
 }
 
 function Vector2D GetHomeCoords()
@@ -182,6 +299,26 @@ function EShipType GetType()
     `LWCE_LOG_DEPRECATED_BY(GetType, m_nmShipTemplate);
 
     return EShipType(0);
+}
+
+/// <summary>
+/// Gets a player-friendly string describing the size of this ship.
+/// </summary>
+function string GetSizeString()
+{
+    switch (m_kTemplate.nmSize)
+    {
+        case 'Small':
+            return class'XGItemTree'.default.m_strSizeSmall;
+        case 'Medium':
+            return class'XGItemTree'.default.m_strSizeMedium;
+        case 'Large':
+            return class'XGItemTree'.default.m_strSizeLarge;
+        case 'VeryLarge':
+            return class'XGItemTree'.default.m_strSizeVeryLarge;
+        default:
+            return "";
+    }
 }
 
 function string GetStatusString()
@@ -266,7 +403,9 @@ function bool IsAlienShip()
 
 function bool IsHumanShip()
 {
-    return m_nmTeam == class'LWCEShipTemplate'.const.SHIP_TEAM_XCOM;
+    `LWCE_LOG_DEPRECATED_BY(IsHumanShip, IsXComShip);
+
+    return false;
 }
 
 /// <summary>
@@ -276,6 +415,66 @@ function bool IsHumanShip()
 function bool IsTrackable()
 {
     return m_nmCountryTarget != '' && CurrentPlan() != 'LiftOff';
+}
+
+function bool IsXComShip()
+{
+    return m_nmTeam == class'LWCEShipTemplate'.const.SHIP_TEAM_XCOM;
+}
+
+/// <summary>
+/// Called when the ship arrives at its destination, triggering the next stage of its behavior.
+/// </summary>
+function OnArrival()
+{
+    local name nmPlan;
+
+    `LWCE_LOG("Ship " $ self $ " OnArrival");
+
+    if (IsXComShip())
+    {
+        if (m_kEngagement != none)
+        {
+            m_kEngagement.OnArrival();
+        }
+        else
+        {
+            LWCE_XGFacility_Hangar(HANGAR()).LWCE_LandShip(self);
+        }
+    }
+    else if (IsAlienShip())
+    {
+        if (m_arrFlightPlan.Length == 0)
+        {
+            return;
+        }
+
+        nmPlan = CurrentPlan();
+        `LWCE_LOG("Current plan is " $ nmPlan);
+
+        if (nmPlan == 'SpendTime' && m_fTimeInCountry > 0.0f)
+        {
+            CalculateSpendTime(`LWCE_XGCOUNTRY(m_nmCountryTarget).GetBounds());
+            return;
+        }
+
+        m_arrFlightPlan.Remove(0, 1);
+
+        if (m_arrFlightPlan.Length == 0)
+        {
+            m_kObjective.LWCE_NotifyOfSuccess(self);
+        }
+        else if (nmPlan == 'Land')
+        {
+            m_bLanded = true;
+            LWCE_XGGeoscape(GEOSCAPE()).LWCE_CancelInterception(self);
+            LWCE_XGStrategyAI(AI()).LWCE_AIAddNewMission(eMission_LandedUFO, self);
+        }
+        else
+        {
+            CalcNewWayPoint();
+        }
+    }
 }
 
 function int NumWeapons()
@@ -308,7 +507,7 @@ function LWCE_EquipWeapon(name ItemName, int Index)
     }
 
     // When an XCOM ship is unequipping an old weapon, return it to storage
-    if (m_nmTeam == class'LWCEShipTemplate'.const.SHIP_TEAM_XCOM && m_arrCEWeapons[Index] != '')
+    if (IsXComShip() && m_arrCEWeapons[Index] != '')
     {
         LWCE_XGStorage(STORAGE()).LWCE_AddItem(m_arrCEWeapons[Index]);
     }
@@ -327,6 +526,14 @@ function LWCE_EquipWeapon(name ItemName, int Index)
             LWCE_XGHangarShip(m_kHangarShip).LWCE_UpdateWeapon(m_arrCEWeapons[0]);
         }
     }
+}
+
+/// <summary>
+/// Gets this ship's speed during interception.
+/// </summary>
+function int GetEngagementSpeed()
+{
+    return m_kTCachedStats.iEngagementSpeed;
 }
 
 /// <summary>
@@ -752,4 +959,9 @@ protected function ChooseApproach(Vector2D v2Relative)
 protected function name CurrentPlan()
 {
     return m_arrFlightPlan.Length > 0 ? m_arrFlightPlan[0] : '';
+}
+
+defaultproperties
+{
+    m_iDetectedBy=INDEX_NONE
 }

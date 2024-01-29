@@ -38,7 +38,7 @@ static function GenerateBattleDescription(XGMission kSelf)
         LWCE_XGBattleDesc(kSelf.m_kDesc).m_kArtifactsContainer.m_arrEntries = kReward.arrItems;
     }
 
-    kSelf.m_kDesc.m_strTime = kSelf.CalcTime();
+    kSelf.m_kDesc.m_strTime = "SOME TIME"; // kSelf.CalcTime();
 }
 
 static function bool GetMissionRewards(XGMission kMission, out LWCE_TMissionReward kReward)

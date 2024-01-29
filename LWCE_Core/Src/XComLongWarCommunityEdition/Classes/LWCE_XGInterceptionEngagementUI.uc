@@ -23,6 +23,55 @@ function PostInit(XGInterception kXGInterception)
     GEOSCAPE().UpdateSound();
 }
 
+function OnEngagementOver()
+{
+    local bool bFriendlyShipLost;
+    local LWCE_XGInterception kInterception;
+    local LWCE_XGShip kShip;
+
+    kInterception = LWCE_XGInterception(m_kInterceptionEngagement.m_kInterception);
+
+    GoToView(eIntEngagementView_Result);
+
+    switch (m_kInterceptionEngagement.m_kInterception.m_eUFOResult)
+    {
+        case eUR_Crash:
+        case eUR_Destroyed:
+            break;
+        case eUR_Escape:
+            kShip = LWCE_XGInterceptionEngagement(m_kInterceptionEngagement).LWCE_GetEnemyShip(0);
+
+            if (kShip.m_kTemplate.nmSize == 'Small' || kShip.m_kTemplate.nmSize == 'Medium')
+            {
+                Sound().PlaySFX(SNDLIB().SFX_Int_SmallUFOEscape);
+            }
+            else
+            {
+                Sound().PlaySFX(SNDLIB().SFX_Int_BigUFOEscape);
+            }
+
+            Narrative(`XComNarrativeMoment("RoboHQ_ContactLost"));
+            break;
+    }
+
+    bFriendlyShipLost = false;
+    foreach kInterception.m_arrFriendlyShips(kShip)
+    {
+        if (kShip.GetHP() <= 0)
+        {
+            bFriendlyShipLost = true;
+            break;
+        }
+    }
+
+    if (bFriendlyShipLost)
+    {
+        Narrative(`XComNarrativeMoment("RoboHQ_AircraftLost"));
+    }
+
+    Sound().PlayMusic(eMusic_MC);
+}
+
 function bool IsShortDistanceWeapon(int iWeapon)
 {
     `LWCE_LOG_DEPRECATED_CLS(IsShortDistanceWeapon);
@@ -33,6 +82,28 @@ function bool IsShortDistanceWeapon(int iWeapon)
 function bool LWCE_IsShortDistanceWeapon(name WeaponName)
 {
     return `LWCE_SHIP_WEAPON(WeaponName).eEngagementDistance == eER_Short;
+}
+
+function SFXShipDestroyed(XGShip kShip)
+{
+    if (kShip.IsAlienShip())
+    {
+        switch (LWCE_XGShip(kShip).m_nmShipTemplate)
+        {
+            case 'UFOFighter':
+            case 'UFOScout':
+                Sound().PlaySFX(SNDLIB().SFX_Int_SmallUFOGoingDown);
+                break;
+            default:
+                Sound().PlaySFX(SNDLIB().SFX_Int_BigUFOGoingDown);
+                break;
+        }
+    }
+    else
+    {
+        PRES().UINarrative(`XComNarrativeMoment("InterceptorDestroyed"));
+        Sound().PlaySFX(SNDLIB().SFX_Int_JetExplode);
+    }
 }
 
 function VOInRange()

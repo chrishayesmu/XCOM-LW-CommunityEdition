@@ -205,6 +205,9 @@ function XGMission LWCE_AIAddNewMission(EMissionType eType, optional LWCE_XGShip
 {
     local XGMission kMission;
 
+    `LWCE_LOG_ERROR("LWCE_AIAddNewMission: doing nothing until mission support is fixed");
+    return none;
+
     if (eType == eMission_Final)
     {
         kMission = CreateTempleMission();
@@ -452,6 +455,101 @@ function AIAddNewUFO(XGShip_UFO kUFO)
 function LWCE_AIAddNewShip(LWCE_XGShip kShip)
 {
     m_arrCEShips.AddItem(kShip);
+}
+
+/// <summary>
+/// Updates any pending Geoscape missions, including Council missions, despite them being
+/// generally managed by XGFundingCouncil. Removes expired missions and notifies the player.
+/// </summary>
+function AIUpdateMissions(optional int iDuration = 1)
+{
+    local array<XGMission> arrRemove;
+    local XGMission kMission;
+    local int iMission;
+    local bool bAbductionBlitzExpired, bDontApplyToContinent;
+    local array<EContinent> arrAbductionContinents;
+    local EContinent eCont;
+
+    for (iMission = 0; iMission < GEOSCAPE().m_arrMissions.Length; iMission++)
+    {
+        kMission = GEOSCAPE().m_arrMissions[iMission];
+
+        if (kMission.m_iDuration > 0)
+        {
+            kMission.m_iDuration -= iDuration;
+
+            // 1 hour left in the mission, slow the Geoscape down to normal speed
+            if (kMission.m_iDuration == 2)
+            {
+                if (kMission.IsDetected())
+                {
+                    GEOSCAPE().RestoreNormalTimeFrame();
+                    LWCE_XComHQPresentationLayer(PRES()).LWCE_Notify('MissionAboutToExpire', class'LWCEDataContainer'.static.NewInt('NotifyData', iMission));
+                }
+            }
+
+            if (kMission.m_iDuration <= 0)
+            {
+                if (HANGAR().GetDropship().IsFlying() && HANGAR().GetDropship().m_kMission == kMission)
+                {
+                    // Don't allow missions to expire while en route to them
+                    kMission.m_iDuration = 1;
+                }
+                else
+                {
+                    if (kMission.m_iMissionType == eMission_LandedUFO)
+                    {
+                        XGMission_UFOLanded(kMission).kUFO.NotifyOfTakeOff();
+                    }
+                    else if (kMission.m_iMissionType == eMission_Special)
+                    {
+                        World().m_kFundingCouncil.OnMissionExpired(XGMission_FundingCouncil(kMission));
+                    }
+                    else if (kMission.m_iMissionType == eMission_TerrorSite)
+                    {
+                        kMission.GetContinent().m_kMonthly.iTerrorIgnored += 1;
+                    }
+                    else if (kMission.m_iMissionType == eMission_Abduction)
+                    {
+                        bAbductionBlitzExpired = true;
+                    }
+                    else if (kMission.m_iMissionType == eMission_CovertOpsExtraction || kMission.m_iMissionType == eMission_CaptureAndHold)
+                    {
+                        EXALT().OnMissionExpire(kMission);
+                    }
+
+                    arrRemove.AddItem(kMission);
+                }
+            }
+        }
+    }
+
+    if (bAbductionBlitzExpired)
+    {
+        kMission.GetContinent().m_kMonthly.iAbductionsIgnored += 1;
+    }
+
+    for (iMission = 0; iMission < arrRemove.Length; iMission++)
+    {
+        bDontApplyToContinent = false;
+        kMission = arrRemove[iMission];
+
+        if (kMission.m_iMissionType == eMission_Abduction)
+        {
+            eCont = EContinent(kMission.GetContinent().GetID());
+
+            if (arrAbductionContinents.Find(eCont) != INDEX_NONE)
+            {
+                bDontApplyToContinent = true;
+            }
+            else
+            {
+                arrAbductionContinents.AddItem(eCont);
+            }
+        }
+
+        GEOSCAPE().RemoveMission(kMission, false, true, false, bDontApplyToContinent);
+    }
 }
 
 function ApplyMissionPanic(XGMission kMission, bool bXComSuccess, optional bool bExpired, optional bool bDontApplyToContinent)
@@ -1920,6 +2018,7 @@ function OnUFOShotDown(XGShip_Interceptor kJet, XGShip_UFO kUFO)
 /// </summary>
 function LWCE_OnShipShotDown(LWCE_XGShip kAttacker, LWCE_XGShip kVictim)
 {
+    `LWCE_LOG("LWCE_OnShipShotDown: kAttacker = " $ kAttacker $ ", kVictim = " $ kVictim);
     kVictim.m_kObjective.LWCE_NotifyOfCrash(kVictim);
     LWCE_DetermineCrashLoot(kVictim, kAttacker);
     LWCE_AIAddNewMission(eMission_Crash, kVictim);

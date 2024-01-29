@@ -63,7 +63,7 @@ function int GetNumSatNodes()
 
 function int GetID()
 {
-    `LWCE_LOG_DEPRECATED_NOREPLACE_CLS(GetID);
+    `LWCE_LOG_DEPRECATED_BY(GetID, LWCE_XGContinent.m_nmContinent);
 
     return -1;
 }

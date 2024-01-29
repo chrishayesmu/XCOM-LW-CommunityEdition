@@ -34,6 +34,7 @@ static function bool AlertWithMultipleButtons_OnMouseEvent(UIMissionControl_Aler
     kMgr = LWCE_XGMissionControlUI(kSelf.GetMgr());
     bHandled = true;
 
+
     switch (Cmd)
     {
         case class'UI_FxsInput'.const.FXS_L_MOUSE_UP:

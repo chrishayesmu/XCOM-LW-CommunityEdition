@@ -231,6 +231,8 @@ function CompleteEngagement()
     kAI = LWCE_XGStrategyAI(AI());
     kHangar = LWCE_XGFacility_Hangar(HANGAR());
 
+    `LWCE_LOG("CompleteEngagement: m_eUFOResult = " $ m_eUFOResult);
+
     if (m_bSimulatedCombat)
     {
         return;
@@ -238,14 +240,18 @@ function CompleteEngagement()
 
     if (m_eUFOResult == eUR_Crash)
     {
+        `LWCE_LOG("Clearing other engagements");
         LWCE_ClearOtherEngagements(m_arrEnemyShips[0]);
 
         // We need to find which ship did the shootdown, because their weaponry may impact how
         // much loot is recoverable from the crash site
+        `LWCE_LOG("Iterating m_arrKills: length is " $ m_arrKills.Length);
         for (I = 0; I < m_arrKills.Length; I++)
         {
+            `LWCE_LOG("m_arrKills[" $ I $ "].kVictim = " $ m_arrKills[I].kVictim);
             if (m_arrKills[I].kVictim == m_arrEnemyShips[0])
             {
+                `LWCE_LOG("Calling LWCE_OnShipShotDown");
                 kAI.LWCE_OnShipShotDown(m_arrKills[I].kAttacker, m_arrEnemyShips[0]);
                 break;
             }

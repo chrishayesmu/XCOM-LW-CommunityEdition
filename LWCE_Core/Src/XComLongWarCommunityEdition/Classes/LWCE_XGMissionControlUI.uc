@@ -12,7 +12,10 @@ struct LWCE_TMCAlert
     var TImage imgAlert;
     var TImage imgAlert2;
     var TImage imgAlert3;
-    var int iNumber;
+
+    // Supplemental data for handling the alert. Generally it's best to process everything into the above fields, so
+    // that the UI layer doesn't have too much logic in it. When that's not possible, this arbitrary data can be used.
+    var LWCEDataContainer kData;
 };
 
 var name m_nmCountryFromExaltSelection;
@@ -38,6 +41,7 @@ function AddNotice(EGeoscapeAlert eNotice, optional int iData1, optional int iDa
 function LWCE_AddNotice(name AlertName, LWCEDataContainer kData)
 {
     local int iData1, iData2, iData3;
+    local LWCECountryTemplate kCountryTemplate;
     local TMCNotice kNotice;
     local XGParamTag kTag;
 
@@ -52,11 +56,60 @@ function LWCE_AddNotice(name AlertName, LWCEDataContainer kData)
             kNotice.txtNotice.iState = eUIState_Warning;
             kNotice.imgNotice.iImage = eImage_Interceptor;
             break;
+        case 'ExaltCellHides':
+            kTag.StrValue0 = `LWCE_XGCOUNTRY(kData.Data[0].Nm).GetName();
+            kNotice.txtNotice.StrValue = class'XComLocalizer'.static.ExpandString(m_strCellHides);
+            kNotice.txtNotice.iState = eUIState_Warning;
+            break;
+        case 'ExcavationComplete':
+            Narrative(`XComNarrativeMoment("RoboHQ_ExcavationComplete"));
+            Sound().PlaySFX(SNDLIB().SFX_Notify_ExcavationComplete);
+            kNotice.txtNotice.StrValue = m_strLabelExcavationComplete;
+            kNotice.txtNotice.iState = eUIState_Warning;
+            kNotice.imgNotice.iImage = eImage_TileConstruction;
+            break;
+        case 'FacilityRemoved':
+            kNotice.txtNotice.StrValue = m_strLabelFacilityRemoved;
+            kNotice.txtNotice.iState = eUIState_Warning;
+            kNotice.imgNotice.iImage = eImage_TileConstruction;
+            break;
+        case 'FCExpiredRequest':
+            kTag.StrValue0 = `LWCE_XGCOUNTRY(kData.Data[0].Nm).GetNameWithArticle(true);
+            kNotice.txtNotice.StrValue = class'XComLocalizer'.static.ExpandString(m_strLabelFCRequestExpired);
+            kNotice.txtNotice.iState = eUIState_Warning;
+            kNotice.imgNotice.iImage = eImage_Interceptor;
+            break;
+        case 'FCNewRequest':
+            kTag.StrValue0 = `LWCE_XGCOUNTRY(kData.Data[0].Nm).GetNameWithArticle(true);
+            kNotice.txtNotice.StrValue = class'XComLocalizer'.static.ExpandString(m_strLabelFCRequestDelayed);
+            kNotice.txtNotice.iState = eUIState_Warning;
+            kNotice.imgNotice.iImage = eImage_Interceptor;
+            break;
+        case 'GeneModComplete':
+            kTag.StrValue0 = BARRACKS().GetSoldierByID(kData.Data[0].I).GetName(eNameType_RankFull);
+            kNotice.txtNotice.StrValue = class'XComLocalizer'.static.ExpandString(m_strGeneModCompleteNotify);
+            kNotice.txtNotice.iState = eUIState_Warning;
+            kNotice.imgNotice.iImage = eImage_Soldier;
+            break;
         case 'ItemRepairsComplete':
             kTag.StrValue0 = `LWCE_ITEM(kData.Data[0].Nm).strName;
             kNotice.txtNotice.StrValue = class'XComLocalizer'.static.ExpandString(m_strSpeakSatDestroyed);
             kNotice.txtNotice.iState = eUIState_Warning;
             kNotice.imgNotice.iImage = eImage_FacilityGear;
+            break;
+        case 'MissionAboutToExpire':
+            kTag.StrValue0 = GEOSCAPE().m_arrMissions[kData.Data[0].I].GetTitle();
+            kNotice.txtNotice.StrValue = class'XComLocalizer'.static.ExpandString(m_strLabelDays);
+            kNotice.txtNotice.iState = eUIState_Warning;
+            kNotice.imgNotice.iImage = eImage_Interceptor;
+            break;
+        case 'NewInterceptors':
+            Sound().PlaySFX(SNDLIB().SFX_Notify_JetArrived);
+            kTag.IntValue0 = kData.Data[0].I;
+            kTag.StrValue0 = `LWCE_XGCONTINENT(kData.Data[0].Nm).GetName();
+            kNotice.txtNotice.StrValue = class'XComLocalizer'.static.ExpandString(m_strLabelNewInterceptorArrival);
+            kNotice.txtNotice.iState = eUIState_Warning;
+            kNotice.imgNotice.iImage = eImage_Interceptor;
             break;
         case 'NewItemBuilt':
             Sound().PlaySFX(SNDLIB().SFX_Notify_ItemBuilt);
@@ -66,11 +119,69 @@ function LWCE_AddNotice(name AlertName, LWCEDataContainer kData)
             kNotice.txtNotice.iState = eUIState_Warning;
             kNotice.imgNotice.iImage = eImage_FacilityGear;
             break;
+        case 'NewSoldiers':
+            Sound().PlaySFX(SNDLIB().SFX_Notify_SoldiersArrived);
+            kTag.IntValue0 = kData.Data[0].I;
+            kNotice.txtNotice.StrValue = class'XComLocalizer'.static.ExpandString(m_strLabelNewSoldiers);
+            kNotice.txtNotice.iState = eUIState_Warning;
+            kNotice.imgNotice.iImage = eImage_Soldier;
+            break;
+        case 'SatelliteOnline':
+            kCountryTemplate = `LWCE_COUNTRY(`LWCE_HQ.m_arrCESatellites[kData.Data[0].I].nmCountry);
+            Sound().PlaySFX(SNDLIB().SFX_Notify_SatelliteOperational);
+            kTag.StrValue0 = `LWCE_ITEM(`LWCE_HQ.m_arrCESatellites[kData.Data[0].I].nmType).strName;
+            kTag.StrValue1 = `LWCE_XGCOUNTRY(kCountryTemplate.GetCountryName()).GetName();
+            kNotice.txtNotice.StrValue = class'XComLocalizer'.static.ExpandString(m_strLabelSatOnline);
+            kNotice.txtNotice.iState = eUIState_Warning;
+            kNotice.imgNotice.iImage = eImage_Interceptor;
+
+            if (kCountryTemplate.strSatelliteNarrativePath != "")
+            {
+                Narrative(XComNarrativeMoment(DynamicLoadObject(kCountryTemplate.strSatelliteNarrativePath, class'XComNarrativeMoment')));
+            }
+
+            break;
         case 'ShipActivityOverCountry':
             kTag.StrValue0 = `LWCE_XGCOUNTRY(kData.Data[0].Nm).GetNameWithArticle(true);
             kNotice.txtNotice.StrValue = class'XComLocalizer'.static.ExpandString(m_strLabelWarningUFOOnGround);
             kNotice.txtNotice.iState = eUIState_Warning;
             kNotice.imgNotice.iImage = eImage_Interceptor;
+            break;
+        case 'ShipArmed':
+            Sound().PlaySFX(SNDLIB().SFX_Notify_JetArmed);
+            kTag.StrValue0 = LWCE_XGFacility_Hangar(HANGAR()).m_arrCEShips[kData.Data[0].I].GetCallsign();
+            kTag.StrValue1 = LWCE_XGFacility_Hangar(HANGAR()).m_arrCEShips[kData.Data[0].I].GetWeaponString();
+            kNotice.txtNotice.StrValue = class'XComLocalizer'.static.ExpandString(m_strLabelShipRearmed);
+            kNotice.txtNotice.iState = eUIState_Warning;
+            kNotice.imgNotice.iImage = eImage_Interceptor;
+            break;
+        case 'ShipEnRouteToXComHQ':
+            kNotice.txtNotice.StrValue = class'XComLocalizer'.static.ExpandString(m_strLabelSignatureNotIdentified);
+            kNotice.txtNotice.iState = eUIState_Warning;
+            kNotice.imgNotice.iImage = eImage_Interceptor;
+            break;
+        case 'ShipOnline':
+            Sound().PlaySFX(SNDLIB().SFX_Notify_JetRepaired);
+            kTag.StrValue0 = LWCE_XGFacility_Hangar(HANGAR()).m_arrCEShips[kData.Data[0].I].GetCallsign();
+            kNotice.txtNotice.StrValue = class'XComLocalizer'.static.ExpandString(m_strLabelShipOnline);
+            kNotice.txtNotice.iState = eUIState_Warning;
+            kNotice.imgNotice.iImage = eImage_Interceptor;
+            break;
+        case 'ShipTransferred':
+            Sound().PlaySFX(SNDLIB().SFX_Notify_JetTransferred);
+            Narrative(`XComNarrativeMoment("RoboHQ_AircraftTransferComplete"));
+            kTag.StrValue0 = LWCE_XGFacility_Hangar(HANGAR()).m_arrCEShips[kData.Data[0].I].GetCallsign();
+            kTag.StrValue1 = `LWCE_XGCONTINENT(LWCE_XGFacility_Hangar(HANGAR()).m_arrCEShips[kData.Data[0].I].GetContinent()).GetName();
+            kNotice.txtNotice.StrValue = class'XComLocalizer'.static.ExpandString(m_strLabelShipTransferArrival);
+            kNotice.txtNotice.iState = eUIState_Warning;
+            kNotice.imgNotice.iImage = eImage_Interceptor;
+            break;
+        case 'SoldierHealed':
+            Sound().PlaySFX(SNDLIB().SFX_Notify_SoldierHealed);
+            kTag.StrValue0 = BARRACKS().GetSoldierByID(kData.Data[0].I).GetName(eNameType_RankFull);
+            kNotice.txtNotice.StrValue = class'XComLocalizer'.static.ExpandString(m_strLabelSoldierHealed);
+            kNotice.txtNotice.iState = eUIState_Warning;
+            kNotice.imgNotice.iImage = eImage_Soldier;
             break;
         default:
             iData1 = kData.Data.Length > 0 ? kData.Data[0].I : 0;
@@ -282,6 +393,30 @@ function BuildEventOptions()
     m_kCEEvents.iHighlight = -1;
 }
 
+/// <summary>
+/// Checks whether it's currently possible to activate a mission. Activation is prevented if
+/// the Skyranger or any other XCOM ships are currently flying.
+/// </summary>
+function bool CanActivateMission()
+{
+    local LWCE_XGShip kShip;
+
+    if (HANGAR().GetDropship().IsFlying())
+    {
+        return false;
+    }
+
+    foreach LWCE_XGFacility_Hangar(HANGAR()).m_arrCEShips(kShip)
+    {
+        if (kShip.IsFlying() && kShip.m_kEngagement != none)
+        {
+            return false;
+        }
+    }
+
+    return true;
+}
+
 function bool CheckForInterrupt()
 {
     local LWCE_TGeoscapeAlert kAlert;
@@ -290,7 +425,7 @@ function bool CheckForInterrupt()
 
     switch (kAlert.AlertType)
     {
-        case 'UFODetected':
+        case 'EnemyShipDetected':
         case 'Abduction':
         case 'Terror':
         case 'FCMission':
@@ -361,6 +496,8 @@ function OnAbductionInput(int iOption)
 
 function OnAlertInput(int iOption)
 {
+    local LWCE_XComHQPresentationLayer kPres;
+    local LWCE_XGGeoscape kGeoscape;
     local LWCE_TGeoscapeAlert kAlert;
     local XGShip_Dropship kSkyranger;
     local XGMission kMission;
@@ -373,16 +510,19 @@ function OnAlertInput(int iOption)
         return;
     }
 
-    PlaySmallCloseSound();
+    kPres = LWCE_XComHQPresentationLayer(PRES());
+    kGeoscape = LWCE_XGGeoscape(GEOSCAPE());
     kAlert = LWCE_XGGeoscape(GEOSCAPE()).LWCE_GetTopAlert();
-    GEOSCAPE().ClearTopAlert();
+
+    PlaySmallCloseSound();
+    kGeoscape.ClearTopAlert();
 
     switch (m_kCECurrentAlert.AlertType)
     {
         case 'SecretPact':
             if (Game().CheckForLoseGame() <= 0)
             {
-                GEOSCAPE().Pause();
+                kGeoscape.Pause();
             }
             else
             {
@@ -393,7 +533,7 @@ function OnAlertInput(int iOption)
         case 'SatelliteDestroyed':
             HQ().CheckForOperatingLoss(GetUIScreen());
             break;
-        case 'UFODetected':
+        case 'EnemyShipDetected':
             if (iOption == 0 && m_iCurrentView != eMCView_ChooseShip)
             {
                 if (m_kCECurrentAlert.mnuReplies.arrOptions[0].iState == eUIState_Disabled)
@@ -407,7 +547,7 @@ function OnAlertInput(int iOption)
                 }
 
                 GoToView(eMCView_ChooseShip);
-                PRES().UIIntercept(AI().GetUFO(kAlert.kData.Data[0].I));
+                kPres.LWCE_UIIntercept(LWCE_XGStrategyAI(AI()).LWCE_GetShip(m_kCECurrentAlert.kData.Data[0].I));
 
                 return;
             }
@@ -426,7 +566,7 @@ function OnAlertInput(int iOption)
                 else
                 {
                     GoToView(eMCView_MainMenu);
-                    PRES().UIChooseSquad(GEOSCAPE().GetMission(kAlert.kData.Data[0].I));
+                    kPres.UIChooseSquad(kGeoscape.GetMission(kAlert.kData.Data[0].I));
                 }
             }
             else
@@ -445,7 +585,7 @@ function OnAlertInput(int iOption)
                 else
                 {
                     GoToView(eMCView_MainMenu);
-                    PRES().UIChooseSquad(GEOSCAPE().GetMission(kAlert.kData.Data[0].I));
+                    kPres.UIChooseSquad(kGeoscape.GetMission(kAlert.kData.Data[0].I));
                 }
             }
             else
@@ -461,17 +601,14 @@ function OnAlertInput(int iOption)
                 {
                     PlayBadSound();
                 }
+                else if (LWCE_XGStorage(STORAGE()).LWCE_GetNumItemsAvailable('Item_SkeletonKey') == 0)
+                {
+                    PlayBadSound();
+                }
                 else
                 {
-                    if (LWCE_XGStorage(STORAGE()).LWCE_GetNumItemsAvailable('Item_SkeletonKey') == 0)
-                    {
-                        PlayBadSound();
-                    }
-                    else
-                    {
-                        GoToView(eMCView_MainMenu);
-                        PRES().UIChooseSquad(GEOSCAPE().GetMission(kAlert.kData.Data[0].I));
-                    }
+                    GoToView(eMCView_MainMenu);
+                    kPres.UIChooseSquad(kGeoscape.GetMission(kAlert.kData.Data[0].I));
                 }
             }
             else
@@ -583,7 +720,7 @@ function OnAlertInput(int iOption)
         case 'FCMissionActivity':
             if (iOption == 0)
             {
-                PRES().bShouldUpdateSituationRoomMenu = false;
+                kPres.bShouldUpdateSituationRoomMenu = false;
                 SITROOM().m_bDisplayMissionDetails = true;
                 JumpToFacility(SITROOM(), eSitView_Mission);
             }
@@ -605,11 +742,11 @@ function OnAlertInput(int iOption)
             else if (iOption == 1)
             {
                 m_eCountryFromExaltSelection = -1;
-                GEOSCAPE().ShowRealEarth();
+                kGeoscape.ShowRealEarth();
             }
             else
             {
-                GEOSCAPE().ShowRealEarth();
+                kGeoscape.ShowRealEarth();
                 bCanceledAction = true;
             }
 
@@ -646,7 +783,7 @@ function OnAlertInput(int iOption)
 
             if (iOption == 0)
             {
-                PRES().ShouldPause(false);
+                kPres.ShouldPause(false);
                 PlaySound(`SoundCue("SoundUI.MenuSelectCue"), true);
                 GetALocalPlayerController().ClientSetCameraFade(true, MakeColor(0, 0, 0), vect2d(0.0, 1.0), 0.20);
                 `HQPRES.SetTimer(0.210, false, 'PostFadeForBeginCombat');
@@ -664,10 +801,10 @@ function OnAlertInput(int iOption)
             }
             else
             {
-                PRES().ShouldPause(true);
+                kPres.ShouldPause(true);
                 PlaySound(`SoundCue("SoundUI.MenuCancelCue"), true);
-                GEOSCAPE().SkyrangerReturnToBase(kSkyranger, true);
-                GEOSCAPE().Resume();
+                kGeoscape.SkyrangerReturnToBase(kSkyranger, true);
+                kGeoscape.Resume();
             }
 
             break;
@@ -682,9 +819,9 @@ function OnAlertInput(int iOption)
                 {
                     GoToView(eMCView_MainMenu);
 
-                    for (iIndex = 0; iIndex < GEOSCAPE().m_arrMissions.Length; iIndex++)
+                    for (iIndex = 0; iIndex < kGeoscape.m_arrMissions.Length; iIndex++)
                     {
-                        kMission = GEOSCAPE().m_arrMissions[iIndex];
+                        kMission = kGeoscape.m_arrMissions[iIndex];
 
                         if (kMission.IsA('XGMission_CovertOpsExtraction') || kMission.IsA('XGMission_CaptureAndHold'))
                         {
@@ -693,22 +830,22 @@ function OnAlertInput(int iOption)
                         }
                     }
 
-                    PRES().bShouldUpdateSituationRoomMenu = false;
+                    kPres.bShouldUpdateSituationRoomMenu = false;
                     SITROOM().m_bDisplayInfiltratorMissionDetails = true;
                     JumpToFacility(SITROOM(), eSitView_CovertOpsExtractionMission);
-                    PRES().UIInfiltratorMission();
+                    kPres.UIInfiltratorMission();
                 }
             }
             else
             {
-                PRES().CAMLookAtEarth(HQ().GetCoords());
+                kPres.CAMLookAtEarth(HQ().GetCoords());
             }
 
             break;
         default:
-            if (!GEOSCAPE().HasAlerts())
+            if (!kGeoscape.HasAlerts())
             {
-                PRES().CAMLookAtEarth(HQ().GetCoords());
+                kPres.CAMLookAtEarth(HQ().GetCoords());
             }
 
             break;
@@ -716,10 +853,10 @@ function OnAlertInput(int iOption)
 
     if (bCanceledAction)
     {
-        LWCE_XGGeoscape(GEOSCAPE()).LWCE_PreloadSquadIntoSkyranger(m_kCECurrentAlert.AlertType, true);
+        kGeoscape.LWCE_PreloadSquadIntoSkyranger(m_kCECurrentAlert.AlertType, true);
     }
 
-    if (GEOSCAPE().HasAlerts())
+    if (kGeoscape.HasAlerts())
     {
         UpdateView();
     }
@@ -754,6 +891,7 @@ function OnMissionInput()
         return;
     }
 
+    // The last entry in the list is always start/stop scanning the Geoscape
     if (m_kMenu.iHighlight == m_kMenu.arrMissions.Length - 1 && kGeoscape.GetFinalMission() == none)
     {
         if (!kGeoscape.IsScanning())
@@ -830,7 +968,7 @@ function ShowUFOInterceptAlert(int iShipIndex)
     kAI = LWCE_XGStrategyAI(AI());
     kGeoscape = LWCE_XGGeoscape(GEOSCAPE());
 
-    kGeoscape.LWCE_Alert(`LWCE_ALERT('UFODetected').AddInt(iShipIndex).Build());
+    kGeoscape.LWCE_Alert(`LWCE_ALERT('EnemyShipDetected').AddInt(iShipIndex).Build());
     GoToView(eMCView_ChooseShip);
     kGeoscape.ClearTopAlert(true);
     LWCE_XComHQPresentationLayer(PRES()).LWCE_UIIntercept(kAI.LWCE_GetShip(iShipIndex));
@@ -936,11 +1074,10 @@ function UpdateAlert()
     kCountryTag = new class'XGCountryTag';
 
     kGeoAlert = kGeoscape.LWCE_GetTopAlert();
-    `LWCE_LOG_CLS("New alert with type " $ kGeoAlert.AlertType);
 
     switch (kGeoAlert.AlertType)
     {
-        case 'UFODetected':
+        case 'EnemyShipDetected':
             kShip = kAI.LWCE_GetShip(kGeoAlert.kData.Data[0].I);
 
             // For our first Overseer, don't play the sound because we're going to do a cinematic instead
@@ -958,19 +1095,21 @@ function UpdateAlert()
             kAlert.txtTitle.iState = eUIState_Warning;
             kAlert.imgAlert.iImage = eImage_OldAssault;
 
+            kAlert.kData = class'LWCEDataContainer'.static.NewInt('AlertData', kGeoAlert.kData.Data[0].I);
+
             txtLabel.strLabel = m_strLabelContact;
-            txtLabel.StrValue = m_strLabelUFOPrefix $ string(kShip.m_iCounter);
+            txtLabel.StrValue = m_strLabelUFOPrefix $ kShip.m_iCounter;
             txtLabel.iState = eUIState_Warning;
             kAlert.arrLabeledText.AddItem(txtLabel);
 
             txtLabel.strLabel = m_strLabelLocation;
             txtLabel.StrValue = `LWCE_XGCOUNTRY(kShip.GetCountry()).GetName();
-            txtLabel.StrValue $= "ALTITUDE MISSING"; // kShip.GetAltitudeString();
+            txtLabel.StrValue $= kShip.GetAltitudeString();
             txtLabel.iState = eUIState_Highlight;
             kAlert.arrLabeledText.AddItem(txtLabel);
 
             txtLabel.strLabel = m_strLabelSize;
-            txtLabel.StrValue = "SIZE MISSING"; // kShip.GetSizeString();
+            txtLabel.StrValue = kShip.GetSizeString();
             txtLabel.iState = eUIState_Highlight;
             kAlert.arrLabeledText.AddItem(txtLabel);
 
@@ -988,6 +1127,7 @@ function UpdateAlert()
                 txtLabel.StrValue = m_strLabelUnidentified;
                 txtLabel.iState = eUIState_Bad;
             }
+
             kAlert.arrLabeledText.AddItem(txtLabel);
 
             if (HQ().IsHyperwaveActive())
@@ -1513,7 +1653,8 @@ function UpdateAlert()
             txtLabel.StrValue = kMission.GetCity().GetName();
             kAlert.arrLabeledText.AddItem(txtLabel);
 
-            kAlert.iNumber = Country(kMission.GetCountry()).GetPanicBlocks();
+            // TODO mission support
+            kAlert.kData = class'LWCEDataContainer'.static.NewInt('AlertData', Country(kMission.GetCountry()).GetPanicBlocks()); // `LWCE_XGCOUNTRY(kMission.GetCountry()).GetPanicBlocks();
             txtLabel.strLabel = m_strLabelPanicLevel;
             kAlert.arrLabeledText.AddItem(txtLabel);
 
@@ -1544,7 +1685,7 @@ function UpdateAlert()
             Sound().PlaySFX(SNDLIB().SFX_Alert_UrgentMessage);
 
             kAlert.imgAlert.iImage = kGeoAlert.kData.Data[0].I;
-            kAlert.iNumber = World().m_iNumCountriesLost;
+            kAlert.kData = class'LWCEDataContainer'.static.NewInt('AlertData', World().m_iNumCountriesLost);
 
             txtLabel.strLabel = kCountry.GetName();
             txtLabel.StrValue = m_strLabelCountrySignedPactLabel;
@@ -1575,7 +1716,7 @@ function UpdateAlert()
             txtTemp.iState = eUIState_Bad;
             kAlert.arrText.AddItem(txtTemp);
 
-            kAlert.iNumber = kCountry.GetPanicBlocks();
+            kAlert.kData = class'LWCEDataContainer'.static.NewInt('AlertData', kCountry.GetPanicBlocks());
             txtTemp.StrValue = m_strLabelPanicLevel;
             kAlert.arrText.AddItem(txtTemp);
 
@@ -1846,7 +1987,7 @@ function UpdateAlert()
             Sound().PlaySFX(SNDLIB().SFX_Alert_UrgentMessage);
 
             kAlert.imgAlert.iImage = kGeoAlert.kData.Data[0].I;
-            kAlert.iNumber = World().m_iNumCountriesLost;
+            kAlert.kData = class'LWCEDataContainer'.static.NewInt('AlertData', World().m_iNumCountriesLost);
 
             txtLabel.strLabel = kCountry.GetName();
             txtLabel.StrValue = m_strLabelExaltRaidCountryFailSubtitle;
@@ -2025,7 +2166,7 @@ function UpdateMissions()
         kOption.txtOption.iButton = 0;
 
         m_arrMenuUFOs.AddItem(iShip);
-        m_arrMenuMissions.AddItem(-1);
+        m_arrMenuMissions.AddItem(-1); // makes sure that m_arrMenuMissions is always at least the length of m_arrMenuUFOs, for OnMissionInput later
         m_kMenu.arrMissions.AddItem(kOption);
     }
 
@@ -2120,7 +2261,7 @@ function UpdateRequest()
 
 function UpdateView()
 {
-    local XGShip_UFO kUFO;
+    local LWCE_XGShip kShip;
     local XGMission kMission;
     local LWCE_XGBase kBase;
     local LWCE_XGGeoscape kGeoscape;
@@ -2163,149 +2304,142 @@ function UpdateView()
             m_bNarrFilteringAbduction = false;
         }
     }
-    else
+    else if (m_iCurrentView == eMCView_Alert)
     {
-        if (m_iCurrentView == eMCView_Alert)
+        kGeoAlert = kGeoscape.LWCE_GetTopAlert();
+
+        if (m_kCECurrentAlert.AlertType == 'UFOCrash')
         {
-            kGeoAlert = kGeoscape.LWCE_GetTopAlert();
+            kMission = XGMission_UFOCrash(kGeoscape.GetMission(kGeoAlert.kData.Data[0].I));
 
-            if (m_kCECurrentAlert.AlertType == 'UFOCrash')
+            if (XGMission_UFOCrash(kMission).m_iUFOType == /* Transport */ eShip_UFOSupply)
             {
-                kMission = XGMission_UFOCrash(kGeoscape.GetMission(kGeoAlert.kData.Data[0].I));
-
-                if (XGMission_UFOCrash(kMission).m_iUFOType == /* Transport */ eShip_UFOSupply)
+                if (Narrative(`XComNarrativeMoment("FirstUFOShotDown_LeadOut_CS")))
                 {
-                    if (Narrative(`XComNarrativeMoment("FirstUFOShotDown_LeadOut_CS")))
-                    {
-                        return;
-                    }
-                }
-
-                if (XGMission_UFOCrash(kMission).m_iUFOType == /* Battleship */ eShip_UFOBattle)
-                {
-                    if (Narrative(`XComNarrativeMoment("FirstUFOShotDown_LeadOut_CEN")))
-                    {
-                        return;
-                    }
+                    return;
                 }
             }
-            else
+
+            if (XGMission_UFOCrash(kMission).m_iUFOType == /* Battleship */ eShip_UFOBattle)
             {
-                if (m_kCECurrentAlert.AlertType == 'UFODetected')
+                if (Narrative(`XComNarrativeMoment("FirstUFOShotDown_LeadOut_CEN")))
                 {
-                    Narrative(`XComNarrativeMoment("RoboHQ_UFODetected"));
-                    kUFO = AI().GetUFO(kGeoAlert.kData.Data[0].I);
-
-                    if (kUFO.m_kObjective.GetType() == eObjective_Hunt)
-                    {
-                        Narrative(`XComNarrativeMoment("MCSatelliteHunterDetected"));
-                        return;
-                    }
-
-                    switch (kUFO.GetType())
-                    {
-                        case eShip_UFOLargeScout:
-                            Narrative(`XComNarrativeMoment("MCLargeScout"));
-                            break;
-                        case eShip_UFOAbductor:
-                            Narrative(`XComNarrativeMoment("MCAbductor"));
-                            break;
-                        case eShip_UFOSupply:
-                            Narrative(`XComNarrativeMoment("MCSupply"));
-                            break;
-                        case eShip_UFOBattle:
-                            Narrative(`XComNarrativeMoment("MCBattleship"));
-                            break;
-                        case eShip_UFOEthereal:
-                            if (!HQ().m_kMC.m_bDetectedOverseer)
-                            {
-                                kBase = LWCE_XGBase(HQ().m_kBase);
-                                PRES().UINarrative(`XComNarrativeMoment("MCOverseer"), none, PostOverseerMatinee,, kBase.LWCE_GetFacility3DLocation('Facility_HyperwaveRelay'));
-                                Narrative(`XComNarrativeMoment("HyperwaveBeaconActivated_LeadOut_CE"));
-                                Narrative(`XComNarrativeMoment("HyperwaveBeaconActivated_LeadOut_CS"));
-                                HQ().m_kMC.m_bDetectedOverseer = true;
-                            }
-
-                            break;
-                        default:
-                            break;
-                    }
-                }
-
-                if (m_kCECurrentAlert.AlertType == 'PsiTraining')
-                {
-                    if (PSILABS().m_bSubjectZeroCinematic)
-                    {
-                        PRES().UINarrative(`XComNarrativeMoment("PsiLabsGift"));
-                    }
-                }
-                else if (m_kCECurrentAlert.AlertType == 'AlienBase')
-                {
-                    if (STORAGE().GetNumItemsAvailable(eItem_Skeleton_Key) == 0 && !ENGINEERING().IsBuildingItem(eItem_Skeleton_Key))
-                    {
-                        Narrative(`XComNarrativeMoment("BuildBasePassKeyReminder"));
-                    }
-                }
-                else if (m_kCECurrentAlert.AlertType == 'ItemProjectCompleted')
-                {
-                    if (kGeoAlert.kData.Data[0].I == eItem_Satellite)
-                    {
-                        Narrative(`XComNarrativeMoment("MCSatellitesReady"));
-                    }
-                }
-                else if (m_kCECurrentAlert.AlertType == 'NewFacilityBuilt')
-                {
-                }
-                else if (m_kCECurrentAlert.AlertType == 'SatelliteDestroyed')
-                {
-                    Narrative(`XComNarrativeMoment("RoboHQ_SatelliteLost"));
-                    Narrative(`XComNarrativeMoment("MCSatelliteShotDown"));
-                }
-                else if (m_kCECurrentAlert.AlertType == 'FCActivity')
-                {
-                    Narrative(`XComNarrativeMoment("RoboHQ_IncomingTransmission"));
-                    Narrative(`XComNarrativeMoment("FC_RGenericRequestIntro"));
-                }
-                else if (m_kCECurrentAlert.AlertType == 'FCMissionActivity')
-                {
-                    Narrative(`XComNarrativeMoment("RoboHQ_IncomingTransmission"));
-                    Narrative(`XComNarrativeMoment("FC_RMissionLeadIn"));
-                }
-                else if (m_kCECurrentAlert.AlertType == 'UFOLost')
-                {
-                    Narrative(`XComNarrativeMoment("RoboHQ_ContactLost"));
-                }
-                else if (m_kCECurrentAlert.AlertType == 'UFOLanded')
-                {
-                    Narrative(`XComNarrativeMoment("RoboHQ_ContactDetected"));
-                }
-                else if (m_kCECurrentAlert.AlertType == 'DropArrive')
-                {
-                    Narrative(`XComNarrativeMoment("SkyrangerArrives"));
+                    return;
                 }
             }
         }
-        else if (m_iCurrentView == eMCView_MainMenu)
+        else if (m_kCECurrentAlert.AlertType == 'EnemyShipDetected')
         {
-            if (!HANGAR().m_kSkyranger.IsFlying())
+            Narrative(`XComNarrativeMoment("RoboHQ_UFODetected"));
+            kShip = LWCE_XGStrategyAI(AI()).LWCE_GetShip(kGeoAlert.kData.Data[0].I);
+
+            if (kShip.m_kObjective.LWCE_GetType() == 'Hunt')
             {
-                if (HANGAR().HasNoJets() && HQ().m_kMC.m_iNoJetsCounter <= 0)
-                {
-                    Narrative(`XComNarrativeMoment("UrgeInterceptors"));
-                    HQ().m_kMC.m_iNoJetsCounter = 4;
-                }
+                Narrative(`XComNarrativeMoment("MCSatelliteHunterDetected"));
+                return;
             }
 
-            if (HANGAR().m_iJetsLost >= 2 && LWCE_XGFacility_Hangar(HANGAR()).m_nmCEBestWeaponEquipped == 'Item_AvalancheMissiles')
+            switch (kShip.m_nmShipTemplate)
             {
-                Narrative(`XComNarrativeMoment("EngineeringBetterJet"));
-            }
+                case 'UFODestroyer':
+                    Narrative(`XComNarrativeMoment("MCLargeScout"));
+                    break;
+                case 'UFOAbductor':
+                    Narrative(`XComNarrativeMoment("MCAbductor"));
+                    break;
+                case 'UFOTransport':
+                    Narrative(`XComNarrativeMoment("MCSupply"));
+                    break;
+                case 'UFOBattleship':
+                    Narrative(`XComNarrativeMoment("MCBattleship"));
+                    break;
+                case 'UFOOverseer':
+                    if (!HQ().m_kMC.m_bDetectedOverseer)
+                    {
+                        kBase = LWCE_XGBase(HQ().m_kBase);
+                        PRES().UINarrative(`XComNarrativeMoment("MCOverseer"), none, PostOverseerMatinee,, kBase.LWCE_GetFacility3DLocation('Facility_HyperwaveRelay'));
+                        Narrative(`XComNarrativeMoment("HyperwaveBeaconActivated_LeadOut_CE"));
+                        Narrative(`XComNarrativeMoment("HyperwaveBeaconActivated_LeadOut_CS"));
+                        HQ().m_kMC.m_bDetectedOverseer = true;
+                    }
 
-            if (GEOSCAPE().m_bUFOIgnored)
-            {
-                Narrative(`XComNarrativeMoment("MCUFOIgnored"));
-                GEOSCAPE().m_bUFOIgnored = false;
+                    break;
+                default:
+                    break;
             }
+        }
+        else if (m_kCECurrentAlert.AlertType == 'PsiTraining')
+        {
+            if (PSILABS().m_bSubjectZeroCinematic)
+            {
+                PRES().UINarrative(`XComNarrativeMoment("PsiLabsGift"));
+            }
+        }
+        else if (m_kCECurrentAlert.AlertType == 'AlienBase')
+        {
+            if (LWCE_XGStorage(STORAGE()).LWCE_GetNumItemsAvailable('Item_SkeletonKey') == 0 && !LWCE_XGFacility_Engineering(ENGINEERING()).LWCE_IsBuildingItem('Item_SkeletonKey'))
+            {
+                Narrative(`XComNarrativeMoment("BuildBasePassKeyReminder"));
+            }
+        }
+        else if (m_kCECurrentAlert.AlertType == 'ItemProjectCompleted')
+        {
+            if (kGeoAlert.kData.Data[0].I == eItem_Satellite)
+            {
+                Narrative(`XComNarrativeMoment("MCSatellitesReady"));
+            }
+        }
+        else if (m_kCECurrentAlert.AlertType == 'NewFacilityBuilt')
+        {
+        }
+        else if (m_kCECurrentAlert.AlertType == 'SatelliteDestroyed')
+        {
+            Narrative(`XComNarrativeMoment("RoboHQ_SatelliteLost"));
+            Narrative(`XComNarrativeMoment("MCSatelliteShotDown"));
+        }
+        else if (m_kCECurrentAlert.AlertType == 'FCActivity')
+        {
+            Narrative(`XComNarrativeMoment("RoboHQ_IncomingTransmission"));
+            Narrative(`XComNarrativeMoment("FC_RGenericRequestIntro"));
+        }
+        else if (m_kCECurrentAlert.AlertType == 'FCMissionActivity')
+        {
+            Narrative(`XComNarrativeMoment("RoboHQ_IncomingTransmission"));
+            Narrative(`XComNarrativeMoment("FC_RMissionLeadIn"));
+        }
+        else if (m_kCECurrentAlert.AlertType == 'UFOLost')
+        {
+            Narrative(`XComNarrativeMoment("RoboHQ_ContactLost"));
+        }
+        else if (m_kCECurrentAlert.AlertType == 'UFOLanded')
+        {
+            Narrative(`XComNarrativeMoment("RoboHQ_ContactDetected"));
+        }
+        else if (m_kCECurrentAlert.AlertType == 'DropArrive')
+        {
+            Narrative(`XComNarrativeMoment("SkyrangerArrives"));
+        }
+    }
+    else if (m_iCurrentView == eMCView_MainMenu)
+    {
+        if (!HANGAR().m_kSkyranger.IsFlying())
+        {
+            if (HANGAR().HasNoJets() && HQ().m_kMC.m_iNoJetsCounter <= 0)
+            {
+                Narrative(`XComNarrativeMoment("UrgeInterceptors"));
+                HQ().m_kMC.m_iNoJetsCounter = 4;
+            }
+        }
+
+        if (HANGAR().m_iJetsLost >= 2 && LWCE_XGFacility_Hangar(HANGAR()).m_nmCEBestWeaponEquipped == 'Item_AvalancheMissiles')
+        {
+            Narrative(`XComNarrativeMoment("EngineeringBetterJet"));
+        }
+
+        if (GEOSCAPE().m_bUFOIgnored)
+        {
+            Narrative(`XComNarrativeMoment("MCUFOIgnored"));
+            GEOSCAPE().m_bUFOIgnored = false;
         }
     }
 

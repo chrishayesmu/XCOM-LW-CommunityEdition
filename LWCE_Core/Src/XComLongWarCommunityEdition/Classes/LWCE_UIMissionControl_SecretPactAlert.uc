@@ -27,7 +27,7 @@ simulated function OnInit()
 
     if (kAlertData.arrText.Length == 2)
     {
-        AS_SetPanicLevel(Caps(kAlertData.arrText[1].StrValue), kAlertData.iNumber);
+        AS_SetPanicLevel(Caps(kAlertData.arrText[1].StrValue), kAlertData.kData.Data[0].I);
         AS_SetText(kAlertData.arrText[0].StrValue);
     }
     else

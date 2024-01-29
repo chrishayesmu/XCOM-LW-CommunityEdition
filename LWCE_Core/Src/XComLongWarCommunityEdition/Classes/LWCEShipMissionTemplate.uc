@@ -25,6 +25,7 @@ struct LWCE_AIShipMissionConfig
 var config int iStartDays;
 var config int iRandomDays;
 var config int iFlightRadius;
+var config name nmAltitude;
 var config name nmFlightPlan;
 var config array<LWCE_AIShipMissionConfig> arrPossibleShips;
 

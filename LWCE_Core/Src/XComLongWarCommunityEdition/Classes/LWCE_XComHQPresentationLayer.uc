@@ -111,11 +111,11 @@ reliable client simulated function UIIntercept(XGShip_UFO kUFO)
 }
 
 /// <summary>
-/// Brings up the UI to TODO
+/// Brings up the UI to choose which ship will be sent to intercept the provided enemy ship.
 /// </summary>
-reliable client simulated function LWCE_UIIntercept(LWCE_XGShip kShip)
+reliable client simulated function LWCE_UIIntercept(LWCE_XGShip kEnemyShip)
 {
-    LWCE_UIMissionControl(m_kUIMissionControl).LWCE_UFOContact_BeginShipSelection(kShip);
+    LWCE_UIMissionControl(m_kUIMissionControl).LWCE_UFOContact_BeginShipSelection(kEnemyShip);
 }
 
 reliable client simulated function UIItemUnlock(TItemUnlock kUnlock)

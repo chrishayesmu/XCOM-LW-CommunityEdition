@@ -16,12 +16,13 @@ struct LWCE_TNameListConfig
 };
 
 var config int iStartingCash;                // How much cash the player will have if choosing this country as their starting location.
-var config int iEngineersPerMonth;           // How many engineers this country gives each month if it has satellite coverage
-var config int iScientistsPerMonth;          // How many scientists this country gives each month if it has satellite coverage
-var config int iCashPerMonth;                // How much this country gives each month if it has satellite coverage; a percentage is given without coverage
+var config int iEngineersPerMonth;           // How many engineers this country gives each month if it has satellite coverage.
+var config int iScientistsPerMonth;          // How many scientists this country gives each month if it has satellite coverage.
+var config int iCashPerMonth;                // How much this country gives each month if it has satellite coverage; a percentage is given without coverage.
 var config bool bIsCouncilMember;            // Whether this country is ever in the XCOM council. If not, the configuration above is unused, and
                                              // this country essentially only exists as a place for missions to occur.
 var config string strFlagIconPath;           // Path to an image containing the icon of this country's flag. Must contain the "img:///" prefix.
+var config string strSatelliteNarrativePath; // Path to an XComNarrativeMoment to be played when satellite coverage is established over this country.
 var config Vector2D v2SatNodeLoc;            // The location on the Geoscape to display a satellite graphic if this country has a satellite.
 var config array<config TRect> arrBounds;    // Bounding boxes which together define the area of this country.
 var config array<name> arrCities;            // The names of the cities which are in this country.
@@ -36,6 +37,7 @@ var config array<LWCE_TNameListConfig> arrFirstNameLists;
 var config array<LWCE_TNameListConfig> arrLastNameLists;
 var config array<LWCE_NameIntKVP> arrSoldierRaceWeights;
 var config array<LWCE_NameIntKVP> arrSpokenLanguageWeights;
+
 var const localized string strName;
 var const localized string strNameWithArticle;
 var const localized string strNameWithArticleLower;

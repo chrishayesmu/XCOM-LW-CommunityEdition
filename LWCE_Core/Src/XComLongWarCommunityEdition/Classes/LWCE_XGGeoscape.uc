@@ -1,19 +1,19 @@
 class LWCE_XGGeoscape extends XGGeoscape
     dependson(LWCETypes);
 
-struct CheckpointRecord_LWCE_XGGeoscape extends XGGeoscape.CheckpointRecord
-{
-    var array<name> m_arrCEShipEncounters;
-};
-
 struct LWCE_TGeoscapeAlert
 {
     var name AlertType;
     var LWCEDataContainer kData;
 };
 
-var array<name> m_arrCEShipEncounters;
+struct CheckpointRecord_LWCE_XGGeoscape extends XGGeoscape.CheckpointRecord
+{
+    var array<name> m_arrCEShipEncounters;
+    var array<LWCE_TGeoscapeAlert> m_arrCEAlerts;
+};
 
+var array<name> m_arrCEShipEncounters;
 var array<LWCE_TGeoscapeAlert> m_arrCEAlerts;
 
 static function name AlertNameFromEnum(EGeoscapeAlert eAlert)
@@ -21,7 +21,7 @@ static function name AlertNameFromEnum(EGeoscapeAlert eAlert)
     switch (eAlert)
     {
         case eGA_UFODetected:
-            return 'UFODetected';
+            return 'EnemyShipDetected';
         case eGA_Abduction:
             return 'Abduction';
         case eGA_Terror:
@@ -103,7 +103,7 @@ static function name AlertNameFromEnum(EGeoscapeAlert eAlert)
         case eGA_FCExpiredRequest:
             return 'FCExpiredRequest';
         case eGA_FCDelayedRequest:
-            return 'FCDelayedRequest';
+            return 'FCNewRequest';
         case eGA_FCSatCountry:
             return 'FCSatCountry';
         case eGA_FCMissionActivity:
@@ -115,9 +115,9 @@ static function name AlertNameFromEnum(EGeoscapeAlert eAlert)
         case eGA_ExaltResearchHack:
             return 'ExaltResearchHack';
         case eGA_CellHides:
-            return 'CellHides';
+            return 'ExaltCellHides';
         case eGA_GeneMod:
-            return 'GeneMod';
+            return 'GeneModComplete';
         case eGA_Augmentation:
             return 'Augmentation';
         case eGA_ExaltRaidFailCountry:
@@ -135,7 +135,7 @@ static function EGeoscapeAlert EnumFromAlertName(name AlertType)
 {
     switch (AlertType)
     {
-        case 'UFODetected':
+        case 'EnemyShipDetected':
             return eGA_UFODetected;
         case 'Abduction':
             return eGA_Abduction;
@@ -217,7 +217,7 @@ static function EGeoscapeAlert EnumFromAlertName(name AlertType)
             return eGA_FCJetTransfer;
         case 'FCExpiredRequest':
             return eGA_FCExpiredRequest;
-        case 'FCDelayedRequest':
+        case 'FCNewRequest':
             return eGA_FCDelayedRequest;
         case 'FCSatCountry':
             return eGA_FCSatCountry;
@@ -229,9 +229,9 @@ static function EGeoscapeAlert EnumFromAlertName(name AlertType)
             return eGA_ExaltAlert;
         case 'ExaltResearchHack':
             return eGA_ExaltResearchHack;
-        case 'CellHides':
+        case 'ExaltCellHides':
             return eGA_CellHides;
-        case 'GeneMod':
+        case 'GeneModComplete':
             return eGA_GeneMod;
         case 'Augmentation':
             return eGA_Augmentation;
@@ -244,6 +244,9 @@ static function EGeoscapeAlert EnumFromAlertName(name AlertType)
         case 'ItemRepairsComplete':
             return EGeoscapeAlert(54);
     }
+
+    `LWCE_LOG_ERROR("EnumFromAlertName: did not find a match for alert name " $ AlertType);
+    return EGeoscapeAlert(0);
 }
 
 function Init()
@@ -774,15 +777,6 @@ function DetermineMap(XGMission kMission, optional EMissionTime eTime = eMission
         return;
     }
 
-    if (ISCONTROLLED() && kMission.m_iMissionType == eMission_Crash)
-    {
-        kMission.m_kDesc.m_strMapName = "CSmallScout_DirtRoad Tutorial 4 (UFO) Dirt Road";
-        kMission.m_kDesc.m_strMapCommand = class'XComMapManager'.static.GetMapCommandLine(kMission.m_kDesc.m_strMapName, true, true, kMission.m_kDesc);
-        class'XComMapManager'.static.IncrementMapPlayHistory(kMission.m_kDesc.m_strMapName, `PROFILESETTINGS.Data.m_arrMapHistory, PlayCount);
-        `ONLINEEVENTMGR.SaveProfileSettings();
-        return;
-    }
-
     eMission = EMissionType(kMission.m_iMissionType);
 
     if (eMission == eMission_LandedUFO)
@@ -805,6 +799,7 @@ function DetermineMap(XGMission kMission, optional EMissionTime eTime = eMission
     else
     {
         // The Country parameter in GetRandomMapDisplayName doesn't seem to be used, so just force it to 0
+        // TODO: this seems to crash the game if no matching map is found
         strMap = class'XComMapManager'.static.GetRandomMapDisplayName(eMission, eTime, eUFO, kMission.GetRegion(), ECountry(0), `PROFILESETTINGS.Data.m_arrMapHistory, PlayCount);
     }
 
@@ -936,7 +931,7 @@ function TGeoscapeAlert MakeAlert(EGeoscapeAlert eAlert, optional int iData1, op
 {
     local TGeoscapeAlert kAlert;
 
-    `LWCE_LOG_CLS("ERROR: LWCE-incompatible function MakeAlert was called. Use the LWCE_ALERT macro instead. Stack trace follows.");
+    `LWCE_LOG_DEPRECATED_BY(MakeAlert, LWCE_ALERT macro);
     ScriptTrace();
 
     return kAlert;
@@ -1031,11 +1026,11 @@ function OnUFODetected(int iShip)
 
     if (kShip.IsFlying())
     {
-        LWCE_Alert(`LWCE_ALERT('UFODetected').AddInt(iShip).Build());
+        LWCE_Alert(`LWCE_ALERT('EnemyShipDetected').AddInt(iShip).Build());
 
         if (kShip.m_kObjective.m_kCETObjective.nmType == 'AssaultXComHQ')
         {
-            PRES().Notify(52);
+            LWCE_XComHQPresentationLayer(PRES()).LWCE_Notify('ShipEnRouteToXComHQ', none);
         }
     }
     else
@@ -1056,13 +1051,11 @@ function OnUFODetected(int iShip)
 
 simulated function PreloadSquadIntoSkyranger(EGeoscapeAlert eAlertType, bool bUnload)
 {
-    `LWCE_LOG_CLS("PreloadSquadIntoSkyranger: eAlertType = " $ eAlertType $ ", bUnload = " $ bUnload);
     LWCE_PreloadSquadIntoSkyranger(AlertNameFromEnum(eAlertType), bUnload);
 }
 
 simulated function LWCE_PreloadSquadIntoSkyranger(name nmAlertType, bool bUnload)
 {
-    `LWCE_LOG_CLS("LWCE_PreloadSquadIntoSkyranger: nmAlertType = " $ nmAlertType $ ", bUnload = " $ bUnload);
     switch (nmAlertType)
     {
         case 'Abduction':
@@ -1285,4 +1278,257 @@ function UpdateCountryColors()
     {
         LWCE_ColorCountry(kCountry.m_nmCountry, kCountry.GetPanicColor());
     }
+}
+
+/// <summary>
+/// Updates the given ship's position, handling some unique behavior for XCom's ships in the process.
+/// </summary>
+/// <returns>True if the ship has reached its destination, false otherwise.</returns>
+function bool UpdateShip(XGShip kShip, float fDeltaT)
+{
+    local Vector2D v2Dist, v2Dest, v2Pos, v2DistRemaining, v2Dir;
+    local bool bEnforceMinTime;
+    local float fMiles, fRealTime, fScale;
+
+    bEnforceMinTime = kShip.IsA('LWCE_XGShip_Dropship') || LWCE_XGShip(kShip).IsXComShip();
+
+    if (kShip.IsFlying())
+    {
+        if (bEnforceMinTime && m_fTimeForShips != 0.0f)
+        {
+            kShip.m_fCurrentFlightTime += (fDeltaT / m_fTimeScale);
+
+            if (kShip.m_fCurrentFlightTime >= 3.0)
+            {
+                bEnforceMinTime = false;
+                m_fTimeForShips = 0.0;
+                Resume();
+            }
+        }
+
+        v2Dest = kShip.m_v2Destination;
+        v2Pos = kShip.m_v2Coords;
+        v2DistRemaining = GetShortestDist(v2Pos, v2Dest);
+        v2Dist = kShip.GetScreenSpeedPerSecond() * fDeltaT;
+
+        if (bEnforceMinTime)
+        {
+            if (kShip.m_fExpectedFlightTime == 0.0f)
+            {
+                fMiles = V2DSize(ConvertToMiles(v2DistRemaining));
+                kShip.m_fExpectedFlightTime = ((fMiles / float(kShip.GetSpeed())) * 60.0f) * 60.0f;
+
+                if (m_fTimeScale != 0.0f)
+                {
+                    fRealTime = kShip.m_fExpectedFlightTime / m_fTimeScale;
+
+                    if (fRealTime < 3.0)
+                    {
+                        fScale = kShip.m_fExpectedFlightTime / 3.0;
+
+                        if (m_fTimeForShips == 0.0f || fScale < m_fTimeForShips)
+                        {
+                            m_fTimeForShips = fScale;
+                            kShip.m_fAdjustedFlightTime = fScale;
+                        }
+                    }
+                }
+            }
+        }
+
+        if (V2DSizeSq(v2Dist) >= V2DSizeSq(v2DistRemaining))
+        {
+            kShip.m_v2Coords = v2Dest;
+            return true;
+        }
+
+        v2Dir = V2DNormal(v2DistRemaining);
+        kShip.m_vHeading.X = v2Dir.X;
+        kShip.m_vHeading.Y = v2Dir.Y;
+        kShip.m_vHeading = Normal(kShip.m_vHeading);
+
+        v2Dir *= v2Dist;
+        kShip.m_v2Coords += v2Dir;
+    }
+    else
+    {
+        kShip.m_fCurrentFlightTime = 0.0;
+
+        if (bEnforceMinTime)
+        {
+            kShip.m_fExpectedFlightTime = 0.0;
+
+            if (kShip.m_fAdjustedFlightTime != 0.0f && kShip.m_fAdjustedFlightTime == m_fTimeForShips)
+            {
+                m_fTimeForShips = 0.0;
+                Resume();
+            }
+
+            kShip.m_fAdjustedFlightTime = 0.0;
+        }
+    }
+
+    return false;
+}
+
+/// <summary>
+/// Updates all ships active on the Geoscape.
+/// </summary>
+function UpdateShips(float fDeltaT)
+{
+    local LWCE_XGFacility_Hangar kHangar;
+    local LWCE_XGShip kShip;
+    local LWCE_XGStrategyAI kAI;
+    local XGShip_Dropship kSkyranger;
+    local int Index;
+
+    kHangar = LWCE_XGFacility_Hangar(HANGAR());
+    kAI = LWCE_XGStrategyAI(AI());
+
+    kSkyranger = kHangar.m_kSkyranger;
+    kSkyranger.Update(fDeltaT);
+
+    if (UpdateShip(kSkyranger, fDeltaT))
+    {
+        kSkyranger.Update(fDeltaT);
+        SkyrangerArrival(kSkyranger, true);
+    }
+    else if (!kSkyranger.IsFlying() && kSkyranger.m_kMission != none)
+    {
+        kSkyranger.Update(fDeltaT);
+        SkyrangerArrival(kSkyranger, true);
+    }
+
+    for (Index = kAI.m_arrCEShips.Length - 1; Index >= 0; Index--)
+    {
+        kShip = kAI.m_arrCEShips[Index];
+        kShip.Update(fDeltaT);
+
+        if (UpdateShip(kShip, fDeltaT))
+        {
+            kShip.OnArrival();
+        }
+    }
+
+    foreach kHangar.m_arrCEShips(kShip)
+    {
+        kShip.Update(fDeltaT);
+
+        if (UpdateShip(kShip, fDeltaT))
+        {
+            kShip.OnArrival();
+        }
+    }
+
+    if (!IsPaused())
+    {
+        Resume();
+    }
+}
+
+/// <summary>
+/// Updates the Geoscape's UI (that is, the hologlobe) with all visible ships, alien bases, XCOM bases/outposts, and missions.
+/// </summary>
+function UpdateUI(float fDeltaT)
+{
+    local LWCE_XGShip kShip;
+    local XGShip_Dropship kSkyranger;
+    local XGMission kMission;
+    local XGOutpost kOutpost;
+    local XGCountry kCountry;
+    local LWCE_XGFacility_Hangar kHangar;
+    local LWCE_XGHeadquarters kHQ;
+    local LWCE_XGStrategyAI kAI;
+    local LWCE_TSatellite kSatellite;
+
+    kAI = LWCE_XGStrategyAI(AI());
+    kHangar = LWCE_XGFacility_Hangar(HANGAR());
+    kHQ = LWCE_XGHeadquarters(HQ());
+
+    UI.Clear();
+    kSkyranger = kHangar.m_kSkyranger;
+
+    if (kSkyranger.GetCoords() == HQ().GetCoords())
+    {
+        kSkyranger.HideEntity(true);
+    }
+    else
+    {
+        UI.DrawSkyranger(kSkyranger.GetEntity(), 0, -1, WrapCoords(kSkyranger.GetCoords()));
+    }
+
+    foreach kHangar.m_arrCEShips(kShip)
+    {
+        if (kShip.GetCoords() != kShip.GetHomeCoords())
+        {
+            UI.DrawInterceptor(kShip.GetEntity(), 0, -1, WrapCoords(kShip.GetCoords()));
+            continue;
+        }
+
+        kShip.HideEntity(true);
+    }
+
+    UI.DrawBase(kHQ.GetEntity(), kHQ.GetCoords());
+
+    foreach kHQ.m_arrOutposts(kOutpost)
+    {
+        UI.DrawBase(kOutpost.GetEntity(), kOutpost.GetCoords());
+    }
+
+    foreach kHQ.m_arrCESatellites(kSatellite)
+    {
+        if (kSatellite.iTravelTime == 0)
+        {
+            UI.DrawSatellite(kSatellite.kSatEntity, kSatellite.v2Loc);
+        }
+    }
+
+    foreach kAI.m_arrCEShips(kShip)
+    {
+        if (!kShip.IsDetected())
+        {
+            kShip.HideEntity(true);
+            continue;
+        }
+        else if (kShip.m_bLanded)
+        {
+            // Hide landed UFOs because they'll have a mission marker
+            kShip.HideEntity(true);
+            continue;
+        }
+
+        UI.DrawUFO(kShip.GetEntity(), 0, -1, WrapCoords(kShip.GetCoords()));
+    }
+
+    foreach m_arrMissions(kMission)
+    {
+        if (kMission.m_iMissionType == eMission_ReturnToBase)
+        {
+            kMission.HideEntity(true);
+            continue;
+        }
+
+        if (!kMission.IsDetected())
+        {
+            kMission.HideEntity(true);
+            continue;
+        }
+
+        UI.DrawMission(kMission.GetEntity(), kMission.m_iMissionType, kMission.GetCoords());
+    }
+
+    foreach World().m_arrCountries(kCountry)
+    {
+        if (kCountry.LeftXCom())
+        {
+            UI.DrawCountry(kCountry.m_kEntity, kCountry.GetCoords());
+        }
+    }
+
+    if (m_kTemple != none)
+    {
+        UI.DrawTemple(m_kTemple, vect2d(0.4150, 0.5570));
+    }
+
+    UI.EndFrame(fDeltaT);
 }

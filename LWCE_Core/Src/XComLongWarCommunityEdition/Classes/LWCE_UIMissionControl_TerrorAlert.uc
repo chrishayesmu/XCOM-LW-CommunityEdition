@@ -22,7 +22,7 @@ simulated function UpdateData()
 
     AS_SetTitle(Caps(kAlertData.arrLabeledText[0].strLabel));
     AS_SetCountryName(Caps(kAlertData.arrLabeledText[0].StrValue));
-    AS_SetPanicLevel(Caps(kAlertData.arrLabeledText[1].strLabel), kAlertData.iNumber);
+    AS_SetPanicLevel(Caps(kAlertData.arrLabeledText[1].strLabel), kAlertData.kData.Data[0].I);
     AS_SetDifficulty(Caps(kAlertData.arrLabeledText[2].strLabel), kAlertData.arrLabeledText[2].StrValue);
     UpdateButtonText();
 }

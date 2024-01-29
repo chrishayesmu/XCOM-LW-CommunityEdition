@@ -90,7 +90,7 @@ simulated function GoToView(int iView)
                 case 'NewFacilityBuilt':
                     m_kActiveAlert = Spawn(class'LWCE_UIMissionControl_FacilityBuiltAlert', self);
                     break;
-                case 'UFODetected':
+                case 'EnemyShipDetected':
                     XComEngine(class'Engine'.static.GetEngine()).SetAlienFXColor(eAlienFX_Yellow);
                     m_kActiveAlert = Spawn(class'LWCE_UIMissionControl_UFORadarContactAlert', self);
                     break;
@@ -242,7 +242,7 @@ simulated function LoadFlashAlertPanel()
 
     switch (LWCE_XGMissionControlUI(GetMgr()).m_kCECurrentAlert.AlertType)
     {
-        case 'UFODetected':
+        case 'EnemyShipDetected':
             Invoke("LoadRadarContactAlert");
             return;
         case 'UFOLanded':

@@ -61,6 +61,82 @@ function Init(bool bLoadingFromSave)
     UpdateHangarBays();
 }
 
+function Update()
+{
+    local LWCE_XComHQPresentationLayer kPres;
+    local LWCE_XGShip kShip, kEnemyShip;
+    local bool bChanged;
+
+    kPres = LWCE_XComHQPresentationLayer(PRES());
+    bChanged = false;
+
+    foreach m_arrCEShips(kShip)
+    {
+        if (kShip.m_iHoursDown > 0)
+        {
+            kShip.m_iHoursDown -= 1;
+
+            if (kShip.m_iHoursDown <= 0)
+            {
+                if (kShip.GetStatus() == eShipStatus_Repairing)
+                {
+                    kShip.m_iHP = kShip.m_kTShip.iHP;
+                }
+
+                if (kShip.GetStatus() == eShipStatus_Refuelling)
+                {
+                    kShip.m_fFlightTime = 43200.0;
+                }
+
+                if (kShip.GetStatus() == eShipStatus_Transfer)
+                {
+                    LWCE_CompleteTransfer(kShip);
+                }
+
+                if (kShip.GetStatus() == eShipStatus_Rearming)
+                {
+                    kPres.LWCE_Notify('ShipArmed', class'LWCEDataContainer'.static.NewInt('NotifyData', m_arrCEShips.Find(kShip)));
+                }
+
+                bChanged = true;
+                LWCE_DetermineShipStatus(kShip);
+
+                if (kShip.m_iStatus == eShipStatus_Ready)
+                {
+                    kPres.LWCE_Notify('ShipOnline', class'LWCEDataContainer'.static.NewInt('NotifyData', m_arrCEShips.Find(kShip)));
+
+                    foreach LWCE_XGStrategyAI(AI()).m_arrCEShips(kEnemyShip)
+                    {
+                        if (kShip.GetContinent() == kEnemyShip.GetContinent())
+                        {
+                            if (kEnemyShip.IsDetected())
+                            {
+                                GEOSCAPE().RestoreNormalTimeFrame();
+                            }
+                        }
+                    }
+                }
+            }
+            else if (kShip.GetStatus() == eShipStatus_Repairing)
+            {
+                kShip.m_iHP += (kShip.m_kTShip.iHP - kShip.m_iHP) / kShip.m_iHoursDown;
+            }
+        }
+
+        if (kShip.m_iHoursDown <= 0 && kShip.m_iStatus != eShipStatus_Ready)
+        {
+            LWCE_DetermineShipStatus(kShip);
+            bChanged = true;
+        }
+    }
+
+    if (bChanged)
+    {
+        UpdateHangarBays();
+        ReorderCraft();
+    }
+}
+
 function AddDropship()
 {
     if (m_kSkyranger == none)
@@ -195,6 +271,53 @@ function LWCE_AddShip(name nmShipType, name nmContinent)
     }
 }
 
+/// <summary>
+/// Checks whether any of XCOM's ships are currently in the air.
+/// </summary>
+function bool AreShipsFlying()
+{
+    local LWCE_XGShip kShip;
+
+    foreach m_arrCEShips(kShip)
+    {
+        if (kShip.IsFlying())
+        {
+            return true;
+        }
+    }
+
+    if (m_kSkyranger.IsFlying())
+    {
+        return true;
+    }
+
+    return false;
+}
+
+/// <summary>
+/// Checks whether XCOM's dropship is away from home or en route to a mission, or if any of XCOM's other ships
+/// are away from their home base.
+/// </summary>
+function bool AreShipsOnMission()
+{
+    local LWCE_XGShip kShip;
+
+    if (m_kSkyranger.m_kMission != none || m_kSkyranger.GetCoords() != HQ().GetCoords())
+    {
+        return true;
+    }
+
+    foreach m_arrCEShips(kShip)
+    {
+        if (kShip.GetCoords() != kShip.GetHomeCoords())
+        {
+            return true;
+        }
+    }
+
+    return false;
+}
+
 function AssignRandomCallsign(LWCE_XGShip kShip)
 {
     kShip.SetCallsign(PilotNames[Rand(PilotNames.Length)]);
@@ -234,29 +357,56 @@ function bool LWCE_CanEquip(name ItemName, LWCE_XGShip kShip, out string strHelp
     return true;
 }
 
-function DetermineInterceptorStatus(XGShip_Interceptor kInterceptor)
+function CompleteTransfer(XGShip_Interceptor kInt)
 {
-    kInterceptor.m_iStatus = eShipStatus_Ready;
+    `LWCE_LOG_DEPRECATED_CLS(CompleteTransfer);
+}
 
-    if (kInterceptor.GetFuelPct() < 1.0f)
+function LWCE_CompleteTransfer(LWCE_XGShip kShip)
+{
+    kShip.m_iStatus = eShipStatus_Ready;
+
+    if (kShip.m_nmContinent == LWCE_XGHeadquarters(HQ()).m_nmContinent)
     {
-        kInterceptor.m_iStatus = eShipStatus_Refuelling;
-        kInterceptor.m_iHoursDown = 1;
+        kShip.m_iHomeBay = GetAvailableBay();
     }
 
-    if (kInterceptor.IsDamaged())
+    kShip.UpdateHangarShip();
+    ReorderCraft();
+    LWCE_XComHQPresentationLayer(PRES()).LWCE_Notify('ShipTransferred', class'LWCEDataContainer'.static.NewInt('NotifyData', m_arrCEShips.Find(kShip)));
+    LWCE_XGFacility_SituationRoom(SITROOM()).LWCE_OnShipSuccessfullyTransferred(kShip);
+    UpdateHangarBays();
+}
+
+function DetermineInterceptorStatus(XGShip_Interceptor kInterceptor)
+{
+    `LWCE_LOG_DEPRECATED_BY(DetermineInterceptorStatus, LWCE_DetermineShipStatus);
+}
+
+function LWCE_DetermineShipStatus(LWCE_XGShip kShip)
+{
+    kShip.m_iStatus = eShipStatus_Ready;
+
+    if (kShip.GetFuelPercentage() < 1.0f)
     {
-        kInterceptor.m_iStatus = eShipStatus_Repairing;
-        kInterceptor.m_iHoursDown = Max(1, int(float(class'XGTacticalGameCore'.default.INTERCEPTOR_REPAIR_HOURS) * (1.0f - kInterceptor.GetHPPct())));
+        kShip.m_iStatus = eShipStatus_Refuelling;
+        kShip.m_iHoursDown = 1;
+    }
+
+    if (kShip.IsDamaged())
+    {
+        kShip.m_iStatus = eShipStatus_Repairing;
+        kShip.m_iHoursDown = Max(1, int(class'XGTacticalGameCore'.default.INTERCEPTOR_REPAIR_HOURS * (1.0f - kShip.GetHPPercentage())));
 
         if (IsOptionEnabled(`LW_SECOND_WAVE_ID(DynamicWar)))
         {
-            kInterceptor.m_iHoursDown /= class'XGTacticalGameCore'.default.SW_MARATHON;
+            kShip.m_iHoursDown /= class'XGTacticalGameCore'.default.SW_MARATHON;
         }
 
+        // TODO move this to template/dataset
         if (LWCE_XGFacility_Engineering(ENGINEERING()).LWCE_IsFoundryTechResearched('Foundry_AdvancedRepair'))
         {
-            kInterceptor.m_iHoursDown *= 0.670;
+            kShip.m_iHoursDown *= 0.670;
         }
     }
 }
@@ -634,6 +784,11 @@ function GiveMissionReward(XGShip_Dropship kSkyranger)
     }
 }
 
+function bool HasNoJets()
+{
+    return m_arrCEShips.Length == 0 && LWCE_XGHeadquarters(HQ()).LWCE_GetNumShipsOnOrder() == 0;
+}
+
 /// <summary>
 /// Checks if the given hangar bay is available. This refers to the bays in XCOM HQ which are used for displaying ships;
 /// it has nothing to do with how the ships themselves are stored on each continent.
@@ -720,6 +875,19 @@ function LandDropship(XGShip_Dropship kSkyranger)
     GEOSCAPE().Resume();
 }
 
+function LandInterceptor(XGShip_Interceptor kInterceptor)
+{
+    `LWCE_LOG_DEPRECATED_BY(LandInterceptor, LWCE_LandShip);
+}
+
+function LWCE_LandShip(LWCE_XGShip kShip)
+{
+    LWCE_DetermineShipStatus(kShip);
+    ReorderCraft();
+    GEOSCAPE().Resume();
+    UpdateHangarBays();
+}
+
 function OnInterceptorDestroyed(XGShip_Interceptor kInterceptor)
 {
     `LWCE_LOG_DEPRECATED_BY(OnInterceptorDestroyed, LWCE_OnShipDestroyed);
@@ -783,6 +951,21 @@ function bool OrderedHigher(XGShip_Interceptor kCraft1, XGShip_Interceptor kCraf
     }
 
     return false;
+}
+
+/// <summary>
+/// Called when the cinematic to launch a ship from the hangar ends.
+/// </summary>
+function NotifyHangarCinematicEnd()
+{
+    if (m_bBusy)
+    {
+        m_bBusy = false;
+        PRES().CAMLookAtNamedLocation("MissionControl", 0.0);
+        PRES().CAMLookAtEarth(LWCE_XGInterception(m_kLaunchInterception).m_arrEnemyShips[0].GetCoords(), 1.0, 0.0);
+        GEOSCAPE().Resume();
+        m_kLaunchInterception = none;
+    }
 }
 
 function RemoveInterceptor(XGShip_Interceptor kInt)
@@ -928,6 +1111,128 @@ function EItemType ShipTypeToItemType(EShipType eShip)
     `LWCE_LOG_DEPRECATED_NOREPLACE_CLS(ShipTypeToItemType);
 
     return eItem_None;
+}
+
+/// <summary>
+/// Plays the cinematic for a ship being launched to begin interception.
+/// </summary>
+function ShowInterceptorLaunch(XGInterception kInterception)
+{
+    local LWCE_XGInterception kCEInterception;
+    local LWCE_XGShip kIter, kShip;
+    local XGHangarShip kHangarShip;
+    local int iBay;
+    local string nEvent;
+    local array<SequenceObject> arrSeqObjs;
+    local SequenceObject kSeqObj;
+    local SeqEvent_RemoteEvent kRemoteEvent;
+    local bool bFound, bFirstLaunch;
+    local float CinDuration;
+
+    kCEInterception = LWCE_XGInterception(kInterception);
+    m_kLaunchInterception = kCEInterception;
+    kShip = none;
+
+    foreach kCEInterception.m_arrFriendlyShips(kIter)
+    {
+        if (kIter.m_iHomeBay >= 0)
+        {
+            kShip = kIter;
+            break;
+        }
+    }
+
+    if (kShip == none)
+    {
+        kShip = kCEInterception.m_arrFriendlyShips[0];
+    }
+
+    iBay = kShip.m_iHomeBay;
+
+    if (iBay < 0)
+    {
+        iBay = 0;
+    }
+
+    kHangarShip = kShip.GetHangarShip();
+
+    if (kHangarShip != none)
+    {
+        kHangarShip.SetHidden(true);
+    }
+
+    bFirstLaunch = false;
+
+    if (kShip.IsType('Firestorm'))
+    {
+        if (`HQGAME.GetGameCore().STAT_GetStat(eRecap_FirestormLaunch) < 1)
+        {
+            bFirstLaunch = true;
+        }
+
+        `HQGAME.GetGameCore().STAT_AddStat(eRecap_FirestormLaunch);
+    }
+    else
+    {
+        if (`HQGAME.GetGameCore().STAT_GetStat(eRecap_InterceptorLaunch) < 1)
+        {
+            bFirstLaunch = true;
+        }
+
+        `HQGAME.GetGameCore().STAT_AddStat(eRecap_InterceptorLaunch);
+    }
+
+    m_arrHangarClosed[iBay].Stop();
+    m_arrHangarOpen[iBay].Stop();
+    m_arrHangarRepair[iBay].Stop();
+    nEvent = "CIN_";
+    CinDuration = 2.0;
+
+    if (bFirstLaunch)
+    {
+        nEvent $= "FirstLaunch_";
+        CinDuration += 9.0;
+    }
+    else
+    {
+        nEvent $= "Launch_";
+    }
+
+    if (kShip.IsType('Firestorm'))
+    {
+        nEvent $= "Firestorm";
+        CinDuration += 8.0;
+    }
+    else
+    {
+        nEvent $= "Interceptor";
+        CinDuration += 6.0;
+    }
+
+    nEvent $= "_Bay" $ (iBay + 1);
+    WorldInfo.GetGameSequence().FindSeqObjectsByClass(class'SeqEvent_RemoteEvent', true, arrSeqObjs);
+    bFound = false;
+
+    foreach arrSeqObjs(kSeqObj)
+    {
+        kRemoteEvent = SeqEvent_RemoteEvent(kSeqObj);
+
+        if (nEvent == string(kRemoteEvent.EventName))
+        {
+            bFound = true;
+            break;
+        }
+    }
+
+    if (bFound)
+    {
+        if (kRemoteEvent.CheckActivate(self, self))
+        {
+            GEOSCAPE().Pause();
+            m_bBusy = true;
+            ForceStreamMissionControlTextures(CinDuration);
+        }
+    }
 }
 
 function TransferCraft(XGShip_Interceptor kInt, int iNewContinent)

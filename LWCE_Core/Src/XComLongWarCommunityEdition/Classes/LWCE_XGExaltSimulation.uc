@@ -181,7 +181,7 @@ function LWCE_ClearCell(name nmCountryToClear)
             iCellsToReplace++;
             m_arrCECellData.Remove(iIndex, 1);
             LWCE_SetLastVisibiltyStatus(m_arrCECellData[iIndex].m_nmCountry, eExaltCellLastVisibilityStatus_Hidden);
-            kPres.LWCE_Notify('CellHides', class'LWCEDataContainer'.static.NewName('NotifyData', m_arrCECellData[iIndex].m_nmCountry));
+            kPres.LWCE_Notify('ExaltCellHides', class'LWCEDataContainer'.static.NewName('NotifyData', m_arrCECellData[iIndex].m_nmCountry));
             iIndex--;
         }
     }
@@ -989,7 +989,7 @@ protected function LWCE_NextDayForExalt()
             if (m_arrCECellData[iIndex].m_iDaysUntilHidden == 1)
             {
                 LWCE_SetLastVisibiltyStatus(m_arrCECellData[iIndex].m_nmCountry, eExaltCellLastVisibilityStatus_Hidden);
-                kPres.LWCE_Notify('CellHides', class'LWCEDataContainer'.static.NewName('NotifyData', m_arrCECellData[iIndex].m_nmCountry));
+                kPres.LWCE_Notify('ExaltCellHides', class'LWCEDataContainer'.static.NewName('NotifyData', m_arrCECellData[iIndex].m_nmCountry));
             }
 
             m_arrCECellData[iIndex].m_iDaysUntilHidden--;
@@ -1044,7 +1044,7 @@ protected function LWCE_RelocateCell(name nmCellCountry)
         {
             m_arrCECellData.Remove(iIndex, 1);
             LWCE_SetLastVisibiltyStatus(nmCellCountry, eExaltCellLastVisibilityStatus_Hidden);
-            kPres.LWCE_Notify('CellHides', class'LWCEDataContainer'.static.NewName('NotifyData', m_arrCECellData[iIndex].m_nmCountry));
+            kPres.LWCE_Notify('ExaltCellHides', class'LWCEDataContainer'.static.NewName('NotifyData', m_arrCECellData[iIndex].m_nmCountry));
             PlaceNextCell(true);
             return;
         }

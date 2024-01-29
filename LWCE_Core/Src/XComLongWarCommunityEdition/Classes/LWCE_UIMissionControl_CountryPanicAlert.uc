@@ -23,6 +23,6 @@ simulated function OnInit()
     super(UIMissionControl_AlertBase).OnInit();
 
     AS_SetCountryImageLabel(class'UIUtilities'.static.GetCountryLabel(kAlertData.imgAlert.iImage));
-    AS_SetPanicLevel(Caps(kAlertData.arrText[1].StrValue), kAlertData.iNumber);
+    AS_SetPanicLevel(Caps(kAlertData.arrText[1].StrValue), kAlertData.kData.Data[0].I);
     XComEngine(class'Engine'.static.GetEngine()).SetAlienFXColor(eAlienFX_Red);
 }

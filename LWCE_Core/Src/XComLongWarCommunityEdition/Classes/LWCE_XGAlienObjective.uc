@@ -247,7 +247,7 @@ function LaunchNextMission()
 
     kShipMission = `LWCE_SHIP_MISSION(m_kCETObjective.arrMissions[0]);
     arrFlightPlan = kShipMission.GetFlightPlanSteps(fDuration);
-    kShip = LWCE_LaunchShip(m_kCETObjective.arrShips[0], arrFlightPlan, DetermineMissionTarget(m_kCETObjective.arrRadii[0]), fDuration);
+    kShip = LWCE_LaunchShip(m_kCETObjective.arrShips[0], m_kCETObjective.arrMissions[0], arrFlightPlan, DetermineMissionTarget(m_kCETObjective.arrRadii[0]), fDuration);
     m_iSightings += 1;
 
     `LWCE_XGCONTINENT(LWCE_GetContinent()).m_kMonthly.iUFOsSeen += 1;
@@ -282,7 +282,7 @@ function XGShip_UFO LaunchUFO(EShipType eShip, array<int> arrFlightPlan, Vector2
 /// <summary>
 /// Spawns a ship and immediately sets it to begin on the given flight plan.
 /// </summary>
-function LWCE_XGShip LWCE_LaunchShip(name nmShipType, array<name> arrFlightPlan, Vector2D v2Target, float fDuration)
+function LWCE_XGShip LWCE_LaunchShip(name nmShipType, name nmMissionType, array<name> arrFlightPlan, Vector2D v2Target, float fDuration)
 {
     local LWCE_XGShip kShip;
 
@@ -294,11 +294,13 @@ function LWCE_XGShip LWCE_LaunchShip(name nmShipType, array<name> arrFlightPlan,
     }
 
     kShip = Spawn(class'LWCE_XGShip');
-    kShip.LWCE_Init(nmShipType, LWCE_GetContinent(), m_nmShipTeam);
+    kShip.LWCE_Init(nmShipType, LWCE_GetContinent(), m_nmShipTeam, nmMissionType);
     kShip.SetObjective(self);
     kShip.SetFlightPlan(arrFlightPlan, v2Target, m_nmCountryTarget, fDuration);
 
     LWCE_XGStrategyAI(AI()).LWCE_AIAddNewShip(kShip);
+
+    `LWCE_LOG("Launched ship " $ kShip $ " to target country " $ m_nmCountryTarget $ " with flight plan length " $ arrFlightPlan.Length $ ", fDuration = " $ fDuration);
 
     return kShip;
 }
@@ -395,6 +397,8 @@ function LWCE_NotifyOfSuccess(LWCE_XGShip kShip)
     {
         LWCE_CheckIsComplete(kShip);
     }
+
+    `LWCE_LOG("LWCE_NotifyOfSuccess: removing ship");
 
     LWCE_XGStrategyAI(AI()).LWCE_RemoveShip(kShip);
 }

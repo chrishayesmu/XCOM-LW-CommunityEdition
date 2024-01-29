@@ -8,7 +8,7 @@ var int m_iSelectedShip;
 var name m_nCachedState;
 
 simulated function Init(XComPlayerController _controller, UIFxsMovie _manager, UIMissionControl _screen) {}
-
+simulated function OnInit() {}
 simulated function BeginInterception(XGShip_UFO kTarget) {}
 
 simulated function UpdateData() {}

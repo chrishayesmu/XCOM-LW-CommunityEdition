@@ -149,6 +149,29 @@ function InitNewGame()
 }
 
 /// <summary>
+/// Activates the given satellite, marking it as operational and playing any resulting narratives.
+/// </summary>
+function ActivateSatellite(int iSatellite, bool bVoice)
+{
+    local XGParamTag kTag;
+
+    if (bVoice)
+    {
+        kTag = XGParamTag(XComEngine(class'Engine'.static.GetEngine()).LocalizeContext.FindTag("XGParam"));
+        kTag.StrValue0 = `LWCE_ITEM('Item_Satellite').strName;
+        kTag.StrValue1 = `LWCE_XGCOUNTRY(m_arrCESatellites[iSatellite].nmCountry).GetName();
+        PRES().Speak(class'XComLocalizer'.static.ExpandString(m_strSpeakSatOpRegion), TTSSPEAKER_Wendy);
+    }
+
+    if (LWCE_XGFacility_Labs(LABS()).LWCE_IsResearched('Tech_AlienOperations'))
+    {
+        SITROOM().OnCodeCracked();
+    }
+
+    UpdateSatCoverageGraphics();
+}
+
+/// <summary>
 /// Adds a new XCOM base with the given parameters. Aside from the base's name, other attributes should be considered immutable.
 /// </summary>
 /// <param name="strName">The player-visible name of this base.</param>
@@ -847,6 +870,36 @@ function name LWCE_GetHomeCountry()
     return m_nmCountry;
 }
 
+function int GetInterceptorsOnOrder(optional int OrderIndex = -1)
+{
+    `LWCE_LOG_DEPRECATED_BY(GetInterceptorsOnOrder, LWCE_GetNumShipsOnOrder);
+
+    return -100;
+}
+
+/// <summary>
+/// Counts how many ships are currently pending ordering. Does not include ships which are being
+/// built by engineering.
+/// </summary>
+function int LWCE_GetNumShipsOnOrder(optional int OrderIndex = -1)
+{
+    local int iOrder, iNumOrdered;
+
+    if (OrderIndex >= 0)
+    {
+        return m_arrCEShipOrders[OrderIndex].iNumShips;
+    }
+
+    iNumOrdered = 0;
+
+    for (iOrder = 0; iOrder < m_arrCEShipOrders.Length; iOrder++)
+    {
+        iNumOrdered += m_arrCEShipOrders[iOrder].iNumShips;
+    }
+
+    return iNumOrdered;
+}
+
 function int GetNumFacilities(EFacilityType eFacility)
 {
     `LWCE_LOG_DEPRECATED_CLS(GetNumFacilities);
@@ -1235,6 +1288,60 @@ function UpdateInterceptorOrders()
     for (iOrder = aiRemove.Length - 1; iOrder >= 0; iOrder--)
     {
         m_arrCEShipTransfers.Remove(aiRemove[iOrder], 1);
+    }
+}
+
+function UpdateSatCoverageGraphics()
+{
+    local XGCountry kCountry;
+    local ESatelliteCoverage SatCoverage;
+
+    `LWCE_LOG_ERROR("UpdateSatCoverageGraphics: pending updates to XComEarth.SetCountrySatellite");
+    return;
+
+    if (IsHyperwaveActive())
+    {
+        SatCoverage = eSat_Hyperwave;
+    }
+    else
+    {
+        SatCoverage = eSat_Regular;
+    }
+
+    foreach World().m_arrCountries(kCountry)
+    {
+        if (kCountry.IsCouncilMember())
+        {
+            if (kCountry.HasSatelliteCoverage())
+            {
+                `HQGAME.GetEarth().SetCountrySatellite(ECountry(kCountry.GetID()), SatCoverage);
+                continue;
+            }
+
+            `HQGAME.GetEarth().SetCountrySatellite(ECountry(kCountry.GetID()), eSat_None);
+        }
+    }
+}
+
+/// <summary>
+/// Updates the state of any satellites which are not yet operational.
+/// </summary>
+function UpdateSatellites()
+{
+    local int iSatellite;
+
+    for (iSatellite = 0; iSatellite < m_arrCESatellites.Length; iSatellite++)
+    {
+        if (m_arrCESatellites[iSatellite].iTravelTime > 0)
+        {
+            m_arrCESatellites[iSatellite].iTravelTime -= 1;
+
+            if (m_arrCESatellites[iSatellite].iTravelTime == 0)
+            {
+                ActivateSatellite(iSatellite, true);
+                Achieve(AT_EyeInTheSky);
+            }
+        }
     }
 }
 

@@ -51,8 +51,9 @@ var config float fArtifactRecoveryBonus; // How much of a boost in recovered art
                                          // is 30% and this value is 20, the final recovery percentage is 50%. Total recovery percentage
                                          // is capped at 100%.
 
-var config EProjectileType eProjectile; // What projectile to display during an interception when this weapon fires. Also determines the
-                                        // accompanying sound effect.
+// What projectile to display during an interception when this weapon fires. Also determines the accompanying sound effect.
+var config EProjectileType eProjectile;
+
 
 var array< delegate<ArmorPenModifierDel> > arrArmorPenModifiers;
 var array< delegate<DamageModifierDel> > arrDamageModifiers;

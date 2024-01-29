@@ -2,6 +2,8 @@ class LWCE_UIInterceptionEngagement extends UIInterceptionEngagement;
 
 simulated function OnInit()
 {
+    local LWCE_XGInterceptionEngagement kEngagement;
+    local name nmAnalysisTech, nmEnemyShipTemplate, nmPlayerShipTemplate;
     local int I, playerShipType, enemyShipType;
 
     super(UI_FxsScreen).OnInit();
@@ -22,41 +24,53 @@ simulated function OnInit()
     m_bViewingResults = false;
     m_DataInitialized = false;
 
-    enemyShipType = m_kMgr.m_kInterceptionEngagement.GetShip(0).GetType();
+    kEngagement = LWCE_XGInterceptionEngagement(m_kMgr.m_kInterceptionEngagement);
 
-    switch (enemyShipType)
+    nmEnemyShipTemplate = kEngagement.LWCE_GetEnemyShip(0).m_nmShipTemplate;
+    nmPlayerShipTemplate = kEngagement.LWCE_GetPlayerShip(0).m_nmShipTemplate;
+
+    // All the graphics during interception are part of the Flash movie, so we have to map everything back somehow
+    switch (nmEnemyShipTemplate)
     {
-        case 10: // Fighter
-            I = eShip_UFOSmallScout;
+        case 'UFOFighter':
+        case 'UFOScout':
+            enemyShipType = eShip_UFOSmallScout;
             break;
-        case 11: // Raider
-            I = eShip_UFOLargeScout;
+        case 'UFODestroyer':
+        case 'UFORaider':
+            enemyShipType = eShip_UFOLargeScout;
             break;
-        case 12: // Harvester
-            I = eShip_UFOAbductor;
+        case 'UFOAbductor':
+        case 'UFOHarvester':
+            enemyShipType = eShip_UFOAbductor;
             break;
-        case 13: // Terror Ship
-            I = eShip_UFOSupply;
+        case 'UFOTerrorShip':
+        case 'UFOTransport':
+            enemyShipType = eShip_UFOSupply;
             break;
-        case 14: // Assault Carrier
-            I = eShip_UFOBattle;
+        case 'UFOAssaultCarrier':
+        case 'UFOBattleship':
+            enemyShipType = eShip_UFOBattle;
+            break;
+        case 'UFOOverseer':
+            enemyShipType = eShip_UFOEthereal;
+            break;
+        default:
+            `LWCE_LOG_ERROR("Unknown ship type " $ kEngagement.LWCE_GetShip(0).m_nmShipTemplate $ "! Defaulting to eShip_UFOSmallScout");
+            enemyShipType = eShip_UFOSmallScout;
             break;
     }
 
-    if (enemyShipType >= 10)
-    {
-        enemyShipType = I;
-    }
-
-    playerShipType = m_kMgr.m_kInterceptionEngagement.GetShip(1).GetType();
+    playerShipType = nmPlayerShipTemplate == 'Interceptor' ? eShip_Interceptor : eShip_Firestorm;
 
     AS_SetResultsTitleLabels(m_strReport_Title, m_strReport_Subtitle);
     AS_InitializeData(playerShipType, enemyShipType, m_strPlayerDamageLabel, m_strEstablishingLinkLabel);
 
-    for (I = 0; I < m_kMgr.m_kInterceptionEngagement.GetNumShips(); I++)
+    for (I = 0; I < kEngagement.GetNumShips(); I++)
     {
-        AS_SetHP(I, m_kMgr.m_kInterceptionEngagement.GetShip(I).GetHullStrength(), true);
-        AS_SetHP(I, m_kMgr.m_kInterceptionEngagement.GetShip(I).m_iHP, true);
+        // TODO is calling this twice necessary?
+        AS_SetHP(I, kEngagement.LWCE_GetShip(I).GetHullStrength(), true);
+        AS_SetHP(I, kEngagement.LWCE_GetShip(I).m_iHP, true);
     }
 
     AS_SetAbortButtonText(m_strAbortMission);
@@ -64,13 +78,9 @@ simulated function OnInit()
     LWCE_SetConsumablesState(eAbilityState_Available);
 
     m_DataInitialized = true;
-    enemyShipType = m_kMgr.m_kInterceptionEngagement.GetShip(0).GetType();
 
-    if (!`LWCE_ENGINEERING.LWCE_IsFoundryTechResearched('Foundry_UFOScanners'))
-    {
-        Invoke("HideUFODamage");
-    }
-    else if (!`LWCE_LABS.LWCE_IsResearched(UFOTypeToAnalysisTech(enemyShipType)))
+    nmAnalysisTech = `LWCE_SHIP(nmEnemyShipTemplate).nmAnalysisTech;
+    if (!`LWCE_ENGINEERING.LWCE_IsFoundryTechResearched('Foundry_UFOScanners') || (nmAnalysisTech != '' && !`LWCE_LABS.LWCE_IsResearched(nmAnalysisTech)))
     {
         Invoke("HideUFODamage");
     }
@@ -153,7 +163,7 @@ simulated function int GetWeaponType(CombatExchange kCombatExchange)
     local array<name> arrShipWeapons;
     local LWCEShipWeaponTemplate kShipWeaponTemplate;
 
-    arrShipWeapons = LWCE_XGShip(m_kMgr.m_kInterceptionEngagement.GetShip(kCombatExchange.iSourceShip)).LWCE_GetWeapons();
+    arrShipWeapons = LWCE_XGInterceptionEngagement(m_kMgr.m_kInterceptionEngagement).LWCE_GetShip(kCombatExchange.iSourceShip).LWCE_GetWeapons();
     kShipWeaponTemplate = `LWCE_SHIP_WEAPON(arrShipWeapons[kCombatExchange.iWeapon]);
 
     if (kShipWeaponTemplate == none)
@@ -172,7 +182,7 @@ simulated function Playback(float fDeltaT)
     local int I, iStreamIndex, iPlaybackIndex, iPlaybackLength;
     local TAttack kAttack;
     local TDamageData kDamageData;
-    local XGShip kShip, kTargetShip;
+    local LWCE_XGShip kShip, kTargetShip;
     local CombatExchange kCombatExchange;
     local float fPlaybackTime, fTimeOffset;
 
@@ -190,7 +200,7 @@ simulated function Playback(float fDeltaT)
         AS_MovementEvent(0, 0, m_fEnemyEscapeTimer);
         AS_SetEnemyEscapeTimer(int(m_fEnemyEscapeTimer * 10));
 
-        if (kMgr.LWCE_IsShortDistanceWeapon(LWCE_XGShip(kEngagement.GetShip(1)).GetWeaponAtIndex(0)))
+        if (kMgr.LWCE_IsShortDistanceWeapon(kEngagement.LWCE_GetPlayerShip(0).GetWeaponAtIndex(0)))
         {
             m_kMgr.VOCloseDistance();
             AS_MovementEvent(0, 1, 1.0f);
@@ -243,8 +253,8 @@ simulated function Playback(float fDeltaT)
 
                 m_iBulletIndex++;
                 kAttack.iSourceShip = kCombatExchange.iSourceShip;
-                kShip = kEngagement.GetShip(kAttack.iSourceShip);
-                kTargetShip = kEngagement.GetShip(kAttack.iTargetShip);
+                kShip = kEngagement.LWCE_GetShip(kAttack.iSourceShip);
+                kTargetShip = kEngagement.LWCE_GetShip(kAttack.iTargetShip);
 
                 if (kShip.m_iHP <= 0 || kTargetShip.m_iHP <= 0)
                 {
@@ -313,9 +323,9 @@ simulated function Playback(float fDeltaT)
         if (m_akDamageInformation[I].fTime < m_fPlaybackTimeElapsed)
         {
             m_iDamageDataIndex++;
-            kShip = kEngagement.GetShip(m_akDamageInformation[I].iShip);
+            kShip = kEngagement.LWCE_GetShip(m_akDamageInformation[I].iShip);
 
-            if (kEngagement.LWCE_GetNumConsumableInEffect('Item_DefenseMatrix') > 0 && kShip.IsHumanShip())
+            if (kEngagement.LWCE_GetNumConsumableInEffect('Item_DefenseMatrix') > 0 && kShip.IsXComShip())
             {
                 kEngagement.LWCE_UseConsumableEffect('Item_DefenseMatrix');
 
@@ -335,6 +345,8 @@ simulated function Playback(float fDeltaT)
                     m_kMgr.SFXShipDestroyed(kShip);
                 }
 
+                // TODO: when a kill occurs, we need to call LWCE_XGInterception.RecordKill, but the structs we're using don't record who was attacking, only the target
+                `LWCE_LOG("Ship " $ kShip $ " is taking " $ m_akDamageInformation[I].iDamage $ " damage; new HP is " $ kShip.m_iHP);
                 AS_SetHP(m_akDamageInformation[I].iShip, kShip.m_iHP, false, m_akDamageInformation[I].iBulletID);
             }
         }
@@ -347,20 +359,22 @@ simulated function ShowResultScreen()
     local string strDescription, strReport;
     local float fHealthPercent;
     local XGParamTag kTag;
+    local LWCE_XGInterception kInterception;
 
+    kInterception = LWCE_XGInterception(m_kMgr.m_kInterceptionEngagement.m_kInterception);
     m_bViewingResults = true;
 
-    if (m_kMgr.m_kInterceptionEngagement.m_kInterception.m_eUFOResult == eUR_Disengaged)
+    if (kInterception.m_eUFOResult == eUR_Disengaged)
     {
         AS_SetAbortLabel(m_strAbortedMission);
     }
 
     LWCE_SetConsumablesState(eAbilityState_Disabled);
 
-    kTag = XGParamTag(XComEngine(class'Engine'.static.GetEngine()).LocalizeContext.FindTag("XGParam"));
-    kTag.StrValue0 = m_kMgr.m_kInterceptionEngagement.m_kInterception.m_arrInterceptors[0].m_kTShip.strName;
+    kTag = XGParamTag(`XEXPANDCONTEXT.FindTag("XGParam"));
+    kTag.StrValue0 = kInterception.m_arrFriendlyShips[0].m_kTemplate.strName;
 
-    switch (m_kMgr.m_kInterceptionEngagement.m_kInterception.m_eUFOResult)
+    switch (kInterception.m_eUFOResult)
     {
         case eUR_Crash:
             battleResult = eUFO_Destroyed;
@@ -380,9 +394,9 @@ simulated function ShowResultScreen()
             break;
     }
 
-    for (I = 0; I < m_kMgr.m_kInterceptionEngagement.m_kInterception.m_arrInterceptors.Length; I++)
+    for (I = 0; I < kInterception.m_arrFriendlyShips.Length; I++)
     {
-        fHealthPercent = float(m_kMgr.m_kInterceptionEngagement.m_kInterception.m_arrInterceptors[I].m_iHP) / float(m_kMgr.m_kInterceptionEngagement.m_kInterception.m_arrInterceptors[I].m_kTShip.iHP);
+        fHealthPercent = kInterception.m_arrFriendlyShips[I].GetHPPercentage();
 
         if (fHealthPercent <= 0.0)
         {
@@ -462,37 +476,5 @@ protected simulated function LWCE_SetConsumablesState(optional int stateOverride
     else
     {
         AS_SetAimButton(m_strAimAbility, eAbilityState_Unavailable);
-    }
-}
-
-// TODO replace this with ship template data
-protected function name UFOTypeToAnalysisTech(int iShipType)
-{
-    switch (iShipType)
-    {
-        case 4:
-            return 'Tech_UFOAnalysis_Scout';
-        case 5:
-            return 'Tech_UFOAnalysis_Destroyer';
-        case 6:
-            return 'Tech_UFOAnalysis_Abductor';
-        case 7:
-            return 'Tech_UFOAnalysis_Transport';
-        case 8:
-            return 'Tech_UFOAnalysis_Battleship';
-        case 9:
-            return 'Tech_UFOAnalysis_Overseer';
-        case 10:
-            return 'Tech_UFOAnalysis_Fighter';
-        case 11:
-            return 'Tech_UFOAnalysis_Raider';
-        case 12:
-            return 'Tech_UFOAnalysis_Harvester';
-        case 13:
-            return 'Tech_UFOAnalysis_TerrorShip';
-        case 14:
-            return 'Tech_UFOAnalysis_AssaultCarrier';
-        default:
-            return '';
     }
 }

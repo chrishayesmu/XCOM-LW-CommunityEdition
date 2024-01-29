@@ -304,7 +304,7 @@ private static function int ShipWeapon_ArmorPenModifier(LWCEShipWeaponTemplate k
     local LWCE_XGFacility_Engineering kEngineering;
     local int iArmorPenModifier;
 
-    if (kAttacker.m_nmTeam == class'LWCEShipTemplate'.const.SHIP_TEAM_XCOM)
+    if (kAttacker.IsXComShip())
     {
         kEngineering = `LWCE_ENGINEERING;
 
@@ -326,7 +326,7 @@ private static function int ShipWeapon_DamageModifier(LWCEShipWeaponTemplate kSh
     local LWCE_XGFacility_Engineering kEngineering;
     local int iDamageModifier;
 
-    if (kAttacker.m_nmTeam == class'LWCEShipTemplate'.const.SHIP_TEAM_XCOM)
+    if (kAttacker.IsXComShip())
     {
         kEngineering = `LWCE_ENGINEERING;
 
@@ -347,7 +347,7 @@ private static function float ShipWeapon_FiringTimeModifier(LWCEShipWeaponTempla
 {
     local float fFiringTimeModifier;
 
-    if (kAttacker.m_nmTeam == class'LWCEShipTemplate'.const.SHIP_TEAM_XCOM)
+    if (kAttacker.IsXComShip())
     {
         if (kShipWeapon != none && kShipWeapon.GetItemName() == 'Item_LaserCannon' && `LWCE_ENGINEERING.LWCE_IsFoundryTechResearched('Foundry_Supercapacitors'))
         {

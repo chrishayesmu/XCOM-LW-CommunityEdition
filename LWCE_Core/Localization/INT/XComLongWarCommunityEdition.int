@@ -12036,7 +12036,7 @@ m_strNoContent="None"
 m_strSoldierAlreadyAugmented="Already Augmented"
 
 [LWCE_XGHangarUI]
-m_strShipStatDisclaimer="The stats shown here include any bonuses from the ship and its pilot.\n\n"
+m_strShipStatDisclaimer="The stats shown here include any bonuses from the ship and its pilot.\n"
 
 [LWCE_XGHeadquarters]
 m_strHQBaseName="XCOM HQ"
