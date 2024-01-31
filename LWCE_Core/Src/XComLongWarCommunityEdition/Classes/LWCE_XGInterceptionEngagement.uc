@@ -1,26 +1,104 @@
+/// <summary>
+/// LWCE version of XGInterceptionEngagement. There are some substantial changes to how this class
+/// is used by LWCE.
+///
+/// In EW and LW 1.0, when an interception begins, the entire combat is simulated immediately. The UI
+/// then replays the simulation in real time, and modifies the results based on some user inputs (e.g.
+/// if the player aborts, or uses a module). There's a substantial problem with this: it can only work
+/// properly if each state is independent of the state prior to it. For a 1-on-1 ship interception, this
+/// is largely true. In larger combats however, each ship has to decide which enemy to attack, and it can't
+/// do that correctly if some ships appear to be alive-or-dead in the initial simulation, and then the UI
+/// changes the outcome so they are dead-or-alive instead. If the player's input kills an enemy ship earlier
+/// than was simulated, the player's ships will be shooting at nothing for some time. Vice versa, if a dodge
+/// module saves a player ship from dying, it will be completely ignored by the enemy ships for the rest of
+/// the simulation, even if there's no other targets present.
+///
+/// To get around this, LWCE retains the bulk of the simulation logic in LWCE_XGInterceptionEngagement, but
+/// the running of the simulation is driven by the UI layer. The interception is simulated in real time to what
+/// the player sees, so there's no rewriting of history.
+/// </summary>
 class LWCE_XGInterceptionEngagement extends XGInterceptionEngagement;
 
+/// <summary>
+/// An "exchange" during an interception is a single shot fired from one ship at another ship.
+/// Unlike the vanilla CombatExchange struct, LWCE's version tracks a lot of data about every
+/// shot fired. This can be used to show the player a shot breakdown, or enable new types of
+/// air modules such as an "always crit" module.
+/// </summary>
+struct LWCE_TCombatExchange
+{
+    // Primary data: these are the inputs to the final damage calculation. As the interception is
+    // simulated, these will be populated using the stats of the ships involved.
+
+    var int iSourceShip;     // Which ship fired the shot.
+    var int iTargetShip;     // Which ship is targeted by the shot.
+    var int iWeapon;         // Which weapon on the source ship was fired.
+    var int iBaseDamage;     // The base damage of the shot, before any bonuses/penalties are applied.
+    var int iSourceArmorPen; // The source's armor penetration at the time this shot was fired.
+    var int iTargetArmor;    // The target's armor stat at the time this shot was fired.
+    var int iCritChance;     // The chance for this shot to critically hit.
+    var int iHitChance;      // The chance for this shot to hit the target.
+    var float fTime;         // At what time in the interception this shot occurred.
+    var float fCompleteTime; // Tracks the time at which a shot actually resolves (reaches the target if a hit, or flies offscreen if a miss). Set by the UI.
+    var int iBulletID;       // Unique ID of the bullet, which the Flash layer uses to track and delete them as needed. Set by the UI.
+
+    // Derived data: these are calculated using the primary data above.
+
+    var array<name> arrConsumablesUsed;     // What consumables, if any, were used by this shot.
+    var array<int> arrConsumablesRemaining; // The remaining quantity of consumables, with entries parallel to arrConsumablesUsed. Unused consumables are not in this array.
+    var float fMitigation; // The percentage (0.0 to 1.0) of damage prevented by the target's armor.
+    var int iDamage;       // How much damage the target will take (if they were hit).
+    var bool bCrit;        // Whether this shot is a critical hit.
+    var bool bHit;         // Whether this shot hit the target.
+};
+
+var int m_iMostRecentExchangesStartIndex;
 var array<name> m_arrCEConsumablesUsed;
+var array<LWCE_TCombatExchange> m_arrCECombatExchanges;
 var array<LWCE_TItemQuantity> m_arrCEConsumableQuantitiesInEffect;
 
 function Init(XGInterception kInterception)
 {
+    local LWCE_XGShip kShip;
+    local int I;
+
+    m_kInterception = kInterception;
+
     // Resetting state for the new interception
     HANGAR().m_bNarrLostJet = false;
-    m_kInterception = kInterception;
     m_fTimeElapsed = 0.0;
     m_iPlaybackIndex = 0;
     m_fEncounterStartingRange = 0.0;
     m_fInterceptorTimeOffset = 0.0;
 
-    m_arrCEConsumablesUsed.Remove(0, m_arrCEConsumablesUsed.Length);
-    m_arrCEConsumableQuantitiesInEffect.Remove(0, m_arrCEConsumableQuantitiesInEffect.Length);
-    m_kCombat.m_aInterceptorExchanges.Remove(0, m_kCombat.m_aInterceptorExchanges.Length);
-    m_kCombat.m_aUFOExchanges.Remove(0, m_kCombat.m_aUFOExchanges.Length);
+    m_aiShipHP.Length = 0;
+    m_afShipDistance.Length = 0;
+    m_arrCEConsumablesUsed.Length = 0;
+    m_arrCEConsumableQuantitiesInEffect.Length = 0;
+    m_arrCECombatExchanges.Length = 0;
 
     // Base game code ranks interceptors by threat level, but there's only one at a time, so just
     // always target that guy
-    m_iUFOTarget = 1;
+    m_iUFOTarget = 1; // TODO dynamic targeting logic
+
+    // LWCE change: do all of the initialization here instead of GetCombat, which is deprecated
+    for (I = 0; I < GetNumShips(); I++)
+    {
+        kShip = LWCE_GetShip(I);
+        m_aiShipHP.AddItem(kShip.GetHP());
+    }
+
+    m_fEncounterStartingRange = GetEncounterStartingRange();
+
+    for (I = 0; I < GetNumShips(); I++)
+    {
+        m_afShipDistance.AddItem(m_fEncounterStartingRange);
+    }
+
+    for (I = 0; I < GetNumShips(); I++)
+    {
+        StaggerWeaponsForShip(I);
+    }
 }
 
 /// <summary>
@@ -242,41 +320,10 @@ function float FindNextWeaponTime()
     return fLowestWeaponTime;
 }
 
-/// <summary>
-/// Gets the Combat struct, effectively simulating 60 seconds of interception. This is interpreted by the UI
-/// layer and modified by the player aborting interception, using modules, etc.
-/// </summary>
 function Combat GetCombat()
 {
-    local LWCE_XGShip kShip;
-    local int I;
-    local float fNextWeaponTime;
+    `LWCE_LOG_DEPRECATED_NOREPLACE_CLS(GetCombat);
 
-    for (I = 0; I < GetNumShips(); I++)
-    {
-        kShip = LWCE_GetShip(I);
-        m_aiShipHP.AddItem(kShip.GetHP());
-    }
-
-    m_fEncounterStartingRange = GetEncounterStartingRange();
-
-    for (I = 0; I < GetNumShips(); I++)
-    {
-        m_afShipDistance.AddItem(m_fEncounterStartingRange);
-    }
-
-    for (I = 0; I < GetNumShips(); I++)
-    {
-        StaggerWeaponsForShip(I);
-    }
-
-    while (m_fTimeElapsed < 60.0)
-    {
-        fNextWeaponTime = FindNextWeaponTime();
-        UpdateSim(fNextWeaponTime);
-    }
-
-    m_fTimeElapsed = 0.0;
     return m_kCombat;
 }
 
@@ -467,6 +514,7 @@ function float GetTimeUntilOutrun(int iShip)
     }
     else
     {
+        // TODO don't hardcode the enemy
         kEnemyShip = LWCE_GetEnemyShip(0);
         iEnemySpeed = float(kEnemyShip.m_kTShip.iEngagementSpeed);
 
@@ -766,17 +814,18 @@ function UpdateEngagementResult(float fElapsedTime)
 
 function UpdateWeapons(float fDeltaT)
 {
-    local CombatExchange kCombatExchange;
+    local LWCE_TCombatExchange kCombatExchange;
     local LWCEItemTemplateManager kTemplateMgr;
     local LWCEShipWeaponTemplate kShipWeaponTemplate;
     local array<name> arrShipWeapons;
-    local array<CombatExchange> akCombatExchange;
     local LWCE_XGShip kAttacker, kTarget;
-    local bool bIsCritical;
-    local float fDamageMitigation;
-    local int iArmor, iArmorPen, iBaseDamage, iCriticalChance, iDamage, iHitChance, iShip, iWeapon, I;
+    local int iShip, iWeapon;
 
     kTemplateMgr = `LWCE_ITEM_TEMPLATE_MGR;
+
+    // Mark when the last combat exchanges were, so we can know what to play back on the UI. We know there's
+    // going to be at least one exchange occurring right now, or else this function wouldn't be called.
+    m_iMostRecentExchangesStartIndex = m_arrCECombatExchanges.Length;
 
     for (iShip = 0; iShip < GetNumShips(); iShip++)
     {
@@ -809,6 +858,7 @@ function UpdateWeapons(float fDeltaT)
                         kCombatExchange.iSourceShip = iShip;
                         kCombatExchange.iWeapon = iWeapon;
 
+                        // TODO more dynamic targeting for UFOs
                         if (iShip == 0) // UFO
                         {
                             if (!IsShipDead(m_iUFOTarget))
@@ -827,16 +877,16 @@ function UpdateWeapons(float fDeltaT)
 
                         kTarget = LWCE_GetShip(kCombatExchange.iTargetShip);
 
-                        iArmor = CalculateArmor(kTarget);
-                        iArmorPen = CalculateArmorPen(kAttacker, kTarget, kShipWeaponTemplate);
-                        iCriticalChance = CalculateCriticalChance(iArmor, iArmorPen);
-                        iHitChance = CalculateHitChance(kAttacker, kTarget, kShipWeaponTemplate);
-                        iBaseDamage = CalculateDamage(kAttacker, kTarget, kShipWeaponTemplate);
-                        fDamageMitigation = CalculateDamageMitigation(iArmor, iArmorPen);
-                        bIsCritical = Roll(iCriticalChance);
+                        kCombatExchange.iTargetArmor = CalculateArmor(kTarget);
+                        kCombatExchange.iSourceArmorPen = CalculateArmorPen(kAttacker, kTarget, kShipWeaponTemplate);
+                        kCombatExchange.iCritChance = CalculateCriticalChance(kCombatExchange.iTargetArmor, kCombatExchange.iSourceArmorPen);
+                        kCombatExchange.iHitChance = CalculateHitChance(kAttacker, kTarget, kShipWeaponTemplate);
+                        kCombatExchange.iBaseDamage = CalculateDamage(kAttacker, kTarget, kShipWeaponTemplate);
+                        kCombatExchange.fMitigation = CalculateDamageMitigation(kCombatExchange.iTargetArmor, kCombatExchange.iSourceArmorPen);
+                        kCombatExchange.bCrit = Roll(kCombatExchange.iCritChance);
 
-                        `LWCE_LOG("UpdateWeapons: kAttacker = " $ kAttacker $ "; iArmor = " $ iArmor $ "; iArmorPen = " $ iArmorPen $ "; iCriticalChance = " $ iCriticalChance $ "; iHitChance = " $ iHitChance $ "; iBaseDamage = " $ iBaseDamage $ "; fDamageMitigation = " $ fDamageMitigation $ "; bIsCritical = " $ bIsCritical);
-                        iDamage = RollForDamage(iBaseDamage, fDamageMitigation, bIsCritical);
+                        // `LWCE_LOG("UpdateWeapons: kAttacker = " $ kAttacker $ "; iArmor = " $ iArmor $ "; iArmorPen = " $ iArmorPen $ "; iCriticalChance = " $ iCriticalChance $ "; iHitChance = " $ iHitChance $ "; iBaseDamage = " $ iBaseDamage $ "; fDamageMitigation = " $ fDamageMitigation $ "; bIsCritical = " $ bIsCritical);
+                        kCombatExchange.iDamage = RollForDamage(kCombatExchange.iBaseDamage, kCombatExchange.fMitigation, kCombatExchange.bCrit);
 
                         if (iShip != 0)
                         {
@@ -844,47 +894,43 @@ function UpdateWeapons(float fDeltaT)
                             // TODO: handle this by creating new ship weapon templates for the lower damage weapons instead
                             if (iWeapon != 0)
                             {
-                                iDamage /= 2.0;
+                                kCombatExchange.iDamage /= 2.0;
                             }
                         }
 
                         // Damage is always stored, even on a miss, in case an aim module is used
-                        kCombatExchange.bHit = Rand(100) <= iHitChance;
-                        kCombatExchange.iDamage = iDamage;
+                        kCombatExchange.bHit = Rand(100) <= kCombatExchange.iHitChance;
 
-                        if (!kCombatExchange.bHit)
+                        // On a miss, if we have an active aim module, consume a charge and turn it to a hit
+                        if (!kCombatExchange.bHit && kAttacker.IsXComShip() && kShipWeaponTemplate.bCanUseAimModules && LWCE_GetNumConsumableInEffect('Item_UplinkTargeting') > 0)
                         {
-                            // This signals that aim modules can't change the outcome (i.e. don't allow Sparrowhawks to burn up
-                            // aim module charges)
-                            // TODO make this more flexible; some secondary weapons might want to be able to use aim modules
-                            if (iShip == 0 || iWeapon != 0)
-                            {
-                                kCombatExchange.iDamage = 0;
-                            }
+                            LWCE_UseConsumableEffect('Item_UplinkTargeting');
+
+                            kCombatExchange.bHit = true;
+                            kCombatExchange.arrConsumablesUsed.AddItem('Item_UplinkTargeting');
+                            kCombatExchange.arrConsumablesRemaining.AddItem(LWCE_GetNumConsumableInEffect('Item_UplinkTargeting'));
+                        }
+
+                        // Similar logic for dodge modules
+                        if (kCombatExchange.bHit && kTarget.IsXComShip() && LWCE_GetNumConsumableInEffect('Item_DefenseMatrix') > 0)
+                        {
+                            LWCE_UseConsumableEffect('Item_DefenseMatrix');
+
+                            kCombatExchange.bHit = false;
+                            kCombatExchange.arrConsumablesUsed.AddItem('Item_DefenseMatrix');
+                            kCombatExchange.arrConsumablesRemaining.AddItem(LWCE_GetNumConsumableInEffect('Item_DefenseMatrix'));
                         }
 
                         kCombatExchange.fTime = m_fTimeElapsed;
-                        akCombatExchange.AddItem(kCombatExchange);
+                        m_arrCECombatExchanges.AddItem(kCombatExchange);
+
+                        if (kCombatExchange.bHit)
+                        {
+                            m_aiShipHP[kCombatExchange.iTargetShip] -= kCombatExchange.iDamage;
+                        }
                     }
                 }
             }
-        }
-    }
-
-    for (I = 0; I < akCombatExchange.Length; I++)
-    {
-        if (akCombatExchange[I].iSourceShip == 0)
-        {
-            m_kCombat.m_aUFOExchanges.AddItem(akCombatExchange[I]);
-        }
-        else
-        {
-            m_kCombat.m_aInterceptorExchanges.AddItem(akCombatExchange[I]);
-        }
-
-        if (akCombatExchange[I].bHit)
-        {
-            m_aiShipHP[akCombatExchange[I].iTargetShip] -= akCombatExchange[I].iDamage;
         }
     }
 }
@@ -894,7 +940,7 @@ function UseConsumable(int iItemType, float fPlaybackTime)
     `LWCE_LOG_DEPRECATED_CLS(UseConsumable);
 }
 
-function LWCE_UseConsumable(name ItemName, float fPlaybackTime)
+function LWCE_UseConsumable(name ItemName)
 {
     local int iNumUses;
 

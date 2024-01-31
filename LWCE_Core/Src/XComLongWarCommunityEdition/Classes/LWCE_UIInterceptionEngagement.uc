@@ -1,4 +1,14 @@
-class LWCE_UIInterceptionEngagement extends UIInterceptionEngagement;
+/// <summary>
+/// LWCE UI for ship interceptions. The way this UI interacts with the underlying interception is
+/// significantly changed from vanilla EW or LW 1.0. See <see cref="LWCE_XGInterceptionEngagement" />
+/// for the changes and the reasoning behind them.
+/// </summary>
+class LWCE_UIInterceptionEngagement extends UIInterceptionEngagement
+    dependson(LWCE_XGInterceptionEngagement);
+
+// The time at which the next ship weapon will be fired during the engagement, as an offset
+// from the current time, in seconds.
+var float m_fNextWeaponTime;
 
 simulated function OnInit()
 {
@@ -104,7 +114,7 @@ simulated function ActivateDodgeAbility()
 
     if (kEngagement.LWCE_CanUseConsumable('Item_DefenseMatrix'))
     {
-        kEngagement.LWCE_UseConsumable('Item_DefenseMatrix', m_fPlaybackTimeElapsed);
+        kEngagement.LWCE_UseConsumable('Item_DefenseMatrix');
         PlaySound(m_kMgr.SNDLIB().SFX_Int_ConsumeDodge);
         AS_DisplayEffectEvent(eDodgeHits, GetAbilityDescription(eDodgeHits), true, kEngagement.LWCE_GetNumConsumableInEffect('Item_DefenseMatrix'));
     }
@@ -123,7 +133,7 @@ simulated function ActivateAimAbility()
 
     if (kEngagement.LWCE_CanUseConsumable('Item_UplinkTargeting'))
     {
-        kEngagement.LWCE_UseConsumable('Item_UplinkTargeting', m_fPlaybackTimeElapsed);
+        kEngagement.LWCE_UseConsumable('Item_UplinkTargeting');
         PlaySound(m_kMgr.SNDLIB().SFX_Int_ConsumeAim);
         AS_DisplayEffectEvent(eEnhancedAccuracy, GetAbilityDescription(eEnhancedAccuracy), true);
     }
@@ -142,12 +152,12 @@ simulated function ActivateTrackAbility()
 
     if (kEngagement.LWCE_CanUseConsumable('Item_UFOTracking'))
     {
-        kEngagement.LWCE_UseConsumable('Item_UFOTracking', m_fPlaybackTimeElapsed);
+        kEngagement.LWCE_UseConsumable('Item_UFOTracking');
         m_fTrackingTimer = m_kMgr.m_kInterceptionEngagement.GetTimeUntilOutrun(1) - m_fTotalBattleLength;
 
         if (m_kMgr.m_kInterceptionEngagement.m_fInterceptorTimeOffset != 0.0)
         {
-            AS_MovementEvent(1, 1, 1.0);
+            AS_MovementEvent(1, ePlayer_CloseDistance, 1.0);
         }
 
         PlaySound(m_kMgr.SNDLIB().SFX_Int_ConsumeTrack);
@@ -155,10 +165,17 @@ simulated function ActivateTrackAbility()
     }
 }
 
+simulated function int GetWeaponType(CombatExchange kCombatExchange)
+{
+    `LWCE_LOG_DEPRECATED_CLS(GetWeaponType);
+
+    return -1;
+}
+
 /// <summary>
 /// Maps the weapon fired in the exchange to an EProjectileType, which tells the Flash movie what image to show for the projectile.
 /// </summary>
-simulated function int GetWeaponType(CombatExchange kCombatExchange)
+simulated function int LWCE_GetWeaponType(LWCE_TCombatExchange kCombatExchange)
 {
     local array<name> arrShipWeapons;
     local LWCEShipWeaponTemplate kShipWeaponTemplate;
@@ -178,13 +195,11 @@ simulated function Playback(float fDeltaT)
 {
     local LWCE_XGInterceptionEngagementUI kMgr;
     local LWCE_XGInterceptionEngagement kEngagement;
-    local bool bDeactivateAimEffect;
-    local int I, iStreamIndex, iPlaybackIndex, iPlaybackLength;
-    local TAttack kAttack;
-    local TDamageData kDamageData;
-    local LWCE_XGShip kShip, kTargetShip;
-    local CombatExchange kCombatExchange;
-    local float fPlaybackTime, fTimeOffset;
+    local bool bShipWasAlive;
+    local int I, iConsumableIndex, iPlaybackStartIndex, iWeaponType;
+    local float fElapsedTimeAtStart, fProjectileDuration;
+    local LWCE_XGShip kSourceShip, kTargetShip;
+    local LWCE_TCombatExchange kCombatExchange;
 
     kMgr = LWCE_XGInterceptionEngagementUI(m_kMgr);
     kEngagement = LWCE_XGInterceptionEngagement(m_kMgr.m_kInterceptionEngagement);
@@ -205,149 +220,126 @@ simulated function Playback(float fDeltaT)
             m_kMgr.VOCloseDistance();
             AS_MovementEvent(0, 1, 1.0f);
         }
+
+        m_fNextWeaponTime = kEngagement.FindNextWeaponTime();
     }
 
+    fElapsedTimeAtStart = m_fPlaybackTimeElapsed;
     m_fPlaybackTimeElapsed += fDeltaT;
     UpdateEnemyEscapeTimer(fDeltaT);
 
-    for (iStreamIndex = 0; iStreamIndex < 2; iStreamIndex++)
+    // TODO: rather than doing playback of a pre-simulated combat, have the simulation update in real time, prompted
+    // by the UI. Otherwise the simulation ends up making decisions based on state (e.g. is target ship dead) that may
+    // not actually come to pass (such as if a module is used).
+    // TODO get rid of having multiple playback streams also
+
+    iPlaybackStartIndex = -1;
+
+    while (fDeltaT >= m_fNextWeaponTime)
     {
-        fPlaybackTime = m_fPlaybackTimeElapsed;
-        fTimeOffset = 0.0;
+        fDeltaT -= m_fNextWeaponTime;
 
-        if (iStreamIndex == 0)
+        kEngagement.UpdateSim(m_fNextWeaponTime);
+
+        if (iPlaybackStartIndex == -1)
         {
-            iPlaybackIndex = m_iInterceptorPlaybackIndex;
-            iPlaybackLength = kEngagement.m_kCombat.m_aInterceptorExchanges.Length;
-            fTimeOffset = kEngagement.m_fInterceptorTimeOffset;
-        }
-        else
-        {
-            iPlaybackIndex = m_iUFOPlaybackIndex;
-            iPlaybackLength = kEngagement.m_kCombat.m_aUFOExchanges.Length;
+            iPlaybackStartIndex = kEngagement.m_iMostRecentExchangesStartIndex;
         }
 
-        fPlaybackTime += fTimeOffset;
+        m_fNextWeaponTime = kEngagement.FindNextWeaponTime();
+    }
 
-        for (I = iPlaybackIndex; I < iPlaybackLength; I++)
+    // Carry over any spare part of the elapsed time, or all of it if nothing fired
+    if (fDeltaT > 0.0f)
+    {
+        kEngagement.UpdateSim(fDeltaT);
+        m_fNextWeaponTime = kEngagement.FindNextWeaponTime();
+    }
+
+    if (iPlaybackStartIndex != -1)
+    {
+        // Iterate any exchanges which occurred during this update, and modify UI accordingly
+        for (I = iPlaybackStartIndex; I < kEngagement.m_arrCECombatExchanges.Length; I++)
         {
-            if (iStreamIndex == 0)
+            kCombatExchange = kEngagement.m_arrCECombatExchanges[I];
+
+            m_iBulletIndex++;
+
+            kSourceShip = kEngagement.LWCE_GetShip(kCombatExchange.iSourceShip);
+            kTargetShip = kEngagement.LWCE_GetShip(kCombatExchange.iTargetShip);
+
+            if (kSourceShip.m_iHP <= 0 || kTargetShip.m_iHP <= 0)
             {
-                kCombatExchange = kEngagement.m_kCombat.m_aInterceptorExchanges[I];
+                continue;
             }
-            else
+
+            // TODO: do we need to let the underlying interception know about this? it probably never matters
+            if (m_bPendingDisengage && kSourceShip.IsXComShip())
             {
-                kCombatExchange = kEngagement.m_kCombat.m_aUFOExchanges[I];
+                continue;
             }
 
-            if (kCombatExchange.fTime < fPlaybackTime)
+            fProjectileDuration = kCombatExchange.bHit ? 0.3f : 0.6f;
+            kEngagement.m_arrCECombatExchanges[I].fCompleteTime = kCombatExchange.fTime + fProjectileDuration;
+            kEngagement.m_arrCECombatExchanges[I].iBulletID = m_iBulletIndex;
+
+            if (!kSourceShip.IsAlienShip())
             {
-                if (iStreamIndex == 0)
-                {
-                    m_iInterceptorPlaybackIndex++;
-                }
-                else
-                {
-                    m_iUFOPlaybackIndex++;
-                }
+                m_kMgr.VOInRange();
+            }
 
-                m_iBulletIndex++;
-                kAttack.iSourceShip = kCombatExchange.iSourceShip;
-                kShip = kEngagement.LWCE_GetShip(kAttack.iSourceShip);
-                kTargetShip = kEngagement.LWCE_GetShip(kAttack.iTargetShip);
+            iWeaponType = LWCE_GetWeaponType(kCombatExchange);
+            m_kMgr.SFXFire(iWeaponType);
+            AS_AttackEvent(kCombatExchange.iSourceShip, kCombatExchange.iTargetShip, iWeaponType, m_iBulletIndex, kCombatExchange.iDamage, fProjectileDuration, kCombatExchange.bHit);
 
-                if (kShip.m_iHP <= 0 || kTargetShip.m_iHP <= 0)
-                {
-                }
-                else
-                {
-                    if (m_bPendingDisengage && kAttack.iSourceShip != 0)
-                    {
-                    }
-                    else
-                    {
-                        kAttack.iTargetShip = kCombatExchange.iTargetShip;
-                        kAttack.iWeapon = GetWeaponType(kCombatExchange);
-                        kAttack.iDamage = kCombatExchange.iDamage;
-                        kAttack.fDuration = 0.30;
-                        kAttack.bHit = kCombatExchange.bHit;
-                        bDeactivateAimEffect = false;
+            // If this shot used our last aim module, do a little animation
+            iConsumableIndex = kCombatExchange.arrConsumablesUsed.Find('Item_UplinkTargeting');
 
-                        if ((kEngagement.LWCE_GetNumConsumableInEffect('Item_UplinkTargeting') > 0) && kAttack.iTargetShip == 0)
-                        {
-                            if (kCombatExchange.iDamage > 0 && !kAttack.bHit)
-                            {
-                                kEngagement.LWCE_UseConsumableEffect('Item_UplinkTargeting');
-                                kAttack.bHit = true;
-
-                                if (kEngagement.LWCE_GetNumConsumableInEffect('Item_UplinkTargeting') == 0)
-                                {
-                                    bDeactivateAimEffect = true;
-                                }
-                            }
-                        }
-
-                        if (!kAttack.bHit)
-                        {
-                            kAttack.fDuration += 0.30;
-                        }
-                        else
-                        {
-                            kDamageData.iDamage = kAttack.iDamage;
-                            kDamageData.iBulletID = m_iBulletIndex;
-                            kDamageData.iShip = kAttack.iTargetShip;
-                            kDamageData.fTime = (kCombatExchange.fTime + kAttack.fDuration) - fTimeOffset;
-                            m_akDamageInformation.AddItem(kDamageData);
-                        }
-
-                        if (!kShip.IsAlienShip())
-                        {
-                            m_kMgr.VOInRange();
-                        }
-
-                        m_kMgr.SFXFire(kAttack.iWeapon);
-                        AS_AttackEvent(kAttack.iSourceShip, kAttack.iTargetShip, kAttack.iWeapon, m_iBulletIndex, kAttack.iDamage, kAttack.fDuration, kAttack.bHit);
-
-                        if (bDeactivateAimEffect)
-                        {
-                            AS_DisplayEffectEvent(eEnhancedAccuracy, GetAbilityDescription(eEnhancedAccuracy), false, m_iBulletIndex);
-                        }
-                    }
-                }
+            if (iConsumableIndex != INDEX_NONE && kCombatExchange.arrConsumablesRemaining[iConsumableIndex] == 0)
+            {
+                AS_DisplayEffectEvent(eEnhancedAccuracy, GetAbilityDescription(eEnhancedAccuracy), false, m_iBulletIndex);
             }
         }
     }
 
-    for (I = m_iDamageDataIndex; I < m_akDamageInformation.Length; I++)
+    // Go through every exchange in this encounter, and find any which reached their target during this update
+    for (I = 0; I < kEngagement.m_arrCECombatExchanges.Length; I++)
     {
-        if (m_akDamageInformation[I].fTime < m_fPlaybackTimeElapsed)
+        kCombatExchange = kEngagement.m_arrCECombatExchanges[I];
+
+        if (kCombatExchange.fCompleteTime > fElapsedTimeAtStart && kCombatExchange.fCompleteTime <= m_fPlaybackTimeElapsed)
         {
-            m_iDamageDataIndex++;
-            kShip = kEngagement.LWCE_GetShip(m_akDamageInformation[I].iShip);
+            kTargetShip = kEngagement.LWCE_GetShip(kCombatExchange.iTargetShip);
 
-            if (kEngagement.LWCE_GetNumConsumableInEffect('Item_DefenseMatrix') > 0 && kShip.IsXComShip())
+            // If this shot was dodged due to a module, show a dodge animation on the player ship
+            iConsumableIndex = kCombatExchange.arrConsumablesUsed.Find('Item_DefenseMatrix');
+
+            if (iConsumableIndex != INDEX_NONE && kCombatExchange.arrConsumablesRemaining[iConsumableIndex] == 0)
             {
-                kEngagement.LWCE_UseConsumableEffect('Item_DefenseMatrix');
-
-                if (!kEngagement.LWCE_IsConsumableInEffect('Item_DefenseMatrix'))
-                {
-                    AS_DisplayEffectEvent(eDodgeHits, GetAbilityDescription(eDodgeHits), false);
-                    AS_SetDodgeButton(m_strDodgeAbility, eAbilityState_Disabled);
-                }
+                AS_DisplayEffectEvent(eDodgeHits, GetAbilityDescription(eDodgeHits), false);
+                AS_SetDodgeButton(m_strDodgeAbility, eAbilityState_Disabled);
             }
-            else
-            {
-                kShip.m_iHP -= m_akDamageInformation[I].iDamage;
-                m_kMgr.SFXShipHit(kShip, m_akDamageInformation[I].iDamage);
 
-                if (kShip.m_iHP <= 0)
+            if (kCombatExchange.bHit)
+            {
+                bShipWasAlive = kTargetShip.m_iHP > 0;
+                kTargetShip.m_iHP -= kCombatExchange.iDamage;
+                m_kMgr.SFXShipHit(kTargetShip, kCombatExchange.iDamage);
+
+                `LWCE_LOG("Ship " $ kTargetShip $ " is taking " $ kCombatExchange.iDamage $ " damage; new HP is " $ kTargetShip.m_iHP);
+
+                // Need to make sure the ship was actually alive before it got hit; in a big dogfight, there might be multiple projectiles
+                // in the air, all landing at the same time
+                if (kTargetShip.m_iHP <= 0 && bShipWasAlive)
                 {
-                    m_kMgr.SFXShipDestroyed(kShip);
+                    m_kMgr.SFXShipDestroyed(kTargetShip);
+
+                    `LWCE_LOG(kTargetShip $ " was destroyed by " $ kSourceShip);
+                    kSourceShip = kEngagement.LWCE_GetShip(kCombatExchange.iSourceShip);
+                    LWCE_XGInterception(kEngagement.m_kInterception).RecordKill(kSourceShip, kTargetShip);
                 }
 
-                // TODO: when a kill occurs, we need to call LWCE_XGInterception.RecordKill, but the structs we're using don't record who was attacking, only the target
-                `LWCE_LOG("Ship " $ kShip $ " is taking " $ m_akDamageInformation[I].iDamage $ " damage; new HP is " $ kShip.m_iHP);
-                AS_SetHP(m_akDamageInformation[I].iShip, kShip.m_iHP, false, m_akDamageInformation[I].iBulletID);
+                AS_SetHP(kCombatExchange.iTargetShip, kTargetShip.m_iHP, false, kCombatExchange.iBulletID);
             }
         }
     }

@@ -46,6 +46,8 @@ var config bool bCanEquipOnFirestorm; // Whether this weapon can be armed on a F
 
 var config bool bCanEquipOnInterceptor; // Whether this weapon can be armed on an Interceptor.
 
+var config bool bCanUseAimModules;
+
 var config float fArtifactRecoveryBonus; // How much of a boost in recovered artifacts is granted when a UFO is shot down using this
                                          // weapon. This is a flat additive percentage; for example, if the base recovery percentage
                                          // is 30% and this value is 20, the final recovery percentage is 50%. Total recovery percentage

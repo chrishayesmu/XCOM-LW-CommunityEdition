@@ -7,7 +7,6 @@ function PostInit(XGInterception kXGInterception)
 
     m_kInterceptionEngagement = Spawn(class'LWCE_XGInterceptionEngagement');
     m_kInterceptionEngagement.Init(kXGInterception);
-    m_kInterceptionEngagement.GetCombat();
 
     kCEInterception = LWCE_XGInterception(m_kInterceptionEngagement.m_kInterception);
 

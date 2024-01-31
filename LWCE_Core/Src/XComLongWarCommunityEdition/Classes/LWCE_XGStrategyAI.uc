@@ -205,7 +205,13 @@ function XGMission LWCE_AIAddNewMission(EMissionType eType, optional LWCE_XGShip
 {
     local XGMission kMission;
 
-    `LWCE_LOG_ERROR("LWCE_AIAddNewMission: doing nothing until mission support is fixed");
+    `LWCE_LOG_ERROR("LWCE_AIAddNewMission: doing nothing except ship removal until mission support is fixed");
+
+    if (kShip != none)
+    {
+        LWCE_RemoveShip(kShip);
+    }
+
     return none;
 
     if (eType == eMission_Final)
