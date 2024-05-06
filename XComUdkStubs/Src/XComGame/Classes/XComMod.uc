@@ -1,0 +1,1 @@
+class XComMod extends Object;

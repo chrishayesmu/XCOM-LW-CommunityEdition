@@ -1,0 +1,1 @@
+class XComOnlineStatsWriteDeathmatchUnranked extends XComOnlineStatsWriteDeathmatch;

@@ -1,0 +1,3 @@
+class XComProjectileFX_Beam_RubberBand extends XComProjectileFX_Beam;
+
+var Vector vTrailEndPos;

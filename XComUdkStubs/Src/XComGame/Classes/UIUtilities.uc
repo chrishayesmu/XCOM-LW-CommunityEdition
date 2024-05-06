@@ -1,0 +1,35 @@
+class UIUtilities extends Object;
+
+const NORMAL_HTML_COLOR = "67E8ED";
+const HILITE_HTML_COLOR = "B9FFFF";
+const DISABLED_HTML_COLOR = "808080";
+const BAD_HTML_COLOR = "EE1C25";
+const GOOD_HTML_COLOR = "5CD16C";
+const CASH_HTML_COLOR = "5CD16C";
+const WARNING_HTML_COLOR = "FFD038";
+const WARNING2_HTML_COLOR = "F67420";
+const PSIONIC_HTML_COLOR = "A09CD6";
+const HYPERWAVE_HTML_COLOR = "F78000";
+const FLASH_DOCUMENT_WIDTH = 1280.0;
+const FLASH_DOCUMENT_HEIGHT = 720.0;
+const MELD_NORMAL = "meld_blue";
+const MELD_GOOD = "meld_green";
+const MELD_WARNING = "meld_orange";
+const MELD_BAD = "meld_red";
+const MELD_DISABLED = "meld_grey";
+const MELDTAG = "#MELDTAG";
+const MELD_TEMPLATE_ITEMCARD_IMG = "img:///UILibrary_MPCards.MPCard_GeneMod";
+
+var const localized string m_strGenericOK;
+var const localized string m_strGenericConfirm;
+var const localized string m_strGenericCancel;
+var const localized string m_strGenericBack;
+var const localized string m_strDay;
+var const localized string m_strDays;
+var const localized string m_strHour;
+var const localized string m_strHours;
+var const localized string m_strMPPlayerEndTurnDialog_Title;
+var const localized string m_strMPPlayerEndTurnDialog_Body;
+var const localized string m_strUpperYWithUmlaut;
+var const localized string m_strLowerYWithUmlaut;
+var const localized string KNOWN_NULL_CHARACTER_DO_NOT_TRANSLATE;
