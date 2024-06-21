@@ -8,6 +8,7 @@ var config array<name> arrContinentBonuses; // Which bonuses are available via c
                                             // at the start of the campaign.
 var config name nmHQCountry;                // Which country contains `v2HQLocation`; this country will be considered to contain the continent's air base.
 var config string ImagePath;                // TODO
+var config int iSortIndex;                  // Where to sort this continent in the satellite room UI, with lower values appearing first.
 
 var const localized string strName;
 var const localized string strNameWithArticle;

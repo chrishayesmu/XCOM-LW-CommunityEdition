@@ -25,6 +25,7 @@ var config string strFlagIconPath;           // Path to an image containing the 
 var config string strSatelliteNarrativePath; // Path to an XComNarrativeMoment to be played when satellite coverage is established over this country.
 var config Vector2D v2SatNodeLoc;            // The location on the Geoscape to display a satellite graphic if this country has a satellite.
 var config array<config TRect> arrBounds;    // Bounding boxes which together define the area of this country.
+var config int iSortIndex;                   // Where to sort this country within its continent in the satellite room UI, with lower values appearing first.
 var config array<name> arrCities;            // The names of the cities which are in this country.
 var config array<name> arrStartingBonuses;   // Which bonuses are available when choosing this country as the starting country.
 var config array<name> arrSatelliteBonuses;  // Which bonuses are available via satellite coverage. If multiple are specified, one is chosen randomly

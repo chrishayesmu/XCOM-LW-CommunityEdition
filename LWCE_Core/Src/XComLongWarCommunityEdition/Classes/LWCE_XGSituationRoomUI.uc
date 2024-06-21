@@ -137,7 +137,7 @@ function array<XGCountry> SortSitCountries()
 function array<LWCE_XGCountry> LWCE_SortSitCountries()
 {
     local array<LWCE_XGContinent> arrContinents;
-    local array<LWCE_XGCountry> arrCountries;
+    local array<LWCE_XGCountry> arrAllCountries, arrCountries;
     local LWCE_XGContinent kContinent;
     local LWCE_XGCountry kCountry;
     local LWCE_XGWorld kWorld;
@@ -145,15 +145,13 @@ function array<LWCE_XGCountry> LWCE_SortSitCountries()
 
     kWorld = LWCE_XGWorld(WORLD());
     arrContinents = kWorld.LWCE_GetContinents();
-
-    // TODO: need some way to sort, maybe north-to-south/east-to-west? or make the templates specify, ugh
-    `LWCE_LOG_WARN("Situation room countries will be in the wrong order until we apply a sort to them!");
+    arrContinents.Sort(SortContinents);
 
     foreach arrContinents(kContinent)
     {
-        for (iCountry = 0; iCountry < kContinent.m_kTemplate.arrCountries.Length; iCountry++)
+        for (iCountry = 0; iCountry < kContinent.m_arrCECountries.Length; iCountry++)
         {
-            kCountry = kWorld.LWCE_GetCountry(kContinent.m_kTemplate.arrCountries[iCountry]);
+            kCountry = kWorld.LWCE_GetCountry(kContinent.m_arrCECountries[iCountry]);
 
             if (!kCountry.IsCouncilMember())
             {
@@ -162,9 +160,18 @@ function array<LWCE_XGCountry> LWCE_SortSitCountries()
 
             arrCountries.AddItem(kCountry);
         }
+
+        arrCountries.Sort(SortCountries);
+
+        for (iCountry = 0; iCountry < arrCountries.Length; iCountry++)
+        {
+            arrAllCountries.AddItem(arrCountries[iCountry]);
+        }
+
+        arrCountries.Length = 0;
     }
 
-    return arrCountries;
+    return arrAllCountries;
 }
 
 function UpdateCountries()
@@ -510,4 +517,14 @@ function UpdateWorldMap()
     }
 
     kExaltSim.ClearLastVisibiltyStatusForAllCountries();
+}
+
+protected function int SortContinents(LWCE_XGContinent kContA, LWCE_XGContinent kContB)
+{
+    return kContA.m_kTemplate.iSortIndex > kContB.m_kTemplate.iSortIndex ? -1 : 0;
+}
+
+protected function int SortCountries(LWCE_XGCountry kCountryA, LWCE_XGCountry kCountryB)
+{
+    return kCountryA.m_kTemplate.iSortIndex > kCountryB.m_kTemplate.iSortIndex ? -1 : 0;
 }

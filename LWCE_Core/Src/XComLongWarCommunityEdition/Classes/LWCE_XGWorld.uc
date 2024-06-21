@@ -167,9 +167,9 @@ function CreateCountries()
     {
         kCEContinent = LWCE_XGContinent(kContinent);
 
-        for (iCountry = 0; iCountry < kCEContinent.m_kTemplate.arrCountries.Length; iCountry++)
+        for (iCountry = 0; iCountry < kCEContinent.m_arrCECountries.Length; iCountry++)
         {
-            LWCE_BuildCountry(kCEContinent.m_kTemplate.arrCountries[iCountry], kCEContinent.m_nmContinent);
+            LWCE_BuildCountry(kCEContinent.m_arrCECountries[iCountry], kCEContinent.m_nmContinent);
         }
     }
 }

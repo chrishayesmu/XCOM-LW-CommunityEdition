@@ -219,6 +219,8 @@ state SatelliteState
 
         UpdateHUD();
 
+        // TODO: the fact that the country index is used in Flash means we can't actually replace or
+        // reorder any countries right now without the UI highlighting getting out of sync
         myValue.Type = AS_Number;
         myValue.N = m_iCurrentCountry;
         myArray.AddItem(myValue);

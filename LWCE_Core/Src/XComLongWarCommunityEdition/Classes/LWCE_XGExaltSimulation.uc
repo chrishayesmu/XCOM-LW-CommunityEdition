@@ -97,7 +97,7 @@ function bool LWCE_AccuseCountry(name nmAccusedCountry)
         {
             kContinent = kWorld.LWCE_GetContinent(kCountry.LWCE_GetContinent());
 
-            foreach kContinent.m_kTemplate.arrCountries(nmNeighborCountry)
+            foreach kContinent.m_arrCECountries(nmNeighborCountry)
             {
                 kCountry = kWorld.LWCE_GetCountry(nmNeighborCountry);
 
@@ -358,7 +358,7 @@ function int LWCE_GetPanicMod(name nmCountryToCheck, int iBasePanic)
     kCountry = `LWCE_XGCOUNTRY(nmCountryToCheck);
     kContinent = `LWCE_XGCONTINENT(kCountry.LWCE_GetContinent());
 
-    foreach kContinent.m_kTemplate.arrCountries(nmCountry)
+    foreach kContinent.m_arrCECountries(nmCountry)
     {
         if (LWCE_IsCellActiveInCountry(nmCountry) && !LWCE_IsCellExposedInCountry(nmCountry))
         {
@@ -526,7 +526,7 @@ function LWCE_PerformIncreasePanicOperation(name nmOperationCountry)
     kCountry.AddPanic(iPropagandaPanicAmount);
 
     // Select a random country on the same continent as the target to also receive panic
-    foreach kContinent.m_kTemplate.arrCountries(nmCountryIter)
+    foreach kContinent.m_arrCECountries(nmCountryIter)
     {
         kCountry = kWorld.LWCE_GetCountry(nmCountryIter);
 
@@ -758,7 +758,7 @@ function PostCombat(XGMission kMission, bool bSuccess)
             {
                 kContinent = kWorld.LWCE_GetContinent(kCountry.LWCE_GetContinent());
 
-                foreach kContinent.m_kTemplate.arrCountries(nmNeighborCountry)
+                foreach kContinent.m_arrCECountries(nmNeighborCountry)
                 {
                     kCountry = kWorld.LWCE_GetCountry(nmNeighborCountry);
 
@@ -843,7 +843,7 @@ protected function int LWCE_GetActiveCellsOnContinent(LWCE_XGContinent kContinen
     local int iActiveCellsInContinent;
     local name nmCountry;
 
-    foreach kContinent.m_kTemplate.arrCountries(nmCountry)
+    foreach kContinent.m_arrCECountries(nmCountry)
     {
         if (LWCE_IsCellActiveInCountry(nmCountry))
         {
