@@ -166,6 +166,36 @@ function UpdateAlert()
     m_kAlert = kAlert;
 }
 
+function UpdateBonus()
+{
+    local TSatBonusUI kUI;
+    local LWCE_XGContinent kContinent;
+    local LWCEBonusTemplate kBonusTemplate;
+    local XGParamTag kTag;
+    local name nmBonus;
+
+    kContinent = `LWCE_XGCONTINENT(m_nmContinent);
+    nmBonus = kContinent.LWCE_GetBonus();
+    kBonusTemplate = `LWCE_BONUS(nmBonus);
+
+    kTag = XGParamTag(XComEngine(class'Engine'.static.GetEngine()).LocalizeContext.FindTag("XGParam"));
+    kTag.StrValue0 = kContinent.GetName();
+
+    kUI.txtTitle.StrValue = class'XComLocalizer'.static.ExpandString(m_strLabelBonusInRegion);
+    kUI.txtTitle.iState = eUIState_Warning;
+
+    kUI.txtBonusName.StrValue = kBonusTemplate.strName;
+    kUI.txtBonusName.iState = eUIState_Highlight;
+
+    kUI.txtBonusDesc.StrValue = kBonusTemplate.strDescription;
+    kUI.txtBonusDesc.iState = eUIState_Warning;
+
+    kUI.btxtOk.iButton = 1;
+    kUI.btxtOk.StrValue = m_strLabelOk;
+
+    m_kBonusUI = kUI;
+}
+
 function UpdateConfirmUI()
 {
     local TSatConfirm kUI;
@@ -360,6 +390,40 @@ function UpdateCountryHelp()
     }
 
     m_kCursorUI = kUI;
+}
+
+function UpdateHelp()
+{
+    local LWCEBonusTemplate kBonusTemplate;
+    local LWCEBonusTemplateManager kBonusTemplateMgr;
+    local array<LWCE_TBonus> arrBonuses;
+    local XGParamTag kParamTag;
+    local int Index;
+
+    kBonusTemplateMgr = `LWCE_BONUS_TEMPLATE_MGR;
+    arrBonuses = LWCE_XGHeadquarters(HQ()).GetActiveBonuses();
+
+    kParamTag = XGParamTag(XComEngine(class'Engine'.static.GetEngine()).LocalizeContext.FindTag("XGParam"));
+    kParamTag.IntValue0 = 0;
+
+    m_kHelp.txtBody.StrValue = "";
+
+    for (Index = 0; Index < arrBonuses.Length; Index++)
+    {
+        kBonusTemplate = kBonusTemplateMgr.FindBonusTemplate(arrBonuses[Index].BonusName);
+
+        // TODO: come back to this once proper localization and tagging is set up
+
+        m_kHelp.txtBody.StrValue $= class'UIUtilities'.static.GetHTMLColoredText(kBonusTemplate.strName, eUIState_Warning, 18) $ ": ";
+        m_kHelp.txtBody.StrValue $= class'UIUtilities'.static.GetHTMLColoredText(class'XComLocalizer'.static.ExpandString(kBonusTemplate.strDescription), eUIState_Highlight, 18);
+        m_kHelp.txtBody.StrValue $= "\n";
+    }
+
+    m_kHelp.txtTitle.StrValue = m_strLabelSatelliteTitle;
+    m_kHelp.txtBody.StrValue $= "\n";
+    m_kHelp.txtBody.StrValue $= m_strLabelSatelliteBody;
+    m_kHelp.btxtOk.iButton = 1;
+    m_kHelp.btxtOk.StrValue = m_strLabelContinue;
 }
 
 function UpdateMain()

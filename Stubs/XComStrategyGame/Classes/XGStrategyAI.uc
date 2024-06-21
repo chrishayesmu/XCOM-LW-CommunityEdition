@@ -103,7 +103,124 @@ function bool IsGoodUFOMissionChoice(TUFO kUFO){}
 function int ChooseUFOMissionType(int iChoice){}
 function int ChooseUFOMission(out array<TUFO> arrUFOs){}
 function ChooseUFO(out array<TUFO> arrUFOs, out array<int> arrDates, out array<ECountry> arrCountries){}
-function AddUFOs(int iNumUFOs, out array<ECountry> arrVisible){}
+function AddUFOs(int iNumUFOs, out array<ECountry> arrVisible)
+{
+    local int iMonth, iUFO;
+    local array<int> arrDates;
+    local array<TUFO> arrUFOs;
+
+    STAT_SetStat(103, iNumUFOs);
+    iUFO = GetNumOutsiders();
+
+    switch (iNumUFOs)
+    {
+        case eObjective_Recon:
+            arrVisible = DetermineBestVisibleTargets(false);
+            iMonth = ChooseUFOTarget(arrVisible);
+
+            if (IsOptionEnabled(9)) // Dynamic War
+            {
+                AIAddNewObjective(eObjective_Recon, 0, Country(iMonth).GetCoords(), iMonth,, EShipType(iUFO));
+            }
+            else
+            {
+                AIAddNewObjective(eObjective_Recon, 2 + Rand(26), Country(iMonth).GetCoords(), iMonth,, EShipType(iUFO));
+            }
+
+            return;
+        case eObjective_Scout:
+            arrVisible = DetermineBestVisibleTargets(false);
+            iMonth = ChooseUFOTarget(arrVisible);
+
+            if (IsOptionEnabled(9))
+            {
+                AIAddNewObjective(eObjective_Scout, 0, Country(iMonth).GetCoords(), iMonth,, EShipType(iUFO));
+            }
+            else
+            {
+                AIAddNewObjective(eObjective_Scout, 1 + Rand(27), Country(iMonth).GetCoords(), iMonth,, EShipType(iUFO));
+            }
+
+            return;
+        case eObjective_Harvest:
+            iMonth = HQ().GetHomeCountry();
+
+            if (GetMonth() > 0)
+            {
+                iMonth = World().GetRandomCouncilCountry().GetID();
+
+                // If the target country has satellite coverage, there's a chance to reroll up to 16 times, until hitting a country with no coverage.
+                // Should such a country eventually be found, this will cost the aliens 5 resources.
+                if (Country(iMonth).HasSatelliteCoverage())
+                {
+                    if (Rand(10) < STAT_GetStat(21))
+                    {
+                        for (m_iTerrorCounter = 0; m_iTerrorCounter < 16; m_iTerrorCounter++)
+                        {
+                            iMonth = World().GetRandomCouncilCountry().GetID();
+
+                            if (!Country(iMonth).HasSatelliteCoverage())
+                            {
+                                STAT_AddStat(19, -5);
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+
+            if (IsOptionEnabled(9))
+            {
+                AIAddNewObjective(eObjective_Harvest, 0, Country(iMonth).GetCoords(), iMonth,, EShipType(iUFO));
+            }
+            else
+            {
+                AIAddNewObjective(eObjective_Harvest, 1 + Rand(26), Country(iMonth).GetCoords(), iMonth,, EShipType(iUFO));
+            }
+
+            return;
+        case eObjective_Hunt:
+            arrVisible = DetermineBestOverseerTargets();
+            iMonth = ChooseUFOTarget(arrVisible);
+
+            if (IsOptionEnabled(9))
+            {
+                AIAddNewObjective(eObjective_Hunt, 0, Country(iMonth).GetCoords(), iMonth,, EShipType(iUFO));
+            }
+            else
+            {
+                AIAddNewObjective(eObjective_Hunt, 1 + Rand(27), Country(iMonth).GetCoords(), iMonth,, EShipType(iUFO));
+            }
+
+            return;
+        case eObjective_Infiltrate:
+            iMonth = DetermineBestTerrorTarget();
+
+            if (IsOptionEnabled(9))
+            {
+                AIAddNewObjective(eObjective_Infiltrate, 5 + Rand(8), Country(iMonth).GetCoords(), iMonth);
+            }
+            else
+            {
+                AIAddNewObjective(eObjective_Infiltrate, 5 + Rand(8), Country(iMonth).GetCoords(), iMonth);
+            }
+
+            return;
+        case 8: // Bombing
+            iMonth = DetermineBestTerrorTarget();
+
+            if (IsOptionEnabled(9))
+            {
+                AIAddNewObjective(8, 0, Country(iMonth).GetCoords(), iMonth,, EShipType(iUFO));
+            }
+            else
+            {
+                AIAddNewObjective(8, 2 + Rand(26), Country(iMonth).GetCoords(), iMonth,, EShipType(iUFO));
+            }
+
+            return;
+    }
+}
 function array<ECountry> FilterCountries(array<EContinent> arrAvoid, array<ECountry> arrCountries){}
 function array<ECityType> PickAbductionTargets(int iNumCities, out array<ECountry> arrCountries){}
 function AddAbductionObjectives(int iNumAbductions, int iStartDate, out array<ECountry> arrCountries){}

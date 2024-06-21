@@ -254,18 +254,18 @@ replication
         m_kReplicatedOwner;
 
     if(bNetDirty && Role == ROLE_Authority)
-        m_aVolumes, m_bCanOpenWindowsAndDoors, 
-        m_bDeathExplosionDone, m_bFailedCloseCombatCheck, 
-        m_bGotoStateInactiveFromStatePanicked, m_bInDropShip, 
-        m_bPushStatePanicking, m_bReactionFireAutoZoomAddSelf, 
-        m_bSeenBetterAlien, m_bServerPanicMoveFinished, 
-        m_bSuppressing, m_bSuppressingArea, 
-        m_eDiscState, m_eReplicateDeactivatePerkType, 
-        m_fAutoFiringRate, m_iAddUnitFlag, 
-        m_iBWAimPenalty, m_iBWMobPenalty, 
-        m_iCriticalWoundCounter, m_iLowestHP, 
-        m_iNumVolumes, m_kForceConstantCombatTarget, 
-        m_kLoadoutInstances, m_kPlayer, 
+        m_aVolumes, m_bCanOpenWindowsAndDoors,
+        m_bDeathExplosionDone, m_bFailedCloseCombatCheck,
+        m_bGotoStateInactiveFromStatePanicked, m_bInDropShip,
+        m_bPushStatePanicking, m_bReactionFireAutoZoomAddSelf,
+        m_bSeenBetterAlien, m_bServerPanicMoveFinished,
+        m_bSuppressing, m_bSuppressingArea,
+        m_eDiscState, m_eReplicateDeactivatePerkType,
+        m_fAutoFiringRate, m_iAddUnitFlag,
+        m_iBWAimPenalty, m_iBWMobPenalty,
+        m_iCriticalWoundCounter, m_iLowestHP,
+        m_iNumVolumes, m_kForceConstantCombatTarget,
+        m_kLoadoutInstances, m_kPlayer,
         m_kReactionFireAutoZoomTarget, m_kReplicateActivatePerkData;
 
     if(!bNetOwner && Role == ROLE_Authority)
@@ -808,7 +808,79 @@ simulated function DrawRangesForFlamethrower(optional XCom3DCursor kCursor=none,
 simulated function bool DoubleTapPerkStillValid(){}
 simulated function MoveCursorToMe(){}
 simulated function GenerateSafeCharacterNames(){}
-simulated function int ReplicateActivatePerkData_ToString(optional int kRAPD=0){}
+simulated function int ReplicateActivatePerkData_ToString(optional int kRAPD = 0)
+{
+    local int strRep, I;
+
+    I = 0;
+
+    // ADDED
+    if (IsAffectedByAbility(eAbility_FlashBang))
+    {
+        I -= 123; // 0x7B
+    }
+    // END
+
+    if ((kRAPD & 1) == 0)
+    {
+        I += GetWill();
+    }
+
+    if (m_bInCombatDrugs)
+    {
+        I += 20;
+    }
+
+    if ((kRAPD & 2) == 2)
+    {
+        if (GetCharacter().HasUpgrade(ePerk_GeneMod_BrainDamping))
+        {
+            I += 20;
+        }
+    }
+
+    if ((kRAPD & 4) == 4)
+    {
+        if (GetAppliedAbility(eAbility_CombatStim) != none)
+        {
+            I += 40;
+        }
+    }
+
+    // Legio Patria Nostra
+    if (GetCharacter().HasUpgrade(/* Legio Patria Nostra */ 156))
+    {
+        I += `GAMECORE.CalcInternationalWillBonus();
+    }
+
+    // Esprit de Corps
+    if (GetSquad().SquadHasStarOfTerra(true) && !`GAMECORE.CharacterHasProperty(GetCharType(), eCP_Robotic))
+    {
+        I += `GAMECORE.TERRA_WILL;
+    }
+
+    I += GetBattleFatigueWillPenalty() + GetFallenComradesWillPenalty();
+
+    if (`GAMECORE.IsOptionEnabled(30)) // Green Fog
+    {
+        if (!IsAI())
+        {
+            if (class'XGTacticalGameCore'.default.ContBalance_Normal[2].iScientists1 == 1)
+            {
+                if (`BATTLE.m_iTurn <= class'XGTacticalGameCore'.default.ContBalance_Normal[2].iEngineers1)
+                {
+                    I -= `BATTLE.m_iTurn;
+                }
+                else
+                {
+                    I -= class'XGTacticalGameCore'.default.ContBalance_Normal[2].iEngineers1;
+                }
+            }
+        }
+    }
+
+    return I;
+}
 simulated function OnSetOnFire(){}
 simulated function PlayTakeDamagePerkEffects(bool bOnDeath, XGUnit kDamageDealer){}
 simulated event Tick(float fDeltaT){}
@@ -859,7 +931,7 @@ simulated state Panicked
 
 simulated state Dead
 {
-    ignores EndState, Activate, Deactivate, SetDiscState, ShowMouseOverDisc, AddAction, 
+    ignores EndState, Activate, Deactivate, SetDiscState, ShowMouseOverDisc, AddAction,
 	    ExecuteNextAction;
 
     simulated function OnDeathUpdateHidden(){}
@@ -970,7 +1042,7 @@ defaultproperties
 	Components.Add(BEPSC)
     begin object name=OnFirePSC class=ParticleSystemComponent
         ReplacementPrimitive=none
-    end object    
+    end object
 	m_OnFirePSC=OnFirePSC
 	Components.Add(OnFirePSC)
     m_bReplicateHidden=false

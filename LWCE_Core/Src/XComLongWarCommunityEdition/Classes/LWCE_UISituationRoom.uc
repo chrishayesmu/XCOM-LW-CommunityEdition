@@ -93,6 +93,23 @@ simulated function UpdateCountries()
     }
 }
 
+protected function LWCE_AlertDialogue()
+{
+    local TDialogueBoxData kDialogData;
+    local LWCE_XGSatelliteSitRoomUI kSatMgr;
+
+    kSatMgr = LWCE_XGSatelliteSitRoomUI(GetSatelliteMgr());
+
+    kDialogData.eType = 0;
+    kDialogData.strTitle = kSatMgr.m_kAlert.txtTitle.StrValue;
+    kDialogData.strText = kSatMgr.m_kAlert.txtBody.StrValue;
+    kDialogData.strAccept = kSatMgr.m_kAlert.mnuOptions.arrOptions[0].strText;
+    kDialogData.strCancel = kSatMgr.m_kAlert.mnuOptions.arrOptions.Length > 1 ? kSatMgr.m_kAlert.mnuOptions.arrOptions[1].strText : "";
+    kDialogData.fnCallback = AlertDialogueCallback;
+
+    XComHQPresentationLayer(controllerRef.m_Pres).UIRaiseDialog(kDialogData);
+}
+
 protected simulated function AS_LWCE_SetCountryInfo(int iIndex, string countryName, string cash, int panicLevel, bool bIsActive)
 {
     local int iShields;
@@ -153,6 +170,39 @@ state SatelliteState
         kStrategyHUD.ShowBackButton(OnUCancel);
 
         m_kSitRoomHUD.AS_SetDisplayMode(DISPLAY_MODE_SATELLITE);
+    }
+
+    simulated function GoToView(int iView)
+    {
+        m_iViewSatellite = iView;
+
+        switch (m_iViewSatellite)
+        {
+            case eSatelliteView_Main:
+                UpdateHUD();
+                Show();
+                m_bAcceptsInput = true;
+                break;
+            case eSatelliteView_Confirm:
+                m_bAcceptsInput = false;
+                ConfirmSatelliteDialogue();
+                break;
+            case eSatelliteView_Bonus:
+                HideHUD();
+                m_bAcceptsInput = false;
+                BonusDialogue();
+                break;
+            case eSatelliteView_Alert:
+                HideHUD();
+                m_bAcceptsInput = false;
+                LWCE_AlertDialogue();
+                break;
+            case eSatelliteView_Help:
+                HideHUD();
+                m_bAcceptsInput = false;
+                HelpSatelliteDialogue();
+                break;
+        }
     }
 
     simulated function LWCE_RealizeSelected()

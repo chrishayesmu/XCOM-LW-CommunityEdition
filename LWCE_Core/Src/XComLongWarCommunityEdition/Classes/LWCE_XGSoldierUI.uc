@@ -895,8 +895,8 @@ function UpdateDoll()
 
     if (kSoldier != none)
     {
-        m_kDoll.iFlag = kSoldier.GetCountry();
-        m_kDoll.imgFlag.strPath = class'UIScreen'.static.GetFlagPath(m_kDoll.iFlag);
+        // TODO does this work for SHIVs?
+        m_kDoll.imgFlag.strPath = `LWCE_COUNTRY(kSoldier.LWCE_GetCountry()).strFlagIconPath;
 
         if (kSoldier.IsATank())
         {

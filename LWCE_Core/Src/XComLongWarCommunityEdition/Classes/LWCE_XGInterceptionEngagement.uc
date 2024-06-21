@@ -706,7 +706,7 @@ function StaggerWeaponsForShip(int iShip)
 }
 
 /// <summary>
-///
+/// TODO
 /// </summary>
 function UpdateEngagementResult(float fElapsedTime)
 {

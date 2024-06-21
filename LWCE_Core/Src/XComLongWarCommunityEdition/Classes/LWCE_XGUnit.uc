@@ -305,9 +305,9 @@ function int AbsorbDamage(const int IncomingDamage, XGUnit kDamageCauser, XGWeap
     fReturnDmg = float(IncomingDamage);
 
     // Apply the Damage Reduction stat
-    if ((m_aCurrentStats[eStat_DamageReduction] % 100) > 0)
+    if ((m_aCurrentStats[4] % 100) > 0)
     {
-        fReturnDmg = fReturnDmg - (float(m_aCurrentStats[eStat_DamageReduction] % 100) / float(10));
+        fReturnDmg = fReturnDmg - (float(m_aCurrentStats[4] % 100) / float(10));
     }
 
     // Mind merge bonus DR (XCOM only)

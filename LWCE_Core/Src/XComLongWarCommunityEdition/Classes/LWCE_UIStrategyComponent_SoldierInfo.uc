@@ -12,7 +12,7 @@ function UpdateData()
     theName = Caps(kSoldier.GetName(eNameType_First) @ kSoldier.GetName(eNameType_Last));
     NickName = kSoldier.GetName(eNameType_Nick);
     Status = class'UIUtilities'.static.GetHTMLColoredText(m_strStatusLabel, eUIState_Normal) @ class'UIUtilities'.static.GetHTMLColoredText(kSoldier.GetStatusString(), kSoldier.GetStatusUIState()) $ "   ";
-    flagIcon = class'UIScreen'.static.GetFlagPath(kSoldier.GetCountry());
+    flagIcon = `LWCE_COUNTRY(kSoldier.LWCE_GetCountry()).strFlagIconPath;
     classLabel = kSoldier.GetClassIcon();
     classText = Caps(kSoldier.GetClassName());
 

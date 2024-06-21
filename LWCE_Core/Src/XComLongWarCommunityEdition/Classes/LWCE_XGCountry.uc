@@ -66,7 +66,7 @@ function AddPanic(int iPanic, optional bool bSuppressHeadline)
 
     iPanic += LWCE_XGExaltSimulation(EXALT()).LWCE_GetPanicMod(m_nmCountry, iPanic);
     m_iPanic = Clamp(m_iPanic + iPanic, 0, 99);
-    GEOSCAPE().ColorCountry(ECountry(GetID()), GetPanicColor());
+    LWCE_XGGeoscape(GEOSCAPE()).LWCE_ColorCountry(m_nmCountry, GetPanicColor());
 
     if (m_iPanic >= GetPanicWarningThreshhold() && m_iPanic - iPanic < GetPanicWarningThreshhold() && iPanic > 0)
     {
@@ -171,6 +171,13 @@ function name LWCE_GetContinent()
     return m_nmContinent;
 }
 
+function int GetID()
+{
+    `LWCE_LOG_DEPRECATED_BY(GetID, LWCE_XGCountry.m_nmCountry);
+
+    return -1;
+}
+
 function string GetName(optional bool bPossessive)
 {
     if (bPossessive)
@@ -235,12 +242,12 @@ function LWCE_InitNewGame(name nmCountry, name nmContinent)
         m_nmBonus = LWCE_XGHeadquarters(HQ()).m_nmStartingBonus;
         m_bIsGrantingBonus = true;
     }
-    else if (m_kTemplate.arrStartingBonuses.Length > 0)
+    else if (m_kTemplate.arrSatelliteBonuses.Length > 0)
     {
         // Otherwise, randomly choose a possible bonus for this country to have
         // TODO: it would be better to do this at a higher level and avoid the same bonus appearing in multiple countries
         // (unless some config setting indicates that we want that)
-        m_nmBonus = m_kTemplate.arrStartingBonuses[Rand(m_kTemplate.arrStartingBonuses.Length)];
+        m_nmBonus = m_kTemplate.arrSatelliteBonuses[Rand(m_kTemplate.arrSatelliteBonuses.Length)];
     }
 }
 

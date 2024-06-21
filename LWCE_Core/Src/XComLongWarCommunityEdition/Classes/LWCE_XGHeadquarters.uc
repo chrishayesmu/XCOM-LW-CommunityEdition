@@ -596,6 +596,27 @@ function CreateFacilities()
     m_kSitRoom = XGFacility_SituationRoom(kFacility);
 }
 
+/// <summary>
+/// Gets all active bonuses, i.e. those with a bonus level greater than 0.
+/// This should be used instead of iterating m_arrBonuses, in case any event
+/// hooks are added later.
+/// </summary>
+function array<LWCE_TBonus> GetActiveBonuses()
+{
+    local array<LWCE_TBonus> arrBonuses;
+    local int Index;
+
+    for (Index = 0; Index < m_arrBonuses.Length; Index++)
+    {
+        if (m_arrBonuses[Index].Level > 0)
+        {
+            arrBonuses.AddItem(m_arrBonuses[Index]);
+        }
+    }
+
+    return arrBonuses;
+}
+
 function LWCE_XGBase GetBaseById(int Id)
 {
     local LWCE_XGBase kBase;
