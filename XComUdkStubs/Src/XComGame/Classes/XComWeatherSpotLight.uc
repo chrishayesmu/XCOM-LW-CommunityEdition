@@ -9,16 +9,14 @@ var() float m_fConeAngle;
 
 defaultproperties
 {
+    // m_kWeatherLightMI=Material'FX_Weather.Materials.M_RaindropsSpotLightNewer'
+    Tag=SpotLightEmitter
+
     begin object name=RainEmitter0 class=ParticleSystemComponent
-        Template=ParticleSystem'FX_Weather.Particles.P_RainSpotlight'
+        // Template=ParticleSystem'FX_Weather.Particles.P_RainSpotlight'
         Translation=(X=-50.0,Y=0.0,Z=0.0)
     end object
 
     m_kRainEmitter=RainEmitter0
-    m_kWeatherLightMI=Material'FX_Weather.Materials.M_RaindropsSpotLightNewer'
-    Components(0)=none
-    Components(1)=none
-    Components(2)=none
-    Components(3)=RainEmitter0
-    Tag=SpotLightEmitter
+    Components.Add(RainEmitter0)
 }

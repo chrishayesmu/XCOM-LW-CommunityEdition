@@ -30,25 +30,11 @@ struct TEngHeader
     var TLabeledText txtElerium;
     var TLabeledText txtAlloys;
     var TLabeledText txtEngineers;
-
-    structdefaultproperties
-    {
-        txtTitle=(StrValue="",iState=0)
-        txtCash=(StrValue="",strLabel="",iState=0,bNumber=false)
-        txtElerium=(StrValue="",strLabel="",iState=0,bNumber=false)
-        txtAlloys=(StrValue="",strLabel="",iState=0,bNumber=false)
-        txtEngineers=(StrValue="",strLabel="",iState=0,bNumber=false)
-    }
 };
 
 struct TEngMainMenu
 {
     var TMenu mnuOptions;
-
-    structdefaultproperties
-    {
-        mnuOptions=(strLabel="",arrOptions=none,bTakesNoInput=false)
-    }
 };
 
 struct TEngItemTable
@@ -64,12 +50,6 @@ struct TEngProject
 {
     var TText txtTitle;
     var TImage imgStaff;
-
-    structdefaultproperties
-    {
-        txtTitle=(StrValue="",iState=0)
-        imgStaff=(iImage=0,strLabel="",iState=0,strPath="")
-    }
 };
 
 var TEngHeader m_kHeader;

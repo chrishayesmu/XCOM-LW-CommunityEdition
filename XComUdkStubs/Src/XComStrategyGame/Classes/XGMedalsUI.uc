@@ -34,14 +34,6 @@ struct TMedalMainMenuItem
     var string strName;
     var string Status;
     var bool bIsLocked;
-
-    structdefaultproperties
-    {
-        Type=EMedalType.eMedal_None
-        strName=""
-        Status=""
-        bIsLocked=false
-    }
 };
 
 struct TMedalEditing
@@ -51,15 +43,6 @@ struct TMedalEditing
     var string m_tMedalEditingHelp;
     var string m_tMedalEditingSubtitle;
     var string m_tMedalEditingSubtitle2;
-
-    structdefaultproperties
-    {
-        arrOptions=none
-        mnuOptions=(strLabel="",arrOptions=none,bTakesNoInput=false)
-        m_tMedalEditingHelp=""
-        m_tMedalEditingSubtitle=""
-        m_tMedalEditingSubtitle2=""
-    }
 };
 
 struct TMedalPower
@@ -67,13 +50,6 @@ struct TMedalPower
     var string Name;
     var string Desc;
     var EPerkType Type;
-
-    structdefaultproperties
-    {
-        Name=""
-        Desc=""
-        Type=EPerkType.ePerk_None
-    }
 };
 
 struct TMedalAssignPower
@@ -81,23 +57,11 @@ struct TMedalAssignPower
     var string Title;
     var TMedalPower P0;
     var TMedalPower P1;
-
-    structdefaultproperties
-    {
-        Title=""
-        P0=(Name="",Desc="",Type=EPerkType.ePerk_None)
-        P1=(Name="",Desc="",Type=EPerkType.ePerk_None)
-    }
 };
 
 struct TSoldierTable
 {
     var TTableMenu mnuSoldiers;
-
-    structdefaultproperties
-    {
-        mnuSoldiers=(arrCategories=none,kHeader=(arrStrings=none,arrStates=none),arrOptions=none,bTakesNoInput=false)
-    }
 };
 
 var const localized string m_strTitleCurrentMedals;

@@ -30,22 +30,6 @@ var float FacilityBackgroundTextureNormSizeY;
 
 defaultproperties
 {
-    ChooseFacilityMICs(0)=(Facility=EFacilityType.eFacility_AccessLift)
-    ChooseFacilityMICs(1)=(Facility=EFacilityType.eFacility_ScienceLab,FacilityMICName="ChooseFacilities.Materials.M_Laboratory")
-    ChooseFacilityMICs(2)=(Facility=EFacilityType.eFacility_Workshop,FacilityMICName="ChooseFacilities.Materials.M_Workshop")
-    ChooseFacilityMICs(3)=(Facility=EFacilityType.eFacility_SmallRadar,FacilityMICName="ChooseFacilities.Materials.M_SmallRadar")
-    ChooseFacilityMICs(4)=(Facility=EFacilityType.eFacility_Power,FacilityMICName="ChooseFacilities.Materials.M_PowerGenerator")
-    ChooseFacilityMICs(5)=(Facility=EFacilityType.eFacility_Foundry,FacilityMICName="ChooseFacilities.Materials.M_Foundry")
-    ChooseFacilityMICs(6)=(Facility=EFacilityType.eFacility_OTS,FacilityMICName="ChooseFacilities.Materials.M_OTS")
-    ChooseFacilityMICs(7)=(Facility=EFacilityType.eFacility_AlienContain,FacilityMICName="ChooseFacilities.Materials.M_AlienContainment")
-    ChooseFacilityMICs(8)=(Facility=EFacilityType.eFacility_LargeRadar,FacilityMICName="ChooseFacilities.Materials.M_LargeRadar")
-    ChooseFacilityMICs(9)=(Facility=EFacilityType.eFacility_ThermalPower,FacilityMICName="ChooseFacilities.Materials.M_ThermalPower")
-    ChooseFacilityMICs(10)=(Facility=EFacilityType.eFacility_EleriumGenerator,FacilityMICName="ChooseFacilities.Materials.M_EleriumPower")
-    ChooseFacilityMICs(11)=(Facility=EFacilityType.eFacility_PsiLabs,FacilityMICName="ChooseFacilities.Materials.M_PsionicLab")
-    ChooseFacilityMICs(12)=(Facility=EFacilityType.eFacility_HyperwaveRadar,FacilityMICName="ChooseFacilities.Materials.M_Hyperwave")
-    ChooseFacilityMICs(13)=(Facility=EFacilityType.eFacility_DeusEx,FacilityMICName="ChooseFacilities.Materials.M_GollopChamber")
-    ChooseFacilityMICs(14)=(Facility=EFacilityType.eFacility_CyberneticsLab,FacilityMICName="ChooseFacilities.Materials.M_CyberneticsLab")
-    ChooseFacilityMICs(15)=(Facility=EFacilityType.eFacility_GeneticsLab,FacilityMICName="ChooseFacilities.Materials.M_GeneticsLab")
     FacilityTextureScale=1.40
     FacilityTextureNormSizeX=0.70
     FacilityTextureNormSizeY=0.5750

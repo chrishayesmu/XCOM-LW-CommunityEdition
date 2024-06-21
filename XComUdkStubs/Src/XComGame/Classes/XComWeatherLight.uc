@@ -16,9 +16,8 @@ var float m_fSpawnRate;
 
 defaultproperties
 {
-    m_kLightEmitterMIC=MaterialInstanceConstant'FX_Weather.Materials.M_RaindropsPointLight_INST'
-    m_kWeatherLightMI=Material'FX_Weather.Materials.M_RaindropsPointLight'
+    // m_kLightEmitterMIC=MaterialInstanceConstant'FX_Weather.Materials.M_RaindropsPointLight_INST'
+    // m_kWeatherLightMI=Material'FX_Weather.Materials.M_RaindropsPointLight'
     m_fSpawnRate=0.00010
-    Components(0)=none
     Tag=WeatherLightEmitter
 }

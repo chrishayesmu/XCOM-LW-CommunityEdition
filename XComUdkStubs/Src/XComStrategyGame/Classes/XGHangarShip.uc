@@ -13,7 +13,7 @@ var export editinline StaticMeshComponent kLeftWeaponMesh;
 
 defaultproperties
 {
-    Physics=EPhysics.PHYS_Interpolating
+    Physics=PHYS_Interpolating
     bNoDelete=false
 
     begin object name=SkeletalMeshComponent0

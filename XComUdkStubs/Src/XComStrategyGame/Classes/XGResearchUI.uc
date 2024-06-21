@@ -31,30 +31,12 @@ struct TLabHeader
     var TLabeledText txtETA;
     var bool bDrawTech;
     var float fProgress;
-
-    structdefaultproperties
-    {
-        arrResources=none
-        txtIntel=(StrValue="",strLabel="",iState=0,bNumber=false)
-        imgTech=(iImage=0,strLabel="",iState=0,strPath="")
-        txtTitle=(StrValue="",iState=0)
-        txtProject=(StrValue="",iState=0)
-        txtETA=(StrValue="",strLabel="",iState=0,bNumber=false)
-        bDrawTech=false
-        fProgress=0.0
-    }
 };
 
 struct TLabMainMenu
 {
     var TMenu mnuOptions;
     var array<int> arrViews;
-
-    structdefaultproperties
-    {
-        mnuOptions=(strLabel="",arrOptions=none,bTakesNoInput=false)
-        arrViews=none
-    }
 };
 
 struct TLabsTechResult
@@ -63,14 +45,6 @@ struct TLabsTechResult
     var TText txtTitle;
     var TText txtType;
     var int iType;
-
-    structdefaultproperties
-    {
-        imgResult=(iImage=0,strLabel="",iState=0,strPath="")
-        txtTitle=(StrValue="",iState=0)
-        txtType=(StrValue="",iState=0)
-        iType=0
-    }
 };
 
 struct TTechSummary
@@ -82,17 +56,6 @@ struct TTechSummary
     var TText txtRequirementsLabel;
     var bool bCanAfford;
     var TCostSummary kCost;
-
-    structdefaultproperties
-    {
-        imgItem=(iImage=0,strLabel="",iState=0,strPath="")
-        txtTitle=(StrValue="",iState=0)
-        txtSummary=(StrValue="",iState=0)
-        txtProgress=(StrValue="",strLabel="",iState=0,bNumber=false)
-        txtRequirementsLabel=(StrValue="",iState=0)
-        bCanAfford=false
-        kCost=(arrRequirements=none,strHelp="")
-    }
 };
 
 struct TTechTable
@@ -100,23 +63,11 @@ struct TTechTable
     var TTableMenu mnuTechs;
     var array<TTechSummary> arrTechSummaries;
     var int iRecommendedTech;
-
-    structdefaultproperties
-    {
-        mnuTechs=(arrCategories=none,kHeader=(arrStrings=none,arrStates=none),arrOptions=none,bTakesNoInput=false)
-        arrTechSummaries=none
-        iRecommendedTech=0
-    }
 };
 
 struct TWatchtowerMenu
 {
     var TMenu mnuOptions;
-
-    structdefaultproperties
-    {
-        mnuOptions=(strLabel="",arrOptions=none,bTakesNoInput=false)
-    }
 };
 
 struct TTableItemSummary
@@ -124,13 +75,6 @@ struct TTableItemSummary
     var TText txtTitle;
     var TText txtSummary;
     var TImage imgOption;
-
-    structdefaultproperties
-    {
-        txtTitle=(StrValue="",iState=0)
-        txtSummary=(StrValue="",iState=0)
-        imgOption=(iImage=0,strLabel="",iState=0,strPath="")
-    }
 };
 
 struct TResearchReport
@@ -150,37 +94,12 @@ struct TResearchReport
     var array<TText> txtResults;
     var EItemType EItemCard;
     var ECharacter eCharCard;
-
-    structdefaultproperties
-    {
-        txtTitle=(StrValue="",iState=0)
-        txtTopSecret=(StrValue="",iState=0)
-        txtCodename=(StrValue="",iState=0)
-        txtMonth=(StrValue="",iState=0)
-        txtMonthNum=(StrValue="",iState=0)
-        txtYear=(StrValue="",iState=0)
-        txtSubject=(StrValue="",strLabel="",iState=0,bNumber=false)
-        imgProject=(iImage=0,strLabel="",iState=0,strPath="")
-        imgBG=(iImage=0,strLabel="",iState=0,strPath="")
-        txtNotesLabel=(StrValue="",iState=0)
-        txtNotes=(StrValue="",iState=0)
-        btxtInfo=(StrValue="",iState=0,iButton=0)
-        txtResults=none
-        EItemCard=eItem_NONE
-        eCharCard=ECharacter.eChar_None
-    }
 };
 
 struct TLabArchivesUI
 {
     var TMenu mnuArchives;
     var array<ETechType> arrTechs;
-
-    structdefaultproperties
-    {
-        mnuArchives=(strLabel="",arrOptions=none,bTakesNoInput=false)
-        arrTechs=none
-    }
 };
 
 var const localized string m_strProgressLabel;

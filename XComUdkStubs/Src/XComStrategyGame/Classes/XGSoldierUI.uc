@@ -47,27 +47,6 @@ struct TSoldierHeader
     var TText txtWillMod;
     var TText txtStrengthMod;
     var TText txtCritShotMod;
-
-    structdefaultproperties
-    {
-        txtName=(StrValue="",iState=0)
-        txtNickname=(StrValue="",iState=0)
-        txtStatus=(StrValue="",strLabel="",iState=0,bNumber=false)
-        txtOffense=(StrValue="",strLabel="",iState=0,bNumber=false)
-        txtDefense=(StrValue="",strLabel="",iState=0,bNumber=false)
-        txtHP=(StrValue="",strLabel="",iState=0,bNumber=false)
-        txtSpeed=(StrValue="",strLabel="",iState=0,bNumber=false)
-        txtWill=(StrValue="",strLabel="",iState=0,bNumber=false)
-        txtStrength=(StrValue="",strLabel="",iState=0,bNumber=false)
-        txtCritShot=(StrValue="",strLabel="",iState=0,bNumber=false)
-        txtOffenseMod=(StrValue="",iState=0)
-        txtDefenseMod=(StrValue="",iState=0)
-        txtHPMod=(StrValue="",iState=0)
-        txtSpeedMod=(StrValue="",iState=0)
-        txtWillMod=(StrValue="",iState=0)
-        txtStrengthMod=(StrValue="",iState=0)
-        txtCritShotMod=(StrValue="",iState=0)
-    }
 };
 
 struct TSoldierDoll
@@ -75,47 +54,23 @@ struct TSoldierDoll
     var int iFlag;
     var TImage imgFlag;
     var TImage imgSoldier;
-
-    structdefaultproperties
-    {
-        iFlag=0
-        imgFlag=(iImage=0,strLabel="",iState=0,strPath="")
-        imgSoldier=(iImage=0,strLabel="",iState=0,strPath="")
-    }
 };
 
 struct TSoldierMainMenu
 {
     var array<int> arrOptions;
     var TMenu mnuOptions;
-
-    structdefaultproperties
-    {
-        arrOptions=none
-        mnuOptions=(strLabel="",arrOptions=none,bTakesNoInput=false)
-    }
 };
 
 struct TSoldierAbilities
 {
     var TTableMenu tblAbilities;
-
-    structdefaultproperties
-    {
-        tblAbilities=(arrCategories=none,kHeader=(arrStrings=none,arrStates=none),arrOptions=none,bTakesNoInput=false)
-    }
 };
 
 struct TSoldierPerks
 {
     var TText txtNickname;
     var TTableMenu tblNewPerks;
-
-    structdefaultproperties
-    {
-        txtNickname=(StrValue="",iState=0)
-        tblNewPerks=(arrCategories=none,kHeader=(arrStrings=none,arrStates=none),arrOptions=none,bTakesNoInput=false)
-    }
 };
 
 struct TInventoryOption
@@ -159,16 +114,6 @@ struct TAbilityTree
     var int Option;
     var array<int> arrOptions;
     var string testVar;
-
-    structdefaultproperties
-    {
-        txtName=(StrValue="",iState=0)
-        txtLabel=(StrValue="",iState=0)
-        branch=1
-        Option=1
-        arrOptions=none
-        testVar=""
-    }
 };
 
 var const localized string m_strDismissSoldierDialogTitle;

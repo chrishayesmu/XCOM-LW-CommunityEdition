@@ -26,16 +26,6 @@ struct TInfiltratorUI
     var TButtonText btxtExit;
     var int Current;
     var int Max;
-
-    structdefaultproperties
-    {
-        mnuCells=(strLabel="",arrOptions=none,bTakesNoInput=false)
-        btxtRotate=(StrValue="",iState=0,iButton=0)
-        ltxtCapacity=(StrValue="",strLabel="",iState=0,bNumber=false)
-        btxtExit=(StrValue="",iState=0,iButton=0)
-        Current=0
-        Max=0
-    }
 };
 
 struct TInfiltratorCursorUI
@@ -44,14 +34,6 @@ struct TInfiltratorCursorUI
     var TButtonText txtHelp;
     var TButtonText txtAccuse;
     var string strCellInfo;
-
-    structdefaultproperties
-    {
-        bEnabled=false
-        txtHelp=(StrValue="",iState=0,iButton=0)
-        txtAccuse=(StrValue="",iState=0,iButton=0)
-        strCellInfo=""
-    }
 };
 
 struct TInfiltratorCountryUI
@@ -60,24 +42,11 @@ struct TInfiltratorCountryUI
     var int iPanicLevel;
     var bool bHasCell;
     var bool bIsRuledOut;
-
-    structdefaultproperties
-    {
-        txtCountry=(StrValue="",iState=0)
-        iPanicLevel=0
-        bHasCell=false
-        bIsRuledOut=false
-    }
 };
 
 struct TInfiltratorContinentUI
 {
     var TText txtContinent;
-
-    structdefaultproperties
-    {
-        txtContinent=(StrValue="",iState=0)
-    }
 };
 
 struct TInfiltratorNodeUI
@@ -93,21 +62,6 @@ struct TInfiltratorNodeUI
     var TText txtWarning;
     var bool bEnabled;
     var bool bEmpty;
-
-    structdefaultproperties
-    {
-        btxtHelp=(StrValue="",iState=0,iButton=0)
-        txtCountry=(StrValue="",iState=0)
-        txtFunding=(StrValue="",iState=0)
-        txtPanicLabel=(StrValue="",iState=0)
-        iPanicLevel=0
-        txtContinent=(StrValue="",iState=0)
-        arrBonuses=none
-        arrBonusLabels=none
-        txtWarning=(StrValue="",iState=0)
-        bEnabled=false
-        bEmpty=false
-    }
 };
 
 struct TInfiltratorResults
@@ -118,16 +72,6 @@ struct TInfiltratorResults
     var string txtCountryLabel;
     var TText txtDoom;
     var int iDoom;
-
-    structdefaultproperties
-    {
-        txtTitle=(StrValue="",iState=0)
-        txtSubTitle=(StrValue="",iState=0)
-        txtBody=(StrValue="",iState=0)
-        txtCountryLabel=""
-        txtDoom=(StrValue="",iState=0)
-        iDoom=0
-    }
 };
 
 struct TInfiltratorHelp
@@ -137,15 +81,6 @@ struct TInfiltratorHelp
     var TButtonText btxtOk;
     var TButtonText btxtCancel;
     var bool bCanSweep;
-
-    structdefaultproperties
-    {
-        txtTitle=(StrValue="",iState=0)
-        txtBody=(StrValue="",iState=0)
-        btxtOk=(StrValue="",iState=0,iButton=0)
-        btxtCancel=(StrValue="",iState=0,iButton=0)
-        bCanSweep=false
-    }
 };
 
 var TInfiltratorUI m_kUI;

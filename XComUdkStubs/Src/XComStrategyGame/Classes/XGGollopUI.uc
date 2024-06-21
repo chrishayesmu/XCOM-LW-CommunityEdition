@@ -21,12 +21,6 @@ struct TGollopUI
 {
     var TButtonText btxtButton;
     var TText txtHelp;
-
-    structdefaultproperties
-    {
-        btxtButton=(StrValue="",iState=0,iButton=0)
-        txtHelp=(StrValue="",iState=0)
-    }
 };
 
 struct TGollopList
@@ -34,13 +28,6 @@ struct TGollopList
     var TText txtTitle;
     var TTableMenu tmnuSoldiers;
     var array<XGStrategySoldier> arrVolunteers;
-
-    structdefaultproperties
-    {
-        txtTitle=(StrValue="",iState=0)
-        tmnuSoldiers=(arrCategories=none,kHeader=(arrStrings=none,arrStates=none),arrOptions=none,bTakesNoInput=false)
-        arrVolunteers=none
-    }
 };
 
 var TGollopUI m_kButton;

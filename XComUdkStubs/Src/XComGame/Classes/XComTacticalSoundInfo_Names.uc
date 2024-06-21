@@ -1,4 +1,5 @@
 class XComTacticalSoundInfo_Names extends Object
+    dependson(XComTacticalSoundManager)
     hidecategories(Object);
 
 struct RegionAmbiences
@@ -9,7 +10,7 @@ struct RegionAmbiences
 
 struct RainAmbience
 {
-    var() XComTacticalSoundManager.ERainIntensity Intensity;
+    var() ERainIntensity Intensity;
     var() string AmbienceToUse;
 };
 

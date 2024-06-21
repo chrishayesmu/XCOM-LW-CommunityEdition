@@ -22,22 +22,11 @@ struct TFacilityHeader
 {
     var TText txtTitle;
     var array<TLabeledText> arrResources;
-
-    structdefaultproperties
-    {
-        txtTitle=(StrValue="",iState=0)
-        arrResources=none
-    }
 };
 
 struct TFacilityMainMenu
 {
     var TMenu mnuOptions;
-
-    structdefaultproperties
-    {
-        mnuOptions=(strLabel="",arrOptions=none,bTakesNoInput=false)
-    }
 };
 
 struct TTableItemSummary
@@ -45,25 +34,12 @@ struct TTableItemSummary
     var TText txtTitle;
     var TText txtSummary;
     var TImage imgOption;
-
-    structdefaultproperties
-    {
-        txtTitle=(StrValue="",iState=0)
-        txtSummary=(StrValue="",iState=0)
-        imgOption=(iImage=0,strLabel="",iState=0,strPath="")
-    }
 };
 
 struct TFacilityTable
 {
     var TTableMenu mnuOptions;
     var array<TTableItemSummary> arrSummaries;
-
-    structdefaultproperties
-    {
-        mnuOptions=(arrCategories=none,kHeader=(arrStrings=none,arrStates=none),arrOptions=none,bTakesNoInput=false)
-        arrSummaries=none
-    }
 };
 
 var TFacilityHeader m_kHeader;

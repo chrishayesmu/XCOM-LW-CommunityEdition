@@ -29,28 +29,12 @@ struct TSatelliteUI
     var TButtonText btxtExit;
     var int Current;
     var int Max;
-
-    structdefaultproperties
-    {
-        mnuSatellites=(strLabel="",arrOptions=none,bTakesNoInput=false)
-        btxtRotate=(StrValue="",iState=0,iButton=0)
-        ltxtCapacity=(StrValue="",strLabel="",iState=0,bNumber=false)
-        btxtExit=(StrValue="",iState=0,iButton=0)
-        Current=0
-        Max=0
-    }
 };
 
 struct TSatCursorUI
 {
     var bool bEnabled;
     var TButtonText txtHelp;
-
-    structdefaultproperties
-    {
-        bEnabled=false
-        txtHelp=(StrValue="",iState=0,iButton=0)
-    }
 };
 
 struct TSatCountryUI
@@ -59,14 +43,6 @@ struct TSatCountryUI
     var TText txtFunding;
     var int iPanicLevel;
     var bool bHasSatCoverage;
-
-    structdefaultproperties
-    {
-        txtCountry=(StrValue="",iState=0)
-        txtFunding=(StrValue="",iState=0)
-        iPanicLevel=0
-        bHasSatCoverage=false
-    }
 };
 
 struct TSatContinentUI
@@ -76,15 +52,6 @@ struct TSatContinentUI
     var array<TText> arrBonuses;
     var array<TText> arrBonusLabels;
     var int iHighlightedBonus;
-
-    structdefaultproperties
-    {
-        txtContinent=(StrValue="",iState=0)
-        txtInterceptors=(StrValue="",iState=0)
-        arrBonuses=none
-        arrBonusLabels=none
-        iHighlightedBonus=0
-    }
 };
 
 struct TSatNodeUI
@@ -100,21 +67,6 @@ struct TSatNodeUI
     var TText txtWarning;
     var bool bEnabled;
     var bool bEmpty;
-
-    structdefaultproperties
-    {
-        btxtHelp=(StrValue="",iState=0,iButton=0)
-        txtCountry=(StrValue="",iState=0)
-        txtFunding=(StrValue="",iState=0)
-        txtPanicLabel=(StrValue="",iState=0)
-        iPanicLevel=0
-        txtContinent=(StrValue="",iState=0)
-        arrBonuses=none
-        arrBonusLabels=none
-        txtWarning=(StrValue="",iState=0)
-        bEnabled=false
-        bEmpty=false
-    }
 };
 
 struct TSatAlert
@@ -123,14 +75,6 @@ struct TSatAlert
     var TText txtBody;
     var TImage imgAlert;
     var TMenu mnuOptions;
-
-    structdefaultproperties
-    {
-        txtTitle=(StrValue="",iState=0)
-        txtBody=(StrValue="",iState=0)
-        imgAlert=(iImage=0,strLabel="",iState=0,strPath="")
-        mnuOptions=(strLabel="",arrOptions=none,bTakesNoInput=false)
-    }
 };
 
 struct TSatHelp
@@ -138,13 +82,6 @@ struct TSatHelp
     var TText txtTitle;
     var TText txtBody;
     var TButtonText btxtOk;
-
-    structdefaultproperties
-    {
-        txtTitle=(StrValue="",iState=0)
-        txtBody=(StrValue="",iState=0)
-        btxtOk=(StrValue="",iState=0,iButton=0)
-    }
 };
 
 struct TSatFCAlert
@@ -154,15 +91,6 @@ struct TSatFCAlert
     var TText txtContinent;
     var TText txtBonus;
     var TButtonText txtContinue;
-
-    structdefaultproperties
-    {
-        imgAlert=(iImage=0,strLabel="",iState=0,strPath="")
-        txtFunding=(StrValue="",iState=0)
-        txtContinent=(StrValue="",iState=0)
-        txtBonus=(StrValue="",iState=0)
-        txtContinue=(StrValue="",iState=0,iButton=0)
-    }
 };
 
 struct TSatConfirm
@@ -179,22 +107,6 @@ struct TSatConfirm
     var TLabeledText txtSpecialists;
     var TButtonText btxtLaunch;
     var TButtonText btxtCancel;
-
-    structdefaultproperties
-    {
-        imgAlert=(iImage=0,strLabel="",iState=0,strPath="")
-        txtTitle=(StrValue="",iState=0)
-        txtCountryLabel=(StrValue="",iState=0)
-        txtTravelTimeLabel=(StrValue="",iState=0)
-        txtFundingLabel=(StrValue="",iState=0)
-        txtCountry=(StrValue="",iState=0)
-        txtTravelTime=(StrValue="",iState=0)
-        txtFunding=(StrValue="",iState=0)
-        txtContinentCollection=(StrValue="",iState=0)
-        txtSpecialists=(StrValue="",strLabel="",iState=0,bNumber=false)
-        btxtLaunch=(StrValue="",iState=0,iButton=0)
-        btxtCancel=(StrValue="",iState=0,iButton=0)
-    }
 };
 
 struct TSatBonusUI
@@ -203,14 +115,6 @@ struct TSatBonusUI
     var TText txtBonusName;
     var TText txtBonusDesc;
     var TButtonText btxtOk;
-
-    structdefaultproperties
-    {
-        txtTitle=(StrValue="",iState=0)
-        txtBonusName=(StrValue="",iState=0)
-        txtBonusDesc=(StrValue="",iState=0)
-        btxtOk=(StrValue="",iState=0,iButton=0)
-    }
 };
 
 var TSatelliteUI m_kUI;

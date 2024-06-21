@@ -89,22 +89,6 @@ struct TFundingCouncilRewardSoldier
     var int Will;
     var bool bPsiGift;
     var int RequiredRestDays;
-
-    structdefaultproperties
-    {
-        firstName=""
-        lastName=""
-        NickName=""
-        soldierClass=ESoldierClass.eSC_None
-        SoldierRank=ESoldierRanks.eRank_Rookie
-        Appearance=(iHead=-1,iGender=0,iRace=0,iHaircut=-1,iHairColor=0,iFacialHair=0,iBody=-1,iBodyMaterial=-1,iSkinColor=-1,iEyeColor=-1,iFlag=-1,iArmorSkin=-1,iVoice=-1,iLanguage=0,iAttitude=0,iArmorDeco=-1,iArmorTint=-1)
-        Country=ECountry.eCountry_USA
-        HP=0
-        Aim=0
-        Will=0
-        bPsiGift=false
-        RequiredRestDays=0
-    }
 };
 
 struct TFCMission
@@ -129,30 +113,6 @@ struct TFCMission
     var bool bExplicitSoldier;
     var ECountry ECountry;
     var array<int> arrRewardAmounts;
-
-    structdefaultproperties
-    {
-        eMission=EFCMission.eFCM_None
-        eType=EFCMissionType.eFCMType_None
-        arrRewards=none
-        arrRewardSoldiers=none
-        NarrIntro=none
-        strName=""
-        strIntro=""
-        strCompletion=""
-        strFailure=""
-        strSituationBrief=""
-        strObjectivesBrief=""
-        strTickerSuccess=""
-        strTickerFail=""
-        strTickerIgnore=""
-        strMapName=""
-        iFirstAct=0
-        iPanicOnFailure=0
-        bExplicitSoldier=false
-        ECountry=ECountry.eCountry_USA
-        arrRewardAmounts=none
-    }
 };
 
 struct TFCRequest
@@ -178,31 +138,6 @@ struct TFCRequest
     var int iCooldown;
     var bool bIsTransferRequest;
     var bool bIsTransferComplete;
-
-    structdefaultproperties
-    {
-        eRequest=EFCRequest.eFCR_None
-        eType=EFCRequestType.eFCRType_None
-        arrRewards=none
-        arrRewardAmounts=none
-        arrRequirements=none
-        NarrIntro=none
-        strName=""
-        strIntro=""
-        strCompletion=""
-        strTickerSuccess=""
-        strTickerIgnore=""
-        bExalt=false
-        bEliteExalt=false
-        ECountry=ECountry.eCountry_USA
-        eRequestedItem=eItem_NONE
-        eDisplayItem=eItem_NONE
-        iRequestedAmount=0
-        iHours=0
-        iCooldown=0
-        bIsTransferRequest=false
-        bIsTransferComplete=false
-    }
 };
 
 struct CheckpointRecord
@@ -225,69 +160,6 @@ struct CheckpointRecord
     var int m_iFCMissionsThisMonth;
     var int m_iFCRequestsThisMonth;
     var int m_iRequestCoolDown[EFCRequest];
-
-    structdefaultproperties
-    {
-        m_arrPreviousMissions=none
-        m_arrPreviousRequests=none
-        m_iLastAddedMissionID=0
-        m_iFirstRequestCountdown=0
-        m_iSecondRequestCountdown=0
-        m_arrPendingRequests=none
-        m_arrCurrentRequests=none
-        m_bProgenyEnabled=false
-        m_eNextProgenyMission=eFCM_None
-        m_bSlingshotEnabled=false
-        m_eNextSlingshotMission=eFCM_None
-        m_eLastSlingshotMission=eFCM_None
-        m_iNextSlingshotDay=0
-        m_iNextAnnetteMusing=0
-        m_bFuriesWon=false
-        m_iFCMissionsThisMonth=0
-        m_iFCRequestsThisMonth=0
-        m_iRequestCoolDown[0]=0
-        m_iRequestCoolDown[1]=0
-        m_iRequestCoolDown[2]=0
-        m_iRequestCoolDown[3]=0
-        m_iRequestCoolDown[4]=0
-        m_iRequestCoolDown[5]=0
-        m_iRequestCoolDown[6]=0
-        m_iRequestCoolDown[7]=0
-        m_iRequestCoolDown[8]=0
-        m_iRequestCoolDown[9]=0
-        m_iRequestCoolDown[10]=0
-        m_iRequestCoolDown[11]=0
-        m_iRequestCoolDown[12]=0
-        m_iRequestCoolDown[13]=0
-        m_iRequestCoolDown[14]=0
-        m_iRequestCoolDown[15]=0
-        m_iRequestCoolDown[16]=0
-        m_iRequestCoolDown[17]=0
-        m_iRequestCoolDown[18]=0
-        m_iRequestCoolDown[19]=0
-        m_iRequestCoolDown[20]=0
-        m_iRequestCoolDown[21]=0
-        m_iRequestCoolDown[22]=0
-        m_iRequestCoolDown[23]=0
-        m_iRequestCoolDown[24]=0
-        m_iRequestCoolDown[25]=0
-        m_iRequestCoolDown[26]=0
-        m_iRequestCoolDown[27]=0
-        m_iRequestCoolDown[28]=0
-        m_iRequestCoolDown[29]=0
-        m_iRequestCoolDown[30]=0
-        m_iRequestCoolDown[31]=0
-        m_iRequestCoolDown[32]=0
-        m_iRequestCoolDown[33]=0
-        m_iRequestCoolDown[34]=0
-        m_iRequestCoolDown[35]=0
-        m_iRequestCoolDown[36]=0
-        m_iRequestCoolDown[37]=0
-        m_iRequestCoolDown[38]=0
-        m_iRequestCoolDown[39]=0
-        m_iRequestCoolDown[40]=0
-        m_iRequestCoolDown[41]=0
-    }
 };
 
 var config int REQUEST_WINDOW1_MIN_DAY;

@@ -35,12 +35,6 @@ struct TPoint
 {
     var int X;
     var int Y;
-
-    structdefaultproperties
-    {
-        X=0
-        Y=0
-    }
 };
 
 struct TBeing
@@ -48,13 +42,6 @@ struct TBeing
     var int iHP;
     var int iAttack;
     var TPoint ptLoc;
-
-    structdefaultproperties
-    {
-        iHP=0
-        iAttack=0
-        ptLoc=(X=0,Y=0)
-    }
 };
 
 struct TRegion
@@ -64,15 +51,6 @@ struct TRegion
     var int iHeight;
     var array<XGWander.eTerrainType> arrTiles;
     var array<TBeing> arrBeings;
-
-    structdefaultproperties
-    {
-        kRect=(fLeft=0.0,fTop=0.0,fRight=0.0,fBottom=0.0)
-        iWidth=0
-        iHeight=0
-        arrTiles=none
-        arrBeings=none
-    }
 };
 
 var TRegion m_kWorld;

@@ -48,8 +48,9 @@ defaultproperties
         bForceDirectLightMap=false
     end object
 
-    Begin Object Class=XComFloorComponent Name=FloorComponent0
-	End Object
+    begin object Class=XComFloorComponent Name=FloorComponent0
+		fTargetOpacityMaskHeight=999999.0
+	end object
 	FloorComponent=FloorComponent0
 	Components.Add(FloorComponent0)
 }

@@ -21,11 +21,6 @@ enum EBaseView
 struct TSoldierTable
 {
     var TTableMenu mnuSoldiers;
-
-    structdefaultproperties
-    {
-        mnuSoldiers=(arrCategories=none,kHeader=(arrStrings=none,arrStates=none),arrOptions=none,bTakesNoInput=false)
-    }
 };
 
 struct TPsiTraineeList
@@ -33,25 +28,12 @@ struct TPsiTraineeList
     var TText txtTitle;
     var TTableMenu mnuSlots;
     var TButtonText btxtChoose;
-
-    structdefaultproperties
-    {
-        txtTitle=(StrValue="",iState=0)
-        mnuSlots=(arrCategories=none,kHeader=(arrStrings=none,arrStates=none),arrOptions=none,bTakesNoInput=false)
-        btxtChoose=(StrValue="",iState=0,iButton=0)
-    }
 };
 
 struct TPsiResultsList
 {
     var TText txtTitle;
     var TTableMenu mnuResults;
-
-    structdefaultproperties
-    {
-        txtTitle=(StrValue="",iState=0)
-        mnuResults=(arrCategories=none,kHeader=(arrStrings=none,arrStates=none),arrOptions=none,bTakesNoInput=false)
-    }
 };
 
 var TPsiTraineeList m_kTraineeList;

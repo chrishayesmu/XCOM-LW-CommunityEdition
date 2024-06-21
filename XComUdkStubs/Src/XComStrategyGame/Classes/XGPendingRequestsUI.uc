@@ -34,24 +34,6 @@ struct TPendingRequest
     var TButtonText txtAccept;
     var TButtonText txtIgnore;
     var TImage img;
-
-    structdefaultproperties
-    {
-        eRequest=EFCRequest.eFCR_None
-        ECountry=ECountry.eCountry_USA
-        txtTitle=(StrValue="",iState=0)
-        txtSubTitle=(StrValue="",iState=0)
-        txtTopSecretLabel=(StrValue="",iState=0)
-        txtDescription=(StrValue="",iState=0)
-        ltxtDueDate=(StrValue="",strLabel="",iState=0,bNumber=false)
-        ltxtRequired=(StrValue="",strLabel="",iState=0,bNumber=false)
-        ltxtInStorage=(StrValue="",strLabel="",iState=0,bNumber=false)
-        txtRewardLabel=(StrValue="",iState=0)
-        arrRewards=none
-        txtAccept=(StrValue="",iState=0,iButton=0)
-        txtIgnore=(StrValue="",iState=0,iButton=0)
-        img=(iImage=0,strLabel="",iState=0,strPath="")
-    }
 };
 
 var int m_iHighlight;

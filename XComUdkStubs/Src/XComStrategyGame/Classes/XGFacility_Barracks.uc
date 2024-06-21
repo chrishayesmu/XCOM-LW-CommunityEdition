@@ -25,15 +25,6 @@ struct TMedal
     var EPerkType m_ePowerB;
     var int m_iMaxAwards;
     var int m_iMissions;
-
-    structdefaultproperties
-    {
-        m_eType=EMedalType.eMedal_None
-        m_ePowerA=EPerkType.ePerk_None
-        m_ePowerB=EPerkType.ePerk_None
-        m_iMaxAwards=0
-        m_iMissions=0
-    }
 };
 
 struct Medal
@@ -44,16 +35,6 @@ struct Medal
     var int m_iAvailable;
     var int m_iUsed;
     var int m_iMissionsLeft;
-
-    structdefaultproperties
-    {
-        m_Name=""
-        m_eType=EMedalType.eMedal_None
-        m_eChosenPower=EPerkType.ePerk_None
-        m_iAvailable=0
-        m_iUsed=0
-        m_iMissionsLeft=0
-    }
 };
 
 struct MedalRequirements
@@ -65,29 +46,12 @@ struct MedalRequirements
     var int m_iNumCovertOpsMissions;
     var int m_iNumSpecialMissions;
     var bool m_bHQAssaultComplete;
-
-    structdefaultproperties
-    {
-        m_iNumAbductions=0
-        m_bSoldierKilledOrCritWounded=false
-        m_arrContinentMissions=none
-        m_iNumTerrorMissions=0
-        m_iNumCovertOpsMissions=0
-        m_iNumSpecialMissions=0
-        m_bHQAssaultComplete=false
-    }
 };
 
 struct RecycledMedals
 {
     var int m_iNumMissions;
     var array<EMedalType> m_arrMedalsToRecycle;
-
-    structdefaultproperties
-    {
-        m_iNumMissions=0
-        m_arrMedalsToRecycle=none
-    }
 };
 
 struct CheckpointRecord_XGFacility_Barracks extends CheckpointRecord

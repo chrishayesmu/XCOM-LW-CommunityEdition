@@ -34,7 +34,7 @@ var()	float	WindResponse;
 
 // This impact/slide system is temporary. We need a system that looks at both PhysicalMaterials, but that is something for the future.
 
-// Impact effects 
+// Impact effects
 
 /** How hard an impact must be to trigger effect/sound */
 var(Impact)		float						ImpactThreshold;
@@ -119,7 +119,7 @@ simulated function FindFractureSounds(out SoundCue OutSoundExplosion, out SoundC
 
 	OutSoundExplosion = None;
 	OutSoundSingle = None;
-	
+
 	// keep looking until we find all sounds or run out of materials
 	TestMat = self;
 	while( (OutSoundExplosion == None || OutSoundSingle == None) && TestMat != None )

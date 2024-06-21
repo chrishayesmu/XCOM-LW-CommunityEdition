@@ -95,7 +95,9 @@ defaultproperties
         LightingChannels=(bInitialized=true,Static=true)
     end object
 
-    CollisionComponent=FracturedStaticMeshComponent0
-    FracturedStaticMeshComponent=FracturedStaticMeshComponent0
-    Components.Add(FracturedStaticMeshComponent0)
+	begin object Class=XComFloorComponent Name=FloorComponent0
+		fTargetOpacityMaskHeight=999999.0
+	end object
+	FloorComponent=FloorComponent0
+	Components.Add(FloorComponent0)
 }

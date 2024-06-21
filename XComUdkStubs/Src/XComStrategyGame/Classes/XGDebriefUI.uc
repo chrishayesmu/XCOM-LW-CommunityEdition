@@ -25,13 +25,6 @@ struct TDebriefLootItem
     var TImage imgItem;
     var TText txtQuantity;
     var TText txtItem;
-
-    structdefaultproperties
-    {
-        imgItem=(iImage=0,strLabel="",iState=0,strPath="")
-        txtQuantity=(StrValue="",iState=0)
-        txtItem=(StrValue="",iState=0)
-    }
 };
 
 struct TScienceDebriefItem
@@ -41,15 +34,6 @@ struct TScienceDebriefItem
     var TText txtBody;
     var TImage imgTech;
     var TDebriefLootItem kDebriefLootItem;
-
-    structdefaultproperties
-    {
-        txtTitle=(StrValue="",iState=0)
-        txtTech=(StrValue="",iState=0)
-        txtBody=(StrValue="",iState=0)
-        imgTech=(iImage=0,strLabel="",iState=0,strPath="")
-        kDebriefLootItem=(imgItem=(iImage=0,strLabel="",iState=0,strPath=""),txtQuantity=(StrValue="",iState=0),txtItem=(StrValue="",iState=0))
-    }
 };
 
 struct TEngineeringDebriefItem
@@ -58,14 +42,6 @@ struct TEngineeringDebriefItem
     var TText txtItem;
     var TText txtBody;
     var TImage imgItem;
-
-    structdefaultproperties
-    {
-        txtTitle=(StrValue="",iState=0)
-        txtItem=(StrValue="",iState=0)
-        txtBody=(StrValue="",iState=0)
-        imgItem=(iImage=0,strLabel="",iState=0,strPath="")
-    }
 };
 
 struct TSoldierPromotionItem
@@ -75,15 +51,6 @@ struct TSoldierPromotionItem
     var TText txtClassPromotion;
     var TText txtNickname;
     var array<TText> arrPerkText;
-
-    structdefaultproperties
-    {
-        bPromoted=false
-        txtPromotion=(StrValue="",iState=0)
-        txtClassPromotion=(StrValue="",iState=0)
-        txtNickname=(StrValue="",iState=0)
-        arrPerkText=none
-    }
 };
 
 struct TSoldierDebriefItem
@@ -105,27 +72,6 @@ struct TSoldierDebriefItem
     var bool m_isDead;
     var bool m_bHasPerksToAssign;
     var bool m_bIsTank;
-
-    structdefaultproperties
-    {
-        imgSoldier=(iImage=0,strLabel="",iState=0,strPath="")
-        imgFlag=(iImage=0,strLabel="",iState=0,strPath="")
-        txtName=(StrValue="",iState=0)
-        txtStatus=(StrValue="",iState=0)
-        txtMissions=(StrValue="",strLabel="",iState=0,bNumber=false)
-        txtKills=(StrValue="",strLabel="",iState=0,bNumber=false)
-        eState=EUIState.eUIState_Normal
-        kPromotion=(bPromoted=false,txtPromotion=(StrValue="",iState=0),txtClassPromotion=(StrValue="",iState=0),txtNickname=(StrValue="",iState=0),arrPerkText=none)
-        m_eSoldierClass=ESoldierClass.eSC_None
-        m_eSoldierRanks=ESoldierRanks.eRank_Rookie
-        m_bWasPromoted=false
-        m_bPsiPromoted=false
-        m_bIsPsiSoldier=false
-        m_bHasGeneMod=false
-        m_isDead=false
-        m_bHasPerksToAssign=false
-        m_bIsTank=false
-    }
 };
 
 struct TCouncilDebrief
@@ -142,22 +88,6 @@ struct TCouncilDebrief
     var TText txtFundingTitle;
     var TLabeledText txtFunding;
     var int iHighlighted;
-
-    structdefaultproperties
-    {
-        txtOpName=(StrValue="",iState=0)
-        txtTitle=(StrValue="",iState=0)
-        txtAdvisor=(StrValue="",iState=0)
-        imgAdvisor=(iImage=0,strLabel="",iState=0,strPath="")
-        imgBG=(iImage=0,strLabel="",iState=0,strPath="")
-        txtFeedback=(StrValue="",iState=0)
-        txtReward=(StrValue="",iState=0)
-        txtPanicDecrease=none
-        txtPanicIncrease=none
-        txtFundingTitle=(StrValue="",iState=0)
-        txtFunding=(StrValue="",strLabel="",iState=0,bNumber=false)
-        iHighlighted=0
-    }
 };
 
 struct TScienceProject
@@ -168,16 +98,6 @@ struct TScienceProject
     var TText txtTitle;
     var TButtonText txtVisit;
     var bool bVisitHighlighted;
-
-    structdefaultproperties
-    {
-        imgProject=(iImage=0,strLabel="",iState=0,strPath="")
-        txtProject=(StrValue="",iState=0)
-        txtProgress=(StrValue="",strLabel="",iState=0,bNumber=false)
-        txtTitle=(StrValue="",iState=0)
-        txtVisit=(StrValue="",iState=0,iButton=0)
-        bVisitHighlighted=false
-    }
 };
 
 struct TScienceDebrief
@@ -193,21 +113,6 @@ struct TScienceDebrief
     var array<TScienceDebriefItem> arrItems;
     var TScienceProject kProject;
     var int iHighlighted;
-
-    structdefaultproperties
-    {
-        txtOpName=(StrValue="",iState=0)
-        txtTitle=(StrValue="",iState=0)
-        txtAdvisor=(StrValue="",iState=0)
-        imgAdvisor=(iImage=0,strLabel="",iState=0,strPath="")
-        imgBG=(iImage=0,strLabel="",iState=0,strPath="")
-        txtLootTitle=(StrValue="",iState=0)
-        txtResearchTitle=(StrValue="",iState=0)
-        arrLoot=none
-        arrItems=none
-        kProject=(imgProject=(iImage=0,strLabel="",iState=0,strPath=""),txtProject=(StrValue="",iState=0),txtProgress=(StrValue="",strLabel="",iState=0,bNumber=false),txtTitle=(StrValue="",iState=0),txtVisit=(StrValue="",iState=0,iButton=0),bVisitHighlighted=false)
-        iHighlighted=0
-    }
 };
 
 struct TEngineeringDebrief
@@ -219,17 +124,6 @@ struct TEngineeringDebrief
     var TImage imgBG;
     var array<TEngineeringDebriefItem> arrItems;
     var int iHighlighted;
-
-    structdefaultproperties
-    {
-        txtOpName=(StrValue="",iState=0)
-        txtTitle=(StrValue="",iState=0)
-        txtAdvisor=(StrValue="",iState=0)
-        imgAdvisor=(iImage=0,strLabel="",iState=0,strPath="")
-        imgBG=(iImage=0,strLabel="",iState=0,strPath="")
-        arrItems=none
-        iHighlighted=0
-    }
 };
 
 struct TCovertOpDebrief
@@ -241,17 +135,6 @@ struct TCovertOpDebrief
     var TText txtClueBody;
     var TSoldierDebriefItem covertSoldier;
     var bool bSuccessful;
-
-    structdefaultproperties
-    {
-        txtTitle=(StrValue="",iState=0)
-        txtSubTitle=(StrValue="",iState=0)
-        txtFeedback=(StrValue="",iState=0)
-        txtClueTitle=(StrValue="",iState=0)
-        txtClueBody=(StrValue="",iState=0)
-        covertSoldier=(imgSoldier=(iImage=0,strLabel="",iState=0,strPath=""),imgFlag=(iImage=0,strLabel="",iState=0,strPath=""),txtName=(StrValue="",iState=0),txtStatus=(StrValue="",iState=0),txtMissions=(StrValue="",strLabel="",iState=0,bNumber=false),txtKills=(StrValue="",strLabel="",iState=0,bNumber=false),eState=EUIState.eUIState_Normal,kPromotion=(bPromoted=false,txtPromotion=(StrValue="",iState=0),txtClassPromotion=(StrValue="",iState=0),txtNickname=(StrValue="",iState=0),arrPerkText=none),m_eSoldierClass=ESoldierClass.eSC_None,m_eSoldierRanks=ESoldierRanks.eRank_Rookie,m_bWasPromoted=false,m_bPsiPromoted=false,m_bIsPsiSoldier=false,m_bHasGeneMod=false,m_isDead=false,m_bHasPerksToAssign=false,m_bIsTank=false)
-        bSuccessful=false
-    }
 };
 
 struct TSoldierDebrief
@@ -262,16 +145,6 @@ struct TSoldierDebrief
     var array<TSoldierDebriefItem> arrItems;
     var bool bHireHighlighted;
     var int iHighlighted;
-
-    structdefaultproperties
-    {
-        txtOpName=(StrValue="",iState=0)
-        txtTitle=(StrValue="",iState=0)
-        txtHireOption=(StrValue="",iState=0,iButton=0)
-        arrItems=none
-        bHireHighlighted=false
-        iHighlighted=0
-    }
 };
 
 var TCouncilDebrief m_kCouncilDebrief;

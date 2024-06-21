@@ -20,22 +20,11 @@ struct THQHeader
 {
     var array<TText> arrBulletins;
     var TLabeledText txtCash;
-
-    structdefaultproperties
-    {
-        arrBulletins=none
-        txtCash=(StrValue="",strLabel="",iState=0,bNumber=false)
-    }
 };
 
 struct THQMainMenu
 {
     var TMenu mnuOptions;
-
-    structdefaultproperties
-    {
-        mnuOptions=(strLabel="",arrOptions=none,bTakesNoInput=false)
-    }
 };
 
 var THQHeader m_kHeader;

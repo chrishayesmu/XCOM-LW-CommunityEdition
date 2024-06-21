@@ -23,15 +23,15 @@ var privatewrite ERainIntensity CurrentRainIntensity;
 
 defaultproperties
 {
-    DefaultAmbienceInfo=XComTacticalSoundInfo_Names'SoundCollections.XComTacticalSoundInfo'
-    CombatMusicCues(0)="CombatMusic1.ActionMusic1Cue"
-    CombatMusicCues(1)="CombatMusic2.ActionMusic2Cue"
-    CombatMusicCues(2)="CombatMusic3.ActionMusic3Cue"
-    CombatMusicCues(3)="CombatMusic4.ActionMusic4Cue"
-    CombatMusicCues(4)="CombatMusic5.ActionMusic5Cue"
-    CombatMusicCues(5)="CombatMusic6.ActionMusic6Cue"
-    CombatMusicCues(6)="CombatMusic7.ActionMusic7Cue"
-    CombatMusicCues(7)="CombatMusic8.ActionMusic8Cue"
-    CombatMusicCues(8)="CombatMusic9.ActionMusic9Cue"
+    // DefaultAmbienceInfo=XComTacticalSoundInfo_Names'SoundCollections.XComTacticalSoundInfo'
+    CombatMusicCues.Add("CombatMusic1.ActionMusic1Cue")
+    CombatMusicCues.Add("CombatMusic2.ActionMusic2Cue")
+    CombatMusicCues.Add("CombatMusic3.ActionMusic3Cue")
+    CombatMusicCues.Add("CombatMusic4.ActionMusic4Cue")
+    CombatMusicCues.Add("CombatMusic5.ActionMusic5Cue")
+    CombatMusicCues.Add("CombatMusic6.ActionMusic6Cue")
+    CombatMusicCues.Add("CombatMusic7.ActionMusic7Cue")
+    CombatMusicCues.Add("CombatMusic8.ActionMusic8Cue")
+    CombatMusicCues.Add("CombatMusic9.ActionMusic9Cue")
     bEnablePersistentAudio=true
 }

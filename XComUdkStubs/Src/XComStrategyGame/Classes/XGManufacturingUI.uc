@@ -57,29 +57,6 @@ struct TManWidget
     var TButtonText txtRushButton;
     var TButtonText txtNotifyButton;
     var array<TButtonText> arrButtons;
-
-    structdefaultproperties
-    {
-        txtTitle=(StrValue="",iState=0)
-        txtItemInfoButton=(StrValue="",iState=0,iButton=0)
-        imgItem=(iImage=0,strLabel="",iState=0,strPath="")
-        txtQuantity=(StrValue="",iState=0)
-        txtQuantityLabel=(StrValue="",iState=0)
-        txtQuantityHelp=(StrValue="",iState=0,iButton=0)
-        bCanAdjustQuantity=false
-        txtEngineers=(StrValue="",iState=0)
-        txtEngineersLabel=(StrValue="",iState=0)
-        txtEngHelp=(StrValue="",iState=0,iButton=0)
-        txtProjDuration=(StrValue="",strLabel="",iState=0,bNumber=false)
-        txtResourcesLabel=(StrValue="",iState=0)
-        kCost=(arrRequirements=none,strHelp="")
-        txtNotesLabel=(StrValue="",iState=0)
-        txtNotes=(StrValue="",iState=0)
-        txtProblem=(StrValue="",iState=0)
-        txtRushButton=(StrValue="",iState=0,iButton=0)
-        txtNotifyButton=(StrValue="",iState=0,iButton=0)
-        arrButtons=none
-    }
 };
 
 var TButtonBar m_kButtonBar;

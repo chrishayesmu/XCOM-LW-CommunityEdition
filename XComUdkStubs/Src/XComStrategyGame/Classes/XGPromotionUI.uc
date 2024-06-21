@@ -19,21 +19,11 @@ enum ePromotionView
 struct TPromotionHeader
 {
     var TText txtTitle;
-
-    structdefaultproperties
-    {
-        txtTitle=(StrValue="",iState=0)
-    }
 };
 
 struct TPromotionWelcome
 {
     var TText txtTitle;
-
-    structdefaultproperties
-    {
-        txtTitle=(StrValue="",iState=0)
-    }
 };
 
 struct TPerkTree
@@ -41,13 +31,6 @@ struct TPerkTree
     var int iRows;
     var int iColumns;
     var array<TGraphNode> m_arrPerks;
-
-    structdefaultproperties
-    {
-        iRows=0
-        iColumns=0
-        m_arrPerks=none
-    }
 };
 
 var TPromotionHeader m_kHeader;

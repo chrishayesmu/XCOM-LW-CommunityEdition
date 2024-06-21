@@ -18,15 +18,6 @@ struct TMiniWorld
     var array<TRect> arrCountries;
     var array<Color> arrColors;
     var array<TText> arrTickerText;
-
-    structdefaultproperties
-    {
-        imgWorld=(iImage=0,strLabel="",iState=0,strPath="")
-        ltxtFunding=(StrValue="",strLabel="",iState=0,bNumber=false)
-        arrCountries=none
-        arrColors=none
-        arrTickerText=none
-    }
 };
 
 var int m_iCurrentView;

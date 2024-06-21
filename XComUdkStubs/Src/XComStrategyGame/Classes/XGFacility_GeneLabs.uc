@@ -15,13 +15,6 @@ struct TGeneLabsPatient
     var XGStrategySoldier m_kSoldier;
     var array<int> m_arrHoursLeft;
     var array<EPerkType> m_arrPendingGeneMods;
-
-    structdefaultproperties
-    {
-        m_kSoldier=none
-        m_arrHoursLeft=none
-        m_arrPendingGeneMods=none
-    }
 };
 
 struct CheckpointRecord_XGFacility_GeneLabs extends CheckpointRecord

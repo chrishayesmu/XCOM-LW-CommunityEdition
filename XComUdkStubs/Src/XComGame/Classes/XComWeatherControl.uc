@@ -70,25 +70,31 @@ defaultproperties
     m_fBuildingWeatherFadeRate=1.0
     m_fEmitterDistance=3500.0
     m_fFadeDistance=1500.0
+    RemoteRole=ROLE_Authority
+    m_bNoDeleteOnClientInitializeActors=true
+    m_nDynamicCaptureFrustumX=1000
+    m_nDynamicCaptureFrustumY=1000
+    m_fLightningFlashLength=0.40
+    m_kWindVelocity=(X=300.0,Y=0.0,Z=0.0)
+    // m_kDLightTemplate=ParticleSystem'FX_Weather.Particles.RainDirectional'
+    // m_kSplashTemplate=ParticleSystem'FX_Weather.Particles.P_Splashes'
+    // m_kDirectionalLightMI=Material'FX_Weather.Materials.RaindropsDirectional'
+    // m_kSplashMI=Material'FX_Weather.Materials.MPar_Splashes'
+    // m_kPuddleMIC=MaterialInstanceConstant'FX_Weather.Materials.M_PuddleDecalINST'
 
     begin object name=SceneCapture2DComponent0 class=SceneCapture2DComponent
         NearPlane=10000.0
         FarPlane=1.0
         bUpdateMatrices=false
     end object
-    m_kStaticDepthCapture=SceneCapture2DComponent0
-    m_kDynamicDepthCapture=SceneCapture2DComponent1
 
-    m_nDynamicCaptureFrustumX=1000
-    m_nDynamicCaptureFrustumY=1000
-    m_fLightningFlashLength=0.40
-    m_kWindVelocity=(X=300.0,Y=0.0,Z=0.0)
-    m_kDLightTemplate=ParticleSystem'FX_Weather.Particles.RainDirectional'
-    m_kSplashTemplate=ParticleSystem'FX_Weather.Particles.P_Splashes'
-    m_kDirectionalLightMI=Material'FX_Weather.Materials.RaindropsDirectional'
-    m_kSplashMI=Material'FX_Weather.Materials.MPar_Splashes'
-    m_kPuddleMIC=MaterialInstanceConstant'FX_Weather.Materials.M_PuddleDecalINST'
-    Components(0)=none
-    RemoteRole=ROLE_Authority
-    m_bNoDeleteOnClientInitializeActors=true
+    m_kStaticDepthCapture=SceneCapture2DComponent0
+
+    begin object name=SceneCapture2DComponent1 class=SceneCapture2DComponent
+        NearPlane=10000.0
+        FarPlane=1.0
+        bUpdateMatrices=false
+    end object
+
+    m_kDynamicDepthCapture=SceneCapture2DComponent1
 }

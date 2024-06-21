@@ -104,8 +104,8 @@ var	transient	Array<byte>	RequiredBones;
 /** Look Up Table for AimCpnt Indices */
 var transient	Array<byte>	AimCpntIndexLUT;
 
-/** 
- *	Pointer to AimOffset node in package (AnimTreeTemplate), to avoid duplicating profile data. 
+/**
+ *	Pointer to AimOffset node in package (AnimTreeTemplate), to avoid duplicating profile data.
  *	Always NULL in AimOffset Editor (in ATE).
  */
 var	transient AnimNodeAimOffset	TemplateNode;
@@ -161,7 +161,7 @@ var()	editfixedsize array<AimOffsetProfile>		Profiles;
 */
 var()	const editconst int			CurrentProfileIndex;
 
-/** 
+/**
  * if TRUE, pass through (skip additive animation blending) when mesh is not rendered
  */
 var(Performance) bool	bPassThroughWhenNotRendered;
@@ -183,7 +183,7 @@ cpptext
 
 	virtual void		GetBoneAtoms(FBoneAtomArray& Atoms, const TArray<BYTE>& DesiredBones, FBoneAtom& RootMotionDelta, INT& bHasRootMotion, FCurveKeyArray& CurveKeys);
 
-	/** 
+	/**
 	 * Function called after Aim has been extracted and processed (offsets, range, clamping...).
 	 * Gives a chance to PostProcess it before being used by the AimOffset Node.
 	 * Note that X,Y range should remain [-1,+1].

@@ -81,5 +81,5 @@ var private XGInterception m_kXGInterception;
 
 defaultproperties
 {
-    m_eUIMode=EUIMode.eUIMode_Strategy
+    m_eUIMode=eUIMode_Strategy
 }

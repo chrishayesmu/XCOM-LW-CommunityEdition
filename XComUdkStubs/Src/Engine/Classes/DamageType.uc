@@ -22,8 +22,8 @@ var(RigidBody) bool bRadialDamageVelChange;
 var(RigidBody) float KDamageImpulse;
 var(RigidBody) float KDeathVel;
 var(RigidBody) float KDeathUpKick;
-var(RigidBody) float KImpulseRadius;
-var float FracturedMeshRadiusMultiplier;
+// var(RigidBody) float KImpulseRadius; // XCOM addition
+// var float FracturedMeshRadiusMultiplier;
 var(RigidBody) float RadialDamageImpulse;
 var float VehicleDamageScaling;
 var float VehicleMomentumScaling;
@@ -41,8 +41,8 @@ defaultproperties
     bArmorStops=true
     bExtraMomentumZ=true
     KDamageImpulse=800.0
-    KImpulseRadius=250.0
-    FracturedMeshRadiusMultiplier=1.0
+    // KImpulseRadius=250.0
+    // FracturedMeshRadiusMultiplier=1.0
     VehicleDamageScaling=1.0
     VehicleMomentumScaling=1.0
     FracturedMeshDamage=1.0

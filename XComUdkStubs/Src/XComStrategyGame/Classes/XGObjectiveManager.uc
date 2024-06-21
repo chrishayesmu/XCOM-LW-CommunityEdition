@@ -14,12 +14,6 @@ struct CheckpointRecord
 {
     var EGameObjective m_eObjective;
     var bool m_bObjectiveAnnounced;
-
-    structdefaultproperties
-    {
-        m_eObjective=EGameObjective.eObj_None
-        m_bObjectiveAnnounced=false
-    }
 };
 
 var EGameObjective m_eObjective;

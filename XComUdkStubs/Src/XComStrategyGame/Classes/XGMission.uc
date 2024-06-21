@@ -34,28 +34,6 @@ struct CheckpointRecord
     var EMissionDifficulty m_eDifficulty;
     var XGEntity m_kEntity;
     var string m_strTip;
-
-    structdefaultproperties
-    {
-        m_bScripted=false
-        m_strTitle=""
-        m_v2Coords=(X=0.0,Y=0.0)
-        m_iCity=0
-        m_iCountry=0
-        m_iContinent=0
-        m_iMissionType=0
-        m_iID=0
-        m_iDuration=0
-        m_arrArtifacts=none
-        m_kDesc=none
-        m_iDetectedBy=0
-        m_eTimeOfDay=EMissionTime.eMissionTime_None
-        m_kAlienObjective=none
-        m_kReward=(iScientists=0,iEngineers=0,iSoldierClass=0,iSoldierLevel=0,iCredits=0,iData=0,iCountry=0,iCity=0)
-        m_eDifficulty=EMissionDifficulty.eMissionDiff_Easy
-        m_kEntity=none
-        m_strTip=""
-    }
 };
 
 var bool m_bScripted;

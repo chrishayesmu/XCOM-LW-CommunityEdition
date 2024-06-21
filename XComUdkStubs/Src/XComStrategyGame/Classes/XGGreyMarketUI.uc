@@ -22,11 +22,6 @@ enum EGreyMarketView
 struct TGreyMarketHeader
 {
     var array<TLabeledText> arrResources;
-
-    structdefaultproperties
-    {
-        arrResources=none
-    }
 };
 
 struct TGreyMarketListHeader
@@ -34,13 +29,6 @@ struct TGreyMarketListHeader
     var TText txtStorageLabel;
     var TText txtSellLabel;
     var TText txtTotalCredits;
-
-    structdefaultproperties
-    {
-        txtStorageLabel=(StrValue="",iState=0)
-        txtSellLabel=(StrValue="",iState=0)
-        txtTotalCredits=(StrValue="",iState=0)
-    }
 };
 
 struct TGreyMarketItem
@@ -57,22 +45,6 @@ struct TGreyMarketItem
     var bool bBulk;
     var bool bNotResearched;
     var int iSelling;
-
-    structdefaultproperties
-    {
-        txtNumInStorage=(StrValue="",iState=0)
-        btxtToStorage=(StrValue="",iState=0,iButton=0)
-        txtItemName=(StrValue="",iState=0)
-        txtResearchStatus=(StrValue="",iState=0)
-        txtItemPrice=(StrValue="",iState=0)
-        btxtToSell=(StrValue="",iState=0,iButton=0)
-        txtNumForSale=(StrValue="",iState=0)
-        txtCredits=(StrValue="",iState=0)
-        bCanBeSold=false
-        bBulk=false
-        bNotResearched=false
-        iSelling=0
-    }
 };
 
 struct TGMSummary
@@ -80,25 +52,12 @@ struct TGMSummary
     var TImage imgItem;
     var TText txtName;
     var TText txtSummary;
-
-    structdefaultproperties
-    {
-        imgItem=(iImage=0,strLabel="",iState=0,strPath="")
-        txtName=(StrValue="",iState=0)
-        txtSummary=(StrValue="",iState=0)
-    }
 };
 
 struct TGreyMarketBuyButton
 {
     var TButtonText btxtConfirm;
     var XGTacticalScreenMgr.EUIState eState;
-
-    structdefaultproperties
-    {
-        btxtConfirm=(StrValue="",iState=0,iButton=0)
-        eState=EUIState.eUIState_Normal
-    }
 };
 
 var TGreyMarketHeader m_kHeader;

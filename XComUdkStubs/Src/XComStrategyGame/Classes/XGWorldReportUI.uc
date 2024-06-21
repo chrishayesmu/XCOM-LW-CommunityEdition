@@ -30,20 +30,6 @@ struct TWRHeader
     var TText txtFeedback;
     var TText txtActivityLabel;
     var array<TText> arrActivity;
-
-    structdefaultproperties
-    {
-        txtTitle=(StrValue="",iState=0)
-        txtMonth=(StrValue="",iState=0)
-        txtYear=(StrValue="",iState=0)
-        ltxtFunding=(StrValue="",strLabel="",iState=0,bNumber=false)
-        ltxtSpecialists=(StrValue="",strLabel="",iState=0,bNumber=false)
-        txtGrade=(StrValue="",iState=0)
-        txtGradeLabel=(StrValue="",iState=0)
-        txtFeedback=(StrValue="",iState=0)
-        txtActivityLabel=(StrValue="",iState=0)
-        arrActivity=none
-    }
 };
 
 struct TWRCountry
@@ -52,14 +38,6 @@ struct TWRCountry
     var int iPanic;
     var Color clrPanic;
     var TText txtFunding;
-
-    structdefaultproperties
-    {
-        txtName=(StrValue="",iState=0)
-        iPanic=0
-        clrPanic=(R=0,G=0,B=0,A=0)
-        txtFunding=(StrValue="",iState=0)
-    }
 };
 
 struct TWRContinent
@@ -68,14 +46,6 @@ struct TWRContinent
     var TText txtSpecialists;
     var TText txtBonus;
     var array<TWRCountry> arrCountries;
-
-    structdefaultproperties
-    {
-        txtName=(StrValue="",iState=0)
-        txtSpecialists=(StrValue="",iState=0)
-        txtBonus=(StrValue="",iState=0)
-        arrCountries=none
-    }
 };
 
 struct TWRLink
@@ -84,14 +54,6 @@ struct TWRLink
     var TText txtLinkGibberish2;
     var TText txtLinkStatus;
     var TButtonText btxtOk;
-
-    structdefaultproperties
-    {
-        txtLinkGibberish=(StrValue="",iState=0)
-        txtLinkGibberish2=(StrValue="",iState=0)
-        txtLinkStatus=(StrValue="",iState=0)
-        btxtOk=(StrValue="",iState=0,iButton=0)
-    }
 };
 
 struct TWRDefections
@@ -99,13 +61,6 @@ struct TWRDefections
     var TText txtDefections;
     var TText txtToLose;
     var TButtonText btxtOk;
-
-    structdefaultproperties
-    {
-        txtDefections=(StrValue="",iState=0)
-        txtToLose=(StrValue="",iState=0)
-        btxtOk=(StrValue="",iState=0,iButton=0)
-    }
 };
 
 var TWRLink m_kLink;

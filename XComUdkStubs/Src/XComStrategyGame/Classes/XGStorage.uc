@@ -17,15 +17,6 @@ struct CheckpointRecord
     var array<int> m_arrItemArchives;
     var array<int> m_arrClaims;
     var array<EItemType> m_arrInfiniteItems;
-
-    structdefaultproperties
-    {
-        m_arrItems=none
-        m_arrDamagedItems=none
-        m_arrItemArchives=none
-        m_arrClaims=none
-        m_arrInfiniteItems=none
-    }
 };
 
 var array<int> m_arrItems;

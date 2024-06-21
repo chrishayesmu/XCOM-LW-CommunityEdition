@@ -20,12 +20,6 @@ struct TFinanceSection
 {
     var TLabeledText ltxtTitle;
     var array<TLabeledText> arrItems;
-
-    structdefaultproperties
-    {
-        ltxtTitle=(StrValue="",strLabel="",iState=0,bNumber=false)
-        arrItems=none
-    }
 };
 
 var TLabeledText m_ltxtNetIncome;

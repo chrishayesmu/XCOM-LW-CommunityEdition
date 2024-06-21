@@ -21,11 +21,6 @@ enum EGeneLabView
 struct TSoldierTable
 {
     var TTableMenu mnuSoldiers;
-
-    structdefaultproperties
-    {
-        mnuSoldiers=(arrCategories=none,kHeader=(arrStrings=none,arrStates=none),arrOptions=none,bTakesNoInput=false)
-    }
 };
 
 struct TGeneSubjectList
@@ -33,13 +28,6 @@ struct TGeneSubjectList
     var TText txtTitle;
     var TTableMenu mnuSlots;
     var TButtonText btxtChoose;
-
-    structdefaultproperties
-    {
-        txtTitle=(StrValue="",iState=0)
-        mnuSlots=(arrCategories=none,kHeader=(arrStrings=none,arrStates=none),arrOptions=none,bTakesNoInput=false)
-        btxtChoose=(StrValue="",iState=0,iButton=0)
-    }
 };
 
 var TGeneSubjectList m_kSubjectList;

@@ -17,13 +17,6 @@ struct TMCPin
     var Vector2D v2Loc;
     var TText txtTitle;
     var float fTimer;
-
-    structdefaultproperties
-    {
-        v2Loc=(X=0.0,Y=0.0)
-        txtTitle=(StrValue="",iState=0)
-        fTimer=0.0
-    }
 };
 
 struct CheckpointRecord
@@ -50,32 +43,6 @@ struct CheckpointRecord
     var bool m_bAchievementsDisabledXComHero;
     var XGEntity m_kTemple;
     var bool m_bDEMOPlayedTerror;
-
-    structdefaultproperties
-    {
-        m_fTimeScale=0.0
-        m_fAITimer=0.0
-        m_fGameTimer=0.0
-        m_iTicks=0
-        m_iDetectedUFOs=0
-        m_bUFOIgnored=false
-        m_arrMissions=none
-        m_iNumMissions=0
-        m_iMissionCounter=0
-        m_iFunding=0
-        m_iFundingChange=0
-        m_iLastMonthPaid=0
-        m_bFirstTime=false
-        m_kReturnMission=none
-        m_kDateTime=none
-        m_arrInterceptions=none
-        m_arrCraftEncounters=none
-        m_bGlobeHidden=false
-        m_bAchivementsEnabled=false
-        m_bAchievementsDisabledXComHero=false
-        m_kTemple=none
-        m_bDEMOPlayedTerror=false
-    }
 };
 
 var float m_fTimeScale;

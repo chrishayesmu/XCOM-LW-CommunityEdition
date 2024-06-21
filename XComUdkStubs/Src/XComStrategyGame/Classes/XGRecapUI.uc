@@ -40,13 +40,6 @@ struct TRecapItem
     var string strTitle;
     var TText txtValue;
     var TText txtWorldValue;
-
-    structdefaultproperties
-    {
-        strTitle=""
-        txtValue=(StrValue="",iState=0)
-        txtWorldValue=(StrValue="",iState=0)
-    }
 };
 
 struct TRecapUI
@@ -54,13 +47,6 @@ struct TRecapUI
     var TText txtTitle;
     var array<TRecapItem> arrItems;
     var TImage imgBackground;
-
-    structdefaultproperties
-    {
-        txtTitle=(StrValue="",iState=0)
-        arrItems=none
-        imgBackground=(iImage=0,strLabel="",iState=0,strPath="")
-    }
 };
 
 var TText m_txtTitle;

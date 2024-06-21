@@ -77,13 +77,6 @@ struct TObjectivesUI
     var TText txtTitle;
     var array<TText> arrSubObjectivesUI;
     var TGameObjective kObjective;
-
-    structdefaultproperties
-    {
-        txtTitle=(StrValue="",iState=0)
-        arrSubObjectivesUI=none
-        kObjective=(eType=EGameObjective.eObj_None,eStatus=EObjectiveStatus.eObjStatus_NotStarted,strName="",eObjImage=EImage.eImage_None,arrSubObjectives=none)
-    }
 };
 
 struct TObjectivesInDepthUI
@@ -91,13 +84,6 @@ struct TObjectivesInDepthUI
     var TText txtTitle;
     var array<TText> arrSubObjectivesTitle;
     var array<TText> arrSubObjectivesInDepth;
-
-    structdefaultproperties
-    {
-        txtTitle=(StrValue="",iState=0)
-        arrSubObjectivesTitle=none
-        arrSubObjectivesInDepth=none
-    }
 };
 
 struct TSitCountry
@@ -120,15 +106,6 @@ struct TSitCode
     var TText txtTitle;
     var int iTotal;
     var int iCurrent;
-
-    structdefaultproperties
-    {
-        bActive=false
-        bComplete=false
-        txtTitle=(StrValue="",iState=0)
-        iTotal=0
-        iCurrent=0
-    }
 };
 
 struct TSitDoom
@@ -136,35 +113,17 @@ struct TSitDoom
     var int iCountriesLost;
     var int iLimit;
     var TText txtTitle;
-
-    structdefaultproperties
-    {
-        iCountriesLost=0
-        iLimit=0
-        txtTitle=(StrValue="",iState=0)
-    }
 };
 
 struct TSitMoney
 {
     var TLabeledText ltxtMoney;
     var TLabeledText ltxtIncome;
-
-    structdefaultproperties
-    {
-        ltxtMoney=(StrValue="",strLabel="",iState=0,bNumber=false)
-        ltxtIncome=(StrValue="",strLabel="",iState=0,bNumber=false)
-    }
 };
 
 struct TSitTicker
 {
     var array<TText> arrTickerText;
-
-    structdefaultproperties
-    {
-        arrTickerText=none
-    }
 };
 
 struct TSitRequest
@@ -180,21 +139,6 @@ struct TSitRequest
     var TButtonText txtAccept;
     var TButtonText txtSellNow;
     var TButtonText txtIgnore;
-
-    structdefaultproperties
-    {
-        txtTitle=(StrValue="",iState=0)
-        imgBG=(iImage=0,strLabel="",iState=0,strPath="")
-        txtIntro=(StrValue="",iState=0)
-        ltxtDueDate=(StrValue="",strLabel="",iState=0,bNumber=false)
-        ltxtRequired=(StrValue="",strLabel="",iState=0,bNumber=false)
-        ltxtItemDisplay=(StrValue="",strLabel="",iState=0,bNumber=false)
-        txtRewardLabel=(StrValue="",iState=0)
-        arrRewards=none
-        txtAccept=(StrValue="",iState=0,iButton=0)
-        txtSellNow=(StrValue="",iState=0,iButton=0)
-        txtIgnore=(StrValue="",iState=0,iButton=0)
-    }
 };
 
 struct TSitRequestComplete
@@ -204,15 +148,6 @@ struct TSitRequestComplete
     var TText txtRewardLabel;
     var array<TText> arrRewards;
     var TButtonText txtAccept;
-
-    structdefaultproperties
-    {
-        imgBG=(iImage=0,strLabel="",iState=0,strPath="")
-        txtComplete=(StrValue="",iState=0)
-        txtRewardLabel=(StrValue="",iState=0)
-        arrRewards=none
-        txtAccept=(StrValue="",iState=0,iButton=0)
-    }
 };
 
 struct TSitMission
@@ -226,19 +161,6 @@ struct TSitMission
     var array<TText> arrRewards;
     var TButtonText txtAccept;
     var TButtonText txtCancel;
-
-    structdefaultproperties
-    {
-        txtTitle=(StrValue="",iState=0)
-        txtSubTitle=(StrValue="",iState=0)
-        txtTopSecretLabel=(StrValue="",iState=0)
-        imgBG=(iImage=0,strLabel="",iState=0,strPath="")
-        txtDescription=(StrValue="",iState=0)
-        txtRewardLabel=(StrValue="",iState=0)
-        arrRewards=none
-        txtAccept=(StrValue="",iState=0,iButton=0)
-        txtCancel=(StrValue="",iState=0,iButton=0)
-    }
 };
 
 struct TInfiltratorMission
@@ -252,19 +174,6 @@ struct TInfiltratorMission
     var array<TText> arrRewards;
     var TButtonText txtAccept;
     var TButtonText txtCancel;
-
-    structdefaultproperties
-    {
-        txtTitle=(StrValue="",iState=0)
-        txtSubTitle=(StrValue="",iState=0)
-        txtTopSecretLabel=(StrValue="",iState=0)
-        imgBG=(iImage=0,strLabel="",iState=0,strPath="")
-        txtDescription=(StrValue="",iState=0)
-        txtRewardLabel=(StrValue="",iState=0)
-        arrRewards=none
-        txtAccept=(StrValue="",iState=0,iButton=0)
-        txtCancel=(StrValue="",iState=0,iButton=0)
-    }
 };
 
 struct TNewObjectiveUI
@@ -274,15 +183,6 @@ struct TNewObjectiveUI
     var TText txtHelp;
     var TButtonText btxtOk;
     var TImage imgObj;
-
-    structdefaultproperties
-    {
-        txtTitle=(StrValue="",iState=0)
-        txtText=(StrValue="",iState=0)
-        txtHelp=(StrValue="",iState=0)
-        btxtOk=(StrValue="",iState=0,iButton=0)
-        imgObj=(iImage=0,strLabel="",iState=0,strPath="")
-    }
 };
 
 struct TMapItemUI
@@ -291,14 +191,6 @@ struct TMapItemUI
     var float X;
     var float Y;
     var int Amount;
-
-    structdefaultproperties
-    {
-        eType=EMapItem.eMapItem_HQ
-        X=0.0
-        Y=0.0
-        Amount=0
-    }
 };
 
 var TMenu m_mnuMain;
