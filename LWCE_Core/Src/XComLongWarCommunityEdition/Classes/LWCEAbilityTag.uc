@@ -1,4 +1,4 @@
-class LWCE_XGAbilityTag extends LWCE_XGLocalizeTag;
+class LWCEAbilityTag extends LWCELocalizeTag;
 
 var XGAbility m_kAbility;
 
@@ -264,5 +264,5 @@ function int GetAbilityCooldown(int iAbility)
 
 defaultproperties
 {
-    Tag="XGAbility"
+    Tag="LWCEAbility"
 }

@@ -1,3 +1,6 @@
+/// <summary>
+/// TODO
+/// </summary>
 class LWCEBonusDataSet extends LWCEDataSet
     config(LWCEBonuses)
     dependson(LWCEBonusTemplate, LWCETypes);
@@ -5,7 +8,8 @@ class LWCEBonusDataSet extends LWCEDataSet
 var config array<int>  arrAirSuperiorityMaintenanceDiscount;
 var config array<int>  arrAirSuperiorityShipPurchaseDiscount;
 var config array<int>  arrAirSuperiorityShipWeaponPurchaseDiscount;
-var config array<int>  arrArchitectsOfTheFutureDiscount;
+var config array<int>  arrArchitectsOfTheFutureMaintenanceDiscount;
+var config array<int>  arrArchitectsOfTheFuturePurchaseDiscount;
 var config array<int>  arrArmyOfTheSouthernCrossAimBonus;
 var config array<int>  arrBaumeisterFacilityBuildTimeReduction;
 var config array<int>  arrBountiesAbductionsCashBonus;
@@ -15,7 +19,9 @@ var config array<int>  arrCyberwareMeldDiscount;
 var config array<int>  arrDeusExCostReduction;
 var config array<int>  arrDeusExTimeReduction;
 var config array<int>  arrEagerToServeCostReduction;
+var config array<int>  arrExpertiseResearchCreditBonus;
 var config array<int>  arrFirstRecceDefenseBonus;
+var config array<int>  arrForeignLegionNumberOfSoldiers;
 var config array<int>  arrGhostInTheMachineAimBonus;
 var config array<int>  arrGiftOfOsirisFatigueReduction;
 var config array<int>  arrIndependenceDayPanicReduction;
@@ -28,7 +34,8 @@ var config array<int>  arrOldPathPsiTrainingTimeReduction;
 var config array<int>  arrPatriaeSemperVigilisWillBonus;
 var config array<int>  arrPaxNigerianaMobilityBonus;
 var config array<int>  arrPerArduaAdAstraStatRollsBonus;
-var config array<int>  arrPowerToThePeopleDiscount;
+var config array<int>  arrPowerToThePeopleMaintenanceDiscount;
+var config array<int>  arrPowerToThePeoplePurchaseDiscount;
 var config array<int>  arrQuaidOrsayCouncilRequestCooldownReduction;
 var config array<int>  arrQuaidOrsayCouncilRequestShieldsBonus;
 var config array<int>  arrQuaidOrsayExaltScanningCostReduction;
@@ -44,6 +51,8 @@ var config array<int>  arrTaskForceArrowheadBonusWill;
 var config array<int>  arrWealthOfNationsBonusFunding;
 var config array<int>  arrWeHaveWaysResearchTimeReduction;
 var config array<int>  arrXenologicalRemediesSalePriceBonus;
+
+var const localized string m_strStartingCashBonus;
 
 static function array<LWCEDataTemplate> CreateTemplates()
 {
@@ -135,7 +144,7 @@ static function int GetBonusValueInt(const out array<int> Values, int BonusLevel
         return 0;
     }
 
-    Index = Min(BonusLevel - 1, Values.Length - 1);
+    Index = Clamp(BonusLevel - 1, 0, Values.Length - 1);
 
     return Values[Index];
 }
@@ -181,7 +190,7 @@ static function ArchitectsOfTheFuture_AdjustFacilityCost(Object EventData, Objec
     }
 
     iBonusLevel = `LWCE_BONUS_LEVEL('ArchitectsOfTheFuture');
-    fDiscount = GetBonusValueInt(default.arrArchitectsOfTheFutureDiscount, iBonusLevel) / 100.0f;
+    fDiscount = GetBonusValueInt(default.arrArchitectsOfTheFuturePurchaseDiscount, iBonusLevel) / 100.0f;
     kDataContainer = LWCEDataContainer(EventData);
     kCost = LWCECost(kDataContainer.Data[0].Obj);
     kCost.iCash = kCost.iCash * (1.0f - fDiscount);
@@ -202,7 +211,7 @@ static function ArchitectsOfTheFuture_AdjustFacilityMaintenance(Object EventData
     }
 
     iBonusLevel = `LWCE_BONUS_LEVEL('ArchitectsOfTheFuture');
-    fDiscount = GetBonusValueInt(default.arrArchitectsOfTheFutureDiscount, iBonusLevel) / 100.0f;
+    fDiscount = GetBonusValueInt(default.arrArchitectsOfTheFutureMaintenanceDiscount, iBonusLevel) / 100.0f;
     kDataContainer = LWCEDataContainer(EventData);
     kDataContainer.Data[0].I = kDataContainer.Data[0].I * (1.0f - fDiscount);
 }
@@ -811,6 +820,7 @@ static function LWCEBonusTemplate WeHaveWays()
 
     Template.bRegisterInStrategy = true;
     // TODO: hook into events for autopsy/interrogation times
+    // TODO: if the bonus is gained during an applicable research, reduce time remaining
 
     return Template;
 }

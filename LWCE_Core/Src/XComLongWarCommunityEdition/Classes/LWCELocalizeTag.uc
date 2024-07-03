@@ -1,4 +1,4 @@
-class LWCE_XGLocalizeTag extends Object
+class LWCELocalizeTag extends Object
     abstract;
 
 var string Tag;

@@ -1,6 +1,7 @@
 class LWCE_XGHeadquarters extends XGHeadQuarters
     dependson(LWCETypes);
 
+// TODO move these to config
 const COUNTRY_SATELLITE_BONUS_LEVEL_AMOUNT = 1;   // The normal bonus level gained from placing a satellite over a country.
 const COUNTRY_STARTING_BONUS_LEVEL_AMOUNT = 2;    // The normal bonus level gained from starting in a particular country.
 const CONTINENT_SATELLITE_BONUS_LEVEL_AMOUNT = 2; // The normal bonus level gained from completing satellite coverage over an entire continent.

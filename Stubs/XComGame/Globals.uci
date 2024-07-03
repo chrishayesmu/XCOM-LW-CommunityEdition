@@ -19,6 +19,7 @@
 `define SHAPEMGR (`TACTICALGRI.mSimpleShapeManager)
 `define WORLDINFO (class'Engine'.static.GetCurrentWorldInfo())
 `define XCOMGRI XComGameReplicationInfo(class'Engine'.static.GetCurrentWorldInfo().GRI)
+`define XEXPAND class'XComLocalizer'.static.ExpandString
 `define XEXPANDCONTEXT (XComEngine(class'Engine'.static.GetEngine()).LocalizeContext)
 `define TACTICALGRI XComTacticalGRI(`XCOMGRI)
 

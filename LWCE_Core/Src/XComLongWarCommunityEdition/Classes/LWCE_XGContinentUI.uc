@@ -4,8 +4,8 @@ struct LWCE_TStartingOption
 {
     var name Country;
     var name Continent;
-    var name ContinentBonus;
-    var name StartingBonus;
+    var LWCEBonusTemplate ContinentBonus;
+    var LWCEBonusTemplate StartingBonus;
     var string ContinentFriendlyName;
     var string ContinentBonusFriendlyName;
     var string ContinentBonusFriendlyDescription;
@@ -42,7 +42,7 @@ function bool OnChooseCont(int iOption)
     kHQ = LWCE_XGHeadquarters(HQ());
     kOption = m_arrStartingOptions[iOption];
 
-    kHQ.SetStartingData(kOption.Continent, kOption.Country, kOption.StartingBonus);
+    kHQ.SetStartingData(kOption.Continent, kOption.Country, kOption.StartingBonus.GetBonusName());
 
     if (!ISCONTROLLED())
     {
@@ -69,7 +69,7 @@ function UpdateMainMenu()
     local name nmContinentBonus;
 
     arrContinents = m_kContinentTemplateMgr.GetAllContinentTemplates();
-    
+
     for (iContinent = 0; iContinent < arrContinents.Length; iContinent++)
     {
         // If continents have multiple bonuses assigned, one will randomly be picked after starting
@@ -112,9 +112,9 @@ function UpdateMainMenu()
 
                 // Data (so we can pass it to HQ when starting the game)
                 kStartingOption.Continent = arrContinents[iContinent].GetContinentName();
-                kStartingOption.ContinentBonus = nmContinentBonus;
+                kStartingOption.ContinentBonus = kContinentBonusTemplate;
                 kStartingOption.Country = kCountryTemplate.GetCountryName();
-                kStartingOption.StartingBonus = kStartingBonusTemplate.GetBonusName();
+                kStartingOption.StartingBonus = kStartingBonusTemplate;
 
                 // Localization content
                 kStartingOption.ContinentFriendlyName = arrContinents[iContinent].strName;
@@ -123,7 +123,7 @@ function UpdateMainMenu()
                 kStartingOption.CountryFriendlyName = kCountryTemplate.strName;
                 kStartingOption.CountryStartingCash = kCountryTemplate.iStartingCash;
                 kStartingOption.StartingBonusFriendlyName = kStartingBonusTemplate.strName;
-                kStartingOption.StartingBonusFriendlyDescription = kStartingBonusTemplate.strDescription;
+                kStartingOption.StartingBonusFriendlyDescription = kStartingBonusTemplate.GetDescription();
 
                 // Used to rotate the geoscape when selecting a country
                 kStartingOption.CountryCoords = kCountryTemplate.GetCoords();

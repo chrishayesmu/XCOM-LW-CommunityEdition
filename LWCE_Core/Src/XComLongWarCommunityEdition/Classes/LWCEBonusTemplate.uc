@@ -1,7 +1,7 @@
 /// <summary>
 /// Abstractly represents any kind of bonus, though LWCE itself just uses them for country and
-/// continent bonuses. This type is deliberately made flexible so that mods can apply these bonuses
-/// from other sources as well, if desired. The prerequisites for the bonus are deliberately not
+/// continent bonuses. This type is made flexible so that mods can apply these bonuses from
+/// other sources as well, if desired. The prerequisites for the bonus are deliberately not
 /// part of this template. Decoupling the bonus's prerequisites and its effects have some benefits:
 ///
 ///   - Bonuses can be randomized (e.g. shuffling country bonuses at the start of the campaign)
@@ -22,7 +22,7 @@ struct LWCE_TStartingFacility
     var name FacilityName;
 };
 
-// TODO add config for starting soldiers
+// TODO add config for starting soldiers (after soldier class templatization)
 
 var config int iBonusStartingCash;
 var config array<LWCE_TStartingFacility> arrStartingFacilities;
@@ -36,6 +36,15 @@ var const localized string strDescription;
 function name GetBonusName()
 {
     return DataName;
+}
+
+/// <summary>
+/// Gets the user-facing description of this bonus, which may need to be expanded through
+/// the LWCELocalizer with relevant context provided (e.g. the bonus level).
+/// </summary>
+function string GetDescription()
+{
+    return strDescription != "" ? strDescription : GenerateDefaultDescription();
 }
 
 /// <summary>
@@ -60,6 +69,29 @@ function RegisterBonusEvents()
     }
 
     // TODO
+}
+
+/// <summary>
+/// Generates a description for this bonus, based only on the configured starting variables (e.g. iBonusStartingCash).
+/// Will be used if strDescription is not set.
+///
+/// WARNING: right now this only supports iBonusStartingCash.
+/// </summary>
+protected function string GenerateDefaultDescription()
+{
+    // Note: the strings for this are in LWCEBonusDataSet because this class is PerObjectConfig
+    local string outString;
+    local LWCEParamTag kParamTag;
+
+    kParamTag = `LWCE_ENGINE.m_kCEParamTag;
+
+    if (iBonusStartingCash != 0)
+    {
+        kParamTag.IntValue0 = iBonusStartingCash;
+        outString $= `LWCE_XEXPAND(class'LWCEBonusDataSet'.default.m_strStartingCashBonus);
+    }
+
+    return outString;
 }
 
 protected function OnCampaignStart(Object EventData, Object EventSource, Name EventID, Object CallbackData)

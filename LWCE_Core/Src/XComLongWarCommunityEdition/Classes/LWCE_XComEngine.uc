@@ -14,6 +14,13 @@ var config array<string> arrDataTemplateManagers;
 
 var LWCEContentManager m_kCEContentMgr;
 
+// Localization variables
+
+var LWCELocalizeContext m_kCELocalizeContext;
+var LWCEAbilityTag m_kCEAbilityTag;
+var LWCEBonusTag m_kCEBonusTag;
+var LWCEParamTag m_kCEParamTag;
+
 var private array< class<LWCEDataSet> > m_arrDataSets;
 var private array<LWCEDataTemplateManager> m_arrDataTemplateManagers;
 var private LWCEEventManager m_kEventManager;
@@ -75,12 +82,24 @@ static function LWCEDataTemplateManager GetTemplateManager(class<LWCEDataTemplat
     return none;
 }
 
-// There aren't really any good hooks for us to initialize the engine, but building localization happens pretty
-// early on, so we just go ahead and ride on this.
 event BuildLocalization()
 {
+    // Ideally we wouldn't call the super here, but the default localize context is used so many places
     super.BuildLocalization();
 
+    m_kCELocalizeContext = new (self) class'LWCELocalizeContext';
+
+    m_kCEAbilityTag = new (self) class'LWCEAbilityTag';
+    m_kCELocalizeContext.m_arrLocalizeTags.AddItem(m_kCEAbilityTag);
+
+    m_kCEBonusTag = new (self) class'LWCEBonusTag';
+    m_kCELocalizeContext.m_arrLocalizeTags.AddItem(m_kCEBonusTag);
+
+    m_kCEParamTag = new (self) class'LWCEParamTag';
+    m_kCELocalizeContext.m_arrLocalizeTags.AddItem(m_kCEParamTag);
+
+    // There aren't really any good hooks for us to initialize the engine, but building localization happens pretty
+    // early on, so we just go ahead and ride on this.
     LWCE_Init();
 }
 
@@ -101,7 +120,7 @@ function LWCE_Init()
 
     `LWCE_LOG("Creating event manager...");
     m_kEventManager = new (self) class'LWCEEventManager';
-    
+
     `LWCE_LOG("Initializing data template managers...");
     CreateDataTemplateManagers();
 

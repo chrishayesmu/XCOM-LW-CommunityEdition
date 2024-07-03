@@ -177,22 +177,31 @@ simulated function LWCE_UpdateInfoPanelData(int Index)
 {
     local LWCE_XGContinentUI kMgr;
     local LWCE_TStartingOption kOption;
+    local LWCEBonusTag kTag;
     local string ContinentName, BonusName, InfoText;
 
     kMgr = LWCE_XGContinentUI(GetMgr());
     kOption = kMgr.m_arrStartingOptions[Index];
 
+    kTag = `LWCE_ENGINE.m_kCEBonusTag;
+
     ContinentName = class'UIUtilities'.static.GetHTMLColoredText(kOption.CountryFriendlyName, eUIState_Highlight, 26);
     BonusName = kMgr.m_strLabelReturnToContinent $ kMgr.ConvertCashToString(kOption.CountryStartingCash * class'XGTacticalGameCore'.default.FundingBalance[kMgr.Game().GetDifficulty() + 4]);
 
     // Country + continent bonus names and description
+    kTag.BonusTemplate = kOption.StartingBonus;
+    kTag.BonusLevel = class'LWCE_XGHeadquarters'.const.COUNTRY_STARTING_BONUS_LEVEL_AMOUNT;
     InfoText  = class'UIUtilities'.static.GetHTMLColoredText(kOption.StartingBonusFriendlyName $ ": ", eUIState_Warning, 22);
-    InfoText $= class'UIUtilities'.static.GetHTMLColoredText(class'XComLocalizer'.static.ExpandString(kOption.StartingBonusFriendlyDescription), eUIState_Highlight, 16);
+    InfoText $= class'UIUtilities'.static.GetHTMLColoredText(`LWCE_XEXPAND(kOption.StartingBonusFriendlyDescription), eUIState_Highlight, 16);
+
     InfoText $= "\n\n";
     InfoText $= class'UIUtilities'.static.GetHTMLColoredText(kMgr.m_strLabelBonus, eUIState_Highlight, 26);
     InfoText $= "\n";
+
+    kTag.BonusTemplate = kOption.ContinentBonus;
+    kTag.BonusLevel = class'LWCE_XGHeadquarters'.const.CONTINENT_SATELLITE_BONUS_LEVEL_AMOUNT;
     InfoText $= class'UIUtilities'.static.GetHTMLColoredText(kOption.ContinentBonusFriendlyName $ ": ", eUIState_Warning, 22);
-    InfoText $= class'UIUtilities'.static.GetHTMLColoredText(class'XComLocalizer'.static.ExpandString(kOption.ContinentBonusFriendlyDescription), eUIState_Highlight, 16);
+    InfoText $= class'UIUtilities'.static.GetHTMLColoredText(`LWCE_XEXPAND(kOption.ContinentBonusFriendlyDescription), eUIState_Highlight, 16);
 
     // TODO implement string formatting here
     AS_UpdateInfo(/* kOption.txtBonusLabel.StrValue */ ContinentName, /* kOption.txtBonusTitle.StrValue */ BonusName, InfoText);

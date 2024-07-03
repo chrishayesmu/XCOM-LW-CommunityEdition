@@ -1,15 +1,13 @@
-class LWCE_XComLocalizer extends Object
+class LWCELocalizer extends Object
     abstract;
 
-static function string ExpandString(string InString, optional LWCE_XGLocalizeContext kContext)
+static function string ExpandString(string InString)
 {
     local array<string> arrTokens;
     local string strExpanded, strToken, strTagName, strTagValue, OutString;
+    local LWCELocalizeContext kContext;
 
-    if (kContext == none)
-    {
-        kContext = LWCE_XComEngine(class'Engine'.static.GetEngine()).CELocalizeContext;
-    }
+    kContext = `LWCE_XEXPANDCONTEXT;
 
     class'XComLocalizer'.static.EscapeAndTokenize(arrTokens, InString);
 
@@ -30,6 +28,5 @@ static function string ExpandString(string InString, optional LWCE_XGLocalizeCon
         strExpanded $= OutString;
     }
 
-    `LWCE_LOG_CLS("Final string: " $ strExpanded);
     return strExpanded;
 }

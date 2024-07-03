@@ -27,6 +27,7 @@
 `define LWCE_LOG_DEPRECATED_BY(funcname, replacename) `LWCE_LOG("ERROR: LWCE-incompatible function `{funcname} was called. This needs to be replaced with `replacename. Stack trace follows."); ScriptTrace();
 `define LWCE_LOG_NOT_IMPLEMENTED(funcname) `LWCE_LOG_CLS("ERROR: function `{funcname} has not yet been implemented");
 
+`define LWCE_ENGINE (LWCE_XComEngine(class'Engine'.static.GetEngine()))
 `define LWCE_EVENT_MGR (class'LWCE_XComEngine'.static.GetEventManager())
 `define LWCE_MOD_LOADER (class'LWCEModLoader'.static.GetModLoader())
 
@@ -103,7 +104,9 @@
 `define LWCE_IS_STRAT_GAME (XComHeadquartersGame(class'Engine'.static.GetCurrentWorldInfo().Game) != none)
 `define LWCE_IS_TAC_GAME (XComTacticalGame(class'Engine'.static.GetCurrentWorldInfo().Game) != none)
 
-`define LWCE_CONTENT_MGR (LWCE_XComEngine(class'Engine'.static.GetEngine()).m_kCEContentMgr)
+`define LWCE_CONTENT_MGR (`LWCE_ENGINE.m_kCEContentMgr)
+`define LWCE_XEXPAND(sz) class'LWCELocalizer'.static.ExpandString(`sz)
+`define LWCE_XEXPANDCONTEXT (`LWCE_ENGINE.m_kCELocalizeContext)
 
 // ---------------------------
 // Extension macros
