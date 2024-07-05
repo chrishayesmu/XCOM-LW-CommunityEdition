@@ -2,7 +2,6 @@ class LWCEBonusTag extends LWCELocalizeTag;
 
 `define INTBONUSVALUE(arr) (string(class'LWCEBonusDataSet'.static.GetBonusValueInt(class'LWCEBonusDataSet'.default.`arr, BonusLevel)))
 
-var LWCEBonusTemplate BonusTemplate;
 var int BonusLevel;
 
 function bool Expand(string InString, out string OutString)

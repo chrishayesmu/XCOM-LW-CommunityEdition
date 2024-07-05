@@ -171,15 +171,27 @@ function UpdateBonus()
     local TSatBonusUI kUI;
     local LWCE_XGContinent kContinent;
     local LWCEBonusTemplate kBonusTemplate;
-    local XGParamTag kTag;
+    local LWCEBonusTag kBonusTag;
+    local XGParamTag kParamTag;
+    local int iBonusLevel;
     local name nmBonus;
 
     kContinent = `LWCE_XGCONTINENT(m_nmContinent);
     nmBonus = kContinent.LWCE_GetBonus();
     kBonusTemplate = `LWCE_BONUS(nmBonus);
 
-    kTag = XGParamTag(XComEngine(class'Engine'.static.GetEngine()).LocalizeContext.FindTag("XGParam"));
-    kTag.StrValue0 = kContinent.GetName();
+    iBonusLevel = `LWCE_HQ.GetBonusLevel(nmBonus);
+
+    if (iBonusLevel == 0)
+    {
+        iBonusLevel = class'LWCE_XGHeadquarters'.const.CONTINENT_SATELLITE_BONUS_LEVEL_AMOUNT;
+    }
+
+    kBonusTag = `LWCE_ENGINE.m_kCEBonusTag;
+    kBonusTag.BonusLevel = iBonusLevel;
+
+    kParamTag = XGParamTag(`XEXPANDCONTEXT.FindTag("XGParam"));
+    kParamTag.StrValue0 = kContinent.GetName();
 
     kUI.txtTitle.StrValue = class'XComLocalizer'.static.ExpandString(m_strLabelBonusInRegion);
     kUI.txtTitle.iState = eUIState_Warning;
@@ -187,7 +199,7 @@ function UpdateBonus()
     kUI.txtBonusName.StrValue = kBonusTemplate.strName;
     kUI.txtBonusName.iState = eUIState_Highlight;
 
-    kUI.txtBonusDesc.StrValue = kBonusTemplate.strDescription;
+    kUI.txtBonusDesc.StrValue = `LWCE_XEXPAND(kBonusTemplate.GetDescription());
     kUI.txtBonusDesc.iState = eUIState_Warning;
 
     kUI.btxtOk.iButton = 1;
@@ -257,16 +269,16 @@ function UpdateConfirmUI()
 /// <summary>
 /// When a country is selected, its staff-per-month, continent bonus, and country bonus are displayed in the
 /// bottom center of the screen. That is the data being updated by this function.
-///
-/// TODO: need to localize bonus descriptions once localization is working
 /// </summary>
 function UpdateContinent()
 {
     local TSatContinentUI kUI;
+    local LWCEBonusTag kBonusTag;
     local LWCEBonusTemplate kBonusTemplate;
     local LWCEBonusTemplateManager kBonusTemplateMgr;
     local LWCE_XGContinent kContinent;
     local LWCE_XGCountry kCountry;
+    local LWCE_XGHeadquarters kHQ;
 
     kUI.iHighlightedBonus = -1;
 
@@ -276,9 +288,11 @@ function UpdateContinent()
         return;
     }
 
+    kBonusTag = `LWCE_ENGINE.m_kCEBonusTag;
     kBonusTemplateMgr = `LWCE_BONUS_TEMPLATE_MGR;
     kContinent = `LWCE_XGCONTINENT(m_nmContinent);
     kCountry = `LWCE_XGCOUNTRY(m_nmCountry);
+    kHQ = `LWCE_HQ;
 
     kUI.txtContinent.StrValue = kContinent.GetName();
     kUI.txtContinent.iState = eUIState_Highlight;
@@ -289,15 +303,17 @@ function UpdateContinent()
 
     // The first bonus is the continent
     kBonusTemplate = kBonusTemplateMgr.FindBonusTemplate(kContinent.LWCE_GetBonus());
+    kBonusTag.BonusLevel = kContinent.HasBonus() ? kHQ.GetBonusLevel(kContinent.m_nmBonus) : class'LWCE_XGHeadquarters'.const.CONTINENT_SATELLITE_BONUS_LEVEL_AMOUNT;
 
     kUI.arrBonusLabels.AddItem(FormatBonusLabel(kBonusTemplate.strName, kContinent.HasBonus()));
-    kUI.arrBonuses.AddItem(FormatBonusValue(kBonusTemplate.strDescription, kContinent.HasBonus()));
+    kUI.arrBonuses.AddItem(FormatBonusValue(`LWCE_XEXPAND(kBonusTemplate.GetDescription()), kContinent.HasBonus()));
 
     // Second bonus is the selected country's
     kBonusTemplate = kBonusTemplateMgr.FindBonusTemplate(kCountry.m_nmBonus);
+    kBonusTag.BonusLevel = kCountry.IsGrantingBonus() ? kHQ.GetBonusLevel(kCountry.m_nmBonus) : class'LWCE_XGHeadquarters'.const.COUNTRY_SATELLITE_BONUS_LEVEL_AMOUNT;
 
     kUI.arrBonusLabels.AddItem(FormatBonusLabel(kBonusTemplate.strName, kCountry.IsGrantingBonus()));
-    kUI.arrBonuses.AddItem(FormatBonusValue(kBonusTemplate.strDescription, kCountry.IsGrantingBonus()));
+    kUI.arrBonuses.AddItem(FormatBonusValue(`LWCE_XEXPAND(kBonusTemplate.GetDescription()), kCountry.IsGrantingBonus()));
 
     m_kContinentUI = kUI;
 }
@@ -394,14 +410,18 @@ function UpdateCountryHelp()
 
 function UpdateHelp()
 {
+    local LWCEBonusTag kBonusTag;
     local LWCEBonusTemplate kBonusTemplate;
     local LWCEBonusTemplateManager kBonusTemplateMgr;
+    local LWCE_XGHeadquarters kHQ;
     local array<LWCE_TBonus> arrBonuses;
     local XGParamTag kParamTag;
     local int Index;
 
+    kBonusTag = `LWCE_ENGINE.m_kCEBonusTag;
     kBonusTemplateMgr = `LWCE_BONUS_TEMPLATE_MGR;
-    arrBonuses = LWCE_XGHeadquarters(HQ()).GetActiveBonuses();
+    kHQ = LWCE_XGHeadquarters(HQ());
+    arrBonuses = kHQ.GetActiveBonuses();
 
     kParamTag = XGParamTag(XComEngine(class'Engine'.static.GetEngine()).LocalizeContext.FindTag("XGParam"));
     kParamTag.IntValue0 = 0;
@@ -411,11 +431,10 @@ function UpdateHelp()
     for (Index = 0; Index < arrBonuses.Length; Index++)
     {
         kBonusTemplate = kBonusTemplateMgr.FindBonusTemplate(arrBonuses[Index].BonusName);
-
-        // TODO: come back to this once proper localization and tagging is set up
+        kBonusTag.BonusLevel = kHQ.GetBonusLevel(arrBonuses[Index].BonusName);
 
         m_kHelp.txtBody.StrValue $= class'UIUtilities'.static.GetHTMLColoredText(kBonusTemplate.strName, eUIState_Warning, 18) $ ": ";
-        m_kHelp.txtBody.StrValue $= class'UIUtilities'.static.GetHTMLColoredText(class'XComLocalizer'.static.ExpandString(kBonusTemplate.strDescription), eUIState_Highlight, 18);
+        m_kHelp.txtBody.StrValue $= class'UIUtilities'.static.GetHTMLColoredText(class'XComLocalizer'.static.ExpandString(kBonusTemplate.GetDescription()), eUIState_Highlight, 18);
         m_kHelp.txtBody.StrValue $= "\n";
     }
 

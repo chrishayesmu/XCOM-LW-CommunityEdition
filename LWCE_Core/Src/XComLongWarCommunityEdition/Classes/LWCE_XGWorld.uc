@@ -8,6 +8,53 @@ struct CheckpointRecord_LWCE_XGWorld extends XGWorld.CheckpointRecord
 
 var array<LWCE_TSatNode> m_arrCESatNodes;
 
+/// <summary>
+/// DO NOT USE. Maps a country's name to its original ECountry value. This is only being used
+/// internally by LWCE in situations where we couldn't avoid needing this, and may be removed
+/// at any time if LWCE doesn't need it anymore.
+/// </summary>
+static function ECountry CountryIdFromName(name nmCountry)
+{
+    switch (nmCountry)
+    {
+        case 'Argentina':
+            return eCountry_Argentina;
+        case 'Australia':
+            return eCountry_Australia;
+        case 'Brazil':
+            return eCountry_Brazil;
+        case 'Canada':
+            return eCountry_Canada;
+        case 'China':
+            return eCountry_China;
+        case 'Egypt':
+            return eCountry_Egypt;
+        case 'France':
+            return eCountry_France;
+        case 'Germany':
+            return eCountry_Germany;
+        case 'India':
+            return eCountry_India;
+        case 'Japan':
+            return eCountry_Japan;
+        case 'Mexico':
+            return eCountry_Mexico;
+        case 'Nigeria':
+            return eCountry_Nigeria;
+        case 'Russia':
+            return eCountry_Russia;
+        case 'SouthAfrica':
+            return eCountry_SouthAfrica;
+        case 'UnitedKingdom':
+            return eCountry_UK;
+        case 'UnitedStates':
+            return eCountry_USA;
+        default:
+            `LWCE_LOG_WARN("CountryIdFromName: mapping " $ nmCountry $ " to 255");
+            return ECountry(255);
+    }
+}
+
 function Init(bool bNewGame)
 {
     local XGCountry kCountry;

@@ -28,5 +28,7 @@ static function string ExpandString(string InString)
         strExpanded $= OutString;
     }
 
+    `LWCE_LOG_VERBOSE("ExpandString: input string \"" $ InString $ "\" expanded to \"" $ strExpanded $ "\"");
+
     return strExpanded;
 }

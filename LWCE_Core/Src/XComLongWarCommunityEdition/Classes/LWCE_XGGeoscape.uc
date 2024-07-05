@@ -633,9 +633,9 @@ function ColorCountry(ECountry eCntry, Color Col)
 /// </summary>
 function LWCE_ColorCountry(name nmCountry, Color Col)
 {
-    `LWCE_LOG_NOT_IMPLEMENTED(LWCE_ColorCountry);
-
-    // `HQGAME.GetEarth().HighlightCountry(nmCountry, Col);
+    // This (and similar functions) is not substantially rewritten for LWCE, because the Earth object uses
+    // textures and materials specifically made for the base game and its ECountry values
+    `HQGAME.GetEarth().HighlightCountry(class'LWCE_XGWorld'.static.CountryIdFromName(nmCountry), Col);
 }
 
 function ClearCountryColor(ECountry eCntry, Color Col)
@@ -648,9 +648,7 @@ function ClearCountryColor(ECountry eCntry, Color Col)
 /// </summary>
 function LWCE_ClearCountryColor(name nmCountry, Color Col)
 {
-    `LWCE_LOG_NOT_IMPLEMENTED(LWCE_ClearCountryColor);
-
-    // `HQGAME.GetEarth().ClearCountryHighlight(nmCountry);
+    `HQGAME.GetEarth().ClearCountryHighlight(class'LWCE_XGWorld'.static.CountryIdFromName(nmCountry));
 }
 
 function ClearCountryPulse(ECountry eCntry)
@@ -663,10 +661,8 @@ function ClearCountryPulse(ECountry eCntry)
 /// </summary>
 function LWCE_ClearCountryPulse(name nmCountry)
 {
-    `LWCE_LOG_NOT_IMPLEMENTED(LWCE_ClearCountryPulse);
-
-    // `HQGAME.GetEarth().ClearCountryHighlight(nmCountry);
-    // UpdateCountryColors();
+    `HQGAME.GetEarth().ClearCountryHighlight(class'LWCE_XGWorld'.static.CountryIdFromName(nmCountry));
+    UpdateCountryColors();
 }
 
 function int DetectUFO(XGShip_UFO kUFO)

@@ -189,7 +189,6 @@ simulated function LWCE_UpdateInfoPanelData(int Index)
     BonusName = kMgr.m_strLabelReturnToContinent $ kMgr.ConvertCashToString(kOption.CountryStartingCash * class'XGTacticalGameCore'.default.FundingBalance[kMgr.Game().GetDifficulty() + 4]);
 
     // Country + continent bonus names and description
-    kTag.BonusTemplate = kOption.StartingBonus;
     kTag.BonusLevel = class'LWCE_XGHeadquarters'.const.COUNTRY_STARTING_BONUS_LEVEL_AMOUNT;
     InfoText  = class'UIUtilities'.static.GetHTMLColoredText(kOption.StartingBonusFriendlyName $ ": ", eUIState_Warning, 22);
     InfoText $= class'UIUtilities'.static.GetHTMLColoredText(`LWCE_XEXPAND(kOption.StartingBonusFriendlyDescription), eUIState_Highlight, 16);
@@ -198,7 +197,6 @@ simulated function LWCE_UpdateInfoPanelData(int Index)
     InfoText $= class'UIUtilities'.static.GetHTMLColoredText(kMgr.m_strLabelBonus, eUIState_Highlight, 26);
     InfoText $= "\n";
 
-    kTag.BonusTemplate = kOption.ContinentBonus;
     kTag.BonusLevel = class'LWCE_XGHeadquarters'.const.CONTINENT_SATELLITE_BONUS_LEVEL_AMOUNT;
     InfoText $= class'UIUtilities'.static.GetHTMLColoredText(kOption.ContinentBonusFriendlyName $ ": ", eUIState_Warning, 22);
     InfoText $= class'UIUtilities'.static.GetHTMLColoredText(`LWCE_XEXPAND(kOption.ContinentBonusFriendlyDescription), eUIState_Highlight, 16);
