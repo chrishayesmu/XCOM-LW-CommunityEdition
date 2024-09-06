@@ -415,16 +415,12 @@ function UpdateHelp()
     local LWCEBonusTemplateManager kBonusTemplateMgr;
     local LWCE_XGHeadquarters kHQ;
     local array<LWCE_TBonus> arrBonuses;
-    local XGParamTag kParamTag;
     local int Index;
 
     kBonusTag = `LWCE_ENGINE.m_kCEBonusTag;
     kBonusTemplateMgr = `LWCE_BONUS_TEMPLATE_MGR;
     kHQ = LWCE_XGHeadquarters(HQ());
     arrBonuses = kHQ.GetActiveBonuses();
-
-    kParamTag = XGParamTag(XComEngine(class'Engine'.static.GetEngine()).LocalizeContext.FindTag("XGParam"));
-    kParamTag.IntValue0 = 0;
 
     m_kHelp.txtBody.StrValue = "";
 
@@ -434,7 +430,7 @@ function UpdateHelp()
         kBonusTag.BonusLevel = kHQ.GetBonusLevel(arrBonuses[Index].BonusName);
 
         m_kHelp.txtBody.StrValue $= class'UIUtilities'.static.GetHTMLColoredText(kBonusTemplate.strName, eUIState_Warning, 18) $ ": ";
-        m_kHelp.txtBody.StrValue $= class'UIUtilities'.static.GetHTMLColoredText(class'XComLocalizer'.static.ExpandString(kBonusTemplate.GetDescription()), eUIState_Highlight, 18);
+        m_kHelp.txtBody.StrValue $= class'UIUtilities'.static.GetHTMLColoredText(`LWCE_XEXPAND(kBonusTemplate.GetDescription()), eUIState_Highlight, 18);
         m_kHelp.txtBody.StrValue $= "\n";
     }
 
