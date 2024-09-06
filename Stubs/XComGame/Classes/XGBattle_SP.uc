@@ -100,6 +100,3 @@ state AbortMissionCheck
 }
 state EndTurnUI
 {}
-
-
-

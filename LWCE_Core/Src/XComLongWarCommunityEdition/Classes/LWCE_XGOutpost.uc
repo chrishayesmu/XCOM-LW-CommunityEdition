@@ -20,6 +20,8 @@ function LWCE_Init(name nmContinent)
 
 function Vector2D GetCoords()
 {
+    `LWCE_LOG("GetCoords: m_nmContinent = " $ m_nmContinent $ ", location = " $ `V2DTOSTR(`LWCE_XGCONTINENT(m_nmContinent).GetHQLocation()));
+    ScriptTrace();
     return `LWCE_XGCONTINENT(m_nmContinent).GetHQLocation();
 }
 

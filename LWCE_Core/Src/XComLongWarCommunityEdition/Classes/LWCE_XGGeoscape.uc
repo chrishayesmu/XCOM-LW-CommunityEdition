@@ -1233,6 +1233,8 @@ function SkyrangerArrival(XGShip_Dropship kSkyranger, optional bool bRequestOrde
 
 function SpawnTempleEntity()
 {
+    `LWCE_LOG("SpawnTempleEntity");
+    ScriptTrace();
     m_kTemple = Spawn(class'LWCE_XGEntity');
     m_kTemple.Init(eEntityGraphic_Mission_Temple_Ship);
 }

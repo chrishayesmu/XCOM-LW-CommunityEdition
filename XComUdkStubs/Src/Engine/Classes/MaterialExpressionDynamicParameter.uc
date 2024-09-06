@@ -9,7 +9,7 @@ class MaterialExpressionDynamicParameter extends MaterialExpression
 	collapsecategories
 	hidecategories(Object);
 
-/** 
+/**
  *	The names of the parameters.
  *	These will show up in Cascade when editing a particle system
  *	that uses the material it is in...
@@ -36,7 +36,7 @@ cpptext
 	 *
 	 * @param	Compiler - Material compiler that knows how to handle this expression
 	 * @return	Index to the new FMaterialCompiler::CodeChunk entry for this expression
-	 */	
+	 */
 	virtual INT Compile( FMaterialCompiler* Compiler, INT OutputIndex );
 
 	/**
@@ -57,7 +57,7 @@ cpptext
 	 * Textual description for this material expression
 	 *
 	 * @return	Caption text
-	 */	
+	 */
 	virtual FString GetCaption() const;
 
 	/**
@@ -88,8 +88,9 @@ defaultproperties
 	MenuCategories(0)="Particles"
 	MenuCategories(1)="Parameters"
 
-	Outputs(0)=(OutputName="",Mask=1,MaskR=1,MaskG=1,MaskB=1,MaskA=0)
-	Outputs(1)=(OutputName="",Mask=1,MaskR=1,MaskG=0,MaskB=0,MaskA=0)
-	Outputs(2)=(OutputName="",Mask=1,MaskR=0,MaskG=1,MaskB=0,MaskA=0)
-	Outputs(3)=(OutputName="",Mask=1,MaskR=0,MaskG=0,MaskB=1,MaskA=0)
+    Outputs(0)=(Mask=1,MaskR=1)
+    Outputs(1)=(Mask=1,MaskG=1)
+    Outputs(2)=(Mask=1,MaskB=1)
+    Outputs(3)=(Mask=1,MaskA=1)
+    Outputs(4)=(Mask=1,MaskR=1,MaskG=1,MaskB=1)
 }

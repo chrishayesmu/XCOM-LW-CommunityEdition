@@ -411,9 +411,6 @@ function UpdateWorldMap()
 
     for (I = 0; I < mapItems.Length; I++)
     {
-        vec.X = mapItems[I].X;
-        vec.Y = mapItems[I].Y;
-
         m_mapItemsUI.AddItem(mapItems[I]);
     }
 

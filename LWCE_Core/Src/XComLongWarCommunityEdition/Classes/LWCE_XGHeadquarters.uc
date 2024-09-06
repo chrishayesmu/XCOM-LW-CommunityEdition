@@ -661,6 +661,18 @@ function name LWCE_GetContinent()
     return m_nmContinent;
 }
 
+function Vector2D GetCoords()
+{
+    local Vector2D HQCoords;
+
+    if (m_nmContinent != '')
+    {
+        HQCoords = `LWCE_XGCONTINENT(m_nmContinent).GetHQLocation();
+    }
+
+    return HQCoords;
+}
+
 function GetEvents(out array<THQEvent> arrEvents)
 {
     `LWCE_LOG_DEPRECATED_CLS(GetEvents);
