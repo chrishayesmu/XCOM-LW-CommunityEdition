@@ -235,20 +235,6 @@ function LWCE_InitNewGame(name nmCountry, name nmContinent)
     m_nmContinent = nmContinent;
 
     m_arrBounds = m_kTemplate.arrBounds;
-
-    // If this is the starting country, our bonus is already decided for us by the player
-    if (IsStartingCountry())
-    {
-        m_nmBonus = LWCE_XGHeadquarters(HQ()).m_nmStartingBonus;
-        m_bIsGrantingBonus = true;
-    }
-    else if (m_kTemplate.arrSatelliteBonuses.Length > 0)
-    {
-        // Otherwise, randomly choose a possible bonus for this country to have
-        // TODO: it would be better to do this at a higher level and avoid the same bonus appearing in multiple countries
-        // (unless some config setting indicates that we want that)
-        m_nmBonus = m_kTemplate.arrSatelliteBonuses[Rand(m_kTemplate.arrSatelliteBonuses.Length)];
-    }
 }
 
 function bool IsCouncilMember()
@@ -338,6 +324,27 @@ function RejoinXComProject()
     }
 }
 
+/// <summary>
+/// Called after the player selects their starting country and begins the game. This hook is needed due to all countries
+/// and continents being initialized when the new game screen is entered, rather than when it is exited.
+/// </summary>
+function PostStartingCountrySelected(name nmStartingCountry, name nmStartingBonus)
+{
+    if (nmStartingCountry == m_nmCountry )
+    {
+        // Just note the bonus, but don't adjust the actual bonus level; the HQ object takes care of that for us
+        m_nmBonus = nmStartingBonus;
+        m_bIsGrantingBonus = true;
+    }
+    else if (m_kTemplate.arrSatelliteBonuses.Length > 0)
+    {
+        // Otherwise, randomly choose a possible bonus for this country to have
+        // TODO: it would be better to do this at a higher level and avoid the same bonus appearing in multiple countries
+        // (unless some config setting indicates that we want that)
+        m_nmBonus = m_kTemplate.arrSatelliteBonuses[Rand(m_kTemplate.arrSatelliteBonuses.Length)];
+    }
+}
+
 function SetSatelliteCoverage(bool bCoverage)
 {
     if (m_bSatellite == bCoverage)
@@ -364,15 +371,18 @@ function SetSatelliteCoverage(bool bCoverage)
     m_arrCEShipRecord.Length = 0;
 
     // Check if we need to gain or lose a bonus due to this coverage change
-    if (bCoverage && !LeftXCom() && !m_bIsGrantingBonus)
+    if (!IsStartingCountry())
     {
-        m_bIsGrantingBonus = true;
-        `LWCE_HQ.AdjustBonusLevel(m_nmBonus, class'LWCE_XGHeadquarters'.const.COUNTRY_SATELLITE_BONUS_LEVEL_AMOUNT);
-    }
-    else if (!bCoverage && m_bIsGrantingBonus && !IsStartingCountry())
-    {
-        m_bIsGrantingBonus = false;
-        `LWCE_HQ.AdjustBonusLevel(m_nmBonus, -1 * class'LWCE_XGHeadquarters'.const.COUNTRY_SATELLITE_BONUS_LEVEL_AMOUNT);
+        if (bCoverage && !LeftXCom() && !m_bIsGrantingBonus)
+        {
+            m_bIsGrantingBonus = true;
+            `LWCE_HQ.AdjustBonusLevel(m_nmBonus, class'LWCE_XGHeadquarters'.const.COUNTRY_SATELLITE_BONUS_LEVEL_AMOUNT);
+        }
+        else if (!bCoverage && m_bIsGrantingBonus && !IsStartingCountry())
+        {
+            m_bIsGrantingBonus = false;
+            `LWCE_HQ.AdjustBonusLevel(m_nmBonus, -1 * class'LWCE_XGHeadquarters'.const.COUNTRY_SATELLITE_BONUS_LEVEL_AMOUNT);
+        }
     }
 
     BeginPaying();

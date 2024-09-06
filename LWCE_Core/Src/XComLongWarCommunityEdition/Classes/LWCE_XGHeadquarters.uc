@@ -1258,6 +1258,13 @@ function SetSatelliteVisible(name nmCountry, bool bVisible)
 
 function SetStartingData(name nmContinent, name nmCountry, name nmStartingBonus)
 {
+    local LWCE_XGWorld kWorld;
+    local array<LWCE_XGCountry> arrCountries;
+    local LWCE_XGCountry kCountry;
+
+    kWorld = LWCE_XGWorld(WORLD());
+    arrCountries = kWorld.LWCE_GetCountries();
+
     m_nmContinent = nmContinent;
     m_nmCountry = nmCountry;
     m_nmStartingBonus = nmStartingBonus;
@@ -1267,6 +1274,11 @@ function SetStartingData(name nmContinent, name nmCountry, name nmStartingBonus)
 
     LWCE_XGStorage(STORAGE()).LWCE_AddItem('Item_Satellite');
     LWCE_AddSatelliteNode(nmCountry, 'Item_Satellite', true);
+
+    foreach arrCountries(kCountry)
+    {
+        kCountry.PostStartingCountrySelected(m_nmCountry, m_nmStartingBonus);
+    }
 }
 
 function UpdateInterceptorOrders()
