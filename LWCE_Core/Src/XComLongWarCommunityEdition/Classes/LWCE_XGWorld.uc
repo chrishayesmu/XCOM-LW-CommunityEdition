@@ -4,9 +4,11 @@ class LWCE_XGWorld extends XGWorld
 struct CheckpointRecord_LWCE_XGWorld extends XGWorld.CheckpointRecord
 {
     var array<LWCE_TSatNode> m_arrCESatNodes;
+    var LWCE_TCouncilMeeting m_kCECouncil;
 };
 
 var array<LWCE_TSatNode> m_arrCESatNodes;
+var LWCE_TCouncilMeeting m_kCECouncil;
 
 /// <summary>
 /// DO NOT USE. Maps a country's name to its original ECountry value. This is only being used
@@ -484,4 +486,205 @@ function StartGame()
     AddInitialPanic();
     InitFunding();
     AddResource(eResource_Money, `LWCE_COUNTRY(nmHomeCountry).iStartingCash * class'XGTacticalGameCore'.default.FundingBalance[Game().GetDifficulty() + 4]);
+}
+
+function AddToDefectorsList(out TCouncilMeeting kMeeting, ECountry eDefector)
+{
+    `LWCE_LOG_DEPRECATED_CLS(AddToDefectorsList);
+}
+
+function LWCE_AddToDefectorsList(out LWCE_TCouncilMeeting kMeeting, name nmDefector)
+{
+    if (kMeeting.arrLeavingCountries.Find(nmDefector) != INDEX_NONE)
+    {
+        return;
+    }
+
+    if (LWCE_XGGeoscape(GEOSCAPE()).LWCE_CountryHasAbductionMission(nmDefector))
+    {
+        return;
+    }
+
+    kMeeting.arrLeavingCountries.InsertItem(Rand(kMeeting.arrLeavingCountries.Length), nmDefector);
+}
+
+function AdjustDefections(out TCouncilMeeting kCouncil)
+{
+    `LWCE_LOG_DEPRECATED_CLS(AdjustDefections);
+}
+
+function LWCE_AdjustDefections(out LWCE_TCouncilMeeting kCouncil)
+{
+    local int iNumDefectionsAllowed, iDiffCap;
+
+    switch (Game().GetDifficulty())
+    {
+        case 0:
+            iDiffCap = class'XGTacticalGameCore'.default.PANIC_DEFECTIONS_PER_MONTH_EASY;
+            break;
+        case 1:
+            iDiffCap = class'XGTacticalGameCore'.default.PANIC_DEFECTIONS_PER_MONTH_NORMAL;
+            break;
+        case 2:
+            iDiffCap = class'XGTacticalGameCore'.default.PANIC_DEFECTIONS_PER_MONTH_HARD;
+            break;
+        case 3:
+            iDiffCap = class'XGTacticalGameCore'.default.PANIC_DEFECTIONS_PER_MONTH_CLASSIC;
+            break;
+    }
+
+    iNumDefectionsAllowed = iDiffCap;
+    iNumDefectionsAllowed -= World().GetNumDefectors();
+    iNumDefectionsAllowed = Max(iDiffCap, iNumDefectionsAllowed);
+
+    if (kCouncil.eGrade < 3)
+    {
+        if (kCouncil.arrLeavingCountries.Length > iNumDefectionsAllowed)
+        {
+            kCouncil.arrLeavingCountries.Remove(iNumDefectionsAllowed, kCouncil.arrLeavingCountries.Length);
+        }
+    }
+}
+
+function CouncilMeeting()
+{
+    local LWCE_TCouncilMeeting kMeeting;
+    local LWCE_XGCountry kCountry;
+    local int Index;
+
+    GEOSCAPE().m_iLastMonthPaid = GEOSCAPE().EncodePayDay();
+
+    if (GEOSCAPE().m_kDateTime.IsFirstDay())
+    {
+        return;
+    }
+
+    for (Index = 0; Index < m_arrContinents.Length; Index++)
+    {
+        LWCE_XGContinent(m_arrContinents[Index]).LWCE_EndOfMonth(kMeeting);
+    }
+
+    LWCE_XGFundingCouncil(m_kFundingCouncil).LWCE_DetermineMonthlyGrade(kMeeting);
+    LWCE_DetermineDefections(kMeeting);
+    kMeeting.iFunding = PayDay();
+
+    for (Index = 0; Index < m_arrCountries.Length; Index++)
+    {
+        kCountry = LWCE_XGCountry(m_arrCountries[Index]);
+
+        if (!kCountry.IsCouncilMember() || kCountry.LeftXCom() || kMeeting.arrLeavingCountries.Find(kCountry.m_nmCountry) != INDEX_NONE)
+        {
+            continue;
+        }
+
+        if (kCountry.HasSatelliteCoverage())
+        {
+            kMeeting.iEngineers += kCountry.m_kTemplate.iEngineersPerMonth;
+            kMeeting.iScientists += kCountry.m_kTemplate.iScientistsPerMonth;
+
+            AddResource(eResource_Engineers, kCountry.m_kTemplate.iEngineersPerMonth);
+            AddResource(eResource_Scientists, kCountry.m_kTemplate.iScientistsPerMonth);
+        }
+    }
+
+    LWCE_ReducePanic(kMeeting);
+    m_kCECouncil = kMeeting;
+}
+
+function DetermineDefections(out TCouncilMeeting kCouncil)
+{
+    `LWCE_LOG_DEPRECATED_CLS(DetermineDefections);
+}
+
+function LWCE_DetermineDefections(out LWCE_TCouncilMeeting kCouncil)
+{
+    local XGCountry kCountry;
+    local int iCountry, iGrade;
+    local name nmDefector;
+
+    kCouncil.arrLeavingCountries.Sort(LWCE_SortDefectorsList);
+    LWCE_AdjustDefections(kCouncil);
+
+    for (iCountry = 0; iCountry < kCouncil.arrLeavingCountries.Length; iCountry++)
+    {
+        nmDefector = kCouncil.arrLeavingCountries[iCountry];
+        kCountry = LWCE_GetCountry(nmDefector);
+        kCountry.LeaveXComProject();
+    }
+
+    iGrade = kCouncil.eGrade;
+
+    if (kCouncil.arrLeavingCountries.Length > 0)
+    {
+        iGrade += 1;
+    }
+
+    if (kCouncil.arrLeavingCountries.Length > 2)
+    {
+        iGrade += 1;
+    }
+
+    kCouncil.eGrade = EMonthlyGrade(Min(iGrade, 4));
+}
+
+function ReducePanic(out TCouncilMeeting kCouncil)
+{
+    `LWCE_LOG_DEPRECATED_CLS(ReducePanic);
+}
+
+function LWCE_ReducePanic(out LWCE_TCouncilMeeting kCouncil)
+{
+    local LWCE_XGCountry kCountry;
+    local int iCountry, iReduction;
+
+    iReduction = class'XGTacticalGameCore'.default.SAT_PANIC_REDUCTION_PER_MONTH[Game().GetDifficulty()];
+
+    if (iReduction < 1)
+    {
+        return;
+    }
+
+    for (iCountry = 0; iCountry < m_arrCountries.Length; iCountry++)
+    {
+        kCountry = LWCE_XGCountry(m_arrCountries[iCountry]);
+
+        if (!kCountry.IsCouncilMember() || kCountry.LeftXCom() || kCouncil.arrLeavingCountries.Find(kCountry.m_nmCountry) != INDEX_NONE)
+        {
+            continue;
+        }
+
+        if (kCountry.HasSatelliteCoverage())
+        {
+            if (kCountry.GetPanicBlocks() >= 95 && Roll(class'XGTacticalGameCore'.default.PANIC_5_REDUCTION_CHANCE[Game().GetDifficulty()]))
+            {
+                kCountry.AddPanic(-iReduction);
+            }
+            else if (kCountry.GetPanicBlocks() >= 80 && Roll(class'XGTacticalGameCore'.default.PANIC_4_REDUCTION_CHANCE[Game().GetDifficulty()]))
+            {
+                kCountry.AddPanic(-iReduction);
+            }
+            else if (kCountry.GetPanicBlocks() > 1 && Roll(class'XGTacticalGameCore'.default.PANIC_LOW_REDUCTION_CHANCE[Game().GetDifficulty()]))
+            {
+                kCountry.AddPanic(-iReduction);
+            }
+        }
+    }
+}
+
+function int SortDefectorsList(ECountry eDefector1, ECountry eDefector2)
+{
+    `LWCE_LOG_DEPRECATED_CLS(SortDefectorsList);
+    return -1;
+}
+
+function int LWCE_SortDefectorsList(name nmDefector1, name nmDefector2)
+{
+    if (LWCE_GetCountry(nmDefector2).GetPanicBlocks() > LWCE_GetCountry(nmDefector1).GetPanicBlocks())
+    {
+        return -1;
+    }
+    else
+    {
+        return 0;
+    }
 }

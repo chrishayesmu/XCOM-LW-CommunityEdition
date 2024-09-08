@@ -493,3 +493,13 @@ simulated state State_UISoldierAugmentation
         m_kAugmentSoldier = Spawn(class'LWCE_UISoldierAugmentation', self);
     }
 }
+
+simulated state State_WorldReport
+{
+    simulated function Activate()
+    {
+        m_kEoMReport = Spawn(class'LWCE_UIEndOfMonthReport', self);
+        m_kEoMReport.Init(XComPlayerController(Owner), GetHUD(), 0);
+        GetHUD().LoadScreen(m_kEoMReport);
+    }
+}

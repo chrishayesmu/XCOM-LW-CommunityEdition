@@ -11,6 +11,7 @@ struct CheckpointRecord_LWCE_XGContinent extends XGContinent.CheckpointRecord
 var name m_nmBonus; // Which bonus is awarded for completing satellite coverage on this continent
 var name m_nmContinent;
 var array<name> m_arrCECountries;
+var LWCE_TMonthlySummary m_kCEMonthly;
 var array<LWCE_TShipRecord> m_arrCEShipRecord; // History of all of the enemy ships that have been sent on missions targeting this continent.
 
 var protectedwrite LWCEContinentTemplate m_kTemplate;
@@ -31,9 +32,45 @@ function InitNewGame()
     m_nmBonus = m_kTemplate.arrContinentBonuses[Rand(m_kTemplate.arrContinentBonuses.Length)];
 }
 
+function CalcRewards()
+{
+    local LWCE_XGCountry kCountry;
+    local int iCountry;
+
+    for (iCountry = 0; iCountry < m_arrCECountries.Length; iCountry++)
+    {
+        kCountry = `LWCE_XGCOUNTRY(m_arrCECountries[iCountry]);
+
+        if (kCountry.LeftXCom() || !kCountry.IsCouncilMember())
+        {
+            continue;
+        }
+
+        m_kMonthly.iFunding += kCountry.GetCurrentFunding();
+    }
+
+    m_kMonthly.iScientists = GetScientists();
+    m_kMonthly.iEngineers = GetEngineers();
+}
+
 function bool ContainsCountry(name nmCountry)
 {
     return m_arrCECountries.Find(nmCountry) != INDEX_NONE;
+}
+
+function EndOfMonth(out TCouncilMeeting kCouncil)
+{
+    `LWCE_LOG_DEPRECATED_CLS(EndOfMonth);
+}
+
+function LWCE_EndOfMonth(out LWCE_TCouncilMeeting kCouncil)
+{
+    local LWCE_TMonthlySummary kClear;
+
+    LWCE_WhoIsLeaving(kCouncil);
+    CalcRewards();
+    kCouncil.arrContinentSummaries.AddItem(m_kCEMonthly);
+    m_kCEMonthly = kClear;
 }
 
 function TContinentBonus GetBonus()
@@ -53,6 +90,26 @@ function name LWCE_GetBonus()
 function string GetName()
 {
     return m_kTemplate.strName;
+}
+
+function int GetNumRemainingCountries()
+{
+    local LWCE_XGCountry kCountry;
+    local int iCountry, iNumRemaining;
+
+    for (iCountry = 0; iCountry < m_arrCECountries.Length; iCountry++)
+    {
+        kCountry = `LWCE_XGCOUNTRY(m_arrCECountries[iCountry]);
+
+        if (kCountry.LeftXCom() || !kCountry.IsCouncilMember())
+        {
+            continue;
+        }
+
+        iNumRemaining++;
+    }
+
+    return iNumRemaining;
 }
 
 function int GetNumSatNodes()
@@ -166,10 +223,7 @@ function RecordCountryHelped(ECountry eHelpedCountry)
 
 function LWCE_RecordCountryHelped(name nmHelpedCountry)
 {
-    `LWCE_LOG_NOT_IMPLEMENTED(LWCE_RecordCountryHelped);
-
-    // TODO: add LWCE version of m_kMonthly
-    // m_kMonthly.arrCountriesNotHelped.RemoveItem(nmHelpedCountry);
+    m_kCEMonthly.arrCountriesNotHelped.RemoveItem(nmHelpedCountry);
 }
 
 function RecordCountryNotHelped(ECountry eNotHelpedCountry)
@@ -179,13 +233,10 @@ function RecordCountryNotHelped(ECountry eNotHelpedCountry)
 
 function LWCE_RecordCountryNotHelped(name nmNotHelpedCountry)
 {
-    `LWCE_LOG_NOT_IMPLEMENTED(LWCE_RecordCountryNotHelped);
-
-    // TODO: add LWCE version of m_kMonthly
-    // if (m_kMonthly.arrCountriesNotHelped.Find(nmNotHelpedCountry) == INDEX_NONE)
-    // {
-    //     m_kMonthly.arrCountriesNotHelped.AddItem(nmNotHelpedCountry);
-    // }
+    if (m_kCEMonthly.arrCountriesNotHelped.Find(nmNotHelpedCountry) == INDEX_NONE)
+    {
+        m_kCEMonthly.arrCountriesNotHelped.AddItem(nmNotHelpedCountry);
+    }
 }
 
 function SetSatelliteCoverage(int iCountry, bool bCoverage)
@@ -250,6 +301,101 @@ function LWCE_SetSatelliteCoverage(name nmCountry, bool bCoverage)
         if (bHadContinentBonus)
         {
             LWCE_XGHeadquarters(HQ()).AdjustBonusLevel(m_nmBonus, -1 * class'LWCE_XGHeadquarters'.const.CONTINENT_SATELLITE_BONUS_LEVEL_AMOUNT);
+        }
+    }
+}
+
+function WhoIsAdding()
+{
+    `LWCE_LOG_DEPRECATED_NOREPLACE_CLS(WhoIsAdding);
+}
+
+function WhoIsJoining()
+{
+    `LWCE_LOG_DEPRECATED_NOREPLACE_CLS(WhoIsJoining);
+}
+
+function WhoIsLeaving(out TCouncilMeeting kCouncil)
+{
+    `LWCE_LOG_DEPRECATED_CLS(WhoIsLeaving);
+}
+
+function LWCE_WhoIsLeaving(out LWCE_TCouncilMeeting kCouncil)
+{
+    local LWCE_XGCountry kCountry;
+    local LWCE_XGExaltSimulation kExalt;
+    local int iLeaveChance, iDefectThreshold, iNotHelpedThreshold, iChancePerPanic;
+    local name nmCountry;
+    local float fSatHelp, fSatNearbyHelp;
+
+    kExalt = LWCE_XGExaltSimulation(EXALT());
+
+    switch (Game().GetDifficulty())
+    {
+        case 0:
+            iDefectThreshold = class'XGTacticalGameCore'.default.PANIC_DEFECT_THRESHHOLD_EASY;
+            iNotHelpedThreshold = class'XGTacticalGameCore'.default.PANIC_DEFECT_THRESHHOLD_NOT_HELPED_EASY;
+            iChancePerPanic = class'XGTacticalGameCore'.default.PANIC_DEFECT_CHANCE_PER_BLOCK_EASY;
+            break;
+        case 1:
+            iDefectThreshold = class'XGTacticalGameCore'.default.PANIC_DEFECT_THRESHHOLD_NORMAL;
+            iNotHelpedThreshold = class'XGTacticalGameCore'.default.PANIC_DEFECT_THRESHHOLD_NOT_HELPED_NORMAL;
+            iChancePerPanic = class'XGTacticalGameCore'.default.PANIC_DEFECT_CHANCE_PER_BLOCK_NORMAL;
+            break;
+        case 2:
+            iDefectThreshold = class'XGTacticalGameCore'.default.PANIC_DEFECT_THRESHHOLD_HARD;
+            iNotHelpedThreshold = class'XGTacticalGameCore'.default.PANIC_DEFECT_THRESHHOLD_NOT_HELPED_HARD;
+            iChancePerPanic = class'XGTacticalGameCore'.default.PANIC_DEFECT_CHANCE_PER_BLOCK_HARD;
+            break;
+        case 3:
+            iDefectThreshold = class'XGTacticalGameCore'.default.PANIC_DEFECT_THRESHHOLD_CLASSIC;
+            iNotHelpedThreshold = class'XGTacticalGameCore'.default.PANIC_DEFECT_THRESHHOLD_NOT_HELPED_CLASSIC;
+            iChancePerPanic = class'XGTacticalGameCore'.default.PANIC_DEFECT_CHANCE_PER_BLOCK_CLASSIC;
+            break;
+    }
+
+    fSatHelp = class'XGTacticalGameCore'.default.SAT_HELP_DEFECT[Game().GetDifficulty()];
+    fSatNearbyHelp = class'XGTacticalGameCore'.default.SAT_NEARBY_HELP_DEFECT[Game().GetDifficulty()];
+
+    foreach m_arrCECountries(nmCountry)
+    {
+        kCountry = `LWCE_XGCOUNTRY(nmCountry);
+
+        if (!kCountry.IsCouncilMember() || kCountry.LeftXCom())
+        {
+            continue;
+        }
+
+        if (kExalt.LWCE_IsOperativeInCountry(nmCountry))
+        {
+            continue;
+        }
+
+        if (m_kCEMonthly.arrCountriesNotHelped.Find(nmCountry) != INDEX_NONE && kCountry.GetPanicBlocks() >= iNotHelpedThreshold)
+        {
+            iLeaveChance = int((float(kCountry.GetPanicBlocks() * kCountry.GetPanicBlocks()) / 10000.0) * 100.0f);
+        }
+        else if (kCountry.GetPanicBlocks() >= iDefectThreshold)
+        {
+            iLeaveChance = kCountry.GetPanicBlocks() * iChancePerPanic;
+        }
+        else
+        {
+            continue;
+        }
+
+        if (kCountry.HasSatelliteCoverage())
+        {
+            iLeaveChance *= fSatHelp;
+        }
+        else if (HasSatelliteCoverage())
+        {
+            iLeaveChance *= fSatNearbyHelp;
+        }
+
+        if (Roll(iLeaveChance))
+        {
+            LWCE_XGWorld(World()).LWCE_AddToDefectorsList(kCouncil, nmCountry);
         }
     }
 }

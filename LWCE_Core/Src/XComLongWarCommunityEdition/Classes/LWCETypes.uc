@@ -131,6 +131,57 @@ struct LWCE_TClassDefinition
     var array<string> NicknamesMale;   // Nicknames that can be randomly assigned to male soldiers of this class.
 };
 
+/// <summary>
+/// High level stats of the events of a month. Note that *which* month isn't part of this struct, and should be
+/// determined from context.
+/// </summary>
+struct LWCE_TMonthlySummary
+{
+    var int iPanicChange;
+    var int iUFOsSeen;
+    var int iUFOsDetected;
+    var int iUFOsShotdown;
+    var int iUFOsEscaped;
+    var int iInterceptionRating;
+    var int iAbductions;
+    var int iAbductionsThwarted;
+    var int iTerror;
+    var int iTerrorThwarted;
+    var int iUFORaids;
+    var int iTechsResearched;
+    var int iSatellitesLaunched;
+    var int iSatellitesLost;
+    var int iMismanagedFunds;
+    var int iAbductionsIgnored;
+    var int iAbductionsFailed;
+    var int iTerrorIgnored;
+    var int iTerrorFailed;
+    var int iAlienBasesAssaulted;
+    var int iCouncilMissionsCompleted;
+    var int iFunding;
+    var int iScientists;
+    var int iEngineers;
+    var array<name> arrCountriesNotHelped;
+    var array<name> arrCountriesLeaving;
+};
+
+/// <summary>
+/// The results of the monthly council meeting, used to display the council report UI.
+/// </summary>
+struct LWCE_TCouncilMeeting
+{
+    var string strSummary;
+    var array<LWCE_TMonthlySummary> arrContinentSummaries;
+    var int iFunding;
+    var int iScientists;
+    var int iEngineers;
+    var LWCE_TMonthlySummary kSummary;
+    var EMonthlyGrade eGrade;
+
+    // Countries which are leaving during the council report (as opposed to kResult.arrCountriesLeaving, which is countries that left in the month leading up to the report).
+    var array<name> arrLeavingCountries;
+};
+
 struct LWCE_TSoldier
 {
     var int iID;

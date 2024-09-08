@@ -667,6 +667,88 @@ function name LWCE_DetermineFCRequestCountry()
     return LWCE_XGCountry(arrCountries[Rand(arrCountries.Length)]).m_nmCountry;
 }
 
+function DetermineMonthlyGrade(out TCouncilMeeting kMeeting)
+{
+    `LWCE_LOG_DEPRECATED_CLS(DetermineMonthlyGrade);
+}
+
+function LWCE_DetermineMonthlyGrade(out LWCE_TCouncilMeeting kMeeting)
+{
+    local int iContinent, iScore, iPositive;
+
+    for (iContinent = 0; iContinent < kMeeting.arrContinentSummaries.Length; iContinent++)
+    {
+        kMeeting.kSummary.iAbductionsThwarted += kMeeting.arrContinentSummaries[iContinent].iAbductionsThwarted;
+        kMeeting.kSummary.iTerrorThwarted += kMeeting.arrContinentSummaries[iContinent].iTerrorThwarted;
+        kMeeting.kSummary.iSatellitesLaunched += kMeeting.arrContinentSummaries[iContinent].iSatellitesLaunched;
+        kMeeting.kSummary.iTechsResearched += kMeeting.arrContinentSummaries[iContinent].iTechsResearched;
+        kMeeting.kSummary.iUFORaids += kMeeting.arrContinentSummaries[iContinent].iUFORaids;
+        kMeeting.kSummary.iUFOsShotdown += kMeeting.arrContinentSummaries[iContinent].iUFOsShotdown;
+        kMeeting.kSummary.iUFOsDetected += kMeeting.arrContinentSummaries[iContinent].iUFOsDetected;
+        kMeeting.kSummary.iUFOsEscaped += kMeeting.arrContinentSummaries[iContinent].iUFOsDetected - kMeeting.arrContinentSummaries[iContinent].iUFOsShotdown;
+        kMeeting.kSummary.iSatellitesLost += kMeeting.arrContinentSummaries[iContinent].iSatellitesLost;
+        kMeeting.kSummary.iAlienBasesAssaulted += kMeeting.arrContinentSummaries[iContinent].iAlienBasesAssaulted;
+        kMeeting.kSummary.iCouncilMissionsCompleted += kMeeting.arrContinentSummaries[iContinent].iCouncilMissionsCompleted;
+    }
+
+    iPositive = kMeeting.kSummary.iAbductionsThwarted + kMeeting.kSummary.iTerrorThwarted + kMeeting.kSummary.iUFOsShotdown + kMeeting.kSummary.iAlienBasesAssaulted + kMeeting.kSummary.iCouncilMissionsCompleted;
+
+    if (!IsOptionEnabled(/* Dynamic War */ 9))
+    {
+        // Stat 21 after this point is XCOM's threat category (0 to 4). Prior to this, it is the raw threat, accumulated from taking down UFOs.
+        STAT_SetStat(21, Clamp((STAT_GetStat(21)) / 2, 0, 4));
+
+        // If an alien base was assaulted in the previous month, set threat category to max
+        if (kMeeting.kSummary.iAlienBasesAssaulted > 0)
+        {
+            STAT_SetStat(21, 4);
+        }
+    }
+    else
+    {
+        if (kMeeting.kSummary.iAlienBasesAssaulted > 0)
+        {
+            STAT_SetStat(21, Max(STAT_GetStat(21), 4));
+        }
+    }
+
+    if (GetResource(eResource_Money) < 0)
+    {
+        kMeeting.kSummary.iMismanagedFunds += 1;
+    }
+
+    iScore = 0;
+    iScore -= kMeeting.kSummary.iMismanagedFunds;
+    iScore -= kMeeting.kSummary.iTerrorIgnored;
+    iScore -= kMeeting.kSummary.iTerrorFailed;
+    iScore -= kMeeting.kSummary.iAbductionsIgnored;
+    iScore -= kMeeting.kSummary.iAbductionsFailed;
+    iScore -= kMeeting.kSummary.iSatellitesLost;
+
+    if (iScore <= -6 || (iScore < 0 && iPositive == 0) )
+    {
+        kMeeting.eGrade = eGrade_F;
+    }
+    else if (iScore <= -4 || (iScore < -1 && iPositive == 1) )
+    {
+        kMeeting.eGrade = eGrade_D;
+    }
+    else if (iScore <= -2)
+    {
+        kMeeting.eGrade = eGrade_C;
+    }
+    else if (iScore <= -1)
+    {
+        kMeeting.eGrade = eGrade_B;
+    }
+    else
+    {
+        kMeeting.eGrade = eGrade_A;
+    }
+
+    kMeeting.strSummary = class'XGLocalizedData'.default.MonthlyGradeSummary[int(kMeeting.eGrade)];
+}
+
 function bool DetermineNewFCMission(optional EFCMission eMission)
 {
     local TFCMission kMission;

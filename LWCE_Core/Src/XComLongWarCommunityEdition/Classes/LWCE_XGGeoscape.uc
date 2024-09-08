@@ -623,21 +623,6 @@ function ClearTopAlert(optional bool bDoNotResume = false)
     }
 }
 
-function ColorCountry(ECountry eCntry, Color Col)
-{
-    `LWCE_LOG_DEPRECATED_CLS(ColorCountry);
-}
-
-/// <summary>
-/// Changes the given country's color on the Geoscape globe.
-/// </summary>
-function LWCE_ColorCountry(name nmCountry, Color Col)
-{
-    // This (and similar functions) is not substantially rewritten for LWCE, because the Earth object uses
-    // textures and materials specifically made for the base game and its ECountry values
-    `HQGAME.GetEarth().HighlightCountry(class'LWCE_XGWorld'.static.CountryIdFromName(nmCountry), Col);
-}
-
 function ClearCountryColor(ECountry eCntry, Color Col)
 {
     `LWCE_LOG_DEPRECATED_CLS(ClearCountryColor);
@@ -663,6 +648,36 @@ function LWCE_ClearCountryPulse(name nmCountry)
 {
     `HQGAME.GetEarth().ClearCountryHighlight(class'LWCE_XGWorld'.static.CountryIdFromName(nmCountry));
     UpdateCountryColors();
+}
+
+function ColorCountry(ECountry eCntry, Color Col)
+{
+    `LWCE_LOG_DEPRECATED_CLS(ColorCountry);
+}
+
+/// <summary>
+/// Changes the given country's color on the Geoscape globe.
+/// </summary>
+function LWCE_ColorCountry(name nmCountry, Color Col)
+{
+    // This (and similar functions) is not substantially rewritten for LWCE, because the Earth object uses
+    // textures and materials specifically made for the base game and its ECountry values
+    `HQGAME.GetEarth().HighlightCountry(class'LWCE_XGWorld'.static.CountryIdFromName(nmCountry), Col);
+}
+
+function bool CountryHasAbductionMission(ECountry eTargetCountry)
+{
+    `LWCE_LOG_DEPRECATED_CLS(CountryHasAbductionMission);
+
+    return false;
+}
+
+function bool LWCE_CountryHasAbductionMission(name nmTargetCountry)
+{
+    // pending new implementation of XGMission
+    `LWCE_LOG_NOT_IMPLEMENTED(LWCE_CountryHasAbductionMission);
+
+    return false;
 }
 
 function int DetectUFO(XGShip_UFO kUFO)
