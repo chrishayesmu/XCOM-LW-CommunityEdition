@@ -4,7 +4,7 @@ var XGAbility m_kAbility;
 
 function bool Expand(string InString, out string OutString)
 {
-    local Name TagName;
+    local name TagName;
 
     TagName = name(InString);
 

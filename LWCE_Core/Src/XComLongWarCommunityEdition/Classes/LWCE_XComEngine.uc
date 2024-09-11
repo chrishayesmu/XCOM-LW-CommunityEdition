@@ -19,6 +19,7 @@ var LWCEContentManager m_kCEContentMgr;
 var LWCELocalizeContext m_kCELocalizeContext;
 var LWCEAbilityTag m_kCEAbilityTag;
 var LWCEBonusTag m_kCEBonusTag;
+var LWCEMissionTag m_kCEMissionTag;
 var LWCEParamTag m_kCEParamTag;
 
 var private array< class<LWCEDataSet> > m_arrDataSets;
@@ -94,6 +95,9 @@ event BuildLocalization()
 
     m_kCEBonusTag = new (self) class'LWCEBonusTag';
     m_kCELocalizeContext.m_arrLocalizeTags.AddItem(m_kCEBonusTag);
+
+    m_kCEMissionTag = new (self) class'LWCEMissionTag';
+    m_kCELocalizeContext.m_arrLocalizeTags.AddItem(m_kCEMissionTag);
 
     m_kCEParamTag = new (self) class'LWCEParamTag';
     m_kCELocalizeContext.m_arrLocalizeTags.AddItem(m_kCEParamTag);
