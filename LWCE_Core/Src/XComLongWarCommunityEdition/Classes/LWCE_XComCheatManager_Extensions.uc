@@ -1,6 +1,35 @@
 class LWCE_XComCheatManager_Extensions extends Object
     abstract;
 
+static function ListTemplatesOfType(name nmTemplateType, LWCE_Console kConsole)
+{
+    local array<LWCEDataTemplate> arrTemplates;
+    local LWCEDataTemplate kTemplate;
+    local LWCEDataTemplateManager kTemplateManager;
+    local LWCE_XComEngine kEngine;
+    local int iFound;
+
+    kEngine = `LWCE_ENGINE;
+    iFound = 0;
+
+    foreach kEngine.m_arrDataTemplateManagers(kTemplateManager)
+    {
+        arrTemplates = kTemplateManager.GetAllTemplates();
+
+        foreach arrTemplates(kTemplate)
+        {
+            if (nmTemplateType == '' || kTemplate.IsA(nmTemplateType))
+            {
+                kConsole.OutputTextLine(kTemplate.DataName $ " (object name: " $ kTemplate $ ")");
+                iFound++;
+            }
+        }
+    }
+
+    kConsole.OutputTextLine("Found " $ iFound $ " templates matching the type " $ nmTemplateType);
+}
+
+
 /// <summary>
 /// Finds a perk by the given string. Depending on the string, there are two ways this
 /// function can operate.

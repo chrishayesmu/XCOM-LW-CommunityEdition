@@ -535,7 +535,14 @@ function bool CreateReward(out TFCRequest kRequest, EFCRewardType kRewardType, o
 
 function XGMission_FundingCouncil CreateMission(TFCMission MissionData)
 {
-    local XGMission_FundingCouncil kMission;
+    `LWCE_LOG_DEPRECATED_CLS(CreateMission);
+
+    return none;
+}
+
+function LWCE_XGMission_FundingCouncil LWCE_CreateMission(TFCMission MissionData)
+{
+    local LWCE_XGMission_FundingCouncil kMission;
     local XGCountry kCountry;
     local ECharacter eChar;
     local XGDateTime kDateTime;
@@ -603,8 +610,12 @@ function XGMission_FundingCouncil CreateMission(TFCMission MissionData)
         }
     }
 
+    `LWCE_LOG_WARN("LWCE_XGFundingCouncil.CreateMission: not fully implemented!");
     kMission = Spawn(class'LWCE_XGMission_FundingCouncil');
-    kMission.m_kTMission = MissionData;
+    kMission.Init('CouncilMission');
+
+    // kMission.m_kTMission = MissionData; // TODO
+    /*
     kCountry = Country(kMission.m_kTMission.ECountry);
 
     if (kMission.m_kTMission.eMission == eFCM_ChryssalidHive)
@@ -640,7 +651,7 @@ function XGMission_FundingCouncil CreateMission(TFCMission MissionData)
 
     m_iLastAddedMissionID = GEOSCAPE().AddMission(kMission);
     kDateTime.Destroy();
-
+ */
     return kMission;
 }
 

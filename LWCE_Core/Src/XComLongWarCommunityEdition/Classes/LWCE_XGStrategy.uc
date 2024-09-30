@@ -173,7 +173,7 @@ function BeginCombat(XGMission kMission)
 
     if (`HQPRES.m_kMissionAudioMgr == none)
     {
-        DropshipAudioManager = new (`HQPRES) class'XComDropshipAudioMgr';
+        DropshipAudioManager = new (`HQPRES) class'LWCE_XComDropshipAudioMgr';
         `HQPRES.m_kMissionAudioMgr = DropshipAudioManager;
     }
     else
@@ -187,7 +187,7 @@ function BeginCombat(XGMission kMission)
     }
     else
     {
-        DropshipAudioManager.BeginDropshipNarrativeMoments(kMission, EMissionType(kMission.m_iMissionType), ECountry(kMission.m_iCountry));
+        LWCE_XComDropshipAudioMgr(DropshipAudioManager).LWCE_BeginDropshipNarrativeMoments(LWCE_XGMission(kMission));
     }
 
     SetTimer(0.10, false, 'DeferredLaunchCommand');
@@ -208,6 +208,279 @@ function int GetAct()
         return 1;
     }
 }
+
+function bool PostCombat(XGMission kMission)
+{
+    local bool bSuccess;
+    local XGShip_Dropship kSkyranger;
+    local XGContinent kContinent;
+    local EContinent eCont;
+    local int I, iGeneModCount, iMecCount;
+    local TMissionResult kResult;
+    local array<int> arrContinents;
+    local XComDropshipAudioMgr DropshipAudioManager;
+
+    kSkyranger = kMission.GetAssignedSkyranger();
+
+    if (`HQPRES.m_kMissionAudioMgr == none)
+    {
+        DropshipAudioManager = new (`HQPRES) class'LWCE_XComDropshipAudioMgr';
+        `HQPRES.m_kMissionAudioMgr = DropshipAudioManager;
+    }
+    else
+    {
+        DropshipAudioManager = `HQPRES.m_kMissionAudioMgr;
+    }
+
+    LWCE_XComDropshipAudioMgr(DropshipAudioManager).LWCE_BeginDropshipNarrativeMoments(LWCE_XGMission(kMission), true);
+
+    if (kMission.m_kDesc.m_iDifficulty != GetDifficulty())
+    {
+        ChangeDifficulty(kMission.m_kDesc.m_iDifficulty);
+    }
+
+    if (kMission.m_kDesc.m_iLowestDifficulty < m_iLowestDifficulty)
+    {
+        m_iLowestDifficulty = kMission.m_kDesc.m_iLowestDifficulty;
+    }
+
+    m_bIronMan = kMission.m_kDesc.m_bIsIronman;
+    m_fGameDuration += kMission.m_kDesc.m_fMatchDuration;
+    bSuccess = kSkyranger.CargoInfo.m_iBattleResult == 1;
+
+    STAT_AddStat(eRecap_Missions, 1);
+
+    if (bSuccess)
+    {
+        STAT_AddStat(eRecap_MissionsWon, 1);
+    }
+    else
+    {
+        STAT_AddStat(eRecap_MissionsLost, 1);
+
+        if (STAT_GetStat(eRecap_FirstMissionLost) == 0)
+        {
+            STAT_SetStat(eRecap_FirstMissionLost, GetNumMissionsTaken() + 1);
+            STAT_SetStat(eRecap_FirstMissionLostDays, Game().GetDays());
+        }
+    }
+
+    kSkyranger.ReconstructTransferData();
+    kSkyranger.m_bReturnedFromCombat = true;
+    kSkyranger.m_bReturnedFromFirstMission = kMission.m_kDesc.m_bIsFirstMission;
+    kSkyranger.m_strLastOpName = kMission.m_kDesc.GetOpName();
+
+    HQ().m_kLastResult = kResult;
+    HQ().m_kLastResult.eType = EMissionType(kMission.m_iMissionType);
+    HQ().m_kLastResult.iCityTarget = kMission.m_iCity;
+    HQ().m_kLastResult.iCountryTarget = kMission.m_iCountry;
+    HQ().m_kLastResult.iContinentTarget = kMission.m_iContinent;
+    HQ().m_kLastResult.iCiviliansSaved = kSkyranger.CargoInfo.m_iCiviliansSaved;
+    HQ().m_kLastResult.iCiviliansTotal = kSkyranger.CargoInfo.m_iCiviliansTotal;
+    HQ().m_kLastResult.bAllPointsHeld = kSkyranger.CargoInfo.m_bAllPointsHeld;
+    HQ().m_kLastResult.bSuccess = bSuccess;
+
+    LABS().m_bNagExplosives = kSkyranger.CargoInfo.m_bAlienDiedByExplosive;
+    EXALT().PostCombat(kMission, bSuccess);
+    kSkyranger.m_iNumMissions++;
+
+    m_arrMissionTotals[kMission.m_iMissionType] += 1;
+    m_arrMissionTotals[eMission_All] += 1;
+
+    m_kHQ.GetBarracks().PostMission(kSkyranger, kMission.m_iMissionType == eMission_AlienBase && bSuccess);
+    kContinent = kMission.GetContinent();
+
+    for (I = 0; I < kSkyranger.m_arrSoldiers.Length; I++)
+    {
+        if (kSkyranger.m_arrSoldiers[I].m_kChar.eClass == eSC_Mec)
+        {
+            iMecCount++;
+        }
+        else if (perkMgr().HasAnyGeneMod(kSkyranger.m_arrSoldiers[I].m_kChar.aUpgrades))
+        {
+            iGeneModCount++;
+        }
+    }
+
+    World().m_kFundingCouncil.PostCombat(kMission, bSuccess, iGeneModCount, iMecCount);
+    BARRACKS().MedalRequirementsPostCombat(kMission, bSuccess);
+
+    if (kMission.m_kDesc.m_bIsFirstMission && !bSuccess)
+    {
+        PRES().PlayCinematic(eCinematic_Lose);
+        return true;
+    }
+
+    if (kMission.m_iMissionType == eMission_HQAssault && bSuccess)
+    {
+        `ONLINEEVENTMGR.UnlockAchievement(AT_TheyShallNotPass);
+    }
+
+    if (kMission.IsA('XGMission_FundingCouncil') && bSuccess)
+    {
+        switch (XGMission_FundingCouncil(kMission).m_kTMission.eMission)
+        {
+            case eFCM_ChryssalidHive:
+                `ONLINEEVENTMGR.UnlockAchievement(AT_ZomBGone);
+                break;
+            case eFCM_Progeny_Deluge:
+                `ONLINEEVENTMGR.UnlockAchievement(AT_SolidProspect);
+                break;
+            case eFCM_Progeny_Furies:
+                `ONLINEEVENTMGR.UnlockAchievement(AT_HellHathNoFuries);
+                break;
+            case eFCM_Slingshot_LowFriends:
+                `ONLINEEVENTMGR.UnlockAchievement(AT_NewFriend);
+                break;
+            case eFCM_Slingshot_ConfoundingLight:
+                `ONLINEEVENTMGR.UnlockAchievement(AT_BaitTheHook);
+                break;
+            case eFCM_Slingshot_Gangplank:
+                `ONLINEEVENTMGR.UnlockAchievement(AT_BiggerTheyAre);
+                break;
+        }
+    }
+
+    if (kMission.m_iMissionType == eMission_Abduction)
+    {
+        if (RewardIsValid(kMission.m_kReward))
+        {
+            kMission.m_kReward.iCountry = kMission.GetCountry();
+            kMission.m_kReward.iCity = kMission.GetCity().m_iID;
+            kSkyranger.CargoInfo.m_kReward = kMission.m_kReward;
+        }
+
+        if (!bSuccess)
+        {
+            kMission.GetContinent().m_kMonthly.iAbductionsFailed += 1;
+        }
+
+        // First ifnd and remove the abduction we just did
+        for (I = GEOSCAPE().m_arrMissions.Length - 1; I >= 0; I--)
+        {
+            if (GEOSCAPE().m_arrMissions[I] == kMission)
+            {
+                eCont = EContinent(GEOSCAPE().m_arrMissions[I].GetContinent().GetID());
+                GEOSCAPE().RemoveMission(kMission, bSuccess, false, kMission.m_kDesc.m_bIsFirstMission, arrContinents.Find(eCont) != INDEX_NONE);
+                arrContinents.AddItem(eCont);
+            }
+        }
+
+        // There was vanilla logic here to remove all abduction missions from the Geoscape, since they always spawned in groups and only one group could
+        // be active at a time. It was disabled in the bytecode for Long War since both of those assumptions don't apply. I've just deleted it fully for clarity.
+    }
+    else if (kMission.m_iMissionType == eMission_TerrorSite)
+    {
+        if (!bSuccess)
+        {
+            kMission.GetContinent().m_kMonthly.iTerrorFailed += 1;
+        }
+
+        GEOSCAPE().RemoveMission(kMission, bSuccess);
+    }
+    else if (kMission.m_iMissionType == eMission_Crash)
+    {
+        if (bSuccess)
+        {
+            GEOSCAPE().m_arrCraftEncounters[XGMission_UFOCrash(kMission).m_iUFOType] += 1;
+            kContinent.m_kMonthly.iUFORaids += 1;
+            Country(kMission.GetCountry()).AddPanic(class'XGTacticalGameCore'.default.PANIC_UFO_ASSAULT);
+        }
+
+        if (HANGAR().IsDisabled())
+        {
+            HANGAR().SetDisabled(false);
+            HANGAR().m_bRequiresAttention = true;
+        }
+
+        GEOSCAPE().RemoveMission(kMission, bSuccess);
+    }
+    else if (kMission.m_iMissionType == eMission_LandedUFO)
+    {
+        if (XGMission_UFOLanded(kMission).kUFO.m_kTShip.eType != eShip_None)
+        {
+            if (bSuccess)
+            {
+                GEOSCAPE().m_arrCraftEncounters[XGMission_UFOLanded(kMission).kUFO.m_kTShip.eType] += 1;
+                kContinent.m_kMonthly.iUFORaids += 1;
+                AI().LogUFORecord(XGMission_UFOLanded(kMission).kUFO, eUMR_Assaulted);
+                Country(kMission.GetCountry()).AddPanic(class'XGTacticalGameCore'.default.PANIC_UFO_ASSAULT);
+            }
+            else
+            {
+                AI().LogUFORecord(XGMission_UFOLanded(kMission).kUFO, 5);
+            }
+
+            XGMission_UFOLanded(kMission).kUFO.m_kObjective.NotifyOfAssaulted(XGMission_UFOLanded(kMission).kUFO);
+        }
+
+        GEOSCAPE().RemoveMission(kMission, bSuccess);
+    }
+    else if (kMission.m_iMissionType == eMission_AlienBase)
+    {
+        if (bSuccess)
+        {
+            kContinent.m_kMonthly.iAlienBasesAssaulted += 1;
+            GEOSCAPE().RemoveMission(kMission, bSuccess);
+        }
+    }
+    else if (kMission.m_iMissionType == eMission_ExaltRaid)
+    {
+        if (bSuccess)
+        {
+            GEOSCAPE().RemoveMission(kMission, bSuccess);
+        }
+    }
+    else if (kMission.m_iMissionType == eMission_Final)
+    {
+        PRES().HideLoadingScreen();
+        GEOSCAPE().RemoveMission(kMission, bSuccess);
+
+        if (bSuccess)
+        {
+            YouWin();
+        }
+        else
+        {
+            YouLose();
+        }
+
+        return true;
+    }
+    else if (kMission.m_iMissionType == eMission_Special)
+    {
+        if (bSuccess && !ISCONTROLLED() && GetNumMissionsTaken() == 1)
+        {
+            kContinent.m_kMonthly.iCouncilMissionsCompleted += 1;
+        }
+
+        GEOSCAPE().RemoveMission(kMission, bSuccess);
+    }
+    else if (kMission.m_iMissionType == eMission_HQAssault)
+    {
+        if (!bSuccess)
+        {
+            AI().FillUFOPool();
+        }
+
+        GEOSCAPE().RemoveMission(kMission, bSuccess);
+    }
+    else
+    {
+        GEOSCAPE().RemoveMission(kMission, bSuccess);
+    }
+
+    GEOSCAPE().SkyrangerReturnToBase(kSkyranger);
+
+    if (GetNumMissionsTaken() == 1)
+    {
+        SITROOM().m_bRequiresAttention = true;
+    }
+
+    BARRACKS().UpdateFoundryPerks();
+    return false;
+}
+
 
 function PostLoadSaveGame()
 {

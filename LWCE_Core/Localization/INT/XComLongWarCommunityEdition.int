@@ -135,67 +135,67 @@ arrNames=Gift
 strOperationName="Operation <LWCEMission:OpName0/> <LWCEMission:OpName1/>"
 strTitle="Alien Abductions"
 strSituation="Alien abduction in progress. Site is clear of civilians; collateral damage is not a concern."
-strObjective="<Bullet/>   Neutralize all hostile targets\n<Bullet/>   Locate and secure any Meld canisters"
+strObjectives="<Bullet/>   Neutralize all hostile targets\n<Bullet/>   Locate and secure any Meld canisters"
 
 [AlienBaseAssault LWCEMissionTemplate]
 strOperationName="Operation <LWCEMission:OpName0/> <LWCEMission:OpName1/>"
 strTitle="Assault Base: "
 strSituation="We have gained access to an Alien Base by means of the Skeleton Key. Use extreme caution; analysis indicates the presence of a large combined enemy contingent. This mission cannot be aborted."
-strObjective="<Bullet/>   Penetrate the base's defenses\n<Bullet/>   Neutralize all invader forces\n<Bullet/>   Identify and capture the base commander, if possible"
+strObjectives="<Bullet/>   Penetrate the base's defenses\n<Bullet/>   Neutralize all invader forces\n<Bullet/>   Identify and capture the base commander, if possible"
 
 [CaptureAndHold LWCEMissionTemplate]
 strOperationName="Operation <LWCEMission:OpName0/> <LWCEMission:OpName1/>"
 strTitle="Covert Data Recovery"
 strSituation="The covert operative has finished setting up the encoder and transmitter, but EXALT is inbound. Protect the intel assets by eliminating all EXALT forces in the AO."
-strObjective="<Bullet/>   Prevent EXALT from hacking our encoder, so as to stop them from learning the transmitter's location\n<Bullet/>   If that fails, protect the data transmitter until EXALT forces are eliminated\n<Bullet/>   Neutralize all enemy units"
+strObjectives="<Bullet/>   Prevent EXALT from hacking our encoder, so as to stop them from learning the transmitter's location\n<Bullet/>   If that fails, protect the data transmitter until EXALT forces are eliminated\n<Bullet/>   Neutralize all enemy units"
 
 [CouncilMission LWCEMissionTemplate]
 strOperationName="Operation <LWCEMission:OpName0/> <LWCEMission:OpName1/>"
 strTitle="Council Mission"
 strSituation=""
-strObjective=""
+strObjectives=""
 
 [CovertOpsExtraction LWCEMissionTemplate]
 strOperationName="Operation <LWCEMission:OpName0/> <LWCEMission:OpName1/>"
 strTitle="Covert Extraction"
 strSituation="Our covert operative is ready for extraction. The operative holds intel about the location of the EXALT base, so safe conduct back to base is essential. The Skyranger will be flying low and needs extra fuel for this mission, so you will be limited to four operatives."
-strObjective="<Bullet/>   Rendezvous with our covert operative\n<Bullet/>   The operative you sent in earlier must hack two EXALT comm arrays\n<Bullet/>   After the intel is secure, escort our operative to safety\n<Bullet/>   Elimination of EXALT forces is not a primary objective"
+strObjectives="<Bullet/>   Rendezvous with our covert operative\n<Bullet/>   The operative you sent in earlier must hack two EXALT comm arrays\n<Bullet/>   After the intel is secure, escort our operative to safety\n<Bullet/>   Elimination of EXALT forces is not a primary objective"
 
 [ExaltRaid LWCEMissionTemplate]
 strOperationName="Operation <LWCEMission:OpName0/> <LWCEMission:OpName1/>"
 strTitle="EXALT Base Raid"
 strSituation="Under your direction, our covert ops section has located the EXALT base. It is hidden in plain sight, atop a skyscraper. Knock it out to deal a decisive blow to EXALT."
-strObjective="<Bullet/>  Gain entry to the EXALT facility\n<Bullet/>  Eliminate all EXALT elements"
+strObjectives="<Bullet/>  Gain entry to the EXALT facility\n<Bullet/>  Eliminate all EXALT elements"
 
 [TempleShip LWCEMissionTemplate]
 strOperationName="Operation Avenger"
 strTitle="Temple Ship Assault"
 strSituation="We finally have the strength to face the Ethereals on their own ship. The future of humanity is at stake. Expect extreme resistance."
-strObjective="<Bullet/>   Force entry to the Temple Ship's bridge\n<Bullet/>   The Volunteer must survive"
+strObjectives="<Bullet/>   Force entry to the Temple Ship's bridge\n<Bullet/>   The Volunteer must survive"
 
 [TerrorAttack LWCEMissionTemplate]
 strOperationName="Operation <LWCEMission:OpName0/> <LWCEMission:OpName1/>"
 strTitle="Alien Terror Attack in <LWCEMission:TargetCity/>"
 strSituation="Alien terror attack in progress. Strong civilian presence; every civilian casualty will sharply increase panic in this country. Failure will have severe political consequences for XCOM."
-strObjective="<Bullet/>   Approach civilians to enable evacuations\n<Bullet/>   Minimize civilian casualties\n<Bullet/>   Neutralize all hostile targets"
+strObjectives="<Bullet/>   Approach civilians to enable evacuations\n<Bullet/>   Minimize civilian casualties\n<Bullet/>   Neutralize all hostile targets"
 
 [UFOCrashed LWCEMissionTemplate]
 strOperationName="Operation <LWCEMission:OpName0/> <LWCEMission:OpName1/>"
 strTitle="UFO Crash Site"
 strSituation="XCOM Interceptors have splashed a UFO. Intel indicates some surviving crew. Exercise caution when engaging the enemy; the craft may contain usable salvage."
-strObjective="<Bullet/>   Locate the crashed UFO\n<Bullet/>   Sweep the area for surviving crew and neutralize them\n<Bullet/>   Locate and secure any Meld canisters\n<Bullet/>   Avoid additional damage to the craft if possible; some components may be recoverable"
+strObjectives="<Bullet/>   Locate the crashed UFO\n<Bullet/>   Sweep the area for surviving crew and neutralize them\n<Bullet/>   Locate and secure any Meld canisters\n<Bullet/>   Avoid additional damage to the craft if possible; some components may be recoverable"
 
 [UFOLanded LWCEMissionTemplate]
 strOperationName="Operation <LWCEMission:OpName0/> <LWCEMission:OpName1/>"
 strTitle="UFO Landing Site"
 strSituation="Satellite data indicates a UFO has touched down; high probability of enemy operation in progress. Expect to face a full complement of enemy crew."
-strObjective="<Bullet/>  Gain entry to the UFO and neutralize all enemy forces\n<Bullet/>   Locate and secure any Meld canisters"
+strObjectives="<Bullet/>  Gain entry to the UFO and neutralize all enemy forces\n<Bullet/>   Locate and secure any Meld canisters"
 
 [XComHQAssault LWCEMissionTemplate]
 strOperationName="Operation Ashes and Temples"
 strTitle="XCOM Base Defense"
 strSituation="The invaders have infiltrated XCOM in unknown numbers. Limited reinforcements, including XCOM Base Security personnel, are available. Failure will mean a massive setback for XCOM."
-strObjective="<Bullet/>   Defend our base by all necessary means\n<Bullet/>   If all soldiers in the combat area are killed, XCOM HQ will suffer massive damage and loss of resources."
+strObjectives="<Bullet/>   Defend our base by all necessary means\n<Bullet/>   If all soldiers in the combat area are killed, XCOM HQ will suffer massive damage and loss of resources."
 
 [Abduct LWCEEnemyObjectiveTemplate]
 strName="Abductions"

@@ -139,11 +139,19 @@ function Update()
 
 function AddDropship()
 {
+    local LWCE_XGShip_Dropship kDropship;
+
     if (m_kSkyranger == none)
     {
-        m_kSkyranger = Spawn(class'LWCE_XGShip_Dropship');
-        LWCE_XGShip_Dropship(m_kSkyranger).LWCE_Init('Skyranger');
-        m_kSkyranger.m_strCallsign = m_strCallsignSkyranger;
+        kDropship = Spawn(class'LWCE_XGShip_Dropship');
+        kDropship.LWCE_Init('Skyranger');
+        kDropship.m_strCallsign = m_strCallsignSkyranger;
+        kDropship.m_kAssignedBase = LWCE_XGBase(LWCE_XGHeadquarters(HQ()).m_kBase);
+        kDropship.m_v2Coords = kDropship.m_kAssignedBase.GetCoords();
+
+        kDropship.ReturnToBase();
+
+        m_kSkyranger = kDropship;
     }
 }
 

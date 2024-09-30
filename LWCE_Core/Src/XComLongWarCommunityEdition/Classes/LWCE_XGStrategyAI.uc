@@ -205,14 +205,10 @@ function XGMission LWCE_AIAddNewMission(EMissionType eType, optional LWCE_XGShip
 {
     local XGMission kMission;
 
-    `LWCE_LOG_ERROR("LWCE_AIAddNewMission: doing nothing except ship removal until mission support is fixed");
-
     if (kShip != none)
     {
         LWCE_RemoveShip(kShip);
     }
-
-    return none;
 
     if (eType == eMission_Final)
     {
@@ -228,7 +224,7 @@ function XGMission LWCE_AIAddNewMission(EMissionType eType, optional LWCE_XGShip
     }
     else if (eType == eMission_Crash)
     {
-        kMission = LWCE_CreateCrashMission(kShip);
+        kMission = LWCE_CreateCrashedShipMission(kShip);
     }
     else if (eType == eMission_HQAssault)
     {
@@ -823,9 +819,12 @@ function CostAlienSquad()
 /// </summary>
 function XGMission LWCE_CreateAirBaseDefenseMission(LWCE_XGShip kShip)
 {
-    local XGMission_UFOLanded kMission;
+    // TODO: replace this with its own mission type
+    local LWCE_XGMission_ShipLanded kMission;
 
-    kMission = Spawn(class'LWCE_XGMission_UFOLanded');
+    kMission = Spawn(class'LWCE_XGMission_ShipLanded');
+    kMission.Init('XComAirBaseAssault');
+
     kMission.m_kDesc = Spawn(class'LWCE_XGBattleDesc').Init();
     kMission.m_bScripted = true;
     kMission.m_kDesc.m_bScripted = true;
@@ -947,33 +946,26 @@ function CostTest()
 
 function XGMission CreateTempleMission()
 {
-    local XGMission_TempleShip kMission;
+    local LWCE_XGMission_TempleShip kMission;
 
     kMission = Spawn(class'LWCE_XGMission_TempleShip');
+    kMission.Init('TempleShip');
+
     kMission.m_kDesc = Spawn(class'LWCE_XGBattleDesc').Init();
-    kMission.m_iCity = -1;
-    kMission.m_iContinent = -1;
+    kMission.m_nmCity = '';
+    kMission.m_nmContinent = '';
     kMission.m_iDuration = -1;
     kMission.m_v2Coords = vect2d(0.4150, 0.5570);
-    kMission.m_iMissionType = eMission_Final;
+    kMission.m_nmMissionTemplate = 'TempleShip';
 
     return kMission;
 }
 
 function XGMission CheatTerrorMission()
 {
-    local XGMission_Terror kMission;
+    `LWCE_LOG_DEPRECATED_NOREPLACE_CLS(CheatTerrorMission);
 
-    kMission = Spawn(class'LWCE_XGMission_Terror');
-    kMission.m_kDesc = Spawn(class'LWCE_XGBattleDesc').Init();
-    kMission.m_iCity = 4;
-    kMission.m_iCountry = 0;
-    kMission.m_iContinent = 0;
-    kMission.m_iDuration = 2 * `LWCE_STRATCFG(MissionGeoscapeDuration_Terror);
-    kMission.m_v2Coords = CITY(4).m_v2Coords;
-    kMission.m_kDesc.m_kAlienSquad = DetermineTerrorSquad();
-
-    return kMission;
+    return none;
 }
 
 function XGMission CreateTerrorMission(XGShip_UFO kUFO)
@@ -985,30 +977,32 @@ function XGMission CreateTerrorMission(XGShip_UFO kUFO)
 
 function XGMission LWCE_CreateTerrorMission(LWCE_XGShip kShip)
 {
-    local XGMission_Terror kMission;
+    local LWCE_XGMission_Terror kMission;
 
     kMission = Spawn(class'LWCE_XGMission_Terror');
+    kMission.Init('TerrorAttack');
+
     kMission.m_kDesc = Spawn(class'LWCE_XGBattleDesc').Init();
     kMission.m_iDuration = 2 * `LWCE_STRATCFG(MissionGeoscapeDuration_Terror);
     kMission.m_kDesc.m_kAlienSquad = DetermineTerrorSquad();
 
-    `LWCE_LOG_ERROR("City/country/continent names are not supported for LWCE_XGMission_Terror yet!");
-    ScriptTrace();
-    // kMission.m_iCity = kShip.m_kObjective.m_iCityTarget;
-    // kMission.m_v2Coords = CITY(kMission.m_iCity).m_v2Coords;
-    // kMission.m_iContinent = kShip.GetContinent();
-    // kMission.m_iCountry = CITY(kMission.m_iCity).GetCountry();
+    kMission.m_nmCity = kShip.m_kObjective.m_nmCityTarget;
+    kMission.m_v2Coords = `LWCE_XGCITY(kMission.m_nmCity).m_v2Coords;
+    kMission.m_nmContinent = kShip.GetContinent();
+    kMission.m_nmCountry = `LWCE_XGCITY(kMission.m_nmCity).m_nmCountry;
 
     return kMission;
 }
 
 function XGMission CreateHQAssaultMission()
 {
-    local XGMission_HQAssault kMission;
+    local LWCE_XGMission_HQAssault kMission;
 
     kMission = Spawn(class'LWCE_XGMission_HQAssault');
+    kMission.Init('XComHQAssault');
+
     kMission.m_kDesc = Spawn(class'LWCE_XGBattleDesc').Init();
-    kMission.m_iContinent = HQ().GetContinent();
+    kMission.m_nmContinent = LWCE_XGHeadquarters(HQ()).LWCE_GetContinent();
     kMission.m_v2Coords = HQ().GetCoords();
     kMission.m_kDesc.m_kAlienSquad = DetermineHQAssaultSquad();
 
@@ -1024,18 +1018,18 @@ function XGMission CreateExaltRaidMission(ECountry ExaltCountry)
 
 function XGMission LWCE_CreateExaltRaidMission(name nmCountry)
 {
-    local XGMission_ExaltRaid kMission;
+    local LWCE_XGMission_ExaltRaid kMission;
 
     kMission = Spawn(class'LWCE_XGMission_ExaltRaid');
+    kMission.Init('ExaltRaid');
+
     kMission.m_kDesc = Spawn(class'LWCE_XGBattleDesc').Init();
     kMission.m_kDesc.m_kAlienSquad = DetermineExaltRaidSquad();
 
-    `LWCE_LOG_ERROR("Country/continent names are not supported for LWCE_CreateExaltRaidMission yet!");
-    ScriptTrace();
-    // kMission.m_iCity = Country(nmCountry).GetRandomCity();
-    // kMission.m_iCountry = nmCountry;
-    // kMission.m_iContinent = Country(nmCountry).GetContinent();
-    // kMission.m_v2Coords = CITY(kMission.m_iCity).m_v2Coords;
+    kMission.m_nmCity = `LWCE_XGCOUNTRY(nmCountry).LWCE_GetRandomCity();
+    kMission.m_nmCountry = nmCountry;
+    kMission.m_nmContinent = `LWCE_XGCOUNTRY(nmCountry).m_nmContinent;
+    kMission.m_v2Coords = `LWCE_XGCITY(kMission.m_nmCity).m_v2Coords;
 
     return kMission;
 }
@@ -1047,12 +1041,17 @@ function CheatLandedUFO(string strMapName)
 
 function CreateAlienBase()
 {
+    `LWCE_LOG_DEPRECATED_CLS(CreateAlienBase);
+}
+
+function LWCE_CreateAlienBase(name nmCountry)
+{
     local int iElerium;
-    local XGCountry kCountry;
+    local LWCE_XGCountry kCountry;
     local LWCE_XGMission_AlienBase kMission;
     local LWCE_TMissionReward kReward;
 
-    kCountry = Country(m_iAlienMonth);
+    kCountry = `LWCE_XGCOUNTRY(nmCountry);
 
     if (kCountry == none)
     {
@@ -1070,9 +1069,11 @@ function CreateAlienBase()
     }
 
     kMission = Spawn(class'LWCE_XGMission_AlienBase');
+    kMission.Init('AlienBaseAssault');
+
     kMission.m_kDesc = Spawn(class'LWCE_XGBattleDesc').Init();
-    kMission.m_iCountry = kCountry.GetID();
-    kMission.m_v2Coords = CITY(kCountry.GetRandomCity()).m_v2Coords;
+    kMission.m_nmCountry = nmCountry;
+    kMission.m_v2Coords = `LWCE_XGCITY(kCountry.LWCE_GetRandomCity()).m_v2Coords;
     kMission.m_strTitle = kMission.m_strTitle $ kCountry.GetName();
     kMission.m_kDesc.m_kAlienSquad = DetermineAlienBaseSquad();
 
@@ -1089,8 +1090,7 @@ function CreateAlienBase()
         `LWCE_UTILS.SetItemQuantity(kReward.arrItems, 'Item_HyperwaveBeacon', 0);
     }
 
-    class'LWCE_XGMission_Extensions'.static.SetMissionRewards(kMission, kReward);
-
+    kMission.m_kCEReward = kReward;
     kMission.m_iDetectedBy = 0;
 
     GEOSCAPE().AddMission(kMission);
@@ -1098,70 +1098,62 @@ function CreateAlienBase()
 
 function XGMission CreateFirstMission()
 {
-    local XGMission_Abduction kMission;
+    local LWCE_XGCity kCity;
+    local LWCE_XGContinent kContinent;
+    local LWCE_XGMission_Abduction kMission;
+
+    kContinent = `LWCE_XGCONTINENT(LWCE_XGHeadquarters(HQ()).LWCE_GetContinent());
+    kCity = `LWCE_XGCITY(kContinent.LWCE_GetRandomCity());
 
     kMission = Spawn(class'LWCE_XGMission_Abduction');
+    kMission.Init('Abduction');
+
     kMission.m_kDesc = Spawn(class'LWCE_XGBattleDesc').Init();
     kMission.m_iDuration = 2 * `LWCE_STRATCFG(MissionGeoscapeDuration_Abduction);
     kMission.m_eTimeOfDay = eTOD_Night;
     kMission.m_kDesc.m_kAlienSquad = DetermineFirstMissionSquad();
 
-    `LWCE_LOG_ERROR("Country/continent names are not supported for CreateFirstMission yet!");
-    // kMission.m_iCity = Continent(HQ().GetContinent()).GetRandomCity();
-    // kMission.m_iCountry = CITY(kMission.m_iCity).GetCountry();
-    // kMission.m_iContinent = HQ().GetContinent();
-    // kMission.m_v2Coords = CITY(kMission.m_iCity).m_v2Coords;
+    kMission.m_nmCity = kCity.m_nmCity;
+    kMission.m_nmCountry = kCity.m_nmCountry;
+    kMission.m_nmContinent = kCity.LWCE_GetContinent();
+    kMission.m_v2Coords = kCity.m_v2Coords;
 
     return kMission;
 }
 
 function XGMission CreateFirstMission_Controlled()
 {
-    local XGMission_Abduction kMission;
-
-    kMission = Spawn(class'LWCE_XGMission_Abduction');
-    kMission.m_kDesc = Spawn(class'LWCE_XGBattleDesc').Init();
-    kMission.m_bScripted = true;
-    kMission.m_kDesc.m_bScripted = true;
-    kMission.m_iCity = Continent(HQ().GetContinent()).GetRandomCity();
-    kMission.m_iCountry = CITY(kMission.m_iCity).GetCountry();
-    kMission.m_iContinent = HQ().GetContinent();
-    kMission.m_iDuration = 2 * `LWCE_STRATCFG(MissionGeoscapeDuration_Abduction);
-    kMission.m_v2Coords = CITY(kMission.m_iCity).m_v2Coords;
-    kMission.m_kDesc.m_strMapName = "Tutorial 2 (Abduction)";
-    kMission.m_kDesc.m_strMapCommand = class'XComMapManager'.static.GetMapCommandLine(kMission.m_kDesc.m_strMapName, true, true, kMission.m_kDesc);
-    kMission.m_kDesc.m_iMissionType = eMission_Special;
-    return kMission;
-}
-
-function XGMission CreateCrashMission(XGShip_UFO kUFO)
-{
-    `LWCE_LOG_DEPRECATED_CLS(CreateCrashMission);
+    `LWCE_LOG_DEPRECATED_NOREPLACE_CLS(CreateFirstMission_Controlled);
 
     return none;
 }
 
-function XGMission LWCE_CreateCrashMission(LWCE_XGShip kShip)
+function XGMission CreateCrashMission(XGShip_UFO kUFO)
 {
-    local LWCE_TMissionReward kReward;
-    local LWCE_XGMission_UFOCrash kMission;
+    `LWCE_LOG_DEPRECATED_BY(CreateCrashMission, LWCE_CreateCrashedShipMission);
 
-    kMission = Spawn(class'LWCE_XGMission_UFOCrash');
+    return none;
+}
+
+function XGMission LWCE_CreateCrashedShipMission(LWCE_XGShip kShip)
+{
+    local LWCE_XGMission_ShipCrashed kMission;
+
+    kMission = Spawn(class'LWCE_XGMission_ShipCrashed');
+    kMission.Init('ShipCrashed');
+
     kMission.m_kDesc = Spawn(class'LWCE_XGBattleDesc').Init();
     kMission.m_iDuration = 2 * DetermineCrashedUFOMissionTimer(kShip);
     kMission.m_v2Coords = kShip.GetCoords();
     kMission.m_kDesc.m_kAlienSquad = LWCE_DetermineUFOSquad(kShip, false);
     kMission.m_iCounter = kShip.m_iCounter;
 
-    `LWCE_LOG_ERROR("LWCE_XGShip is not supported for LWCE_XGMission_UFOCrash yet!");
-    ScriptTrace();
-    // kMission.m_iContinent = kShip.GetContinent();
-    // kMission.m_iCountry = kShip.GetCountry();
-    // kMission.m_iUFOType = kShip.GetType();
-    // kMission.m_kUFOObjective = kShip.m_kObjective.m_kTObjective;
+    kMission.m_nmContinent = kShip.GetContinent();
+    kMission.m_nmCountry = kShip.GetCountry();
+    kMission.m_nmShipType = kShip.m_nmShipTemplate;
+    kMission.m_kShipObjective = kShip.m_kObjective.m_kCETObjective;
 
-    kReward = CreateMissionRewards(kShip.m_kTemplate.GetSalvage());
-    class'LWCE_XGMission_Extensions'.static.SetMissionRewards(kMission, kReward);
+    kMission.m_kCEReward = CreateMissionRewards(kShip.m_kTemplate.GetSalvage());
 
     LWCE_RemoveShip(kShip);
 
@@ -1177,21 +1169,19 @@ function XGMission CreateLandedUFOMission(XGShip_UFO kUFO)
 
 function XGMission LWCE_CreateLandedShipMission(LWCE_XGShip kShip)
 {
-    local LWCE_TMissionReward kReward;
-    local LWCE_XGMission_UFOLanded kMission;
+    local LWCE_XGMission_ShipLanded kMission;
 
-    kMission = Spawn(class'LWCE_XGMission_UFOLanded');
+    kMission = Spawn(class'LWCE_XGMission_ShipLanded');
+    kMission.Init('ShipLanded');
+
     kMission.m_kDesc = Spawn(class'LWCE_XGBattleDesc').Init();
     kMission.m_iDuration = 2 * DetermineLandedUFOMissionTimer(kShip);
     kMission.m_v2Coords = kShip.GetCoords();
     kMission.m_kDesc.m_kAlienSquad = LWCE_DetermineUFOSquad(kShip, true);
 
-    // TODO
-    `LWCE_LOG_ERROR("LWCE_XGShip is not supported for LWCE_XGMission_UFOLanded yet!");
-    ScriptTrace();
-    // kMission.m_iContinent = kShip.GetContinent();
-    // kMission.m_iCountry = kShip.GetCountry();
-    // kMission.kUFO = kShip;
+    kMission.m_nmContinent = kShip.GetContinent();
+    kMission.m_nmCountry = kShip.GetCountry();
+    kMission.m_kShip = kShip;
 
     if (`LWCE_XGCOUNTRY(kShip.GetCountry()).HasSatelliteCoverage())
     {
@@ -1203,8 +1193,7 @@ function XGMission LWCE_CreateLandedShipMission(LWCE_XGShip kShip)
         kMission.m_iDetectedBy = -1;
     }
 
-    kReward = CreateMissionRewards(kShip.m_kTemplate.GetSalvage());
-    class'LWCE_XGMission_Extensions'.static.SetMissionRewards(kMission, kReward);
+    kMission.m_kCEReward = CreateMissionRewards(kShip.m_kTemplate.GetSalvage());
 
     return kMission;
 }
@@ -1222,18 +1211,20 @@ function XGMission LWCE_CreateCovertOpsExtractionMission(name nmMissionCountry)
     local LWCE_XGCountry kCountry;
 
     kCountry = `LWCE_XGCOUNTRY(nmMissionCountry);
+
     kMission = Spawn(class'LWCE_XGMission_CovertOpsExtraction');
+    kMission.Init('CovertOpsExtraction');
+
     kMission.m_kDesc = Spawn(class'LWCE_XGBattleDesc').Init();
     kMission.m_iDuration = 2 * `LWCE_STRATCFG(MissionGeoscapeDuration_CovertExtraction);
     kMission.m_v2Coords = kCountry.GetCoords();
 
+    // TODO rewrite DetermineCovertOpsSquad to avoid this
     m_iAlienMonth = eMission_CovertOpsExtraction; // Hacked-in way to pass mission type to DetermineCovertOpsSquad
     kMission.m_kDesc.m_kAlienSquad = DetermineCovertOpsSquad();
 
-    `LWCE_LOG_ERROR("Country/continent names are not supported for LWCE_XGMission_CovertOpsExtraction yet!");
-    ScriptTrace();
-    // kMission.m_iContinent = kCountry.GetContinent();
-    // kMission.m_iCountry = nmMissionCountry;
+    kMission.m_nmContinent = kCountry.m_nmContinent;
+    kMission.m_nmCountry = nmMissionCountry;
 
     return kMission;
 }
@@ -1253,6 +1244,8 @@ function XGMission LWCE_CreateCaptureAndHoldMission(name nmMissionCountry)
     kCountry = `LWCE_XGCOUNTRY(nmMissionCountry);
 
     kMission = Spawn(class'LWCE_XGMission_CaptureAndHold');
+    kMission.Init('CaptureAndHold');
+
     kMission.m_kDesc = Spawn(class'LWCE_XGBattleDesc').Init();
     kMission.m_iDuration = 2 * `LWCE_STRATCFG(MissionGeoscapeDuration_DataRecovery);
     kMission.m_v2Coords = kCountry.GetCoords();
@@ -1700,8 +1693,13 @@ function bool IsXComBeingAttacked()
 
 function LaunchBlitz(array<ECityType> arrTargetCities, optional bool bFirstBlitz)
 {
-    local XGMission_Abduction kMission;
-    local XGCity kCity;
+    `LWCE_LOG_DEPRECATED_CLS(LaunchBlitz);
+}
+
+function LWCE_LaunchBlitz(array<name> arrTargetCities, optional bool bFirstBlitz)
+{
+    local LWCE_XGMission_Abduction kMission;
+    local LWCE_XGCity kCity;
     local array<EMissionRewardType> arrRewards;
     local EMissionRewardType eReward;
     local EMissionDifficulty eDiff;
@@ -1732,24 +1730,26 @@ function LaunchBlitz(array<ECityType> arrTargetCities, optional bool bFirstBlitz
     {
         kReward = kBlankReward;
 
-        kCity = CITY(arrTargetCities[I]);
+        kCity = `LWCE_XGCITY(arrTargetCities[I]);
         iIndex = Rand(arrRewards.Length);
         eReward = arrRewards[iIndex];
         arrRewards.Remove(iIndex, 1);
-        eDiff = GetAbductionDifficulty(Country(kCity.GetCountry()));
+        eDiff = GetAbductionDifficulty(`LWCE_XGCOUNTRY(kCity.LWCE_GetCountry()));
 
         kMission = Spawn(class'LWCE_XGMission_Abduction');
+        kMission.Init('Abduction');
+
         kMission.m_kDesc = Spawn(class'LWCE_XGBattleDesc').Init();
-        kMission.m_iCity = kCity.m_iID;
-        kMission.m_iCountry = CITY(kMission.m_iCity).GetCountry();
-        kMission.m_iContinent = kCity.GetContinent();
+        kMission.m_nmCity = kCity.m_nmCity;
+        kMission.m_nmCountry = kCity.LWCE_GetCountry();
+        kMission.m_nmContinent = kCity.LWCE_GetContinent();
         kMission.m_iDuration = 2 * `LWCE_STRATCFG(MissionGeoscapeDuration_Abduction);
         kMission.m_v2Coords = kCity.GetCoords();
         kMission.m_kDesc.m_kAlienSquad = DetermineAbductionSquad(eDiff);
         kMission.m_eDifficulty = eDiff;
 
         LWCE_DetermineAbductionReward(kReward, eDiff, eReward);
-        class'LWCE_XGMission_Extensions'.static.SetMissionRewards(kMission, kReward);
+        kMission.m_kCEReward = kReward;
 
         kMission.m_iDetectedBy = 0;
 

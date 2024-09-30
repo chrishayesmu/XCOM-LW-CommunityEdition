@@ -33,7 +33,7 @@ static function name AlertNameFromEnum(EGeoscapeAlert eAlert)
         case eGA_UFOLost:
             return 'UFOLost';
         case eGA_UFOLanded:
-            return 'UFOLanded';
+            return 'ShipLanded';
         case eGA_DropArrive:
             return 'DropArrive';
         case eGA_AlienBase:
@@ -147,7 +147,7 @@ static function EGeoscapeAlert EnumFromAlertName(name AlertType)
             return eGA_UFOCrash;
         case 'UFOLost':
             return eGA_UFOLost;
-        case 'UFOLanded':
+        case 'ShipLanded':
             return eGA_UFOLanded;
         case 'DropArrive':
             return eGA_DropArrive;
@@ -260,6 +260,19 @@ function InitNewGame()
     m_kDateTime.SetTime(0, 0, 0, START_MONTH, START_DAY, START_YEAR);
 
     InitPlayer();
+}
+
+function InitPlayer()
+{
+    // XGGeoscape.InitPlayer does some setup for the Skyranger, but we're letting the hangar handle that in LWCE
+    local XGShip_Dropship kSkyranger;
+
+    kSkyranger = HANGAR().m_kSkyranger;
+    kSkyranger.m_v2Coords = HQ().GetCoords();
+    kSkyranger.m_v2Destination = HQ().GetCoords();
+
+    m_kReturnMission = Spawn(class'XGMission_ReturnToBase');
+    m_kReturnMission.m_v2Coords = HQ().GetCoords();
 }
 
 event Tick(float fDeltaT)
@@ -811,7 +824,8 @@ function DetermineMap(XGMission kMission, optional EMissionTime eTime = eMission
     {
         // The Country parameter in GetRandomMapDisplayName doesn't seem to be used, so just force it to 0
         // TODO: this seems to crash the game if no matching map is found
-        strMap = class'XComMapManager'.static.GetRandomMapDisplayName(eMission, eTime, eUFO, kMission.GetRegion(), ECountry(0), `PROFILESETTINGS.Data.m_arrMapHistory, PlayCount);
+        `LWCE_LOG("Finding random map for eMission=" $ eMission $ ", eTime=" $ eTime $ ", eUFO=" $ eUFO $ ", region=" $ kMission.GetRegion());
+        strMap = class'XComMapManager'.static.GetRandomMapDisplayName(eMission_Abduction, eTime, eUFO, kMission.GetRegion(), ECountry(0), `PROFILESETTINGS.Data.m_arrMapHistory, PlayCount);
     }
 
     kMission.m_kDesc.m_iPlayCount = PlayCount;
@@ -959,6 +973,8 @@ function MissionAlert(int iMission)
 
     kMission = m_arrMissions[iMission];
 
+    `LWCE_LOG("MissionAlert: kMission = " $ kMission);
+
     if (kMission.m_iMissionType == eMission_Crash)
     {
         LWCE_Alert(`LWCE_ALERT('UFOCrash').AddInt(kMission.m_iID).Build());
@@ -990,7 +1006,7 @@ function MissionAlert(int iMission)
     }
     else if (kMission.m_iMissionType == eMission_LandedUFO)
     {
-        LWCE_Alert(`LWCE_ALERT('UFOLanded').AddInt(kMission.m_iID).Build());
+        LWCE_Alert(`LWCE_ALERT('ShipLanded').AddInt(kMission.m_iID).Build());
     }
     else if (kMission.m_iMissionType == eMission_Special)
     {
@@ -1046,17 +1062,14 @@ function OnUFODetected(int iShip)
     }
     else
     {
-        `LWCE_LOG_ERROR("Landed UFO missions in Geoscape require update to XGMission framework");
-        ScriptTrace();
-
-        // foreach m_arrMissions(kMission)
-        // {
-        //     if (XGMission_UFOLanded(kMission) != none && XGMission_UFOLanded(kMission).kUFO == kShip)
-        //     {
-        //         LWCE_Alert(`LWCE_ALERT('UFOLanded').AddInt(kMission.m_iID).Build());
-        //         break;
-        //     }
-        // }
+        foreach m_arrMissions(kMission)
+        {
+            if (LWCE_XGMission_ShipLanded(kMission) != none && LWCE_XGMission_ShipLanded(kMission).m_kShip == kShip)
+            {
+                LWCE_Alert(`LWCE_ALERT('ShipLanded').AddInt(kMission.m_iID).Build());
+                break;
+            }
+        }
     }
 }
 
@@ -1073,7 +1086,7 @@ simulated function LWCE_PreloadSquadIntoSkyranger(name nmAlertType, bool bUnload
         case 'Terror':
         case 'FCMission':
         case 'UFOCrash':
-        case 'UFOLanded':
+        case 'ShipLanded':
         case 'AlienBase':
         case 'Temple':
         case 'FCMissionActivity':
@@ -1218,13 +1231,13 @@ function LWCE_RemoveShip(LWCE_XGShip kShip)
 
 function SkyrangerArrival(XGShip_Dropship kSkyranger, optional bool bRequestOrders)
 {
-    local XGMission kMission;
+    local LWCE_XGMission kMission;
     local int iSkyrangerIndex;
 
-    kMission = kSkyranger.m_kMission;
+    kMission = LWCE_XGMission(kSkyranger.m_kMission);
     kSkyranger.m_fExpectedFlightTime = 0.0;
 
-    if (kMission.m_iMissionType == eMission_ReturnToBase)
+    if (kMission.m_nmMissionTemplate == 'ReturnToBase')
     {
         kSkyranger.Land();
         kSkyranger.SetMission(none);
@@ -1244,6 +1257,28 @@ function SkyrangerArrival(XGShip_Dropship kSkyranger, optional bool bRequestOrde
     {
         Game().BeginCombat(kSkyranger.m_kMission);
     }
+}
+
+function SkyrangerReturnToBase(XGShip_Dropship kSkyranger, optional bool bMissionAborted = false)
+{
+    local float iMinutesPassed;
+    local int PlayCount;
+
+    if (!bMissionAborted)
+    {
+        iMinutesPassed = 60.0 + `SYNC_RAND(45);
+        m_kDateTime.AddTime(iMinutesPassed * 60.0f);
+        AI().FastForward(int(iMinutesPassed / 30.0f));
+    }
+    else
+    {
+        AI().AIUpdateMissions(1);
+        class'XComMapManager'.static.DecrementMapPlayHistory(kSkyranger.m_kMission.m_kDesc.m_strMapName, `PROFILESETTINGS.Data.m_arrMapHistory, PlayCount);
+        class'XComMapManager'.static.DecrementMapPlayHistory(kSkyranger.m_kMission.m_kDesc.m_strMapName, `PROFILESETTINGS.Data.m_arrMapHistory, PlayCount);
+        `ONLINEEVENTMGR.SaveProfileSettings();
+    }
+
+    LWCE_XGShip_Dropship(kSkyranger).ReturnToBase();
 }
 
 function SpawnTempleEntity()

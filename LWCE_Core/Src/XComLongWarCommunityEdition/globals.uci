@@ -165,7 +165,7 @@
 `define LWCE_WORLD (LWCE_XGWorld(`LWCE_STRATEGY.m_kWorld))
 
 // These macros look similar to the LWCE_COUNTRY and LWCE_CONTINENT macros, but they're retrieving the
-// XGCountry and XGContinent objects in the strat layer, while the other macros retrieve templates
+// XGCity/XGCountry/XGContinent objects in the strat layer, while the other macros retrieve templates
 `define LWCE_XGCITY(nm) (`LWCE_WORLD.LWCE_GetCity(`nm))
 `define LWCE_XGCONTINENT(nm) (`LWCE_WORLD.LWCE_GetContinent(`nm))
 `define LWCE_XGCOUNTRY(nm) (`LWCE_WORLD.LWCE_GetCountry(`nm))

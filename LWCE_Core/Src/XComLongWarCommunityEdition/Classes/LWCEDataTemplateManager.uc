@@ -141,6 +141,25 @@ function bool AddDataTemplate(LWCEDataTemplate kTemplate, bool ReplaceDuplicate 
 }
 
 /// <summary>
+/// Gets all of the templates cached in this template manager. Generally, subclasses will expose a more narrowly typed
+/// version of this function, which should be preferred unless the caller truly needs all templates regardless of their type.
+/// </summary>
+function array<LWCEDataTemplate> GetAllTemplates()
+{
+    local array<LWCEDataTemplate> arrTemplates;
+    local int Index;
+
+    arrTemplates.Length = m_arrTemplates.Length;
+
+    for (Index = 0; Index < m_arrTemplates.Length; Index++)
+    {
+        arrTemplates[Index] = m_arrTemplates[Index].kTemplate;
+    }
+
+    return arrTemplates;
+}
+
+/// <summary>
 /// Retrieves the names of all of the templates which are cached in this template manager.
 /// </summary>
 function array<name> GetTemplateNames()

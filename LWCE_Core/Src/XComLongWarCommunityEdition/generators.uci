@@ -15,5 +15,4 @@
 `include(generators_cheatmgr.uci)
 `include(generators_uisoldierlist.uci)
 `include(generators_xgbattle.uci)
-`include(generators_xgmission.uci)
 `include(generators_xgplayer.uci)

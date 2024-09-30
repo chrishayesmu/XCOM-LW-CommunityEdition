@@ -430,7 +430,7 @@ function bool CheckForInterrupt()
         case 'Terror':
         case 'FCMission':
         case 'UFOCrash':
-        case 'UFOLanded':
+        case 'ShipLanded':
         case 'DropArrive':
         case 'AlienBase':
         case 'Temple':
@@ -556,7 +556,7 @@ function OnAlertInput(int iOption)
         case 'Terror':
         case 'FCMission':
         case 'UFOCrash':
-        case 'UFOLanded':
+        case 'ShipLanded':
             if (iOption == 0)
             {
                 if (HANGAR().m_kSkyranger.IsFlying())
@@ -1157,12 +1157,11 @@ function UpdateAlert()
             PRES().CAMLookAtEarth(kShip.GetCoords());
 
             break;
-        case 'UFOLanded':
+        case 'ShipLanded':
             Sound().PlaySFX(SNDLIB().SFX_Alert_UFOLanded);
 
-            `LWCE_LOG_ERROR("LWCE_XGMissionControlUI: UFOLanded alert requires updates to XGMission_UFOLanded");
-            //kShip = XGMission_UFOLanded(GEOSCAPE().GetMission(kGeoAlert.kData.Data[0].I)).kUFO;
-            kMission = XGMission_UFOLanded(GEOSCAPE().GetMission(kGeoAlert.kData.Data[0].I));
+            kShip = LWCE_XGMission_ShipLanded(GEOSCAPE().GetMission(kGeoAlert.kData.Data[0].I)).m_kShip;
+            kMission = LWCE_XGMission_ShipLanded(GEOSCAPE().GetMission(kGeoAlert.kData.Data[0].I));
 
             if (kMission.m_kDesc.m_strMapName == "EWI_HQAssault_MP (Airbase Defense)")
             {
@@ -2411,7 +2410,7 @@ function UpdateView()
         {
             Narrative(`XComNarrativeMoment("RoboHQ_ContactLost"));
         }
-        else if (m_kCECurrentAlert.AlertType == 'UFOLanded')
+        else if (m_kCECurrentAlert.AlertType == 'ShipLanded')
         {
             Narrative(`XComNarrativeMoment("RoboHQ_ContactDetected"));
         }

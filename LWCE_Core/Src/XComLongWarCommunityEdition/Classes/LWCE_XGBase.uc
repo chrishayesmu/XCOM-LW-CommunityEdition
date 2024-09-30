@@ -339,6 +339,11 @@ function name LWCE_GetAdjacency(int X1, int Y1, int X2, int Y2)
     return '';
 }
 
+function Vector2D GetCoords()
+{
+    return m_vBaseCoords;
+}
+
 function int GetFacilityAt(int X, int Y)
 {
     `LWCE_LOG_DEPRECATED_CLS(GetFacilityAt);

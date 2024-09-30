@@ -1,12 +1,11 @@
-class LWCE_XGMission_AlienBase extends XGMission_AlienBase;
+class LWCE_XGMission_AlienBase extends LWCE_XGMission;
 
-struct CheckpointRecord_LWCE_XGMission_AlienBase extends XGMission.CheckpointRecord
+function int GetMainSpecies()
 {
-    var LWCE_TMissionReward m_KCEReward;
-};
+    return m_kDesc.m_kAlienInfo.iPodLeaderType;
+}
 
-var LWCE_TMissionReward m_KCEReward;
-
-`include(generators.uci)
-
-`LWCE_GENERATOR_XGMISSION
+defaultproperties
+{
+    m_iDetectedBy=-1
+}

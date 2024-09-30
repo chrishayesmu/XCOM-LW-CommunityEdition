@@ -1,12 +1,11 @@
-class LWCE_XGMission_HQAssault extends XGMission_HQAssault;
+class LWCE_XGMission_HQAssault extends LWCE_XGMission;
 
-struct CheckpointRecord_LWCE_XGMission_HQAssault extends XGMission.CheckpointRecord
+function OnLoadGame()
 {
-    var LWCE_TMissionReward m_KCEReward;
-};
-
-var LWCE_TMissionReward m_KCEReward;
-
-`include(generators.uci)
-
-`LWCE_GENERATOR_XGMISSION
+    if (Game().m_kStrategyTransport == none)
+    {
+        PRES().m_bIsShuttling = true;
+        GEOSCAPE().StartHQAssault();
+        PRES().m_bIsShuttling = false;
+    }
+}

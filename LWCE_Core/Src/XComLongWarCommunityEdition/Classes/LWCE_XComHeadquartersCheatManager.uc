@@ -22,11 +22,13 @@ exec function AdjustBonus(name nmBonus, int Adjustment)
 
 exec function CreateAlienBaseAlert()
 {
-    local XGMission_AlienBase kMission;
+    local LWCE_XGMission_AlienBase kMission;
 
     kMission = Outer.Spawn(class'LWCE_XGMission_AlienBase');
+    kMission.Init('AlienBaseAssault');
+
     kMission.m_kDesc = Outer.Spawn(class'LWCE_XGBattleDesc').Init();
-    kMission.m_iContinent = 0;
+    kMission.m_nmContinent = `LWCE_HQ.m_nmContinent;
     kMission.m_v2Coords = vect2d(0.3020, 0.3940);
     kMission.m_iDetectedBy = 0;
     kMission.m_kDesc.m_kAlienSquad = AI().DetermineAlienBaseSquad();

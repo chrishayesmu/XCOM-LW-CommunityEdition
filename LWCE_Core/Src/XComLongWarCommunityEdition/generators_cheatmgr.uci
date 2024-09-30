@@ -5,6 +5,11 @@ function LWCE_Console GetConsole() \
     return LWCE_Console(LocalPlayer(Outer.Player).ViewportClient.ViewportConsole); \
 } \
 \
+exec function DumpTemplates(optional string strTemplateType) \
+{ \
+    class'LWCE_XComCheatManager_Extensions'.static.ListTemplatesOfType(name(strTemplateType), GetConsole()); \
+} \
+\
 exec function OpenDevConsole_Full() \
 { \
     if (!class'LWCE_UIKeybindingsPCScreen'.static.IsKeybindingInProgress()) \

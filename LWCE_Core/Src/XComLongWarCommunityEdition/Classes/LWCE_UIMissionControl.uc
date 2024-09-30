@@ -118,7 +118,7 @@ simulated function GoToView(int iView)
                 case 'DropArrive':
                     m_kActiveAlert = Spawn(class'LWCE_UIMissionControl_DropshipArrivedAlert', self);
                     break;
-                case 'UFOLanded':
+                case 'ShipLanded':
                     XComEngine(class'Engine'.static.GetEngine()).SetAlienFXColor(eAlienFX_Yellow);
                     m_kActiveAlert = Spawn(class'LWCE_UIMissionControl_UFOAlert', self);
                     m_kActiveAlert.s_alertName = "UFOLandingAlert";
@@ -245,7 +245,7 @@ simulated function LoadFlashAlertPanel()
         case 'EnemyShipDetected':
             Invoke("LoadRadarContactAlert");
             return;
-        case 'UFOLanded':
+        case 'ShipLanded':
             Invoke("LoadUFOLandedAlert");
             return;
         case 'UFOCrash':

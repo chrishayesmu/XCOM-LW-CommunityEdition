@@ -2,9 +2,11 @@ class LWCE_XGShip_Dropship extends XGShip_Dropship;
 
 struct CheckpointRecord_LWCE_XGShip_Dropship extends XGShip_Dropship.CheckpointRecord_XGShip_Dropship
 {
+    var LWCE_XGBase m_kAssignedBase;
     var name m_nmShipTemplate;
 };
 
+var LWCE_XGBase m_kAssignedBase;
 var name m_nmShipTemplate; // Name of an LWCEShipTemplate which describes this ship's capabilities.
 
 var LWCEShipTemplate m_kTemplate;
@@ -222,4 +224,42 @@ function ReconstructTransferData()
 
     kCargoInfo.m_arrSoldiers.Remove(0, kCargoInfo.m_arrSoldiers.Length);
     kCargoInfo.m_arrCESoldiers.Remove(0, kCargoInfo.m_arrCESoldiers.Length);
+}
+
+function ReturnToBase()
+{
+    local LWCE_XGMission_ReturnToBase kMission;
+
+    if (m_kMission != none && m_kMission.IsA('LWCE_XGMission_ReturnToBase'))
+    {
+        `LWCE_LOG_VERBOSE("Skyranger ordered to return-to-base, but already on an RTB mission");
+        return;
+    }
+
+    kMission = Spawn(class'LWCE_XGMission_ReturnToBase');
+    kMission.Init('ReturnToBase');
+    kMission.m_v2Coords = m_kAssignedBase.GetCoords();
+    kMission.m_kDesc.m_kDropShipCargoInfo = CargoInfo;
+
+    SetMission(kMission);
+}
+
+function SetMission(XGMission kMission)
+{
+    if (m_kMission != none && m_kMission.IsA('LWCE_XGMission_ReturnToBase'))
+    {
+        `LWCE_LOG_VERBOSE("Destroying Skyranger's current return-to-base mission: " $ m_kMission);
+        m_kMission.Destroy();
+    }
+
+    m_kMission = kMission;
+
+    if (kMission != none)
+    {
+        m_v2Destination = kMission.m_v2Coords;
+    }
+    else
+    {
+        m_v2Destination = m_v2Coords;
+    }
 }

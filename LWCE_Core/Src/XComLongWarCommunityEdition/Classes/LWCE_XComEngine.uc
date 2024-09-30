@@ -23,7 +23,7 @@ var LWCEMissionTag m_kCEMissionTag;
 var LWCEParamTag m_kCEParamTag;
 
 var private array< class<LWCEDataSet> > m_arrDataSets;
-var private array<LWCEDataTemplateManager> m_arrDataTemplateManagers;
+var privatewrite array<LWCEDataTemplateManager> m_arrDataTemplateManagers;
 var private LWCEEventManager m_kEventManager;
 var private bool m_bInitialized;
 
