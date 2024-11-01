@@ -1,18 +1,113 @@
 class LWCEUIButton extends LWCEUIWidget;
 
-function SetStyle(int iNewStyle, optional float fFontSize = 20.0, optional bool bResizeToText = true)
+enum LWCEButtonStyle
 {
-    AS_SetStyle(iNewStyle, fFontSize, bResizeToText);
+    eBtnStyle_None,
+    eBtnStyle_HotlinkButton,
+    eBtnStyle_SelectedShowsHotlink,
+    eBtnStyle_HotlinkWhenSansMouse,
+    eBtnStyle_ButtonWhenMouse
+};
+
+// Handlers which will run, in order, when this button is pressed.
+var array< delegate<LWCEButtonOnPress> > m_arrOnPressHandlers;
+
+var privatewrite bool m_bIsHtmlText;
+var privatewrite bool m_bResizeToText;
+var privatewrite float m_fFontSize;
+var privatewrite LWCEButtonStyle m_eButtonStyle;
+var privatewrite string m_strIconLabel; // Reference class UI_FxsGamepadIcons for valid values
+var privatewrite string m_strLabelText;
+
+delegate LWCEButtonOnPress();
+
+function Init()
+{
+    if (m_bIsInited)
+    {
+        return;
+    }
+
+    super.Init();
+
+    // Hook in our onclick handler
+    AS_SetOnPress(OnPress);
+
+    SetFontSize(m_fFontSize);
+    SetIcon(m_strIconLabel);
+    SetResizeToText(m_bResizeToText);
+    SetStyle(m_eButtonStyle);
+
+    if (m_bIsHtmlText)
+    {
+        SetHtmlLabel(m_strLabelText);
+    }
+    else
+    {
+        SetLabel(m_strLabelText);
+    }
+}
+
+function SetFontSize(float fFontSize)
+{
+    m_fFontSize = fFontSize;
+
+    if (m_bIsInited)
+    {
+        AS_SetStyle(m_eButtonStyle, m_fFontSize, m_bResizeToText);
+    }
+}
+
+function SetStyle(LWCEButtonStyle eNewStyle)
+{
+    m_eButtonStyle = eNewStyle;
+
+    if (m_bIsInited)
+    {
+        AS_SetStyle(m_eButtonStyle, m_fFontSize, m_bResizeToText);
+    }
+}
+
+function SetResizeToText(bool bResizeToText)
+{
+    m_bResizeToText = bResizeToText;
+
+    if (m_bIsInited)
+    {
+        AS_SetStyle(m_eButtonStyle, m_fFontSize, m_bResizeToText);
+    }
+}
+
+function SetHtmlLabel(string strNewText)
+{
+    m_bIsHtmlText = true;
+    m_strLabelText = strNewText;
+
+    if (m_bIsInited)
+    {
+        AS_SetHTMLText(strNewText);
+    }
+}
+
+function SetIcon(string strIconLabel)
+{
+    m_strIconLabel = strIconLabel;
+
+    if (m_bIsInited)
+    {
+        AS_SetIcon(strIconLabel);
+    }
 }
 
 function SetLabel(string strNewText)
 {
-    AS_SetText(strNewText);
-}
+    m_bIsHtmlText = false;
+    m_strLabelText = strNewText;
 
-function SetHTMLText(string strNewText)
-{
-    AS_SetHTMLText(strNewText);
+    if (m_bIsInited)
+    {
+        AS_SetText(strNewText);
+    }
 }
 
 function Select()
@@ -35,9 +130,14 @@ function OnLoseFocus()
     AS_OnLoseFocus();
 }
 
-function SetIcon(string strIconLabel)
+protected function OnPress()
 {
-    AS_SetIcon(strIconLabel);
+    local delegate<LWCEButtonOnPress> del;
+
+    foreach m_arrOnPressHandlers(del)
+    {
+        del();
+    }
 }
 
 // ActionScript proxy functions, only to be called by the public versions above
@@ -80,4 +180,19 @@ protected function AS_OnLoseFocus()
 protected function AS_SetIcon(string strIconLabel)
 {
 	ActionScriptVoid("setIcon");
+}
+
+protected function AS_SetOnPress(delegate<LWCEButtonOnPress> del)
+{
+    ActionScriptSetFunction("release");
+}
+
+defaultproperties
+{
+    m_bIsHtmlText=false
+    m_bResizeToText=false
+    m_eButtonStyle=eBtnStyle_None
+    m_fFontSize=20.0
+    m_strIconLabel=""
+    m_strLabelText=""
 }

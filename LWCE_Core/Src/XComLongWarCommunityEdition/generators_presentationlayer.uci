@@ -74,7 +74,7 @@ simulated state State_InterfaceMgr
         m_kHUD = new (self) class'LWCE_UIInterfaceMgr';
         m_kUIMovieMgr.InitMovie(m_kHUD);
 
-        m_kModalHUD = new (self) class'UIFxsMovie';
+        m_kModalHUD = new (self) class'LWCE_UIFxsMovie';
         m_kUIMovieMgr.InitMovie(m_kModalHUD);
         m_kModalHUD.Show();
     }

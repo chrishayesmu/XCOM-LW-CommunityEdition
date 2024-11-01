@@ -15,7 +15,8 @@ simulated function Init(XComPlayerController _controllerRef, UIFxsMovie _manager
 
 simulated function OnInit()
 {
-    local LWCEUIButton kButton;
+    local LWCE_UI_FxsPanel kPanel;
+    local LWCEUIButton kButton, kButton2;
     local LWCEUICheckbox kCheckbox;
     local LWCEUICombobox kCombobox;
     local LWCEUISlider kSlider;
@@ -53,11 +54,25 @@ simulated function OnInit()
         Show();
     }
 
+    kPanel = Spawn(class'LWCE_UI_FxsPanel', self);
+    kPanel.PanelInit(controllerRef, manager, screen);
+
     // TODO: delete. Just some testing of UI utils for now.
-    kButton = class'LWCEUIUtils'.static.CreateButton(m_kGfx, "lwceModButton");
-    kButton.SetLabel("My Button");
+    kButton = class'LWCEUIUtils'.static.CreateButton();
+    kButton.SetLabel("<b>Bold</b> My Button");
+    kButton.SetResizeToText(true);
     kButton.SetX(300);
     kButton.SetY(120);
+    kButton.Init();
+
+    kButton.m_arrOnPressHandlers.AddItem(LogOccurrence);
+
+    kButton2 = class'LWCEUIUtils'.static.CreateButton(m_kGfx, "lwceModButton2");
+    kButton2.SetHtmlLabel("<b>Bold</b> Button 2");
+    kButton2.SetX(300);
+    kButton2.SetY(180);
+    kButton2.m_arrOnPressHandlers.AddItem(LogOccurrence);
+    kButton2.Init();
 
     kCheckbox = class'LWCEUIUtils'.static.CreateCheckbox(m_kGfx, "lwceModCheckbox");
     kCheckbox.SetLabel("My Checkbox");
@@ -84,6 +99,12 @@ simulated function OnInit()
     kSlider.SetY(480);
 }
 
+function LogOccurrence()
+{
+    `LWCE_LOG("LogOccurrence was reached!");
+    ScriptTrace();
+}
+
 simulated function bool OnMouseEvent(int Cmd, array<string> args)
 {
     local bool bHandled;
@@ -99,6 +120,8 @@ simulated function bool OnMouseEvent(int Cmd, array<string> args)
             {
                 ExitScreen();
             }
+
+            `LWCE_LOG("OnMouseEvent: strTargetName = " $ strTargetName);
 
             break;
         default:

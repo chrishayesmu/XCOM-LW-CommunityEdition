@@ -1,4 +1,12 @@
-class LWCEUIWidget extends GFxObject;
+class LWCEUIWidget extends GFxObject
+    abstract;
+
+var protected bool m_bIsInited;
+
+function Init()
+{
+    m_bIsInited = true;
+}
 
 function float GetX()
 {

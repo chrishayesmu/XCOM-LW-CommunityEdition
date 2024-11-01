@@ -14,6 +14,7 @@
 `define HQPRES (XComHQPresentationLayer(XComHeadquartersController(`HQGAME.PlayerController).m_Pres))
 `define ONLINEEVENTMGR (XComOnlineEventMgr(GameEngine(class'Engine'.static.GetEngine()).OnlineEventManager))
 `define PRES (XComPresentationLayer(XComPlayerController(class'Engine'.static.GetCurrentWorldInfo().GetALocalPlayerController()).m_Pres))
+`define PRESBASE (XComPlayerController(class'WorldInfo'.static.GetWorldInfo().GetALocalPlayerController()).m_Pres)
 `define PROFILESETTINGS XComOnlineProfileSettings(class'Engine'.static.GetEngine().GetProfileSettings())
 `define TRACEMGR (`TACTICALGRI.m_kTraceMgr)
 `define SHAPEMGR (`TACTICALGRI.mSimpleShapeManager)

@@ -13,14 +13,25 @@ static function bool TryGetPanelReference(UI_FxsPanel kPanel, out GFxObject gfxR
     return gfxRef != none;
 }
 
-static function LWCEUIButton CreateButton(GFxObject gfxParent, string strButtonName)
+/// <summary>
+/// Creates a new LWCEUIButton. It will be present in the Flash movie immediately, so initializing the object
+/// should occur in the same rendering frame as its creation.
+/// </summary>
+/// <param name="gfxParent">The graphics object to serve as the button's parent. If not provided, the active screen is used.</param>
+/// <param name="strButtonName">The internal name of the button. If not unique within its parent object, then any other object sharing
+/// the same name will be deleted. If not provided, a random unique name is generated.</param>
+static function LWCEUIButton CreateButton(optional GFxObject gfxParent = none, optional string strButtonName = "")
 {
+    PopulateCreateArguments(gfxParent, strButtonName, "XComButton");
+
     return LWCEUIButton(BindMovie(gfxParent, "XComButton", strButtonName, class'LWCEUIButton'));
 }
 
 static function LWCEUICheckbox CreateCheckbox(GFxObject gfxParent, string strCheckboxName)
 {
     local LWCEUICheckbox kCheckbox;
+
+    PopulateCreateArguments(gfxParent, strCheckboxName, "XComCheckbox");
 
     kCheckbox = LWCEUICheckbox(BindMovie(gfxParent, "XComCheckbox", strCheckboxName, class'LWCEUICheckbox'));
     AS_AddMouseListener(kCheckbox);
@@ -33,6 +44,8 @@ static function LWCEUICombobox CreateCombobox(GFxObject gfxParent, string strCom
 {
     local LWCEUICombobox kCombobox;
 
+    PopulateCreateArguments(gfxParent, strComboboxName, "XComCombobox");
+
     kCombobox = LWCEUICombobox(BindMovie(gfxParent, "XComCombobox", strComboboxName, class'LWCEUICombobox'));
     //AS_AddMouseListener(kCombobox);
     //AS_BindMouse(kCombobox);
@@ -42,6 +55,8 @@ static function LWCEUICombobox CreateCombobox(GFxObject gfxParent, string strCom
 
 static function LWCEUISlider CreateSlider(GFxObject gfxParent, string strSliderName)
 {
+    PopulateCreateArguments(gfxParent, strSliderName, "XComSlider");
+
     return LWCEUISlider(BindMovie(gfxParent, "XComSlider", strSliderName, class'LWCEUISlider'));
 }
 
@@ -176,9 +191,70 @@ protected static function GfxObject AS_BindMovie(GFxObject kOwner, coerce string
 	return kManager.ActionScriptObject(kManager.GetMCPath() $ "._global.Bind.movie");
 }
 
+protected static function UI_FxsScreen GetActiveScreen()
+{
+    local XComPresentationLayerBase kPres;
+    local UIFxsMovieMgr kMovieMgr;
+
+    kPres = `PRESBASE;
+
+    if (kPres == none)
+    {
+        `LWCE_LOG_ERROR("Couldn't find a presentation layer to use!");
+        ScriptTrace();
+    }
+
+    kMovieMgr = kPres.m_kUIMovieMgr;
+
+    if (kMovieMgr == none || kMovieMgr.m_arrScreenInputStack.Length == 0)
+    {
+        return none;
+    }
+
+    return kMovieMgr.m_arrScreenInputStack[0];
+}
+
 protected static function UIInterfaceMgr GetHUD()
 {
     return XComPlayerController(class'Engine'.static.GetCurrentWorldInfo().GetALocalPlayerController()).m_Pres.GetHUD();
+}
+
+protected static function PopulateCreateArguments(out GFxObject gfxParent, out string strMovieName, string strTemplateFlashClass)
+{
+    local UI_FxsScreen kScreen;
+
+    if (gfxParent == none)
+    {
+        kScreen = GetActiveScreen();
+
+        if (kScreen != none)
+        {
+            gfxParent = kScreen.manager.GetVariableObject(string(kScreen.GetMCPath()));
+        }
+    }
+
+    if (strMovieName == "")
+    {
+        strMovieName = strTemplateFlashClass $ "_" $ GenerateRandomString(8);
+
+        `LWCE_LOG_VERBOSE("Generated random movie name " $ strMovieName);
+    }
+
+}
+
+protected static function string GenerateRandomString(int length)
+{
+    local string strResult;
+    local int Index;
+
+    for (Index = 0; Index < length; Index++)
+    {
+        // ASCII 97: 'a'
+        // ASCII 122: 'z'
+        strResult $= Chr(97 + Rand(26));
+    }
+
+    return strResult;
 }
 
 defaultproperties
