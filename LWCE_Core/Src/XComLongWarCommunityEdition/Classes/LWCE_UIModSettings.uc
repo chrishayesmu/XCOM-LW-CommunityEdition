@@ -15,9 +15,8 @@ simulated function Init(XComPlayerController _controllerRef, UIFxsMovie _manager
 
 simulated function OnInit()
 {
-    local LWCE_UI_FxsPanel kPanel;
     local LWCEUIButton kButton, kButton2;
-    local LWCEUICheckbox kCheckbox;
+    local LWCEUICheckbox kCheckbox, kCheckbox2;
     local LWCEUICombobox kCombobox;
     local LWCEUISlider kSlider;
     local int I;
@@ -54,12 +53,9 @@ simulated function OnInit()
         Show();
     }
 
-    kPanel = Spawn(class'LWCE_UI_FxsPanel', self);
-    kPanel.PanelInit(controllerRef, manager, screen);
-
     // TODO: delete. Just some testing of UI utils for now.
     kButton = class'LWCEUIUtils'.static.CreateButton();
-    kButton.SetLabel("<b>Bold</b> My Button");
+    kButton.SetLabel("My Button");
     kButton.SetResizeToText(true);
     kButton.SetX(300);
     kButton.SetY(120);
@@ -68,22 +64,35 @@ simulated function OnInit()
     kButton.m_arrOnPressHandlers.AddItem(LogOccurrence);
 
     kButton2 = class'LWCEUIUtils'.static.CreateButton(m_kGfx, "lwceModButton2");
-    kButton2.SetHtmlLabel("<b>Bold</b> Button 2");
-    kButton2.SetX(300);
+    kButton2.SetHtmlLabel("<font color='#F78000'>Disabled</font> Button");
+    kButton2.SetX(kButton.GetX());
     kButton2.SetY(180);
+    kButton2.SetEnabled(false);
     kButton2.m_arrOnPressHandlers.AddItem(LogOccurrence);
     kButton2.Init();
 
-    kCheckbox = class'LWCEUIUtils'.static.CreateCheckbox(m_kGfx, "lwceModCheckbox");
+    kCheckbox = class'LWCEUIUtils'.static.CreateCheckbox(m_kGfx);
     kCheckbox.SetLabel("My Checkbox");
     kCheckbox.SetX(kButton.GetX());
     kCheckbox.SetY(240);
+    kCheckbox.SetChecked(true);
+    kCheckbox.m_arrOnToggleHandlers.AddItem(LogOccurrence);
+    kCheckbox.Init();
+
+    kCheckbox2 = class'LWCEUIUtils'.static.CreateCheckbox(m_kGfx);
+    kCheckbox2.SetLabel("Readonly Checkbox");
+    kCheckbox2.SetX(kButton.GetX());
+    kCheckbox2.SetY(300);
+    kCheckbox2.SetChecked(true);
+    kCheckbox2.SetReadOnly(true);
+    kCheckbox2.m_arrOnToggleHandlers.AddItem(LogOccurrence);
+    kCheckbox2.Init();
 
     kCombobox = class'LWCEUIUtils'.static.CreateCombobox(m_kGfx, "lwceModCombobox");
     kCombobox.SetButtonLabel("My Combobox");
     //kCombobox.SetButtonText("Item 0");
     kCombobox.SetX(kButton.GetX());
-    kCombobox.SetY(360);
+    kCombobox.SetY(420);
 
     kCombobox.ClearList();
     kCombobox.AddListItem(0, "Item 0");

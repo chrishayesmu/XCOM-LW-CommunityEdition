@@ -6,50 +6,96 @@ enum EUIStyle_Checkbox
     eUISChk_TextOnRight
 };
 
-function SetChecked(bool bChecked)
+var array< delegate<LWCECheckboxOnToggle> > m_arrOnToggleHandlers;
+
+var protectedwrite bool m_bIsChecked;
+var protectedwrite bool m_bIsReadOnly;
+var protectedwrite EUIStyle_Checkbox m_eCheckboxStyle;
+var protectedwrite string m_strLabelText;
+
+delegate LWCECheckboxOnToggle();
+
+function Init()
 {
-    AS_SetChecked(bChecked);
+    if (m_bIsInited)
+    {
+        return;
+    }
+
+    super.Init();
+
+    // Hook in our onpress handler, which is responsible for invoking the UC delegates
+    AS_SetOnPress(OnPress);
+
+    SetChecked(m_bIsChecked);
+    SetReadOnly(m_bIsReadOnly);
+    SetTextStyle(m_eCheckboxStyle);
+
+    SetLabel(m_strLabelText);
 }
 
-function SetEnabled(bool bEnabled)
+protected function OnPress()
 {
-    if (bEnabled)
-    {
-        AS_Enable();
-    }
-    else
-    {
-        AS_Disable();
-    }
+    // Our code drives the state of the Flash movie
+    SetChecked(!m_bIsChecked);
 }
 
-function SetIcon(string strIconLabel)
+function SetChecked(bool bIsChecked)
 {
-    AS_SetIcon(strIconLabel);
+    local delegate<LWCECheckboxOnToggle> del;
+
+    if (m_bIsReadOnly)
+    {
+        // Can't just early return here; we might need to call AS_SetChecked
+        // below in order to have the right visual state during initialization
+        bIsChecked = m_bIsChecked;
+    }
+
+    m_bIsChecked = bIsChecked;
+
+    if (m_bIsInited)
+    {
+        AS_SetChecked(m_bIsChecked);
+
+        foreach m_arrOnToggleHandlers(del)
+        {
+            del();
+        }
+    }
 }
 
 function SetLabel(string strLabel)
 {
-    AS_SetLabel(strLabel);
+    m_strLabelText = strLabel;
+
+    if (m_bIsInited)
+    {
+        AS_SetLabel(m_strLabelText);
+    }
+}
+
+function SetReadOnly(bool bIsReadOnly)
+{
+    m_bIsReadOnly = bIsReadOnly;
+
+    if (m_bIsInited)
+    {
+        AS_SetReadOnly(m_bIsReadOnly);
+    }
 }
 
 function SetTextStyle(EUIStyle_Checkbox eStyle)
 {
     local int iStyle;
 
-    iStyle = eStyle == eUISChk_TextOnLeft ? 0 : 1;
+    m_eCheckboxStyle = eStyle;
 
-    AS_SetTextStyle(iStyle);
-}
+    if (m_bIsInited)
+    {
+        iStyle = eStyle == eUISChk_TextOnLeft ? 0 : 1;
 
-function AS_Disable()
-{
-	ActionScriptVoid("disable");
-}
-
-function AS_Enable()
-{
-	ActionScriptVoid("enable");
+        AS_SetTextStyle(iStyle);
+    }
 }
 
 protected function AS_SetChecked(bool bChecked)
@@ -57,17 +103,29 @@ protected function AS_SetChecked(bool bChecked)
 	ActionScriptVoid("setChecked");
 }
 
-protected function AS_SetIcon(string strIconLabel)
-{
-	ActionScriptVoid("setIcon");
-}
-
-protected function AS_SetLabel(string strLabel)
+protected function AS_SetLabel(string txt)
 {
 	ActionScriptVoid("setLabel");
+}
+
+protected function AS_SetOnPress(delegate<LWCECheckboxOnToggle> del)
+{
+    ActionScriptSetFunction("release");
+}
+
+protected function AS_SetReadOnly(bool bReadOnly)
+{
+	ActionScriptVoid("setReadOnly");
 }
 
 protected function AS_SetTextStyle(int iStyle)
 {
 	ActionScriptVoid("setTextStyle");
+}
+
+defaultproperties
+{
+    m_bIsChecked=false
+    m_bIsReadOnly=false
+    m_eCheckboxStyle=eUISChk_TextOnLeft
 }

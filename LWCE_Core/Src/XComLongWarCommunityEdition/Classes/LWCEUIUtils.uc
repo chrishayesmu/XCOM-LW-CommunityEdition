@@ -27,7 +27,7 @@ static function LWCEUIButton CreateButton(optional GFxObject gfxParent = none, o
     return LWCEUIButton(BindMovie(gfxParent, "XComButton", strButtonName, class'LWCEUIButton'));
 }
 
-static function LWCEUICheckbox CreateCheckbox(GFxObject gfxParent, string strCheckboxName)
+static function LWCEUICheckbox CreateCheckbox(GFxObject gfxParent, optional string strCheckboxName = "")
 {
     local LWCEUICheckbox kCheckbox;
 
@@ -40,7 +40,7 @@ static function LWCEUICheckbox CreateCheckbox(GFxObject gfxParent, string strChe
     return kCheckbox;
 }
 
-static function LWCEUICombobox CreateCombobox(GFxObject gfxParent, string strComboboxName)
+static function LWCEUICombobox CreateCombobox(GFxObject gfxParent, optional string strComboboxName = "")
 {
     local LWCEUICombobox kCombobox;
 
@@ -53,7 +53,7 @@ static function LWCEUICombobox CreateCombobox(GFxObject gfxParent, string strCom
     return kCombobox;
 }
 
-static function LWCEUISlider CreateSlider(GFxObject gfxParent, string strSliderName)
+static function LWCEUISlider CreateSlider(GFxObject gfxParent, optional string strSliderName = "")
 {
     PopulateCreateArguments(gfxParent, strSliderName, "XComSlider");
 

@@ -12,12 +12,13 @@ enum LWCEButtonStyle
 // Handlers which will run, in order, when this button is pressed.
 var array< delegate<LWCEButtonOnPress> > m_arrOnPressHandlers;
 
-var privatewrite bool m_bIsHtmlText;
-var privatewrite bool m_bResizeToText;
-var privatewrite float m_fFontSize;
-var privatewrite LWCEButtonStyle m_eButtonStyle;
-var privatewrite string m_strIconLabel; // Reference class UI_FxsGamepadIcons for valid values
-var privatewrite string m_strLabelText;
+var protectedwrite bool m_bIsEnabled;
+var protectedwrite bool m_bIsHtmlText;
+var protectedwrite bool m_bResizeToText;
+var protectedwrite float m_fFontSize;
+var protectedwrite LWCEButtonStyle m_eButtonStyle;
+var protectedwrite string m_strIconLabel; // Reference class UI_FxsGamepadIcons for valid values
+var protectedwrite string m_strLabelText;
 
 delegate LWCEButtonOnPress();
 
@@ -30,13 +31,14 @@ function Init()
 
     super.Init();
 
-    // Hook in our onclick handler
+    // Hook in our onpress handler, which is responsible for invoking the UC delegates
     AS_SetOnPress(OnPress);
 
     SetFontSize(m_fFontSize);
     SetIcon(m_strIconLabel);
     SetResizeToText(m_bResizeToText);
     SetStyle(m_eButtonStyle);
+    SetEnabled(m_bIsEnabled);
 
     if (m_bIsHtmlText)
     {
@@ -86,6 +88,23 @@ function SetHtmlLabel(string strNewText)
     if (m_bIsInited)
     {
         AS_SetHTMLText(strNewText);
+    }
+}
+
+function SetEnabled(bool bIsEnabled)
+{
+    m_bIsEnabled = bIsEnabled;
+
+    if (m_bIsInited)
+    {
+        if (m_bIsEnabled)
+        {
+            AS_Enable();
+        }
+        else
+        {
+            AS_Disable();
+        }
     }
 }
 
@@ -167,6 +186,16 @@ protected function AS_Deselect()
 	ActionScriptVoid("deselect");
 }
 
+protected function AS_Disable()
+{
+	ActionScriptVoid("disable");
+}
+
+protected function AS_Enable()
+{
+	ActionScriptVoid("enable");
+}
+
 protected function AS_OnReceiveFocus()
 {
 	ActionScriptVoid("onReceiveFocus");
@@ -189,6 +218,7 @@ protected function AS_SetOnPress(delegate<LWCEButtonOnPress> del)
 
 defaultproperties
 {
+    m_bIsEnabled=true
     m_bIsHtmlText=false
     m_bResizeToText=false
     m_eButtonStyle=eBtnStyle_None
